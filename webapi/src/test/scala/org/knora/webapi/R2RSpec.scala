@@ -28,6 +28,7 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
+
 import org.knora.webapi.util.FileUtil
 
 /**
@@ -62,9 +63,6 @@ abstract class R2RSpec
     Environment
   ] =
     ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ Slf4jBridge.initialize ++ effectLayers
-
-  // no idea why we need that, but we do
-  private val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
 
   // add scope to bootstrap
   private val bootstrapWithScope = Scope.default >>>

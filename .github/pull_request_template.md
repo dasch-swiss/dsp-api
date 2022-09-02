@@ -1,47 +1,39 @@
-<!-- Important! Please follow the new guidelines for naming Pull Requests: https://docs.dasch.swiss/developers/dsp/contribution/#pull-request-guidelines-->
+<!-- Important! Please follow the guidelines for naming Pull Requests: https://docs.dasch.swiss/latest/developers/dsp/contribution/ -->
 
-Resolves DEV-
+Issue Number: DEV-
 
-## PR Checklist
+## Pull Request Checklist
+
+### Basic Requirements
 
 Please check if your PR fulfills the following requirements:
 
 - [ ] Tests for the changes have been added (for bug fixes / features)
 - [ ] Docs have been added / updated (for bug fixes / features)
 
-
-## PR Type
+### PR Type
 
 What kind of change does this PR introduce?
 
-<!-- Please check the one that applies to this PR using "x". -->
-
-- [ ] Bugfix
-- [ ] Feature
-- [ ] Code style update (formatting, local variables)
-- [ ] Refactoring (no functional changes, no api changes)
-- [ ] Build related changes
-- [ ] CI related changes
-- [ ] Documentation content changes
+- [ ] Bugfix: represents bug fixes
+- [ ] Refactor: represents production code refactoring
+- [ ] Feature: represents a new feature
+- [ ] Documentation: documentation changes (no production code change)
+- [ ] Chore: maintenance tasks (no production code change)
+- [ ] Style: styles updates (no production code change)
+- [ ] Test: all about tests: adding, refactoring tests (no production code change)
 - [ ] Other... Please describe:
 
+### Does this PR introduce a breaking change?
 
-## What is the current behavior?
-<!-- Please describe the current behavior that you are modifying, or link to a relevant issue. -->
-
-Issue Number: N/A
-
-
-## What is the new behavior?
-
-
-## Does this PR introduce a breaking change?
+<!-- If this PR contains a breaking change, please describe the impact and migration path for existing applications below. -->
 
 - [ ] Yes
 - [ ] No
 
+### Does this PR change client-test-data?
 
-<!-- If this PR contains a breaking change, please describe the impact and migration path for existing applications below. -->
+- [ ] Yes (don't forget to update the JS-LIB team about the change)
+- [ ] No
 
-
-## Other information
+### Other information

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Run all tests
+        run: make test
+      - name: Upload coverage data to codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
+      - name: Upload coverage data to codecov 
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./target/scala-2.13/coverage-report/cobertura.xml
+
+  test-client-test-data:
+    name: Test client-test-data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Create client-test-data
+        run: make client-test-data
+
+  test-repository-upgrade:
+    name: Test repository upgrade
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Test repository upgrade
+        run: make test-repository-upgrade
+      - name: Dump docker logs
+        uses: jwalton/gh-docker-logs@v1
+
+  test-docs-build:
+    name: Test docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+      - name: Install requirements (pip, npm, apt)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          npm install --global typedoc
+          sudo apt-get install graphviz
+      - name: Build docs
+        run: make docs-build
+
+  check-formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Check formatting
+        run: make check

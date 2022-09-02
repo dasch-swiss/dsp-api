@@ -17,7 +17,7 @@ import dsp.valueobjects.User._
  */
 object UserDomainSpec extends ZIOSpecDefault {
 
-  def spec = (compareUsersTest + createUserTest + updateUserTest)
+  def spec = suite("UserDomainSpec")(compareUsersTest, createUserTest, updateUserTest)
 
   private val compareUsersTest = suite("compareUsers")(
     test("compare two users") {

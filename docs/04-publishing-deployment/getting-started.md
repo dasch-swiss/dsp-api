@@ -56,18 +56,6 @@ Other triplestores are planned.
 
 Use `git` to clone the DSP-API repository from [Github](https://github.com/dasch-swiss/dsp-api).
 
-The following environment variables are **optional**:
-
-- `KNORA_DB_HOME`: sets the path to the folder where the triplestore will store
-the database files
-- `KNORA_DB_IMPORT`: sets the path to the import directory accessible from
-inside the docker image
-
-```bash
-$ export KNORA_DB_IMPORT=/path/to/some/folder
-$ export KNORA_DB_HOME=/path/to/some/other_folder
-```
-
 Then from inside the cloned `DSP-API` repository folder, run:
 
 ```bash

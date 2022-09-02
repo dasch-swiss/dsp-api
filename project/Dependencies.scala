@@ -18,7 +18,7 @@ object Dependencies {
 
   val AkkaHttpVersion  = "10.2.9"
   val AkkaActorVersion = "2.6.19"
-  val JenaVersion      = "4.5.0"
+  val JenaVersion      = "4.6.0"
 
   val ZioVersion        = "2.0.2"
   val ZioHttpVersion    = "2.0.0-RC4"
@@ -62,8 +62,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.6" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.6" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.7" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.7" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =

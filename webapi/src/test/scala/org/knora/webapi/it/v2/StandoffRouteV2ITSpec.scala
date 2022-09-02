@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e.v2
+package org.knora.webapi.it.v2
 
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.model.HttpEntity
@@ -40,9 +40,9 @@ import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
 /**
- * End-to-end test specification for the standoff endpoint.
+ * Integration test specification for the standoff endpoint.
  */
-class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
+class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonProtocol {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -130,7 +130,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     val request = Get(
       s"$baseApiUrl/v2/resources/$iri"
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-    getResponseAsJsonLD(request)
+    getResponseJsonLD(request)
   }
 
   "The Standoff v2 Endpoint" should {
