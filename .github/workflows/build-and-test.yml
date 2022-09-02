@@ -4,7 +4,7 @@ on:
   push:
     branches-ignore:
       - main
-      - 'wip/'
+      - 'wip/*'
       - 'release-*'
 
 jobs:
