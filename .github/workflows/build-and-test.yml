@@ -12,11 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: test
-        run: echo "1111"
-        if: startsWith(${{ github.ref_name }}, 'wip') == false
+        run: echo ${{ github.ref_name }}
       - name: test
-        run: echo "2222"
+        run: echo startsWith(${{ github.ref_name }}, 'wip')
+      - name: test
+        if: startsWith(${{ github.ref_name }}, 'wip') == false
+        run: echo "1111"
+        
+      - name: test
         if: startsWith(${{ github.ref_name }}, 'wip')
+        run: echo "2222"
+        
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         if: startsWith(${{ github.ref_name }}, 'wip') != true
