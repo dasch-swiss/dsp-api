@@ -15,7 +15,7 @@ jobs:
         run: echo ${{ github.ref_name }}
 
       - name: test
-        run: startsWith('wip/dev-1112-skip-test-with-success', 'wip')
+        run: startsWith('wipdev-1112-skip-test-with-success', 'wip')
 
       - name: test
         run: startsWith(${{ github.ref_name }}, 'wip')
