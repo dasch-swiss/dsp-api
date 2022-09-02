@@ -14,9 +14,9 @@ jobs:
       - id: branch_name 
         run: echo ${{ github.ref_name }}
       - name: test
-        run: echo ${{ github.ref_name }}
+        run: echo $branch_name
       - name: test
-        run: startsWith($branch_name, 'wip')
+        run: startsWith(steps.branch_name, 'wip')
       - name: test
         if: startsWith(${{ github.ref_name }}, 'wip') == false
         run: echo "1111"
