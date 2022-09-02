@@ -11,12 +11,12 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
-      - id: name 
+      - id: branch_name 
         run: echo ${{ github.ref_name }}
       - name: test
         run: echo ${{ github.ref_name }}
       - name: test
-        run: echo startsWith($name, 'wip')
+        run: startsWith($branch_name, 'wip')
       - name: test
         if: startsWith(${{ github.ref_name }}, 'wip') == false
         run: echo "1111"
