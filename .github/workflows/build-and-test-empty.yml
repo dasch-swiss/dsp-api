@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - 'wip/'
+      - 'release-*'
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip with success
+        runs: echo "skipped"
+
+  test-client-test-data:
+    name: Test client-test-data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip with success
+        runs: echo "skipped"
+
+  test-repository-upgrade:
+    name: Test repository upgrade
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip with success
+        runs: echo "skipped"
+
+  test-docs-build:
+    name: Test docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip with success
+        runs: echo "skipped"
