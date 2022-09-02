@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: test
         run: echo "1111"
-        if: startsWith(${{ github.ref_name }}, 'wip') != true
+        if: startsWith(${{ github.ref_name }}, 'wip') == false
       - name: test
         run: echo "2222"
         if: startsWith(${{ github.ref_name }}, 'wip')
