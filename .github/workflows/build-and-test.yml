@@ -2,6 +2,9 @@ name: CI
 
 on:
   push:
+    branches-ignore:
+      - main
+      - 'release-'
 
 jobs:
   build-and-test:
