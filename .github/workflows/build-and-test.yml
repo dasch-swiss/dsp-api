@@ -11,12 +11,12 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
-      - id: branch_name 
-        run: echo ${{ env.GITHUB_REF_NAME }}
       - name: test
-        run: echo $env:GITHUB_REF_NAME
+        run: echo "$env:GITHUB_REF_NAME"
+
       - name: test
-        run: startsWith('$env:GITHUB_REF_NAME', 'wip')
+        run: startsWith(${{ github.ref_name }}, 'wip')
+        
       - name: test
         if: startsWith(${{ github.ref_name }}, 'wip') == false
         run: echo "1111"
