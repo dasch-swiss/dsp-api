@@ -4,7 +4,6 @@ on:
   push:
     branches-ignore:
       - main
-      - 'release-*'
 
 jobs:
   build-and-test:
@@ -12,19 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        if: startsWith(github.ref_name, 'wip') == false
+        # if the branch name starts with release-, skip the step with successful outcome
+        if: startsWith(github.ref_name, 'release-') == false
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Run all tests
-        if: startsWith(github.ref_name, 'wip') == false
+        if: startsWith(github.ref_name, 'release-') == false
         run: make test
       - name: Upload coverage data to codacy
-        if: startsWith(github.ref_name, 'wip') == false
+        if: startsWith(github.ref_name, 'release-') == false
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
-        if: startsWith(github.ref_name, 'wip') == false
+        if: startsWith(github.ref_name, 'release-') == false
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
@@ -34,8 +34,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
+        if: startsWith(github.ref_name, 'release-') == false
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Create client-test-data
+        if: startsWith(github.ref_name, 'release-') == false
         run: make client-test-data
 
   test-repository-upgrade:
@@ -43,10 +45,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
+        if: startsWith(github.ref_name, 'release-') == false
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Test repository upgrade
+        if: startsWith(github.ref_name, 'release-') == false
         run: make test-repository-upgrade
       - name: Dump docker logs
+        if: startsWith(github.ref_name, 'release-') == false
         uses: jwalton/gh-docker-logs@v1
 
   test-docs-build:
@@ -54,8 +59,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
+        if: startsWith(github.ref_name, 'release-') == false
         uses: actions/checkout@v3
       - name: Install requirements (pip, npm, apt)
+        if: startsWith(github.ref_name, 'release-') == false
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
