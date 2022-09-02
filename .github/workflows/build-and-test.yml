@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        if: !startsWith(${{ github.ref_name }}, 'wip')
+        if: startsWith(${{ github.ref_name }}, 'wip') != true
       - name: Run all tests
         run: make test
       - name: Upload coverage data to codacy
