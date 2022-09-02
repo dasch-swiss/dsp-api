@@ -11,11 +11,9 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
-      - name: test success
-        run: echo ${{ github.ref_name }},
-        if: startsWith(${{ github.ref_name }}, 'wip')
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        if: !startsWith(${{ github.ref_name }}, 'wip')
       - name: Run all tests
         run: make test
       - name: Upload coverage data to codacy
