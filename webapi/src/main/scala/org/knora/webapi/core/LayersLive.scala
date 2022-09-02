@@ -4,6 +4,7 @@ import zio.ZLayer
 
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -22,6 +23,7 @@ object LayersLive {
    */
   type DSPEnvironmentLive =
     ActorSystem
+      with ApiRoutes
       with AppConfig
       with AppRouter
       with CacheServiceManager
@@ -41,6 +43,7 @@ object LayersLive {
       DSPEnvironmentLive
     ](
       ActorSystem.layer,
+      ApiRoutes.layer,
       AppConfig.live,
       AppRouter.layer,
       CacheServiceManager.layer,

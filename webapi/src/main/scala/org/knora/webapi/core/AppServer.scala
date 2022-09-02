@@ -13,7 +13,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNO
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
-import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -25,60 +24,6 @@ import org.knora.webapi.util.cache.CacheUtil
  * The application bootstrapper
  */
 object AppServer {
-
-  /**
-   * Initiates the startup sequence of the DSP-API server.
-   *
-   * @param requiresRepository  if `true`, check if it is running, run upgrading and loading ontology cache.
-   *                                If `false`, check if it is running but don't run upgrading AND loading ontology cache.
-   * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
-   */
-  def start(
-    requiresRepository: Boolean,
-    requiresIIIFService: Boolean
-  ): ZIO[
-    ActorSystem
-      with AppRouter
-      with State
-      with HttpServer
-      with Scope
-      with TriplestoreService
-      with AppConfig
-      with RepositoryUpdater
-      with ActorSystem
-      with AppRouter
-      with IIIFService
-      with CacheService
-      with AppConfig,
-    Nothing,
-    Unit
-  ] =
-    for {
-      state  <- ZIO.service[State]
-      _      <- state.set(AppState.StartingUp)
-      routes <- ApiRoutes.routes
-      _      <- ZIO.service[HttpServer].flatMap(_.start(routes))
-      _      <- state.set(AppState.WaitingForTriplestore)
-      _      <- checkTriplestoreService
-      _      <- state.set(AppState.TriplestoreReady)
-      _      <- state.set(AppState.UpdatingRepository)
-      _      <- upgradeRepository(requiresRepository)
-      _      <- state.set(AppState.RepositoryUpToDate)
-      _      <- state.set(AppState.CreatingCaches)
-      _      <- buildAllCaches
-      _      <- state.set(AppState.CachesReady)
-      _      <- state.set(AppState.LoadingOntologies)
-      _      <- populateOntologyCaches(requiresRepository)
-      _      <- state.set(AppState.OntologiesReady)
-      _      <- state.set(AppState.WaitingForIIIFService)
-      _      <- checkIIIFService(requiresIIIFService)
-      _      <- state.set(AppState.IIIFServiceReady)
-      _      <- state.set(AppState.WaitingForCacheService)
-      _      <- checkCacheService
-      _      <- state.set(AppState.CacheServiceReady)
-      _      <- printBanner
-      _      <- state.set(AppState.Running)
-    } yield ()
 
   /**
    * Checks if the TriplestoreService is running and the repository is properly initialized.
@@ -157,9 +102,10 @@ object AppServer {
   /**
    * Prints the welcome message
    */
-  private val printBanner: ZIO[AppConfig, Nothing, Unit] =
+  private val printBanner: ZIO[AppConfig with HttpServer, Nothing, Unit] =
     for {
       config <- ZIO.service[AppConfig]
+      server <- ZIO.service[HttpServer]
       _ <-
         ZIO.logInfo(
           s"DSP-API Server started: ${config.knoraApi.internalKnoraApiBaseUrl}"
@@ -170,4 +116,39 @@ object AppServer {
           }
     } yield ()
 
+  /**
+   * Initiates the startup sequence of the DSP-API server.
+   *
+   * @param requiresRepository  if `true`, check if it is running, run upgrading and loading ontology cache.
+   *                                If `false`, check if it is running but don't run upgrading AND loading ontology cache.
+   * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
+   */
+  def start(
+    requiresRepository: Boolean,
+    requiresIIIFService: Boolean
+  ) =
+    for {
+      state         <- ZIO.service[State]
+      serverBinding <- ZIO.service[HttpServer]
+      _             <- state.set(AppState.WaitingForTriplestore)
+      _             <- checkTriplestoreService
+      _             <- state.set(AppState.TriplestoreReady)
+      _             <- state.set(AppState.UpdatingRepository)
+      _             <- upgradeRepository(requiresRepository)
+      _             <- state.set(AppState.RepositoryUpToDate)
+      _             <- state.set(AppState.CreatingCaches)
+      _             <- buildAllCaches
+      _             <- state.set(AppState.CachesReady)
+      _             <- state.set(AppState.LoadingOntologies)
+      _             <- populateOntologyCaches(requiresRepository)
+      _             <- state.set(AppState.OntologiesReady)
+      _             <- state.set(AppState.WaitingForIIIFService)
+      _             <- checkIIIFService(requiresIIIFService)
+      _             <- state.set(AppState.IIIFServiceReady)
+      _             <- state.set(AppState.WaitingForCacheService)
+      _             <- checkCacheService
+      _             <- state.set(AppState.CacheServiceReady)
+      _             <- printBanner
+      _             <- state.set(AppState.Running)
+    } yield ()
 }

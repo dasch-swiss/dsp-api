@@ -4,6 +4,7 @@ import zio.ZLayer
 
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -27,6 +28,7 @@ object LayersTest {
       DefaultTestEnvironmentWithSipi
     ](
       ActorSystem.layer,
+      ApiRoutes.layer,
       AppConfigForTestContainers.testcontainers,
       AppRouter.layer,
       CacheServiceManager.layer,
@@ -52,6 +54,7 @@ object LayersTest {
       DefaultTestEnvironmentWithoutSipi
     ](
       ActorSystem.layer,
+      ApiRoutes.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       AppRouter.layer,
       CacheServiceManager.layer,
@@ -75,6 +78,7 @@ object LayersTest {
       DefaultTestEnvironmentWithoutSipi
     ](
       ActorSystem.layer,
+      ApiRoutes.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       AppRouter.layer,
       CacheServiceManager.layer,

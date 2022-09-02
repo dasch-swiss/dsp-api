@@ -38,8 +38,8 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
   val internalKnoraApiPort: Int    = config.getInt("app.knora-api.internal-port")
   val internalKnoraApiBaseUrl: String =
     "http://" + internalKnoraApiHost + (if (internalKnoraApiPort != 80)
-                                                                  ":" + internalKnoraApiPort
-                                                                else "")
+                                          ":" + internalKnoraApiPort
+                                        else "")
 
   // used for communication between the outside and the knora stack, e.g., browser
   val externalKnoraApiProtocol: String = config.getString("app.knora-api.external-protocol")

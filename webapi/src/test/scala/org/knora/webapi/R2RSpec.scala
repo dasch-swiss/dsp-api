@@ -28,7 +28,6 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
-
 import org.knora.webapi.util.FileUtil
 
 /**

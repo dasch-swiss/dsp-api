@@ -18,13 +18,13 @@ import zio.logging.slf4j.bridge.Slf4jBridge
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
-import org.knora.webapi.core.AppServer
 import org.knora.webapi.util.LogAspect
 
 abstract class CoreSpec

@@ -6,7 +6,6 @@
 package org.knora.webapi.core
 
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import zio._
 
@@ -14,32 +13,30 @@ import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
+import org.knora.webapi.core.domain.AppState
+import org.knora.webapi.routing.ApiRoutes
 
 trait HttpServer {
-  val actorSystem: UIO[akka.actor.ActorSystem]
-  def start(routes: Route): ZIO[Scope, Nothing, Http.ServerBinding]
+  val serverBinding: Http.ServerBinding
 }
 
 object HttpServer {
-
-  val layer: ZLayer[core.ActorSystem with AppConfig, Nothing, HttpServer] =
-    ZLayer { // ZLayer.scope;
+  val layer: ZLayer[State & core.ActorSystem & AppConfig & ApiRoutes, Nothing, HttpServer] =
+    ZLayer.scoped {
       for {
-        as     <- ZIO.service[core.ActorSystem]
-        config <- ZIO.service[AppConfig]
-      } yield new HttpServer {
+        _         <- ZIO.service[State].flatMap(_.set(AppState.StartingUp))
+        as        <- ZIO.service[core.ActorSystem]
+        config    <- ZIO.service[AppConfig]
+        apiRoutes <- ZIO.service[ApiRoutes]
+        binding <- {
+          implicit val system: akka.actor.ActorSystem     = as.system
+          implicit val materializer: Materializer         = Materializer.matFromSystem(system)
+          implicit val executionContext: ExecutionContext = system.dispatcher
 
-        implicit val system: akka.actor.ActorSystem     = as.system
-        implicit val materializer: Materializer         = Materializer.matFromSystem(system)
-        implicit val executionContext: ExecutionContext = system.dispatcher
-
-        val actorSystem: UIO[akka.actor.ActorSystem] = ZIO.succeed(as.system)
-
-        def start(routes: Route): ZIO[Scope, Nothing, Http.ServerBinding] =
           ZIO.acquireRelease {
             ZIO
               .fromFuture(_ =>
-                Http().newServerAt(config.knoraApi.internalHost, config.knoraApi.internalPort).bind(routes)
+                Http().newServerAt(config.knoraApi.internalHost, config.knoraApi.internalPort).bind(apiRoutes.routes)
               )
               .tap(_ => ZIO.logInfo(">>> Acquire HTTP Server <<<"))
               .orDie
@@ -50,15 +47,14 @@ object HttpServer {
                   new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS)
                 )
               )
-              .tap(_ => ZIO.logInfo(">>> Release HTTP Server and Actor System <<<"))
+              .tap(_ => ZIO.logInfo(">>> Release HTTP Server <<<"))
               .orDie
           }
-      }
+        }
+      } yield HttpServerImpl(binding)
     }
 
-  val actorSystem: ZIO[HttpServer, Nothing, akka.actor.ActorSystem] =
-    ZIO.serviceWithZIO[HttpServer](_.actorSystem)
-
-  def start(routes: Route): ZIO[Scope with HttpServer, Nothing, Http.ServerBinding] =
-    ZIO.serviceWithZIO[HttpServer](_.start(routes))
+  private final case class HttpServerImpl(binding: Http.ServerBinding) extends HttpServer { self =>
+    val serverBinding: Http.ServerBinding = self.binding
+  }
 }

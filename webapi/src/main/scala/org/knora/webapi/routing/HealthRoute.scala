@@ -5,7 +5,6 @@
 
 package org.knora.webapi.routing
 
-import akka.http.interop.ZIOSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.get
 import akka.http.scaladsl.server.Directives.path
@@ -115,10 +114,9 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-final case class HealthRoute(state: State, routeData: KnoraRouteData, runtime: Runtime[State])
+final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
     extends HealthCheck
-    with Authenticator
-    with ZIOSupport {
+    with Authenticator {
 
   /**
    * Returns the route.
@@ -126,10 +124,11 @@ final case class HealthRoute(state: State, routeData: KnoraRouteData, runtime: R
   def makeRoute: Route =
     path("health") {
       get { requestContext =>
-        val res: ZIO[Any, Nothing, HttpResponse] = {
+        val res: ZIO[State, Nothing, HttpResponse] = {
           for {
-            _  <- ZIO.logInfo("health route start")
-            ec <- ZIO.executor.map(_.asExecutionContext)
+            _     <- ZIO.logInfo("health route start")
+            ec    <- ZIO.executor.map(_.asExecutionContext)
+            state <- ZIO.service[State]
             requestingUser <- ZIO
                                 .fromFuture(_ => getUserADM(requestContext)(routeData.system, routeData.appActor, ec))
                                 .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
@@ -137,7 +136,12 @@ final case class HealthRoute(state: State, routeData: KnoraRouteData, runtime: R
             _      <- ZIO.logInfo("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())
           } yield result
         } @@ LogAspect.logSpan("health-request") @@ LogAspect.logAnnotateCorrelationId(requestContext.request)
-        requestContext.complete(res)
+
+        // executing our effect and returning a future to Akka Http
+        Unsafe.unsafe { implicit u =>
+          val resF = runtime.unsafe.runToFuture(res)
+          requestContext.complete(resF)
+        }
       }
     }
 }

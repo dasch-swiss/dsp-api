@@ -28,7 +28,7 @@ import org.knora.webapi.settings.KnoraSettings
  *
  * TODO: This should probably be refactored into a ZIO-HTTP middleware, when the transistion to ZIO-HTTP is done.
  */
-class RejectingRoute(state: State, system: akka.actor.ActorSystem) { self =>
+class RejectingRoute(system: akka.actor.ActorSystem, runtime: Runtime[State]) { self =>
 
   val settings    = KnoraSettings(system)
   val log: Logger = Logger(this.getClass)
@@ -38,9 +38,10 @@ class RejectingRoute(state: State, system: akka.actor.ActorSystem) { self =>
    */
   private val getAppState: Future[AppState] =
     Unsafe.unsafe { implicit u =>
-      Runtime.default.unsafe
+      runtime.unsafe
         .runToFuture(
           for {
+            state <- ZIO.service[State]
             state <- state.get
           } yield state
         )
