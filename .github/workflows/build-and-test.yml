@@ -22,6 +22,10 @@ jobs:
         if: startsWith('wip/dev-1112-skip-test-with-success', 'wip') == false
         run: echo "hello false"
 
+      - name: test sa
+        if: startsWith(${{ github.ref_name }}, 'wip') == false
+        run: echo "hello false"
+
       - name: test
         if: startsWith(${{ github.ref_name }}, 'wip') == false
         run: echo "1111"
