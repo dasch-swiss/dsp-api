@@ -23,6 +23,8 @@ jobs:
             {"type": "fix", "section": "Bug Fixes", "hidden": false },
             {"type": "build", "section": "Maintenance", "hidden": false },
             {"type": "chore", "section": "Maintenance", "hidden": false },
+            {"type": "test", "section": "Maintenance", "hidden": false },
+            {"type": "style", "section": "Maintenance", "hidden": false },
             {"type": "refactor", "section": "Maintenance", "hidden": false },
             {"type": "docs", "section": "Documentation", "hidden": false }
             ]'
