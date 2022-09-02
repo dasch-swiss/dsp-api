@@ -11,6 +11,8 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
+      - name: test success
+        run: exit 0
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Run all tests
