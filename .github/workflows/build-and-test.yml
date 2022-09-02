@@ -23,7 +23,7 @@ jobs:
         run: echo "hello false"
 
       - name: test sa
-        if: startsWith(${{ github.ref_name }}, 'wip') == false
+        if: startsWith('${{ github.ref_name }}', 'wip') == false
         run: echo "hello false"
 
       - name: test
