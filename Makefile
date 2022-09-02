@@ -183,7 +183,7 @@ stack-db-only: env-file  ## starts only fuseki.
 
 .PHONY: client-test-data
 client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
-client-test-data: build ## runs the dsp-api e2e tests and generates client test data.
+client-test-data: build ## runs the dsp-api e2e and r2r tests and generates client-test-data.
 	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
 	sbt -v "webapi/testOnly *E2ESpec *R2RSpec"
 	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
@@ -203,13 +203,12 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 
 .PHONY: test
 test: build ## runs all tests
+	sbt -v coverage "webapi/test"
 	sbt -v coverage "shared/test"
-	sbt -v coverage "sipi/test"
 	sbt -v coverage "userCore/test"
 	sbt -v coverage "userHandler/test"
 	sbt -v coverage "userInterface/test"
 	sbt -v coverage "userRepo/test"
-	sbt -v coverage "webapi/test"
 	sbt coverageAggregate
 
 
@@ -266,13 +265,13 @@ db_ls_test_server_dump.trig:
 init-db-test-from-test: db_test_dump.trig init-db-test-empty ## init local database with data from test
 	@echo $@
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_test_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_test_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: init-db-test-from-staging
 init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local database with data from staging
 	@echo $@
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: init-db-test-from-prod
 init-db-test-from-prod: db_prod_dump.trig init-db-test-empty ## init local database with data from production
@@ -287,7 +286,7 @@ init-db-test-from-ls-test-server: db_ls_test_server_dump.trig init-db-test-from-
 init-db-test-from-ls-test-server-trig-file: init-db-test-empty ## init local database with data from a local ls-test-server dump
 	@echo $@
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 #################################
 ## Other
@@ -323,11 +322,6 @@ clean-sipi-tmp: ## deletes all files in Sipi's tmp folder
 clean-sipi-projects: ## deletes all files uploaded within a project
 	@rm -rf sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
 	@rm -rf sipi/images/originals/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
-
-.PHONY: info
-info: ## print out all variables
-	@echo "BUILD_TAG: \t\t $(BUILD_TAG)"
-	@echo "GIT_EMAIL: \t\t $(GIT_EMAIL)"
 
 .PHONY: check
 check: # Run code formating check 

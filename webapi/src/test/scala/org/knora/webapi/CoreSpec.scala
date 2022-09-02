@@ -50,7 +50,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.util.StartupUtils
 
 object CoreSpec {
@@ -140,9 +139,8 @@ abstract class CoreSpec(_system: ActorSystem)
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      AppConfigForTestContainers.testcontainers,
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
       JWTService.layer,
-      SipiTestContainer.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
