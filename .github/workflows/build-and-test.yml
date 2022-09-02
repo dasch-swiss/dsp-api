@@ -11,40 +11,20 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
-      - name: test
-        run: echo ${{ github.ref_name }}
-
-      - name: test
-        if: startsWith('wip/dev-1112-skip-test-with-success', 'wip') == true
-        run: echo "hello true"
-
-      - name: test
-        if: startsWith('wip/dev-1112-skip-test-with-success', 'wip') == false
-        run: echo "hello false"
-
-      - name: test sa
-        if: startsWith(github.ref_name, 'wip') == false
-        run: echo "hello false"
-
-      - name: test
-        if: startsWith(${{ github.ref_name }}, 'wip') == false
-        run: echo "1111"
-        
-      - name: test
-        if: startsWith(${{ github.ref_name }}, 'wip')
-        run: echo "2222"
-        
       - name: Run preparatory steps
+        if: startsWith(github.ref_name, 'wip') == false
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        if: startsWith(${{ github.ref_name }}, 'wip') != true
       - name: Run all tests
+        if: startsWith(github.ref_name, 'wip') == false
         run: make test
       - name: Upload coverage data to codacy
+        if: startsWith(github.ref_name, 'wip') == false
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
-      - name: Upload coverage data to codecov 
+      - name: Upload coverage data to codecov
+        if: startsWith(github.ref_name, 'wip') == false
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
