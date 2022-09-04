@@ -30,34 +30,33 @@ object Dependencies {
   val ZioPreludeVersion = "1.0.0-RC15"
 
   // ZIO - all Scala 3 compatible
-  val zio                   = "dev.zio" %% "zio"                      % ZioVersion
-  val zioMacros             = "dev.zio" %% "zio-macros"               % ZioVersion
-  val zioHttp               = "io.d11"  %% "zhttp"                    % ZioHttpVersion
-  val zioJson               = "dev.zio" %% "zio-json"                 % ZioJsonVersion
-  val zioPrelude            = "dev.zio" %% "zio-prelude"              % ZioPreludeVersion
-  val zioLogging            = "dev.zio" %% "zio-logging"              % ZioLoggingVersion
-  val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j-bridge" % ZioLoggingVersion
-  val zioConfig             = "dev.zio" %% "zio-config"               % ZioConfigVersion
-  val zioConfigMagnolia     = "dev.zio" %% "zio-config-magnolia"      % ZioConfigVersion
-  val zioConfigTypesafe     = "dev.zio" %% "zio-config-typesafe"      % ZioConfigVersion
-  val zioTest               = "dev.zio" %% "zio-test"                 % "2.0.0"
-  val zioTestSbt            = "dev.zio" %% "zio-test-sbt"             % "2.0.0"
+  val zio               = "dev.zio" %% "zio"                 % ZioVersion
+  val zioMacros         = "dev.zio" %% "zio-macros"          % ZioVersion
+  val zioHttp           = "io.d11"  %% "zhttp"               % ZioHttpVersion
+  val zioJson           = "dev.zio" %% "zio-json"            % ZioJsonVersion
+  val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
+  val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
+  val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
+  val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
+  val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
+  val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
+  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.0"
+  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % AkkaHttpVersion  // Scala 3 incompatible
   val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.1.3"          // Scala 3 incompatible
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaSlf4j         = "com.typesafe.akka" %% "akka-slf4j"           % AkkaActorVersion // Scala 3 compatible
   val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % AkkaActorVersion // Scala 3 compatible
 
   // jena
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.11"
-  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
-  val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "2.0.0"
+  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5"  // Scala 3 compatible
+  val slf4jApi       = "org.slf4j"                   % "slf4j-api"       % "2.0.0"  // the logging interface
+  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.0" // the logging implementation
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
@@ -116,7 +115,6 @@ object Dependencies {
     akkaHttpCors,
     akkaHttpSprayJson,
     akkaHttpTestkit % Test,
-    akkaSlf4j,
     akkaStream,
     akkaStreamTestkit % Test,
     akkaTestkit       % Test,
@@ -136,6 +134,7 @@ object Dependencies {
     jwtSprayJson,
     kamonCore,
     kamonScalaFuture,
+    logbackClassic,
     rdf4jClient % Test,
     rdf4jShacl,
     saxonHE,
@@ -143,6 +142,7 @@ object Dependencies {
     scalaLogging,
     scalaTest % Test,
     scallop,
+    slf4jApi,
     springSecurityCore,
     bouncyCastle,
     swaggerAkkaHttp,
@@ -156,7 +156,7 @@ object Dependencies {
     zioHttp,
     zioJson,
     zioLogging,
-    zioLoggingSlf4jBridge,
+    zioLoggingSlf4j,
     zioMacros,
     zioPrelude,
     zioTest    % Test,
@@ -193,70 +193,78 @@ object Dependencies {
 
   // user projects dependencies
   val userInterfaceLibraryDependencies = Seq(
-    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val userHandlerLibraryDependencies = Seq(
     bouncyCastle,
-    slf4j % Test,
     springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val userCoreLibraryDependencies = Seq(
     bouncyCastle,
-    slf4j % Test,
     springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val userRepoLibraryDependencies = Seq(
-    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
 
   // role projects dependencies
   val roleInterfaceLibraryDependencies = Seq(
-    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val roleHandlerLibraryDependencies = Seq(
     bouncyCastle,
-    slf4j % Test,
     springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val roleCoreLibraryDependencies = Seq(
     bouncyCastle,
-    slf4j % Test,
     springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val roleRepoLibraryDependencies = Seq(
-    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
 
   // shared project dependencies
@@ -266,10 +274,11 @@ object Dependencies {
     commonsValidator,
     gwtServlet,
     scalaLogging,
-    slf4j % Test,
     springSecurityCore,
     zioPrelude,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
 }

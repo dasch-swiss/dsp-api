@@ -13,7 +13,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
-import zio.logging.slf4j.bridge.Slf4jBridge
+import zio.logging.backend.SLF4J
 
 import scala.concurrent.ExecutionContext
 
@@ -55,18 +55,16 @@ abstract class CoreSpec
     Any,
     Any,
     Environment
-  ] =
-    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging
-      .consoleJson() ++ Slf4jBridge.initialize ++ effectLayers
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ effectLayers
 
   // add scope to bootstrap
   private val bootstrapWithScope = Scope.default >>>
     bootstrap +!+ ZLayer.environment[Scope]
 
-  // maybe a configured runtime?
+  // create a configured runtime
   val runtime = Unsafe.unsafe { implicit u =>
     Runtime.unsafe
-      .fromLayer(bootstrapWithScope) // vs. bootstrap (without Scope)???
+      .fromLayer(bootstrapWithScope)
   }
 
   println("after configuring the runtime")
@@ -103,7 +101,7 @@ abstract class CoreSpec
       _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
     } yield ()
 
-  /* Here we start our main effect in a separate fiber */
+  /* Here we start our app server */
   Unsafe.unsafe { implicit u =>
     runtime.unsafe.run(appServerTest)
   }

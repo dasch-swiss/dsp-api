@@ -1,32 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
 
-<!--
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
- * SPDX-License-Identifier: Apache-2.0
-  -->
+<configuration>
+    <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
+    <import class="ch.qos.logback.core.ConsoleAppender"/>
 
-<!-- For assistance related to logback-translator or configuration  -->
-<!-- files in general, please contact the logback user mailing list -->
-<!-- at http://www.qos.ch/mailman/listinfo/logback-user             -->
-<!--                                                                -->
-<!-- For professional support please see                            -->
-<!--    http://www.qos.ch/shop/products/professionalSupport         -->
-<!--                                                                -->
-<configuration scan="false" debug="false">
-    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>[%level] %logger{0} - %msg%n</pattern>
+    <appender name="STDOUT" class="ConsoleAppender">
+        <encoder class="PatternLayoutEncoder">
+        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <!--<appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>logs/console.log</File>
-        <encoder>
-            <pattern>[%date{ISO8601}] %-5level %logger{0} - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/console.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
-        </rollingPolicy>
-    </appender>-->
+
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
@@ -148,7 +132,7 @@
     <logger name="M-CacheSerialization" level="ERROR"/>
 
     <root level="ERROR">
-        <appender-ref ref="stdout"/>
+        <appender-ref ref="STDOUT"/>
         <!--<appender-ref ref="R"/>-->
     </root>
 </configuration>

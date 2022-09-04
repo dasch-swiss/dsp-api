@@ -12,7 +12,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
-import zio.logging.slf4j.bridge.Slf4jBridge
+import zio.logging.backend.SLF4J
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -60,15 +60,14 @@ abstract class R2RSpec
     Any,
     Any,
     Environment
-  ] =
-    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ Slf4jBridge.initialize ++ effectLayers
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ effectLayers
 
   // add scope to bootstrap
   private val bootstrapWithScope = Scope.default >>>
     bootstrap +!+ ZLayer.environment[Scope]
 
-  // maybe a configured runtime?
-  val runtime = Unsafe.unsafe { implicit u =>
+  // create a configured runtime
+  private val runtime = Unsafe.unsafe { implicit u =>
     Runtime.unsafe
       .fromLayer(bootstrapWithScope)
   }
@@ -77,7 +76,7 @@ abstract class R2RSpec
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
-  val routerAndConfig = for {
+  private val routerAndConfig = for {
     router <- ZIO.service[core.AppRouter]
     config <- ZIO.service[AppConfig]
   } yield (router, config)
@@ -87,7 +86,7 @@ abstract class R2RSpec
   /**
    * Create router and config by unsafe running them.
    */
-  val (router, config) =
+  private val (router, config) =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
@@ -113,11 +112,10 @@ abstract class R2RSpec
   }
 
   // main difference to other specs (no own systen and executionContext defined)
-  override def createActorSystem(): akka.actor.ActorSystem = router.system
-  implicit lazy val settings: KnoraSettingsImpl            = KnoraSettings(system)
-  lazy val rdfDataObjects                                  = List.empty[RdfDataObject]
-  val log: Logger                                          = Logger(this.getClass())
-  val appActor                                             = router.ref
+  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+  lazy val rdfDataObjects                       = List.empty[RdfDataObject]
+  val log: Logger                               = Logger(this.getClass())
+  val appActor                                  = router.ref
 
   // needed by some tests
   val routeData = KnoraRouteData(system, appActor)

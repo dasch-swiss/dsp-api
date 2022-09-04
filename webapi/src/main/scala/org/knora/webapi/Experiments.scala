@@ -1,7 +1,7 @@
 package org.knora.webapi
 
 import zio._
-import zio.logging.slf4j.bridge.Slf4jBridge
+import zio.logging.backend.SLF4J
 
 import org.knora.webapi.config.AppConfig
 
@@ -11,8 +11,7 @@ object Experiments extends App {
    * The `bootstrap` layer combines our app's layers with some configuration
    */
   val bootstrap: ZLayer[Any, Nothing, core.LayersLive.DSPEnvironmentLive] =
-    ZLayer.empty ++ Runtime.removeDefaultLoggers ++
-      logging.consoleJson() ++ Slf4jBridge.initialize ++ core.LayersLive.dspLayersLive
+    ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ core.LayersLive.dspLayersLive
 
   // add scope to bootstrap
   val bootstrapWithScope = Scope.default >>>

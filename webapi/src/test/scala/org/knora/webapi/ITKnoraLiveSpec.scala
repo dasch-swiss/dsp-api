@@ -15,7 +15,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
 import zio._
-import zio.logging.slf4j.bridge.Slf4jBridge
+import zio.logging.backend.SLF4J
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -68,8 +68,7 @@ abstract class ITKnoraLiveSpec
     Any,
     Any,
     Environment
-  ] =
-    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ Slf4jBridge.initialize ++ effectLayers
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ effectLayers
 
   // no idea why we need that, but we do
   private val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]

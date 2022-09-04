@@ -18,7 +18,7 @@ import zio.Runtime
 import zio.ZIO
 import zio.ZLayer
 import zio._
-import zio.logging.slf4j.bridge.Slf4jBridge
+import zio.logging.backend.SLF4J
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -76,8 +76,7 @@ abstract class E2ESpec
     Any,
     Any,
     Environment
-  ] =
-    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ Slf4jBridge.initialize ++ effectLayers
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ effectLayers
 
   // no idea why we need that, but we do
   private val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]

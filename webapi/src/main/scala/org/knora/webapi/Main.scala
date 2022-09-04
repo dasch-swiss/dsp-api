@@ -6,7 +6,7 @@
 package org.knora.webapi
 
 import zio._
-import zio.logging.slf4j.bridge.Slf4jBridge
+import zio.logging.backend.SLF4J
 
 object Main extends ZIOApp {
 
@@ -23,9 +23,7 @@ object Main extends ZIOApp {
     ZIOAppArgs with Scope,
     Any,
     Environment
-  ] =
-    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging
-      .consoleJson() ++ Slf4jBridge.initialize ++ core.LayersLive.dspLayersLive
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ core.LayersLive.dspLayersLive
 
   // no idea why we need that, but we do
   val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
