@@ -20,7 +20,7 @@ object Dependencies {
   val AkkaActorVersion = "2.6.19"
   val JenaVersion      = "4.6.0"
 
-  val ZioVersion        = "2.0.0"
+  val ZioVersion        = "2.0.2"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC11"
   val ZioConfigVersion  = "3.0.2"
