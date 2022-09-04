@@ -55,7 +55,7 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.11"
+  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.0"
   val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
   val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "2.0.0"
 
