@@ -9,7 +9,6 @@ import zio.prelude.Validation
 
 import scala.util.matching.Regex
 
-import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 
 object Project {
@@ -49,20 +48,20 @@ object Project {
    */
   sealed abstract case class ShortName private (value: String)
   object ShortName { self =>
-    def make(value: String): Validation[Throwable, ShortName] =
+    def make(value: String): Validation[ValidationException, ShortName] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.ShortNameMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
       } else {
         val validatedValue = Validation(
           V2ProjectIriValidation.validateAndEscapeProjectShortname(
             value,
-            throw BadRequestException(ProjectErrorMessages.ShortNameInvalid)
+            throw ValidationException(ProjectErrorMessages.ShortNameInvalid)
           )
-        )
+        ).mapError(e => new ValidationException(e.getMessage()))
         validatedValue.map(new ShortName(_) {})
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[ShortName]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[ShortName]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -115,14 +114,14 @@ object Project {
    */
   sealed abstract case class Keywords private (value: Seq[String])
   object Keywords { self =>
-    def make(value: Seq[String]): Validation[Throwable, Keywords] =
+    def make(value: Seq[String]): Validation[ValidationException, Keywords] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.KeywordsMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing))
       } else {
         Validation.succeed(new Keywords(value) {})
       }
 
-    def make(value: Option[Seq[String]]): Validation[Throwable, Option[Keywords]] =
+    def make(value: Option[Seq[String]]): Validation[ValidationException, Option[Keywords]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -134,13 +133,13 @@ object Project {
    */
   sealed abstract case class Logo private (value: String)
   object Logo { self =>
-    def make(value: String): Validation[Throwable, Logo] =
+    def make(value: String): Validation[ValidationException, Logo] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.LogoMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.LogoMissing))
       } else {
         Validation.succeed(new Logo(value) {})
       }
-    def make(value: Option[String]): Validation[Throwable, Option[Logo]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[Logo]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -152,10 +151,10 @@ object Project {
    */
   sealed abstract case class ProjectSelfJoin private (value: Boolean)
   object ProjectSelfJoin { self =>
-    def make(value: Boolean): Validation[Throwable, ProjectSelfJoin] =
+    def make(value: Boolean): Validation[ValidationException, ProjectSelfJoin] =
       Validation.succeed(new ProjectSelfJoin(value) {})
 
-    def make(value: Option[Boolean]): Validation[Throwable, Option[ProjectSelfJoin]] =
+    def make(value: Option[Boolean]): Validation[ValidationException, Option[ProjectSelfJoin]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -167,10 +166,10 @@ object Project {
    */
   sealed abstract case class ProjectStatus private (value: Boolean)
   object ProjectStatus { self =>
-    def make(value: Boolean): Validation[Throwable, ProjectStatus] =
+    def make(value: Boolean): Validation[ValidationException, ProjectStatus] =
       Validation.succeed(new ProjectStatus(value) {})
 
-    def make(value: Option[Boolean]): Validation[Throwable, Option[ProjectStatus]] =
+    def make(value: Option[Boolean]): Validation[ValidationException, Option[ProjectStatus]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
