@@ -30,7 +30,10 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
   )
   private val project = getValidated(Project.make(id, name, description))
 
-  def spec = (projectRepoMockTest + projectRepoLiveTest)
+  def spec = suite("ProjectRepoImplSpec")(
+    projectRepoMockTest,
+    projectRepoLiveTest
+  )
 
   val getProjectTest = suite("retrieve a single project")(
     test("store a project and retrieve it by ID") {

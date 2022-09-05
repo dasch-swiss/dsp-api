@@ -28,7 +28,11 @@ object ProjectDomainSpec extends ZIOSpecDefault {
     .make(Seq(V2.StringLiteralV2("A Project", Some("en"))))
     .fold(e => throw e.head, v => v)
 
-  override def spec = suite("Project")(projectCreateTests + projectCompareTests + projectUpdateTests)
+  override def spec = suite("ProjectDomainSpec")(
+    projectCreateTests,
+    projectCompareTests,
+    projectUpdateTests
+  )
 
   val projectCreateTests = suite("create project")(
     test("create a project from valid input") {
