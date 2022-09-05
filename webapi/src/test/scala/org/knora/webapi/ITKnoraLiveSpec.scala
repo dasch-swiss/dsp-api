@@ -23,7 +23,11 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 import zio._
 
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.auth.JWTService
@@ -38,6 +42,7 @@ import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings._
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -268,5 +273,18 @@ abstract class ITKnoraLiveSpec(_system: ActorSystem)
         )
         .getOrThrow()
     }
+
+  protected def responseToString(httpResponse: HttpResponse): String = {
+    val responseBodyFuture: Future[String] =
+      httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
+    Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
+  }
+
+  protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
+    val responseBodyFuture: Future[String] =
+      httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
+    val responseBodyStr = Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
+    JsonLDUtil.parseJsonLD(responseBodyStr)
+  }
 
 }

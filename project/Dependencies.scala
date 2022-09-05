@@ -20,7 +20,7 @@ object Dependencies {
   val AkkaActorVersion = "2.6.19"
   val JenaVersion      = "4.6.0"
 
-  val ZioVersion        = "2.0.0"
+  val ZioVersion        = "2.0.2"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC11"
   val ZioConfigVersion  = "3.0.2"
@@ -40,8 +40,8 @@ object Dependencies {
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
-  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.1"
-  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.1"
+  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.2"
+  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.2"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -61,8 +61,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.7" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.7" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.8" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.8" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -96,7 +96,7 @@ object Dependencies {
   val swaggerAkkaHttp = "com.github.swagger-akka-http" %% "swagger-akka-http" % "1.6.0"  // Scala 3 incompatible
   val titaniumJSONLD  = "com.apicatalog"                % "titanium-json-ld"  % "1.3.1"
   val xmlunitCore     = "org.xmlunit"                   % "xmlunit-core"      % "2.9.0"
-  val jacksonDatabind = "com.fasterxml.jackson.core"    % "jackson-databind"  % "2.13.3"
+  val jacksonDatabind = "com.fasterxml.jackson.core"    % "jackson-databind"  % "2.13.4"
 
   // test
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
