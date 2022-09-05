@@ -96,7 +96,7 @@ object Dependencies {
   val swaggerAkkaHttp = "com.github.swagger-akka-http" %% "swagger-akka-http" % "1.6.0"  // Scala 3 incompatible
   val titaniumJSONLD  = "com.apicatalog"                % "titanium-json-ld"  % "1.3.1"
   val xmlunitCore     = "org.xmlunit"                   % "xmlunit-core"      % "2.9.0"
-  val jacksonDatabind = "com.fasterxml.jackson.core"    % "jackson-databind"  % "2.13.3"
+  val jacksonDatabind = "com.fasterxml.jackson.core"    % "jackson-databind"  % "2.13.4"
 
   // test
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
