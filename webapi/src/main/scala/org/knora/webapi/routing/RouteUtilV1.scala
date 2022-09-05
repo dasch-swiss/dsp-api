@@ -278,7 +278,6 @@ object RouteUtilV1 {
    */
   private val audioMimeTypes: Set[String] = Set(
     "audio/mpeg",
-    "audio/mp4",
     "audio/wav",
     "audio/x-wav",
     "audio/vnd.wave"
