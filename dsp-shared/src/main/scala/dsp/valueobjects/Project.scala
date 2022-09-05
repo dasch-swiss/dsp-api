@@ -55,7 +55,7 @@ object Project {
         val validatedValue = Validation(
           V2ProjectIriValidation.validateAndEscapeProjectShortname(
             value,
-            throw ValidationException(ProjectErrorMessages.ShortNameInvalid)
+            throw ValidationException(ProjectErrorMessages.ShortNameInvalid(value))
           )
         ).mapError(e => new ValidationException(e.getMessage()))
         validatedValue.map(new ShortName(_) {})
@@ -179,15 +179,15 @@ object Project {
 
 object ProjectErrorMessages {
   val ShortcodeMissing           = "Shortcode cannot be empty."
-  val ShortcodeInvalid           = (shortCode: String) => s"Shortcode is invalid: $shortCode"
+  val ShortcodeInvalid           = (v: String) => s"Shortcode is invalid: $v"
   val ShortNameMissing           = "Shortname cannot be empty."
-  val ShortNameInvalid           = "Shortname is invalid."
+  val ShortNameInvalid           = (v: String) => s"Shortname is invalid: $v"
   val NameMissing                = "Longname cannot be empty."
-  val NameInvalid                = "Longname is invalid."
+  val NameInvalid                = (v: String) => s"Longname is invalid: $v"
   val ProjectDescriptionsMissing = "Description cannot be empty."
-  val ProjectDescriptionsInvalid = "Description is invalid."
+  val ProjectDescriptionsInvalid = (v: String) => s"Description is invalid: $v"
   val KeywordsMissing            = "Keywords cannot be empty."
-  val KeywordsInvalid            = "Keywords are invalid."
+  val KeywordsInvalid            = (v: String) => s"Keywords are invalid: $v"
   val LogoMissing                = "Logo cannot be empty."
-  val LogoInvalid                = "Logo is invalid."
+  val LogoInvalid                = (v: String) => s"Logo is invalid: $v"
 }
