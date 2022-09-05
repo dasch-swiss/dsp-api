@@ -5,16 +5,14 @@
 
 # Publishing
 
-Knora is published as a set of [Docker](https://www.docker.com) images under the
-[DaSCH Basel Dockerhub Organization](https://hub.docker.com/u/daschswiss).
+DSP is published as a set of [Docker](https://www.docker.com) images under the
+[DaSCH Dockerhub Organization](https://hub.docker.com/u/daschswiss).
 
 The following Docker images are published:
 
 - Knora-API:
   - https://hub.docker.com/r/daschswiss/knora-api
-- Jena Fuseki:
-  - https://hub.docker.com/r/daschswiss/knora-jena-fuseki
-- Sipi (includes Knora's Sipi scripts):
+- Sipi (includes DSP's specific Sipi scripts):
   - https://hub.docker.com/r/daschswiss/knora-sipi
 - Salsah 1:
   - https://hub.docker.com/r/daschswiss/knora-salsah1

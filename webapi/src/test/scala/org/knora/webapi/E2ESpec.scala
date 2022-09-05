@@ -59,7 +59,6 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestActorSystemService
 import org.knora.webapi.testservices.TestClientService
@@ -131,9 +130,8 @@ abstract class E2ESpec(_system: ActorSystem)
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      AppConfigForTestContainers.testcontainers,
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
       JWTService.layer,
-      SipiTestContainer.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
@@ -180,7 +178,7 @@ abstract class E2ESpec(_system: ActorSystem)
     appActor ! SetAllowReloadOverHTTPState(true)
 
     // start the knora service, loading data from the repository
-    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
+    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
     // waits until knora is up and running
     applicationStateRunning()
