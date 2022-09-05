@@ -17,8 +17,8 @@ import dsp.valueobjects.Project._
  * This spec is used to test the [[Project]] value objects creation.
  */
 object ProjectSpec extends ZIOSpecDefault {
-  private val validShortcode   = "1234"
-  private val invalidShortcode = "12345"
+  private val validShortCode   = "1234"
+  private val invalidShortCode = "12345"
   private val validShortName   = "validShortname"
   private val invalidShortname = "~!@#$%^&*()_+"
   private val validName        = "That is the project longname"
@@ -29,7 +29,7 @@ object ProjectSpec extends ZIOSpecDefault {
   private val validLogo     = "/fu/bar/baz.jpg"
 
   def spec = suite("ProjectSpec")(
-    shortcodeTest,
+    shortCodeTest,
     shortNameTest,
     nameTest,
     projectDescriptionsTest,
@@ -39,7 +39,7 @@ object ProjectSpec extends ZIOSpecDefault {
     projectSelfJoinTest
   )
 
-  private val shortcodeTest = suite("ProjectSpec - Shortcode")(
+  private val shortCodeTest = suite("ProjectSpec - Shortcode")(
     test("pass an empty value and return an error") {
       assertTrue(
         ShortCode.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
@@ -50,24 +50,24 @@ object ProjectSpec extends ZIOSpecDefault {
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        ShortCode.make(invalidShortcode) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortcode))
+        ShortCode.make(invalidShortCode) == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortCode))
         )
       ) &&
       assertTrue(
-        ShortCode.make(Some(invalidShortcode)) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortcode))
+        ShortCode.make(Some(invalidShortCode)) == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortCode))
         )
       )
     },
     test("pass a valid value and successfully create value object") {
       for {
-        shortCode           <- ShortCode.make(validShortcode).toZIO
-        optionalShortCode   <- ShortCode.make(Option(validShortcode)).toZIO
+        shortCode           <- ShortCode.make(validShortCode).toZIO
+        optionalShortCode   <- ShortCode.make(Option(validShortCode)).toZIO
         shortCodeFromOption <- ZIO.fromOption(optionalShortCode)
-      } yield assertTrue(shortCode.value == validShortcode) &&
+      } yield assertTrue(shortCode.value == validShortCode) &&
         assert(optionalShortCode)(isSome(isSubtype[ShortCode](Assertion.anything))) &&
-        assertTrue(shortCodeFromOption.value == validShortcode)
+        assertTrue(shortCodeFromOption.value == validShortCode)
     },
     test("successfully validate passing None") {
       assertTrue(

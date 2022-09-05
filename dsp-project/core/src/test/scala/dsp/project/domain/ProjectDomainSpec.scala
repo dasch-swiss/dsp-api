@@ -18,12 +18,8 @@ import dsp.valueobjects.V2
 object ProjectDomainSpec extends ZIOSpecDefault {
 
   private val shortcode = ShortCode.make("0001").fold(e => throw e.head, v => v)
-  // private val uuid      = UUID.randomUUID()
-  // private val iri = Iri.ProjectIri
-  //   .make(s"http://rdfh.ch/projects/${UUID.randomUUID()}")
-  //   .fold(e => throw e.head, v => v)
-  private val id   = ProjectId.make(shortcode).fold(e => throw e.head, v => v)
-  private val name = Name.make("proj").fold(e => throw e.head, v => v)
+  private val id        = ProjectId.make(shortcode).fold(e => throw e.head, v => v)
+  private val name      = Name.make("proj").fold(e => throw e.head, v => v)
   private val description = ProjectDescription
     .make(Seq(V2.StringLiteralV2("A Project", Some("en"))))
     .fold(e => throw e.head, v => v)
