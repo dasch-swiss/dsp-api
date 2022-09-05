@@ -93,6 +93,7 @@ object Project {
    * ProjectDescription value object.
    */
   // TODO-BL: [domain-model] should probably be MultiLangString; should probably be called `Description` as it's clear that it's part of Project
+  // ATM it can't be changed to MultiLangString, because that has the language tag required, whereas in V2, it's currently optional, so this would be a breaking change.
   sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
   object ProjectDescription { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, ProjectDescription] =
