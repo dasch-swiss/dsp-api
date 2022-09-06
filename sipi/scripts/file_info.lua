@@ -100,7 +100,9 @@ local text_extensions = {
     "xsl",
     "xsd",
     "txt",
-    "csv"
+    "csv",
+    "odd",
+    "rng"
 }
 
 local document_extensions = {
@@ -217,6 +219,8 @@ function get_file_info(filename, mimetype)
     elseif table.contains(archive_mime_types, mimetype) then
         return make_archive_file_info(extension)
     else
+
+        server.log("FILE: " .. filename .. ", MIME: " .. mimetype, server.loglevel.LOG_DEBUG)
         -- no supported mediatype could be determined
         return nil
     end
