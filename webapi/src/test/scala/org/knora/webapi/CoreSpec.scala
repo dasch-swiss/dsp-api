@@ -67,16 +67,12 @@ abstract class CoreSpec
       .fromLayer(bootstrapWithScope)
   }
 
-  println("after configuring the runtime")
-
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
   private val routerAndConfig = for {
     router <- ZIO.service[core.AppRouter]
     config <- ZIO.service[AppConfig]
   } yield (router, config)
-
-  println("before running routerAndConfig")
 
   /**
    * Create router and config by unsafe running them.
@@ -89,10 +85,6 @@ abstract class CoreSpec
         )
         .getOrThrowFiberFailure()
     }
-
-  println(router.ref)
-
-  println("before running AppServer")
 
   // this effect represents our application
   private val appServerTest =
@@ -120,9 +112,6 @@ abstract class CoreSpec
   final override def beforeAll(): Unit = {}
 
   final override def afterAll(): Unit = {
-
-    println("releasing all ressources after tests")
-
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()

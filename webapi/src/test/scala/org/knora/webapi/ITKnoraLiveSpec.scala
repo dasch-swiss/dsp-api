@@ -83,16 +83,12 @@ abstract class ITKnoraLiveSpec
       .fromLayer(bootstrapWithScope)
   }
 
-  println("after configuring the runtime")
-
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
   val routerAndConfig = for {
     router <- ZIO.service[core.AppRouter]
     config <- ZIO.service[AppConfig]
   } yield (router, config)
-
-  println("before running routerAndConfig")
 
   /**
    * Create router and config by unsafe running them.
@@ -105,10 +101,6 @@ abstract class ITKnoraLiveSpec
         )
         .getOrThrowFiberFailure()
     }
-
-  println(router.ref)
-
-  println("before running AppServer")
 
   // this effect represents our application
   private val appServerTest =

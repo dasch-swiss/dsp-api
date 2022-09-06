@@ -11,7 +11,7 @@ import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
-object ActorSystemTestImpl {
+object ActorSystemTest {
 
   def layer(sys: akka.actor.ActorSystem): ZLayer[Any, Nothing, ActorSystem] =
     ZLayer
@@ -22,5 +22,5 @@ object ActorSystemTestImpl {
           override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
         }
       )
-      .tap(_ => ZIO.logInfo(">>> ActorSystem Initialized <<<"))
+      .tap(_ => ZIO.debug(">>> ActorSystemTest Initialized <<<"))
 }

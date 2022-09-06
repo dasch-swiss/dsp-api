@@ -22,7 +22,7 @@ object LayersTest {
   type DefaultTestEnvironmentWithoutSipi = LayersLive.DSPEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
-  // all effect layers needed to provide the `Environment`
+  // All live layers and both Fuseki and Sipi testcontainers
   val defaultLayersTestWithSipi =
     ZLayer.make[
       DefaultTestEnvironmentWithSipi
@@ -48,7 +48,7 @@ object LayersTest {
       TestClientService.layer
     )
 
-  // all effect layers needed to provide the `Environment`
+  // All live layers but without sipi testcontainer
   val defaultLayersTestWithoutSipi =
     ZLayer.make[
       DefaultTestEnvironmentWithoutSipi
@@ -72,12 +72,62 @@ object LayersTest {
       // Test services
       TestClientService.layer
     )
+  // All live layers but without sipi testcontainer
+  def defaultLayersTestWithoutSipi(system: akka.actor.ActorSystem) =
+    ZLayer.make[
+      DefaultTestEnvironmentWithoutSipi
+    ](
+      ActorSystemTest.layer(system),
+      ApiRoutes.layer,
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      AppRouter.layer,
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      HttpServer.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      JWTService.layer,
+      RepositoryUpdater.layer,
+      State.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      // testcontainers
+      FusekiTestContainer.layer,
+      // Test services
+      TestClientService.layer
+    )
 
+  // All live layers but with the mocked IIIF layer
   val defaultLayersTestWithMockedSipi =
     ZLayer.make[
       DefaultTestEnvironmentWithoutSipi
     ](
       ActorSystem.layer,
+      ApiRoutes.layer,
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      AppRouter.layer,
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      HttpServer.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceMockImpl.layer, // alternative: IIIFServiceMockImpl.layer
+      JWTService.layer,
+      RepositoryUpdater.layer,
+      State.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      // testcontainers
+      FusekiTestContainer.layer,
+      // Test services
+      TestClientService.layer
+    )
+
+  // All live layers but with the mocked IIIF layer
+  def defaultLayersTestWithMockedSipi(system: akka.actor.ActorSystem) =
+    ZLayer.make[
+      DefaultTestEnvironmentWithoutSipi
+    ](
+      ActorSystemTest.layer(system),
       ApiRoutes.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       AppRouter.layer,

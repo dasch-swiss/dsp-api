@@ -29,6 +29,7 @@
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
+    <logger name="org.knora.webapi.core" level="INFO"/>
     <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="ERROR"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
@@ -59,6 +60,9 @@
     <logger name="M-HttpTriplestoreConnector" level="INFO"/>
     <logger name="M-CacheServiceManager" level="INFO"/>
     <logger name="M-CacheSerialization" level="INFO"/>
+
+    <!-- layers -->
+    <logger name="org.knora.webapi.core.ActorSystem" level="INFO"/>
 
     <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 

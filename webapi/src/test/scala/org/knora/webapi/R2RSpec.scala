@@ -50,7 +50,7 @@ abstract class R2RSpec
    * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers = core.LayersTest.defaultLayersTestWithoutSipi
+  lazy val effectLayers = core.LayersTest.defaultLayersTestWithoutSipi(system)
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
@@ -72,16 +72,12 @@ abstract class R2RSpec
       .fromLayer(bootstrapWithScope)
   }
 
-  println("after configuring the runtime")
-
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
   private val routerAndConfig = for {
     router <- ZIO.service[core.AppRouter]
     config <- ZIO.service[AppConfig]
   } yield (router, config)
-
-  println("before running routerAndConfig")
 
   /**
    * Create router and config by unsafe running them.
@@ -94,10 +90,6 @@ abstract class R2RSpec
         )
         .getOrThrowFiberFailure()
     }
-
-  println(router.ref)
-
-  println("before running AppServer")
 
   // this effect represents our application
   private val appServerTest =

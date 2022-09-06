@@ -54,8 +54,8 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5"  // Scala 3 compatible
-  val slf4jApi       = "org.slf4j"                   % "slf4j-api"       % "2.0.0"  // the logging interface
+  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
+  val slf4jApi       = "org.slf4j"                   % "slf4j-api"       % "2.0.0" // the logging interface
   val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.0" // the logging implementation
 
   // Metrics

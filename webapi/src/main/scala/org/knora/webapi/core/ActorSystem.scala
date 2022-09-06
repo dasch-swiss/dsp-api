@@ -15,6 +15,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
+import zio.logging.backend.SLF4J
 
 @accessible
 trait ActorSystem {
@@ -41,7 +42,7 @@ object ActorSystem {
   private def release(system: akka.actor.ActorSystem): URIO[Any, actor.Terminated] =
     ZIO
       .fromFuture(_ => system.terminate())
-      .tap(_ => ZIO.logInfo(">>> Release Actor System <<<"))
+      .tap(_ => ZIO.logInfo(">>> Release Actor System <<<") @@ SLF4J.loggerName("org.knora.webapi.core.ActorSystem"))
       .orDie
 
   val layer: ZLayer[AppConfig, Nothing, ActorSystem] =
@@ -55,5 +56,5 @@ object ActorSystem {
         override val settings: KnoraSettingsImpl                = KnoraSettings(actorSystem)
         override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(actorSystem.settings.config)
       }
-    }.tap(_ => ZIO.logInfo(">>> ActorSystem Initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> ActorSystem Initialized <<<") @@ SLF4J.loggerName("org.knora.webapi.core.ActorSystem"))
 }
