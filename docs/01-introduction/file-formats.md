@@ -5,7 +5,10 @@
 
 # File Formats in DSP-API
 
-Currently, only a limited number of file formats is accepted to be uploaded onto DSP. Some metadata is extracted from the files during the ingest but the file formats are not validated. Only image file formats are currently migrated into another format. Both, the migrated version of the file and the original are kept.
+Currently, only a limited number of file formats is accepted to be uploaded onto DSP.
+Some metadata is extracted from the files during the ingest but the file formats are not validated.
+Only image file formats are currently migrated into another format.
+Both, the migrated version of the file and the original are kept.
 
 The following table shows the accepted file formats:
 
@@ -14,7 +17,7 @@ The following table shows the accepted file formats:
 | Text, XML<sup>1</sup> | TXT, XML, XSL, XSD                     | No                                                                         |
 | Tables                | CSV, XLS, XLSX                         | No                                                                         |
 | 2D Images             | JPG, JPEG, JP2, PNG, TIF, TIFF         | Yes, converted to JPEG 2000 by [Sipi](https://github.com/dasch-swiss/sipi) |
-| Audio                 | MPEG (MP3), MP4, WAV                   | No                                                                         |
+| Audio                 | MPEG (MP3), WAV                        | No                                                                         |
 | Video                 | MP4                                    | No                                                                         |
 | Office                | PDF, DOC, DOCX, PPT, PPTX              | No                                                                         |
 | Archives              | ZIP, TAR, GZ, Z, TAR.GZ, TGZ, GZIP, 7Z | No                                                                         |
