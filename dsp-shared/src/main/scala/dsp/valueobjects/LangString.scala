@@ -1,6 +1,6 @@
 package dsp.valueobjects
 
-import zio._
+import com.typesafe.scalalogging.Logger
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
@@ -11,6 +11,8 @@ import dsp.errors.ValidationException
 sealed abstract case class LangString private (language: LanguageCode, value: String)
 
 object LangString {
+
+  val log: Logger = Logger(this.getClass())
 
   /**
    * Creates a [[zio.prelude.Validation]] that either fails with a ValidationException or succeeds with a LangString value object.
@@ -53,18 +55,11 @@ object LangString {
       .fold(
         e => {
           val unsafe = new LangString(language, value) {}
-          executeZioLog(ZIO.logWarning(s"Called unsafeMake() for an invalid $unsafe: $e"))
+          log.warn(s"Called unsafeMake() for an invalid LangString '$unsafe': $e")
           unsafe
         },
         langString => langString
       )
-
-  private def executeZioLog(z: UIO[Unit]): Unit = { // TODO-BL: [discuss] this should not be necessary!
-    val runtime = Runtime.default
-    Unsafe.unsafe { implicit unsafe =>
-      runtime.unsafe.run(z).getOrThrowFiberFailure()
-    }
-  }
 }
 
 /**

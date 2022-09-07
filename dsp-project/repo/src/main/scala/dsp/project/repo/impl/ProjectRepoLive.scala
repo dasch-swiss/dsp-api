@@ -18,8 +18,8 @@ import dsp.valueobjects.ProjectId
 /**
  * Project repo live implementation.
  *
- * @param projects    a map of projects (UUID -> Project).
- * @param lookupTable a map of projects (shortCode -> UUID).
+ * @param projects    a map of project UUIDs to projects (UUID -> Project).
+ * @param lookupTable a map of shortcodes to projects (shortCode -> UUID).
  */
 final case class ProjectRepoLive(
   projects: TMap[UUID, Project],

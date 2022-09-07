@@ -16,7 +16,10 @@ import dsp.errors.ValidationException
  */
 object LangStringSpec extends ZIOSpecDefault {
 
-  def spec = (langStringTest + multiLangStringTest)
+  def spec = suite("LangStringSpec")(
+    langStringTest,
+    multiLangStringTest
+  )
 
   private val langStringTest = suite("LangString")(
     suite("`make()` smart constructor")(
