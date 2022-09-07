@@ -20,7 +20,7 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
-      - name: Upload coverage data to codecov 
+      - name: Upload coverage data to codecov
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
