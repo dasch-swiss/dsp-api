@@ -20,6 +20,13 @@ import dsp.valueobjects.V2
 
 object ProjectHandlerSpec extends ZIOSpecDefault {
 
+  private def initializeHandler(projects: Project*): URIO[ProjectHandler with ProjectRepoMock, ProjectHandler] =
+    for {
+      repo    <- ZIO.service[ProjectRepoMock]
+      _       <- repo.initializeRepo(projects: _*)
+      handler <- ZIO.service[ProjectHandler]
+    } yield handler
+
   private def getValidated[NonEmptyChunk[E], A](validation: Validation[Throwable, A]): A =
     validation.fold(e => throw e.head, v => v)
 
@@ -49,17 +56,13 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
   private val getAllProjectsTests = suite("get all projects")(
     test("return an empty list when requesting all users when there are none") {
       for {
-        projectHandler    <- ZIO.service[ProjectHandler]
-        retrievedProjects <- projectHandler.getProjects()
+        handler           <- initializeHandler()
+        retrievedProjects <- handler.getProjects()
       } yield assertTrue(retrievedProjects == List.empty)
     },
     test("return all projects when several are stored") {
       for {
-        handler <- ZIO.service[ProjectHandler]
-
-        _ <- handler.createProject(project)
-        _ <- handler.createProject(project2)
-
+        handler           <- initializeHandler(project, project2)
         retrievedProjects <- handler.getProjects()
         shortCodeSet       = retrievedProjects.map(_.id.shortCode).toSet
       } yield assertTrue(retrievedProjects.length == 2) &&
@@ -71,14 +74,13 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     suite("get a project by ID")(
       test("return an error if a project is requested that does not exist") {
         for {
-          handler <- ZIO.service[ProjectHandler]
+          handler <- initializeHandler()
           res     <- handler.getProjectById(id).exit
         } yield assert(res)(failsWithA[NotFoundException])
       },
       test("return a project that exists") {
         for {
-          handler <- ZIO.service[ProjectHandler]
-          id      <- handler.createProject(project)
+          handler <- initializeHandler(project)
           res     <- handler.getProjectById(id)
         } yield assertTrue(res.id == id)
       }
@@ -86,14 +88,13 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     suite("get a project by shortCode")(
       test("return an error if a project is requested that does not exist") {
         for {
-          handler <- ZIO.service[ProjectHandler]
+          handler <- initializeHandler()
           res     <- handler.getProjectByShortCode(shortCode).exit
         } yield assert(res)(failsWithA[NotFoundException])
       },
       test("return a project that exists") {
         for {
-          handler <- ZIO.service[ProjectHandler]
-          id      <- handler.createProject(project)
+          handler <- initializeHandler(project)
           res     <- handler.getProjectByShortCode(shortCode)
         } yield assertTrue(res.id == id)
       }
@@ -121,8 +122,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
   private val deleteProjectTests = suite("delete a project")(
     test("successfully delete a project") {
       for {
-        handler            <- ZIO.service[ProjectHandler]
-        id                 <- handler.createProject(project)
+        handler            <- initializeHandler(project)
         deletedId          <- handler.deleteProject(id)
         retieveAfterDelete <- handler.getProjectById(id).exit
       } yield assertTrue(deletedId == id) &&
@@ -130,7 +130,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     },
     test("fail to delete a project that does not exist") {
       for {
-        handler <- ZIO.service[ProjectHandler]
+        handler <- initializeHandler()
         delete  <- handler.deleteProject(id).exit
       } yield assert(delete)(fails(isSubtype[NotFoundException](anything)))
     }
@@ -140,15 +140,13 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     suite("update project name")(
       test("successfully update a project name with a valid name") {
         for {
-          handler <- ZIO.service[ProjectHandler]
-          id      <- handler.createProject(project)
+          handler <- initializeHandler(project)
           res     <- handler.updateProjectName(id, name2).exit
         } yield assert(res)(succeeds(equalTo(id)))
       },
       test("not update a project name of a non-existing project")(
         for {
-          handler <- ZIO.service[ProjectHandler]
-          _       <- handler.createProject(project)
+          handler <- initializeHandler(project)
           res     <- handler.updateProjectName(id2, name2).exit
         } yield assert(res)(fails(isSubtype[NotFoundException](anything)))
       )
@@ -156,15 +154,13 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     suite("update project description")(
       test("successfully update a project description with a valid description") {
         for {
-          handler <- ZIO.service[ProjectHandler]
-          id      <- handler.createProject(project)
+          handler <- initializeHandler(project)
           res     <- handler.updateProjectDescription(id, description2).exit
         } yield assert(res)(succeeds(equalTo(id)))
       },
       test("not update a project description of a non-existing project")(
         for {
-          handler <- ZIO.service[ProjectHandler]
-          _       <- handler.createProject(project)
+          handler <- initializeHandler(project)
           res     <- handler.updateProjectDescription(id2, description2).exit
         } yield assert(res)(fails(isSubtype[NotFoundException](anything)))
       )

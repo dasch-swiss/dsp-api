@@ -92,13 +92,21 @@ final case class ProjectRepoMock(
       _ => ZIO.logDebug(s"Deleted project: ${id.uuid}")
     )
 
+  /**
+   * Additional method for the test implementation of ProjectRepo.
+   * Adds a variable amount of Projects to the Repo
+   */
+  def initializeRepo(pp: Project*) = for {
+    ids <- ZIO.collectAll(pp.map(storeProject(_)))
+  } yield ids
+
 }
 
 /**
  * Companion object providing the layer with an initialized implementation of ProjectRepo
  */
 object ProjectRepoMock {
-  val layer: ZLayer[Any, Nothing, ProjectRepo] =
+  val layer: ZLayer[Any, Nothing, ProjectRepoMock] =
     ZLayer {
       for {
         projects <- TMap.empty[UUID, Project].commit
