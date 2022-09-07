@@ -24,6 +24,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -33,6 +34,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings._
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the Knora server and
@@ -52,13 +54,13 @@ abstract class ITKnoraLiveSpec
    * The `Environment` that we require to exist at startup.
    * Can be overriden in specs that need other implementations.
    */
-  type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  type Environment = core.LayersTest.DefaultTestEnvironmentWithSipi
 
   /**
    * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers = core.LayersTest.defaultLayersTestWithoutSipi
+  lazy val effectLayers = core.LayersTest.defaultLayersTestWithSipi
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
@@ -68,10 +70,7 @@ abstract class ITKnoraLiveSpec
     Any,
     Any,
     Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ effectLayers
-
-  // no idea why we need that, but we do
-  private val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // add scope to bootstrap
   private val bootstrapWithScope = Scope.default >>>
@@ -102,12 +101,9 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  // this effect represents our application
-  private val appServerTest =
-    for {
-      _ <- core.AppServer.start(false, false)
-      _ <- prepareRepository(rdfDataObjects) // main difference to the live version
-    } yield ()
+  // some effects
+  private val appServerTest = AppServer.start(false, true)
+  private val prepare       = prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
 
   /* Here we start our main effect in a separate fiber */
   Unsafe.unsafe { implicit u =>
@@ -125,29 +121,16 @@ abstract class ITKnoraLiveSpec
   val baseApiUrl          = settings.internalKnoraApiBaseUrl
   val baseInternalSipiUrl = settings.internalSipiBaseUrl
 
-  final override def beforeAll(): Unit = {}
-  // waits until knora is up and running
-  // applicationStateRunning(appActor, system)
-
-  // loadTestData
-  // loadTestData(rdfDataObjects)
+  final override def beforeAll(): Unit =
+    /* Here we prepare the repository before each suit runs */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(prepare)
+    }
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
-    }
-
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.loadTestData(rdfDataObjects)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
     }
 
   protected def getResponseStringOrThrow(request: HttpRequest): String =

@@ -11,6 +11,10 @@
         </encoder>
     </appender>
 
+    <root level="ERROR">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
     <logger name="org.eclipse.rdf4j.rio.RDFParserRegistry" level="ERROR"/>
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
@@ -61,12 +65,7 @@
     <logger name="M-CacheServiceManager" level="INFO"/>
     <logger name="M-CacheSerialization" level="INFO"/>
 
-    <!-- layers -->
-    <logger name="org.knora.webapi.core.ActorSystem" level="INFO"/>
-
     <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 
-    <root level="ERROR">
-        <appender-ref ref="STDOUT"/>
-    </root>
+    
 </configuration>

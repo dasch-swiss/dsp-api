@@ -22,6 +22,7 @@ import scala.concurrent.Await
 import scala.concurrent.Future
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
@@ -29,6 +30,7 @@ import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.LogAspect
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -60,7 +62,7 @@ abstract class R2RSpec
     Any,
     Any,
     Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ effectLayers
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // add scope to bootstrap
   private val bootstrapWithScope = Scope.default >>>
@@ -91,12 +93,9 @@ abstract class R2RSpec
         .getOrThrowFiberFailure()
     }
 
-  // this effect represents our application
-  private val appServerTest =
-    for {
-      _ <- core.AppServer.start(false, false)
-      _ <- prepareRepository(rdfDataObjects) // main difference to the live version
-    } yield ()
+  // some effects
+  private val appServerTest = AppServer.start(false, false)
+  private val prepare       = prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
 
   /* Here we start our main effect in a separate fiber */
   Unsafe.unsafe { implicit u =>
@@ -112,8 +111,11 @@ abstract class R2RSpec
   // needed by some tests
   val routeData = KnoraRouteData(system, appActor)
 
-  final override def beforeAll(): Unit = {}
-  // waits until knora is up and running
+  final override def beforeAll(): Unit =
+    /* Here we prepare the repository before each suit runs */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(prepare)
+    }
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */

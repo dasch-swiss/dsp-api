@@ -31,6 +31,7 @@ import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.FileWriteException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -41,6 +42,7 @@ import org.knora.webapi.settings._
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the Knora-API server
@@ -76,10 +78,7 @@ abstract class E2ESpec
     Any,
     Any,
     Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ effectLayers
-
-  // no idea why we need that, but we do
-  private val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // add scope to bootstrap
   private val bootstrapWithScope = Scope.default >>>
@@ -110,12 +109,9 @@ abstract class E2ESpec
         .getOrThrowFiberFailure()
     }
 
-  // this effect represents our application
-  private val appServerTest =
-    for {
-      _ <- core.AppServer.start(false, false)
-      _ <- prepareRepository(rdfDataObjects) // main difference to the live version
-    } yield ()
+  // some effects
+  private val appServerTest = AppServer.start(false, false)
+  private val prepare       = prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
 
   /* Here we start our main effect in a separate fiber */
   Unsafe.unsafe { implicit u =>
@@ -133,32 +129,16 @@ abstract class E2ESpec
   val routeData  = KnoraRouteData(system, appActor)
   val baseApiUrl = settings.internalKnoraApiBaseUrl
 
-  final override def beforeAll(): Unit = {}
-  // create temp data dir if not present
-  // createTmpFileDir()
-
-  // waits until knora is up and running
-  // applicationStateRunning(appActor, system)
-
-  // loadTestData
-  // loadTestData(rdfDataObjects)
+  final override def beforeAll(): Unit =
+    /* Here we prepare the repository before each suit runs */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(prepare)
+    }
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
-    }
-
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.loadTestData(rdfDataObjects)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
     }
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 30.seconds): HttpResponse =

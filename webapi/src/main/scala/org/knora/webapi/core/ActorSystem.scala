@@ -15,7 +15,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
-import zio.logging.backend.SLF4J
 
 @accessible
 trait ActorSystem {
@@ -36,13 +35,13 @@ object ActorSystem {
           defaultExecutionContext = Some(ec)
         )
       )
-      .tap(_ => ZIO.logInfo(">>> Acquire Actor System <<<"))
+      .tap(_ => ZIO.debug(">>> Acquire Actor System <<<"))
       .orDie
 
   private def release(system: akka.actor.ActorSystem): URIO[Any, actor.Terminated] =
     ZIO
       .fromFuture(_ => system.terminate())
-      .tap(_ => ZIO.logInfo(">>> Release Actor System <<<") @@ SLF4J.loggerName("org.knora.webapi.core.ActorSystem"))
+      .tap(_ => ZIO.debug(">>> Release Actor System <<<"))
       .orDie
 
   val layer: ZLayer[AppConfig, Nothing, ActorSystem] =
@@ -50,11 +49,11 @@ object ActorSystem {
       for {
         config      <- ZIO.service[AppConfig]
         context     <- ZIO.executor.map(_.asExecutionContext)
-        actorSystem <- ZIO.acquireRelease(acquire(config, context))(release _) //
+        actorSystem <- ZIO.acquireRelease(acquire(config, context))(release _)
       } yield new ActorSystem {
         override val system: akka.actor.ActorSystem             = actorSystem
         override val settings: KnoraSettingsImpl                = KnoraSettings(actorSystem)
         override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(actorSystem.settings.config)
       }
-    }.tap(_ => ZIO.logInfo(">>> ActorSystem Initialized <<<") @@ SLF4J.loggerName("org.knora.webapi.core.ActorSystem"))
+    }
 }

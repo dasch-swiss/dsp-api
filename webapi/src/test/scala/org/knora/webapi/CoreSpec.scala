@@ -55,7 +55,7 @@ abstract class CoreSpec
     Any,
     Any,
     Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers >>> SLF4J.slf4j ++ effectLayers
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // add scope to bootstrap
   private val bootstrapWithScope = Scope.default >>>
@@ -86,12 +86,9 @@ abstract class CoreSpec
         .getOrThrowFiberFailure()
     }
 
-  // this effect represents our application
-  private val appServerTest =
-    for {
-      _ <- AppServer.start(false, false)
-      _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-    } yield ()
+  // some effects
+  private val appServerTest = AppServer.start(false, false)
+  private val prepare       = prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
 
   /* Here we start our app server */
   Unsafe.unsafe { implicit u =>
@@ -109,13 +106,16 @@ abstract class CoreSpec
   val cacheServiceSettings = new CacheServiceSettings(system.settings.config)
   val responderData        = ResponderData(system, appActor, settings, cacheServiceSettings)
 
-  final override def beforeAll(): Unit = {}
+  final override def beforeAll(): Unit =
+    /* Here we prepare the repository before each suit runs */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(prepare)
+    }
 
-  final override def afterAll(): Unit = {
+  final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
     }
-  }
 
 }

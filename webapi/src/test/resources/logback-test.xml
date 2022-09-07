@@ -11,6 +11,9 @@
         </encoder>
     </appender>
 
+    <root level="ERROR">
+        <appender-ref ref="STDOUT"/>
+    </root>
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
@@ -132,8 +135,4 @@
     <logger name="M-CacheServiceManager" level="ERROR"/>
     <logger name="M-CacheSerialization" level="ERROR"/>
 
-    <root level="ERROR">
-        <appender-ref ref="STDOUT"/>
-        <!--<appender-ref ref="R"/>-->
-    </root>
 </configuration>
