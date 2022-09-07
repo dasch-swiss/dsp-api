@@ -13,6 +13,7 @@ import dsp.project.api.ProjectRepo
 import dsp.project.domain.Project
 import dsp.valueobjects.Project._
 import dsp.valueobjects._
+import zio._
 
 /**
  * This spec is used to test all [[dsp.user.repo.ProjectRepo]] implementations.
@@ -32,7 +33,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
 
   def spec = suite("ProjectRepoImplSpec")(
     projectRepoMockTest,
-    projectRepoLiveTest
+    projectRepoLiveTest,
+    projectRepoMockTestFunctionalityTest
   )
 
   val getProjectTest = suite("retrieve a single project")(
@@ -172,5 +174,24 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
   val projectRepoLiveTest = suite("ProjectRepo - Live")(
     projectTests
   ).provide(ProjectRepoLive.layer)
+
+  val projectRepoMockTestFunctionalityTest = suite("ProjectRepoMock - test implementation specific functionality")(
+    suite("initialize repo with projects")(
+      test("initialize repo empty") {
+        for {
+          repo     <- ZIO.service[ProjectRepoMock]
+          _        <- repo.initializeRepo()
+          contents <- repo.getProjects()
+        } yield (assertTrue(contents == Nil))
+      },
+      test("initialize repo with a project") {
+        for {
+          repo     <- ZIO.service[ProjectRepoMock]
+          _        <- repo.initializeRepo(project)
+          contents <- repo.getProjects()
+        } yield (assertTrue(contents == scala.collection.immutable.List(project)))
+      }
+    )
+  ).provide(ProjectRepoMock.layer)
 
 }
