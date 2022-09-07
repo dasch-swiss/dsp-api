@@ -12,8 +12,6 @@ import dsp.project.domain._
 import dsp.valueobjects.Project._
 import dsp.valueobjects._
 
-// import java.util.UUID
-
 /**
  * The trait (interface) for the project repository. The project repository is responsible for storing and retrieving projects.
  * Needs to be used by the project repository implementations.

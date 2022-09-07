@@ -5,6 +5,7 @@
 
 package dsp.project.repo.impl
 
+import zio._
 import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
@@ -13,7 +14,6 @@ import dsp.project.api.ProjectRepo
 import dsp.project.domain.Project
 import dsp.valueobjects.Project._
 import dsp.valueobjects._
-import zio._
 
 /**
  * This spec is used to test all [[dsp.user.repo.ProjectRepo]] implementations.
