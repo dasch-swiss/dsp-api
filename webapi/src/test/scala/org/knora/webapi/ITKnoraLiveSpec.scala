@@ -118,8 +118,8 @@ abstract class ITKnoraLiveSpec
   val appActor                                         = router.ref
 
   // needed by some tests
-  val baseApiUrl          = settings.internalKnoraApiBaseUrl
-  val baseInternalSipiUrl = settings.internalSipiBaseUrl
+  val baseApiUrl          = config.knoraApi.internalKnoraApiBaseUrl
+  val baseInternalSipiUrl = config.sipi.internalBaseUrl
 
   final override def beforeAll(): Unit =
     /* Here we prepare the repository before each suit runs */

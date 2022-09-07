@@ -318,6 +318,6 @@ object TestClientService {
         config     <- ZIO.service[AppConfig]
         httpClient <- ZIO.acquireRelease(acquire)(release(_)(sys.system))
       } yield TestClientService(config, httpClient, sys.system)
-    }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
+    }
 
 }
