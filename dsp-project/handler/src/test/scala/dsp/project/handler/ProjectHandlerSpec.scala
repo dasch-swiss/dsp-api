@@ -44,7 +44,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     createProjectTests,
     deleteProjectTests,
     updateProjectTests
-  )
+  ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
 
   private val getAllProjectsTests = suite("get all projects")(
     test("return an empty list when requesting all users when there are none") {
@@ -65,7 +65,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
       } yield assertTrue(retrievedProjects.length == 2) &&
         assertTrue(shortCodeSet == Set(shortCode, shortCode2))
     }
-  ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
+  )
 
   private val getProjectTests = suite("get a single projects")(
     suite("get a project by ID")(
@@ -98,7 +98,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
         } yield assertTrue(res.id == id)
       }
     )
-  ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
+  )
 
   private val createProjectTests = suite("create a project")(
     test("successfully create a project") {
@@ -116,7 +116,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
         res                          <- handler.createProject(projectWithOccupiedShortCode).exit
       } yield assert(res)(fails(isSubtype[DuplicateValueException](anything)))
     }
-  ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
+  )
 
   private val deleteProjectTests = suite("delete a project")(
     test("successfully delete a project") {
@@ -134,7 +134,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
         delete  <- handler.deleteProject(id).exit
       } yield assert(delete)(fails(isSubtype[NotFoundException](anything)))
     }
-  ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
+  )
 
   private val updateProjectTests = suite("update a project")(
     suite("update project name")(
@@ -169,5 +169,5 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
         } yield assert(res)(fails(isSubtype[NotFoundException](anything)))
       )
     )
-  ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
+  )
 }
