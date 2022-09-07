@@ -202,7 +202,7 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
 .PHONY: test
-test: build test-shared test-user-slice test-role-slice ## runs all tests
+test: build test-shared test-user-slice test-role-slice test-project-slice ## runs all tests
 	sbt -v coverage "webapi/test"
 	sbt -v coverage "schemaCore/test"
 	sbt coverageAggregate
