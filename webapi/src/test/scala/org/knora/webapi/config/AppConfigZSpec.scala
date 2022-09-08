@@ -20,6 +20,6 @@ object AppConfigZSpec extends ZIOSpecDefault {
         assertTrue(appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS)) &&
         assertTrue(appConfig.bcryptPasswordStrength == User.PasswordStrength(12))
       }
-    }.provideCustomLayer(AppConfig.live)
+    }.provideLayer(AppConfig.live)
   )
 }

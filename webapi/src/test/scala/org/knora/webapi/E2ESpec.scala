@@ -84,7 +84,7 @@ abstract class E2ESpec
   private val bootstrapWithScope = Scope.default >>>
     bootstrap +!+ ZLayer.environment[Scope]
 
-  // maybe a configured runtime?
+  // create a configured runtime
   val runtime = Unsafe.unsafe { implicit u =>
     Runtime.unsafe
       .fromLayer(bootstrapWithScope)

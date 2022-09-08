@@ -128,27 +128,26 @@ object AppServer {
     requiresIIIFService: Boolean
   ) =
     for {
-      state         <- ZIO.service[State]
-      serverBinding <- ZIO.service[HttpServer]
-      _             <- state.set(AppState.WaitingForTriplestore)
-      _             <- checkTriplestoreService
-      _             <- state.set(AppState.TriplestoreReady)
-      _             <- state.set(AppState.UpdatingRepository)
-      _             <- upgradeRepository(requiresRepository)
-      _             <- state.set(AppState.RepositoryUpToDate)
-      _             <- state.set(AppState.CreatingCaches)
-      _             <- buildAllCaches
-      _             <- state.set(AppState.CachesReady)
-      _             <- state.set(AppState.LoadingOntologies)
-      _             <- populateOntologyCaches(requiresRepository)
-      _             <- state.set(AppState.OntologiesReady)
-      _             <- state.set(AppState.WaitingForIIIFService)
-      _             <- checkIIIFService(requiresIIIFService)
-      _             <- state.set(AppState.IIIFServiceReady)
-      _             <- state.set(AppState.WaitingForCacheService)
-      _             <- checkCacheService
-      _             <- state.set(AppState.CacheServiceReady)
-      _             <- printBanner
-      _             <- state.set(AppState.Running)
+      state <- ZIO.service[State]
+      _     <- state.set(AppState.WaitingForTriplestore)
+      _     <- checkTriplestoreService
+      _     <- state.set(AppState.TriplestoreReady)
+      _     <- state.set(AppState.UpdatingRepository)
+      _     <- upgradeRepository(requiresRepository)
+      _     <- state.set(AppState.RepositoryUpToDate)
+      _     <- state.set(AppState.CreatingCaches)
+      _     <- buildAllCaches
+      _     <- state.set(AppState.CachesReady)
+      _     <- state.set(AppState.LoadingOntologies)
+      _     <- populateOntologyCaches(requiresRepository)
+      _     <- state.set(AppState.OntologiesReady)
+      _     <- state.set(AppState.WaitingForIIIFService)
+      _     <- checkIIIFService(requiresIIIFService)
+      _     <- state.set(AppState.IIIFServiceReady)
+      _     <- state.set(AppState.WaitingForCacheService)
+      _     <- checkCacheService
+      _     <- state.set(AppState.CacheServiceReady)
+      _     <- printBanner
+      _     <- state.set(AppState.Running)
     } yield ()
 }

@@ -57,11 +57,11 @@ object SipiTestContainer {
 
     sipiContainer.start()
     sipiContainer
-  }.tap(_ => ZIO.debug(">>> Acquire Sipi TestContainer <<<"))
+  }.tap(_ => ZIO.logInfo(">>> Acquire Sipi TestContainer <<<"))
 
   def release(container: GenericContainer[Nothing]): UIO[Unit] = ZIO.attemptBlocking {
     container.stop()
-  }.orDie.tap(_ => ZIO.debug(">>> Release Sipi TestContainer <<<"))
+  }.orDie.tap(_ => ZIO.logInfo(">>> Release Sipi TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, SipiTestContainer] =
     ZLayer.scoped {

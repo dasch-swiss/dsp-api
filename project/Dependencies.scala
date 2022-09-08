@@ -20,28 +20,29 @@ object Dependencies {
   val AkkaActorVersion = "2.6.19"
   val JenaVersion      = "4.6.0"
 
-  val ZioVersion        = "2.0.2"
-  val ZioHttpVersion    = "2.0.0-RC4"
-  val ZioJsonVersion    = "0.3.0-RC11"
-  val ZioConfigVersion  = "3.0.2"
-  val ZioSchemaVersion  = "0.2.0"
-  val ZioLoggingVersion = "2.1.0"
-  val ZioZmxVersion     = "2.0.0-RC4"
-  val ZioPreludeVersion = "1.0.0-RC15"
+  val ZioVersion                  = "2.0.2"
+  val ZioHttpVersion              = "2.0.0-RC4"
+  val ZioJsonVersion              = "0.3.0-RC11"
+  val ZioConfigVersion            = "3.0.2"
+  val ZioSchemaVersion            = "0.2.0"
+  val ZioLoggingVersion           = "2.1.0"
+  val ZioMetricsConnectorsVersion = "2.0.0"
+  val ZioPreludeVersion           = "1.0.0-RC15"
 
   // ZIO - all Scala 3 compatible
-  val zio               = "dev.zio" %% "zio"                 % ZioVersion
-  val zioMacros         = "dev.zio" %% "zio-macros"          % ZioVersion
-  val zioHttp           = "io.d11"  %% "zhttp"               % ZioHttpVersion
-  val zioJson           = "dev.zio" %% "zio-json"            % ZioJsonVersion
-  val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
-  val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
-  val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
-  val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
-  val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
-  val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
-  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.0"
-  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0"
+  val zio                  = "dev.zio" %% "zio"                    % ZioVersion
+  val zioMacros            = "dev.zio" %% "zio-macros"             % ZioVersion
+  val zioHttp              = "io.d11"  %% "zhttp"                  % ZioHttpVersion
+  val zioJson              = "dev.zio" %% "zio-json"               % ZioJsonVersion
+  val zioPrelude           = "dev.zio" %% "zio-prelude"            % ZioPreludeVersion
+  val zioLogging           = "dev.zio" %% "zio-logging"            % ZioLoggingVersion
+  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j"      % ZioLoggingVersion
+  val zioConfig            = "dev.zio" %% "zio-config"             % ZioConfigVersion
+  val zioConfigMagnolia    = "dev.zio" %% "zio-config-magnolia"    % ZioConfigVersion
+  val zioConfigTypesafe    = "dev.zio" %% "zio-config-typesafe"    % ZioConfigVersion
+  val zioTest              = "dev.zio" %% "zio-test"               % ZioVersion
+  val zioTestSbt           = "dev.zio" %% "zio-test-sbt"           % ZioVersion
+  val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -158,6 +159,7 @@ object Dependencies {
     zioLogging,
     zioLoggingSlf4j,
     zioMacros,
+    zioMetricsConnectors,
     zioPrelude,
     zioTest    % Test,
     zioTestSbt % Test

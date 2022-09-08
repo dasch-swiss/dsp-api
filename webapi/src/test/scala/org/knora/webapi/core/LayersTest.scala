@@ -19,7 +19,7 @@ import org.knora.webapi.testservices.TestClientService
 
 object LayersTest {
 
-  type DefaultTestEnvironmentWithoutSipi = LayersLive.DSPEnvironmentLive with FusekiTestContainer with TestClientService
+  type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
   // All live layers and both Fuseki and Sipi testcontainers

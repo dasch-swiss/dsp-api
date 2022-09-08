@@ -127,6 +127,8 @@
     <logger name="org.knora.webapi.e2e.admin.StoreADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
 
+   <logger name="org.knora.webapi.testcontainers" level="INFO"/> 
+
     <!-- metrics logging (info level turns them on, error level turns them off -->
     <logger name="M-Main$" level="ERROR"/>
     <logger name="M-Authenticator" level="ERROR"/>

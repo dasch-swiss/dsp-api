@@ -35,13 +35,13 @@ object ActorSystem {
           defaultExecutionContext = Some(ec)
         )
       )
-      .tap(_ => ZIO.debug(">>> Acquire Actor System <<<"))
+      .tap(_ => ZIO.logInfo(">>> Acquire Actor System <<<"))
       .orDie
 
   private def release(system: akka.actor.ActorSystem): URIO[Any, actor.Terminated] =
     ZIO
       .fromFuture(_ => system.terminate())
-      .tap(_ => ZIO.debug(">>> Release Actor System <<<"))
+      .tap(_ => ZIO.logInfo(">>> Release Actor System <<<"))
       .orDie
 
   val layer: ZLayer[AppConfig, Nothing, ActorSystem] =

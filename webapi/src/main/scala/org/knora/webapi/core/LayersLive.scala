@@ -21,7 +21,7 @@ object LayersLive {
   /**
    * The `Environment` that we require to exist at startup.
    */
-  type DSPEnvironmentLive =
+  type DspEnvironmentLive =
     ActorSystem
       with ApiRoutes
       with AppConfig
@@ -40,7 +40,7 @@ object LayersLive {
   // all effect layers needed to provide the `Environment`
   val dspLayersLive =
     ZLayer.make[
-      DSPEnvironmentLive
+      DspEnvironmentLive
     ](
       ActorSystem.layer,
       ApiRoutes.layer,

@@ -78,7 +78,7 @@ object AppConfigForTestContainers {
         _               <- ZIO.attempt(StringFormatter.initForTest()).orDie     // needs early init before first usage
         _               <- ZIO.attempt(RdfFeatureFactory.init(appConfig)).orDie // needs early init before first usage
       } yield alteredConfig
-    }.tap(_ => ZIO.debug(">>> App Config for Fuseki and Sipi Testcontainers Initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> App Config for Fuseki and Sipi Testcontainers Initialized <<<"))
 
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
@@ -92,5 +92,5 @@ object AppConfigForTestContainers {
         _               <- ZIO.attempt(StringFormatter.initForTest()).orDie     // needs early init before first usage
         _               <- ZIO.attempt(RdfFeatureFactory.init(appConfig)).orDie // needs early init before first usage
       } yield alteredConfig
-    }.tap(_ => ZIO.debug(">>> App Config for Fuseki only Testcontainers Initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> App Config for Fuseki only Testcontainers Initialized <<<"))
 }
