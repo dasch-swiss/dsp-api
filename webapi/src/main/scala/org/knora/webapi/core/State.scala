@@ -29,7 +29,7 @@ object State {
   sealed abstract private class StateImpl(state: Ref[AppState]) extends State {
 
     override def set(v: AppState): UIO[Unit] =
-      state.set(v)
+      state.set(v) *> ZIO.logInfo(s"AppState set to ${v.toString()}")
 
     override val get: UIO[AppState] =
       state.get

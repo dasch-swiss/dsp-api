@@ -86,15 +86,6 @@ abstract class CoreSpec
         .getOrThrowFiberFailure()
     }
 
-  // some effects
-  private val appServerTest = AppServer.start(false, false)
-  private val prepare       = prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-
-  /* Here we start our app server */
-  Unsafe.unsafe { implicit u =>
-    runtime.unsafe.run(appServerTest)
-  }
-
   implicit lazy val system: actor.ActorSystem          = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
@@ -107,9 +98,16 @@ abstract class CoreSpec
   val responderData        = ResponderData(system, appActor, settings, cacheServiceSettings)
 
   final override def beforeAll(): Unit =
-    /* Here we prepare the repository before each suit runs */
+    /* Here we start our app and initialize the repository before each suit runs */
     Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(prepare)
+      runtime.unsafe
+        .run(
+          (for {
+            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
+          } yield ()).provideSomeLayer(AppServer.test(false, false))
+        )
+        .getOrThrow()
+
     }
 
   final override def afterAll(): Unit =

@@ -23,89 +23,109 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * The application bootstrapper
  */
-object AppServer {
+final case class AppServer(
+  state: State,
+  ts: TriplestoreService,
+  ru: RepositoryUpdater,
+  as: ActorSystem,
+  ar: AppRouter,
+  iiifs: IIIFService,
+  cs: CacheService,
+  hs: HttpServer,
+  config: AppConfig
+) {
 
   /**
    * Checks if the TriplestoreService is running and the repository is properly initialized.
    */
-  private val checkTriplestoreService: ZIO[TriplestoreService with AppConfig, Nothing, Unit] =
+  private val checkTriplestoreService: ZIO[Any, Nothing, Unit] =
     for {
-      ts     <- ZIO.service[TriplestoreService]
+      _      <- state.set(AppState.WaitingForTriplestore)
       status <- ts.checkTriplestore().map(_.triplestoreStatus)
       _ <- status match {
-             case TriplestoreStatus.Available(msg)      => ZIO.logInfo(msg)
+             case TriplestoreStatus.Available(_)        => ZIO.unit
              case TriplestoreStatus.NotInitialized(msg) => ZIO.die(new Exception(msg))
              case TriplestoreStatus.Unavailable(msg)    => ZIO.die(new Exception(msg))
            }
+      _ <- state.set(AppState.TriplestoreReady)
     } yield ()
 
   /**
    * Initiates repository upgrade if `requiresRepository` is `true` an logs the result.
    */
-  private def upgradeRepository(requiresRepository: Boolean): ZIO[RepositoryUpdater, Nothing, Unit] =
-    if (requiresRepository)
-      ZIO
-        .service[RepositoryUpdater]
-        .flatMap(svc => svc.maybeUpgradeRepository)
-        .flatMap(response => ZIO.logInfo(response.message))
-    else
-      ZIO.unit
+  private def upgradeRepository(requiresRepository: Boolean): ZIO[Any, Nothing, Unit] =
+    for {
+      _ <- state.set(AppState.UpdatingRepository)
+      _ <- if (requiresRepository)
+             ru.maybeUpgradeRepository.flatMap(response => ZIO.logInfo(response.message))
+           else
+             ZIO.unit
+      _ <- state.set(AppState.RepositoryUpToDate)
+    } yield ()
 
   /* Initiates building of all caches */
-  private val buildAllCaches: ZIO[ActorSystem, Nothing, Unit] =
-    ZIO
-      .service[ActorSystem]
-      .map(_.settings)
-      .flatMap(settings => ZIO.attempt(CacheUtil.createCaches(settings.caches)))
-      .orDie
+  private val buildAllCaches: ZIO[Any, Nothing, Unit] =
+    for {
+      _ <- state.set(AppState.CreatingCaches)
+      _ <- ZIO.attempt {
+        CacheUtil.removeAllCaches()
+        CacheUtil.createCaches(as.settings.caches)
+      }.orDie
+      _ <- state.set(AppState.CachesReady)
+    } yield ()
 
   /* Initiates population of the ontology caches if `requiresRepository` is `true` */
-  private def populateOntologyCaches(requiresRepository: Boolean): ZIO[AppRouter, Nothing, Unit] =
-    if (requiresRepository)
-      ZIO
-        .service[AppRouter]
-        .flatMap(svc => svc.populateOntologyCaches)
-    else
-      ZIO.unit
+  private def populateOntologyCaches(requiresRepository: Boolean): ZIO[Any, Nothing, Unit] =
+    for {
+      _ <- state.set(AppState.LoadingOntologies)
+      _ <- if (requiresRepository)
+             ar.populateOntologyCaches
+           else
+             ZIO.unit
+      _ <- state.set(AppState.OntologiesReady)
+    } yield ()
 
   /* Checks if the IIIF service is running */
-  private def checkIIIFService(requiresIIIFService: Boolean): ZIO[IIIFService, Nothing, Unit] =
-    if (requiresIIIFService)
-      ZIO
-        .service[IIIFService]
-        .flatMap(svc => svc.getStatus())
-        .flatMap(status =>
-          status match {
-            case IIIFServiceStatusOK =>
-              ZIO.logInfo("IIIF service running")
-            case IIIFServiceStatusNOK =>
-              ZIO.logError("IIIF service not running") *> ZIO.die(new Exception("IIIF service not running"))
-          }
-        )
-    else
-      ZIO.unit
+  private def checkIIIFService(requiresIIIFService: Boolean): ZIO[Any, Nothing, Unit] =
+    for {
+      _ <- state.set(AppState.WaitingForIIIFService)
+      _ <- if (requiresIIIFService)
+             iiifs
+               .getStatus()
+               .flatMap(status =>
+                 status match {
+                   case IIIFServiceStatusOK =>
+                     ZIO.logInfo("IIIF service running")
+                   case IIIFServiceStatusNOK =>
+                     ZIO.logError("IIIF service not running") *> ZIO.die(new Exception("IIIF service not running"))
+                 }
+               )
+           else
+             ZIO.unit
+      _ <- state.set(AppState.IIIFServiceReady)
+    } yield ()
 
   /* Checks if the Cache service is running */
-  private val checkCacheService =
-    ZIO
-      .service[CacheService]
-      .flatMap(svc => svc.getStatus)
-      .flatMap(status =>
-        status match {
-          case CacheServiceStatusNOK =>
-            ZIO.logError("Cache service not running.") *> ZIO.die(new Exception("Cache service not running."))
-          case CacheServiceStatusOK =>
-            ZIO.logInfo("Cache service running.")
-        }
-      )
+  private val checkCacheService: ZIO[Any, Nothing, Unit] =
+    for {
+      _ <- state.set(AppState.WaitingForCacheService)
+      _ <- cs.getStatus
+             .flatMap(status =>
+               status match {
+                 case CacheServiceStatusNOK =>
+                   ZIO.logError("Cache service not running.") *> ZIO.die(new Exception("Cache service not running."))
+                 case CacheServiceStatusOK =>
+                   ZIO.unit
+               }
+             )
+      _ <- state.set(AppState.CacheServiceReady)
+    } yield ()
 
   /**
    * Prints the welcome message
    */
-  private val printBanner: ZIO[AppConfig with HttpServer, Nothing, Unit] =
+  private val printBanner: ZIO[Any, Nothing, Unit] =
     for {
-      config <- ZIO.service[AppConfig]
-      server <- ZIO.service[HttpServer]
       _ <-
         ZIO.logInfo(
           s"DSP-API Server started: ${config.knoraApi.internalKnoraApiBaseUrl}"
@@ -128,26 +148,64 @@ object AppServer {
     requiresIIIFService: Boolean
   ) =
     for {
-      state <- ZIO.service[State]
-      _     <- state.set(AppState.WaitingForTriplestore)
-      _     <- checkTriplestoreService
-      _     <- state.set(AppState.TriplestoreReady)
-      _     <- state.set(AppState.UpdatingRepository)
-      _     <- upgradeRepository(requiresRepository)
-      _     <- state.set(AppState.RepositoryUpToDate)
-      _     <- state.set(AppState.CreatingCaches)
-      _     <- buildAllCaches
-      _     <- state.set(AppState.CachesReady)
-      _     <- state.set(AppState.LoadingOntologies)
-      _     <- populateOntologyCaches(requiresRepository)
-      _     <- state.set(AppState.OntologiesReady)
-      _     <- state.set(AppState.WaitingForIIIFService)
-      _     <- checkIIIFService(requiresIIIFService)
-      _     <- state.set(AppState.IIIFServiceReady)
-      _     <- state.set(AppState.WaitingForCacheService)
-      _     <- checkCacheService
-      _     <- state.set(AppState.CacheServiceReady)
-      _     <- printBanner
-      _     <- state.set(AppState.Running)
+      _ <- ZIO.logInfo("=> Startup checks initiated")
+      _ <- checkTriplestoreService
+      _ <- upgradeRepository(requiresRepository)
+      _ <- buildAllCaches
+      _ <- populateOntologyCaches(requiresRepository)
+      _ <- checkIIIFService(requiresIIIFService)
+      _ <- checkCacheService
+      _ <- ZIO.logInfo("=> Startup checks finished")
+      _ <- printBanner
+      _ <- state.set(AppState.Running)
     } yield ()
+}
+
+object AppServer {
+
+  private type AppServerEnvironment =
+    TriplestoreService
+      with RepositoryUpdater
+      with ActorSystem
+      with AppRouter
+      with IIIFService
+      with CacheService
+      with HttpServer
+      with AppConfig
+      with State
+
+  private def startup(
+    requiresRepository: Boolean,
+    requiresIIIFService: Boolean
+  ): ZIO[AppServerEnvironment, Nothing, Unit] =
+    for {
+      state  <- ZIO.service[State]
+      ts     <- ZIO.service[TriplestoreService]
+      ru     <- ZIO.service[RepositoryUpdater]
+      as     <- ZIO.service[ActorSystem]
+      ar     <- ZIO.service[AppRouter]
+      iiifs  <- ZIO.service[IIIFService]
+      cs     <- ZIO.service[CacheService]
+      hs     <- ZIO.service[HttpServer]
+      config <- ZIO.service[AppConfig]
+      _      <- AppServer(state, ts, ru, as, ar, iiifs, cs, hs, config).start(requiresRepository, requiresIIIFService)
+    } yield ()
+
+  /* Live version */
+  val live: ZLayer[AppServerEnvironment, Nothing, Unit] =
+    ZLayer {
+      startup(true, true)
+    }
+
+  /**
+   * The AppServer layer, which initiates the startup checks. Before this layer does what it does,
+   * the complete server should have already been started.
+   *
+   * @param requiresRepository
+   * @param requiresIIIFService
+   */
+  def test(requiresRepository: Boolean, requiresIIIFService: Boolean): ZLayer[AppServerEnvironment, Nothing, Unit] =
+    ZLayer {
+      startup(requiresRepository, requiresIIIFService)
+    }
 }

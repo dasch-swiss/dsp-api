@@ -8,6 +8,8 @@ package org.knora.webapi
 import zio._
 import zio.logging.backend.SLF4J
 
+import org.knora.webapi.core.AppServer
+
 object Main extends ZIOApp {
 
   /**
@@ -30,9 +32,8 @@ object Main extends ZIOApp {
 
   /* Here we start our Application */
   override val run =
-    for {
-      _     <- core.AppServer.start(true, true)
+    (for {
       never <- ZIO.never
-    } yield never
+    } yield never).provideLayer(AppServer.live)
 
 }

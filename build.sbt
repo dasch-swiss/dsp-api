@@ -233,17 +233,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .dependsOn(shared, schemaCore)
 
 lazy val webapiJavaRunOptions = Seq(
-  // "-showversion",
   "-Xms1G",
   "-Xmx1G",
-  // "-verbose:gc",
-  // "-XX:+UseG1GC",
-  // "-XX:MaxGCPauseMillis=500"
-  "-Dcom.sun.management.jmxremote",
-  // "-Dcom.sun.management.jmxremote.port=1617",
-  "-Dcom.sun.management.jmxremote.authenticate=false",
-  "-Dcom.sun.management.jmxremote.ssl=false"
-  // "-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
+  "-Xss6M"
 )
 
 lazy val webapiJavaTestOptions = Seq(

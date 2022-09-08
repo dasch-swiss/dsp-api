@@ -93,15 +93,6 @@ abstract class R2RSpec
         .getOrThrowFiberFailure()
     }
 
-  // some effects
-  private val appServerTest = AppServer.start(false, false)
-  private val prepare       = prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-
-  /* Here we start our main effect in a separate fiber */
-  Unsafe.unsafe { implicit u =>
-    runtime.unsafe.run(appServerTest)
-  }
-
   // main difference to other specs (no own systen and executionContext defined)
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
   lazy val rdfDataObjects                       = List.empty[RdfDataObject]
@@ -112,9 +103,15 @@ abstract class R2RSpec
   val routeData = KnoraRouteData(system, appActor)
 
   final override def beforeAll(): Unit =
-    /* Here we prepare the repository before each suit runs */
+    /* Here we start our app and initialize the repository before each suit runs */
     Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(prepare)
+      runtime.unsafe
+        .run(
+          (for {
+            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
+          } yield ()).provideSomeLayer(AppServer.test(false, false))
+        )
+        .getOrThrow()
     }
 
   final override def afterAll(): Unit = {

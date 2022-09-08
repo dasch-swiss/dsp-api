@@ -101,15 +101,6 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  // some effects
-  private val appServerTest = AppServer.start(false, true)
-  private val prepare       = prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-
-  /* Here we start our main effect in a separate fiber */
-  Unsafe.unsafe { implicit u =>
-    runtime.unsafe.run(appServerTest)
-  }
-
   implicit lazy val system: akka.actor.ActorSystem     = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
@@ -122,9 +113,15 @@ abstract class ITKnoraLiveSpec
   val baseInternalSipiUrl = config.sipi.internalBaseUrl
 
   final override def beforeAll(): Unit =
-    /* Here we prepare the repository before each suit runs */
+    /* Here we start our app and initialize the repository before each suit runs */
     Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(prepare)
+      runtime.unsafe
+        .run(
+          (for {
+            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
+          } yield ()).provideSomeLayer(AppServer.test(false, true))
+        )
+        .getOrThrow()
     }
 
   final override def afterAll(): Unit =
