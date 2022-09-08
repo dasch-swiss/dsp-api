@@ -165,7 +165,6 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       "application/zip"                                                           -> "ZIP",
       "application/x-compressed-zip"                                              -> "ZIP",
       "audio/mpeg"                                                                -> "AUDIO",
-      "audio/mp4"                                                                 -> "AUDIO",
       "audio/wav"                                                                 -> "AUDIO",
       "audio/x-wav"                                                               -> "AUDIO",
       "audio/vnd.wave"                                                            -> "AUDIO",

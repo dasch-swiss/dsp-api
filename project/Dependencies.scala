@@ -61,8 +61,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.7" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.7" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.8" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.8" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -96,7 +96,7 @@ object Dependencies {
   val swaggerAkkaHttp = "com.github.swagger-akka-http" %% "swagger-akka-http" % "1.6.0"  // Scala 3 incompatible
   val titaniumJSONLD  = "com.apicatalog"                % "titanium-json-ld"  % "1.3.1"
   val xmlunitCore     = "org.xmlunit"                   % "xmlunit-core"      % "2.9.0"
-  val jacksonDatabind = "com.fasterxml.jackson.core"    % "jackson-databind"  % "2.13.3"
+  val jacksonDatabind = "com.fasterxml.jackson.core"    % "jackson-databind"  % "2.13.4"
 
   // test
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
