@@ -42,10 +42,9 @@ object HttpServer {
             ZIO
               .fromFuture(_ =>
                 serverBinding.terminate(
-                  new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS)
+                  new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.MILLISECONDS)
                 )
               )
-              .timeout(3.seconds)
               .tap(_ => ZIO.logInfo(">>> Release HTTP Server <<<"))
               .orDie
           }
