@@ -69,7 +69,7 @@ final case class ProjectRepoMock(
   /**
    * @inheritDoc
    */
-  override def checkShortCodeExists(shortCode: ShortCode): IO[Option[Nothing], Unit] =
+  override def checkIfShortCodeIsAvailable(shortCode: ShortCode): IO[Option[Nothing], Unit] =
     (for {
       exists <- lookupTableShortCodeToUuid.contains(shortCode).commit
       _ <- if (exists) ZIO.fail(None) // project shortcode does exist

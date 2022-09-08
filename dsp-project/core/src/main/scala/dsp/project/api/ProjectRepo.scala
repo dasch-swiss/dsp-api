@@ -53,12 +53,12 @@ trait ProjectRepo {
   def getProjectByShortCode(shortCode: ShortCode): IO[Option[Nothing], Project]
 
   /**
-   * Checks if a project ShortCode exists in the repo.
+   * Checks if a project ShortCode is available or if it already exists in the repo.
    *
    * @param shortCode ShortCode of the project.
-   * @return Unit in case of success
+   * @return Success of Unit if the ShortCode is available, Error of None if not.
    */
-  def checkShortCodeExists(shortCode: ShortCode): IO[Option[Nothing], Unit]
+  def checkIfShortCodeIsAvailable(shortCode: ShortCode): IO[Option[Nothing], Unit]
 
   /**
    * Deletes a [[Project]] from the repository by its [[ProjectId]].

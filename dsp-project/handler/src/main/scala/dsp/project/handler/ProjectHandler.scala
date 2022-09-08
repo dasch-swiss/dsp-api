@@ -71,7 +71,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
   private def checkIfShortCodeTaken(shortCode: ShortCode): IO[DuplicateValueException, Unit] =
     for {
       _ <- repo
-             .checkShortCodeExists(shortCode)
+             .checkIfShortCodeIsAvailable(shortCode)
              .mapError(_ => DuplicateValueException(s"ShortCode ${shortCode.value} already exists"))
              .tapBoth(
                _ => ZIO.logInfo(s"ShortCode '${shortCode}' is already taken"),

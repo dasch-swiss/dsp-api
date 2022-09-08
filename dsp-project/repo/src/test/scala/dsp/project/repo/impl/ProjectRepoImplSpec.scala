@@ -122,7 +122,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
   val checkShortCodeExists = suite("check if shortCode already exists")(
     test("not return that a shortCode exists if it does not exist") {
       for {
-        res <- ProjectRepo.checkShortCodeExists(shortCode)
+        res <- ProjectRepo.checkIfShortCodeIsAvailable(shortCode)
       } yield (
         assert(res)(isUnit)
       )
@@ -130,7 +130,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     test("return that a shortCode exists if it does indeed exist") {
       for {
         _   <- ProjectRepo.storeProject(project)
-        res <- ProjectRepo.checkShortCodeExists(shortCode).exit
+        res <- ProjectRepo.checkIfShortCodeIsAvailable(shortCode).exit
       } yield (
         assert(res)(fails(equalTo(None)))
       )
