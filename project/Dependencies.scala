@@ -11,7 +11,7 @@ import sbt.{Def, _}
 object Dependencies {
 
   val fusekiImage =
-    "daschswiss/apache-jena-fuseki:2.0.8" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+    "daschswiss/apache-jena-fuseki:2.0.10" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
   val sipiImage = "daschswiss/sipi:3.5.0" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.8"

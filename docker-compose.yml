@@ -3,7 +3,7 @@ version: '3.7'
 services:
 
   db:
-    image: daschswiss/apache-jena-fuseki:2.0.8 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+    image: daschswiss/apache-jena-fuseki:2.0.10 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
     ports:
       - "3030:3030"
     volumes:
