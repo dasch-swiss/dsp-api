@@ -16,8 +16,8 @@ object Dependencies {
 
   val ScalaVersion = "2.13.8"
 
-  val AkkaHttpVersion  = "10.2.9"
-  val AkkaActorVersion = "2.6.19"
+  val AkkaActorVersion = "2.6.20"
+  val AkkaHttpVersion  = "10.2.10"
   val JenaVersion      = "4.6.0"
 
   val ZioVersion                  = "2.0.2"
