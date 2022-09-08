@@ -49,6 +49,7 @@ object Dependencies {
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % AkkaHttpVersion  // Scala 3 incompatible
   val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.1.3"          // Scala 3 incompatible
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion  // Scala 3 incompatible
+  val akkaSlf4j         = "com.typesafe.akka" %% "akka-slf4j"           % AkkaActorVersion // Scala 3 compatible
   val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % AkkaActorVersion // Scala 3 compatible
 
   // jena
@@ -115,6 +116,7 @@ object Dependencies {
     akkaHttp,
     akkaHttpCors,
     akkaHttpSprayJson,
+    akkaSlf4j,
     akkaHttpTestkit % Test,
     akkaStream,
     akkaStreamTestkit % Test,
