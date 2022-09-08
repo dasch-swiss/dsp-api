@@ -13,7 +13,6 @@ import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
-import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.routing.ApiRoutes
 
 trait HttpServer {
@@ -21,10 +20,9 @@ trait HttpServer {
 }
 
 object HttpServer {
-  val layer: ZLayer[State & core.ActorSystem & AppConfig & ApiRoutes, Nothing, HttpServer] =
+  val layer: ZLayer[core.ActorSystem & AppConfig & ApiRoutes, Nothing, HttpServer] =
     ZLayer.scoped {
       for {
-        _         <- ZIO.service[State].flatMap(_.set(AppState.StartingUp))
         as        <- ZIO.service[core.ActorSystem]
         config    <- ZIO.service[AppConfig]
         apiRoutes <- ZIO.service[ApiRoutes]

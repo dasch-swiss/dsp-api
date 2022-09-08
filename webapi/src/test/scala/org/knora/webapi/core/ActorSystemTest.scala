@@ -22,5 +22,5 @@ object ActorSystemTest {
           override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
         }
       )
-      .tap(_ => ZIO.debug(">>> ActorSystemTest Initialized <<<"))
+      .tap(_ => ZIO.logInfo(">>> ActorSystemTest Initialized <<<"))
 }
