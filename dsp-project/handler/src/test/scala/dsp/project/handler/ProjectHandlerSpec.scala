@@ -44,7 +44,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
   )
   private val project  = getValidated(Project.make(id, name, description))
   private val project2 = getValidated(Project.make(id2, name2, description2))
-  // private val project = getValidated(Project.make(id, name, description))
+
   def spec = suite("ProjectHandlerSpec")(
     getProjectsTests,
     getProjectTests,
@@ -54,7 +54,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
   ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
 
   private val getProjectsTests = suite("get all projects")(
-    test("return an empty list when requesting all users when there are none") {
+    test("return an empty list when requesting all projects, when there are none") {
       for {
         handler           <- initializeHandler()
         retrievedProjects <- handler.getProjects()
@@ -70,7 +70,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     }
   )
 
-  private val getProjectTests = suite("get a single projects")(
+  private val getProjectTests = suite("get a single project")(
     suite("get a project by ID")(
       test("return an error if a project is requested that does not exist") {
         for {

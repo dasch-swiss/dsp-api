@@ -28,10 +28,10 @@ object Project {
   object ShortCode { self =>
     def make(value: String): Validation[ValidationException, ShortCode] =
       if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeMissing))
       } else {
         ProjectIDRegex.matches(value.toUpperCase) match {
-          case false => Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeInvalid(value)))
+          case false => Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeInvalid(value)))
           case true  => Validation.succeed(new ShortCode(value.toUpperCase) {})
         }
       }
@@ -179,12 +179,12 @@ object Project {
 }
 
 object ProjectErrorMessages {
-  val ShortcodeMissing           = "Shortcode cannot be empty."
-  val ShortcodeInvalid           = (v: String) => s"Shortcode is invalid: $v"
+  val ShortCodeMissing           = "ShortCode cannot be empty."
+  val ShortCodeInvalid           = (v: String) => s"ShortCode is invalid: $v"
   val ShortNameMissing           = "Shortname cannot be empty."
   val ShortNameInvalid           = (v: String) => s"Shortname is invalid: $v"
-  val NameMissing                = "Longname cannot be empty."
-  val NameInvalid                = (v: String) => s"Longname is invalid: $v"
+  val NameMissing                = "Name cannot be empty."
+  val NameInvalid                = (v: String) => s"Name is invalid: $v"
   val ProjectDescriptionsMissing = "Description cannot be empty."
   val ProjectDescriptionsInvalid = (v: String) => s"Description is invalid: $v"
   val KeywordsMissing            = "Keywords cannot be empty."

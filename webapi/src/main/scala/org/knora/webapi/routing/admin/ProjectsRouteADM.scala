@@ -130,7 +130,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def addProject(): Route = path(projectsBasePath) {
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
-        // zio prelude: validation
         val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
         val shortname: Validation[Throwable, ShortName]            = ShortName.make(apiRequest.shortname)
         val shortcode: Validation[Throwable, ShortCode]            = ShortCode.make(apiRequest.shortcode)

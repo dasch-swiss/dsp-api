@@ -39,24 +39,24 @@ object ProjectSpec extends ZIOSpecDefault {
     projectSelfJoinTest
   )
 
-  private val shortCodeTest = suite("ProjectSpec - Shortcode")(
+  private val shortCodeTest = suite("ProjectSpec - ShortCode")(
     test("pass an empty value and return an error") {
       assertTrue(
-        ShortCode.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
+        ShortCode.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeMissing))
       ) &&
       assertTrue(
-        ShortCode.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
+        ShortCode.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         ShortCode.make(invalidShortCode) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortCode))
+          ValidationException(ProjectErrorMessages.ShortCodeInvalid(invalidShortCode))
         )
       ) &&
       assertTrue(
         ShortCode.make(Some(invalidShortCode)) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortCode))
+          ValidationException(ProjectErrorMessages.ShortCodeInvalid(invalidShortCode))
         )
       )
     },

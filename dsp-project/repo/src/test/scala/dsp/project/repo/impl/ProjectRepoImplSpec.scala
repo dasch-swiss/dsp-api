@@ -96,7 +96,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
       )
     }
 
-    test("get multiple projects from a repository with multiple project") {
+    test("get multiple projects from a repository with multiple projects") {
       for {
         _          <- ProjectRepo.storeProject(project)
         project2   <- project2

@@ -134,7 +134,7 @@ abstract case class ProjectId private (
 object ProjectId {
 
   /**
-   * Generates a ProjectId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
+   * Generates a ProjectId instance provided a Project IRI and a ShortCode. The UUID is extracted from the IRI.
    *
    * @param iri       the project IRI
    * @param shortCode the project short code (as defined by the ARK resolver)
@@ -150,7 +150,7 @@ object ProjectId {
   }
 
   /**
-   * Generates a ProjectId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
+   * Generates a ProjectId instance provided a UUID and a ShortCode. The Project IRI is generated on basis of the UUID.
    *
    * @param uuid      the project UUID
    * @param shortCode the project short code (as defined by the ARK resolver)

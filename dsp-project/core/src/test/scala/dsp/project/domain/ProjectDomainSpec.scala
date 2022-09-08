@@ -17,8 +17,8 @@ import dsp.valueobjects.V2
  */
 object ProjectDomainSpec extends ZIOSpecDefault {
 
-  private val shortcode = ShortCode.make("0001").fold(e => throw e.head, v => v)
-  private val id        = ProjectId.make(shortcode).fold(e => throw e.head, v => v)
+  private val shortCode = ShortCode.make("0001").fold(e => throw e.head, v => v)
+  private val id        = ProjectId.make(shortCode).fold(e => throw e.head, v => v)
   private val name      = Name.make("proj").fold(e => throw e.head, v => v)
   private val description = ProjectDescription
     .make(Seq(V2.StringLiteralV2("A Project", Some("en"))))
@@ -50,8 +50,8 @@ object ProjectDomainSpec extends ZIOSpecDefault {
       (for {
         iri1             <- Iri.ProjectIri.make(iri1String)
         iri2             <- Iri.ProjectIri.make(iri2String)
-        id1              <- ProjectId.fromIri(iri1, shortcode)
-        id2              <- ProjectId.fromIri(iri2, shortcode)
+        id1              <- ProjectId.fromIri(iri1, shortCode)
+        id2              <- ProjectId.fromIri(iri2, shortCode)
         project1         <- Project.make(id1, name, description)
         project2         <- Project.make(id2, name, description)
         listInitial       = List(project1, project2)

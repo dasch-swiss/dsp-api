@@ -128,7 +128,7 @@ object LangStringSpec extends ZIOSpecDefault {
             res             <- multiLangString.addLangString(de)
           } yield assertTrue(res.langStrings == Set(en, de))).toZIO
         },
-        test("not add a LangString that already exists") {
+        test("not add a LangString if there is already a LangString with the same language") {
           (for {
             en              <- LangString.make(LanguageCode.en, "string in english")
             en2             <- LangString.make(LanguageCode.en, "another string in english")
@@ -154,7 +154,7 @@ object LangStringSpec extends ZIOSpecDefault {
             en              <- LangString.make(LanguageCode.en, "string in english")
             de              <- LangString.make(LanguageCode.de, "string in german")
             de2             <- LangString.make(LanguageCode.de, "anotherstring in german")
-            fr              <- LangString.make(LanguageCode.de, "string in french")
+            fr              <- LangString.make(LanguageCode.fr, "string in french")
             multiLangString <- MultiLangString.make(Set(en, de))
             res              = multiLangString.addLangStrings(Set(de2, fr))
           } yield assertTrue(

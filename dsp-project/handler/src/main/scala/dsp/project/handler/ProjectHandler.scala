@@ -139,7 +139,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
    *
    * @param id    the ID of the project to be updated
    * @param value the new description of the project
-   * @return either the project ID if successfful, or a RequestRejectedException if not successful
+   * @return either the project ID if successful, or a RequestRejectedException if not successful
    */
   def updateProjectDescription(id: ProjectId, value: ProjectDescription): IO[RequestRejectedException, ProjectId] =
     (for {
