@@ -18,8 +18,8 @@ import dsp.valueobjects.ProjectId
 /**
  * Project repo test implementation. Mocks the project repo for tests.
  *
- * @param projects    a map of project UUIDs to projects (UUID -> Project).
- * @param lookupTable a map of shortcodes to projects (shortCode -> UUID).
+ * @param projects                   a map of project UUIDs to projects (UUID -> Project).
+ * @param lookupTableShortCodeToUuid a map of shortcodes to projects (shortCode -> UUID).
  */
 final case class ProjectRepoMock(
   projects: TMap[UUID, Project],
@@ -95,6 +95,8 @@ final case class ProjectRepoMock(
   /**
    * Additional method for the test implementation of ProjectRepo.
    * Adds a variable amount of Projects to the Repo
+   *
+   * @param pp a various length parameter of Project value objects that should be added to the repo as initialization
    */
   def initializeRepo(pp: Project*) = for {
     ids <- ZIO.collectAll(pp.map(storeProject(_)))
@@ -102,9 +104,6 @@ final case class ProjectRepoMock(
 
 }
 
-/**
- * Companion object providing the layer with an initialized implementation of ProjectRepo
- */
 object ProjectRepoMock {
   val layer: ZLayer[Any, Nothing, ProjectRepoMock] =
     ZLayer {

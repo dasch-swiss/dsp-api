@@ -5,7 +5,6 @@
 
 package dsp.project.repo.impl
 
-import zio._
 import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
@@ -33,8 +32,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
 
   def spec = suite("ProjectRepoImplSpec")(
     projectRepoMockTest,
-    projectRepoLiveTest,
-    projectRepoMockTestFunctionalityTest
+    projectRepoLiveTest
   )
 
   val getProjectTest = suite("retrieve a single project")(
@@ -71,7 +69,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     }
   )
 
-  val getAllProjectsTest = suiteAll("retrieve all projects") {
+  val getProjectsTest = suiteAll("retrieve all projects") {
     val project2 = (for {
       shortCode   <- ShortCode.make("0001")
       id          <- ProjectId.make(shortCode)
@@ -162,7 +160,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
   val projectTests = suite("ProjectRepo")(
     storeProjectTest,
     getProjectTest,
-    getAllProjectsTest,
+    getProjectsTest,
     checkShortCodeExists,
     deleteProject
   )
@@ -174,24 +172,5 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
   val projectRepoLiveTest = suite("ProjectRepo - Live")(
     projectTests
   ).provide(ProjectRepoLive.layer)
-
-  val projectRepoMockTestFunctionalityTest = suite("ProjectRepoMock - test implementation specific functionality")(
-    suite("initialize repo with projects")(
-      test("initialize repo empty") {
-        for {
-          repo     <- ZIO.service[ProjectRepoMock]
-          _        <- repo.initializeRepo()
-          contents <- repo.getProjects()
-        } yield (assertTrue(contents == Nil))
-      },
-      test("initialize repo with a project") {
-        for {
-          repo     <- ZIO.service[ProjectRepoMock]
-          _        <- repo.initializeRepo(project)
-          contents <- repo.getProjects()
-        } yield (assertTrue(contents == scala.collection.immutable.List(project)))
-      }
-    )
-  ).provide(ProjectRepoMock.layer)
 
 }

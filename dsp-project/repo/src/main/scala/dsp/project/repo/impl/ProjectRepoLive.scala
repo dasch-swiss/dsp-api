@@ -18,8 +18,8 @@ import dsp.valueobjects.ProjectId
 /**
  * Project repo live implementation.
  *
- * @param projects    a map of project UUIDs to projects (UUID -> Project).
- * @param lookupTable a map of shortcodes to projects (shortCode -> UUID).
+ * @param projects                   a map of project UUIDs to projects (UUID -> Project).
+ * @param lookupTableShortCodeToUuid a map of shortcodes to projects (shortCode -> UUID).
  */
 final case class ProjectRepoLive(
   projects: TMap[UUID, Project],
@@ -94,9 +94,6 @@ final case class ProjectRepoLive(
 
 }
 
-/**
- * Companion object providing the layer with an initialized implementation of ProjectRepo
- */
 object ProjectRepoLive {
   val layer: ZLayer[Any, Nothing, ProjectRepo] =
     ZLayer {

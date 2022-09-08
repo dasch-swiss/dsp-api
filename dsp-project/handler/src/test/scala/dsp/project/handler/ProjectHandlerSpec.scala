@@ -46,14 +46,14 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
   private val project2 = getValidated(Project.make(id2, name2, description2))
   // private val project = getValidated(Project.make(id, name, description))
   def spec = suite("ProjectHandlerSpec")(
-    getAllProjectsTests,
+    getProjectsTests,
     getProjectTests,
     createProjectTests,
     deleteProjectTests,
     updateProjectTests
   ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
 
-  private val getAllProjectsTests = suite("get all projects")(
+  private val getProjectsTests = suite("get all projects")(
     test("return an empty list when requesting all users when there are none") {
       for {
         handler           <- initializeHandler()

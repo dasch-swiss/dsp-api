@@ -29,13 +29,12 @@ sealed abstract case class Project private (
    * Allows to sort collections of [[Project]]s. Sorting is done by the IRI.
    */
   def compare(that: Project): Int = self.id.iri.toString().compareTo(that.id.iri.toString())
-  // TODO-BL: [discuss] by which field should a project be sorted by? shortcode? name? IRI?
 
   /**
-   * Update the name of the project.
+   * Updates the name of the project.
    *
    * @param name the new name
-   * @return the updated Project
+   * @return the updated Project or a ValidationException
    */
   def updateProjectName(name: Name): Validation[ValidationException, Project] =
     Project.make(
@@ -45,10 +44,10 @@ sealed abstract case class Project private (
     )
 
   /**
-   * Update the description of the project.
+   * Updates the description of the project.
    *
    * @param description the new description
-   * @return the updated Project
+   * @return the updated Project or a ValidationException
    */
   def updateProjectDescription(description: ProjectDescription): Validation[ValidationException, Project] =
     Project.make(

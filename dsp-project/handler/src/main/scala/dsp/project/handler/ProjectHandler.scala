@@ -84,7 +84,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
    *
    * @param shortCode   the project's short code
    * @param name        the project's name
-   * @param description the project descriptions
+   * @param description the project's descriptions
    * @return either a throwable if creation failed, or the ID of the newly created project
    */
   def createProject(
