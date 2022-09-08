@@ -65,62 +65,7 @@ object LangString {
 /**
  * MultiLangString value object
  */
-sealed abstract case class MultiLangString private (langStrings: Set[LangString]) { self =>
-  private val lookup: Map[LanguageCode, LangString] =
-    self.langStrings.map(langString => (langString.language, langString)).toMap
-
-  /**
-   * Add a LangString to the MultiLangString
-   *
-   * @param value the new LangString
-   * @return either a MultiLangString or a ValidationException
-   */
-  def addLangString(value: LangString): Validation[ValidationException, MultiLangString] =
-    MultiLangString.make(self.langStrings + value)
-  // TODO-BL: [discuss] should the error messages be more specific here in these operations?
-  // e.g. when I remove the only language, the error will say "must not be empty"
-  // but it should probably say "can not remove the only element"
-
-  /**
-   * Add a set of LangStrings to the MultiLangString
-   *
-   * @param values the new LangStrings
-   * @return either a MultiLangString or a ValidationException
-   */
-  def addLangStrings(values: Set[LangString]): Validation[ValidationException, MultiLangString] =
-    MultiLangString.make(self.langStrings ++ values)
-
-  def removeLanguage(value: LanguageCode): Validation[ValidationException, MultiLangString] =
-    // TODO-BL: [discuss] what should happen if the element is not contained?
-    MultiLangString.make(self.langStrings.filter(langString => langString.language == value))
-
-  def removeLangString(value: LangString): Validation[ValidationException, MultiLangString] =
-    // TODO-BL: [discuss] what should happen if the element is not contained?
-    MultiLangString.make(self.langStrings - value)
-
-  def removeLangStrings(values: Set[LangString]): Validation[ValidationException, MultiLangString] =
-    // TODO-BL: [discuss] what should happen if the elements are not contained?
-    MultiLangString.make(self.langStrings -- values)
-
-  /**
-   * Updates the LangString of a certain language to a new value.
-   *
-   * @param value the LangString containing the new value
-   * @return the updated MultiLangString
-   */
-  def updateLangString(value: LangString): Validation[ValidationException, MultiLangString] =
-    // TODO-BL: [discuss] what should happen if the element is not contained?
-    MultiLangString.make(self.langStrings.filter(langString => langString.language != value.language) + value)
-
-  /**
-   * Returns the LangString with the specified LanguageCode, if available.
-   *
-   * @param lang the requested language
-   * @return Optionally the LangString in the requested language
-   */
-  def getByLanguage(lang: LanguageCode): Option[LangString] =
-    self.lookup.get(lang)
-}
+sealed abstract case class MultiLangString private (langStrings: Set[LangString])
 
 object MultiLangString {
 
