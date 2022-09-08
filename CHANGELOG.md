@@ -1,5 +1,22 @@
 # Changelog
 
+### [24.0.2](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.1...v24.0.2) (2022-09-08)
+
+
+### Bug Fixes
+
+* **sipi:** remove support for audio/mp4 file format (DEV-1300) ([#2195](https://www.github.com/dasch-swiss/dsp-api/issues/2195)) ([122bf52](https://www.github.com/dasch-swiss/dsp-api/commit/122bf52f97142961f147f3a5b13142c660b555da))
+
+
+### Maintenance
+
+* Adjust GitHub template (DEV-1313) ([#2183](https://www.github.com/dasch-swiss/dsp-api/issues/2183)) ([5782494](https://www.github.com/dasch-swiss/dsp-api/commit/57824944ae580d10ff7267121d5b77333b452126))
+* bump dependencies ([#2196](https://www.github.com/dasch-swiss/dsp-api/issues/2196)) ([2fbf664](https://www.github.com/dasch-swiss/dsp-api/commit/2fbf664c65b647038154580f777a344cc5be992f))
+* Ignore push on certain branches from tests (DEV-1112) ([#2187](https://www.github.com/dasch-swiss/dsp-api/issues/2187)) ([e0a0fbb](https://www.github.com/dasch-swiss/dsp-api/commit/e0a0fbb19d5df7fa7978291401bbae6bba6f556f))
+* Improve GitHub actions (DEV-1112) ([#2182](https://www.github.com/dasch-swiss/dsp-api/issues/2182)) ([71c772f](https://www.github.com/dasch-swiss/dsp-api/commit/71c772f64f3108250abe37d756ecc93453396c3f))
+* Skip tests with success (DEV-1112) ([#2188](https://www.github.com/dasch-swiss/dsp-api/issues/2188)) ([82703d7](https://www.github.com/dasch-swiss/dsp-api/commit/82703d7687b8f4947fba384d2b6d26f75b62c1ec))
+* **v3:** add project slice (DEV-1009) ([#2076](https://www.github.com/dasch-swiss/dsp-api/issues/2076)) ([bd2d31e](https://www.github.com/dasch-swiss/dsp-api/commit/bd2d31e3dbcd4898a699a220bd70f88660a4ed02))
+
 ### [24.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.0...v24.0.1) (2022-08-26)
 
 
