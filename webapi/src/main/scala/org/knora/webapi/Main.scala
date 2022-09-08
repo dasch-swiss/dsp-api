@@ -8,50 +8,31 @@ package org.knora.webapi
 import zio._
 import zio.logging.backend.SLF4J
 
-object Main extends App {
+object Main extends ZIOApp {
 
   /**
    * The `Environment` that we require to exist at startup.
-   * Can be overriden in specs that need other implementations.
    */
-  type Environment = core.LayersLive.DspEnvironmentLive
-
-  /**
-   * The effect layers from which the App is built.
-   * Can be overriden in specs that need other implementations.
-   */
-  lazy val effectLayers = core.LayersLive.dspLayersLive
+  override type Environment = core.LayersLive.DspEnvironmentLive
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  private val bootstrap: ZLayer[
-    Any,
+  override val bootstrap: ZLayer[
+    ZIOAppArgs with Scope,
     Any,
     Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ core.LayersLive.dspLayersLive
 
-  // add scope to bootstrap
-  private val bootstrapWithScope = Scope.default >>>
-    bootstrap +!+ ZLayer.environment[Scope]
-
-  // create a configured runtime
-  private val runtime = Unsafe.unsafe { implicit u =>
-    Runtime.unsafe
-      .fromLayer(bootstrapWithScope)
-  }
+  // no idea why we need that, but we do
+  override val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
 
   /* Here we start our Application */
-  private val appServer =
+  override val run =
     for {
       _     <- core.AppServer.start(true, true)
       never <- ZIO.never
     } yield never
-
-  /* Here we start our app server */
-  Unsafe.unsafe { implicit u =>
-    runtime.unsafe.run(appServer)
-  }
 
 }
