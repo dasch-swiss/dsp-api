@@ -1,6 +1,6 @@
 package dsp.valueobjects
 
-import zio._
+import com.typesafe.scalalogging.Logger
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
@@ -11,6 +11,8 @@ import dsp.errors.ValidationException
 sealed abstract case class LangString private (language: LanguageCode, value: String)
 
 object LangString {
+
+  val log: Logger = Logger(this.getClass())
 
   /**
    * Creates a [[zio.prelude.Validation]] that either fails with a ValidationException or succeeds with a LangString value object.
@@ -53,13 +55,49 @@ object LangString {
       .fold(
         e => {
           val unsafe = new LangString(language, value) {}
-          ZIO.logWarning(s"Called unsafeMake() for an invalid $unsafe: $e") // TODO-BL: get this to actually log
+          log.warn(s"Called unsafeMake() for an invalid LangString '$unsafe': $e")
           unsafe
         },
         langString => langString
       )
 }
 
+/**
+ * MultiLangString value object
+ */
+sealed abstract case class MultiLangString private (langStrings: Set[LangString])
+
+object MultiLangString {
+
+  /**
+   * Creates a [[zio.prelude.Validation]] that either fails with a ValidationException, or succeeds with a MultiLangString.
+   * Ensures that the MultiLangString is not empty and that the languages are unique.
+   *
+   * @param values a set of LangString value objects
+   * @return a validation of a MultiLangString value object
+   */
+  def make(values: Set[LangString]): Validation[ValidationException, MultiLangString] =
+    values match {
+      case v if v.isEmpty => Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
+      case v if v.size > v.map(_.language).size =>
+        val languages = v.toList.map(_.language)
+        val languageCount = languages.foldLeft[Map[LanguageCode, Int]](Map.empty) { (acc, lang) =>
+          acc.updated(lang, acc.getOrElse(lang, 0) + 1)
+        }
+        val nonUniqueLanguages = languageCount.filter { case (_, count) => count > 1 }.keySet
+        Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUniqueLanguages)))
+      case _ => Validation.succeed(new MultiLangString(values) {})
+    }
+}
+
 object LangStringErrorMessages {
   val LangStringValueEmpty = "String value cannot be empty."
+}
+
+object MultiLangStringErrorMessages {
+  val MultiLangStringEmptySet = "MultiLangString must consist of at least one LangStirng."
+  val LanguageNotUnique = (nonUniqueLanguages: Set[LanguageCode]) => {
+    val issuesString = nonUniqueLanguages.toList.map(_.value).sorted
+    s"Each Language must only appear once. $issuesString"
+  }
 }

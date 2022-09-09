@@ -37,14 +37,22 @@ lazy val root: Project = Project(id = "root", file("."))
     webapi,
     sipi,
     shared,
+    // user
     userCore,
     userHandler,
     userRepo,
     userInterface,
+    // role
     roleCore,
-    roleRepo,
     roleHandler,
+    roleRepo,
     roleInterface,
+    // project
+    projectCore,
+    projectHandler,
+    projectRepo,
+    projectInterface,
+    // schema
     schemaCore
   )
   .enablePlugins(GitVersioning, GitBranchPrompt)
@@ -343,6 +351,52 @@ lazy val userCore = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(shared)
+
+// project projects
+
+lazy val projectInterface = project
+  .in(file("dsp-project/interface"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectInterface",
+    libraryDependencies ++= Dependencies.projectInterfaceLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, projectHandler)
+
+lazy val projectHandler = project
+  .in(file("dsp-project/handler"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectHandler",
+    libraryDependencies ++= Dependencies.projectHandlerLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(
+    shared,
+    projectCore,
+    projectRepo % "test->test"
+  ) // projectHandler tests need mock implementation of ProjectRepo
+
+lazy val projectCore = project
+  .in(file("dsp-project/core"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectCore",
+    libraryDependencies ++= Dependencies.projectCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
+lazy val projectRepo = project
+  .in(file("dsp-project/repo"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectRepo",
+    libraryDependencies ++= Dependencies.projectRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, projectCore)
 
 // schema projects
 
