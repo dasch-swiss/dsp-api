@@ -104,7 +104,7 @@ abstract class CoreSpec
         .run(
           (for {
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ()).provideSomeLayer(AppServer.test(false, false))
+          } yield ()).provideSomeLayer(AppServer.testWithoutSipi)
         )
         .getOrThrow()
 

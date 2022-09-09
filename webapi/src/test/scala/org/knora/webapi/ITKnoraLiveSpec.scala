@@ -119,7 +119,7 @@ abstract class ITKnoraLiveSpec
         .run(
           (for {
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ()).provideSomeLayer(AppServer.test(false, true))
+          } yield ()).provideSomeLayer(AppServer.testWithSipi)
         )
         .getOrThrow()
     }

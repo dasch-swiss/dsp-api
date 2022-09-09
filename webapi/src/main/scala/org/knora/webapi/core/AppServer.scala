@@ -68,9 +68,9 @@ final case class AppServer(
     for {
       _ <- state.set(AppState.CreatingCaches)
       _ <- ZIO.attempt {
-        CacheUtil.removeAllCaches()
-        CacheUtil.createCaches(as.settings.caches)
-      }.orDie
+             CacheUtil.removeAllCaches()
+             CacheUtil.createCaches(as.settings.caches)
+           }.orDie
       _ <- state.set(AppState.CachesReady)
     } yield ()
 
@@ -198,14 +198,20 @@ object AppServer {
     }
 
   /**
-   * The AppServer layer, which initiates the startup checks. Before this layer does what it does,
+   * The AppServer test layer with Sipi, which initiates the startup checks. Before this layer does what it does,
    * the complete server should have already been started.
-   *
-   * @param requiresRepository
-   * @param requiresIIIFService
    */
-  def test(requiresRepository: Boolean, requiresIIIFService: Boolean): ZLayer[AppServerEnvironment, Nothing, Unit] =
+  val testWithSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
     ZLayer {
-      startup(requiresRepository, requiresIIIFService)
+      startup(false, true)
+    }
+
+  /**
+   * The AppServer test layer without Sipi, which initiates the startup checks. Before this layer does what it does,
+   * the complete server should have already been started.
+   */
+  val testWithoutSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
+    ZLayer {
+      startup(false, false)
     }
 }
