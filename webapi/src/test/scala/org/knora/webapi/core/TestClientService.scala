@@ -262,9 +262,6 @@ object TestClientService {
    */
   private val acquire = ZIO.attemptBlocking {
 
-    // timeout from config
-    val sipiTimeoutMillis = 120 * 1000
-
     // Create a connection manager with custom configuration.
     val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
 
@@ -286,6 +283,7 @@ object TestClientService {
     connManager.setDefaultMaxPerRoute(10)
 
     // Sipi custom default request config
+    val sipiTimeoutMillis = 120 * 1000
     val defaultRequestConfig = RequestConfig
       .custom()
       .setConnectTimeout(sipiTimeoutMillis)

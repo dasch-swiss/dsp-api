@@ -74,7 +74,8 @@ class RoutingActor(
   cacheServiceManager: CacheServiceManager,
   iiifServiceManager: IIIFServiceManager,
   triplestoreManager: TriplestoreServiceManager,
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  runtime: zio.Runtime[Any]
 ) extends Actor {
 
   implicit val system: ActorSystem = context.system
@@ -186,10 +187,10 @@ class RoutingActor(
     case sipiResponderRequestADM: SipiResponderRequestADM =>
       ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
     case msg: CacheServiceRequest =>
-      ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), appConfig, log)
-    case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), appConfig, log)
+      ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), appConfig, log, runtime)
+    case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), appConfig, log, runtime)
     case msg: TriplestoreRequest =>
-      ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), appConfig, log)
+      ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), appConfig, log, runtime)
 
     case other =>
       throw UnexpectedMessageException(

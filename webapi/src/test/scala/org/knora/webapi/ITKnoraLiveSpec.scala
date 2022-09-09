@@ -72,14 +72,10 @@ abstract class ITKnoraLiveSpec
     Environment
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
-  // add scope to bootstrap
-  private val bootstrapWithScope = Scope.default >>>
-    bootstrap +!+ ZLayer.environment[Scope]
-
   // create a configured runtime
   val runtime = Unsafe.unsafe { implicit u =>
     Runtime.unsafe
-      .fromLayer(bootstrapWithScope)
+      .fromLayer(bootstrap)
   }
 
   // An effect for getting stuff out, so that we can pass them

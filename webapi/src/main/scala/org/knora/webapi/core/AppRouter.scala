@@ -44,6 +44,7 @@ object AppRouter {
         iiifServiceManager        <- ZIO.service[IIIFServiceManager]
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
+        runtime                   <- ZIO.runtime[Any]
       } yield new AppRouter { self =>
         implicit val system: akka.actor.ActorSystem     = as.system
         implicit val executionContext: ExecutionContext = system.dispatcher
@@ -54,7 +55,8 @@ object AppRouter {
               cacheServiceManager,
               iiifServiceManager,
               triplestoreServiceManager,
-              appConfig
+              appConfig,
+              runtime
             )
           ),
           name = APPLICATION_MANAGER_ACTOR_NAME
