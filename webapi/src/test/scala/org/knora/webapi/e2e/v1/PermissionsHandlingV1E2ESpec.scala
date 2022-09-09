@@ -7,24 +7,16 @@ package org.knora.webapi.e2e.v1
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import com.typesafe.config.ConfigFactory
 
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
-object PermissionsHandlingV1E2ESpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-end test specification for testing the handling of permissions.
  */
-class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.config) with TriplestoreJsonProtocol {
+class PermissionsHandlingV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   private val rootUser      = SharedTestDataV1.rootUser
   private val rootUserEmail = rootUser.userData.email.get

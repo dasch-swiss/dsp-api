@@ -70,7 +70,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route = {
+  override def makeRoute: Route = {
 
     def makeResourceRequestMessage(
       resIri: String,

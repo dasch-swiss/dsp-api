@@ -11,8 +11,6 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 
@@ -21,18 +19,10 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
-object ProjectsResponderV1Spec {
-
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderV1]] actor.
  */
-class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) with ImplicitSender {
+class ProjectsResponderV1Spec extends CoreSpec with ImplicitSender {
 
   private val timeout = 5.seconds
 

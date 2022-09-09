@@ -55,6 +55,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
 
@@ -450,23 +451,22 @@ case class TriplestoreServiceHttpConnectorImpl(
     val triplestoreAvailableResponse =
       ZIO.succeed(
         CheckTriplestoreResponse(
-          triplestoreStatus = TriplestoreStatus.ServiceAvailable,
-          msg = "Triplestore is available."
+          triplestoreStatus = TriplestoreStatus.Available("Triplestore is available.")
         )
       )
 
     val triplestoreNotInitializedResponse =
       ZIO.succeed(
         CheckTriplestoreResponse(
-          triplestoreStatus = TriplestoreStatus.NotInitialized,
-          msg = s"None of the active datasets meet our requirement of name: ${config.triplestore.fuseki.repositoryName}"
+          triplestoreStatus = TriplestoreStatus.NotInitialized(
+            s"None of the active datasets meet our requirement of name: ${config.triplestore.fuseki.repositoryName}"
+          )
         )
       )
 
     def triplestoreUnavailableResponse(cause: String) =
       CheckTriplestoreResponse(
-        triplestoreStatus = TriplestoreStatus.ServiceUnavailable,
-        msg = s"Triplestore not available: $cause"
+        triplestoreStatus = TriplestoreStatus.Unavailable(s"Triplestore not available: $cause")
       )
 
     ZIO
@@ -1052,7 +1052,7 @@ object TriplestoreServiceHttpConnectorImpl {
       .build()
 
     httpClient
-  }.tap(_ => ZIO.debug(">>> Acquire Triplestore Service Http Connector <<<")).orDie
+  }.tap(_ => ZIO.logInfo(">>> Acquire Triplestore Service Http Connector <<<")).orDie
 
   /**
    * Releases the httpClient, freeing all resources.
@@ -1060,13 +1060,12 @@ object TriplestoreServiceHttpConnectorImpl {
   private def release(httpClient: CloseableHttpClient): URIO[Any, Unit] =
     ZIO.attemptBlocking {
       httpClient.close()
-    }.tap(_ => ZIO.debug(">>> Release Triplestore Service Http Connector <<<")).orDie
+    }.tap(_ => ZIO.logInfo(">>> Release Triplestore Service Http Connector <<<")).orDie
 
   val layer: ZLayer[AppConfig, Nothing, TriplestoreService] =
     ZLayer.scoped {
       for {
-        config <- ZIO.service[AppConfig]
-        // _          <- ZIO.debug(config)
+        config     <- ZIO.service[AppConfig]
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield TriplestoreServiceHttpConnectorImpl(config, httpClient)
     }

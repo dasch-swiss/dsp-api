@@ -31,7 +31,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     getAdministrativePermissionForProjectGroup() ~
       getAdministrativePermissionsForProject() ~
       getDefaultObjectAccessPermissionsForProject() ~

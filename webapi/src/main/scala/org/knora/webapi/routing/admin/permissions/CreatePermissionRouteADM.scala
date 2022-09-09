@@ -32,7 +32,7 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     createAdministrativePermission() ~
       createDefaultObjectAccessPermission()
 

@@ -7,9 +7,7 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
@@ -27,7 +25,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequ
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -37,67 +34,31 @@ import org.knora.webapi.settings.KnoraSettingsImpl
  * @param system   the actor system.
  * @param appActor the main application actor.
  */
-case class KnoraRouteData(system: ActorSystem, appActor: ActorRef)
-
-/**
- * An abstract class providing functionality that is commonly used by Knora routes and by
- * feature factories that construct Knora routes.
- *
- * @param routeData a [[KnoraRouteData]] providing access to the application.
- */
-abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
-  implicit protected val system: ActorSystem         = routeData.system
-  implicit protected val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit protected val timeout: Timeout            = settings.defaultTimeout
-  implicit protected val executionContext: ExecutionContext =
-    system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-  implicit protected val materializer: Materializer       = Materializer.matFromSystem(system)
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  implicit protected val appActor: ActorRef = routeData.appActor
-  protected val log: Logger                 = Logger(this.getClass)
-  protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
-
-  /**
-   * Constructs a route. This can be done:
-   *
-   * - by statically returning a routing function (if this is an ordinary route that
-   * doesn't use a feature factory, or if this is a route feature returned by
-   * a feature factory)
-   *
-   * - by asking a feature factory for a routing function (if this is a façade route)
-   *
-   * @return a route configured with the features enabled by the feature factory configuration.
-   */
-  def makeRoute(): Route
-}
+case class KnoraRouteData(system: akka.actor.ActorSystem, appActor: akka.actor.ActorRef)
 
 /**
  * An abstract class providing functionality that is commonly used in implementing Knora routes.
  *
  * @param routeData a [[KnoraRouteData]] providing access to the application.
  */
-abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData) {
+abstract class KnoraRoute(routeData: KnoraRouteData) {
+
+  implicit protected val system: ActorSystem                = routeData.system
+  implicit protected val settings: KnoraSettingsImpl        = KnoraSettings(system)
+  implicit protected val timeout: Timeout                   = settings.defaultTimeout
+  implicit protected val executionContext: ExecutionContext = system.dispatcher
+  implicit protected val materializer: Materializer         = Materializer.matFromSystem(system)
+  implicit protected val stringFormatter: StringFormatter   = StringFormatter.getGeneralInstance
+  implicit protected val appActor: ActorRef                 = routeData.appActor
+  protected val log: Logger                                 = Logger(this.getClass)
+  protected val baseApiUrl: String                          = settings.internalKnoraApiBaseUrl
 
   /**
-   * Returns a routing function that uses per-request feature factory configuration.
-   */
-  def knoraApiPath: Route = runRoute
-
-  /**
-   * A routing function that calls `makeRoute`, passing it the per-request feature factory configuration,
-   * and runs the resulting routing function.
+   * Constructs a route.
    *
-   * @param requestContext the HTTP request context.
-   * @return the result of running the route.
+   * @return a route.
    */
-  private def runRoute(requestContext: RequestContext): Future[RouteResult] = {
-
-    val route: Route = makeRoute()
-
-    // Call the routing function.
-    route(requestContext)
-  }
+  def makeRoute: Route
 
   /**
    * Gets a [[ProjectADM]] corresponding to the specified project IRI.

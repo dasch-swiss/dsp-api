@@ -5,6 +5,8 @@ import zio._
 import zio.config._
 import zio.config.typesafe.TypesafeConfigSource
 
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 
@@ -29,7 +31,8 @@ object AppConfigForTestContainers {
     val alteredTriplestore = oldConfig.triplestore.copy(fuseki = alteredFuseki)
     val alteredSipi        = oldConfig.sipi.copy(internalPort = newSipiPort)
 
-    val newConfig: AppConfig = oldConfig.copy(triplestore = alteredTriplestore, sipi = alteredSipi)
+    val newConfig: AppConfig =
+      oldConfig.copy(allowReloadOverHttp = true, triplestore = alteredTriplestore, sipi = alteredSipi)
 
     ZIO.succeed(newConfig)
   }
@@ -72,8 +75,10 @@ object AppConfigForTestContainers {
         fusekiContainer <- ZIO.service[FusekiTestContainer]
         sipiContainer   <- ZIO.service[SipiTestContainer]
         alteredConfig   <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer)
+        _               <- ZIO.attempt(StringFormatter.initForTest()).orDie     // needs early init before first usage
+        _               <- ZIO.attempt(RdfFeatureFactory.init(appConfig)).orDie // needs early init before first usage
       } yield alteredConfig
-    }.tap(_ => ZIO.debug(">>> App Config for Fuseki and Sipi Testcontainers Initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> App Config for Fuseki and Sipi Testcontainers Initialized <<<"))
 
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
@@ -84,6 +89,8 @@ object AppConfigForTestContainers {
         appConfig       <- config
         fusekiContainer <- ZIO.service[FusekiTestContainer]
         alteredConfig   <- alterFusekiPort(appConfig, fusekiContainer)
+        _               <- ZIO.attempt(StringFormatter.initForTest()).orDie     // needs early init before first usage
+        _               <- ZIO.attempt(RdfFeatureFactory.init(appConfig)).orDie // needs early init before first usage
       } yield alteredConfig
-    }.tap(_ => ZIO.debug(">>> App Config for Fuseki only Testcontainers Initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> App Config for Fuseki only Testcontainers Initialized <<<"))
 }

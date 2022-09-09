@@ -11,8 +11,6 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import java.util.UUID
 import scala.concurrent.duration._
@@ -32,18 +30,10 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
-object ProjectsResponderADMSpec {
-
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
  */
-class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config) with ImplicitSender {
+class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val timeout                                   = 5.seconds

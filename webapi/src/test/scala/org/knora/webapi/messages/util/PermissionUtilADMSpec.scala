@@ -6,7 +6,6 @@
 package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
-import com.typesafe.config.ConfigFactory
 
 import scala.collection.Map
 
@@ -20,14 +19,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
-object PermissionUtilADMSpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
-class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with ImplicitSender with Authenticator {
+class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authenticator {
 
   val permissionLiteral =
     "RV knora-admin:UnknownUser|V knora-admin:KnownUser|M knora-admin:ProjectMember|CR knora-admin:Creator"

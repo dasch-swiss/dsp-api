@@ -24,19 +24,8 @@ import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.Logging
 
 object ActorUtil {
-
-  /**
-   * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be
-   * allocated immediately, and not released until the `Runtime` is shut down or
-   * the end of the application.
-   */
-  private val runtime =
-    Unsafe.unsafe { implicit u =>
-      Runtime.unsafe.fromLayer(Logging.slf4j)
-    }
 
   /**
    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
@@ -49,11 +38,18 @@ object ActorUtil {
    *
    * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
    */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], appConfig: AppConfig, log: Logger): Unit =
+  def zio2Message[A](
+    sender: ActorRef,
+    zioTask: zio.Task[A],
+    appConfig: AppConfig,
+    log: Logger,
+    runtime: Runtime[Any]
+  ): Unit =
     Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(
-        zioTask.foldCause(cause => handleCause(cause, sender, log), success => sender ! success)
-      )
+      runtime.unsafe
+        .run(
+          zioTask.foldCause(cause => handleCause(cause, sender, log), success => sender ! success)
+        )
     }
 
   /**

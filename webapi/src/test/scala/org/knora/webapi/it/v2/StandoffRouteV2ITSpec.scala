@@ -284,7 +284,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
           Map("filename" -> freetestXSLTFile)
         )
       )
-      val sipiRequest  = Post(s"${appConfig.sipi.internalBaseUrl}/upload?token=$loginToken", sipiFormData)
+      val sipiRequest  = Post(s"${baseInternalSipiUrl}/upload?token=$loginToken", sipiFormData)
       val sipiResponse = singleAwaitingRequest(sipiRequest)
       val uploadedFile = responseToString(sipiResponse).parseJson.asJsObject
         .convertTo[SipiUploadResponse]

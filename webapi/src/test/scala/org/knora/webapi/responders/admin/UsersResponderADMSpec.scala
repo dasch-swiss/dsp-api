@@ -7,8 +7,6 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import java.util.UUID
 import scala.concurrent.duration._
@@ -30,18 +28,10 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-object UsersResponderADMSpec {
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-         app.use-redis-cache = true
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
  */
-class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with ImplicitSender with Authenticator {
+class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authenticator {
 
   private val timeout: FiniteDuration = 8.seconds
 
@@ -549,7 +539,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
           rootUser,
           UUID.randomUUID()
         )
-        expectMsgType[UserOperationResponseADM](timeout)
+        val membershipUpdateResponse = expectMsgType[UserOperationResponseADM](timeout)
 
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)

@@ -242,7 +242,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     path("v1" / "search" /) {
       // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
       get { requestContext =>

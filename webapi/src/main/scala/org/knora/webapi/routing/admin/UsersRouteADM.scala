@@ -40,7 +40,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     getUsers() ~
       addUser() ~
       getUserByIri() ~

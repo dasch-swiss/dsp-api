@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.app.appmessages
+package org.knora.webapi.core.domain
 
 sealed trait ApplicationRequest
 
@@ -160,43 +160,23 @@ case object CheckCacheService extends ApplicationRequest
  * Application States at Startup
  */
 sealed trait AppState
-
-object AppStates {
-
-  case object Stopped extends AppState
-
-  case object StartingUp extends AppState
-
-  case object WaitingForTriplestore extends AppState
-
-  case object TriplestoreReady extends AppState
-
-  case object UpdatingRepository extends AppState
-
-  case object RepositoryUpToDate extends AppState
-
-  case object CreatingCaches extends AppState
-
-  case object CachesReady extends AppState
-
-  case object UpdatingSearchIndex extends AppState
-
-  case object SearchIndexReady extends AppState
-
-  case object LoadingOntologies extends AppState
-
-  case object OntologiesReady extends AppState
-
-  case object WaitingForIIIFService extends AppState
-
-  case object IIIFServiceReady extends AppState
-
+object AppState {
+  case object Stopped                extends AppState
+  case object StartingUp             extends AppState
+  case object WaitingForTriplestore  extends AppState
+  case object TriplestoreReady       extends AppState
+  case object UpdatingRepository     extends AppState
+  case object RepositoryUpToDate     extends AppState
+  case object CreatingCaches         extends AppState
+  case object CachesReady            extends AppState
+  case object UpdatingSearchIndex    extends AppState
+  case object SearchIndexReady       extends AppState
+  case object LoadingOntologies      extends AppState
+  case object OntologiesReady        extends AppState
+  case object WaitingForIIIFService  extends AppState
+  case object IIIFServiceReady       extends AppState
   case object WaitingForCacheService extends AppState
-
-  case object CacheServiceReady extends AppState
-
-  case object MaintenanceMode extends AppState
-
-  case object Running extends AppState
-
+  case object CacheServiceReady      extends AppState
+  case object MaintenanceMode        extends AppState
+  case object Running                extends AppState
 }

@@ -6,8 +6,6 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit._
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 
@@ -17,19 +15,9 @@ import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
- * Static data for testing [[ListsResponderV1]].
- */
-object ListsResponderV1Spec {
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
-/**
  * Tests [[ListsResponderV1]].
  */
-class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with ImplicitSender {
+class ListsResponderV1Spec extends CoreSpec with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
   implicit val timeout = 5.seconds

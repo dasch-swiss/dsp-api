@@ -6,8 +6,8 @@
 package org.knora.webapi.messages.util.rdf
 
 import dsp.errors.AssertionException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.rdf.jenaimpl._
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * A feature factory that creates RDF processing tools.
@@ -25,12 +25,12 @@ object RdfFeatureFactory {
    *
    * @param settings the application settings.
    */
-  def init(settings: KnoraSettingsImpl): Unit =
+  def init(config: AppConfig): Unit =
     // Construct the SHACL validators, which need the application settings.
     this.synchronized {
       jenaShaclValidator = Some(
         new JenaShaclValidator(
-          baseDir = settings.shaclShapesDir,
+          baseDir = config.shacl.shapesDirPath,
           rdfFormatUtil = jenaFormatUtil,
           nodeFactory = jenaNodeFactory
         )

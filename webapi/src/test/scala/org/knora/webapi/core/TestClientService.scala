@@ -1,6 +1,5 @@
 package org.knora.webapi.testservices
 
-import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding
 import akka.stream.Materializer
 import org.apache.http
@@ -30,6 +29,7 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -59,11 +59,11 @@ final case class FileToUpload(path: Path, mimeType: ContentType)
  */
 final case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
 
-final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient, actorSystem: ActorSystem)
+final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient, sys: akka.actor.ActorSystem)
     extends TriplestoreJsonProtocol
     with RequestBuilding {
 
-  implicit val system: ActorSystem                = actorSystem
+  implicit val system: akka.actor.ActorSystem     = sys
   implicit val settings: KnoraSettingsImpl        = KnoraSettings(system)
   implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
@@ -260,10 +260,7 @@ object TestClientService {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
-
-    // timeout from config
-    val sipiTimeoutMillis = config.sipi.timeoutInSeconds.toMillis.toInt
+  private val acquire = ZIO.attemptBlocking {
 
     // Create a connection manager with custom configuration.
     val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
@@ -286,6 +283,7 @@ object TestClientService {
     connManager.setDefaultMaxPerRoute(10)
 
     // Sipi custom default request config
+    val sipiTimeoutMillis = 120 * 1000
     val defaultRequestConfig = RequestConfig
       .custom()
       .setConnectTimeout(sipiTimeoutMillis)
@@ -306,19 +304,18 @@ object TestClientService {
   /**
    * Releases the httpClient, freeing all resources.
    */
-  private def release(httpClient: CloseableHttpClient)(implicit system: ActorSystem) = ZIO.attemptBlocking {
+  private def release(httpClient: CloseableHttpClient)(implicit system: akka.actor.ActorSystem) = ZIO.attemptBlocking {
     akka.http.scaladsl.Http().shutdownAllConnectionPools()
     httpClient.close()
   }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
 
-  val layer: ZLayer[AppConfig & TestActorSystemService, Nothing, TestClientService] =
+  def layer: ZLayer[ActorSystem & AppConfig, Nothing, TestClientService] =
     ZLayer.scoped {
       for {
-        // _          <- ZIO.debug(config.sipi)
+        sys        <- ZIO.service[ActorSystem]
         config     <- ZIO.service[AppConfig]
-        tass       <- ZIO.service[TestActorSystemService]
-        httpClient <- ZIO.acquireRelease(acquire(config))(release(_)(tass.getActorSystem))
-      } yield TestClientService(config, httpClient, tass.getActorSystem)
-    }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
+        httpClient <- ZIO.acquireRelease(acquire)(release(_)(sys.system))
+      } yield TestClientService(config, httpClient, sys.system)
+    }
 
 }

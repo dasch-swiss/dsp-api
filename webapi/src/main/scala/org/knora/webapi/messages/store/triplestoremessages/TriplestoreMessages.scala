@@ -22,9 +22,9 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus.TriplestoreStatus
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.store.triplestore.domain
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -336,7 +336,7 @@ case class CheckTriplestoreRequest() extends TriplestoreRequest
  * @param triplestoreStatus the state of the triplestore.
  * @param msg               further description.
  */
-case class CheckTriplestoreResponse(triplestoreStatus: TriplestoreStatus, msg: String)
+case class CheckTriplestoreResponse(triplestoreStatus: domain.TriplestoreStatus)
 
 /**
  * Simulates a triplestore timeout. Used only in testing.
@@ -382,17 +382,6 @@ case class RepositoryUpdatedResponse(message: String) extends TriplestoreRequest
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
-
-/**
- * Triplestore status
- * - ServiceUnavailable: Triplestore is not responding to HTTP requests.
- * - NotInitialized: Triplestore is responding to HTTP requests but the repository defined in 'application.conf' is missing.
- * - ServiceAvailable: Everything is OK.
- */
-object TriplestoreStatus extends Enumeration {
-  type TriplestoreStatus = Value
-  val ServiceUnavailable, NotInitialized, ServiceAvailable = Value
-}
 
 /**
  * Contains the path to the 'ttl' file and the name of the named graph it should be loaded in.

@@ -9,9 +9,6 @@ import akka.testkit.ImplicitSender
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
-import zio.&
-import zio.Runtime
-import zio.ZLayer
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -20,8 +17,6 @@ import scala.concurrent.duration._
 
 import dsp.errors._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -40,15 +35,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.util._
 
 object ResourcesResponderV2Spec {
@@ -415,19 +401,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val graphTestData = new GraphTestData
 
   /* we need to run our app with the mocked sipi implementation */
-  override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
-      Runtime.removeDefaultLoggers,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceMockImpl.layer,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer
-    )
+  override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

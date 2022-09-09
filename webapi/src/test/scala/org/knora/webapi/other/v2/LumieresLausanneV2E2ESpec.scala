@@ -10,24 +10,15 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 
-object LumieresLausanneV2E2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for additional testing of permissions.
  */
-class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config) with TriplestoreJsonProtocol {
+class LumieresLausanneV2E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

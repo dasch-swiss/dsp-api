@@ -35,7 +35,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route = Route {
+  override def makeRoute: Route = Route {
     path("admin" / "store") {
       get { requestContext =>
         /**

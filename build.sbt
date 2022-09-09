@@ -209,7 +209,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // add 'config' directory to the classpath of the start script,
     Universal / scriptClasspath := Seq("webapi/scripts", "knora-ontologies", "../config/") ++ scriptClasspath.value,
     // need this here, so that the Manifest inside the jars has the correct main class set.
-    Compile / mainClass := Some("org.knora.webapi.app.Main"),
+    Compile / mainClass := Some("org.knora.webapi.Main"),
     // add dockerCommands used to create the image
     // docker:stage, docker:publishLocal, docker:publish, docker:clean
     Docker / dockerRepository := Some("daschswiss"),
@@ -241,17 +241,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .dependsOn(shared, schemaCore)
 
 lazy val webapiJavaRunOptions = Seq(
-  // "-showversion",
   "-Xms1G",
   "-Xmx1G",
-  // "-verbose:gc",
-  // "-XX:+UseG1GC",
-  // "-XX:MaxGCPauseMillis=500"
-  "-Dcom.sun.management.jmxremote",
-  // "-Dcom.sun.management.jmxremote.port=1617",
-  "-Dcom.sun.management.jmxremote.authenticate=false",
-  "-Dcom.sun.management.jmxremote.ssl=false"
-  // "-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
+  "-Xss6M"
 )
 
 lazy val webapiJavaTestOptions = Seq(

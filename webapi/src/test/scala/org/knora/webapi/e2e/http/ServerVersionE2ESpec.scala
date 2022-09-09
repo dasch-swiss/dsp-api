@@ -8,23 +8,14 @@ package org.knora.webapi.e2e.http
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.version.ServerVersion
 
-object ServerVersionE2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing the server response.
  */
-class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
+class ServerVersionE2ESpec extends E2ESpec {
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
   "The Server" should {

@@ -63,6 +63,6 @@ object IIIFServiceMockImpl {
   val layer: ZLayer[Any, Nothing, IIIFService] =
     ZLayer
       .succeed(IIIFServiceMockImpl())
-      .tap(_ => ZIO.debug(">>> Mock Sipi IIIF Service Initialized <<<"))
+      .tap(_ => ZIO.logInfo(">>> Mock Sipi IIIF Service Initialized <<<"))
 
 }
