@@ -146,13 +146,6 @@ class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
 
   "The TriplestoreServiceManager" should {
 
-    "only start answering after initialization has finished " in {
-      appActor ! CheckTriplestoreRequest()
-      val response = expectMsgType[CheckTriplestoreResponse](1.second)
-
-      response.triplestoreStatus should be(TriplestoreStatus.Available)
-    }
-
     "reset the data after receiving a 'ResetTriplestoreContent' request" in {
       appActor ! ResetRepositoryContent(rdfDataObjects)
       expectMsg(5.minutes, ResetRepositoryContentACK())
