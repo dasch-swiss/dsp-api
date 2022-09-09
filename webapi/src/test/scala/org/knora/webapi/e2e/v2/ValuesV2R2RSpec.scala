@@ -34,11 +34,6 @@ import org.knora.webapi.util.MutableTestIri
  * Tests creating a still image file value using a mock Sipi.
  */
 class ValuesV2R2RSpec extends R2RSpec {
-  override def testConfigSource: String =
-    """
-      |# akka.loglevel = "DEBUG"
-      |# akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

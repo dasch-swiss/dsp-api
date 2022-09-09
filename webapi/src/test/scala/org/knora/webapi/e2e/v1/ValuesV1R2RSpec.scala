@@ -29,12 +29,6 @@ import org.knora.webapi.util.MutableTestIri
  */
 class ValuesV1R2RSpec extends R2RSpec {
 
-  override def testConfigSource: String =
-    """
-         # akka.loglevel = "DEBUG"
-         # akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
   private val valuesPath = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)

@@ -31,12 +31,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
  */
 class SipiV1R2RSpec extends R2RSpec {
 
-  override def testConfigSource: String =
-    """
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
   private val resourcesPath = new ResourcesRouteV1(routeData).makeRoute
   private val valuesPath    = new ValuesRouteV1(routeData).makeRoute
 

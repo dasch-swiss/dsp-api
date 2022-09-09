@@ -24,12 +24,6 @@ import org.knora.webapi.routing.v1.SearchRouteV1
  */
 class SearchV1R2RSpec extends R2RSpec {
 
-  override def testConfigSource: String =
-    """
-      |# akka.loglevel = "DEBUG"
-      |# akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
   private val searchPath = new SearchRouteV1(routeData).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
