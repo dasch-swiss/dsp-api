@@ -27,7 +27,7 @@ object Main extends ZIOApp {
     Environment
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ core.LayersLive.dspLayersLive
 
-  // no idea why we need that, but we do
+  /* Needed for ZIO type magic */
   override val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
 
   /* Here we start our Application */
