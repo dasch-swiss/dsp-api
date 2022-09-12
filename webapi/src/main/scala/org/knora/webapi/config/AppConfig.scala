@@ -30,10 +30,16 @@ final case class AppConfig(
   knoraApi: KnoraAPI,
   sipi: Sipi,
   ark: Ark,
+  salsah1: Salsah1,
+  gui: Gui,
   triplestore: Triplestore,
-  shacl: Shacl
+  v2: V2,
+  shacl: Shacl,
+  user: User
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
+  val defaultTimeoutAsDuration =
+    scala.concurrent.duration.Duration.apply(defaultTimeout).asInstanceOf[duration.FiniteDuration]
 }
 
 final case class KnoraAPI(
@@ -79,7 +85,8 @@ final case class Sipi(
   externalHost: String,
   externalPort: Int,
   fileServerPath: String,
-  v2: V2,
+  moveFileRoute: String,
+  deleteTempFileRoute: String,
   imageMimeTypes: List[String],
   documentMimeTypes: List[String],
   textMimeTypes: List[String],
@@ -94,12 +101,40 @@ final case class Sipi(
                                                               ":" + externalPort
                                                             else "")
   val timeoutInSeconds: duration.Duration = scala.concurrent.duration.Duration(timeout)
+
 }
 
 final case class V2(
-  fileMetadataRoute: String,
-  moveFileRoute: String,
-  deleteTempFileRoute: String
+  resourcesSequence: ResourcesSequence,
+  graphRoute: GraphRoute,
+  fulltextSearch: FulltextSearch
+)
+
+final case class ResourcesSequence(
+  resultsPerPage: Int
+)
+
+final case class GraphRoute(
+  defaultGraphDepth: Int,
+  maxGraphDepth: Int
+)
+
+final case class FulltextSearch(
+  searchValueMinLength: Int
+)
+
+final case class Salsah1(
+  baseUrl: String,
+  projectIconsBasepath: String
+)
+
+final case class Gui(
+  defaultIconSize: DefaultIconSize
+)
+
+final case class DefaultIconSize(
+  dimX: Int,
+  dimY: Int
 )
 
 final case class Ark(
@@ -141,6 +176,9 @@ final case class Shacl(
 ) {
   val shapesDirPath = Paths.get(shapesDir)
 }
+final case class User(
+  defaultLanguage: String = "en"
+)
 
 /**
  * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading

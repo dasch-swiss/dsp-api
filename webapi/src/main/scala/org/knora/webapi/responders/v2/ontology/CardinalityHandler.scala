@@ -60,7 +60,6 @@ object CardinalityHandler {
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
-             settings,
              appActor,
              internalOntologyIri = internalOntologyIri,
              expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
@@ -220,7 +219,6 @@ object CardinalityHandler {
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
-             settings,
              appActor,
              internalOntologyIri = internalOntologyIri,
              expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
@@ -403,7 +401,6 @@ object CardinalityHandler {
       // Check that the ontology's last modification date was updated.
 
       _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
-             settings,
              appActor,
              internalOntologyIri = internalOntologyIri,
              expectedLastModificationDate = currentTime
@@ -412,7 +409,6 @@ object CardinalityHandler {
       // Check that the data that was saved corresponds to the data that was submitted.
 
       loadedClassDef <- OntologyHelpers.loadClassDefinition(
-                          settings,
                           appActor,
                           classIri = internalClassIri
                         )

@@ -120,7 +120,7 @@ class RoutingActor(
   val projectsResponderV1: ProjectsResponderV1   = new ProjectsResponderV1(responderData)
 
   // V2 responders
-  val ontologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(responderData)
+  val ontologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(responderData, appConfig)
   val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData)
   val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
   val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)

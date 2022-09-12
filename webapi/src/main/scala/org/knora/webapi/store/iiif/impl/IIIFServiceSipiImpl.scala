@@ -103,7 +103,7 @@ case class IIIFServiceSipiImpl(
 
     // builds the url for the operation
     def moveFileUrl(token: String) =
-      ZIO.succeed(s"${config.sipi.internalBaseUrl}/${config.sipi.v2.moveFileRoute}?token=$token")
+      ZIO.succeed(s"${config.sipi.internalBaseUrl}/${config.sipi.moveFileRoute}?token=$token")
 
     // build the form to send together with the request
     val formParams = new util.ArrayList[NameValuePair]()
@@ -149,7 +149,7 @@ case class IIIFServiceSipiImpl(
 
     def deleteUrl(token: String): ZIO[Any, Nothing, String] =
       ZIO.succeed(
-        s"${config.sipi.internalBaseUrl}/${config.sipi.v2.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
+        s"${config.sipi.internalBaseUrl}/${config.sipi.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
       )
 
     for {

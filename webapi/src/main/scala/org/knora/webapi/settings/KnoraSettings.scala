@@ -163,9 +163,9 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
                                                                                        else "")
   val sipiFileServerPrefix: String      = config.getString("app.sipi.file-server-path")
   val externalSipiIIIFGetUrl: String    = externalSipiBaseUrl
-  val sipiFileMetadataRouteV2: String   = config.getString("app.sipi.v2.file-metadata-route")
-  val sipiMoveFileRouteV2: String       = config.getString("app.sipi.v2.move-file-route")
-  val sipiDeleteTempFileRouteV2: String = config.getString("app.sipi.v2.delete-temp-file-route")
+  val sipiFileMetadataRouteV2: String   = config.getString("app.sipi.file-metadata-route")
+  val sipiMoveFileRouteV2: String       = config.getString("app.sipi.move-file-route")
+  val sipiDeleteTempFileRouteV2: String = config.getString("app.sipi.delete-temp-file-route")
 
   val arkResolver: String    = config.getString("app.ark.resolver")
   val arkAssignedNumber: Int = config.getInt("app.ark.assigned-number")
@@ -193,8 +193,8 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
   val showInternalErrors: Boolean        = config.getBoolean("app.show-internal-errors")
   val maxResultsPerSearchResultPage: Int = config.getInt("app.max-results-per-search-result-page")
   val standoffPerPage: Int               = config.getInt("app.standoff-per-page")
-  val defaultIconSizeDimX: Int           = config.getInt("app.gui.default-icon-size.dimX")
-  val defaultIconSizeDimY: Int           = config.getInt("app.gui.default-icon-size.dimY")
+  val defaultIconSizeDimX: Int           = config.getInt("app.gui.default-icon-size.dim-x")
+  val defaultIconSizeDimY: Int           = config.getInt("app.gui.default-icon-size.dim-y")
 
   val v2ResultsPerPage: Int     = config.getInt("app.v2.resources-sequence.results-per-page")
   val searchValueMinLength: Int = config.getInt("app.v2.fulltext-search.search-value-min-length")
