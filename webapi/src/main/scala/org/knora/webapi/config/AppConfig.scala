@@ -35,7 +35,8 @@ final case class AppConfig(
   triplestore: Triplestore,
   v2: V2,
   shacl: Shacl,
-  user: User
+  fallbackLanguage: String,
+  maxResultsPerSearchResultPage: Int
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -176,9 +177,6 @@ final case class Shacl(
 ) {
   val shapesDirPath = Paths.get(shapesDir)
 }
-final case class User(
-  defaultLanguage: String = "en"
-)
 
 /**
  * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading

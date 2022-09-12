@@ -30,12 +30,13 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
+import org.knora.webapi.config.AppConfig
 
 /**
  * Responds to requests for user search queries and returns responses in Knora API
  * v1 format.
  */
-class SearchResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class SearchResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
   // Valid combinations of value types and comparison operators, for determining whether a requested search
   // criterion is valid. The valid comparison operators for search criteria involving link properties can be
@@ -133,7 +134,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     valuePermissionCode: Option[Int]
   )
 
-  val valueUtilV1 = new ValueUtilV1(settings)
+  val valueUtilV1 = new ValueUtilV1(appConfig)
 
   /**
    * Receives a message of type [[SearchResponderRequestV1]], and returns an appropriate response message.
@@ -166,7 +167,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                           .searchFulltext(
                             searchTerms = LuceneQueryString(searchGetRequest.searchValue),
                             preferredLanguage = searchGetRequest.userProfile.lang,
-                            fallbackLanguage = settings.fallbackLanguage,
+                            fallbackLanguage = appConfig.fallbackLanguage,
                             projectIriOption = searchGetRequest.filterByProject,
                             restypeIriOption = searchGetRequest.filterByRestype
                           )
@@ -228,7 +229,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
               val resourceEntityInfo: ClassInfoV1 = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
               val resourceClassLabel = resourceEntityInfo.getPredicateObject(
                 predicateIri = OntologyConstants.Rdfs.Label,
-                preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)
+                preferredLangs = Some(searchGetRequest.userProfile.lang, appConfig.fallbackLanguage)
               )
               val resourceClassIcon = resourceEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
               val resourceLabel = firstRowMap.getOrElse(
@@ -259,7 +260,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                         .propertyInfoMap(propertyIri)
                         .getPredicateObject(
                           OntologyConstants.Rdfs.Label,
-                          preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)
+                          preferredLangs = Some(searchGetRequest.userProfile.lang, appConfig.fallbackLanguage)
                         ) match {
                         case Some(label) => label
                         case None =>
@@ -308,11 +309,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                   value = resourceLabel +: matchingValues.map(_.literal),
                   preview_nx = firstRowMap.get("previewDimX") match {
                     case Some(previewDimX) => previewDimX.toInt
-                    case None              => settings.defaultIconSizeDimX
+                    case None              => appConfig.gui.defaultIconSize.dimX
                   },
                   preview_ny = firstRowMap.get("previewDimY") match {
                     case Some(previewDimY) => previewDimY.toInt
-                    case None              => settings.defaultIconSizeDimY
+                    case None              => appConfig.gui.defaultIconSize.dimY
                   },
                   rights = resourcePermissionCode
                 )
@@ -578,7 +579,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                        .searchExtended(
                          searchCriteria = searchCriteria,
                          preferredLanguage = searchGetRequest.userProfile.lang,
-                         fallbackLanguage = settings.fallbackLanguage,
+                         fallbackLanguage = appConfig.fallbackLanguage,
                          projectIriOption = searchGetRequest.filterByProject,
                          restypeIriOption = searchGetRequest.filterByRestype,
                          ownerIriOption = searchGetRequest.filterByOwner
@@ -636,7 +637,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
               val resourceEntityInfo = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
               val resourceClassLabel = resourceEntityInfo.getPredicateObject(
                 predicateIri = OntologyConstants.Rdfs.Label,
-                preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)
+                preferredLangs = Some(searchGetRequest.userProfile.lang, appConfig.fallbackLanguage)
               )
               val resourceClassIcon = resourceEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
               val resourceLabel = firstRowMap.getOrElse(
@@ -701,7 +702,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                           .propertyInfoMap(propertyIri)
                           .getPredicateObject(
                             predicateIri = OntologyConstants.Rdfs.Label,
-                            preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)
+                            preferredLangs = Some(searchGetRequest.userProfile.lang, appConfig.fallbackLanguage)
                           ) match {
                           case Some(label) => label
                           case None =>
@@ -759,11 +760,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                   value = resourceLabel +: matchingValues.map(_.literal),
                   preview_nx = firstRowMap.get("previewDimX") match {
                     case Some(previewDimX) => previewDimX.toInt
-                    case None              => settings.defaultIconSizeDimX
+                    case None              => appConfig.gui.defaultIconSize.dimX
                   },
                   preview_ny = firstRowMap.get("previewDimY") match {
                     case Some(previewDimY) => previewDimY.toInt
-                    case None              => settings.defaultIconSizeDimY
+                    case None              => appConfig.gui.defaultIconSize.dimY
                   },
                   rights = resourcePermissionCode
                 )
@@ -830,7 +831,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
       throw BadRequestException("Search limit must be greater than 0")
     }
 
-    if (limit > settings.maxResultsPerSearchResultPage) settings.maxResultsPerSearchResultPage else limit
+    if (limit > appConfig.maxResultsPerSearchResultPage) appConfig.maxResultsPerSearchResultPage else limit
   }
 
   /**

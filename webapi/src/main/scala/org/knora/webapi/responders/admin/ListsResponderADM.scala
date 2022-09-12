@@ -34,11 +34,12 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.config.AppConfig
 
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderADM(responderData: ResponderData) extends Responder(responderData) {
+class ListsResponderADM(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
   // The IRI used to lock user creation and update
   private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
@@ -798,7 +799,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                            .getNodePath(
                              queryNodeIri = queryNodeIri,
                              preferredLanguage = requestingUser.lang,
-                             fallbackLanguage = settings.fallbackLanguage
+                             fallbackLanguage = appConfig.fallbackLanguage
                            )
                            .toString()
                        }

@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.config.AppConfig
 
 /**
  * Handles requests for information about ontology entities.
@@ -35,9 +36,9 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
  * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
  * the application.
  */
-class OntologyResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class OntologyResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
-  private val valueUtilV1 = new ValueUtilV1(settings)
+  private val valueUtilV1 = new ValueUtilV1(appConfig)
 
   /**
    * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message.
@@ -240,14 +241,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         predicateIri = OntologyConstants.Rdfs.Label,
                                                                         preferredLangs = Some(
                                                                           userProfile.lang,
-                                                                          settings.fallbackLanguage
+                                                                          appConfig.fallbackLanguage
                                                                         )
                                                                       ),
                                                                       description = entityInfo.getPredicateObject(
                                                                         predicateIri = OntologyConstants.Rdfs.Comment,
                                                                         preferredLangs = Some(
                                                                           userProfile.lang,
-                                                                          settings.fallbackLanguage
+                                                                          appConfig.fallbackLanguage
                                                                         )
                                                                       ),
                                                                       vocabulary = entityInfo.ontologyIri,
@@ -290,14 +291,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         predicateIri = OntologyConstants.Rdfs.Label,
                                                                         preferredLangs = Some(
                                                                           userProfile.lang,
-                                                                          settings.fallbackLanguage
+                                                                          appConfig.fallbackLanguage
                                                                         )
                                                                       ),
                                                                       description = entityInfo.getPredicateObject(
                                                                         predicateIri = OntologyConstants.Rdfs.Comment,
                                                                         preferredLangs = Some(
                                                                           userProfile.lang,
-                                                                          settings.fallbackLanguage
+                                                                          appConfig.fallbackLanguage
                                                                         )
                                                                       ),
                                                                       vocabulary = entityInfo.ontologyIri,
@@ -340,11 +341,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                  name = resourceTypeIri,
                                  label = resourceClassInfo.getPredicateObject(
                                    predicateIri = OntologyConstants.Rdfs.Label,
-                                   preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                                   preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                                  ),
                                  description = resourceClassInfo.getPredicateObject(
                                    predicateIri = OntologyConstants.Rdfs.Comment,
-                                   preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                                   preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                                  ),
                                  iconsrc =
                                    resourceClassInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
@@ -620,11 +621,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                 name = propertyIri,
                 label = entityInfo.getPredicateObject(
                   predicateIri = OntologyConstants.Rdfs.Label,
-                  preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                 ),
                 description = entityInfo.getPredicateObject(
                   predicateIri = OntologyConstants.Rdfs.Comment,
-                  preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                 ),
                 vocabulary = entityInfo.ontologyIri,
                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
@@ -652,11 +653,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                 name = propertyIri,
                 label = entityInfo.getPredicateObject(
                   predicateIri = OntologyConstants.Rdfs.Label,
-                  preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                 ),
                 description = entityInfo.getPredicateObject(
                   predicateIri = OntologyConstants.Rdfs.Comment,
-                  preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                 ),
                 vocabulary = entityInfo.ontologyIri,
                 valuetype_id = entityInfo

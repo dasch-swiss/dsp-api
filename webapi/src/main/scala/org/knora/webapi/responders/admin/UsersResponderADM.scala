@@ -40,11 +40,14 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.config.AppConfig
 
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
+class UsersResponderADM(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData)
+    with InstrumentationSupport {
 
   // The IRI used to lock user creation and update
   private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -499,7 +502,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
         // hash the new password
-        encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
+        encoder = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
         newHashedPassword = Password
                               .make(encoder.encode(userUpdatePasswordPayload.newPassword.value))
                               .fold(e => throw e.head, value => value)
@@ -1673,7 +1676,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         userIri: IRI                   <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password
-        encoder        = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
+        encoder        = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
         hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.

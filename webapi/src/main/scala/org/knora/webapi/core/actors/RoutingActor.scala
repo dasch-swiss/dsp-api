@@ -114,9 +114,9 @@ class RoutingActor(
   val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
   val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
   val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
-  val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData)
+  val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData, appConfig)
   val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
-  val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
+  val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData, appConfig)
   val projectsResponderV1: ProjectsResponderV1   = new ProjectsResponderV1(responderData)
 
   // V2 responders
@@ -129,11 +129,11 @@ class RoutingActor(
 
   // Admin responders
   val groupsResponderADM: GroupsResponderADM           = new GroupsResponderADM(responderData)
-  val listsResponderADM: ListsResponderADM             = new ListsResponderADM(responderData)
+  val listsResponderADM: ListsResponderADM             = new ListsResponderADM(responderData, appConfig)
   val permissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
   val projectsResponderADM: ProjectsResponderADM       = new ProjectsResponderADM(responderData)
-  val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData)
-  val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData)
+  val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData, appConfig)
+  val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData, appConfig)
   val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
 
   def receive: Receive = {

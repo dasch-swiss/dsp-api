@@ -50,13 +50,14 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.util._
+import org.knora.webapi.config.AppConfig
 
 /**
  * Updates Knora values.
  */
-class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class ValuesResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
   // Converts SPARQL query results to ApiValueV1 objects.
-  val valueUtilV1 = new ValueUtilV1(settings)
+  val valueUtilV1 = new ValueUtilV1(appConfig)
 
   /**
    * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.

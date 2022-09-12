@@ -20,11 +20,12 @@ import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.config.AppConfig
 
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class ListsResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
   /**
    * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.
@@ -147,7 +148,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                        .getList(
                          rootNodeIri = rootNodeIri,
                          preferredLanguage = userProfile.userData.lang,
-                         fallbackLanguage = settings.fallbackLanguage
+                         fallbackLanguage = appConfig.fallbackLanguage
                        )
                        .toString()
                    }
@@ -229,7 +230,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                            .getNodePath(
                              queryNodeIri = queryNodeIri,
                              preferredLanguage = userProfile.userData.lang,
-                             fallbackLanguage = settings.fallbackLanguage
+                             fallbackLanguage = appConfig.fallbackLanguage
                            )
                            .toString()
                        }

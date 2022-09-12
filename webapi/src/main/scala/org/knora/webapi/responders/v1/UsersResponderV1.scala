@@ -30,11 +30,12 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.config.AppConfig
 
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class UsersResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
   // The IRI used to lock user creation and update
   val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -98,7 +99,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 UserDataV1(
                   lang = propsMap.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
                     case Some(langList) => langList
-                    case None           => settings.fallbackLanguage
+                    case None           => appConfig.fallbackLanguage
                   },
                   user_id = Some(userIri),
                   email = propsMap.get(OntologyConstants.KnoraAdmin.Email),
@@ -454,7 +455,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       val userDataV1 = UserDataV1(
         lang = groupedUserData.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
           case Some(langList) => langList.head
-          case None           => settings.fallbackLanguage
+          case None           => appConfig.fallbackLanguage
         },
         user_id = Some(returnedUserIri),
         email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),
@@ -494,7 +495,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       val userDataV1 = UserDataV1(
         lang = groupedUserData.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
           case Some(langList) => langList.head
-          case None           => settings.fallbackLanguage
+          case None           => appConfig.fallbackLanguage
         },
         user_id = Some(returnedUserIri),
         email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),

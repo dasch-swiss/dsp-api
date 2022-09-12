@@ -24,12 +24,13 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.config.AppConfig
 
 /**
  * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
  * 'Store Module'
  */
-class StoresResponderADM(responderData: ResponderData) extends Responder(responderData) {
+class StoresResponderADM(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
   /**
    * A user representing the Knora API server, used in those cases where a user is required.
@@ -63,7 +64,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
 
     for {
       // FIXME: need to call directly into the State service
-      value: Boolean <- FastFuture.successful(settings.allowReloadOverHTTP)
+      value: Boolean <- FastFuture.successful(appConfig.allowReloadOverHttp)
       _ = if (!value) {
             throw ForbiddenException(
               "The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"

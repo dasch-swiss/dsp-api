@@ -61,7 +61,7 @@ import org.knora.webapi.config.AppConfig
  *
  * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
  */
-class OntologyResponderV2(responderData: ResponderData, config: AppConfig) extends Responder(responderData) {
+class OntologyResponderV2(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
   /**
    * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
@@ -294,7 +294,7 @@ class OntologyResponderV2(responderData: ResponderData, config: AppConfig) exten
                        label = classInfo.entityInfoContent
                          .getPredicateStringLiteralObject(
                            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                           preferredLangs = Some(requestingUser.lang, config.user.defaultLanguage)
+                           preferredLangs = Some(requestingUser.lang, appConfig.fallbackLanguage)
                          )
                          .getOrElse(
                            throw InconsistentRepositoryDataException(s"Resource class $subClassIri has no rdfs:label")
