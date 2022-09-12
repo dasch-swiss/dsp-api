@@ -438,7 +438,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       RouteUtilV2.runTEIXMLRoute(
         requestMessageF = requestMessageFuture,
         requestContext = requestContext,
-        settings = settings,
         appActor = appActor,
         log = log,
         targetSchema = RouteUtilV2.getOntologySchema(requestContext)

@@ -220,10 +220,6 @@ object RouteUtilV2 {
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption]
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
-    // Optionally log the request message. TODO: move this to the testing framework.
-    if (settings.dumpMessages) {
-      log.debug(requestMessage.toString)
-    }
 
     val httpResponse: Future[HttpResponse] = for {
       // Make sure the responder sent a reply of type KnoraResponseV2.
@@ -237,11 +233,6 @@ object RouteUtilV2 {
                              s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
                            )
                        }
-
-      // Optionally log the reply message. TODO: move this to the testing framework.
-      _ = if (settings.dumpMessages) {
-            log.debug(knoraResponse.toString)
-          }
 
       // Choose a media type for the response.
       responseMediaType: MediaType.NonBinary = chooseRdfMediaTypeForResponse(requestContext)
@@ -275,7 +266,6 @@ object RouteUtilV2 {
    *
    * @param requestMessageF      a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param settings             the application's settings.
    * @param responderManager     a reference to the responder manager.
    * @param log                  a logging adapter.
    * @param targetSchema         the API schema that should be used in the response.
@@ -286,7 +276,6 @@ object RouteUtilV2 {
   def runTEIXMLRoute(
     requestMessageF: Future[KnoraRequestV2],
     requestContext: RequestContext,
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     log: Logger,
     targetSchema: ApiV2Schema
