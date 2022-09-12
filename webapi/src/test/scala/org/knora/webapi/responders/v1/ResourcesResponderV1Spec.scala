@@ -6,8 +6,6 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import spray.json.JsValue
 
 import java.util.UUID
@@ -40,10 +38,6 @@ import org.knora.webapi.util._
  * Static data for testing [[ResourcesResponderV1]].
  */
 object ResourcesResponderV1Spec {
-  private val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
 
   private val ReiseInsHeiligelandThreeValues: ResourceSearchResponseV1 = ResourceSearchResponseV1(
     resources = Vector(
@@ -647,7 +641,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
   implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val valueUtilV1 = new ValueUtilV1(settings)
+  private val valueUtilV1 = new ValueUtilV1(appConfig)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

@@ -15,6 +15,7 @@ import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -40,7 +41,6 @@ import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.util._
-import org.knora.webapi.config.AppConfig
 
 /**
  * Responds to requests dealing with ontologies.

@@ -110,12 +110,12 @@ class RoutingActor(
 
   // V1 responders
   val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
-  val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
-  val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
+  val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData, appConfig)
+  val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData, appConfig)
   val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
-  val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
+  val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData, appConfig)
   val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData, appConfig)
-  val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
+  val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData, appConfig)
   val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData, appConfig)
   val projectsResponderV1: ProjectsResponderV1   = new ProjectsResponderV1(responderData)
 

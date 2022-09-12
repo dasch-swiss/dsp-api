@@ -14,6 +14,7 @@ import scala.concurrent.Future
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -50,7 +51,6 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.util._
-import org.knora.webapi.config.AppConfig
 
 /**
  * Updates Knora values.
