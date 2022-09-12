@@ -112,21 +112,11 @@ object GravsearchParser {
        * @param sourceName the source name.
        * @return an [[algebra.Var]] representing the name or its literal value.
        */
-      def nameToVar(sourceName: String): algebra.Var = {
-        val sparqlVar = new algebra.Var
-        sparqlVar.setName(sourceName)
-
+      def nameToVar(sourceName: String): algebra.Var =
         valueConstants.get(sourceName) match {
-          case Some(valueConstant) =>
-            sparqlVar.setConstant(true)
-            sparqlVar.setValue(valueConstant.getValue)
-
-          case None =>
-            sparqlVar.setConstant(false)
+          case Some(valueConstant) => new algebra.Var(sourceName, valueConstant.getValue(), false, true)
+          case None                => new algebra.Var(sourceName, null, false, false)
         }
-
-        sparqlVar
-      }
 
       // Convert each ConstructStatementWithConstants to a StatementPattern for use in the CONSTRUCT clause.
       val constructStatements: Seq[StatementPattern] = constructStatementsWithConstants.toVector.map {
