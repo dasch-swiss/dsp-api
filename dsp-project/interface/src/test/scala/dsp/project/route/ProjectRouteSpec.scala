@@ -5,4 +5,4 @@
 
 package dsp.project.route
 
-object placeholder {}
+object placeholder

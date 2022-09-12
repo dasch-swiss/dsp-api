@@ -5,4 +5,4 @@
 
 package dsp.project.listener.external
 
-object placeholder {}
+object placeholder
