@@ -17,7 +17,6 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -208,9 +207,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: Change existing user's basic information.
+   * Change existing user's basic information.
    */
-  @ApiMayChange
   private def changeUserBasicInformation(): Route =
     path(usersBasePath / "iri" / Segment / "BasicUserInformation") { userIri =>
       put {
@@ -286,9 +284,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: Change user's password.
+   * Change user's password.
    */
-  @ApiMayChange
   private def changeUserPassword(): Route =
     path(usersBasePath / "iri" / Segment / "Password") { userIri =>
       put {
@@ -338,9 +335,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: Change user's status.
+   * Change user's status.
    */
-  @ApiMayChange
   private def changeUserStatus(): Route =
     path(usersBasePath / "iri" / Segment / "Status") { userIri =>
       put {
@@ -386,9 +382,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: delete a user identified by iri (change status to false).
+   * delete a user identified by iri (change status to false).
    */
-  @ApiMayChange
   private def deleteUser(): Route = path(usersBasePath / "iri" / Segment) { userIri =>
     delete { requestContext =>
       if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -429,9 +424,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   }
 
   /**
-   * API MAY CHANGE: Change user's SystemAdmin membership.
+   * Change user's SystemAdmin membership.
    */
-  @ApiMayChange
   private def changeUserSystemAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "SystemAdmin") { userIri =>
       put {
@@ -477,9 +471,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: get user's project memberships
+   * get user's project memberships
    */
-  @ApiMayChange
   private def getUsersProjectMemberships(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships") { userIri =>
       get { requestContext =>
@@ -508,9 +501,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: add user to project
+   * add user to project
    */
-  @ApiMayChange
   private def addUserToProjectMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
@@ -555,9 +547,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: remove user from project (and all groups belonging to this project)
+   * remove user from project (and all groups belonging to this project)
    */
-  @ApiMayChange
   private def removeUserFromProjectMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
@@ -602,9 +593,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: get user's project admin memberships
+   * get user's project admin memberships
    */
-  @ApiMayChange
   private def getUsersProjectAdminMemberships(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
       get { requestContext =>
@@ -634,9 +624,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: add user to project admin
+   * add user to project admin
    */
-  @ApiMayChange
   private def addUserToProjectAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
@@ -681,9 +670,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: remove user from project admin membership
+   * remove user from project admin membership
    */
-  @ApiMayChange
   private def removeUserFromProjectAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
@@ -728,9 +716,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: get user's group memberships
+   * get user's group memberships
    */
-  @ApiMayChange
   private def getUsersGroupMemberships(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships") { userIri =>
       get { requestContext =>
@@ -759,9 +746,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: add user to group
+   * add user to group
    */
-  @ApiMayChange
   private def addUserToGroupMembership(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       post { requestContext =>
@@ -803,9 +789,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
   /**
-   * API MAY CHANGE: remove user from group
+   * remove user from group
    */
-  @ApiMayChange
   private def removeUserFromGroupMembership(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       delete { requestContext =>

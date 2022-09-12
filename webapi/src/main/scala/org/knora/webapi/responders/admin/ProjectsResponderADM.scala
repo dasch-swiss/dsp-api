@@ -20,7 +20,6 @@ import scala.util.Try
 
 import dsp.errors._
 import org.knora.webapi._
-import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -686,7 +685,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @param requestingUser       the user making the request.
    * @return [[ProjectRestrictedViewSettingsADM]]
    */
-  @ApiMayChange
   private def projectRestrictedViewSettingsGetADM(
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
@@ -738,7 +736,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @param requestingUser the user making the request.
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
-  @ApiMayChange
   private def projectRestrictedViewSettingsGetRequestADM(
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
