@@ -36,7 +36,8 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
  * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
  * the application.
  */
-class OntologyResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class OntologyResponderV1(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
 
   private val valueUtilV1 = new ValueUtilV1(appConfig)
 

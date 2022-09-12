@@ -36,7 +36,8 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  * Responds to requests for user search queries and returns responses in Knora API
  * v1 format.
  */
-class SearchResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class SearchResponderV1(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
 
   // Valid combinations of value types and comparison operators, for determining whether a requested search
   // criterion is valid. The valid comparison operators for search criteria involving link properties can be

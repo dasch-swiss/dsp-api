@@ -25,7 +25,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class ListsResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData, appConfig) {
 
   /**
    * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.

@@ -15,6 +15,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
@@ -40,7 +41,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
  * under http://data.humanities.ch
  */
-class CkanResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class CkanResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData, appConfig) {
 
   /**
    * A user representing the Knora API server, used in those cases where a user is required.

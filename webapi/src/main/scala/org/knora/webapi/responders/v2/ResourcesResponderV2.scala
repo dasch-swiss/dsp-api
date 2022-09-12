@@ -66,7 +66,7 @@ import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
 class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
-    extends ResponderWithStandoffV2(responderData) {
+    extends ResponderWithStandoffV2(responderData, appConfig) {
 
   /* actor materializer needed for http requests */
   implicit val materializer: Materializer = Materializer.matFromSystem(system)

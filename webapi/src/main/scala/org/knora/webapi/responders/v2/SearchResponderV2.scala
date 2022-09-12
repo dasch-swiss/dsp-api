@@ -51,7 +51,7 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport._
 
 class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
-    extends ResponderWithStandoffV2(responderData) {
+    extends ResponderWithStandoffV2(responderData, appConfig) {
 
   // A Gravsearch type inspection runner.
   private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(appActor, responderData)

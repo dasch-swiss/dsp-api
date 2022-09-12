@@ -46,7 +46,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
  * Provides information about Knora users to other responders.
  */
 class UsersResponderADM(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData)
+    extends Responder(responderData, appConfig)
     with InstrumentationSupport {
 
   // The IRI used to lock user creation and update

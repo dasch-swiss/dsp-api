@@ -63,7 +63,8 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
 
   /* actor materializer needed for http requests */
   implicit val materializer: Materializer = Materializer.matFromSystem(system)

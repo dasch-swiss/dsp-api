@@ -24,7 +24,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * Responds to requests relating to lists and nodes.
  */
-class ListsResponderV2(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class ListsResponderV2(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData, appConfig) {
 
   /**
    * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.

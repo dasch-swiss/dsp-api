@@ -39,7 +39,8 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderADM(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class ListsResponderADM(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
 
   // The IRI used to lock user creation and update
   private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"

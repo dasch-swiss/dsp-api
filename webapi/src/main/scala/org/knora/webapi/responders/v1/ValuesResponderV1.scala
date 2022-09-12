@@ -55,7 +55,8 @@ import org.knora.webapi.util._
 /**
  * Updates Knora values.
  */
-class ValuesResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class ValuesResponderV1(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
   // Converts SPARQL query results to ApiValueV1 objects.
   val valueUtilV1 = new ValueUtilV1(appConfig)
 

@@ -59,7 +59,8 @@ import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
  */
-class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
 
   // Converts SPARQL query results to ApiValueV1 objects.
   private val valueUtilV1 = new ValueUtilV1(appConfig)

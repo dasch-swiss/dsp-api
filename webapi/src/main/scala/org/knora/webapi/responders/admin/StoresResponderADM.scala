@@ -30,7 +30,8 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
  * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
  * 'Store Module'
  */
-class StoresResponderADM(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class StoresResponderADM(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
 
   /**
    * A user representing the Knora API server, used in those cases where a user is required.

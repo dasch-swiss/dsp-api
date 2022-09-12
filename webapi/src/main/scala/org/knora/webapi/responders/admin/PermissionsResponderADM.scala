@@ -15,6 +15,7 @@ import scala.concurrent.Future
 
 import dsp.errors._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -40,7 +41,8 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Provides information about permissions to other responders.
  */
-class PermissionsResponderADM(responderData: ResponderData) extends Responder(responderData) {
+class PermissionsResponderADM(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
   /* Entity types used to more clearly distinguish what kind of entity is meant */

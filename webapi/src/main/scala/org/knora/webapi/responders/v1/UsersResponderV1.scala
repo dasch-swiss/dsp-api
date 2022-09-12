@@ -35,7 +35,7 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
+class UsersResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData, appConfig) {
 
   // The IRI used to lock user creation and update
   val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"

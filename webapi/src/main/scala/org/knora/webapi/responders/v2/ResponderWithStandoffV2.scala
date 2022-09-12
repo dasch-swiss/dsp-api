@@ -12,6 +12,7 @@ import scala.concurrent.Future
 
 import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
@@ -27,7 +28,8 @@ import org.knora.webapi.store.iiif.errors.SipiException
 /**
  * An abstract class with standoff utility methods for v2 responders.
  */
-abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Responder(responderData) {
+abstract class ResponderWithStandoffV2(responderData: ResponderData, appConfig: AppConfig)
+    extends Responder(responderData, appConfig) {
 
   /**
    * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
