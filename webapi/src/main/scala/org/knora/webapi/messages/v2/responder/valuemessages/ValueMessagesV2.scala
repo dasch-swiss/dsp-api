@@ -3189,13 +3189,18 @@ case class StillImageFileValueContentV2(
   def makeFileUrl(projectADM: ProjectADM, settings: KnoraSettingsImpl): String =
     s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
 
+  // def makeFileUrl(projectADM: ProjectADM, appConfig: AppConfig): String =
+  //   s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
+
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     settings: KnoraSettingsImpl,
+    // appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDValue = {
     val fileUrl: String = makeFileUrl(projectADM, settings)
+    // val fileUrl: String = makeFileUrl(projectADM, appConfig)
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -3208,6 +3213,7 @@ case class StillImageFileValueContentV2(
             OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
               .datatypeValueToJsonLDObject(
                 value = s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}",
+                // value = s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}",
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
               )
           )

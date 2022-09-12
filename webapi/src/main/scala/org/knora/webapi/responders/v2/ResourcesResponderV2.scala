@@ -1509,7 +1509,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
     val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) =
       StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
         queryStandoff = queryStandoff,
-        settings = settings
+        appConfig = appConfig
       )
 
     for {
@@ -1615,7 +1615,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                                                 calculateMayHaveMoreResults = false,
                                                 appActor = appActor,
                                                 targetSchema = targetSchema,
-                                                settings = settings,
+                                                appConfig = appConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1706,7 +1706,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                                                 calculateMayHaveMoreResults = false,
                                                 appActor = appActor,
                                                 targetSchema = targetSchema,
-                                                settings = settings,
+                                                appConfig = appConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1796,7 +1796,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
           }
 
       gravsearchUrl: String =
-        s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
+        s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
     } yield gravsearchUrl
 
     val recoveredGravsearchUrlFuture = gravsearchUrlFuture.recover { case notFound: NotFoundException =>
@@ -2179,7 +2179,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                         startNodeOnly = false,
                         maybeExcludeLinkProperty = excludePropertyInternal,
                         outbound = outbound, // true to query outbound edges, false to query inbound edges
-                        limit = settings.maxGraphBreadth
+                        limit = appConfig.v2.graphRoute.maxGraphBreadth
                       )
                       .toString()
                   )
@@ -2320,7 +2320,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                       maybeExcludeLinkProperty = excludePropertyInternal,
                       startNodeOnly = true,
                       outbound = true,
-                      limit = settings.maxGraphBreadth
+                      limit = appConfig.v2.graphRoute.maxGraphBreadth
                     )
                     .toString()
                 )
@@ -2610,7 +2610,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                                           Seq(
                                             JsonLDObject(
                                               Map(
-                                                "id"      -> JsonLDString(settings.externalSipiIIIFGetUrl),
+                                                "id"      -> JsonLDString(appConfig.sipi.externalBaseUrl),
                                                 "type"    -> JsonLDString("ImageService3"),
                                                 "profile" -> JsonLDString("level1")
                                               )

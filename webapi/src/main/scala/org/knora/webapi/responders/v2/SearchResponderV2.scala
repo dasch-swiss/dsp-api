@@ -363,7 +363,7 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
           calculateMayHaveMoreResults = true,
           versionDate = None,
           appActor = appActor,
-          settings = settings,
+          appConfig = appConfig,
           targetSchema = targetSchema,
           requestingUser = requestingUser
         )
@@ -725,7 +725,7 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
           versionDate = None,
           calculateMayHaveMoreResults = true,
           appActor = appActor,
-          settings = settings,
+          appConfig = appConfig,
           targetSchema = targetSchema,
           requestingUser = requestingUser
         )
@@ -855,7 +855,7 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
         StandoffTagUtilV2
           .getStandoffMinAndMaxStartIndexesForTextValueQuery(
             queryStandoff = queryStandoff,
-            settings = settings
+            appConfig = appConfig
           )
 
       // Are there any matching resources?
@@ -921,7 +921,7 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
                 calculateMayHaveMoreResults = true,
                 appActor = appActor,
                 targetSchema = resourcesInProjectGetRequestV2.targetSchema,
-                settings = settings,
+                appConfig = appConfig,
                 requestingUser = resourcesInProjectGetRequestV2.requestingUser
               )
           } yield readResourcesSequence
@@ -1068,7 +1068,7 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
           calculateMayHaveMoreResults = true,
           appActor = appActor,
           targetSchema = targetSchema,
-          settings = settings,
+          appConfig = appConfig,
           requestingUser = requestingUser
         )
 

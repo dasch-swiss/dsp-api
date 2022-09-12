@@ -156,7 +156,7 @@ class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig) ex
                                                             versionDate = None,
                                                             appActor = appActor,
                                                             targetSchema = getStandoffRequestV2.targetSchema,
-                                                            settings = settings,
+                                                            appConfig = appConfig,
                                                             requestingUser = getStandoffRequestV2.requestingUser
                                                           )
 

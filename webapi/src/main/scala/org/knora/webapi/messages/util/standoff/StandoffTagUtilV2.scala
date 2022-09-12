@@ -18,6 +18,7 @@ import scala.concurrent.Future
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -33,7 +34,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.UpdateValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 object StandoffTagUtilV2 {
 
@@ -1666,17 +1666,17 @@ object StandoffTagUtilV2 {
    * for the first page of standoff in a text value. Otherwise, returns `(None, None)`.
    *
    * @param queryStandoff `true` if standoff should be queried.
-   * @param settings      the application settings.
+   * @param appConfig      the application configuration.
    * @return a tuple containing the minimum start index and maximum start index, or `(None, None)` if standoff
    *         is not being queried with text values.
    */
   def getStandoffMinAndMaxStartIndexesForTextValueQuery(
     queryStandoff: Boolean,
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): (Option[Int], Option[Int]) =
     if (queryStandoff) {
       // Yes. Get the first page of standoff with each text value.
-      (Some(0), Some(settings.standoffPerPage - 1))
+      (Some(0), Some(appConfig.standoffPerPage - 1))
     } else {
       // No.
       (None, None)
