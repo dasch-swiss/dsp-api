@@ -9,7 +9,6 @@ The `src` folder contains the following documentation sources:
 
 - `src/api-v1`: The DSP-API V1 (JSON) Request and Response Format documentation. Source can be found in `salsah1/src/typescript_interfaces`
 - `src/api-v2`: The DSP-API V2 (JSON-LD) Request and Response Format documentation.
-- `src/api-admin`: The DSP-API Admin (JSON) Request and Response format Swagger-based documentation.
 
 All the different documentations are build by invoking the following make
 commands from the project root directory:
