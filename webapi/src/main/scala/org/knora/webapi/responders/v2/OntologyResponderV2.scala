@@ -1756,7 +1756,6 @@ class OntologyResponderV2(responderData: ResponderData, config: AppConfig) exten
                       iri = ONTOLOGY_CACHE_LOCK_IRI,
                       task = () =>
                         CardinalityHandler.canDeleteCardinalitiesFromClass(
-                          settings,
                           appActor,
                           deleteCardinalitiesFromClassRequest = canDeleteCardinalitiesFromClassRequest,
                           internalClassIri = internalClassIri,
@@ -1796,7 +1795,6 @@ class OntologyResponderV2(responderData: ResponderData, config: AppConfig) exten
                       iri = ONTOLOGY_CACHE_LOCK_IRI,
                       task = () =>
                         CardinalityHandler.deleteCardinalitiesFromClass(
-                          settings,
                           appActor,
                           deleteCardinalitiesFromClassRequest = deleteCardinalitiesFromClassRequest,
                           internalClassIri = internalClassIri,

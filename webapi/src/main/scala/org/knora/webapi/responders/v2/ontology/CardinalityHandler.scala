@@ -28,7 +28,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * Contains methods used for dealing with cardinalities on a class
@@ -38,7 +37,6 @@ object CardinalityHandler {
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
    *
-   * @param settings the applications settings.
    * @param storeManager the store manager actor.
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
@@ -46,7 +44,6 @@ object CardinalityHandler {
    * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
    */
   def canDeleteCardinalitiesFromClass(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
@@ -124,7 +121,6 @@ object CardinalityHandler {
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(
-                                   settings,
                                    appActor,
                                    internalClassIri,
                                    submittedPropertyToDelete
@@ -197,7 +193,6 @@ object CardinalityHandler {
    * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
    * of the class and any subclasses.
    *
-   * @param settings the applications settings.
    * @param storeManager the store manager actor.
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
@@ -205,7 +200,6 @@ object CardinalityHandler {
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
   def deleteCardinalitiesFromClass(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
@@ -284,7 +278,6 @@ object CardinalityHandler {
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(
-                                   settings,
                                    appActor,
                                    internalClassIri,
                                    submittedPropertyToDelete
@@ -444,7 +437,6 @@ object CardinalityHandler {
    * Check if a property entity is used in resource instances. Returns `true` if
    * it is used, and `false` if it is not used.
    *
-   * @param settings application settings.
    * @param storeManager store manager actor ref.
    * @param internalPropertyIri the IRI of the entity that is being checked for usage.
    * @param ec the execution context onto with the future will run.
@@ -452,7 +444,6 @@ object CardinalityHandler {
    * @return a [[Boolean]] denoting if the property entity is used.
    */
   def isPropertyUsedInResources(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     internalClassIri: SmartIri,
     internalPropertyIri: SmartIri
