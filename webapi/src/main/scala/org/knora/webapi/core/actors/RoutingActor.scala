@@ -121,11 +121,11 @@ class RoutingActor(
 
   // V2 responders
   val ontologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(responderData, appConfig)
-  val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData)
-  val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
+  val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData, appConfig)
+  val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData, appConfig)
   val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)
-  val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData)
-  val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
+  val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData, appConfig)
+  val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData, appConfig)
 
   // Admin responders
   val groupsResponderADM: GroupsResponderADM           = new GroupsResponderADM(responderData)

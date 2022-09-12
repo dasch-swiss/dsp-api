@@ -27,6 +27,7 @@ import scala.xml.XML
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -62,7 +63,7 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
+class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
   /* actor materializer needed for http requests */
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
@@ -98,7 +99,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
   private val xsltCacheName = "xsltCache"
 
   private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Future[GetStandoffResponseV2] = {
-    val requestMaxStartIndex = getStandoffRequestV2.offset + settings.standoffPerPage - 1
+    val requestMaxStartIndex = getStandoffRequestV2.offset + appConfig.standoffPerPage - 1
 
     for {
       resourceRequestSparql <- Future(
@@ -259,7 +260,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
           }
 
       xsltUrl: String =
-        s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
+        s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
     } yield xsltUrl
 
@@ -1281,7 +1282,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     val firstTask = GetStandoffTask(
       resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
       valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      offset = settings.standoffPerPage, // the offset of the second page
+      offset = appConfig.standoffPerPage, // the offset of the second page
       requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
     )
 

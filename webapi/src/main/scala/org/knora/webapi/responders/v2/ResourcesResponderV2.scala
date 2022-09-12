@@ -18,6 +18,7 @@ import scala.util.Success
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -64,7 +65,8 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
-class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
+class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
+    extends ResponderWithStandoffV2(responderData) {
 
   /* actor materializer needed for http requests */
   implicit val materializer: Materializer = Materializer.matFromSystem(system)

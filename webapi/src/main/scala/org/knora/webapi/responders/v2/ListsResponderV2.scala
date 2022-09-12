@@ -10,6 +10,7 @@ import akka.pattern._
 import scala.concurrent.Future
 
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
@@ -23,7 +24,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * Responds to requests relating to lists and nodes.
  */
-class ListsResponderV2(responderData: ResponderData) extends Responder(responderData) {
+class ListsResponderV2(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData) {
 
   /**
    * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.
@@ -57,7 +58,7 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
                                                )
                                                .mapTo[ListGetResponseADM]
 
-    } yield ListGetResponseV2(list = listResponseADM.list, requestingUser.lang, settings.fallbackLanguage)
+    } yield ListGetResponseV2(list = listResponseADM.list, requestingUser.lang, appConfig.fallbackLanguage)
 
   /**
    * Gets a single list node from the triplestore.
@@ -80,6 +81,6 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
                                                        )
                                                      )
                                                      .mapTo[ChildNodeInfoGetResponseADM]
-    } yield NodeGetResponseV2(node = nodeResponse.nodeinfo, requestingUser.lang, settings.fallbackLanguage)
+    } yield NodeGetResponseV2(node = nodeResponse.nodeinfo, requestingUser.lang, appConfig.fallbackLanguage)
 
 }

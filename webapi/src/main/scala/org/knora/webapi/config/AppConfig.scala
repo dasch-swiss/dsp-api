@@ -36,7 +36,8 @@ final case class AppConfig(
   v2: V2,
   shacl: Shacl,
   fallbackLanguage: String,
-  maxResultsPerSearchResultPage: Int
+  maxResultsPerSearchResultPage: Int,
+  standoffPerPage: Int
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -117,6 +118,7 @@ final case class ResourcesSequence(
 
 final case class GraphRoute(
   defaultGraphDepth: Int,
+  maxGraphBreadth: Int,
   maxGraphDepth: Int
 )
 
