@@ -199,7 +199,7 @@ trait Authenticator extends InstrumentationSupport {
          |<div align="center">
          |    <section class="container">
          |        <div class="login">
-         |            <h1>Knora Login</h1>
+         |            <h1>DSP-API Login</h1>
          |            <form name="myform" action="$apiUrl/v2/login" method="post">
          |                <p>
          |                    <input type="text" name="username" value="" placeholder="Username">
@@ -217,7 +217,7 @@ trait Authenticator extends InstrumentationSupport {
          |
          |    <section class="about">
          |        <p class="about-author">
-         |            &copy; 2015&ndash;2019 <a href="https://knora.org" target="_blank">Knora.org</a>
+         |            &copy; 2015&ndash;2022 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a>
          |    </section>
          |</div>
         """.stripMargin
