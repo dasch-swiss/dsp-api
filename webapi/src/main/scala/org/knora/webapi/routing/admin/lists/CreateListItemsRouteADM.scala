@@ -8,11 +8,9 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import io.swagger.annotations._
 import zio.prelude.Validation
 
 import java.util.UUID
-import javax.ws.rs.Path
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
@@ -33,8 +31,6 @@ import org.knora.webapi.routing.RouteUtilADM
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-@Api(value = "lists", produces = "application/json")
-@Path("/admin/lists")
 class CreateListItemsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
@@ -46,28 +42,6 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
     createListRootNode() ~
       createListChildNode()
 
-  @ApiOperation(
-    value = "Add new list",
-    nickname = "addList",
-    httpMethod = "POST",
-    response = classOf[ListGetResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"list\" to create",
-        required = true,
-        dataTypeClass = classOf[ListRootNodeCreateApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Creates a new list (root node).
    */
@@ -115,29 +89,6 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
     }
   }
 
-  @Path("/{IRI}")
-  @ApiOperation(
-    value = "Add new node",
-    nickname = "addListNode",
-    httpMethod = "POST",
-    response = classOf[ChildNodeInfoGetResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"node\" to create",
-        required = true,
-        dataTypeClass = classOf[ListChildNodeCreateApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Creates a new list child node.
    */
@@ -192,5 +143,4 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
       }
     }
   }
-
 }

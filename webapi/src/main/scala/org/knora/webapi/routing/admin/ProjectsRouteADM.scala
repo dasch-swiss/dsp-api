@@ -18,12 +18,10 @@ import akka.stream.IOResult
 import akka.stream.scaladsl.FileIO
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import io.swagger.annotations._
 import zio.prelude.Validation
 
 import java.nio.file.Files
 import java.util.UUID
-import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.Try
 
@@ -38,8 +36,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-@Api(value = "projects", produces = "application/json")
-@Path("/admin/projects")
 class ProjectsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
@@ -72,17 +68,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
       getProjectData()
 
   /* return all projects */
-  @ApiOperation(
-    value = "Get projects",
-    nickname = "getProjects",
-    httpMethod = "GET",
-    response = classOf[ProjectsGetResponseADM]
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   private def getProjects(): Route = path(projectsBasePath) {
     get { requestContext =>
       log.info("All projects requested.")
@@ -105,28 +90,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   }
 
   /* create a new project */
-  @ApiOperation(
-    value = "Add new project",
-    nickname = "addProject",
-    httpMethod = "POST",
-    response = classOf[ProjectOperationResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"project\" to create",
-        required = true,
-        dataTypeClass = classOf[CreateProjectApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   private def addProject(): Route = path(projectsBasePath) {
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>

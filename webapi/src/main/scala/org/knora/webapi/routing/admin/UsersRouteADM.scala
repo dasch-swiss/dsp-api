@@ -8,11 +8,9 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import io.swagger.annotations._
 import zio.prelude.Validation
 
 import java.util.UUID
-import javax.ws.rs.Path
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
@@ -31,8 +29,6 @@ import org.knora.webapi.routing.RouteUtilADM
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
  */
-@Api(value = "users", produces = "application/json")
-@Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
@@ -60,12 +56,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       getUsersGroupMemberships() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-  @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
+
   /* return all users */
   def getUsers(): Route = path(usersBasePath) {
     get { requestContext =>
@@ -87,28 +78,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
   }
 
-  @ApiOperation(
-    value = "Add new user",
-    nickname = "addUser",
-    httpMethod = "POST",
-    response = classOf[UserOperationResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"user\" to create",
-        required = true,
-        dataTypeClass = classOf[CreateUserApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /* create a new user */
   def addUser(): Route = path(usersBasePath) {
     post {

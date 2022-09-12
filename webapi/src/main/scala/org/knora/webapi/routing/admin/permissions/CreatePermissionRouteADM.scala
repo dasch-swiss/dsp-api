@@ -8,10 +8,8 @@ package org.knora.webapi.routing.admin.permissions
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import io.swagger.annotations._
 
 import java.util.UUID
-import javax.ws.rs.Path
 import scala.concurrent.Future
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
@@ -20,8 +18,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-@Api(value = "permissions", produces = "application/json")
-@Path("/admin/permissions")
 class CreatePermissionRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
