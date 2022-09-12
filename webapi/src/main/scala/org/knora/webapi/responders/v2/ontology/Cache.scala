@@ -47,7 +47,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.cache.CacheUtil
 
 object Cache extends LazyLogging {
@@ -103,7 +102,6 @@ object Cache extends LazyLogging {
    * @return a [[SuccessResponseV2]].
    */
   def loadOntologies(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     requestingUser: UserADM
   )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] = {

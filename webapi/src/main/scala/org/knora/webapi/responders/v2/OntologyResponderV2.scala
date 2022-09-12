@@ -68,7 +68,7 @@ class OntologyResponderV2(responderData: ResponderData, config: AppConfig) exten
    */
   def receive(msg: OntologiesResponderRequestV2) = msg match {
     case LoadOntologiesRequestV2(requestingUser) =>
-      Cache.loadOntologies(settings, appActor, requestingUser)
+      Cache.loadOntologies(appActor, requestingUser)
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
       getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
     case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) =>
