@@ -8,18 +8,15 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import io.swagger.annotations._
 import zio.prelude.Validation
 
 import java.util.UUID
-import javax.ws.rs.Path
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -32,8 +29,6 @@ import org.knora.webapi.routing.RouteUtilADM
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
  */
-@Api(value = "users", produces = "application/json")
-@Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     extends KnoraRoute(routeData, appConfig)
     with Authenticator {
@@ -63,12 +58,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       getUsersGroupMemberships() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-  @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
+
   /* return all users */
   def getUsers(): Route = path(usersBasePath) {
     get { requestContext =>
@@ -90,28 +80,6 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
   }
 
-  @ApiOperation(
-    value = "Add new user",
-    nickname = "addUser",
-    httpMethod = "POST",
-    response = classOf[UserOperationResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"user\" to create",
-        required = true,
-        dataTypeClass = classOf[CreateUserApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /* create a new user */
   def addUser(): Route = path(usersBasePath) {
     post {
@@ -241,9 +209,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: Change existing user's basic information.
+   * Change existing user's basic information.
    */
-  @ApiMayChange
   private def changeUserBasicInformation(): Route =
     path(usersBasePath / "iri" / Segment / "BasicUserInformation") { userIri =>
       put {
@@ -319,9 +286,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: Change user's password.
+   * Change user's password.
    */
-  @ApiMayChange
   private def changeUserPassword(): Route =
     path(usersBasePath / "iri" / Segment / "Password") { userIri =>
       put {
@@ -371,9 +337,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: Change user's status.
+   * Change user's status.
    */
-  @ApiMayChange
   private def changeUserStatus(): Route =
     path(usersBasePath / "iri" / Segment / "Status") { userIri =>
       put {
@@ -419,9 +384,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: delete a user identified by iri (change status to false).
+   * delete a user identified by iri (change status to false).
    */
-  @ApiMayChange
   private def deleteUser(): Route = path(usersBasePath / "iri" / Segment) { userIri =>
     delete { requestContext =>
       if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -462,9 +426,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
   }
 
   /**
-   * API MAY CHANGE: Change user's SystemAdmin membership.
+   * Change user's SystemAdmin membership.
    */
-  @ApiMayChange
   private def changeUserSystemAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "SystemAdmin") { userIri =>
       put {
@@ -510,9 +473,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: get user's project memberships
+   * get user's project memberships
    */
-  @ApiMayChange
   private def getUsersProjectMemberships(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships") { userIri =>
       get { requestContext =>
@@ -541,9 +503,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: add user to project
+   * add user to project
    */
-  @ApiMayChange
   private def addUserToProjectMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
@@ -588,9 +549,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: remove user from project (and all groups belonging to this project)
+   * remove user from project (and all groups belonging to this project)
    */
-  @ApiMayChange
   private def removeUserFromProjectMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
@@ -635,9 +595,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: get user's project admin memberships
+   * get user's project admin memberships
    */
-  @ApiMayChange
   private def getUsersProjectAdminMemberships(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
       get { requestContext =>
@@ -667,9 +626,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: add user to project admin
+   * add user to project admin
    */
-  @ApiMayChange
   private def addUserToProjectAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
@@ -714,9 +672,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: remove user from project admin membership
+   * remove user from project admin membership
    */
-  @ApiMayChange
   private def removeUserFromProjectAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
@@ -761,9 +718,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: get user's group memberships
+   * get user's group memberships
    */
-  @ApiMayChange
   private def getUsersGroupMemberships(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships") { userIri =>
       get { requestContext =>
@@ -792,9 +748,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: add user to group
+   * add user to group
    */
-  @ApiMayChange
   private def addUserToGroupMembership(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       post { requestContext =>
@@ -836,9 +791,8 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: remove user from group
+   * remove user from group
    */
-  @ApiMayChange
   private def removeUserFromGroupMembership(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       delete { requestContext =>

@@ -18,12 +18,10 @@ import akka.stream.IOResult
 import akka.stream.scaladsl.FileIO
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import io.swagger.annotations._
 import zio.prelude.Validation
 
 import java.nio.file.Files
 import java.util.UUID
-import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.Try
 
@@ -31,15 +29,12 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import org.knora.webapi.IRI
-import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-@Api(value = "projects", produces = "application/json")
-@Path("/admin/projects")
 class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     extends KnoraRoute(routeData, appConfig)
     with Authenticator
@@ -72,17 +67,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       getProjectData()
 
   /* return all projects */
-  @ApiOperation(
-    value = "Get projects",
-    nickname = "getProjects",
-    httpMethod = "GET",
-    response = classOf[ProjectsGetResponseADM]
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   private def getProjects(): Route = path(projectsBasePath) {
     get { requestContext =>
       log.info("All projects requested.")
@@ -105,28 +89,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
   }
 
   /* create a new project */
-  @ApiOperation(
-    value = "Add new project",
-    nickname = "addProject",
-    httpMethod = "POST",
-    response = classOf[ProjectOperationResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"project\" to create",
-        required = true,
-        dataTypeClass = classOf[CreateProjectApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   private def addProject(): Route = path(projectsBasePath) {
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
@@ -334,9 +296,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: update project status to false
+   * update project status to false
    */
-  @ApiMayChange
   private def deleteProject(): Route =
     path(projectsBasePath / "iri" / Segment) { value =>
       delete { requestContext =>
@@ -365,9 +326,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: returns all members part of a project identified through iri
+   * returns all members part of a project identified through iri
    */
-  @ApiMayChange
   private def getProjectMembersByIri(): Route =
     path(projectsBasePath / "iri" / Segment / "members") { value =>
       get { requestContext =>
@@ -394,9 +354,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: returns all members part of a project identified through shortname
+   * returns all members part of a project identified through shortname
    */
-  @ApiMayChange
   private def getProjectMembersByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "members") { value =>
       get { requestContext =>
@@ -425,9 +384,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: returns all members part of a project identified through shortcode
+   * returns all members part of a project identified through shortcode
    */
-  @ApiMayChange
   private def getProjectMembersByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "members") { value =>
       get { requestContext =>
@@ -456,9 +414,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: returns all admin members part of a project identified through iri
+   * returns all admin members part of a project identified through iri
    */
-  @ApiMayChange
   private def getProjectAdminMembersByIri(): Route =
     path(projectsBasePath / "iri" / Segment / "admin-members") { value =>
       get { requestContext =>
@@ -485,9 +442,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: returns all admin members part of a project identified through shortname
+   * returns all admin members part of a project identified through shortname
    */
-  @ApiMayChange
   private def getProjectAdminMembersByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "admin-members") { value =>
       get { requestContext =>
@@ -516,9 +472,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     }
 
   /**
-   * API MAY CHANGE: returns all admin members part of a project identified through shortcode
+   * returns all admin members part of a project identified through shortcode
    */
-  @ApiMayChange
   private def getProjectAdminMembersByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "admin-members") { value =>
       get { requestContext =>
@@ -549,7 +504,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
   /**
    * Returns the project's restricted view settings identified through IRI.
    */
-  @ApiMayChange
   private def getProjectRestrictedViewSettingsByIri(): Route =
     path(projectsBasePath / "iri" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>
@@ -576,7 +530,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
   /**
    * Returns the project's restricted view settings identified through shortname.
    */
-  @ApiMayChange
   private def getProjectRestrictedViewSettingsByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>
@@ -604,7 +557,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
   /**
    * Returns the project's restricted view settings identified through shortcode.
    */
-  @ApiMayChange
   private def getProjectRestrictedViewSettingsByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>

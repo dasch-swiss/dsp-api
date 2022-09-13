@@ -8,11 +8,9 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import io.swagger.annotations._
 import zio.prelude.Validation
 
 import java.util.UUID
-import javax.ws.rs.Path
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
@@ -46,29 +44,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       updateNodePosition() ~
       updateList()
 
-  @Path("/{IRI}/name")
-  @ApiOperation(
-    value = "Update Node Name",
-    nickname = "putNodeName",
-    httpMethod = "PUT",
-    response = classOf[NodeInfoGetResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"node name\" to update",
-        required = true,
-        dataTypeClass = classOf[ChangeNodeNameApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Update name of an existing list node, either root or child.
    */
@@ -101,29 +76,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       }
     }
 
-  @Path("/{IRI}/labels")
-  @ApiOperation(
-    value = "Update Node Labels",
-    nickname = "putNodeLabels",
-    httpMethod = "PUT",
-    response = classOf[NodeInfoGetResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"node labels\" to update",
-        required = true,
-        dataTypeClass = classOf[ChangeNodeLabelsApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Update labels of an existing list node, either root or child.
    */
@@ -156,29 +108,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       }
     }
 
-  @Path("/{IRI}/comments")
-  @ApiOperation(
-    value = "Update Node Comments",
-    nickname = "putNodeComments",
-    httpMethod = "PUT",
-    response = classOf[NodeInfoGetResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"node comments\" to update",
-        required = true,
-        dataTypeClass = classOf[ChangeNodeCommentsApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Updates comments of an existing list node, either root or child.
    */
@@ -211,29 +140,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       }
     }
 
-  @Path("/{IRI}/position")
-  @ApiOperation(
-    value = "Update Node Position",
-    nickname = "putNodePosition",
-    httpMethod = "PUT",
-    response = classOf[ListGetResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"node position\" to update",
-        required = true,
-        dataTypeClass = classOf[ChangeNodeCommentsApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Updates position of an existing list child node.
    */
@@ -263,29 +169,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       }
     }
 
-  @Path("/{IRI}")
-  @ApiOperation(
-    value = "Update basic list information",
-    nickname = "putList",
-    httpMethod = "PUT",
-    response = classOf[RootNodeInfoGetResponseADM]
-  )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "\"list\" to update",
-        required = true,
-        dataTypeClass = classOf[ListNodeChangeApiRequestADM],
-        paramType = "body"
-      )
-    )
-  )
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Updates existing list node, either root or child.
    */
