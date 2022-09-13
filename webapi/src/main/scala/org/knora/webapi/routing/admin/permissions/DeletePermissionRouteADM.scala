@@ -13,16 +13,16 @@ import io.swagger.annotations._
 import java.util.UUID
 import javax.ws.rs.Path
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class DeletePermissionRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
+class DeletePermissionRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
@@ -41,7 +41,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
     path(permissionsBasePath / Segment) { iri =>
       delete { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield PermissionDeleteRequestADM(
           permissionIri = iri,
           requestingUser = requestingUser,
@@ -51,7 +51,6 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )

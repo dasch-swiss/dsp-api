@@ -183,7 +183,6 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
           )
 
         // Check link targets and list nodes that should exist.
-
         _ <- checkStandoffLinkTargets(
                values = internalCreateResource.flatValues,
                requestingUser = createResourceRequestV2.requestingUser
@@ -200,7 +199,6 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
 
         // Get the definitions of the resource class and its properties, as well as of the classes of all
         // resources that are link targets.
-
         resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <-
           appActor
             .ask(
@@ -2080,7 +2078,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
               header = TEIHeader(
                 headerInfo = headerResource,
                 headerXSLT = headerXSLT,
-                settings = settings
+                appConfig = appConfig
               ),
               body = TEIBody(
                 bodyInfo = bodyTextValue,
@@ -2569,7 +2567,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                 }
 
                 val fileUrl: String =
-                  imageValueContent.makeFileUrl(projectADM = representation.projectADM, settings = settings)
+                  imageValueContent.makeFileUrl(projectADM = representation.projectADM, appConfig.sipi.externalBaseUrl)
 
                 JsonLDObject(
                   Map(

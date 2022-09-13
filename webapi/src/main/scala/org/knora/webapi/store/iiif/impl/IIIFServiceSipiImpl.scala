@@ -60,9 +60,8 @@ case class IIIFServiceSipiImpl(
     import SipiKnoraJsonResponseProtocol._
 
     for {
-      url     <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
-      request <- ZIO.succeed(new HttpGet(url))
-      // _               <- ZIO.debug(request)
+      url             <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
+      request         <- ZIO.succeed(new HttpGet(url))
       sipiResponseStr <- doSipiRequest(request).orDie
       sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]).orDie
     } yield GetFileMetadataResponse(

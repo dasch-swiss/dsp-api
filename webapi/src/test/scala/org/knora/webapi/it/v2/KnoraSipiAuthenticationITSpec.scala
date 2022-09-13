@@ -66,7 +66,7 @@ class KnoraSipiAuthenticationITSpec
     "successfuly get an image with provided credentials inside cookie" in {
 
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)
-      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
+      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
       val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, loginToken)
 
       // Request the permanently stored image from Sipi.

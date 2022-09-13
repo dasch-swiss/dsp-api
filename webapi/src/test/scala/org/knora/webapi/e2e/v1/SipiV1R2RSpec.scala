@@ -31,10 +31,12 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
  */
 class SipiV1R2RSpec extends R2RSpec {
 
-  private val resourcesPath = new ResourcesRouteV1(routeData).makeRoute
-  private val valuesPath    = new ValuesRouteV1(routeData).makeRoute
+  private val resourcesPath = new ResourcesRouteV1(routeData, appConfig).makeRoute
+  private val valuesPath    = new ValuesRouteV1(routeData, appConfig).makeRoute
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   private val incunabulaProjectAdminEmail = SharedTestDataV1.incunabulaProjectAdminUser.userData.email.get
   private val testPass                    = "test"
@@ -90,14 +92,16 @@ class SipiV1R2RSpec extends R2RSpec {
 
     def createTmpFileDir(): Unit = {
       // check if tmp datadir exists and create it if not
-      val tmpFileDir = Paths.get(settings.tmpDataDir)
+      val tmpFileDir = Paths.get(appConfig.tmpDatadir)
 
       if (!Files.exists(tmpFileDir)) {
         try {
           Files.createDirectories(tmpFileDir)
         } catch {
           case e: Throwable =>
-            throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
+            throw FileWriteException(
+              s"Tmp data directory ${appConfig.tmpDatadir} could not be created: ${e.getMessage}"
+            )
         }
       }
     }

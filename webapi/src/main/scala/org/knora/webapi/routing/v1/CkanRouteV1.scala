@@ -8,6 +8,7 @@ package org.knora.webapi.routing.v1
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -17,7 +18,9 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
  */
-class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class CkanRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
+    with Authenticator {
 
   /**
    * Returns the route.
@@ -26,7 +29,7 @@ class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
     path("v1" / "ckan") {
       get { requestContext =>
         val requestMessage = for {
-          userProfile                 <- getUserADM(requestContext)
+          userProfile                 <- getUserADM(requestContext, appConfig)
           params                       = requestContext.request.uri.query().toMap
           project: Option[Seq[String]] = params.get("project").map(_.split(",").toSeq)
           limit: Option[Int]           = params.get("limit").map(_.toInt)
@@ -41,7 +44,6 @@ class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
           requestContext,
-          settings,
           appActor,
           log
         )

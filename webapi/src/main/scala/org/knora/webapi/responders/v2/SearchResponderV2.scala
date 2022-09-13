@@ -298,7 +298,7 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
             valueObjectIris = allValueObjectIris,
             targetSchema = targetSchema,
             schemaOptions = schemaOptions,
-            settings = settings
+            appConfig = appConfig
           )
 
           val queryPatternTransformerConstruct: ConstructToConstructTransformer =
@@ -509,7 +509,7 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-          settings = settings
+          appConfig = appConfig
         )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
@@ -639,7 +639,7 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
             valueObjectIris = allValueObjectIris,
             targetSchema = targetSchema,
             schemaOptions = schemaOptions,
-            settings = settings
+            appConfig = appConfig
           )
 
           val queryPatternTransformerConstruct: ConstructToConstructTransformer =
@@ -834,8 +834,8 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
                      resourceClassIri = internalClassIri,
                      maybeOrderByProperty = maybeInternalOrderByPropertyIri,
                      maybeOrderByValuePredicate = maybeOrderByValuePredicate,
-                     limit = settings.v2ResultsPerPage,
-                     offset = resourcesInProjectGetRequestV2.page * settings.v2ResultsPerPage
+                     limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                     offset = resourcesInProjectGetRequestV2.page * appConfig.v2.resourcesSequence.resultsPerPage
                    )
                    .toString
 
@@ -1012,8 +1012,8 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
               searchTerm = searchPhrase,
               limitToProject = limitToProject,
               limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = settings.v2ResultsPerPage,
-              offset = offset * settings.v2ResultsPerPage,
+              limit = appConfig.v2.resourcesSequence.resultsPerPage,
+              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
               countQuery = false
             )
             .toString()

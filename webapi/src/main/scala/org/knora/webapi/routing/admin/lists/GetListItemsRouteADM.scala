@@ -15,6 +15,7 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -28,8 +29,8 @@ import org.knora.webapi.routing.RouteUtilADM
  */
 @Api(value = "lists", produces = "application/json")
 @Path("/admin/lists")
-class GetListItemsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
+class GetListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
     with Authenticator
     with ListADMJsonProtocol {
 
@@ -62,7 +63,8 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListsGetRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              appConfig
                             )
         } yield ListsGetRequestADM(
           projectIri = projectIri,
@@ -72,7 +74,6 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -97,7 +98,8 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
 
       val requestMessage: Future[ListGetRequestADM] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext
+                            requestContext = requestContext,
+                            appConfig
                           )
       } yield ListGetRequestADM(
         iri = listIri,
@@ -107,7 +109,6 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
       RouteUtilADM.runJsonRoute(
         requestMessageF = requestMessage,
         requestContext = requestContext,
-        settings = settings,
         appActor = appActor,
         log = log
       )
@@ -123,7 +124,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
         val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
           requestingUser = requestingUser
@@ -132,7 +133,6 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -150,7 +150,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
         val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
           requestingUser = requestingUser
@@ -159,7 +159,6 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )

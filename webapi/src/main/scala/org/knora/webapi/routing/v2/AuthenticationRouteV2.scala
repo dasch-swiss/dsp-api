@@ -8,6 +8,7 @@ package org.knora.webapi.routing.v2
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
@@ -19,8 +20,8 @@ import org.knora.webapi.routing.KnoraRouteData
 /**
  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
  */
-class AuthenticationRouteV2(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
+class AuthenticationRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
     with Authenticator
     with AuthenticationV2JsonProtocol {
 
@@ -33,7 +34,8 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
         requestContext =>
           requestContext.complete {
             doAuthenticateV2(
-              requestContext = requestContext
+              requestContext = requestContext,
+              appConfig
             )
           }
       } ~
@@ -61,7 +63,8 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
                     maybeUsername = apiRequest.username
                   ),
                   password = apiRequest.password
-                )
+                ),
+                appConfig
               )
             }
           }
@@ -69,7 +72,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
         delete { // logout
           requestContext =>
             requestContext.complete {
-              doLogoutV2(requestContext)
+              doLogoutV2(requestContext, appConfig)
             }
         }
     } ~
@@ -77,7 +80,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
         get { // html login interface (necessary for IIIF Authentication API support)
           requestContext =>
             requestContext.complete {
-              presentLoginFormV2(requestContext)
+              presentLoginFormV2(requestContext, appConfig)
             }
         } ~
           post { // called by html login interface (necessary for IIIF Authentication API support)
@@ -90,7 +93,8 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
                         maybeUsername = Some(username)
                       ),
                       password = password
-                    )
+                    ),
+                    appConfig
                   )
                 }
               }

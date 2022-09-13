@@ -13,6 +13,7 @@ import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoresADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -27,8 +28,8 @@ import org.knora.webapi.routing.RouteUtilADM
 
 @Api(value = "store", produces = "application/json")
 @Path("/admin/store")
-class StoreRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
+class StoreRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
     with Authenticator
     with StoresADMJsonProtocol {
 
@@ -60,7 +61,6 @@ class StoreRouteADM(routeData: KnoraRouteData)
             RouteUtilADM.runJsonRoute(
               requestMessageF = requestMessage,
               requestContext = requestContext,
-              settings = settings,
               appActor = appActor,
               log = log
             )(timeout = 479999.milliseconds, executionContext = executionContext)

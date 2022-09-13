@@ -13,16 +13,16 @@ import io.swagger.annotations._
 import java.util.UUID
 import javax.ws.rs.Path
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class GetPermissionsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
+class GetPermissionsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
@@ -41,13 +41,12 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
     path(permissionsBasePath / "ap" / Segment / Segment) { (projectIri, groupIri) =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -58,7 +57,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
     path(permissionsBasePath / "ap" / Segment) { projectIri =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield AdministrativePermissionsForProjectGetRequestADM(
           projectIri = projectIri,
           requestingUser = requestingUser,
@@ -68,7 +67,6 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -79,7 +77,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
     path(permissionsBasePath / "doap" / Segment) { projectIri =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield DefaultObjectAccessPermissionsForProjectGetRequestADM(
           projectIri = projectIri,
           requestingUser = requestingUser,
@@ -89,7 +87,6 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -100,7 +97,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
     path(permissionsBasePath / Segment) { projectIri =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield PermissionsForProjectGetRequestADM(
           projectIri = projectIri,
           requestingUser = requestingUser,
@@ -110,7 +107,6 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )

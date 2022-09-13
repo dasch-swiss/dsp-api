@@ -13,6 +13,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -24,8 +25,8 @@ import org.knora.webapi.routing.RouteUtilADM
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-class DeleteListItemsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
+class DeleteListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
     with Authenticator
     with ListADMJsonProtocol {
 
@@ -45,7 +46,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list item Iri: $iri"))
 
         val requestMessage: Future[ListItemDeleteRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           requestingUser = requestingUser,
@@ -55,7 +56,6 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -72,7 +72,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 
         val requestMessage: Future[CanDeleteListRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
         } yield CanDeleteListRequestADM(
           iri = listIri,
           requestingUser = requestingUser
@@ -81,7 +81,6 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -98,7 +97,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListNodeCommentsDeleteRequestADM] =
           for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, appConfig)
           } yield ListNodeCommentsDeleteRequestADM(
             iri = listIri,
             requestingUser = requestingUser
@@ -107,7 +106,6 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )

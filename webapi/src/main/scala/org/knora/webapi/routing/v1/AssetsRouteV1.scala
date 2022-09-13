@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Paths
 import javax.imageio.ImageIO
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -26,7 +27,9 @@ import org.knora.webapi.routing.KnoraRouteData
 /**
  * A route used for faking the image server.
  */
-class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class AssetsRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
+    with Authenticator {
 
   /**
    * Returns the route.

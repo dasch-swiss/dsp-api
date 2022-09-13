@@ -38,6 +38,7 @@ import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -47,8 +48,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
@@ -76,34 +75,34 @@ trait Authenticator extends InstrumentationSupport {
    * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
    *         the generated session id.
    */
-  def doLoginV1(requestContext: RequestContext)(implicit
+  def doLoginV1(requestContext: RequestContext, appConfig: AppConfig)(implicit
     system: ActorSystem,
     appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[HttpResponse] = {
 
-    val settings                                = KnoraSettings(system)
-    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext, settings)
+    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext, appConfig)
 
     for {
       userADM <- getUserADMThroughCredentialsV2(
-                   credentials = credentials
+                   credentials = credentials,
+                   appConfig
                  ) // will return or throw
       userProfile = userADM.asUserProfileV1
 
-      cookieDomain = Some(settings.cookieDomain)
+      cookieDomain = Some(appConfig.cookieDomain)
       sessionToken = JWTHelper.createToken(
                        userProfile.userData.user_id.get,
-                       settings.jwtSecretKey,
-                       settings.jwtLongevity,
-                       settings.externalKnoraApiHostPort
+                       appConfig.jwtSecretKey,
+                       appConfig.jwtLongevityAsDuration,
+                       appConfig.knoraApi.externalKnoraApiHostPort
                      )
 
       httpResponse = HttpResponse(
                        headers = List(
                          headers.`Set-Cookie`(
                            HttpCookie(
-                             calculateCookieName(settings),
+                             calculateCookieName(appConfig),
                              sessionToken,
                              domain = cookieDomain,
                              path = Some("/"),
@@ -134,7 +133,7 @@ trait Authenticator extends InstrumentationSupport {
    * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
    *         the generated session id.
    */
-  def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit
+  def doLoginV2(credentials: KnoraPasswordCredentialsV2, appConfig: AppConfig)(implicit
     system: ActorSystem,
     appActor: ActorRef,
     executionContext: ExecutionContext
@@ -145,28 +144,27 @@ trait Authenticator extends InstrumentationSupport {
     for {
       // will throw exception if not valid and thus trigger the correct response
       _ <- authenticateCredentialsV2(
-             credentials = Some(credentials)
+             credentials = Some(credentials),
+             appConfig
            )
-
-      settings = KnoraSettings(system)
 
       userADM <- getUserByIdentifier(
                    identifier = credentials.identifier
                  )
 
-      cookieDomain = Some(settings.cookieDomain)
+      cookieDomain = Some(appConfig.cookieDomain)
       token = JWTHelper.createToken(
                 userADM.id,
-                settings.jwtSecretKey,
-                settings.jwtLongevity,
-                settings.externalKnoraApiHostPort
+                appConfig.jwtSecretKey,
+                appConfig.jwtLongevityAsDuration,
+                appConfig.knoraApi.externalKnoraApiHostPort
               )
 
       httpResponse = HttpResponse(
                        headers = List(
                          headers.`Set-Cookie`(
                            HttpCookie(
-                             calculateCookieName(settings),
+                             calculateCookieName(appConfig),
                              token,
                              domain = cookieDomain,
                              path = Some("/"),
@@ -187,12 +185,11 @@ trait Authenticator extends InstrumentationSupport {
   }
 
   def presentLoginFormV2(
-    requestContext: RequestContext
+    requestContext: RequestContext,
+    appConfig: AppConfig
   )(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
 
-    val settings = KnoraSettings(system)
-
-    val apiUrl = settings.externalKnoraApiBaseUrl
+    val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
 
     val form =
       s"""
@@ -246,19 +243,19 @@ trait Authenticator extends InstrumentationSupport {
    * @param system               the current [[ActorSystem]]
    * @return a [[RequestContext]]
    */
-  def doAuthenticateV1(requestContext: RequestContext)(implicit
+  def doAuthenticateV1(requestContext: RequestContext, appConfig: AppConfig)(implicit
     system: ActorSystem,
     appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[HttpResponse] = {
 
-    val settings                                = KnoraSettings(system)
-    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext, settings)
+    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext, appConfig)
 
     for {
       // will authenticate and either return or throw
       userADM: UserADM <- getUserADMThroughCredentialsV2(
-                            credentials = credentials
+                            credentials = credentials,
+                            appConfig
                           )
 
       userProfile: UserProfileV1 = userADM.asUserProfileV1
@@ -284,19 +281,19 @@ trait Authenticator extends InstrumentationSupport {
    * @param system         the current [[ActorSystem]]
    * @return a [[HttpResponse]]
    */
-  def doAuthenticateV2(requestContext: RequestContext)(implicit
+  def doAuthenticateV2(requestContext: RequestContext, appConfig: AppConfig)(implicit
     system: ActorSystem,
     appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[HttpResponse] = {
 
-    val settings                                = KnoraSettings(system)
-    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext, settings)
+    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext, appConfig)
 
     for {
       // will throw exception if not valid
       _ <- authenticateCredentialsV2(
-             credentials = credentials
+             credentials = credentials,
+             appConfig
            )
 
       httpResponse = HttpResponse(
@@ -319,14 +316,14 @@ trait Authenticator extends InstrumentationSupport {
    * Used to logout the user, i.e. returns a header deleting the cookie and puts the token on the 'invalidated' list.
    *
    * @param requestContext a [[RequestContext]] containing the http request
+   * @param appConfig      the application's configuration
    * @param system         the current [[ActorSystem]]
    * @return a [[HttpResponse]]
    */
-  def doLogoutV2(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+  def doLogoutV2(requestContext: RequestContext, appConfig: AppConfig)(implicit system: ActorSystem): HttpResponse = {
 
-    val settings     = KnoraSettings(system)
-    val credentials  = extractCredentialsV2(requestContext, settings)
-    val cookieDomain = Some(settings.cookieDomain)
+    val credentials  = extractCredentialsV2(requestContext, appConfig)
+    val cookieDomain = Some(appConfig.cookieDomain)
 
     credentials match {
       case Some(KnoraSessionCredentialsV2(sessionToken)) =>
@@ -336,7 +333,7 @@ trait Authenticator extends InstrumentationSupport {
           headers = List(
             headers.`Set-Cookie`(
               HttpCookie(
-                calculateCookieName(settings),
+                calculateCookieName(appConfig),
                 "",
                 domain = cookieDomain,
                 path = Some("/"),
@@ -362,7 +359,7 @@ trait Authenticator extends InstrumentationSupport {
           headers = List(
             headers.`Set-Cookie`(
               HttpCookie(
-                calculateCookieName(settings),
+                calculateCookieName(appConfig),
                 "",
                 domain = cookieDomain,
                 path = Some("/"),
@@ -410,14 +407,13 @@ trait Authenticator extends InstrumentationSupport {
    * @param system               the current [[ActorSystem]]
    * @return a [[UserProfileV1]]
    */
-  def getUserADM(requestContext: RequestContext)(implicit
+  def getUserADM(requestContext: RequestContext, appConfig: AppConfig)(implicit
     system: ActorSystem,
     appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[UserADM] = {
 
-    val settings                                = KnoraSettings(system)
-    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext, settings)
+    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext, appConfig)
 
     if (credentials.isEmpty) {
       log.debug("getUserADM - No credentials found, returning 'anonymousUser'.")
@@ -426,7 +422,8 @@ trait Authenticator extends InstrumentationSupport {
 
       for {
         user: UserADM <- getUserADMThroughCredentialsV2(
-                           credentials = credentials
+                           credentials = credentials,
+                           appConfig
                          )
         _ = log.debug("Authenticator - getUserADM - user: {}", user)
 
@@ -473,15 +470,14 @@ object Authenticator extends InstrumentationSupport {
    *                                 when the password does not match; when the supplied token is not valid.
    */
   def authenticateCredentialsV2(
-    credentials: Option[KnoraCredentialsV2]
+    credentials: Option[KnoraCredentialsV2],
+    appConfig: AppConfig
   )(implicit
     system: ActorSystem,
     appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[Boolean] =
     for {
-      settings <- FastFuture.successful(KnoraSettings(system))
-
       result <- credentials match {
                   case Some(passCreds: KnoraPasswordCredentialsV2) =>
                     for {
@@ -501,14 +497,24 @@ object Authenticator extends InstrumentationSupport {
                           }
                     } yield true
                   case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-                    if (!JWTHelper.validateToken(jwtToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
+                    if (
+                      !JWTHelper.validateToken(
+                        jwtToken,
+                        appConfig.jwtSecretKey,
+                        appConfig.knoraApi.externalKnoraApiHostPort
+                      )
+                    ) {
                       log.debug("authenticateCredentialsV2 - token was not valid")
                       throw BadCredentialsException(BAD_CRED_NOT_VALID)
                     }
                     FastFuture.successful(true)
                   case Some(KnoraSessionCredentialsV2(sessionToken)) =>
                     if (
-                      !JWTHelper.validateToken(sessionToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)
+                      !JWTHelper.validateToken(
+                        sessionToken,
+                        appConfig.jwtSecretKey,
+                        appConfig.knoraApi.externalKnoraApiHostPort
+                      )
                     ) {
                       log.debug("authenticateCredentialsV2 - session token was not valid")
                       throw BadCredentialsException(BAD_CRED_NOT_VALID)
@@ -533,14 +539,14 @@ object Authenticator extends InstrumentationSupport {
    */
   private def extractCredentialsV2(
     requestContext: RequestContext,
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): Option[KnoraCredentialsV2] = {
     // log.debug("extractCredentialsV2 start ...")
 
     val credentialsFromParameters: Option[KnoraCredentialsV2] = extractCredentialsFromParametersV2(requestContext)
     log.debug("extractCredentialsV2 - credentialsFromParameters: {}", credentialsFromParameters)
 
-    val credentialsFromHeaders: Option[KnoraCredentialsV2] = extractCredentialsFromHeaderV2(requestContext, settings)
+    val credentialsFromHeaders: Option[KnoraCredentialsV2] = extractCredentialsFromHeaderV2(requestContext, appConfig)
     log.debug("extractCredentialsV2 - credentialsFromHeader: {}", credentialsFromHeaders)
 
     // return found credentials based on precedence: 1. url parameters, 2. header (basic auth, token)
@@ -616,19 +622,19 @@ object Authenticator extends InstrumentationSupport {
    *    2. authorization token
    *    3. session token
    *
-   * @param requestContext the HTTP request context.
-   * @param settings the application settings.
+   * @param requestContext   the HTTP request context.
+   * @param appConfig        the application's configuration.
    * @return an optional [[KnoraCredentialsV2]].
    */
   private def extractCredentialsFromHeaderV2(
     requestContext: RequestContext,
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): Option[KnoraCredentialsV2] = {
 
     // Session token from cookie header
     val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
     val maybeSessionCreds: Option[KnoraSessionCredentialsV2] =
-      cookies.find(_.name == calculateCookieName(settings)) match {
+      cookies.find(_.name == calculateCookieName(appConfig)) match {
         case Some(authCookie) =>
           val value: String = authCookie.value
           Some(KnoraSessionCredentialsV2(value))
@@ -704,17 +710,15 @@ object Authenticator extends InstrumentationSupport {
    * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
    */
   private def getUserADMThroughCredentialsV2(
-    credentials: Option[KnoraCredentialsV2]
+    credentials: Option[KnoraCredentialsV2],
+    appConfig: AppConfig
   )(implicit
     system: ActorSystem,
     appActor: ActorRef,
     executionContext: ExecutionContext
-  ): Future[UserADM] = {
-
-    val settings = KnoraSettings(system)
-
+  ): Future[UserADM] =
     for {
-      _ <- authenticateCredentialsV2(credentials)
+      _ <- authenticateCredentialsV2(credentials, appConfig)
 
       user <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) =>
@@ -724,8 +728,8 @@ object Authenticator extends InstrumentationSupport {
                 case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
                   val userIri: IRI = JWTHelper.extractUserIriFromToken(
                     jwtToken,
-                    settings.jwtSecretKey,
-                    settings.externalKnoraApiHostPort
+                    appConfig.jwtSecretKey,
+                    appConfig.knoraApi.externalKnoraApiHostPort
                   ) match {
                     case Some(iri) => iri
                     case None      =>
@@ -740,8 +744,8 @@ object Authenticator extends InstrumentationSupport {
                 case Some(KnoraSessionCredentialsV2(sessionToken)) =>
                   val userIri: IRI = JWTHelper.extractUserIriFromToken(
                     sessionToken,
-                    settings.jwtSecretKey,
-                    settings.externalKnoraApiHostPort
+                    appConfig.jwtSecretKey,
+                    appConfig.knoraApi.externalKnoraApiHostPort
                   ) match {
                     case Some(iri) => iri
                     case None      =>
@@ -758,7 +762,6 @@ object Authenticator extends InstrumentationSupport {
               }
 
     } yield user
-  }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // TRIPLE STORE ACCESS
@@ -809,12 +812,12 @@ object Authenticator extends InstrumentationSupport {
    * The default padding needs to be changed from '=' to '9' because '=' is not allowed inside the cookie!!!
    * This also needs to be changed in all the places that base32 is used to calculate the cookie name, e.g., sipi.
    *
-   * @param settings the application settings.
+   * @param appConfig the application's configuration.
    */
-  def calculateCookieName(settings: KnoraSettingsImpl): String = {
+  def calculateCookieName(appConfig: AppConfig): String = {
     //
     val base32 = new Base32('9'.toByte)
-    "KnoraAuthentication" + base32.encodeAsString(settings.externalKnoraApiHostPort.getBytes())
+    "KnoraAuthentication" + base32.encodeAsString(appConfig.knoraApi.externalKnoraApiHostPort.getBytes())
   }
 
 }

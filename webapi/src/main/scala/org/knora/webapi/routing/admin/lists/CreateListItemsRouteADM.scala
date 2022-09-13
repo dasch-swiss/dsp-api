@@ -20,6 +20,7 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
@@ -35,8 +36,8 @@ import org.knora.webapi.routing.RouteUtilADM
  */
 @Api(value = "lists", produces = "application/json")
 @Path("/admin/lists")
-class CreateListItemsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
+class CreateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
     with Authenticator
     with ListADMJsonProtocol {
 
@@ -87,7 +88,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedListRootNodeCreatePayload)
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
 
           // check if the requesting user is allowed to perform operation
           _ =
@@ -107,7 +108,6 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -165,7 +165,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedCreateChildNodePeyload)
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, appConfig)
 
           // check if the requesting user is allowed to perform operation
           _ =
@@ -185,7 +185,6 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )

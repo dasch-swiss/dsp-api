@@ -15,6 +15,7 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -26,11 +27,20 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
-class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class ResourcesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
+    with Authenticator {
 
   val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
 
@@ -74,7 +84,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         val requestMessageFuture: Future[ResourceIIIFManifestGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              appConfig
                             )
         } yield ResourceIIIFManifestGetRequestV2(
           resourceIri = resourceIri,
@@ -84,7 +95,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -101,7 +112,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
           val requestMessageFuture: Future[CreateResourceRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                appConfig
                               )
 
             requestMessage: CreateResourceRequestV2 <- CreateResourceRequestV2.fromJsonLD(
@@ -109,15 +121,19 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                          apiRequestID = UUID.randomUUID,
                                                          requestingUser = requestingUser,
                                                          appActor = appActor,
-                                                         settings = settings,
                                                          log = log
                                                        )
+
+            // check for each value which represents a file value if the file's MIME type is allowed
+            _ <- checkMimeTypesForFileValueContents(
+                   values = requestMessage.createResource.flatValues
+                 )
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -136,7 +152,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
           val requestMessageFuture: Future[UpdateResourceMetadataRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                appConfig
                               )
 
             requestMessage: UpdateResourceMetadataRequestV2 <- UpdateResourceMetadataRequestV2.fromJsonLD(
@@ -144,7 +161,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                                  apiRequestID = UUID.randomUUID,
                                                                  requestingUser = requestingUser,
                                                                  appActor = appActor,
-                                                                 settings = settings,
                                                                  log = log
                                                                )
           } yield requestMessage
@@ -152,7 +168,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -205,7 +221,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
       val requestMessageFuture: Future[SearchResourcesByProjectAndClassRequestV2] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext
+                            requestContext = requestContext,
+                            appConfig
                           )
       } yield SearchResourcesByProjectAndClassRequestV2(
         projectIri = projectIri,
@@ -220,7 +237,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       RouteUtilV2.runRdfRouteWithFuture(
         requestMessageF = requestMessageFuture,
         requestContext = requestContext,
-        settings = settings,
+        appConfig = appConfig,
         appActor = appActor,
         log = log,
         targetSchema = ApiV2Complex,
@@ -252,7 +269,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         val requestMessageFuture: Future[ResourceVersionHistoryGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              appConfig
                             )
         } yield ResourceVersionHistoryGetRequestV2(
           resourceIri = resourceIri,
@@ -264,7 +282,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -278,7 +296,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       get { requestContext =>
         val requestMessageFuture: Future[ResourceHistoryEventsGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              appConfig
                             )
         } yield ResourceHistoryEventsGetRequestV2(
           resourceIri = resourceIri,
@@ -288,7 +307,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -302,7 +321,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       get { requestContext =>
         val requestMessageFuture: Future[ProjectResourcesWithHistoryGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              appConfig
                             )
         } yield ProjectResourcesWithHistoryGetRequestV2(
           projectIri = projectIri,
@@ -312,7 +332,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -323,8 +343,10 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
   private def getResources(): Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
     get { requestContext =>
-      if (resIris.size > settings.v2ResultsPerPage)
-        throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
+      if (resIris.size > appConfig.v2.resourcesSequence.resultsPerPage)
+        throw BadRequestException(
+          s"List of provided resource Iris exceeds limit of ${appConfig.v2.resourcesSequence.resultsPerPage}"
+        )
 
       val resourceIris: Seq[IRI] = resIris.map { resIri: String =>
         stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
@@ -350,7 +372,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
       val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext
+                            requestContext = requestContext,
+                            appConfig
                           )
       } yield ResourcesGetRequestV2(
         resourceIris = resourceIris,
@@ -363,7 +386,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       RouteUtilV2.runRdfRouteWithFuture(
         requestMessageF = requestMessageFuture,
         requestContext = requestContext,
-        settings = settings,
+        appConfig = appConfig,
         appActor = appActor,
         log = log,
         targetSchema = targetSchema,
@@ -375,8 +398,10 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
   private def getResourcesPreview(): Route =
     path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
       get { requestContext =>
-        if (resIris.size > settings.v2ResultsPerPage)
-          throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
+        if (resIris.size > appConfig.v2.resourcesSequence.resultsPerPage)
+          throw BadRequestException(
+            s"List of provided resource Iris exceeds limit of ${appConfig.v2.resourcesSequence.resultsPerPage}"
+          )
 
         val resourceIris: Seq[IRI] = resIris.map { resIri: String =>
           stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
@@ -386,7 +411,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         val requestMessageFuture: Future[ResourcesPreviewGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              appConfig
                             )
         } yield ResourcesPreviewGetRequestV2(
           resourceIris = resourceIris,
@@ -397,7 +423,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = appConfig,
           appActor = appActor,
           log = log,
           targetSchema = RouteUtilV2.getOntologySchema(requestContext),
@@ -424,7 +450,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
       val requestMessageFuture: Future[ResourceTEIGetRequestV2] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext
+                            requestContext = requestContext,
+                            appConfig
                           )
       } yield ResourceTEIGetRequestV2(
         resourceIri = resourceIri,
@@ -453,14 +480,14 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           throw BadRequestException(s"Invalid resource IRI: <$resIriStr>")
         )
       val params: Map[String, String] = requestContext.request.uri.query().toMap
-      val depth: Int                  = params.get(Depth).map(_.toInt).getOrElse(settings.defaultGraphDepth)
+      val depth: Int                  = params.get(Depth).map(_.toInt).getOrElse(appConfig.v2.graphRoute.defaultGraphDepth)
 
       if (depth < 1) {
         throw BadRequestException(s"$Depth must be at least 1")
       }
 
-      if (depth > settings.maxGraphDepth) {
-        throw BadRequestException(s"$Depth cannot be greater than ${settings.maxGraphDepth}")
+      if (depth > appConfig.v2.graphRoute.maxGraphDepth) {
+        throw BadRequestException(s"$Depth cannot be greater than ${appConfig.v2.graphRoute.maxGraphDepth}")
       }
 
       val direction: String = params.getOrElse(Direction, Outbound)
@@ -479,7 +506,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
       val requestMessageFuture: Future[GraphDataGetRequestV2] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext
+                            requestContext = requestContext,
+                            appConfig
                           )
       } yield GraphDataGetRequestV2(
         resourceIri = resourceIri,
@@ -493,7 +521,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       RouteUtilV2.runRdfRouteWithFuture(
         requestMessageF = requestMessageFuture,
         requestContext = requestContext,
-        settings = settings,
+        appConfig = appConfig,
         appActor = appActor,
         log = log,
         targetSchema = RouteUtilV2.getOntologySchema(requestContext),
@@ -510,14 +538,14 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
           val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                appConfig
                               )
             requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
                                                                 requestDoc,
                                                                 apiRequestID = UUID.randomUUID,
                                                                 requestingUser = requestingUser,
                                                                 appActor = appActor,
-                                                                settings = settings,
                                                                 log = log
                                                               )
           } yield requestMessage
@@ -525,7 +553,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -544,7 +572,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
           val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                appConfig
                               )
 
             requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
@@ -552,7 +581,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                                 apiRequestID = UUID.randomUUID,
                                                                 requestingUser = requestingUser,
                                                                 appActor = appActor,
-                                                                settings = settings,
                                                                 log = log
                                                               )
           } yield requestMessage.copy(erase = true)
@@ -560,7 +588,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -656,4 +684,57 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       case None => None
     }
   }
+
+  /**
+   * Checks if the MIME types of the given values are allowed by the configuration
+   *
+   * @param values the values to be checked.
+   */
+  private def checkMimeTypesForFileValueContents(
+    values: Iterable[CreateValueInNewResourceV2]
+  ): Future[Unit] =
+    Future {
+      def badRequestException(fileValueContent: FileValueContentV2): BadRequestException =
+        BadRequestException(
+          s"File ${fileValueContent.fileValue.internalFilename} has MIME type ${fileValueContent.fileValue.internalMimeType}, which is not supported for still image files"
+        )
+      values.foreach { value =>
+        value.valueContent match {
+          case fileValueContent: StillImageFileValueContentV2 => {
+            println("StillImageFileValueContentV2")
+            if (!appConfig.sipi.imageMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
+              throw badRequestException(fileValueContent)
+            }
+          }
+          case fileValueContent: DocumentFileValueContentV2 => {
+            if (!appConfig.sipi.documentMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
+              throw badRequestException(fileValueContent)
+            }
+          }
+          case fileValueContent: ArchiveFileValueContentV2 => {
+            if (!appConfig.sipi.archiveMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
+              throw badRequestException(fileValueContent)
+            }
+          }
+          case fileValueContent: TextFileValueContentV2 => {
+            println("TextFileValueContentV2")
+            if (!appConfig.sipi.textMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
+              throw badRequestException(fileValueContent)
+            }
+          }
+          case fileValueContent: AudioFileValueContentV2 => {
+            if (!appConfig.sipi.audioMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
+              throw badRequestException(fileValueContent)
+            }
+          }
+          case fileValueContent: MovingImageFileValueContentV2 => {
+            if (!appConfig.sipi.videoMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
+              throw badRequestException(fileValueContent)
+            }
+          }
+          case _ => ()
+
+        }
+      }
+    }
 }

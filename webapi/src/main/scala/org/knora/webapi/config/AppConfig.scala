@@ -37,11 +37,16 @@ final case class AppConfig(
   shacl: Shacl,
   fallbackLanguage: String,
   maxResultsPerSearchResultPage: Int,
-  standoffPerPage: Int
+  standoffPerPage: Int,
+  routesToReject: List[String],
+  tmpDatadir: String,
+  clientTestDataService: ClientTestDataService
+  // collectClientTestData: Boolean
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
     scala.concurrent.duration.Duration.apply(defaultTimeout).asInstanceOf[duration.FiniteDuration]
+
 }
 
 final case class KnoraAPI(
@@ -179,6 +184,10 @@ final case class Shacl(
 ) {
   val shapesDirPath = Paths.get(shapesDir)
 }
+
+final case class ClientTestDataService(
+  collectClientTestData: Boolean
+)
 
 /**
  * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading

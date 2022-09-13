@@ -8,6 +8,7 @@ package org.knora.webapi.routing.v1
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -15,7 +16,9 @@ import org.knora.webapi.routing.KnoraRouteData
 /**
  * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
  */
-class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class AuthenticationRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
+    with Authenticator {
 
   /**
    * Returns the route.
@@ -24,7 +27,7 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
     path("v1" / "authenticate") {
       get { requestContext =>
         requestContext.complete {
-          doAuthenticateV1(requestContext)
+          doAuthenticateV1(requestContext, appConfig)
         }
       }
     } ~ path("v1" / "session") {
@@ -32,20 +35,20 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
         requestContext.complete {
           val params = requestContext.request.uri.query().toMap
           if (params.contains("logout")) {
-            doLogoutV2(requestContext)
+            doLogoutV2(requestContext, appConfig)
           } else if (params.contains("login")) {
-            doLoginV1(requestContext)
+            doLoginV1(requestContext, appConfig)
           } else {
-            doAuthenticateV1(requestContext)
+            doAuthenticateV1(requestContext, appConfig)
           }
         }
       } ~ post { requestContext =>
         requestContext.complete {
-          doLoginV1(requestContext)
+          doLoginV1(requestContext, appConfig)
         }
       } ~ delete { requestContext =>
         requestContext.complete {
-          doLogoutV2(requestContext)
+          doLogoutV2(requestContext, appConfig)
         }
       }
     }

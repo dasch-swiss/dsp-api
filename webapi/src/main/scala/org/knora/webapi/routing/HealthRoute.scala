@@ -13,6 +13,7 @@ import spray.json.JsObject
 import spray.json.JsString
 import zio._
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -114,7 +115,7 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
+final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State], appConfig: AppConfig)
     extends HealthCheck
     with Authenticator {
 
@@ -129,9 +130,10 @@ final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
             _     <- ZIO.logInfo("health route start")
             ec    <- ZIO.executor.map(_.asExecutionContext)
             state <- ZIO.service[State]
-            requestingUser <- ZIO
-                                .fromFuture(_ => getUserADM(requestContext)(routeData.system, routeData.appActor, ec))
-                                .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
+            requestingUser <-
+              ZIO
+                .fromFuture(_ => getUserADM(requestContext, appConfig)(routeData.system, routeData.appActor, ec))
+                .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
             result <- healthCheck(state)
             _      <- ZIO.logInfo("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())
           } yield result

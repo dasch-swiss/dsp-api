@@ -20,7 +20,6 @@ import scala.concurrent.Future
 import dsp.errors._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 import messages.store.triplestoremessages.SparqlSelectRequest
@@ -63,11 +62,6 @@ abstract class Responder(responderData: ResponderData, appConfig: AppConfig) ext
    */
   protected implicit val executionContext: ExecutionContext =
     system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-  /**
-   * The application settings.
-   */
-  protected val settings: KnoraSettingsImpl = responderData.knoraSettings
 
   /**
    * The Cache Service settings.

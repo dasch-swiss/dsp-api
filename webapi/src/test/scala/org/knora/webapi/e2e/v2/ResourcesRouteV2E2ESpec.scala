@@ -25,8 +25,6 @@ import spray.json.JsonParser
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
-import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import dsp.errors.AssertionException
@@ -48,6 +46,7 @@ import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+import scala.concurrent.Await
 
 /**
  * Tests the API v2 resources route.
@@ -55,7 +54,9 @@ import org.knora.webapi.util._
 class ResourcesRouteV2E2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   private val anythingUserEmail             = SharedTestDataADM.anythingUser1.email
   private val password                      = SharedTestDataADM.testPass
@@ -94,7 +95,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
   private val clientTestDataPath: Seq[String] = Seq("v2", "resources")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   private def collectClientTestData(fileName: String, fileContent: String, fileExtension: String = "json"): Unit =
     clientTestDataCollector.addFile(
@@ -821,7 +822,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "not accept a graph request with an invalid depth (> max)" in {
       val request = Get(
-        s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=${settings.maxGraphBreadth + 1}"
+        s"$baseApiUrl/v2/graph/${URLEncoder
+            .encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=${appConfig.v2.graphRoute.maxGraphBreadth + 1}"
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -1870,79 +1872,79 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       xmlDiff.hasDifferences should be(false)
     }
 
-    "read the large text without its markup, and get the markup separately as pages of standoff" ignore { // depends on previous test
-      // Get the resource without markup.
-      val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}")
-        .addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)
-      )
-      val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
-      val resourceGetResponseAsString       = responseToString(resourceGetResponse)
+    // "read the large text without its markup, and get the markup separately as pages of standoff" ignore { // depends on previous test
+    //   // Get the resource without markup.
+    //   val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}")
+    //     .addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(
+    //     BasicHttpCredentials(anythingUserEmail, password)
+    //   )
+    //   val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
+    //   val resourceGetResponseAsString       = responseToString(resourceGetResponse)
 
-      // Check that the response matches the ontology.
-      instanceChecker.check(
-        instanceResponse = resourceGetResponseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
-      )
+    //   // Check that the response matches the ontology.
+    //   instanceChecker.check(
+    //     instanceResponse = resourceGetResponseAsString,
+    //     expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+    //     knoraRouteGet = doGetRequest
+    //   )
 
-      // Get the standoff markup separately.
-      val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
-      val textValue: JsonLDObject =
-        resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
-      val maybeTextValueAsXml: Option[String] =
-        textValue.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
-      assert(maybeTextValueAsXml.isEmpty)
-      val textValueIri: IRI =
-        textValue.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+    //   // Get the standoff markup separately.
+    //   val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+    //   val textValue: JsonLDObject =
+    //     resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+    //   val maybeTextValueAsXml: Option[String] =
+    //     textValue.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+    //   assert(maybeTextValueAsXml.isEmpty)
+    //   val textValueIri: IRI =
+    //     textValue.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
 
-      val resourceIriEncoded: IRI  = URLEncoder.encode(hamletResourceIri.get, "UTF-8")
-      val textValueIriEncoded: IRI = URLEncoder.encode(textValueIri, "UTF-8")
+    //   val resourceIriEncoded: IRI  = URLEncoder.encode(hamletResourceIri.get, "UTF-8")
+    //   val textValueIriEncoded: IRI = URLEncoder.encode(textValueIri, "UTF-8")
 
-      val standoffBuffer: ArrayBuffer[JsonLDObject] = ArrayBuffer.empty
-      var offset: Int                               = 0
-      var hasMoreStandoff: Boolean                  = true
+    //   val standoffBuffer: ArrayBuffer[JsonLDObject] = ArrayBuffer.empty
+    //   var offset: Int                               = 0
+    //   var hasMoreStandoff: Boolean                  = true
 
-      while (hasMoreStandoff) {
-        // Get a page of standoff.
+    //   while (hasMoreStandoff) {
+    //     // Get a page of standoff.
 
-        val standoffGetRequest = Get(
-          s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset"
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-        val standoffGetResponse: HttpResponse         = singleAwaitingRequest(standoffGetRequest)
-        val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
+    //     val standoffGetRequest = Get(
+    //       s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset"
+    //     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+    //     val standoffGetResponse: HttpResponse         = singleAwaitingRequest(standoffGetRequest)
+    //     val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
 
-        val standoff: Seq[JsonLDValue] =
-          standoffGetResponseAsJsonLD.maybeArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
+    //     val standoff: Seq[JsonLDValue] =
+    //       standoffGetResponseAsJsonLD.maybeArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
 
-        val standoffAsJsonLDObjects: Seq[JsonLDObject] = standoff.map {
-          case jsonLDObject: JsonLDObject => jsonLDObject
-          case other                      => throw AssertionException(s"Expected JsonLDObject, got $other")
-        }
+    //     val standoffAsJsonLDObjects: Seq[JsonLDObject] = standoff.map {
+    //       case jsonLDObject: JsonLDObject => jsonLDObject
+    //       case other                      => throw AssertionException(s"Expected JsonLDObject, got $other")
+    //     }
 
-        standoffBuffer.appendAll(standoffAsJsonLDObjects)
+    //     standoffBuffer.appendAll(standoffAsJsonLDObjects)
 
-        standoffGetResponseAsJsonLD.maybeInt(OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex) match {
-          case Some(nextOffset) => offset = nextOffset
-          case None             => hasMoreStandoff = false
-        }
-      }
+    //     standoffGetResponseAsJsonLD.maybeInt(OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex) match {
+    //       case Some(nextOffset) => offset = nextOffset
+    //       case None             => hasMoreStandoff = false
+    //     }
+    //   }
 
-      assert(standoffBuffer.length == 6738)
+    //   assert(standoffBuffer.length == 6738)
 
-      // Check the standoff tags to make sure they match the ontology.
+    //   // Check the standoff tags to make sure they match the ontology.
 
-      for (jsonLDObject <- standoffBuffer) {
-        val docForValidation = JsonLDDocument(body = jsonLDObject).toCompactString()
+    //   for (jsonLDObject <- standoffBuffer) {
+    //     val docForValidation = JsonLDDocument(body = jsonLDObject).toCompactString()
 
-        instanceChecker.check(
-          instanceResponse = docForValidation,
-          expectedClassIri =
-            jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr),
-          knoraRouteGet = doGetRequest
-        )
-      }
-    }
+    //     instanceChecker.check(
+    //       instanceResponse = docForValidation,
+    //       expectedClassIri =
+    //         jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr),
+    //       knoraRouteGet = doGetRequest
+    //     )
+    //   }
+    // }
 
     "erase a resource" in {
       val resourceLastModificationDate = Instant.parse("2019-02-13T09:05:10Z")
@@ -2106,7 +2108,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
       val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-      DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).makeRoute)
+      DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData, appConfig).makeRoute)
       val auth = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it

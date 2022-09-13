@@ -42,15 +42,19 @@ import org.knora.webapi.util.MutableTestIri
  */
 class StandoffV1R2RSpec extends R2RSpec {
 
-  private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV1(routeData).makeRoute)
-  private val valuesPath   = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).makeRoute)
+  private val standoffPath =
+    DSPApiDirectives.handleErrors(system, appConfig)(new StandoffRouteV1(routeData, appConfig).makeRoute)
+  private val valuesPath =
+    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData, appConfig).makeRoute)
 
   private val anythingUser      = SharedTestDataV1.anythingUser1
   private val anythingUserEmail = anythingUser.userData.email.get
 
   private val password = SharedTestDataADM.testPass
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

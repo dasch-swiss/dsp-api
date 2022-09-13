@@ -11,6 +11,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import zio._
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
@@ -20,7 +21,6 @@ import org.knora.webapi.routing.AroundDirectives
 import org.knora.webapi.routing.HealthRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RejectingRoute
-import org.knora.webapi.routing.SwaggerApiDocsRoute
 import org.knora.webapi.routing.VersionRoute
 import org.knora.webapi.routing.admin.FilesRouteADM
 import org.knora.webapi.routing.admin.GroupsRouteADM
@@ -57,19 +57,21 @@ object ApiRoutes {
   /**
    * All routes composed together.
    */
-  val layer: ZLayer[ActorSystem & AppRouter & core.State, Nothing, ApiRoutes] =
+  val layer: ZLayer[ActorSystem & AppRouter & core.State & AppConfig, Nothing, ApiRoutes] =
     ZLayer {
       for {
-        sys    <- ZIO.service[ActorSystem]
-        router <- ZIO.service[AppRouter]
+        sys       <- ZIO.service[ActorSystem]
+        router    <- ZIO.service[AppRouter]
+        appConfig <- ZIO.service[AppConfig]
         routeData <- ZIO.succeed(
                        KnoraRouteData(
                          system = sys.system,
-                         appActor = router.ref
+                         appActor = router.ref,
+                         appConfig = appConfig
                        )
                      )
         runtime <- ZIO.runtime[core.State]
-      } yield ApiRoutesImpl(routeData, runtime)
+      } yield ApiRoutesImpl(routeData, runtime, appConfig)
     }
 }
 
@@ -80,45 +82,44 @@ object ApiRoutes {
  * ALL requests go through each of the routes in ORDER.
  * The FIRST matching route is used for handling a request.
  */
-private final case class ApiRoutesImpl(routeData: KnoraRouteData, runtime: Runtime[core.State])
+private final case class ApiRoutesImpl(routeData: KnoraRouteData, runtime: Runtime[core.State], appConfig: AppConfig)
     extends ApiRoutes
     with AroundDirectives {
 
   val routes =
     logDuration {
       ServerVersion.addServerHeader {
-        DSPApiDirectives.handleErrors(routeData.system) {
+        DSPApiDirectives.handleErrors(routeData.system, appConfig) {
           CorsDirectives.cors(CorsSettings(routeData.system)) {
-            DSPApiDirectives.handleErrors(routeData.system) {
-              new HealthRoute(routeData, runtime).makeRoute ~
+            DSPApiDirectives.handleErrors(routeData.system, appConfig) {
+              new HealthRoute(routeData, runtime, appConfig).makeRoute ~
                 new VersionRoute().makeRoute ~
-                new RejectingRoute(routeData.system, runtime).makeRoute ~
-                new ResourcesRouteV1(routeData).makeRoute ~
-                new ValuesRouteV1(routeData).makeRoute ~
-                new StandoffRouteV1(routeData).makeRoute ~
-                new ListsRouteV1(routeData).makeRoute ~
-                new ResourceTypesRouteV1(routeData).makeRoute ~
-                new SearchRouteV1(routeData).makeRoute ~
-                new AuthenticationRouteV1(routeData).makeRoute ~
-                new AssetsRouteV1(routeData).makeRoute ~
-                new CkanRouteV1(routeData).makeRoute ~
-                new UsersRouteV1(routeData).makeRoute ~
-                new ProjectsRouteV1(routeData).makeRoute ~
-                new OntologiesRouteV2(routeData).makeRoute ~
-                new SearchRouteV2(routeData).makeRoute ~
-                new ResourcesRouteV2(routeData).makeRoute ~
-                new ValuesRouteV2(routeData).makeRoute ~
-                new StandoffRouteV2(routeData).makeRoute ~
-                new ListsRouteV2(routeData).makeRoute ~
-                new AuthenticationRouteV2(routeData).makeRoute ~
-                new GroupsRouteADM(routeData).makeRoute ~
-                new ListsRouteADM(routeData).makeRoute ~
-                new PermissionsRouteADM(routeData).makeRoute ~
-                new ProjectsRouteADM(routeData).makeRoute ~
-                new StoreRouteADM(routeData).makeRoute ~
-                new UsersRouteADM(routeData).makeRoute ~
-                new FilesRouteADM(routeData).makeRoute ~
-                new SwaggerApiDocsRoute(routeData).makeRoute
+                new RejectingRoute(routeData.system, runtime, appConfig).makeRoute ~
+                new ResourcesRouteV1(routeData, appConfig).makeRoute ~
+                new ValuesRouteV1(routeData, appConfig).makeRoute ~
+                new StandoffRouteV1(routeData, appConfig).makeRoute ~
+                new ListsRouteV1(routeData, appConfig).makeRoute ~
+                new ResourceTypesRouteV1(routeData, appConfig).makeRoute ~
+                new SearchRouteV1(routeData, appConfig).makeRoute ~
+                new AuthenticationRouteV1(routeData, appConfig).makeRoute ~
+                new AssetsRouteV1(routeData, appConfig).makeRoute ~
+                new CkanRouteV1(routeData, appConfig).makeRoute ~
+                new UsersRouteV1(routeData, appConfig).makeRoute ~
+                new ProjectsRouteV1(routeData, appConfig).makeRoute ~
+                new OntologiesRouteV2(routeData, appConfig).makeRoute ~
+                new SearchRouteV2(routeData, appConfig).makeRoute ~
+                new ResourcesRouteV2(routeData, appConfig).makeRoute ~
+                new ValuesRouteV2(routeData, appConfig).makeRoute ~
+                new StandoffRouteV2(routeData, appConfig).makeRoute ~
+                new ListsRouteV2(routeData, appConfig).makeRoute ~
+                new AuthenticationRouteV2(routeData, appConfig).makeRoute ~
+                new GroupsRouteADM(routeData, appConfig).makeRoute ~
+                new ListsRouteADM(routeData, appConfig).makeRoute ~
+                new PermissionsRouteADM(routeData, appConfig).makeRoute ~
+                new ProjectsRouteADM(routeData, appConfig).makeRoute ~
+                new StoreRouteADM(routeData, appConfig).makeRoute ~
+                new UsersRouteADM(routeData, appConfig).makeRoute ~
+                new FilesRouteADM(routeData, appConfig).makeRoute
             }
           }
         }

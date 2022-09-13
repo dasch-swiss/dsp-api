@@ -14,16 +14,16 @@ import java.util.UUID
 import javax.ws.rs.Path
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class UpdatePermissionRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
+class UpdatePermissionRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
@@ -49,7 +49,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, appConfig)
           } yield PermissionChangeGroupRequestADM(
             permissionIri = permissionIri,
             changePermissionGroupRequest = apiRequest,
@@ -60,7 +60,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )
@@ -79,7 +78,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, appConfig)
           } yield PermissionChangeHasPermissionsRequestADM(
             permissionIri = permissionIri,
             changePermissionHasPermissionsRequest = apiRequest,
@@ -90,7 +89,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )
@@ -109,7 +107,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, appConfig)
           } yield PermissionChangeResourceClassRequestADM(
             permissionIri = permissionIri,
             changePermissionResourceClassRequest = apiRequest,
@@ -120,7 +118,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )
@@ -139,7 +136,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, appConfig)
           } yield PermissionChangePropertyRequestADM(
             permissionIri = permissionIri,
             changePermissionPropertyRequest = apiRequest,
@@ -150,7 +147,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )

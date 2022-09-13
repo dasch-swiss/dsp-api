@@ -62,8 +62,6 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -80,11 +78,6 @@ class RoutingActor(
 
   implicit val system: ActorSystem = context.system
   val log: Logger                  = Logger(this.getClass())
-
-  /**
-   * The application's configuration.
-   */
-  implicit val knoraSettings: KnoraSettingsImpl = KnoraSettings(system)
 
   /**
    * The Cache Service's configuration.
@@ -104,7 +97,7 @@ class RoutingActor(
   /**
    * Data used in responders.
    */
-  val responderData: ResponderData = ResponderData(system, self, knoraSettings, cacheServiceSettings)
+  val responderData: ResponderData = ResponderData(system, self, cacheServiceSettings)
 
   // V1 responders
   val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData, appConfig)

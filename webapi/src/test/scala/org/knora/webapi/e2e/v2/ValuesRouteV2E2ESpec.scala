@@ -74,7 +74,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val clientTestDataPath: Seq[String] = Seq("v2", "values")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   object AThing {
     val iri: IRI           = "http://rdfh.ch/0001/a-thing"

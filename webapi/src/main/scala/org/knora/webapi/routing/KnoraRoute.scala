@@ -9,7 +9,6 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Route
 import akka.pattern._
-import akka.stream.Materializer
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import zio.prelude.Validation
@@ -19,14 +18,13 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * Data needed to be passed to each route.
@@ -34,24 +32,21 @@ import org.knora.webapi.settings.KnoraSettingsImpl
  * @param system   the actor system.
  * @param appActor the main application actor.
  */
-case class KnoraRouteData(system: akka.actor.ActorSystem, appActor: akka.actor.ActorRef)
+case class KnoraRouteData(system: akka.actor.ActorSystem, appActor: akka.actor.ActorRef, appConfig: AppConfig)
 
 /**
  * An abstract class providing functionality that is commonly used in implementing Knora routes.
  *
  * @param routeData a [[KnoraRouteData]] providing access to the application.
  */
-abstract class KnoraRoute(routeData: KnoraRouteData) {
+abstract class KnoraRoute(routeData: KnoraRouteData, appConfig: AppConfig) {
 
   implicit protected val system: ActorSystem                = routeData.system
-  implicit protected val settings: KnoraSettingsImpl        = KnoraSettings(system)
-  implicit protected val timeout: Timeout                   = settings.defaultTimeout
+  implicit protected val timeout: Timeout                   = appConfig.defaultTimeoutAsDuration
   implicit protected val executionContext: ExecutionContext = system.dispatcher
-  implicit protected val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit protected val stringFormatter: StringFormatter   = StringFormatter.getGeneralInstance
   implicit protected val appActor: ActorRef                 = routeData.appActor
   protected val log: Logger                                 = Logger(this.getClass)
-  protected val baseApiUrl: String                          = settings.internalKnoraApiBaseUrl
 
   /**
    * Constructs a route.
@@ -64,7 +59,6 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
    * Gets a [[ProjectADM]] corresponding to the specified project IRI.
    *
    * @param projectIri           the project IRI.
-   *
    * @param requestingUser       the user making the request.
    * @return the corresponding [[ProjectADM]].
    */

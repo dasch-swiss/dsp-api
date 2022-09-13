@@ -12,6 +12,7 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v2.responder.listsmessages.ListGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
 import org.knora.webapi.routing.Authenticator
@@ -22,7 +23,9 @@ import org.knora.webapi.routing.RouteUtilV2
 /**
  * Provides a function for API routes that deal with lists and nodes.
  */
-class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class ListsRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
+    extends KnoraRoute(routeData, appConfig)
+    with Authenticator {
 
   /**
    * Returns the route.
@@ -37,7 +40,8 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       requestContext =>
         val requestMessage: Future[ListGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              appConfig
                             )
           listIri: IRI = stringFormatter.validateAndEscapeIri(
                            lIri,
@@ -51,7 +55,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -66,7 +70,8 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       requestContext =>
         val requestMessage: Future[NodeGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              appConfig
                             )
           nodeIri: IRI = stringFormatter.validateAndEscapeIri(
                            nIri,
@@ -80,7 +85,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,

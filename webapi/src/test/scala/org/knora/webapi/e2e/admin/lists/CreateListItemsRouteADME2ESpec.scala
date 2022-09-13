@@ -43,7 +43,7 @@ class CreateListItemsRouteADME2ESpec
   private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),

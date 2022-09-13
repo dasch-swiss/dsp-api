@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.e2e.v2
 
 import akka.actor.ActorSystem
@@ -58,10 +63,14 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val ontologiesPath = DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).makeRoute)
-  private val resourcesPath  = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).makeRoute)
+  private val ontologiesPath =
+    DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData, appConfig).makeRoute)
+  private val resourcesPath =
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, appConfig).makeRoute)
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -93,7 +102,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   private val clientTestDataPath: Seq[String] = Seq("v2", "ontologies")
 
   // an instance of ClientTestDataCollector
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   // Collects client test data
   // TODO: redefine below method somewhere else if can be reused over other test files
