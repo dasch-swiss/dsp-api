@@ -11,8 +11,6 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 
@@ -21,18 +19,10 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
-object UsersResponderV1Spec {
-
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the messages received by the [[UsersResponderV1]] actor.
  */
-class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
+class UsersResponderV1Spec extends CoreSpec with ImplicitSender {
 
   private val timeout = 5.seconds
 
@@ -40,9 +30,14 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
   private val rootUserIri   = rootUser.userData.user_id.get
   private val rootUserEmail = rootUser.userData.email.get
 
+  private val normalUser    = SharedTestDataV1.normalUser
+  private val normalUserIri = normalUser.userData.user_id.get
+
   private val incunabulaUser      = SharedTestDataV1.incunabulaProjectAdminUser
   private val incunabulaUserIri   = incunabulaUser.userData.user_id.get
   private val incunabulaUserEmail = incunabulaUser.userData.email.get
+
+  private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
 
   "The UsersResponder " when {
 

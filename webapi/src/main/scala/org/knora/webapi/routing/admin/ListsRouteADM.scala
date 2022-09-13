@@ -21,9 +21,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
   private val deleteNodeRoute: DeleteListItemsRouteADM = new DeleteListItemsRouteADM(routeData)
   private val updateNodeRoute: UpdateListItemsRouteADM = new UpdateListItemsRouteADM(routeData)
 
-  override def makeRoute(): Route =
-    getNodeRoute.makeRoute() ~
-      createNodeRoute.makeRoute() ~
-      deleteNodeRoute.makeRoute() ~
-      updateNodeRoute.makeRoute()
+  override def makeRoute: Route =
+    getNodeRoute.makeRoute ~
+      createNodeRoute.makeRoute ~
+      deleteNodeRoute.makeRoute ~
+      updateNodeRoute.makeRoute
 }

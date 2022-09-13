@@ -7,31 +7,36 @@ package dsp.valueobjects
 
 import zio.prelude.Validation
 
-import dsp.errors.BadRequestException
+import scala.util.matching.Regex
+
+import dsp.errors.ValidationException
 
 object Project {
+  // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
+  private val ProjectIDPattern: String =
+    """\p{XDigit}{4,4}"""
+
+  // A regex for matching a string containing the project ID.
+  private val ProjectIDRegex: Regex = ("^" + ProjectIDPattern + "$").r
 
   // TODO-mpro: longname, description, keywords, logo are missing enhanced validation
 
   /**
-   * Project Shortcode value object.
+   * Project ShortCode value object.
    */
-  sealed abstract case class Shortcode private (value: String)
-  object Shortcode { self =>
-    def make(value: String): Validation[Throwable, Shortcode] =
+  sealed abstract case class ShortCode private (value: String)
+  object ShortCode { self =>
+    def make(value: String): Validation[ValidationException, ShortCode] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeMissing))
       } else {
-        val validatedValue: Validation[Throwable, String] = Validation(
-          V2ProjectIriValidation.validateProjectShortcode(
-            value,
-            throw BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
-          )
-        )
-        validatedValue.map(new Shortcode(_) {})
+        ProjectIDRegex.matches(value.toUpperCase) match {
+          case false => Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeInvalid(value)))
+          case true  => Validation.succeed(new ShortCode(value.toUpperCase) {})
+        }
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[Shortcode]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[ShortCode]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -39,24 +44,24 @@ object Project {
   }
 
   /**
-   * Project Shortname value object.
+   * Project ShortName value object.
    */
-  sealed abstract case class Shortname private (value: String)
-  object Shortname { self =>
-    def make(value: String): Validation[Throwable, Shortname] =
+  sealed abstract case class ShortName private (value: String)
+  object ShortName { self =>
+    def make(value: String): Validation[ValidationException, ShortName] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
       } else {
         val validatedValue = Validation(
           V2ProjectIriValidation.validateAndEscapeProjectShortname(
             value,
-            throw BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+            throw ValidationException(ProjectErrorMessages.ShortNameInvalid(value))
           )
-        )
-        validatedValue.map(new Shortname(_) {})
+        ).mapError(e => new ValidationException(e.getMessage()))
+        validatedValue.map(new ShortName(_) {})
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[Shortname]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[ShortName]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -64,18 +69,20 @@ object Project {
   }
 
   /**
-   * Project Longname value object.
+   * Project Name value object.
+   * (Formerly `Longname`)
    */
-  sealed abstract case class Longname private (value: String)
-  object Longname { self =>
-    def make(value: String): Validation[Throwable, Longname] =
+  // TODO-BL: [domain-model] this should be multi-lang-string, I suppose; needs real validation once value constraints are defined
+  sealed abstract case class Name private (value: String)
+  object Name { self =>
+    def make(value: String): Validation[ValidationException, Name] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))
       } else {
-        Validation.succeed(new Longname(value) {})
+        Validation.succeed(new Name(value) {})
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[Longname]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[Name]] =
       value match {
         case None    => Validation.succeed(None)
         case Some(v) => self.make(v).map(Some(_))
@@ -85,16 +92,18 @@ object Project {
   /**
    * ProjectDescription value object.
    */
+  // TODO-BL: [domain-model] should probably be MultiLangString; should probably be called `Description` as it's clear that it's part of Project
+  // ATM it can't be changed to MultiLangString, because that has the language tag required, whereas in V2, it's currently optional, so this would be a breaking change.
   sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
   object ProjectDescription { self =>
-    def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, ProjectDescription] =
+    def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, ProjectDescription] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing))
       } else {
         Validation.succeed(new ProjectDescription(value) {})
       }
 
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[ProjectDescription]] =
+    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[ValidationException, Option[ProjectDescription]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -106,14 +115,14 @@ object Project {
    */
   sealed abstract case class Keywords private (value: Seq[String])
   object Keywords { self =>
-    def make(value: Seq[String]): Validation[Throwable, Keywords] =
+    def make(value: Seq[String]): Validation[ValidationException, Keywords] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.KeywordsMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing))
       } else {
         Validation.succeed(new Keywords(value) {})
       }
 
-    def make(value: Option[Seq[String]]): Validation[Throwable, Option[Keywords]] =
+    def make(value: Option[Seq[String]]): Validation[ValidationException, Option[Keywords]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -125,13 +134,13 @@ object Project {
    */
   sealed abstract case class Logo private (value: String)
   object Logo { self =>
-    def make(value: String): Validation[Throwable, Logo] =
+    def make(value: String): Validation[ValidationException, Logo] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.LogoMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.LogoMissing))
       } else {
         Validation.succeed(new Logo(value) {})
       }
-    def make(value: Option[String]): Validation[Throwable, Option[Logo]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[Logo]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -143,10 +152,10 @@ object Project {
    */
   sealed abstract case class ProjectSelfJoin private (value: Boolean)
   object ProjectSelfJoin { self =>
-    def make(value: Boolean): Validation[Throwable, ProjectSelfJoin] =
+    def make(value: Boolean): Validation[ValidationException, ProjectSelfJoin] =
       Validation.succeed(new ProjectSelfJoin(value) {})
 
-    def make(value: Option[Boolean]): Validation[Throwable, Option[ProjectSelfJoin]] =
+    def make(value: Option[Boolean]): Validation[ValidationException, Option[ProjectSelfJoin]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -158,10 +167,10 @@ object Project {
    */
   sealed abstract case class ProjectStatus private (value: Boolean)
   object ProjectStatus { self =>
-    def make(value: Boolean): Validation[Throwable, ProjectStatus] =
+    def make(value: Boolean): Validation[ValidationException, ProjectStatus] =
       Validation.succeed(new ProjectStatus(value) {})
 
-    def make(value: Option[Boolean]): Validation[Throwable, Option[ProjectStatus]] =
+    def make(value: Option[Boolean]): Validation[ValidationException, Option[ProjectStatus]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -170,16 +179,16 @@ object Project {
 }
 
 object ProjectErrorMessages {
-  val ShortcodeMissing           = "Shortcode cannot be empty."
-  val ShortcodeInvalid           = "Shortcode is invalid."
-  val ShortnameMissing           = "Shortname cannot be empty."
-  val ShortnameInvalid           = "Shortname is invalid."
-  val LongnameMissing            = "Longname cannot be empty."
-  val LongnameInvalid            = "Longname is invalid."
+  val ShortCodeMissing           = "ShortCode cannot be empty."
+  val ShortCodeInvalid           = (v: String) => s"ShortCode is invalid: $v"
+  val ShortNameMissing           = "Shortname cannot be empty."
+  val ShortNameInvalid           = (v: String) => s"Shortname is invalid: $v"
+  val NameMissing                = "Name cannot be empty."
+  val NameInvalid                = (v: String) => s"Name is invalid: $v"
   val ProjectDescriptionsMissing = "Description cannot be empty."
-  val ProjectDescriptionsInvalid = "Description is invalid."
+  val ProjectDescriptionsInvalid = (v: String) => s"Description is invalid: $v"
   val KeywordsMissing            = "Keywords cannot be empty."
-  val KeywordsInvalid            = "Keywords are invalid."
+  val KeywordsInvalid            = (v: String) => s"Keywords are invalid: $v"
   val LogoMissing                = "Logo cannot be empty."
-  val LogoInvalid                = "Logo is invalid."
+  val LogoInvalid                = (v: String) => s"Logo is invalid: $v"
 }

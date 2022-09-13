@@ -31,7 +31,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     path("v1" / "mapping") {
       post {
         entity(as[Multipart.FormData]) { formdata: Multipart.FormData => requestContext =>

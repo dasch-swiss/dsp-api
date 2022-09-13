@@ -293,8 +293,8 @@ object V2ProjectIriValidation {
    * @param shortcode the project's shortcode.
    * @return the shortcode in upper case.
    */
-  def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String =
-    ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
+  def validateProjectShortCode(shortCode: String, errorFun: => Nothing): String =
+    ProjectIDRegex.findFirstIn(shortCode.toUpperCase) match {
       case Some(value) => value
       case None        => errorFun
     }

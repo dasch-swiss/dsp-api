@@ -12,8 +12,6 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.util.Timeout
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import java.net.URLEncoder
 import scala.concurrent.Await
@@ -37,18 +35,11 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
-object ProjectsADME2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
 class ProjectsADME2ESpec
-    extends E2ESpec(ProjectsADME2ESpec.config)
+    extends E2ESpec
     with SessionJsonProtocol
     with ProjectsADMJsonProtocol
     with TriplestoreJsonProtocol {

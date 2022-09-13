@@ -27,7 +27,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     path("v2" / "authentication") {
       get { // authenticate credentials
         requestContext =>

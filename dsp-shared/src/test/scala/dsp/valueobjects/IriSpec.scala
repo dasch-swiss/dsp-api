@@ -9,6 +9,7 @@ import zio.prelude.Validation
 import zio.test._
 
 import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import dsp.valueobjects.Iri._
 
 /**
@@ -115,32 +116,32 @@ object IriSpec extends ZIOSpecDefault {
 
   private val projectIriTest = suite("IriSpec - ProjectIri")(
     test("pass an empty value and return an error") {
-      assertTrue(ProjectIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing))) &&
+      assertTrue(ProjectIri.make("") == Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))) &&
       assertTrue(
-        ProjectIri.make(Some("")) == Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing))
+        ProjectIri.make(Some("")) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         ProjectIri.make(invalidIri) == Validation.fail(
-          BadRequestException(IriErrorMessages.ProjectIriInvalid)
+          ValidationException(IriErrorMessages.ProjectIriInvalid)
         )
       ) &&
       assertTrue(
         ProjectIri.make(Some(invalidIri)) == Validation.fail(
-          BadRequestException(IriErrorMessages.ProjectIriInvalid)
+          ValidationException(IriErrorMessages.ProjectIriInvalid)
         )
       )
     },
     test("pass an invalid IRI containing unsupported UUID version and return an error") {
       assertTrue(
         ProjectIri.make(projectIriWithUUIDVersion3) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
+          ValidationException(IriErrorMessages.UuidVersionInvalid)
         )
       ) &&
       assertTrue(
         ProjectIri.make(Some(projectIriWithUUIDVersion3)) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
+          ValidationException(IriErrorMessages.UuidVersionInvalid)
         )
       )
     },

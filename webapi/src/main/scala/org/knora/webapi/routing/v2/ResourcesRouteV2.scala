@@ -48,7 +48,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     getIIIFManifest() ~
       createResource() ~
       updateResourceMetadata() ~

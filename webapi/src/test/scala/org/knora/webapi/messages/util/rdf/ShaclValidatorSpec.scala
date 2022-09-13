@@ -5,8 +5,6 @@
 
 package org.knora.webapi.util.rdf
 
-import com.typesafe.config.ConfigFactory
-
 import java.nio.file.Paths
 
 import dsp.errors.AssertionException
@@ -14,23 +12,11 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
-object ShaclValidatorSpec {
-  val config: String =
-    s"""
-       |app {
-       |    shacl {
-       |        shapes-dir = "../test_data/shacl"
-       |    }
-       |}
-       |""".stripMargin
-}
-
 /**
  * Tests implementations of [[ShaclValidator]].
  */
-class ShaclValidatorSpec() extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
+class ShaclValidatorSpec() extends CoreSpec {
 
-  RdfFeatureFactory.init(settings)
   private val rdfFormatUtil: RdfFormatUtil   = RdfFeatureFactory.getRdfFormatUtil()
   private val nodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory()
   private val shaclValidator: ShaclValidator = RdfFeatureFactory.getShaclValidator()

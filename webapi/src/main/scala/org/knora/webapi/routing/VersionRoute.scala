@@ -9,21 +9,15 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.get
 import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import spray.json.JsObject
 import spray.json.JsString
-
-import scala.concurrent.duration._
 
 import org.knora.webapi.http.version.BuildInfo
 
 /**
- * Provides version check logic
+ * Provides the '/version' endpoint serving the components versions.
  */
-trait VersionCheck {
-  this: VersionRoute =>
-
-  override implicit val timeout: Timeout = 1.second
+final case class VersionRoute() {
 
   protected def createResponse(): HttpResponse = {
     val sipiVersion: String   = BuildInfo.sipi.split(":").apply(1)
@@ -44,17 +38,11 @@ trait VersionCheck {
       )
     )
   }
-}
-
-/**
- * Provides the '/version' endpoint serving the components versions.
- */
-class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with VersionCheck {
 
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  def makeRoute: Route =
     path("version") {
       get { requestContext =>
         requestContext.complete(createResponse())

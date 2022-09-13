@@ -56,16 +56,10 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   import OntologyV2R2RSpec._
 
-  override def testConfigSource: String =
-    """
-      |# akka.loglevel = "DEBUG"
-      |# akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val ontologiesPath = DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).knoraApiPath)
-  private val resourcesPath  = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).knoraApiPath)
+  private val ontologiesPath = DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).makeRoute)
+  private val resourcesPath  = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
