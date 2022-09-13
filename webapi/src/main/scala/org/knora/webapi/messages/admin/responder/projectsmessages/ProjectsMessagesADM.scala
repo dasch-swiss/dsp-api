@@ -20,8 +20,6 @@ import dsp.errors.DataConversionException
 import dsp.errors.OntologyConstraintException
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
-import org.knora.webapi.annotation.ApiMayChange
-import org.knora.webapi.annotation.ServerUnique
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
@@ -247,7 +245,6 @@ case class ProjectKeywordsGetRequestADM(
  * @param identifier           the identifier of the project.
  * @param requestingUser       the user making the request.
  */
-@ApiMayChange
 case class ProjectRestrictedViewSettingsGetADM(
   identifier: ProjectIdentifierADM,
   requestingUser: UserADM
@@ -259,7 +256,6 @@ case class ProjectRestrictedViewSettingsGetADM(
  * @param identifier           the identifier of the project.
  * @param requestingUser       the user making the request.
  */
-@ApiMayChange
 case class ProjectRestrictedViewSettingsGetRequestADM(
   identifier: ProjectIdentifierADM,
   requestingUser: UserADM
@@ -365,11 +361,10 @@ case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRes
 }
 
 /**
- * API MAY CHANGE: Represents a response to a request for the project's restricted view settings.
+ * Represents a response to a request for the project's restricted view settings.
  *
  * @param settings the restricted view settings.
  */
-@ApiMayChange
 case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM)
     extends KnoraResponseADM
     with ProjectsADMJsonProtocol {
@@ -399,8 +394,8 @@ case class ProjectDataGetResponseADM(projectDataFile: Path)
  * Represents basic information about a project.
  *
  * @param id          The project's IRI.
- * @param shortname   The project's shortname. [[ServerUnique]].
- * @param shortcode   The project's shortcode. [[ServerUnique]].
+ * @param shortname   The project's shortname.
+ * @param shortcode   The project's shortcode.
  * @param longname    The project's long name.
  * @param description The project's description.
  * @param keywords    The project's keywords.
@@ -411,8 +406,8 @@ case class ProjectDataGetResponseADM(projectDataFile: Path)
  */
 case class ProjectADM(
   id: IRI,
-  @ServerUnique shortname: String,
-  @ServerUnique shortcode: String,
+  shortname: String,
+  shortcode: String,
   longname: Option[String],
   description: Seq[StringLiteralV2],
   keywords: Seq[String],
@@ -639,12 +634,11 @@ object ProjectIdentifierType {
 }
 
 /**
- * API MAY CHANGE: Represents the project's restricted view settings.
+ * Represents the project's restricted view settings.
  *
  * @param size      the restricted view size.
  * @param watermark the watermark file.
  */
-@ApiMayChange
 case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
 
 /**
