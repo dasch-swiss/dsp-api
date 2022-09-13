@@ -20,7 +20,6 @@ import org.knora.webapi.routing.AroundDirectives
 import org.knora.webapi.routing.HealthRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RejectingRoute
-import org.knora.webapi.routing.SwaggerApiDocsRoute
 import org.knora.webapi.routing.VersionRoute
 import org.knora.webapi.routing.admin.FilesRouteADM
 import org.knora.webapi.routing.admin.GroupsRouteADM
@@ -117,8 +116,7 @@ private final case class ApiRoutesImpl(routeData: KnoraRouteData, runtime: Runti
                 new ProjectsRouteADM(routeData).makeRoute ~
                 new StoreRouteADM(routeData).makeRoute ~
                 new UsersRouteADM(routeData).makeRoute ~
-                new FilesRouteADM(routeData).makeRoute ~
-                new SwaggerApiDocsRoute(routeData).makeRoute
+                new FilesRouteADM(routeData).makeRoute
             }
           }
         }

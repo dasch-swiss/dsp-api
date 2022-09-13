@@ -8,9 +8,7 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import io.swagger.annotations._
 
-import javax.ws.rs.Path
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
@@ -26,8 +24,6 @@ import org.knora.webapi.routing.RouteUtilADM
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-@Api(value = "lists", produces = "application/json")
-@Path("/admin/lists")
 class GetListItemsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
@@ -42,12 +38,6 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
       getListOrNodeInfo("nodes") ~
       getListInfo()
 
-  @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Returns all lists optionally filtered by project.
    */
@@ -80,13 +70,6 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
     }
   }
 
-  @Path("/{IRI}")
-  @ApiOperation(value = "Get a list", nickname = "getlist", httpMethod = "GET", response = classOf[ListGetResponseADM])
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 500, message = "Internal server error")
-    )
-  )
   /**
    * Returns a list node, root or child, with children (if exist).
    */
