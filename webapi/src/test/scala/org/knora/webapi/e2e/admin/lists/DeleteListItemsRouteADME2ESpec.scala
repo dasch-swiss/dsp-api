@@ -10,8 +10,6 @@ import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 
@@ -28,18 +26,11 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 
-object DeleteListItemsRouteADME2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing  endpoint.
  */
 class DeleteListItemsRouteADME2ESpec
-    extends E2ESpec(DeleteListItemsRouteADME2ESpec.config)
+    extends E2ESpec
     with SessionJsonProtocol
     with TriplestoreJsonProtocol
     with ListADMJsonProtocol {

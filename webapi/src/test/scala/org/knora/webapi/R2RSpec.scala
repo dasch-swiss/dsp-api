@@ -5,161 +5,110 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.actor.Props
 import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import zio._
+import zio.logging.backend.SLF4J
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import org.knora.webapi.app.ApplicationActor
-import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.core.Core
-import org.knora.webapi.core.Logging
-import org.knora.webapi.http.handler
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.AppStart
-import org.knora.webapi.messages.app.appmessages.AppStop
-import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testservices.TestActorSystemService
-import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.StartupUtils
+import org.knora.webapi.util.LogAspect
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
  */
 abstract class R2RSpec
-    extends Core
-    with StartupUtils
-    with Suite
+    extends AnyWordSpec
+    with TestStartupUtils
     with ScalatestRouteTest
-    with AnyWordSpecLike
     with Matchers
     with BeforeAndAfterAll {
 
-  /* needed by the core trait */
-  implicit lazy val _system: ActorSystem = ActorSystem(
-    actorSystemNameFrom(getClass)
-  )
-
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
-
-  StringFormatter.initForTest()
-
-  val log: Logger                             = Logger(this.getClass())
-  lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-  // override so that we can use our own system
-  override def createActorSystem(): ActorSystem = _system
-
-  def actorRefFactory: ActorSystem = _system
-
-  implicit val knoraExceptionHandler: ExceptionHandler = handler.KnoraExceptionHandler(settings)
-
-  implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-
-  // The effect for building a cache service manager and a IIIF service manager.
-  lazy val managers = for {
-    csm       <- ZIO.service[CacheServiceManager]
-    iiifsm    <- ZIO.service[IIIFServiceManager]
-    tssm      <- ZIO.service[TriplestoreServiceManager]
-    appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, tssm, appConfig)
-
   /**
-   * The effect layers which will be used to run the managers effect.
+   * The `Environment` that we require to exist at startup.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      JWTService.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer,
-      Logging.slf4j,
-      TestClientService.layer,
-      TestActorSystemService.layer
-    )
-
-  // The ZIO runtime used to run functional effects
-  lazy val runtime =
-    Unsafe.unsafe { implicit u =>
-      Runtime.unsafe.fromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
-    }
+  type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
 
   /**
-   * Create both managers by unsafe running them.
+   * The effect layers from which the App is built.
+   * Can be overriden in specs that need other implementations.
    */
-  lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
+  lazy val effectLayers = core.LayersTest.defaultLayersTestWithoutSipi(system)
+
+  /**
+   * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
+   * and cleaned up when the Runtime is shutdown.
+   */
+  private val bootstrap: ZLayer[
+    Any,
+    Any,
+    Environment
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
+
+  // create a configured runtime
+  private val runtime = Unsafe.unsafe { implicit u =>
+    Runtime.unsafe
+      .fromLayer(bootstrap)
+  }
+
+  // An effect for getting stuff out, so that we can pass them
+  // to some legacy code
+  private val routerAndConfig = for {
+    router <- ZIO.service[core.AppRouter]
+    config <- ZIO.service[AppConfig]
+  } yield (router, config)
+
+  /**
+   * Create router and config by unsafe running them.
+   */
+  private val (router, config) =
     Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(managers).getOrElse(c => throw FiberFailure(c))
+      runtime.unsafe
+        .run(
+          routerAndConfig
+        )
+        .getOrThrowFiberFailure()
     }
 
-  // start the Application Actor
-  lazy val appActor: ActorRef =
-    system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
-      name = APPLICATION_MANAGER_ACTOR_NAME
-    )
+  // main difference to other specs (no own systen and executionContext defined)
+  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+  lazy val rdfDataObjects                       = List.empty[RdfDataObject]
+  val log: Logger                               = Logger(this.getClass())
+  val appActor                                  = router.ref
 
-  val routeData: KnoraRouteData = KnoraRouteData(
-    system = system,
-    appActor = appActor
-  )
+  // needed by some tests
+  val routeData = KnoraRouteData(system, appActor)
 
-  lazy val rdfDataObjects = List.empty[RdfDataObject]
-
-  final override def beforeAll(): Unit = {
-    // set allow reload over http
-    appActor ! SetAllowReloadOverHTTPState(true)
-
-    // start the knora service, loading data from the repository
-    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
-
-    // waits until knora is up and running
-    applicationStateRunning()
-
-    loadTestData(rdfDataObjects)
-  }
+  final override def beforeAll(): Unit =
+    /* Here we start our app and initialize the repository before each suit runs */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
+          } yield ()).provideSomeLayer(AppServer.testWithoutSipi)
+        )
+        .getOrThrow()
+    }
 
   final override def afterAll(): Unit = {
 
@@ -167,20 +116,8 @@ abstract class R2RSpec
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
     }
-    /* Stop the server when everything else has finished */
-    appActor ! AppStop()
-
+    system.terminate()
   }
-
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(
-        (for {
-          testClient <- ZIO.service[TestClientService]
-          result     <- testClient.loadTestData(rdfDataObjects)
-        } yield result)
-      )
-    }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =

@@ -7,8 +7,6 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import org.scalatest.PrivateMethodTester
 
 import java.util.UUID
@@ -35,31 +33,13 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.cache.CacheUtil
 
-object PermissionsResponderADMSpec {
-
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the [[PermissionsResponderADM]] actor.
  */
-class PermissionsResponderADMSpec
-    extends CoreSpec(PermissionsResponderADMSpec.config)
-    with ImplicitSender
-    with PrivateMethodTester {
+class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with PrivateMethodTester {
 
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
-
-  private val responderUnderTest = new PermissionsResponderADM(responderData)
-
-  /* define private method access */
-  private val userAdministrativePermissionsGetADM =
-    PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]](Symbol("userAdministrativePermissionsGetADM"))
-  PrivateMethod[Future[Set[PermissionADM]]](Symbol("defaultObjectAccessPermissionsForGroupsGetADM"))
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -164,8 +144,11 @@ class PermissionsResponderADMSpec
     }
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
+
+        val permissionsResponder = new PermissionsResponderADM(responderData)
+
         val f: Future[Map[IRI, Set[PermissionADM]]] =
-          responderUnderTest invokePrivate userAdministrativePermissionsGetADM(
+          permissionsResponder.userAdministrativePermissionsGetADM(
             multiuserUser.permissions.groupsPerProject
           )
         val result: Map[IRI, Set[PermissionADM]] = Await.result(f, 1.seconds)

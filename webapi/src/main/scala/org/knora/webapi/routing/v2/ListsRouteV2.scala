@@ -27,7 +27,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     getList() ~
       getNode()
 

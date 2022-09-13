@@ -1,26 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
 
-<!-- For assistance related to logback-translator or configuration  -->
-<!-- files in general, please contact the logback user mailing list -->
-<!-- at http://www.qos.ch/mailman/listinfo/logback-user             -->
-<!--                                                                -->
-<!-- For professional support please see                            -->
-<!--    http://www.qos.ch/shop/products/professionalSupport         -->
-<!--                                                                -->
-<configuration scan="false" debug="false">
-    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %-5level | %logger{0} | %msg%n</pattern>
+<configuration>
+    <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
+    <import class="ch.qos.logback.core.ConsoleAppender"/>
+
+    <appender name="STDOUT" class="ConsoleAppender">
+        <encoder class="PatternLayoutEncoder">
+        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!--<conversionRule conversionWord="traceID" converterClass="kamon.instrumentation.logback.tools.LogbackTraceIDConverter" />
-
-    <appender name="STDOUTMETRICS" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %-5level | %traceID | %c{0} -> %m%n</pattern>
-        </encoder>
-    </appender>-->
+    <root level="ERROR">
+        <appender-ref ref="STDOUT"/>
+    </root>
 
     <logger name="org.eclipse.rdf4j.rio.RDFParserRegistry" level="ERROR"/>
     <logger name="org.apache.jena.riot" level="ERROR"/>
@@ -40,6 +33,7 @@
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
+    <logger name="org.knora.webapi.core" level="INFO"/>
     <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="ERROR"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
@@ -73,7 +67,5 @@
 
     <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 
-    <root level="ERROR">
-        <appender-ref ref="stdout"/>
-    </root>
+    
 </configuration>

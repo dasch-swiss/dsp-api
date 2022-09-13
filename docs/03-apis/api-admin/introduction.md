@@ -52,16 +52,6 @@ API server can authenticate the user making the request. Credentials can
 be sent as a part of the HTTP header or as parts of the URL (see
 [Authentication in Knora](../../05-internals/design/principles/authentication.md)).
 
-## OpenAPI/Swagger
-
-The Admin API uses
-[OpenAPI](https://github.com/OAI/OpenAPI-Specification) for
-documentation purposes. To try it out, run webapi and open
-http://host/api-docs/swagger.json in <http://petstore.swagger.io> .
-Alternatively, the documentation can be looked at by using
-[ReDoc](https://github.com/Rebilly/ReDoc), which is provided in
-`knora/docs/redoc/index.html` and is published under <https://docs.knora.org/api-admin/index.html>.
-
 ## Admin API Endpoints
 
 TODO

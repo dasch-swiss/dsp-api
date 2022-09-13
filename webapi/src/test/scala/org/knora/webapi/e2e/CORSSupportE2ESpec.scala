@@ -12,22 +12,14 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.headers.`Access-Control-Allow-Methods`
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.ConfigFactory
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
-object CORSSupportE2ESpec {
-  val config = ConfigFactory.parseString("""
-            akka.loglevel = "DEBUG"
-            akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-end test specification for testing [[CORSSupport]].
  */
-class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
+class CORSSupportE2ESpec extends E2ESpec {
 
   implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 

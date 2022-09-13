@@ -27,7 +27,6 @@ import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 import dsp.errors.AssertionException
@@ -53,12 +52,10 @@ import org.knora.webapi.util._
 /**
  * Tests the API v2 resources route.
  */
-class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
+class ResourcesRouteV2E2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
-
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   private val anythingUserEmail             = SharedTestDataADM.anythingUser1.email
   private val password                      = SharedTestDataADM.testPass
@@ -2109,7 +2106,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
       val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-      DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).knoraApiPath)
+      DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).makeRoute)
       val auth = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it

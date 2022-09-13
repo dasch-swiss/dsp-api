@@ -303,7 +303,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
    * @param groupsPerProject the groups inside each project the user is member of.
    * @return a the user's resulting set of administrative permissions for each project.
    */
-  private def userAdministrativePermissionsGetADM(
+  def userAdministrativePermissionsGetADM(
     groupsPerProject: Map[IRI, Seq[IRI]]
   ): Future[Map[IRI, Set[PermissionADM]]] = {
 

@@ -33,6 +33,7 @@ import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
@@ -226,11 +227,11 @@ object StringFormatter {
    *
    * @param settings the application settings.
    */
-  def init(settings: KnoraSettingsImpl): Unit =
+  def init(config: AppConfig): Unit =
     this.synchronized {
       generalInstance match {
         case Some(_) => ()
-        case None    => generalInstance = Some(new StringFormatter(Some(settings)))
+        case None    => generalInstance = Some(new StringFormatter(Some(config)))
       }
     }
 
@@ -241,7 +242,7 @@ object StringFormatter {
     this.synchronized {
       generalInstance match {
         case Some(_) => ()
-        case None    => generalInstance = Some(new StringFormatter(maybeSettings = None, initForTest = true))
+        case None    => generalInstance = Some(new StringFormatter(maybeConfig = None, initForTest = true))
       }
     }
 
@@ -576,7 +577,7 @@ object IriConversions {
  * Handles string parsing, formatting, conversion, and validation.
  */
 class StringFormatter private (
-  val maybeSettings: Option[KnoraSettingsImpl] = None,
+  val maybeConfig: Option[AppConfig] = None,
   maybeKnoraHostAndPort: Option[String] = None,
   initForTest: Boolean = false
 ) {
@@ -592,9 +593,9 @@ class StringFormatter private (
     // Use the default host and port for automated testing.
     Some("0.0.0.0:3333")
   } else {
-    maybeSettings match {
-      case Some(settings) => Some(settings.externalOntologyIriHostAndPort)
-      case None           => maybeKnoraHostAndPort
+    maybeConfig match {
+      case Some(config) => Some(config.knoraApi.externalOntologyIriHostAndPort)
+      case None         => maybeKnoraHostAndPort
     }
   }
 
@@ -602,14 +603,14 @@ class StringFormatter private (
   private val arkResolver: Option[String] = if (initForTest) {
     Some("http://0.0.0.0:3336")
   } else {
-    maybeSettings.map(_.arkResolver)
+    maybeConfig.map(_.ark.resolver)
   }
 
   // The DaSCH's ARK assigned number.
   private val arkAssignedNumber: Option[Int] = if (initForTest) {
     Some(72163)
   } else {
-    maybeSettings.map(_.arkAssignedNumber)
+    maybeConfig.map(_.ark.assignedNumber)
   }
 
   // The hostname used in internal Knora IRIs.

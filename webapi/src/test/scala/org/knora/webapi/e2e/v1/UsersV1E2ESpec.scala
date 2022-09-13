@@ -9,7 +9,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 
@@ -21,17 +20,10 @@ import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.AkkaHttpUtils
 
-object UsersV1E2ESpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing users endpoint.
  */
-class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class UsersV1E2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJsonProtocol {
 
   implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
