@@ -6,7 +6,7 @@ under <https://docs.dasch.swiss/> and managed by
 
 ## Build and serve the docs locally
 
-Documentation can be build by invoking the following make commands from 
+Documentation can be build by invoking the following make commands from
 the project root directory:
 
 ```shell
