@@ -8,11 +8,9 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import io.swagger.annotations._
 import zio.prelude.Validation
 
 import java.util.UUID
-import javax.ws.rs.Path
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Group._
@@ -26,9 +24,6 @@ import org.knora.webapi.routing.RouteUtilADM
 /**
  * Provides a routing function for API routes that deal with groups.
  */
-
-@Api(value = "groups", produces = "application/json")
-@Path("/admin/groups")
 class GroupsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
@@ -36,7 +31,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
   val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     getGroups() ~
       getGroup() ~
       getGroupMembers() ~

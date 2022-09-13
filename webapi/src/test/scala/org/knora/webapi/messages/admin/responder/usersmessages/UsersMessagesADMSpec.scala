@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
@@ -17,17 +15,10 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionP
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-object UsersMessagesADMSpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the [[UserADM]] and [[UserIdentifierADM]] classes.
  */
-class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
+class UsersMessagesADMSpec extends CoreSpec {
 
   private val id          = SharedTestDataADM.rootUser.id
   private val username    = SharedTestDataADM.rootUser.username

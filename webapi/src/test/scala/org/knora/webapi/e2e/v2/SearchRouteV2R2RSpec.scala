@@ -51,16 +51,10 @@ import org.knora.webapi.util.MutableTestIri
 class SearchRouteV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  override def testConfigSource: String =
-    """
-      |# akka.loglevel = "DEBUG"
-      |# akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
-  private val searchPath   = DSPApiDirectives.handleErrors(system)(new SearchRouteV2(routeData).knoraApiPath)
-  private val resourcePath = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).knoraApiPath)
-  private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV2(routeData).knoraApiPath)
-  private val valuesPath   = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
+  private val searchPath   = DSPApiDirectives.handleErrors(system)(new SearchRouteV2(routeData).makeRoute)
+  private val resourcePath = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).makeRoute)
+  private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV2(routeData).makeRoute)
+  private val valuesPath   = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

@@ -6,9 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-import zio.&
-import zio.Runtime
-import zio.ZLayer
 
 import java.time.Instant
 import java.util.UUID
@@ -16,8 +13,6 @@ import scala.concurrent.duration._
 
 import dsp.errors._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -38,16 +33,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels.ChangeFileRequest
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.errors.SipiException
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -72,19 +58,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val mimeTypeJP2  = "image/jp2"
 
   /* we need to run our app with the mocked sipi implementation */
-  override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
-      Runtime.removeDefaultLoggers,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceMockImpl.layer,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer
-    )
+  override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

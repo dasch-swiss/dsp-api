@@ -24,13 +24,8 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
  * End-to-end specification for the handling of JSONLD documents.
  */
 class JSONLDHandlingV2R2RSpec extends R2RSpec {
-  override def testConfigSource: String =
-    """
-      |# akka.loglevel = "DEBUG"
-      |# akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
 
-  private val resourcesPath = new ResourcesRouteV2(routeData).knoraApiPath
+  private val resourcesPath = new ResourcesRouteV2(routeData).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

@@ -16,32 +16,33 @@ object Dependencies {
 
   val ScalaVersion = "2.13.8"
 
-  val AkkaHttpVersion  = "10.2.9"
-  val AkkaActorVersion = "2.6.19"
+  val AkkaActorVersion = "2.6.20"
+  val AkkaHttpVersion  = "10.2.10"
   val JenaVersion      = "4.6.0"
 
-  val ZioVersion        = "2.0.0"
-  val ZioHttpVersion    = "2.0.0-RC4"
-  val ZioJsonVersion    = "0.3.0-RC11"
-  val ZioConfigVersion  = "3.0.2"
-  val ZioSchemaVersion  = "0.2.0"
-  val ZioLoggingVersion = "2.1.0"
-  val ZioZmxVersion     = "2.0.0-RC4"
-  val ZioPreludeVersion = "1.0.0-RC15"
+  val ZioVersion                  = "2.0.2"
+  val ZioHttpVersion              = "2.0.0-RC4"
+  val ZioJsonVersion              = "0.3.0-RC11"
+  val ZioConfigVersion            = "3.0.2"
+  val ZioSchemaVersion            = "0.2.0"
+  val ZioLoggingVersion           = "2.1.0"
+  val ZioMetricsConnectorsVersion = "2.0.0"
+  val ZioPreludeVersion           = "1.0.0-RC15"
 
   // ZIO - all Scala 3 compatible
-  val zio               = "dev.zio" %% "zio"                 % ZioVersion
-  val zioMacros         = "dev.zio" %% "zio-macros"          % ZioVersion
-  val zioHttp           = "io.d11"  %% "zhttp"               % ZioHttpVersion
-  val zioJson           = "dev.zio" %% "zio-json"            % ZioJsonVersion
-  val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
-  val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
-  val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
-  val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
-  val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
-  val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
-  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.1"
-  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.1"
+  val zio                  = "dev.zio" %% "zio"                    % ZioVersion
+  val zioMacros            = "dev.zio" %% "zio-macros"             % ZioVersion
+  val zioHttp              = "io.d11"  %% "zhttp"                  % ZioHttpVersion
+  val zioJson              = "dev.zio" %% "zio-json"               % ZioJsonVersion
+  val zioPrelude           = "dev.zio" %% "zio-prelude"            % ZioPreludeVersion
+  val zioLogging           = "dev.zio" %% "zio-logging"            % ZioLoggingVersion
+  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j"      % ZioLoggingVersion
+  val zioConfig            = "dev.zio" %% "zio-config"             % ZioConfigVersion
+  val zioConfigMagnolia    = "dev.zio" %% "zio-config-magnolia"    % ZioConfigVersion
+  val zioConfigTypesafe    = "dev.zio" %% "zio-config-typesafe"    % ZioConfigVersion
+  val zioTest              = "dev.zio" %% "zio-test"               % ZioVersion
+  val zioTestSbt           = "dev.zio" %% "zio-test-sbt"           % ZioVersion
+  val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -55,14 +56,14 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.11"
   val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
-  val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "2.0.0"
+  val slf4jApi       = "org.slf4j"                   % "slf4j-api"       % "2.0.0" // the logging interface
+  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.0" // the logging implementation
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.7" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.7" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.8" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.8" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -83,20 +84,19 @@ object Dependencies {
   val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
 
   // other
-  val diff            = "com.sksamuel.diff"             % "diff"              % "1.1.11"
-  val gwtServlet      = "com.google.gwt"                % "gwt-servlet"       % "2.10.0"
-  val icu4j           = "com.ibm.icu"                   % "icu4j"             % "71.1"
-  val jakartaJSON     = "org.glassfish"                 % "jakarta.json"      % "2.0.1"
-  val jodd            = "org.jodd"                      % "jodd"              % "3.2.7"
-  val rdf4jClient     = "org.eclipse.rdf4j"             % "rdf4j-client"      % "4.1.0"
-  val rdf4jShacl      = "org.eclipse.rdf4j"             % "rdf4j-shacl"       % "4.1.0"
-  val saxonHE         = "net.sf.saxon"                  % "Saxon-HE"          % "11.4"
-  val scalaGraph      = "org.scala-graph"              %% "graph-core"        % "1.13.5" // Scala 3 incompatible
-  val scallop         = "org.rogach"                   %% "scallop"           % "4.1.0"  // Scala 3 compatible
-  val swaggerAkkaHttp = "com.github.swagger-akka-http" %% "swagger-akka-http" % "1.6.0"  // Scala 3 incompatible
-  val titaniumJSONLD  = "com.apicatalog"                % "titanium-json-ld"  % "1.3.1"
-  val xmlunitCore     = "org.xmlunit"                   % "xmlunit-core"      % "2.9.0"
-  val jacksonDatabind = "com.fasterxml.jackson.core"    % "jackson-databind"  % "2.13.3"
+  val diff            = "com.sksamuel.diff"          % "diff"             % "1.1.11"
+  val gwtServlet      = "com.google.gwt"             % "gwt-servlet"      % "2.10.0"
+  val icu4j           = "com.ibm.icu"                % "icu4j"            % "71.1"
+  val jakartaJSON     = "org.glassfish"              % "jakarta.json"     % "2.0.1"
+  val jodd            = "org.jodd"                   % "jodd"             % "3.2.7"
+  val rdf4jClient     = "org.eclipse.rdf4j"          % "rdf4j-client"     % "4.1.0"
+  val rdf4jShacl      = "org.eclipse.rdf4j"          % "rdf4j-shacl"      % "4.1.0"
+  val saxonHE         = "net.sf.saxon"               % "Saxon-HE"         % "11.4"
+  val scalaGraph      = "org.scala-graph"           %% "graph-core"       % "1.13.5" // Scala 3 incompatible
+  val scallop         = "org.rogach"                %% "scallop"          % "4.1.0"  // Scala 3 compatible
+  val titaniumJSONLD  = "com.apicatalog"             % "titanium-json-ld" % "1.3.1"
+  val xmlunitCore     = "org.xmlunit"                % "xmlunit-core"     % "2.9.0"
+  val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.13.4"
 
   // test
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
@@ -115,8 +115,8 @@ object Dependencies {
     akkaHttp,
     akkaHttpCors,
     akkaHttpSprayJson,
+    akkaSlf4j,
     akkaHttpTestkit % Test,
-    akkaSlf4j       % Runtime,
     akkaStream,
     akkaStreamTestkit % Test,
     akkaTestkit       % Test,
@@ -136,17 +136,17 @@ object Dependencies {
     jwtSprayJson,
     kamonCore,
     kamonScalaFuture,
-    logbackClassic % Runtime,
-    rdf4jClient    % Test,
+    logbackClassic,
+    rdf4jClient % Test,
     rdf4jShacl,
     saxonHE,
     scalaGraph,
     scalaLogging,
     scalaTest % Test,
     scallop,
+    slf4jApi,
     springSecurityCore,
     bouncyCastle,
-    swaggerAkkaHttp,
     testcontainers % Test,
     titaniumJSONLD,
     xmlunitCore % Test,
@@ -159,6 +159,7 @@ object Dependencies {
     zioLogging,
     zioLoggingSlf4j,
     zioMacros,
+    zioMetricsConnectors,
     zioPrelude,
     zioTest    % Test,
     zioTestSbt % Test
@@ -194,70 +195,78 @@ object Dependencies {
 
   // user projects dependencies
   val userInterfaceLibraryDependencies = Seq(
-    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val userHandlerLibraryDependencies = Seq(
     bouncyCastle,
-    slf4j % Test,
     springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val userCoreLibraryDependencies = Seq(
     bouncyCastle,
-    slf4j % Test,
     springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val userRepoLibraryDependencies = Seq(
-    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
 
   // role projects dependencies
   val roleInterfaceLibraryDependencies = Seq(
-    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val roleHandlerLibraryDependencies = Seq(
     bouncyCastle,
-    slf4j % Test,
     springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val roleCoreLibraryDependencies = Seq(
     bouncyCastle,
-    slf4j % Test,
     springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
   val roleRepoLibraryDependencies = Seq(
-    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
   )
 
   // shared project dependencies
@@ -267,9 +276,36 @@ object Dependencies {
     commonsValidator,
     gwtServlet,
     scalaLogging,
-    slf4j % Test,
     springSecurityCore,
     zioPrelude,
+    zioTest    % Test,
+    zioTestSbt % Test,
+    zioLogging,
+    zioLoggingSlf4j
+  )
+
+  // project project dependencies
+  val projectInterfaceLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val projectHandlerLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val projectCoreLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val projectRepoLibraryDependencies = Seq(
+    zio,
+    zioMacros,
     zioTest    % Test,
     zioTestSbt % Test
   )

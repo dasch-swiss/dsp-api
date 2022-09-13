@@ -42,14 +42,8 @@ import org.knora.webapi.util.MutableTestIri
  */
 class StandoffV1R2RSpec extends R2RSpec {
 
-  override def testConfigSource: String =
-    """
-         # akka.loglevel = "DEBUG"
-         # akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
-  private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV1(routeData).knoraApiPath)
-  private val valuesPath   = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
+  private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV1(routeData).makeRoute)
+  private val valuesPath   = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).makeRoute)
 
   private val anythingUser      = SharedTestDataV1.anythingUser1
   private val anythingUserEmail = anythingUser.userData.email.get

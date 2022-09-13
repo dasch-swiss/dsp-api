@@ -36,9 +36,10 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
   // used for communication inside the knora stack
   val internalKnoraApiHost: String = config.getString("app.knora-api.internal-host")
   val internalKnoraApiPort: Int    = config.getInt("app.knora-api.internal-port")
-  val internalKnoraApiBaseUrl: String = internalKnoraApiHost + (if (internalKnoraApiPort != 80)
-                                                                  ":" + internalKnoraApiPort
-                                                                else "")
+  val internalKnoraApiBaseUrl: String =
+    "http://" + internalKnoraApiHost + (if (internalKnoraApiPort != 80)
+                                          ":" + internalKnoraApiPort
+                                        else "")
 
   // used for communication between the outside and the knora stack, e.g., browser
   val externalKnoraApiProtocol: String = config.getString("app.knora-api.external-protocol")
@@ -52,7 +53,10 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
                                                                  ":" + externalKnoraApiPort
                                                                else "")
 
-  // If the external hostname is localhost, include the configured external port number in ontology IRIs for manual testing.
+  /**
+   * If the external hostname is localhost or 0.0.0.0, include the configured
+   * external port number in ontology IRIs for manual testing.
+   */
   val externalOntologyIriHostAndPort: String =
     if (externalKnoraApiHost == "0.0.0.0" || externalKnoraApiHost == "localhost") {
       externalKnoraApiHostPort

@@ -9,9 +9,6 @@ import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import spray.json.JsValue
-import zio.&
-import zio.Runtime
-import zio.ZLayer
 
 import java.util.UUID
 import scala.concurrent.duration._
@@ -20,8 +17,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.errors.OntologyConstraintException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -39,15 +34,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.util._
 
 /**
@@ -655,7 +641,7 @@ object ResourcesResponderV1Spec {
 /**
  * Tests [[ResourcesResponderV1]].
  */
-class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config) with ImplicitSender {
+class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
   import ResourcesResponderV1Spec._
 
@@ -669,19 +655,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
   )
 
   /* we need to run our app with the mocked sipi implementation */
-  override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
-      Runtime.removeDefaultLoggers,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceMockImpl.layer,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer
-    )
+  override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 60.seconds
@@ -751,7 +726,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         (
           propIri,
           propValues.sortBy { valueObject: ResourceCreateValueResponseV1 =>
-            val stringValue = valueObject.value.textval.map { case (_: LiteralValueType.Value, value: String) =>
+            val stringValue = valueObject.value.textval.map { case (valType: LiteralValueType.Value, value: String) =>
               value // get string and ignore value type
             }.head  // each value is represented by a map consisting of only one item (e.g. string -> "book title")
             stringValue
@@ -1313,7 +1288,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         iri = newBookResourceIri.get,
         userADM = SharedTestDataADM.incunabulaProjectAdminUser
       )
-      expectMsgPF(timeout) { case _: ResourceFullResponseV1 =>
+      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
         () // If we got a ResourceFullResponseV1, the operation succeeded.
       }
     }

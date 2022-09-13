@@ -8,8 +8,6 @@ package org.knora.webapi.e2e.v2
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -22,22 +20,12 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestString
 
-object AuthenticationV2E2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing authentication.
  *
  * This spec tests the 'v1/authentication' and 'v1/session' route.
  */
-class AuthenticationV2E2ESpec
-    extends E2ESpec(AuthenticationV2E2ESpec.config)
-    with AuthenticationV2JsonProtocol
-    with TriplestoreJsonProtocol {
+class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
   private val rootIri              = SharedTestDataADM.rootUser.id
   private val rootIriEnc           = java.net.URLEncoder.encode(rootIri, "utf-8")

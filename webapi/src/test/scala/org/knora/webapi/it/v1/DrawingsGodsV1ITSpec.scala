@@ -8,8 +8,6 @@ package org.knora.webapi.it.v1
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import spray.json._
 
 import java.net.URLEncoder
@@ -26,20 +24,10 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.Authenticatio
 import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
 import org.knora.webapi.testservices.FileToUpload
 
-object DrawingsGodsV1ITSpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for additional testing of permissions.
  */
-class DrawingsGodsV1ITSpec
-    extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config)
-    with AuthenticationV2JsonProtocol
-    with TriplestoreJsonProtocol {
+class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

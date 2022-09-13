@@ -7,8 +7,6 @@ package org.knora.webapi.util.cache
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
@@ -19,14 +17,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-
-object CacheUtilSpec {
-  val config: Config = ConfigFactory.parseString("""
-        app {
-
-        }
-        """.stripMargin)
-}
 
 class CacheUtilSpec
     extends TestKit(ActorSystem("CacheUtilSpec"))
@@ -42,8 +32,10 @@ class CacheUtilSpec
   private val cacheName = Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
   private val sessionId = System.currentTimeMillis().toString
 
-  final override def beforeAll(): Unit =
+  final override def beforeAll(): Unit = {
+    CacheUtil.removeAllCaches()
     CacheUtil.createCaches(settings.caches)
+  }
 
   final override def afterAll(): Unit = {
     CacheUtil.removeAllCaches()

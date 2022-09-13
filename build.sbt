@@ -37,14 +37,22 @@ lazy val root: Project = Project(id = "root", file("."))
     webapi,
     sipi,
     shared,
+    // user
     userCore,
     userHandler,
     userRepo,
     userInterface,
+    // role
     roleCore,
-    roleRepo,
     roleHandler,
+    roleRepo,
     roleInterface,
+    // project
+    projectCore,
+    projectHandler,
+    projectRepo,
+    projectInterface,
+    // schema
     schemaCore
   )
   .enablePlugins(GitVersioning, GitBranchPrompt)
@@ -201,7 +209,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // add 'config' directory to the classpath of the start script,
     Universal / scriptClasspath := Seq("webapi/scripts", "knora-ontologies", "../config/") ++ scriptClasspath.value,
     // need this here, so that the Manifest inside the jars has the correct main class set.
-    Compile / mainClass := Some("org.knora.webapi.app.Main"),
+    Compile / mainClass := Some("org.knora.webapi.Main"),
     // add dockerCommands used to create the image
     // docker:stage, docker:publishLocal, docker:publish, docker:clean
     Docker / dockerRepository := Some("daschswiss"),
@@ -233,17 +241,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .dependsOn(shared, schemaCore)
 
 lazy val webapiJavaRunOptions = Seq(
-  // "-showversion",
   "-Xms1G",
   "-Xmx1G",
-  // "-verbose:gc",
-  // "-XX:+UseG1GC",
-  // "-XX:MaxGCPauseMillis=500"
-  "-Dcom.sun.management.jmxremote",
-  // "-Dcom.sun.management.jmxremote.port=1617",
-  "-Dcom.sun.management.jmxremote.authenticate=false",
-  "-Dcom.sun.management.jmxremote.ssl=false"
-  // "-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
+  "-Xss6M"
 )
 
 lazy val webapiJavaTestOptions = Seq(
@@ -351,6 +351,52 @@ lazy val userCore = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(shared)
+
+// project projects
+
+lazy val projectInterface = project
+  .in(file("dsp-project/interface"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectInterface",
+    libraryDependencies ++= Dependencies.projectInterfaceLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, projectHandler)
+
+lazy val projectHandler = project
+  .in(file("dsp-project/handler"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectHandler",
+    libraryDependencies ++= Dependencies.projectHandlerLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(
+    shared,
+    projectCore,
+    projectRepo % "test->test"
+  ) // projectHandler tests need mock implementation of ProjectRepo
+
+lazy val projectCore = project
+  .in(file("dsp-project/core"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectCore",
+    libraryDependencies ++= Dependencies.projectCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
+lazy val projectRepo = project
+  .in(file("dsp-project/repo"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectRepo",
+    libraryDependencies ++= Dependencies.projectRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, projectCore)
 
 // schema projects
 

@@ -23,7 +23,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route = {
+  override def makeRoute: Route = {
 
     path("v1" / "resourcetypes" / Segment) { iri =>
       get { requestContext =>

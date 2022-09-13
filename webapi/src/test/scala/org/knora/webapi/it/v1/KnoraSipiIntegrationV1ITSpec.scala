@@ -16,8 +16,6 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -48,18 +46,11 @@ import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
-object KnoraSipiIntegrationV1ITSpec {
-  val config: Config = ConfigFactory.parseString("""
-                                                   |akka.loglevel = "DEBUG"
-                                                   |akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing Knora-Sipi integration.
  */
 class KnoraSipiIntegrationV1ITSpec
-    extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config)
+    extends ITKnoraLiveSpec
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
 

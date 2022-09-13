@@ -27,7 +27,7 @@ trait CacheService {
   def getStringValue(key: String): Task[Option[String]]
   def removeValues(keys: Set[String]): Task[Unit]
   def flushDB(requestingUser: UserADM): Task[Unit]
-  def ping(): Task[CacheServiceStatusResponse]
+  val getStatus: UIO[CacheServiceStatusResponse]
 }
 
 /**

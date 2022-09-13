@@ -39,26 +39,36 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Tests [[OntologyResponderV2]].
  */
-class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
+class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  override lazy val rdfDataObjects: List[RdfDataObject] =
-    List(exampleSharedOntology, anythingData, freeTestOntology, freeTestData)
+
   private val imagesUser           = SharedTestDataADM.imagesUser01
   private val imagesProjectIri     = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri
   private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
   private val anythingProjectIri   = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
-  private val exampleSharedOntology = RdfDataObject(
-    path = "test_data/ontologies/example-box.ttl",
-    name = "http://www.knora.org/ontology/shared/example-box"
-  )
-  private val anythingData =
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-  private val freeTestOntology =
-    RdfDataObject(path = "test_data/ontologies/freetest-onto.ttl", name = "http://www.knora.org/ontology/0001/freetest")
-  private val freeTestData =
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
+
+  override lazy val rdfDataObjects: List[RdfDataObject] =
+    List(
+      RdfDataObject(
+        path = "test_data/ontologies/example-box.ttl",
+        name = "http://www.knora.org/ontology/shared/example-box"
+      ),
+      RdfDataObject(
+        path = "test_data/all_data/anything-data.ttl",
+        name = "http://www.knora.org/data/0001/anything"
+      ),
+      RdfDataObject(
+        path = "test_data/ontologies/freetest-onto.ttl",
+        name = "http://www.knora.org/ontology/0001/freetest"
+      ),
+      RdfDataObject(
+        path = "test_data/all_data/freetest-data.ttl",
+        name = "http://www.knora.org/data/0001/freetest"
+      )
+    )
+
   // The default timeout for receiving reply messages from actors.
   private val timeout                      = 10.seconds
   private val fooIri                       = new MutableTestIri

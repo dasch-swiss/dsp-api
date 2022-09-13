@@ -8,9 +8,7 @@ import scala.concurrent.duration.FiniteDuration
 
 import dsp.valueobjects.User
 
-object AppConfigZSpec extends ZIOSpec[AppConfig] {
-
-  val bootstrap = ZLayer.make[AppConfig](AppConfig.live)
+object AppConfigZSpec extends ZIOSpecDefault {
 
   def spec = suite("ApplicationConfigSpec")(
     test("successfully provide the application configuration") {
@@ -22,6 +20,6 @@ object AppConfigZSpec extends ZIOSpec[AppConfig] {
         assertTrue(appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS)) &&
         assertTrue(appConfig.bcryptPasswordStrength == User.PasswordStrength(12))
       }
-    }
+    }.provideLayer(AppConfig.live)
   )
 }

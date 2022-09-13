@@ -8,6 +8,10 @@ package dsp.valueobjects
 import zio.prelude.Validation
 
 import java.util.UUID
+import scala.util.Try
+
+import dsp.errors.ValidationException
+import dsp.valueobjects.Iri
 
 sealed trait Id
 object Id {
@@ -109,4 +113,67 @@ object Id {
       Validation.succeed(new UserId(uuid, iri) {})
     }
   }
+}
+
+/**
+ * Stores the project ID, i.e. UUID, IRI and short code of the project
+ *
+ * @param uuid      the UUID of the project
+ * @param iri       the IRI of the project
+ * @param shortCode the shortcode of the project
+ */
+abstract case class ProjectId private (
+  uuid: UUID,
+  iri: Iri.ProjectIri,
+  shortCode: Project.ShortCode
+)
+
+/**
+ * Companion object for ProjectId. Contains factory methods for creating ProjectId instances.
+ */
+object ProjectId {
+
+  /**
+   * Generates a ProjectId instance provided a Project IRI and a ShortCode. The UUID is extracted from the IRI.
+   *
+   * @param iri       the project IRI
+   * @param shortCode the project short code (as defined by the ARK resolver)
+   * @return a new ProjectId instance
+   */
+  def fromIri(iri: Iri.ProjectIri, shortCode: Project.ShortCode): Validation[ValidationException, ProjectId] = {
+    val uuid: Try[UUID] = Try(UUID.fromString(iri.value.split("/").last))
+    val projectId: Either[ValidationException, ProjectId] = uuid.toEither.fold(
+      _ => Left(new ValidationException(IdErrorMessages.IriDoesNotContainUuid(iri))),
+      uuid => Right(new ProjectId(uuid = uuid, iri = iri, shortCode = shortCode) {})
+    )
+    Validation.fromEither(projectId)
+  }
+
+  /**
+   * Generates a ProjectId instance provided a UUID and a ShortCode. The Project IRI is generated on basis of the UUID.
+   *
+   * @param uuid      the project UUID
+   * @param shortCode the project short code (as defined by the ARK resolver)
+   * @return a new ProjectId instance
+   */
+  def fromUuid(uuid: UUID, shortCode: Project.ShortCode): Validation[ValidationException, ProjectId] = {
+    val iri = Iri.ProjectIri.make(s"http://rdfh.ch/projects/${uuid}")
+    iri.map(iri => new ProjectId(uuid = uuid, iri = iri, shortCode = shortCode) {})
+  }
+
+  /**
+   * Generates a ProjectId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
+   *
+   * @param shortCode the project short code (as defined by the ARK resolver)
+   * @return a new ProjectId instance
+   */
+  def make(shortCode: Project.ShortCode): Validation[ValidationException, ProjectId] = {
+    val uuid = UUID.randomUUID()
+    val iri  = Iri.ProjectIri.make(s"http://rdfh.ch/projects/${uuid}")
+    iri.map(iri => new ProjectId(uuid = uuid, iri = iri, shortCode = shortCode) {})
+  }
+}
+
+object IdErrorMessages {
+  def IriDoesNotContainUuid(iri: Iri) = s"No UUID can be extracted from IRI '${iri.value}'"
 }

@@ -31,7 +31,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
 
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
-  def makeRoute(): Route =
+  def makeRoute: Route =
     deleteListItem() ~
       canDeleteList() ~
       deleteListNodeComments()

@@ -8,24 +8,17 @@ package org.knora.webapi.e2e
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
+import zio.Unsafe
+import zio.ZIO
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.app.appmessages.AppStates
-import org.knora.webapi.messages.app.appmessages.SetAppState
-
-object HealthRouteE2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
+import org.knora.webapi.core.State
+import org.knora.webapi.core.domain.AppState
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.
  */
-class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
+class HealthRouteE2ESpec extends E2ESpec {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
@@ -71,7 +64,18 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
     "return 'ServiceUnavailable' for state 'Stopped'" in {
 
-      appActor ! SetAppState(AppStates.Stopped)
+      Unsafe.unsafe { implicit u =>
+        runtime.unsafe
+          .run(
+            for {
+              state <- ZIO.service[State]
+              _     <- state.set(AppState.Stopped)
+            } yield ()
+          )
+          .getOrThrow()
+      }
+
+      // appActor ! SetAppState(AppState.Stopped)
 
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -94,7 +98,16 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
     }
 
     "return 'ServiceUnavailable' for state 'MaintenanceMode'" in {
-      appActor ! SetAppState(AppStates.MaintenanceMode)
+      Unsafe.unsafe { implicit u =>
+        runtime.unsafe
+          .run(
+            for {
+              state <- ZIO.service[State]
+              _     <- state.set(AppState.MaintenanceMode)
+            } yield ()
+          )
+          .getOrThrow()
+      }
 
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)

@@ -196,7 +196,7 @@ case class CacheServiceInMemImpl(
   /**
    * Pings the in-memory cache to see if it is available.
    */
-  def ping(): Task[CacheServiceStatusResponse] =
+  val getStatus: UIO[CacheServiceStatusResponse] =
     ZIO.succeed(CacheServiceStatusOK)
 }
 
@@ -211,5 +211,5 @@ object CacheServiceInMemImpl {
         projects <- TMap.empty[String, ProjectADM].commit
         lut      <- TMap.empty[String, String].commit
       } yield CacheServiceInMemImpl(users, projects, lut)
-    }.tap(_ => ZIO.debug(">>> In-Memory Cache Service Initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> In-Memory Cache Service Initialized <<<"))
 }

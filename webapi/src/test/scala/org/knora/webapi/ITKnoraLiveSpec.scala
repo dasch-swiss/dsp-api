@@ -5,23 +5,17 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.actor.Props
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.Materializer
-import akka.testkit.TestKit
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
+import akka.testkit.TestKitBase
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
 import zio._
+import zio.logging.backend.SLF4J
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -29,247 +23,177 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-import org.knora.webapi.app.ApplicationActor
-import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.core.Core
-import org.knora.webapi.core.Logging
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.AppStart
-import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.testservices.TestActorSystemService
 import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.util.StartupUtils
-
-object ITKnoraLiveSpec {
-  val defaultConfig: Config = ConfigFactory.load()
-}
+import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the Knora server and
  * provides access to settings and logging.
  */
-abstract class ITKnoraLiveSpec(_system: ActorSystem)
-    extends TestKit(_system)
-    with Core
-    with StartupUtils
-    with Suite
-    with AnyWordSpecLike
+abstract class ITKnoraLiveSpec
+    extends AnyWordSpec
+    with TestKitBase
+    with TestStartupUtils
     with Matchers
     with BeforeAndAfterAll
     with RequestBuilding
     with TriplestoreJsonProtocol
     with LazyLogging {
 
-  /* constructors */
-  def this(name: String, config: Config) =
-    this(
-      ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig))
-    )
-
-  def this(config: Config) =
-    this(
-      ActorSystem(
-        "IntegrationTests",
-        config.withFallback(ITKnoraLiveSpec.defaultConfig)
-      )
-    )
-  def this(name: String) =
-    this(ActorSystem(name, ITKnoraLiveSpec.defaultConfig))
-
-  def this() =
-    this(ActorSystem("IntegrationTests", ITKnoraLiveSpec.defaultConfig))
-
-  /* needed by the core trait (represents the KnoraTestCore trait)*/
-  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
-  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
-  implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-  // can be overridden in individual spec
-  lazy val rdfDataObjects = Seq.empty[RdfDataObject]
-
-  /* Needs to be initialized before any responders */
-  StringFormatter.initForTest()
-  val log: Logger = Logger(this.getClass)
-
   /**
-   * The effect for building a cache service manager, a IIIF service manager,
-   * and the sipi test client.
-   */
-  lazy val managers = for {
-    csm       <- ZIO.service[CacheServiceManager]
-    iiifsm    <- ZIO.service[IIIFServiceManager]
-    tssm      <- ZIO.service[TriplestoreServiceManager]
-    appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, tssm, appConfig)
-
-  /**
-   * The effect layers which will be used to run the managers effect.
+   * The `Environment` that we require to exist at startup.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      AppConfigForTestContainers.testcontainers,
-      JWTService.layer,
-      SipiTestContainer.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer,
-      Logging.slf4j,
-      TestClientService.layer,
-      TestActorSystemService.layer
-    )
-
-  // The ZIO runtime used to run functional effects
-  lazy val runtime =
-    Unsafe.unsafe { implicit u =>
-      Runtime.unsafe.fromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
-    }
+  type Environment = core.LayersTest.DefaultTestEnvironmentWithSipi
 
   /**
-   * Create both managers and the sipi client by unsafe running them.
+   * The effect layers from which the App is built.
+   * Can be overriden in specs that need other implementations.
    */
-  val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(managers).getOrElse(c => throw FiberFailure(c))
-    }
+  lazy val effectLayers = core.LayersTest.defaultLayersTestWithSipi
 
-  // start the Application Actor
-  lazy val appActor: ActorRef =
-    system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
-      name = APPLICATION_MANAGER_ACTOR_NAME
-    )
+  /**
+   * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
+   * and cleaned up when the Runtime is shutdown.
+   */
+  private val bootstrap: ZLayer[
+    Any,
+    Any,
+    Environment
+  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
-  protected val baseApiUrl: String          = appConfig.knoraApi.internalKnoraApiBaseUrl
-  protected val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
-  protected val baseExternalSipiUrl: String = appConfig.sipi.externalBaseUrl
-
-  final override def beforeAll(): Unit = {
-
-    // set allow reload over http
-    appActor ! SetAllowReloadOverHTTPState(true)
-
-    // Start Knora, reading data from the repository
-    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
-
-    // waits until knora is up and running
-    applicationStateRunning()
-
-    // loadTestData
-    loadTestData(rdfDataObjects)
+  // create a configured runtime
+  val runtime = Unsafe.unsafe { implicit u =>
+    Runtime.unsafe
+      .fromLayer(bootstrap)
   }
 
-  final override def afterAll(): Unit = {
+  // An effect for getting stuff out, so that we can pass them
+  // to some legacy code
+  val routerAndConfig = for {
+    router <- ZIO.service[core.AppRouter]
+    config <- ZIO.service[AppConfig]
+  } yield (router, config)
 
+  /**
+   * Create router and config by unsafe running them.
+   */
+  val (router, config) =
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          routerAndConfig
+        )
+        .getOrThrowFiberFailure()
+    }
+
+  implicit lazy val system: akka.actor.ActorSystem     = router.system
+  implicit lazy val executionContext: ExecutionContext = system.dispatcher
+  implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
+  lazy val rdfDataObjects                              = List.empty[RdfDataObject]
+  val log: Logger                                      = Logger(this.getClass())
+  val appActor                                         = router.ref
+
+  // needed by some tests
+  val baseApiUrl          = config.knoraApi.internalKnoraApiBaseUrl
+  val baseInternalSipiUrl = config.sipi.internalBaseUrl
+
+  final override def beforeAll(): Unit =
+    /* Here we start our app and initialize the repository before each suit runs */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
+          } yield ()).provideSomeLayer(AppServer.testWithSipi)
+        )
+        .getOrThrow()
+    }
+
+  final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
-    }
-
-    /* Stop the server when everything else has finished */
-    TestKit.shutdownActorSystem(system)
-
-  }
-
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(
-        (for {
-          testClient <- ZIO.service[TestClientService]
-          result     <- testClient.loadTestData(rdfDataObjects)
-        } yield result)
-      )
     }
 
   protected def getResponseStringOrThrow(request: HttpRequest): String =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          (for {
+          for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseString(request)
-          } yield result)
+          } yield result
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def checkResponseOK(request: HttpRequest): Unit =
     Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(
-        (for {
-          testClient <- ZIO.service[TestClientService]
-          result     <- testClient.checkResponseOK(request)
-        } yield result)
-      )
+      runtime.unsafe
+        .run(
+          for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.checkResponseOK(request)
+          } yield result
+        )
+        .getOrThrowFiberFailure()
     }
 
   protected def getResponseJson(request: HttpRequest): JsObject =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          (for {
+          for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseJson(request)
-          } yield result)
+          } yield result
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 15.seconds): HttpResponse =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          (for {
+          for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.singleAwaitingRequest(request, duration)
-          } yield result)
+          } yield result
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          (for {
+          for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseJsonLD(request)
-          } yield result)
+          } yield result
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          (for {
+          for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.uploadToSipi(loginToken, filesToUpload)
-          } yield result)
+          } yield result
         )
         .getOrThrow()
     }

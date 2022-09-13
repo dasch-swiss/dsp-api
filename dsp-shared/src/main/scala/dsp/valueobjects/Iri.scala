@@ -8,9 +8,14 @@ package dsp.valueobjects
 import org.apache.commons.validator.routines.UrlValidator
 import zio.prelude.Validation
 
-import dsp.errors.BadRequestException
+import scala.util.Try
 
-sealed trait Iri
+import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
+
+sealed trait Iri {
+  val value: String
+}
 object Iri {
 
   // A validator for URLs
@@ -99,29 +104,30 @@ object Iri {
    */
   sealed abstract case class ProjectIri private (value: String) extends Iri
   object ProjectIri { self =>
-    def make(value: String): Validation[Throwable, ProjectIri] =
+    def make(value: String): Validation[ValidationException, ProjectIri] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing))
+        Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
       } else {
         val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraProjectIriStr(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.ProjectIriInvalid))
+          Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
         } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
+          Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
         } else {
-          val validatedValue = Validation(
+          val eitherValue = Try(
             V2IriValidation.validateAndEscapeProjectIri(
               value,
-              throw BadRequestException(IriErrorMessages.ProjectIriInvalid)
+              throw ValidationException(IriErrorMessages.ProjectIriInvalid)
             )
-          )
+          ).toEither.left.map(_.asInstanceOf[ValidationException])
+          val validatedValue = Validation.fromEither(eitherValue)
 
           validatedValue.map(new ProjectIri(_) {})
         }
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[ProjectIri]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[ProjectIri]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)

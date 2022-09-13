@@ -25,7 +25,6 @@ local APPLICATION_XML = "application/xml"
 local TEXT_XML = "text/xml"
 local TEXT_PLAIN = "text/plain"
 local AUDIO_MP3 = "audio/mpeg"
-local AUDIO_MP4 = "audio/mp4"
 local AUDIO_WAV = "audio/wav"
 local AUDIO_X_WAV = "audio/x-wav"
 local AUDIO_VND_WAVE = "audio/vnd.wave"
@@ -56,7 +55,6 @@ local image_mime_types = {
 
 local audio_mime_types = {
     AUDIO_MP3,
-    AUDIO_MP4,
     AUDIO_WAV,
     AUDIO_X_WAV,
     AUDIO_VND_WAVE
@@ -94,7 +92,6 @@ local video_mime_types = {
 
 local audio_extensions = {
     "mp3",
-    "mp4",
     "wav"
 }
 
