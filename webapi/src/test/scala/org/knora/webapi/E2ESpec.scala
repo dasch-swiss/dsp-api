@@ -44,7 +44,7 @@ import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
 
 /**
- * This class can be used in End-to-End testing. It starts the Knora-API server
+ * This class can be used in End-to-End testing. It starts the DSP stack
  * and provides access to settings and logging.
  */
 abstract class E2ESpec
@@ -106,10 +106,9 @@ abstract class E2ESpec
 
   implicit lazy val system: akka.actor.ActorSystem     = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
-  // implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
-  lazy val rdfDataObjects = List.empty[RdfDataObject]
-  val log: Logger         = Logger(this.getClass())
-  val appActor            = router.ref
+  lazy val rdfDataObjects                              = List.empty[RdfDataObject]
+  val log: Logger                                      = Logger(this.getClass())
+  val appActor                                         = router.ref
 
   // needed by some tests
   val appConfig  = config

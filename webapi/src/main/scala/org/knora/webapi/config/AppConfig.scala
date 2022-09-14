@@ -9,6 +9,7 @@ import scala.concurrent.duration
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
+import org.knora.webapi.util.cache.CacheUtil
 
 import typesafe._
 import magnolia._
@@ -40,12 +41,22 @@ final case class AppConfig(
   standoffPerPage: Int,
   routesToReject: List[String],
   tmpDatadir: String,
-  clientTestDataService: ClientTestDataService
-  // collectClientTestData: Boolean
+  clientTestDataService: ClientTestDataService,
+  caches: List[CacheConfig]
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
     scala.concurrent.duration.Duration.apply(defaultTimeout).asInstanceOf[duration.FiniteDuration]
+  val cacheConfigs: Seq[org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig] = caches.map { c =>
+    CacheUtil.KnoraCacheConfig(
+      c.cacheName,
+      c.maxElementsInMemory,
+      c.overflowToDisk,
+      c.eternal,
+      c.timeToLiveSeconds,
+      c.timeToIdleSeconds
+    )
+  }
 
 }
 
@@ -111,6 +122,15 @@ final case class Sipi(
 
 }
 
+final case class CacheConfig(
+  cacheName: String,
+  maxElementsInMemory: Int,
+  overflowToDisk: Boolean,
+  eternal: Boolean,
+  timeToLiveSeconds: Int,
+  timeToIdleSeconds: Int
+)
+
 final case class V2(
   resourcesSequence: ResourcesSequence,
   graphRoute: GraphRoute,
@@ -164,14 +184,6 @@ final case class Triplestore(
   val gravsearchTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(gravsearchTimeout))
 }
 
-/**
- * Fuseki specific configuration.
- *
- * @param port
- * @param repositoryName
- * @param username
- * @param password
- */
 final case class Fuseki(
   port: Int,
   repositoryName: String,

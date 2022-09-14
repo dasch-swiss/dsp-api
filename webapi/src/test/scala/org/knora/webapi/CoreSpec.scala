@@ -82,10 +82,9 @@ abstract class CoreSpec
 
   implicit lazy val system: actor.ActorSystem          = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
-  // implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
-  lazy val rdfDataObjects = List.empty[RdfDataObject]
-  val log: Logger         = Logger(this.getClass())
-  val appActor            = router.ref
+  lazy val rdfDataObjects                              = List.empty[RdfDataObject]
+  val log: Logger                                      = Logger(this.getClass())
+  val appActor                                         = router.ref
 
   // needed by some tests
   val cacheServiceSettings = new CacheServiceSettings(system.settings.config)

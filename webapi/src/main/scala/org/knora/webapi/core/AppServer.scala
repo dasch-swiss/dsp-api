@@ -32,7 +32,7 @@ final case class AppServer(
   iiifs: IIIFService,
   cs: CacheService,
   hs: HttpServer,
-  config: AppConfig
+  appConfig: AppConfig
 ) {
 
   /**
@@ -69,7 +69,7 @@ final case class AppServer(
       _ <- state.set(AppState.CreatingCaches)
       _ <- ZIO.attempt {
              CacheUtil.removeAllCaches()
-             CacheUtil.createCaches(as.settings.caches)
+             CacheUtil.createCaches(appConfig.cacheConfigs)
            }.orDie
       _ <- state.set(AppState.CachesReady)
     } yield ()
@@ -128,10 +128,10 @@ final case class AppServer(
     for {
       _ <-
         ZIO.logInfo(
-          s"DSP-API Server started: ${config.knoraApi.internalKnoraApiBaseUrl}"
+          s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}"
         )
 
-      _ = if (config.allowReloadOverHttp) {
+      _ = if (appConfig.allowReloadOverHttp) {
             ZIO.logWarning("Resetting DB over HTTP is turned ON")
           }
     } yield ()

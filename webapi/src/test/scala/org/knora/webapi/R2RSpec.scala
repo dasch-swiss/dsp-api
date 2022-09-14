@@ -88,7 +88,6 @@ abstract class R2RSpec
     }
 
   // main difference to other specs (no own systen and executionContext defined)
-  // implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
   lazy val rdfDataObjects = List.empty[RdfDataObject]
   val log: Logger         = Logger(this.getClass())
   val appActor            = router.ref
