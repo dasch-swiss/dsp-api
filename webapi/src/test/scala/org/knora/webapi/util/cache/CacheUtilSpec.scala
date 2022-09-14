@@ -35,6 +35,7 @@ class CacheUtilSpec
   final override def beforeAll(): Unit = {
     CacheUtil.removeAllCaches()
     CacheUtil.createCaches(settings.caches)
+    // CacheUtil.createCaches(appConfig.cacheConfigs)
   }
 
   final override def afterAll(): Unit = {

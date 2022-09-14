@@ -11,6 +11,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors.GravsearchException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -21,13 +22,16 @@ import org.knora.webapi.settings.KnoraDispatchers
 /**
  * Runs Gravsearch type inspection using one or more type inspector implementations.
  *
+ * @param appActor      a reference to the application actor
  * @param responderData the Knora [[ResponderData]].
  * @param inferTypes    if true, use type inference.
+ * @param appConfig     the application's configuration
  */
 class GravsearchTypeInspectionRunner(
   appActor: ActorRef,
   responderData: ResponderData,
-  inferTypes: Boolean = true
+  inferTypes: Boolean = true,
+  appConfig: AppConfig
 ) {
   private implicit val executionContext: ExecutionContext =
     responderData.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
@@ -38,7 +42,8 @@ class GravsearchTypeInspectionRunner(
       new InferringGravsearchTypeInspector(
         nextInspector = None,
         appActor = appActor,
-        responderData = responderData
+        responderData = responderData,
+        appConfig = appConfig
       )
     )
   } else {
@@ -48,7 +53,8 @@ class GravsearchTypeInspectionRunner(
   // The pipeline of type inspectors.
   private val typeInspectionPipeline = new AnnotationReadingGravsearchTypeInspector(
     nextInspector = maybeInferringTypeInspector,
-    responderData = responderData
+    responderData = responderData,
+    appConfig = appConfig
   )
 
   /**

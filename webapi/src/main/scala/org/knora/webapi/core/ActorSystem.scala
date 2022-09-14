@@ -12,14 +12,12 @@ import zio.macros.accessible
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 @accessible
 trait ActorSystem {
   val system: akka.actor.ActorSystem
-  val settings: KnoraSettingsImpl
+  val appConfig: AppConfig
   val cacheServiceSettings: CacheServiceSettings
 }
 
@@ -52,8 +50,8 @@ object ActorSystem {
         actorSystem <- ZIO.acquireRelease(acquire(config, context))(release _)
       } yield new ActorSystem {
         override val system: akka.actor.ActorSystem             = actorSystem
-        override val settings: KnoraSettingsImpl                = KnoraSettings(actorSystem)
-        override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(actorSystem.settings.config)
+        override val appConfig                                  = config
+        override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(appConfig)
       }
     }
 }

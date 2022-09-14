@@ -1343,7 +1343,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
   "The annotation-reading type inspector" should {
     "get type information from a simple query" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = false)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = false,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1421,7 +1426,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "refine the inspected types for each typeableEntity" in {
       val typeInspectionRunner =
-        new InferringGravsearchTypeInspector(nextInspector = None, appActor, responderData = responderData)
+        new InferringGravsearchTypeInspector(
+          nextInspector = None,
+          appActor,
+          responderData = responderData,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
       val (_, entityInfo) = Await.result(
         typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
@@ -1473,7 +1483,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "sanitize inconsistent resource types that only have knora-base:Resource as base class in common" in {
       val typeInspectionRunner =
-        new InferringGravsearchTypeInspector(nextInspector = None, appActor, responderData = responderData)
+        new InferringGravsearchTypeInspector(
+          nextInspector = None,
+          appActor,
+          responderData = responderData,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
       val (usageIndex, entityInfo) = Await.result(
         typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
@@ -1551,7 +1566,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "sanitize inconsistent resource types that have common base classes other than knora-base:Resource" in {
       val typeInspectionRunner =
-        new InferringGravsearchTypeInspector(nextInspector = None, appActor, responderData = responderData)
+        new InferringGravsearchTypeInspector(
+          nextInspector = None,
+          appActor,
+          responderData = responderData,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
       val (usageIndex, entityInfo) = Await.result(
         typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
@@ -1613,7 +1633,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "sanitize inconsistent types resulted from a union" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1673,7 +1698,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
                 """.stripMargin
 
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(queryWithOptional)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1735,7 +1765,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the most specific type from redundant ones given in a query" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithRedundantTypes)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1746,7 +1781,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1761,7 +1801,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryKnoraObjectTypeFromPropertyIriRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1771,7 +1816,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer an entity's type if the entity is used as the object of a statement and the predicate's knora-api:objectType is known" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfObjectFromPropertyRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1781,7 +1831,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the knora-api:objectType of a property variable if it's used with an object whose type is known" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryKnoraObjectTypeFromObjectRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1791,7 +1846,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and the predicate's knora-api:subjectType is known" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1801,7 +1861,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromFilterRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1811,7 +1876,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the type of a non-property variable if it's compared to an XSD literal in a FILTER" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryNonPropertyVarTypeFromFilterRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1821,7 +1891,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the type of a non-property variable used as the argument of a function in a FILTER" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryVarTypeFromFunction)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1831,7 +1906,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryIriTypeFromFunction)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1841,7 +1921,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the types in a query that requires 6 iterations" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1851,7 +1936,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "know the object type of rdfs:label" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndLiteral)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1861,7 +1951,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the type of a variable used as the object of rdfs:label" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndVariable)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1871,7 +1966,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the type of a variable when it is compared with another variable in a FILTER (in the simple schema)" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourcesInSimpleSchema)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1881,7 +1981,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the type of a variable when it is compared with another variable in a FILTER (in the complex schema)" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourcesInComplexSchema)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1891,7 +1996,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the type of a resource IRI when it is compared with a variable in a FILTER (in the simple schema)" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourceIriInSimpleSchema)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1901,7 +2011,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer the type of a resource IRI when it is compared with a variable in a FILTER (in the complex schema)" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourceIriInComplexSchema)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1911,7 +2026,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "infer knora-api:Resource as the subject type of a subproperty of knora-api:hasLinkTo" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithFilterComparison)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1921,7 +2041,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "reject a query with a non-Knora property whose type cannot be inferred" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithoutAnnotation)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1932,7 +2057,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "accept a query with a non-Knora property whose type can be inferred" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithAnnotation)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1942,7 +2072,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "ignore Gravsearch options" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithGravsearchOptions)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1952,7 +2087,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "reject a query with inconsistent types inferred from statements" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes1)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
@@ -1963,7 +2103,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     "reject a query with inconsistent types inferred from a FILTER" in {
       val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+        new GravsearchTypeInspectionRunner(
+          appActor,
+          responderData = responderData,
+          inferTypes = true,
+          appConfig = appConfig
+        )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes2)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
         typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)

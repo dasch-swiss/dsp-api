@@ -54,7 +54,8 @@ class SearchResponderV2(responderData: ResponderData, appConfig: AppConfig)
     extends ResponderWithStandoffV2(responderData, appConfig) {
 
   // A Gravsearch type inspection runner.
-  private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(appActor, responderData)
+  private val gravsearchTypeInspectionRunner =
+    new GravsearchTypeInspectionRunner(appActor = appActor, responderData = responderData, appConfig = appConfig)
 
   /**
    * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.

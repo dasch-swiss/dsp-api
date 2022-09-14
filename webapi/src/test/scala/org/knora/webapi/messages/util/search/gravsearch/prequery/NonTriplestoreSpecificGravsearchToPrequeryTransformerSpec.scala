@@ -39,7 +39,12 @@ private object QueryHandler {
     val constructQuery = GravsearchParser.parseQuery(query)
 
     val typeInspectionRunner =
-      new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+      new GravsearchTypeInspectionRunner(
+        appActor,
+        responderData = responderData,
+        inferTypes = true,
+        appConfig = appConfig
+      )
 
     val typeInspectionResultFuture = typeInspectionRunner.inspectTypes(constructQuery.whereClause, anythingUser)
 

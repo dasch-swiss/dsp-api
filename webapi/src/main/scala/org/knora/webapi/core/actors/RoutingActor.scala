@@ -82,7 +82,7 @@ class RoutingActor(
   /**
    * The Cache Service's configuration.
    */
-  implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
+  implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(appConfig)
 
   /**
    * Provides the default global execution context

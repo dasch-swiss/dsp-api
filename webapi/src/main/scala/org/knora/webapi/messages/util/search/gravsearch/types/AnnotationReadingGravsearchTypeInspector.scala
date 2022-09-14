@@ -10,6 +10,7 @@ import scala.concurrent.Future
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -30,8 +31,9 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
  */
 class AnnotationReadingGravsearchTypeInspector(
   nextInspector: Option[GravsearchTypeInspector],
-  responderData: ResponderData
-) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
+  responderData: ResponderData,
+  appConfig: AppConfig
+) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData, appConfig = appConfig) {
 
   /**
    * Represents a Gravsearch type annotation.

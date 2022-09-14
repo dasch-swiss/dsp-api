@@ -5,11 +5,11 @@
 
 package org.knora.webapi.responders.v1
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.standoffmessages.XMLTag
-import org.knora.webapi.config.AppConfig
 
 // FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
 final case class ResourcesResponderV1SpecFullData(appConfig: AppConfig) {

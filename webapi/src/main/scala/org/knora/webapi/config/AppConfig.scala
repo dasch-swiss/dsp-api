@@ -42,7 +42,8 @@ final case class AppConfig(
   routesToReject: List[String],
   tmpDatadir: String,
   clientTestDataService: ClientTestDataService,
-  caches: List[CacheConfig]
+  caches: List[CacheConfig],
+  cacheService: CacheService
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -129,6 +130,16 @@ final case class CacheConfig(
   eternal: Boolean,
   timeToLiveSeconds: Int,
   timeToIdleSeconds: Int
+)
+
+final case class CacheService(
+  enabled: Boolean,
+  redis: Redis
+)
+
+final case class Redis(
+  host: String,
+  port: Int
 )
 
 final case class V2(

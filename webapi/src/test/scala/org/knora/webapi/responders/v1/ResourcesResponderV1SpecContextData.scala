@@ -10,9 +10,9 @@ import spray.json.JsonParser
 
 import java.nio.file.Paths
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.config.AppConfig
 
 final case class ResourcesResponderV1SpecContextData(appConfig: AppConfig) {
 
