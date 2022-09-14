@@ -641,6 +641,9 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
   implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+  private val resourcesResponderV1SpecContextData: ResourcesResponderV1SpecContextData =
+    new ResourcesResponderV1SpecContextData(appConfig)
+
   private val valueUtilV1 = new ValueUtilV1(appConfig)
 
   override lazy val rdfDataObjects = List(
@@ -934,7 +937,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
       val response: JsValue = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
 
-      response should be(ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
+      response should be(resourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
     }
 
     "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
@@ -948,7 +951,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case response: ResourceContextResponseV1 =>
         compareResourcePartOfContextResponses(
           received = response,
-          expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse
+          expected = resourcesResponderV1SpecContextData.expectedPageResourceContextResponse
         )
       }
     }
