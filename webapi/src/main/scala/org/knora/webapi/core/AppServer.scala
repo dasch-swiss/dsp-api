@@ -174,7 +174,7 @@ object AppServer {
       with AppConfig
       with State
 
-  private def startup(
+  def startup(
     requiresRepository: Boolean,
     requiresIIIFService: Boolean
   ): ZIO[AppServerEnvironment, Nothing, Unit] =
@@ -194,7 +194,7 @@ object AppServer {
   /* Live version */
   val live: ZLayer[AppServerEnvironment, Nothing, Unit] =
     ZLayer {
-      startup(true, true)
+      startup(requiresRepository = true, requiresIIIFService = true)
     }
 
   /**
@@ -203,7 +203,7 @@ object AppServer {
    */
   val testWithSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
     ZLayer {
-      startup(false, true)
+      startup(requiresRepository = false, requiresIIIFService = true)
     }
 
   /**
@@ -212,6 +212,6 @@ object AppServer {
    */
   val testWithoutSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
     ZLayer {
-      startup(false, false)
+      startup(requiresRepository = false, requiresIIIFService = false)
     }
 }

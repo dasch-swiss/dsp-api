@@ -4,14 +4,15 @@ import com.typesafe.config.ConfigFactory
 import zio._
 import zio.config._
 
+import java.nio.file.Files
 import java.nio.file.Paths
 import scala.concurrent.duration
 
+import dsp.errors.FileWriteException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.util.cache.CacheUtil
-import java.nio.file.Files
-import dsp.errors.FileWriteException
+
 import typesafe._
 import magnolia._
 
