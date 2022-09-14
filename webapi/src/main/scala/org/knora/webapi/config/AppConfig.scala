@@ -10,7 +10,8 @@ import scala.concurrent.duration
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.util.cache.CacheUtil
-
+import java.nio.file.Files
+import dsp.errors.FileWriteException
 import typesafe._
 import magnolia._
 
@@ -28,22 +29,23 @@ final case class AppConfig(
   jwtLongevity: String,
   cookieDomain: String,
   allowReloadOverHttp: Boolean,
-  knoraApi: KnoraAPI,
+  fallbackLanguage: String,
+  knoraApi: KnoraApi,
   sipi: Sipi,
   ark: Ark,
   salsah1: Salsah1,
-  gui: Gui,
-  triplestore: Triplestore,
-  v2: V2,
-  shacl: Shacl,
-  fallbackLanguage: String,
+  caches: List[CacheConfig],
+  tmpDatadir: String,
+  datadir: String,
   maxResultsPerSearchResultPage: Int,
   standoffPerPage: Int,
+  v2: V2,
+  gui: Gui,
   routesToReject: List[String],
-  tmpDatadir: String,
-  clientTestDataService: ClientTestDataService,
-  caches: List[CacheConfig],
-  cacheService: CacheService
+  triplestore: Triplestore,
+  shacl: Shacl,
+  cacheService: CacheService,
+  clientTestDataService: ClientTestDataService
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -59,18 +61,35 @@ final case class AppConfig(
     )
   }
 
+  // try to create the directories
+  if (!Files.exists(Paths.get(tmpDatadir))) {
+    try {
+      Files.createDirectories(Paths.get(tmpDatadir))
+    } catch {
+      case e: Throwable =>
+        throw FileWriteException(s"Tmp data directory $tmpDatadir could not be created: ${e.getMessage}")
+    }
+  }
+
+  // try to create the directories
+  if (!Files.exists(Paths.get(datadir))) {
+    try {
+      Files.createDirectories(Paths.get(datadir))
+    } catch {
+      case e: Throwable =>
+        throw FileWriteException(s"Data directory $datadir could not be created: ${e.getMessage}")
+    }
+  }
+
 }
 
-final case class KnoraAPI(
+final case class KnoraApi(
   internalHost: String,
   internalPort: Int,
   externalProtocol: String,
   externalHost: String,
   externalPort: Int
 ) {
-  val internalKnoraApiHostPort: String = internalHost + (if (internalPort != 80)
-                                                           ":" + internalPort
-                                                         else "")
   val internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                                       ":" + internalPort
                                                                     else "")
@@ -113,15 +132,25 @@ final case class Sipi(
   audioMimeTypes: List[String],
   archiveMimeTypes: List[String]
 ) {
-  def internalBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
+  val internalBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                               ":" + internalPort
                                                             else "")
-  def externalBaseUrl: String = "http://" + externalHost + (if (externalPort != 80)
+  val externalBaseUrl: String = "http://" + externalHost + (if (externalPort != 80)
                                                               ":" + externalPort
                                                             else "")
   val timeoutInSeconds: duration.Duration = scala.concurrent.duration.Duration(timeout)
 
 }
+
+final case class Ark(
+  resolver: String,
+  assignedNumber: Int
+)
+
+final case class Salsah1(
+  baseUrl: String,
+  projectIconsBasepath: String
+)
 
 final case class CacheConfig(
   cacheName: String,
@@ -132,39 +161,24 @@ final case class CacheConfig(
   timeToIdleSeconds: Int
 )
 
-final case class CacheService(
-  enabled: Boolean,
-  redis: Redis
-)
-
-final case class Redis(
-  host: String,
-  port: Int
-)
-
 final case class V2(
   resourcesSequence: ResourcesSequence,
-  graphRoute: GraphRoute,
-  fulltextSearch: FulltextSearch
+  fulltextSearch: FulltextSearch,
+  graphRoute: GraphRoute
 )
 
 final case class ResourcesSequence(
   resultsPerPage: Int
 )
 
-final case class GraphRoute(
-  defaultGraphDepth: Int,
-  maxGraphBreadth: Int,
-  maxGraphDepth: Int
-)
-
 final case class FulltextSearch(
   searchValueMinLength: Int
 )
 
-final case class Salsah1(
-  baseUrl: String,
-  projectIconsBasepath: String
+final case class GraphRoute(
+  defaultGraphDepth: Int,
+  maxGraphDepth: Int,
+  maxGraphBreadth: Int
 )
 
 final case class Gui(
@@ -176,11 +190,6 @@ final case class DefaultIconSize(
   dimY: Int
 )
 
-final case class Ark(
-  resolver: String,
-  assignedNumber: Int
-)
-
 final case class Triplestore(
   dbtype: String,
   useHttps: Boolean,
@@ -188,8 +197,8 @@ final case class Triplestore(
   queryTimeout: String,
   gravsearchTimeout: String,
   autoInit: Boolean,
-  profileQueries: Boolean,
-  fuseki: Fuseki
+  fuseki: Fuseki,
+  profileQueries: Boolean
 ) {
   val queryTimeoutAsDuration      = zio.Duration.fromScala(scala.concurrent.duration.Duration(queryTimeout))
   val gravsearchTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(gravsearchTimeout))
@@ -207,6 +216,16 @@ final case class Shacl(
 ) {
   val shapesDirPath = Paths.get(shapesDir)
 }
+
+final case class CacheService(
+  enabled: Boolean,
+  redis: Redis
+)
+
+final case class Redis(
+  host: String,
+  port: Int
+)
 
 final case class ClientTestDataService(
   collectClientTestData: Boolean
