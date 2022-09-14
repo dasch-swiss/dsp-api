@@ -462,7 +462,7 @@ object Authenticator extends InstrumentationSupport {
    * to be valid.
    *
    * @param credentials          the user supplied and extracted credentials.
-   *
+   * @param appConfig            the application's configuration
    * @param system               the current [[ActorSystem]]
    * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
    *         will be thrown.
@@ -541,7 +541,6 @@ object Authenticator extends InstrumentationSupport {
     requestContext: RequestContext,
     appConfig: AppConfig
   ): Option[KnoraCredentialsV2] = {
-    // log.debug("extractCredentialsV2 start ...")
 
     val credentialsFromParameters: Option[KnoraCredentialsV2] = extractCredentialsFromParametersV2(requestContext)
     log.debug("extractCredentialsV2 - credentialsFromParameters: {}", credentialsFromParameters)

@@ -35,8 +35,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val getUserByIdentifier       = PrivateMethod[Future[UserADM]](Symbol("getUserByIdentifier"))
-  private val authenticateCredentialsV2 = PrivateMethod[Future[Boolean]](Symbol("authenticateCredentialsV2"))
+  private val getUserByIdentifier = PrivateMethod[Future[UserADM]](Symbol("getUserByIdentifier"))
 
   "During Authentication" when {
     "called, the 'getUserADMByEmail' method " should {
@@ -86,12 +85,9 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
             UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
             AuthenticatorSpec.rootUserPassword
           )
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+        val resF = Authenticator.authenticateCredentialsV2(
           Some(correctPasswordCreds),
-          appConfig,
-          system,
-          appActor,
-          executionContext
+          appConfig
         )
         resF map { res =>
           assert(res)
@@ -100,12 +96,9 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "fail with unknown email" in {
         val wrongPasswordCreds =
           KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some("wrongemail@example.com")), "wrongpassword")
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+        val resF = Authenticator.authenticateCredentialsV2(
           Some(wrongPasswordCreds),
-          appConfig,
-          system,
-          appActor,
-          executionContext
+          appConfig
         )
         resF map { _ =>
           assertThrows(BadCredentialsException)
@@ -117,12 +110,9 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
             UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
             "wrongpassword"
           )
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+        val resF = Authenticator.authenticateCredentialsV2(
           Some(wrongPasswordCreds),
-          appConfig,
-          system,
-          appActor,
-          executionContext
+          appConfig
         )
         resF map { _ =>
           assertThrows(BadCredentialsException)
@@ -130,18 +120,15 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       }
       "succeed with correct token" in {
         val token = JWTHelper.createToken(
-          "http://rdfh.ch/users/X-T8IkfQTKa86UWuESpbOA",
+          "http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA",
           appConfig.jwtSecretKey,
           appConfig.jwtLongevityAsDuration,
           appConfig.knoraApi.externalKnoraApiHostPort
         )
         val tokenCreds = KnoraJWTTokenCredentialsV2(token)
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+        val resF = Authenticator.authenticateCredentialsV2(
           Some(tokenCreds),
-          appConfig,
-          system,
-          appActor,
-          executionContext
+          appConfig
         )
         resF map { res =>
           assert(res)
@@ -149,36 +136,30 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       }
       "fail with invalidated token" in {
         val token = JWTHelper.createToken(
-          "http://rdfh.ch/users/X-T8IkfQTKa86UWuESpbOA",
+          "http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA",
           appConfig.jwtSecretKey,
           appConfig.jwtLongevityAsDuration,
           appConfig.knoraApi.externalKnoraApiHostPort
         )
         val tokenCreds = KnoraJWTTokenCredentialsV2(token)
         CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(
-          Some(tokenCreds),
-          appConfig,
-          system,
-          appActor,
-          executionContext
-        )
 
-        resF map { _ =>
-          assertThrows(BadCredentialsException)
+        assertThrows[BadCredentialsException] {
+          Authenticator.authenticateCredentialsV2(
+            Some(tokenCreds),
+            appConfig
+          )
         }
+
       }
       "fail with wrong token" in {
         val tokenCreds = KnoraJWTTokenCredentialsV2("123456")
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(
-          Some(tokenCreds),
-          appConfig,
-          system,
-          appActor,
-          executionContext
-        )
-        resF map { _ =>
-          assertThrows(BadCredentialsException)
+
+        assertThrows[BadCredentialsException] {
+          Authenticator.authenticateCredentialsV2(
+            Some(tokenCreds),
+            appConfig
+          )
         }
       }
 

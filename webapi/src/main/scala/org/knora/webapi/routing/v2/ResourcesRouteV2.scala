@@ -23,17 +23,17 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
