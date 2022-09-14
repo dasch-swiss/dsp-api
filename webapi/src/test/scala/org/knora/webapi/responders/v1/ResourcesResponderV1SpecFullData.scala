@@ -5,21 +5,14 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.ActorSystem
-
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.standoffmessages.XMLTag
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.config.AppConfig
 
 // FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
-object ResourcesResponderV1SpecFullData {
-
-  implicit lazy val system: ActorSystem = ActorSystem("webapi")
-
-  val settings: KnoraSettingsImpl = KnoraSettings(system)
+final case class ResourcesResponderV1SpecFullData(appConfig: AppConfig) {
 
   // The expected response to a "full" resource request for a book.
   val expectedBookResourceFullResponse: ResourceFullResponseV1 = ResourceFullResponseV1(
@@ -38,7 +31,7 @@ object ResourcesResponderV1SpecFullData {
           locations = None,
           preview = None,
           restype_iconsrc =
-            Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/link.gif"),
+            Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "knora-base/link.gif"),
           restype_description = Some("Verkn\u00FCpfung mehrerer Resourcen"),
           restype_label = Some("Verkn\u00FCpfungsobjekt"),
           restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
@@ -64,7 +57,7 @@ object ResourcesResponderV1SpecFullData {
           locations = None,
           preview = None,
           restype_iconsrc =
-            Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/link.gif"),
+            Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "knora-base/link.gif"),
           restype_description = Some("Verkn\u00FCpfung mehrerer Resourcen"),
           restype_label = Some("Verkn\u00FCpfungsobjekt"),
           restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
@@ -404,7 +397,7 @@ object ResourcesResponderV1SpecFullData {
     resdata = Some(
       ResourceDataV1(
         rights = Some(6),
-        iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+        iconsrc = Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif"),
         restype_label = Some("Buch"),
         restype_name = "http://www.knora.org/ontology/0803/incunabula#book",
         res_id = "http://rdfh.ch/0803/c5058f3a"
@@ -421,7 +414,8 @@ object ResourcesResponderV1SpecFullData {
         locdata = None,
         locations = None,
         preview = None,
-        restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+        restype_iconsrc =
+          Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif"),
         restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
         restype_label = Some("Buch"),
         restype_name = Some("http://www.knora.org/ontology/0803/incunabula#book"),
@@ -445,7 +439,7 @@ object ResourcesResponderV1SpecFullData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                 ny = Some(128),
                 nx = Some(95),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -455,7 +449,7 @@ object ResourcesResponderV1SpecFullData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
                 ny = Some(110),
                 nx = Some(82),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -465,7 +459,7 @@ object ResourcesResponderV1SpecFullData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
                 ny = Some(219),
                 nx = Some(163),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -475,7 +469,7 @@ object ResourcesResponderV1SpecFullData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
                 ny = Some(438),
                 nx = Some(327),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -485,7 +479,7 @@ object ResourcesResponderV1SpecFullData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
                 ny = Some(876),
                 nx = Some(653),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -495,8 +489,7 @@ object ResourcesResponderV1SpecFullData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path =
-                  s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
                 ny = Some(1753),
                 nx = Some(1307),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -506,8 +499,7 @@ object ResourcesResponderV1SpecFullData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path =
-                  s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                 ny = Some(3505),
                 nx = Some(2613),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -648,14 +640,14 @@ object ResourcesResponderV1SpecFullData {
             value_rights = Vector(Some(2)),
             value_firstprops = Vector(Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi")),
             value_iconsrcs =
-              Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif")),
+              Vector(Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif")),
             value_restype = Vector(Some("Buch")),
             comments = Vector(None),
             value_ids = Vector("http://rdfh.ch/0803/8a0b1e75/values/ac9ddbf4-62a7-4cdc-b530-16cbbaa265bf"),
             values = Vector(
               LinkV1(
                 valueResourceClassIcon =
-                  Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+                  Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif"),
                 valueResourceClassLabel = Some("Buch"),
                 valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 valueLabel = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
@@ -773,7 +765,7 @@ object ResourcesResponderV1SpecFullData {
     resdata = Some(
       ResourceDataV1(
         rights = Some(6),
-        iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
+        iconsrc = Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/page.gif"),
         restype_label = Some("Seite"),
         restype_name = "http://www.knora.org/ontology/0803/incunabula#page",
         res_id = "http://rdfh.ch/0803/8a0b1e75"
@@ -792,7 +784,7 @@ object ResourcesResponderV1SpecFullData {
             protocol = "file",
             duration = 0,
             fps = 0,
-            path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+            path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
             ny = Some(3505),
             nx = Some(2613),
             origname = Some("ad+s167_druck1=0001.tif"),
@@ -805,7 +797,7 @@ object ResourcesResponderV1SpecFullData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
               ny = Some(128),
               nx = Some(95),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -815,7 +807,7 @@ object ResourcesResponderV1SpecFullData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
               ny = Some(110),
               nx = Some(82),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -825,7 +817,7 @@ object ResourcesResponderV1SpecFullData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
               ny = Some(219),
               nx = Some(163),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -835,7 +827,7 @@ object ResourcesResponderV1SpecFullData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
               ny = Some(438),
               nx = Some(327),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -845,7 +837,7 @@ object ResourcesResponderV1SpecFullData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
               ny = Some(876),
               nx = Some(653),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -855,7 +847,7 @@ object ResourcesResponderV1SpecFullData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
               ny = Some(1753),
               nx = Some(1307),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -865,7 +857,7 @@ object ResourcesResponderV1SpecFullData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
               ny = Some(3505),
               nx = Some(2613),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -878,14 +870,15 @@ object ResourcesResponderV1SpecFullData {
             protocol = "file",
             duration = 0,
             fps = 0,
-            path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+            path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
             ny = Some(128),
             nx = Some(95),
             origname = Some("ad+s167_druck1=0001.tif"),
             format_name = "JPEG2000"
           )
         ),
-        restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
+        restype_iconsrc =
+          Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/page.gif"),
         restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
         restype_label = Some("Seite"),
         restype_name = Some("http://www.knora.org/ontology/0803/incunabula#page"),

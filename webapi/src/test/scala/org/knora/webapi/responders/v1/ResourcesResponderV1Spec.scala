@@ -644,6 +644,9 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
   private val resourcesResponderV1SpecContextData: ResourcesResponderV1SpecContextData =
     new ResourcesResponderV1SpecContextData(appConfig)
 
+  private val resourcesResponderV1SpecFullData: ResourcesResponderV1SpecFullData =
+    new ResourcesResponderV1SpecFullData(appConfig)
+
   private val valueUtilV1 = new ValueUtilV1(appConfig)
 
   override lazy val rdfDataObjects = List(
@@ -907,7 +910,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
         compareResourceFullResponses(
           received = response,
-          expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse
+          expected = resourcesResponderV1SpecFullData.expectedBookResourceFullResponse
         )
       }
     }
@@ -922,7 +925,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
         compareResourceFullResponses(
           received = response,
-          expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse
+          expected = resourcesResponderV1SpecFullData.expectedPageResourceFullResponse
         )
       }
     }
@@ -1160,7 +1163,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
           )
         ),
         resource_reference = Set(nonexistentIri),
-        mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+        mapping = resourcesResponderV1SpecFullData.dummyMapping,
         mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
       )
 
@@ -1223,7 +1226,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
             startIndex = 1
           )
         ),
-        mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+        mapping = resourcesResponderV1SpecFullData.dummyMapping,
         mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
         resource_reference = Set("http://rdfh.ch/0803/c5058f3a")
       )
