@@ -7,6 +7,7 @@ import zio.config._
 import java.nio.file.Files
 import java.nio.file.Paths
 import scala.concurrent.duration
+import scala.util.Try
 
 import dsp.errors.FileWriteException
 import org.knora.webapi.messages.StringFormatter
@@ -62,24 +63,23 @@ final case class AppConfig(
     )
   }
 
-  // try to create the directories
+  // create the directories
   if (!Files.exists(Paths.get(tmpDatadir))) {
-    try {
+    val tmpDataDirCreation = Try {
       Files.createDirectories(Paths.get(tmpDatadir))
-    } catch {
-      case e: Throwable =>
-        throw FileWriteException(s"Tmp data directory $tmpDatadir could not be created: ${e.getMessage}")
-    }
+    }.fold(
+      e => throw FileWriteException(s"Tmp data directory $tmpDatadir could not be created: ${e.getMessage}"),
+      v => ZIO.logInfo(s"Created tmp directory $tmpDatadir")
+    )
   }
 
-  // try to create the directories
   if (!Files.exists(Paths.get(datadir))) {
-    try {
+    val dataDirCreation = Try {
       Files.createDirectories(Paths.get(datadir))
-    } catch {
-      case e: Throwable =>
-        throw FileWriteException(s"Data directory $datadir could not be created: ${e.getMessage}")
-    }
+    }.fold(
+      e => throw FileWriteException(s"Data directory $datadir could not be created: ${e.getMessage}"),
+      v => ZIO.logInfo(s"Created directory $datadir")
+    )
   }
 
 }
