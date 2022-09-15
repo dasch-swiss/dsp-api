@@ -16,9 +16,12 @@ import org.knora.webapi.util.cache.CacheUtil
 
 import typesafe._
 import magnolia._
+import scala.util.Success
+import scala.util.Failure
+import java.nio.file.Path
 
 /**
- * Represents (eventually) the complete configuration as defined in application.conf.
+ * Represents the configuration as defined in application.conf.
  */
 final case class AppConfig(
   testing: Boolean = false,
@@ -64,22 +67,20 @@ final case class AppConfig(
   }
 
   // create the directories
-  if (!Files.exists(Paths.get(tmpDatadir))) {
-    val tmpDataDirCreation = Try {
-      Files.createDirectories(Paths.get(tmpDatadir))
-    }.fold(
-      e => throw FileWriteException(s"Tmp data directory $tmpDatadir could not be created: ${e.getMessage}"),
-      v => ZIO.logInfo(s"Created tmp directory $tmpDatadir")
-    )
+  val tmpDataDirCreation: Try[Path] = Try {
+    Files.createDirectories(Paths.get(tmpDatadir))
+  }
+  tmpDataDirCreation match {
+    case Success(_) => ZIO.logInfo(s"Created tmp directory $tmpDatadir")
+    case Failure(e) => throw FileWriteException(s"Tmp data directory $tmpDatadir could not be created: ${e.getMessage}")
   }
 
-  if (!Files.exists(Paths.get(datadir))) {
-    val dataDirCreation = Try {
-      Files.createDirectories(Paths.get(datadir))
-    }.fold(
-      e => throw FileWriteException(s"Data directory $datadir could not be created: ${e.getMessage}"),
-      v => ZIO.logInfo(s"Created directory $datadir")
-    )
+  val dataDirCreation: Try[Path] = Try {
+    Files.createDirectories(Paths.get(datadir))
+  }
+  dataDirCreation match {
+    case Success(_) => ZIO.logInfo(s"Created directory $datadir")
+    case Failure(e) => throw FileWriteException(s"Data directory $datadir could not be created: ${e.getMessage}")
   }
 
 }
@@ -251,7 +252,7 @@ object AppConfig {
   private val config: IO[ReadError[String], AppConfig] = read(descriptor[AppConfig].mapKey(toKebabCase) from source)
 
   /**
-   * Live configuration reading from application.conf and initializing StringFormater for live
+   * Live configuration reading from application.conf and initializing StringFormater
    */
   val live: ZLayer[Any, Nothing, AppConfig] =
     ZLayer {

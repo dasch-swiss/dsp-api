@@ -11,6 +11,8 @@ import org.knora.webapi.core.AppServer
 
 object Main extends ZIOApp {
 
+  override def environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
+
   /**
    * The `Environment` that we require to exist at startup.
    */
@@ -20,17 +22,14 @@ object Main extends ZIOApp {
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  override val bootstrap: ZLayer[
+  override def bootstrap: ZLayer[
     ZIOAppArgs with Scope,
     Any,
     Environment
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ core.LayersLive.dspLayersLive
 
-  /* Needed for ZIO type magic */
-  override val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
-
   /* Here we start our Application */
-  override val run =
+  override def run =
     (for {
       never <- ZIO.never
     } yield never).provideLayer(AppServer.live)
