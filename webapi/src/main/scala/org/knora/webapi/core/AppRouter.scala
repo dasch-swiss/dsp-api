@@ -45,7 +45,7 @@ object AppRouter {
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
         runtime                   <- ZIO.runtime[Any]
-      } yield new AppRouter { self =>
+      } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem     = as.system
         implicit val executionContext: ExecutionContext = system.dispatcher
 

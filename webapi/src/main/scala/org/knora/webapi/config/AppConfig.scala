@@ -5,8 +5,11 @@ import zio._
 import zio.config._
 
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import scala.concurrent.duration
+import scala.util.Failure
+import scala.util.Success
 import scala.util.Try
 
 import dsp.errors.FileWriteException
@@ -16,9 +19,6 @@ import org.knora.webapi.util.cache.CacheUtil
 
 import typesafe._
 import magnolia._
-import scala.util.Success
-import scala.util.Failure
-import java.nio.file.Path
 
 /**
  * Represents the configuration as defined in application.conf.

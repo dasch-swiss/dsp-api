@@ -31,7 +31,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.store.iiif.api.IIIFService
@@ -41,14 +40,16 @@ import org.knora.webapi.util.SipiUtil
 
 /**
  * Makes requests to Sipi.
+ *
+ * @param config      The application's configuration
+ * @param jwt         The JWT Service to handle JWT Tokens
+ * @param httpClient  The HTTP Client
  */
 case class IIIFServiceSipiImpl(
   config: AppConfig,
   jwt: JWTService,
   httpClient: CloseableHttpClient
 ) extends IIIFService {
-
-  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   /**
    * Asks Sipi for metadata about a file, served from the 'knora.json' route.

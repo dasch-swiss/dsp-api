@@ -23,14 +23,14 @@ trait ActorSystem {
 
 object ActorSystem {
 
-  private def acquire(config: AppConfig, ec: ExecutionContext): URIO[Any, actor.ActorSystem] =
+  private def acquire(executionContext: ExecutionContext): URIO[Any, actor.ActorSystem] =
     ZIO
       .attempt(
         akka.actor.ActorSystem(
           name = "webapi",
           config = None,
           classLoader = None,
-          defaultExecutionContext = Some(ec)
+          defaultExecutionContext = Some(executionContext)
         )
       )
       .tap(_ => ZIO.logInfo(">>> Acquire Actor System <<<"))
@@ -47,7 +47,7 @@ object ActorSystem {
       for {
         config      <- ZIO.service[AppConfig]
         context     <- ZIO.executor.map(_.asExecutionContext)
-        actorSystem <- ZIO.acquireRelease(acquire(config, context))(release _)
+        actorSystem <- ZIO.acquireRelease(acquire(context))(release _)
       } yield new ActorSystem {
         override val system: akka.actor.ActorSystem             = actorSystem
         override val appConfig                                  = config
