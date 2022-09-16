@@ -8,7 +8,6 @@ package org.knora.webapi.routing
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Route
-import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import zio.prelude.Validation
@@ -16,15 +15,8 @@ import zio.prelude.Validation
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import dsp.errors.BadRequestException
-import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 /**
  * Data that needs to be passed to each route.
@@ -57,45 +49,7 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
   def makeRoute: Route
 
   /**
-   * Gets a [[ProjectADM]] corresponding to the specified project IRI.
-   *
-   * @param projectIri           the project IRI.
-   * @param requestingUser       the user making the request.
-   * @return the corresponding [[ProjectADM]].
-   */
-  protected def getProjectADM(
-    projectIri: IRI,
-    requestingUser: UserADM
-  ): Future[ProjectADM] = {
-    val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(
-      projectIri,
-      throw BadRequestException(s"Invalid project IRI: $projectIri")
-    )
-
-    if (stringFormatter.isKnoraBuiltInProjectIriStr(checkedProjectIri)) {
-      throw BadRequestException(s"Metadata cannot be updated for a built-in project")
-    }
-
-    for {
-      projectInfoResponse: ProjectGetResponseADM <-
-        appActor
-          .ask(
-            ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
-              requestingUser = requestingUser
-            )
-          )
-          .mapTo[ProjectGetResponseADM]
-    } yield projectInfoResponse.project
-  }
-
-  /**
-   * Helper method converting an [[Either]] to a [[Future]].
-   */
-  def toFuture[A](either: Either[Throwable, A]): Future[A] = either.fold(Future.failed, Future.successful)
-
-  /**
-   * Helper method converting an [[zio.prelude.Validation]] to a [[scala.concurrent.Future]].
+   * Helper method converting a [[zio.prelude.Validation]] to a [[scala.concurrent.Future]].
    */
   def toFuture[A](validation: Validation[Throwable, A]): Future[A] =
     validation.fold(
