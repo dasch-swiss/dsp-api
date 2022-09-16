@@ -6,15 +6,15 @@
 package org.knora.webapi.core
 
 import akka.http.scaladsl.Http
-import akka.stream.Materializer
 import zio._
-
-import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.routing.ApiRoutes
 
+/**
+ * The Akka based HTTP server
+ */
 trait HttpServer {
   val serverBinding: Http.ServerBinding
 }
@@ -27,9 +27,7 @@ object HttpServer {
         config    <- ZIO.service[AppConfig]
         apiRoutes <- ZIO.service[ApiRoutes]
         binding <- {
-          implicit val system: akka.actor.ActorSystem     = as.system
-          implicit val materializer: Materializer         = Materializer.matFromSystem(system)
-          implicit val executionContext: ExecutionContext = system.dispatcher
+          implicit val system: akka.actor.ActorSystem = as.system
 
           ZIO.acquireRelease {
             ZIO

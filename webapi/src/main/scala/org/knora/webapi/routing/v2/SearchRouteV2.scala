@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio.ZIO
 
 import scala.concurrent.Future
 
@@ -210,7 +211,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
   private def fullTextSearch(): Route = path("v2" / "search" / Segment) {
     searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
       get { requestContext =>
-        log.info(s"Full Text Search for string: $searchStr")
+        ZIO.logInfo(s"Full-text Search for string: $searchStr")
 
         if (searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname)) {
           throw BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route")

@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import akka.stream.Materializer
 import akka.util.Timeout
 import org.xml.sax.SAXException
 
@@ -65,9 +64,6 @@ import org.knora.webapi.util.cache.CacheUtil
  */
 class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig)
     extends Responder(responderData, appConfig) {
-
-  /* actor materializer needed for http requests */
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
   private def xmlMimeTypes = Set(
     "text/xml",

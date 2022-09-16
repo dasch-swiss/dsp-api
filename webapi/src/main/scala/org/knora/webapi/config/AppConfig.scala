@@ -13,8 +13,6 @@ import scala.util.Success
 import scala.util.Try
 
 import dsp.errors.FileWriteException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.util.cache.CacheUtil
 
 import typesafe._
@@ -249,29 +247,18 @@ object AppConfig {
   /**
    * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
    */
-  private val config: IO[ReadError[String], AppConfig] = read(descriptor[AppConfig].mapKey(toKebabCase) from source)
+  private val configFromSource: IO[ReadError[String], AppConfig] = read(
+    descriptor[AppConfig].mapKey(toKebabCase) from source
+  )
 
   /**
-   * Live configuration reading from application.conf and initializing StringFormater
+   * Application configuration from application.conf
    */
-  val live: ZLayer[Any, Nothing, AppConfig] =
+  val layer: ZLayer[Any, Nothing, AppConfig] =
     ZLayer {
       for {
-        c <- config.orDie
-        _ <- ZIO.attempt(StringFormatter.init(c)).orDie   // needs early init before first usage
-        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
+        c <- configFromSource.orDie
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Live Initialized <<<"))
 
-  /**
-   * Test configuration reading from application.conf and initializing StringFormater for tests
-   */
-  val test: ZLayer[Any, Nothing, AppConfig] =
-    ZLayer {
-      for {
-        c <- config.orDie
-        _ <- ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
-        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie     // needs early init before first usage
-      } yield c
-    }.tap(_ => ZIO.logInfo(">>> AppConfig Test Initialized <<<"))
 }

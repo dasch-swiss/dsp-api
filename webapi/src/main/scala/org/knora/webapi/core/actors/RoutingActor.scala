@@ -90,11 +90,6 @@ class RoutingActor(
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   /**
-   * Timeout definition
-   */
-  implicit protected val timeout: Timeout = appConfig.defaultTimeoutAsDuration
-
-  /**
    * Data used in responders.
    */
   val responderData: ResponderData = ResponderData(system, self, cacheServiceSettings)
@@ -129,6 +124,7 @@ class RoutingActor(
 
   def receive: Receive = {
 
+    // V1 request messages
     case ckanResponderRequestV1: CkanResponderRequestV1 =>
       ActorUtil.future2Message(sender(), ckanResponderV1.receive(ckanResponderRequestV1), log)
     case resourcesResponderRequestV1: ResourcesResponderRequestV1 =>
@@ -148,7 +144,7 @@ class RoutingActor(
     case projectsResponderRequestV1: ProjectsResponderRequestV1 =>
       ActorUtil.future2Message(sender(), projectsResponderV1.receive(projectsResponderRequestV1), log)
 
-    // Knora API V2 messages
+    // V2 request messages
     case ontologiesResponderRequestV2: OntologiesResponderRequestV2 =>
       ActorUtil.future2Message(sender(), ontologiesResponderV2.receive(ontologiesResponderRequestV2), log)
     case searchResponderRequestV2: SearchResponderRequestV2 =>
@@ -162,7 +158,7 @@ class RoutingActor(
     case listsResponderRequestV2: ListsResponderRequestV2 =>
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
-    // Knora Admin message
+    // Admin request messages
     case groupsResponderRequestADM: GroupsResponderRequestADM =>
       ActorUtil.future2Message(sender(), groupsResponderADM.receive(groupsResponderRequestADM), log)
     case listsResponderRequest: ListsResponderRequestADM =>

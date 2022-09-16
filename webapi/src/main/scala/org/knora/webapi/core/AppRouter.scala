@@ -46,8 +46,7 @@ object AppRouter {
         appConfig                 <- ZIO.service[AppConfig]
         runtime                   <- ZIO.runtime[Any]
       } yield new AppRouter {
-        implicit val system: akka.actor.ActorSystem     = as.system
-        implicit val executionContext: ExecutionContext = system.dispatcher
+        implicit val system: akka.actor.ActorSystem = as.system
 
         val ref: ActorRef = system.actorOf(
           Props(

@@ -9,10 +9,12 @@ import zio._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.domain.AppState
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -152,7 +154,7 @@ final case class AppServer(
       _ <- checkCacheService
       _ <- ZIO.logInfo("=> Startup checks finished")
       _ <- ZIO.logInfo(s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}")
-      _  = if (appConfig.allowReloadOverHttp) { ZIO.logWarning("Resetting DB over HTTP is turned ON") }
+      _  = if (appConfig.allowReloadOverHttp) ZIO.logWarning("Resetting DB over HTTP is turned ON")
       _ <- state.set(AppState.Running)
     } yield ()
 }
@@ -172,20 +174,24 @@ object AppServer {
 
   /**
    * Initializes the AppServer instance with the required services
+   *
+   * @param test  If `true`, initiates the string formatter as test
    */
-  def init(
-  ): ZIO[AppServerEnvironment, Nothing, AppServer] =
+  def init(test: Boolean = false): ZIO[AppServerEnvironment, Nothing, AppServer] =
     for {
-      state    <- ZIO.service[State]
-      ts       <- ZIO.service[TriplestoreService]
-      ru       <- ZIO.service[RepositoryUpdater]
-      as       <- ZIO.service[ActorSystem]
-      ar       <- ZIO.service[AppRouter]
-      iiifs    <- ZIO.service[IIIFService]
-      cs       <- ZIO.service[CacheService]
-      hs       <- ZIO.service[HttpServer]
-      config   <- ZIO.service[AppConfig]
-      appServer = AppServer(state, ts, ru, as, ar, iiifs, cs, hs, config)
+      state <- ZIO.service[State]
+      ts    <- ZIO.service[TriplestoreService]
+      ru    <- ZIO.service[RepositoryUpdater]
+      as    <- ZIO.service[ActorSystem]
+      ar    <- ZIO.service[AppRouter]
+      iiifs <- ZIO.service[IIIFService]
+      cs    <- ZIO.service[CacheService]
+      hs    <- ZIO.service[HttpServer]
+      c     <- ZIO.service[AppConfig]
+      _     <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
+      _ = if (test) ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
+          else ZIO.attempt(StringFormatter.init(c)).orDie
+      appServer = AppServer(state, ts, ru, as, ar, iiifs, cs, hs, c)
     } yield appServer
 
   /**
@@ -206,7 +212,7 @@ object AppServer {
   val testWithSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
     ZLayer {
       for {
-        appServer <- AppServer.init()
+        appServer <- AppServer.init(test = true)
         _         <- appServer.start(requiresRepository = false, requiresIIIFService = true)
       } yield ()
     }
@@ -218,7 +224,7 @@ object AppServer {
   val testWithoutSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
     ZLayer {
       for {
-        appServer <- AppServer.init()
+        appServer <- AppServer.init(test = true)
         _         <- appServer.start(requiresRepository = false, requiresIIIFService = false)
       } yield ()
     }

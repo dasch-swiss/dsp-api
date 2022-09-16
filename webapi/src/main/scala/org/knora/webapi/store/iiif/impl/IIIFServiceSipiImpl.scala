@@ -280,7 +280,7 @@ object IIIFServiceSipiImpl {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
+  private def acquire(config: AppConfig): URIO[Any, CloseableHttpClient] = ZIO.attemptBlocking {
 
     // timeout from config
     val sipiTimeoutMillis: Int = config.sipi.timeoutInSeconds.toMillis.toInt
@@ -313,14 +313,12 @@ object IIIFServiceSipiImpl {
       .setSocketTimeout(sipiTimeoutMillis)
       .build()
 
-    // Create an HttpClient with the given custom dependencies and configuration.
-    val httpClient: CloseableHttpClient = HttpClients
+    // Return an HttpClient with the given custom dependencies and configuration.
+    HttpClients
       .custom()
       .setConnectionManager(connManager)
       .setDefaultRequestConfig(defaultRequestConfig)
       .build()
-
-    httpClient
   }.tap(_ => ZIO.logInfo(">>> Acquire Sipi IIIF Service <<<")).orDie
 
   /**
@@ -334,12 +332,10 @@ object IIIFServiceSipiImpl {
   val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] =
     ZLayer.scoped {
       for {
-        config <- ZIO.service[AppConfig]
-        // _          <- ZIO.debug(config)
+        config     <- ZIO.service[AppConfig]
         jwtService <- ZIO.service[JWTService]
         // HINT: Scope does not work when used together with unsafeRun to
-        // bridge over to Akka. Need to change this as soon Akka is removed
-        // httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
+        // bridge over to Akka. TODO Need to change this as soon as Akka is removed
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }
