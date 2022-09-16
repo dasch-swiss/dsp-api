@@ -89,7 +89,7 @@ abstract class CoreSpec
   // needed by some tests
   val appConfig            = config
   val cacheServiceSettings = new CacheServiceSettings(appConfig)
-  val responderData        = ResponderData(system, appActor, cacheServiceSettings)
+  val responderData        = ResponderData(system, appActor, appConfig, cacheServiceSettings)
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */

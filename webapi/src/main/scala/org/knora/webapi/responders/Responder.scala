@@ -18,7 +18,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
@@ -50,7 +49,7 @@ object Responder {
 /**
  * An abstract class providing values that are commonly used in Knora responders.
  */
-abstract class Responder(responderData: ResponderData, appConfig: AppConfig) extends LazyLogging {
+abstract class Responder(responderData: ResponderData) extends LazyLogging {
 
   /**
    * The actor system.
@@ -81,7 +80,7 @@ abstract class Responder(responderData: ResponderData, appConfig: AppConfig) ext
   /**
    * The application's default timeout for `ask` messages.
    */
-  protected implicit val timeout: Timeout = appConfig.defaultTimeoutAsDuration
+  protected implicit val timeout: Timeout = responderData.appConfig.defaultTimeoutAsDuration
 
   /**
    * Provides logging

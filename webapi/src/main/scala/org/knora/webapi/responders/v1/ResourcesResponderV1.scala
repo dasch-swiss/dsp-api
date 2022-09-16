@@ -19,7 +19,6 @@ import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -59,11 +58,10 @@ import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
  */
-class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig) {
+class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
   // Converts SPARQL query results to ApiValueV1 objects.
-  private val valueUtilV1 = new ValueUtilV1(appConfig)
+  private val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
 
   /**
    * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
@@ -437,8 +435,10 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
                                              .resourceClassInfoMap(node.nodeClass)
                                              .getPredicateObject(
                                                predicateIri = OntologyConstants.Rdfs.Label,
-                                               preferredLangs =
-                                                 Some(graphDataGetRequest.userADM.lang, appConfig.fallbackLanguage)
+                                               preferredLangs = Some(
+                                                 graphDataGetRequest.userADM.lang,
+                                                 responderData.appConfig.fallbackLanguage
+                                               )
                                              )
                                              .getOrElse(
                                                throw InconsistentRepositoryDataException(
@@ -461,8 +461,10 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
                                              .propertyInfoMap(edge.linkProp)
                                              .getPredicateObject(
                                                predicateIri = OntologyConstants.Rdfs.Label,
-                                               preferredLangs =
-                                                 Some(graphDataGetRequest.userADM.lang, appConfig.fallbackLanguage)
+                                               preferredLangs = Some(
+                                                 graphDataGetRequest.userADM.lang,
+                                                 responderData.appConfig.fallbackLanguage
+                                               )
                                              )
                                              .getOrElse(
                                                throw InconsistentRepositoryDataException(
@@ -768,14 +770,14 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
 
       resourceClassLabel = resourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Label,
-                             preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                            )
 
       resInfo: ResourceInfoV1 = resInfoWithoutQueryingOntology.copy(
                                   restype_label = resourceClassLabel,
                                   restype_description = resourceTypeEntityInfo.getPredicateObject(
                                     predicateIri = OntologyConstants.Rdfs.Comment,
-                                    preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                                    preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                                   ),
                                   restype_iconsrc = maybeResourceTypeIconSrc
                                 )
@@ -798,11 +800,11 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
                          resinfo = incoming.resinfo.copy(
                            restype_label = incomingResourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Label,
-                             preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                            ),
                            restype_description = incomingResourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Comment,
-                             preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                            ),
                            restype_iconsrc = incomingResourceTypeEntityInfo.getPredicateObject(
                              OntologyConstants.KnoraBase.ResourceIcon
@@ -874,7 +876,8 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
                                             ),
                                           label = propertyEntityInfo.getPredicateObject(
                                             predicateIri = OntologyConstants.Rdfs.Label,
-                                            preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                                            preferredLangs =
+                                              Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                                           ),
                                           occurrence = Some(propsAndCardinalities(propertyIri).cardinality.value),
                                           attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
@@ -905,7 +908,8 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
                                             ),
                                           label = propertyEntityInfo.getPredicateObject(
                                             predicateIri = OntologyConstants.Rdfs.Label,
-                                            preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                                            preferredLangs =
+                                              Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                                           ),
                                           occurrence = Some(propsAndCardinalities(propertyIri).cardinality.value),
                                           attributes = propertyEntityInfo
@@ -3098,11 +3102,11 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
               entityInfo = entityInfoResponse.resourceClassInfoMap(resTypeIri)
               label = entityInfo.getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
-                        preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                        preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                       )
               description = entityInfo.getPredicateObject(
                               predicateIri = OntologyConstants.Rdfs.Comment,
-                              preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                              preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                             )
               iconsrc = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
                           case Some(resClassIcon) =>
@@ -3229,7 +3233,7 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
         label = propertyEntityInfo.flatMap(
           _.getPredicateObject(
             predicateIri = OntologyConstants.Rdfs.Label,
-            preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+            preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
           )
         ),
         occurrence = propertyCardinality.map(_.cardinality.value),
@@ -3377,7 +3381,7 @@ class ResourcesResponderV1(responderData: ResponderData, appConfig: AppConfig)
                     case Some(referencedResTypeEntityInfo) =>
                       val labelOption: Option[String] = referencedResTypeEntityInfo.getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
-                        preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                        preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                       )
                       val resIconOption: Option[String] =
                         referencedResTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)

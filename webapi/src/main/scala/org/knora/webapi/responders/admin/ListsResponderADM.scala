@@ -17,7 +17,6 @@ import dsp.valueobjects.Iri._
 import dsp.valueobjects.List.ListName
 import dsp.valueobjects.ListErrorMessages
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -39,8 +38,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderADM(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig) {
+class ListsResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
   // The IRI used to lock user creation and update
   private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
@@ -800,7 +798,7 @@ class ListsResponderADM(responderData: ResponderData, appConfig: AppConfig)
                            .getNodePath(
                              queryNodeIri = queryNodeIri,
                              preferredLanguage = requestingUser.lang,
-                             fallbackLanguage = appConfig.fallbackLanguage
+                             fallbackLanguage = responderData.appConfig.fallbackLanguage
                            )
                            .toString()
                        }

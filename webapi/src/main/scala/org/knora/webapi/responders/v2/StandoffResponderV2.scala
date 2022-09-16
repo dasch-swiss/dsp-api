@@ -26,7 +26,6 @@ import scala.xml.XML
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -62,8 +61,7 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig) {
+class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
   private def xmlMimeTypes = Set(
     "text/xml",
@@ -96,7 +94,7 @@ class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig)
   private val xsltCacheName = "xsltCache"
 
   private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Future[GetStandoffResponseV2] = {
-    val requestMaxStartIndex = getStandoffRequestV2.offset + appConfig.standoffPerPage - 1
+    val requestMaxStartIndex = getStandoffRequestV2.offset + responderData.appConfig.standoffPerPage - 1
 
     for {
       resourceRequestSparql <- Future(
@@ -153,7 +151,7 @@ class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig)
                                                             versionDate = None,
                                                             appActor = appActor,
                                                             targetSchema = getStandoffRequestV2.targetSchema,
-                                                            appConfig = appConfig,
+                                                            appConfig = responderData.appConfig,
                                                             requestingUser = getStandoffRequestV2.requestingUser
                                                           )
 
@@ -257,7 +255,7 @@ class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig)
           }
 
       xsltUrl: String =
-        s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
+        s"${responderData.appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
     } yield xsltUrl
 
@@ -1279,7 +1277,7 @@ class StandoffResponderV2(responderData: ResponderData, appConfig: AppConfig)
     val firstTask = GetStandoffTask(
       resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
       valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      offset = appConfig.standoffPerPage, // the offset of the second page
+      offset = responderData.appConfig.standoffPerPage, // the offset of the second page
       requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
     )
 

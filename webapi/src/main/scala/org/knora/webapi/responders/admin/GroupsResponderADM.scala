@@ -14,7 +14,6 @@ import scala.concurrent.Future
 import dsp.errors._
 import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -34,9 +33,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * Returns information about Knora projects.
  */
-class GroupsResponderADM(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig)
-    with GroupsADMJsonProtocol {
+class GroupsResponderADM(responderData: ResponderData) extends Responder(responderData) with GroupsADMJsonProtocol {
 
   // Global lock IRI used for group creation and updating
   private val GROUPS_GLOBAL_LOCK_IRI: IRI = "http://rdfh.ch/groups"

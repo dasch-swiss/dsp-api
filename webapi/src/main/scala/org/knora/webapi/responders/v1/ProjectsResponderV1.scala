@@ -13,7 +13,6 @@ import scala.concurrent.Future
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetRequestADM
@@ -35,8 +34,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * Returns information about Knora projects.
  */
-class ProjectsResponderV1(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig) {
+class ProjectsResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
   // Global lock IRI used for project creation and update
 

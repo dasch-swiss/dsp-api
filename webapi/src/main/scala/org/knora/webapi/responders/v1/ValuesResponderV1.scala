@@ -14,7 +14,6 @@ import scala.concurrent.Future
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -55,10 +54,9 @@ import org.knora.webapi.util._
 /**
  * Updates Knora values.
  */
-class ValuesResponderV1(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig) {
+class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData) {
   // Converts SPARQL query results to ApiValueV1 objects.
-  val valueUtilV1 = new ValueUtilV1(appConfig)
+  val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
 
   /**
    * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.

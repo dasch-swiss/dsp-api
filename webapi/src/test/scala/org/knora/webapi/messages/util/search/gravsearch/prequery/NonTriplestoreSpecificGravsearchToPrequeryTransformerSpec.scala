@@ -42,8 +42,7 @@ private object QueryHandler {
       new GravsearchTypeInspectionRunner(
         appActor,
         responderData = responderData,
-        inferTypes = true,
-        appConfig = appConfig
+        inferTypes = true
       )
 
     val typeInspectionResultFuture = typeInspectionRunner.inspectTypes(constructQuery.whereClause, anythingUser)

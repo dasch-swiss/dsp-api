@@ -17,7 +17,6 @@ import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
 import dsp.valueobjects.User._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -45,9 +44,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderADM(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig)
-    with InstrumentationSupport {
+class UsersResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
 
   // The IRI used to lock user creation and update
   private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -502,7 +499,7 @@ class UsersResponderADM(responderData: ResponderData, appConfig: AppConfig)
             }
 
         // hash the new password
-        encoder = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
+        encoder = new BCryptPasswordEncoder(responderData.appConfig.bcryptPasswordStrength)
         newHashedPassword = Password
                               .make(encoder.encode(userUpdatePasswordPayload.newPassword.value))
                               .fold(e => throw e.head, value => value)
@@ -1676,7 +1673,7 @@ class UsersResponderADM(responderData: ResponderData, appConfig: AppConfig)
         userIri: IRI                   <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password
-        encoder        = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
+        encoder        = new BCryptPasswordEncoder(responderData.appConfig.bcryptPasswordStrength)
         hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.

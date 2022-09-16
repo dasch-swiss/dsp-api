@@ -12,7 +12,6 @@ import scala.concurrent.Future
 
 import dsp.errors.NotFoundException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -25,7 +24,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderV1(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData, appConfig) {
+class ListsResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
   /**
    * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.
@@ -148,7 +147,7 @@ class ListsResponderV1(responderData: ResponderData, appConfig: AppConfig) exten
                        .getList(
                          rootNodeIri = rootNodeIri,
                          preferredLanguage = userProfile.userData.lang,
-                         fallbackLanguage = appConfig.fallbackLanguage
+                         fallbackLanguage = responderData.appConfig.fallbackLanguage
                        )
                        .toString()
                    }
@@ -230,7 +229,7 @@ class ListsResponderV1(responderData: ResponderData, appConfig: AppConfig) exten
                            .getNodePath(
                              queryNodeIri = queryNodeIri,
                              preferredLanguage = userProfile.userData.lang,
-                             fallbackLanguage = appConfig.fallbackLanguage
+                             fallbackLanguage = responderData.appConfig.fallbackLanguage
                            )
                            .toString()
                        }

@@ -15,7 +15,6 @@ import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -61,8 +60,7 @@ import org.knora.webapi.util._
  *
  * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
  */
-class OntologyResponderV2(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig) {
+class OntologyResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
   /**
    * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
@@ -295,7 +293,7 @@ class OntologyResponderV2(responderData: ResponderData, appConfig: AppConfig)
                        label = classInfo.entityInfoContent
                          .getPredicateStringLiteralObject(
                            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                           preferredLangs = Some(requestingUser.lang, appConfig.fallbackLanguage)
+                           preferredLangs = Some(requestingUser.lang, responderData.appConfig.fallbackLanguage)
                          )
                          .getOrElse(
                            throw InconsistentRepositoryDataException(s"Resource class $subClassIri has no rdfs:label")

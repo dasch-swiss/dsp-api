@@ -15,7 +15,6 @@ import scala.concurrent.Future
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -44,8 +43,7 @@ import org.knora.webapi.util.ActorUtil
 /**
  * Handles requests to read and write Knora values.
  */
-class ValuesResponderV2(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig) {
+class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
   /**
    * The IRI and content of a new value or value version whose existence in the triplestore has been verified.

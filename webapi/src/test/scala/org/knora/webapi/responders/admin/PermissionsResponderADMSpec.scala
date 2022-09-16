@@ -145,7 +145,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
 
-        val permissionsResponder = new PermissionsResponderADM(responderData, appConfig)
+        val permissionsResponder = new PermissionsResponderADM(responderData)
 
         val f: Future[Map[IRI, Set[PermissionADM]]] =
           permissionsResponder.userAdministrativePermissionsGetADM(

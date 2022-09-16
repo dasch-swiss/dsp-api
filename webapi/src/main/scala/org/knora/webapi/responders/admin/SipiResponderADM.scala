@@ -12,7 +12,6 @@ import scala.concurrent.Future
 
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
@@ -35,7 +34,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
  * ADM format.
  */
-class SipiResponderADM(responderData: ResponderData, appConfig: AppConfig) extends Responder(responderData, appConfig) {
+class SipiResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
   /**
    * Receives a message of type [[SipiResponderRequestADM]], and returns an appropriate response message, or

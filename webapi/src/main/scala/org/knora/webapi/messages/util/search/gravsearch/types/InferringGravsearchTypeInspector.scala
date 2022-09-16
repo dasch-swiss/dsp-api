@@ -16,7 +16,6 @@ import scala.concurrent.Future
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -36,9 +35,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 class InferringGravsearchTypeInspector(
   nextInspector: Option[GravsearchTypeInspector],
   appActor: ActorRef,
-  responderData: ResponderData,
-  appConfig: AppConfig
-) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData, appConfig = appConfig) {
+  responderData: ResponderData
+) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

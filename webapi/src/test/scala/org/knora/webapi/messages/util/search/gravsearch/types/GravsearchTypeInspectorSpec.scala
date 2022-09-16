@@ -1346,8 +1346,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = false,
-          appConfig = appConfig
+          inferTypes = false
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1429,8 +1428,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new InferringGravsearchTypeInspector(
           nextInspector = None,
           appActor,
-          responderData = responderData,
-          appConfig = appConfig
+          responderData = responderData
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
       val (_, entityInfo) = Await.result(
@@ -1486,8 +1484,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new InferringGravsearchTypeInspector(
           nextInspector = None,
           appActor,
-          responderData = responderData,
-          appConfig = appConfig
+          responderData = responderData
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
       val (usageIndex, entityInfo) = Await.result(
@@ -1569,8 +1566,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new InferringGravsearchTypeInspector(
           nextInspector = None,
           appActor,
-          responderData = responderData,
-          appConfig = appConfig
+          responderData = responderData
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
       val (usageIndex, entityInfo) = Await.result(
@@ -1636,8 +1632,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1701,8 +1696,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(queryWithOptional)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1768,8 +1762,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithRedundantTypes)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1784,8 +1777,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1804,8 +1796,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryKnoraObjectTypeFromPropertyIriRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1819,8 +1810,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfObjectFromPropertyRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1834,8 +1824,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryKnoraObjectTypeFromObjectRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1849,8 +1838,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1864,8 +1852,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromFilterRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1879,8 +1866,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryNonPropertyVarTypeFromFilterRule)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1894,8 +1880,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryVarTypeFromFunction)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1909,8 +1894,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryIriTypeFromFunction)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1924,8 +1908,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1939,8 +1922,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndLiteral)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1954,8 +1936,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndVariable)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1969,8 +1950,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourcesInSimpleSchema)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1984,8 +1964,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourcesInComplexSchema)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -1999,8 +1978,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourceIriInSimpleSchema)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -2014,8 +1992,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourceIriInComplexSchema)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -2029,8 +2006,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithFilterComparison)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -2044,8 +2020,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithoutAnnotation)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -2060,8 +2035,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithAnnotation)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -2075,8 +2049,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithGravsearchOptions)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -2090,8 +2063,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes1)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
@@ -2106,8 +2078,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         new GravsearchTypeInspectionRunner(
           appActor,
           responderData = responderData,
-          inferTypes = true,
-          appConfig = appConfig
+          inferTypes = true
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes2)
       val resultFuture: Future[GravsearchTypeInspectionResult] =

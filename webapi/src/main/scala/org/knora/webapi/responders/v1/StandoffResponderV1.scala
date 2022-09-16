@@ -12,7 +12,6 @@ import scala.concurrent.Future
 
 import dsp.errors.NotFoundException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -28,8 +27,7 @@ import org.knora.webapi.store.iiif.errors.SipiException
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV1(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig) {
+class StandoffResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
   /**
    * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message.

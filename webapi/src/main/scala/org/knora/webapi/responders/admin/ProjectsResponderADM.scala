@@ -20,7 +20,6 @@ import scala.util.Try
 
 import dsp.errors._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -47,9 +46,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 /**
  * Returns information about Knora projects.
  */
-class ProjectsResponderADM(responderData: ResponderData, appConfig: AppConfig)
-    extends Responder(responderData, appConfig)
-    with InstrumentationSupport {
+class ProjectsResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
 
   // Global lock IRI used for project creation and update
   private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"

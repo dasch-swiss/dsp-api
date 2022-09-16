@@ -17,7 +17,6 @@ import scala.util.Success
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -64,8 +63,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
-class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
-    extends ResponderWithStandoffV2(responderData, appConfig) {
+class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -1503,7 +1501,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
     val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) =
       StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
         queryStandoff = queryStandoff,
-        appConfig = appConfig
+        appConfig = responderData.appConfig
       )
 
     for {
@@ -1609,7 +1607,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                                                 calculateMayHaveMoreResults = false,
                                                 appActor = appActor,
                                                 targetSchema = targetSchema,
-                                                appConfig = appConfig,
+                                                appConfig = responderData.appConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1700,7 +1698,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                                                 calculateMayHaveMoreResults = false,
                                                 appActor = appActor,
                                                 targetSchema = targetSchema,
-                                                appConfig = appConfig,
+                                                appConfig = responderData.appConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1790,7 +1788,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
           }
 
       gravsearchUrl: String =
-        s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
+        s"${responderData.appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
     } yield gravsearchUrl
 
     val recoveredGravsearchUrlFuture = gravsearchUrlFuture.recover { case notFound: NotFoundException =>
@@ -2074,7 +2072,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
               header = TEIHeader(
                 headerInfo = headerResource,
                 headerXSLT = headerXSLT,
-                appConfig = appConfig
+                appConfig = responderData.appConfig
               ),
               body = TEIBody(
                 bodyInfo = bodyTextValue,
@@ -2173,7 +2171,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                         startNodeOnly = false,
                         maybeExcludeLinkProperty = excludePropertyInternal,
                         outbound = outbound, // true to query outbound edges, false to query inbound edges
-                        limit = appConfig.v2.graphRoute.maxGraphBreadth
+                        limit = responderData.appConfig.v2.graphRoute.maxGraphBreadth
                       )
                       .toString()
                   )
@@ -2314,7 +2312,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                       maybeExcludeLinkProperty = excludePropertyInternal,
                       startNodeOnly = true,
                       outbound = true,
-                      limit = appConfig.v2.graphRoute.maxGraphBreadth
+                      limit = responderData.appConfig.v2.graphRoute.maxGraphBreadth
                     )
                     .toString()
                 )
@@ -2563,7 +2561,10 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                 }
 
                 val fileUrl: String =
-                  imageValueContent.makeFileUrl(projectADM = representation.projectADM, appConfig.sipi.externalBaseUrl)
+                  imageValueContent.makeFileUrl(
+                    projectADM = representation.projectADM,
+                    responderData.appConfig.sipi.externalBaseUrl
+                  )
 
                 JsonLDObject(
                   Map(
@@ -2604,7 +2605,7 @@ class ResourcesResponderV2(responderData: ResponderData, appConfig: AppConfig)
                                           Seq(
                                             JsonLDObject(
                                               Map(
-                                                "id"      -> JsonLDString(appConfig.sipi.externalBaseUrl),
+                                                "id"      -> JsonLDString(responderData.appConfig.sipi.externalBaseUrl),
                                                 "type"    -> JsonLDString("ImageService3"),
                                                 "profile" -> JsonLDString("level1")
                                               )

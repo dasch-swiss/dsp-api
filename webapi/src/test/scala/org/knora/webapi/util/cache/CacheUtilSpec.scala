@@ -5,11 +5,9 @@
 
 package org.knora.webapi.util.cache
 
-import akka.testkit.TestKit
-
-import org.knora.webapi.CoreSpec
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.CoreSpec
 
 class CacheUtilSpec extends CoreSpec {
 
@@ -23,14 +21,12 @@ class CacheUtilSpec extends CoreSpec {
       CacheUtil.createCaches(appConfig.cacheConfigs)
       CacheUtil.put(cacheName, sessionId, SharedTestDataV1.rootUser)
       CacheUtil.get(cacheName, sessionId) should be(Some(SharedTestDataV1.rootUser))
-      TestKit.shutdownActorSystem(system)
     }
 
     "return none if key is not found " in {
       CacheUtil.removeAllCaches()
       CacheUtil.createCaches(appConfig.cacheConfigs)
       CacheUtil.get(cacheName, 213.toString) should be(None)
-      TestKit.shutdownActorSystem(system)
     }
 
     "allow to delete a set value " in {
@@ -38,7 +34,6 @@ class CacheUtilSpec extends CoreSpec {
       CacheUtil.createCaches(appConfig.cacheConfigs)
       CacheUtil.remove(cacheName, sessionId)
       CacheUtil.get(cacheName, sessionId) should be(None)
-      TestKit.shutdownActorSystem(system)
     }
   }
 }
