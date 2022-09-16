@@ -172,10 +172,8 @@ object AppServer {
 
   /**
    * Initializes the AppServer instance with the required services
-   *
-   * @param test  If `true`, initiates the string formatter as test
    */
-  def init(test: Boolean = false): ZIO[AppServerEnvironment, Nothing, AppServer] =
+  def init(): ZIO[AppServerEnvironment, Nothing, AppServer] =
     for {
       state    <- ZIO.service[State]
       ts       <- ZIO.service[TriplestoreService]
@@ -207,7 +205,7 @@ object AppServer {
   val testWithSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
     ZLayer {
       for {
-        appServer <- AppServer.init(test = true)
+        appServer <- AppServer.init()
         _         <- appServer.start(requiresRepository = false, requiresIIIFService = true)
       } yield ()
     }
@@ -219,7 +217,7 @@ object AppServer {
   val testWithoutSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
     ZLayer {
       for {
-        appServer <- AppServer.init(test = true)
+        appServer <- AppServer.init()
         _         <- appServer.start(requiresRepository = false, requiresIIIFService = false)
       } yield ()
     }

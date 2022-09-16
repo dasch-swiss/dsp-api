@@ -5,9 +5,9 @@
 
 package org.knora.webapi.util.cache
 
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-import org.knora.webapi.CoreSpec
 
 class CacheUtilSpec extends CoreSpec {
 
