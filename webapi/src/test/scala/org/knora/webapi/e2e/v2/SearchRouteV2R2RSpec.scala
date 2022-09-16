@@ -52,13 +52,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val searchPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new SearchRouteV2(routeData, appConfig).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new SearchRouteV2(routeData).makeRoute)
   private val resourcePath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, appConfig).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData).makeRoute)
   private val standoffPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new StandoffRouteV2(routeData, appConfig).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new StandoffRouteV2(routeData).makeRoute)
   private val valuesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData, appConfig).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

@@ -12,7 +12,6 @@ import scala.language.postfixOps
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
@@ -28,9 +27,7 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides a spray-routing function for API routes that deal with search.
  */
-class SearchRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
-    with Authenticator {
+class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
    * The default number of rows to show in search results.
@@ -250,7 +247,7 @@ class SearchRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
       // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
       get { requestContext =>
         val requestMessage = for {
-          userADM                         <- getUserADM(requestContext, appConfig)
+          userADM                         <- getUserADM(requestContext, routeData.appConfig)
           params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         } yield makeExtendedSearchRequestMessage(userADM, params)
 
@@ -266,7 +263,7 @@ class SearchRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
         searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
           get { requestContext =>
             val requestMessage = for {
-              userADM                    <- getUserADM(requestContext, appConfig)
+              userADM                    <- getUserADM(requestContext, routeData.appConfig)
               params: Map[String, String] = requestContext.request.uri.query().toMap
             } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
 

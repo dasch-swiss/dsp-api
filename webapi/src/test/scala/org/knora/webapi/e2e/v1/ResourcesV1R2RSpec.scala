@@ -56,11 +56,11 @@ import org.knora.webapi.util.MutableTestIri
 class ResourcesV1R2RSpec extends R2RSpec {
 
   private val resourcesPathV1 =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV1(routeData, appConfig).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV1(routeData).makeRoute)
   private val resourcesPathV2 =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, appConfig).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData).makeRoute)
   private val valuesPathV1 =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData, appConfig).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
 
   private val superUser      = SharedTestDataADM.superUser
   private val superUserEmail = superUser.email

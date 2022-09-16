@@ -15,7 +15,6 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -30,9 +29,7 @@ import org.knora.webapi.routing.RouteUtilV2
 /**
  * Provides a routing function for API v2 routes that deal with values.
  */
-class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
-    with Authenticator {
+class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   val valuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
 
@@ -82,7 +79,7 @@ class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield ResourcesGetRequestV2(
           resourceIris = Seq(resourceIri.toString),
@@ -95,7 +92,7 @@ class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          appConfig = appConfig,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = targetSchema,
@@ -113,7 +110,7 @@ class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessageFuture: Future[CreateValueRequestV2] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
             requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
                                                       requestDoc,
@@ -127,7 +124,7 @@ class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -147,7 +144,7 @@ class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessageFuture: Future[UpdateValueRequestV2] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
             requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
                                                       requestDoc,
@@ -161,7 +158,7 @@ class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -181,7 +178,7 @@ class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessageFuture: Future[DeleteValueRequestV2] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
             requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
                                                       requestDoc,
@@ -195,7 +192,7 @@ class ValuesRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,

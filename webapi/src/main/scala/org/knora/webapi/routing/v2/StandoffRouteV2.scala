@@ -16,7 +16,6 @@ import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -32,9 +31,7 @@ import org.knora.webapi.routing.RouteUtilV2
 /**
  * Provides a function for API routes that deal with search.
  */
-class StandoffRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
-    with Authenticator {
+class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
    * Returns the route.
@@ -67,7 +64,7 @@ class StandoffRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
           } yield GetStandoffPageRequestV2(
             resourceIri = resourceIri.toString,
@@ -80,7 +77,7 @@ class StandoffRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -126,7 +123,7 @@ class StandoffRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessageFuture: Future[CreateMappingRequestV2] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
             allParts: Map[Name, String] <- allPartsFuture
             jsonldDoc =
@@ -164,7 +161,7 @@ class StandoffRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,

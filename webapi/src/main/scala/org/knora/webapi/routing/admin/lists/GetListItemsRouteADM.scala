@@ -13,7 +13,6 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -25,8 +24,8 @@ import org.knora.webapi.routing.RouteUtilADM
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-class GetListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
+class GetListItemsRouteADM(routeData: KnoraRouteData)
+    extends KnoraRoute(routeData)
     with Authenticator
     with ListADMJsonProtocol {
 
@@ -54,7 +53,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ListsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield ListsGetRequestADM(
           projectIri = projectIri,
@@ -82,7 +81,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       val requestMessage: Future[ListGetRequestADM] = for {
         requestingUser <- getUserADM(
                             requestContext = requestContext,
-                            appConfig
+                            routeData.appConfig
                           )
       } yield ListGetRequestADM(
         iri = listIri,
@@ -107,7 +106,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
         val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, appConfig)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
           requestingUser = requestingUser
@@ -133,7 +132,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
         val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, appConfig)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
           requestingUser = requestingUser

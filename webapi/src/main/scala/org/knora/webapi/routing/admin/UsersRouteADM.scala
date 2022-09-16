@@ -17,7 +17,6 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -29,9 +28,7 @@ import org.knora.webapi.routing.RouteUtilADM
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
  */
-class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
-    with Authenticator {
+class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
@@ -65,7 +62,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       val requestMessage: Future[UsersGetRequestADM] = for {
         requestingUser <- getUserADM(
                             requestContext = requestContext,
-                            appConfig
+                            routeData.appConfig
                           )
       } yield UsersGetRequestADM(
         requestingUser = requestingUser
@@ -114,7 +111,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
 
         val requestMessage: Future[UserCreateRequestADM] = for {
           payload        <- toFuture(validatedUserCreatePayload)
-          requestingUser <- getUserADM(requestContext, appConfig)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
         } yield UserCreateRequestADM(
           userCreatePayloadADM = payload,
           requestingUser = requestingUser,
@@ -139,7 +136,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       val requestMessage: Future[UserGetRequestADM] = for {
         requestingUser <- getUserADM(
                             requestContext = requestContext,
-                            appConfig
+                            routeData.appConfig
                           )
       } yield UserGetRequestADM(
         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
@@ -165,7 +162,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserGetRequestADM(
           identifier = UserIdentifierADM(maybeEmail = Some(userIri)),
@@ -191,7 +188,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserGetRequestADM(
           identifier = UserIdentifierADM(maybeUsername = Some(userIri)),
@@ -266,7 +263,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
           } yield UserChangeBasicInformationRequestADM(
             userIri = checkedUserIri,
@@ -317,7 +314,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
           } yield UserChangePasswordRequestADM(
             userIri = checkedUserIri,
@@ -364,7 +361,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
           } yield UserChangeStatusRequestADM(
             userIri = checkedUserIri,
@@ -407,7 +404,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       val requestMessage: Future[UserChangeStatusRequestADM] = for {
         requestingUser <- getUserADM(
                             requestContext = requestContext,
-                            appConfig
+                            routeData.appConfig
                           )
       } yield UserChangeStatusRequestADM(
         userIri = checkedUserIri,
@@ -453,7 +450,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
           } yield UserChangeSystemAdminMembershipStatusRequestADM(
             userIri = checkedUserIri,
@@ -486,7 +483,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserProjectMembershipsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserProjectMembershipsGetRequestADM(
           userIri = checkedUserIri,
@@ -530,7 +527,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserProjectMembershipAddRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserProjectMembershipAddRequestADM(
           userIri = checkedUserIri,
@@ -576,7 +573,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserProjectMembershipRemoveRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserProjectMembershipRemoveRequestADM(
           userIri = checkedUserIri,
@@ -608,7 +605,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserProjectAdminMembershipsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserProjectAdminMembershipsGetRequestADM(
           userIri = checkedUserIri,
@@ -653,7 +650,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserProjectAdminMembershipAddRequestADM(
           userIri = checkedUserIri,
@@ -699,7 +696,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserProjectAdminMembershipRemoveRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserProjectAdminMembershipRemoveRequestADM(
           userIri = checkedUserIri,
@@ -731,7 +728,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserGroupMembershipsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserGroupMembershipsGetRequestADM(
           userIri = checkedUserIri,
@@ -772,7 +769,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserGroupMembershipAddRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserGroupMembershipAddRequestADM(
           userIri = checkedUserIri,
@@ -815,7 +812,7 @@ class UsersRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[UserGroupMembershipRemoveRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield UserGroupMembershipRemoveRequestADM(
           userIri = checkedUserIri,

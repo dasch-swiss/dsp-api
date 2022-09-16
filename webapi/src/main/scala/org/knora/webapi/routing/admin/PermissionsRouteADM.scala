@@ -8,7 +8,6 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.admin.permissions._
@@ -16,11 +15,11 @@ import org.knora.webapi.routing.admin.permissions._
 /**
  * Provides an akka-http-routing function for API routes that deal with permissions.
  */
-class PermissionsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig) extends KnoraRoute(routeData, appConfig) {
-  private val createPermissionRoute: CreatePermissionRouteADM = new CreatePermissionRouteADM(routeData, appConfig)
-  private val getPermissionRoute: GetPermissionsRouteADM      = new GetPermissionsRouteADM(routeData, appConfig)
-  private val updatePermissionRoute: UpdatePermissionRouteADM = new UpdatePermissionRouteADM(routeData, appConfig)
-  private val deletePermissionRoute: DeletePermissionRouteADM = new DeletePermissionRouteADM(routeData, appConfig)
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
+  private val createPermissionRoute: CreatePermissionRouteADM = new CreatePermissionRouteADM(routeData)
+  private val getPermissionRoute: GetPermissionsRouteADM      = new GetPermissionsRouteADM(routeData)
+  private val updatePermissionRoute: UpdatePermissionRouteADM = new UpdatePermissionRouteADM(routeData)
+  private val deletePermissionRoute: DeletePermissionRouteADM = new DeletePermissionRouteADM(routeData)
 
   override def makeRoute: Route =
     createPermissionRoute.makeRoute ~

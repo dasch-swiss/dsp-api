@@ -12,7 +12,6 @@ import org.apache.commons.validator.routines.UrlValidator
 import java.util.UUID
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -22,9 +21,7 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides a spray-routing function for API routes that deal with lists.
  */
-class UsersRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
-    with Authenticator {
+class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   private val schemes = Array("http", "https")
   new UrlValidator(schemes)
@@ -39,7 +36,7 @@ class UsersRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
         /* return all users */
         requestContext =>
           val requestMessage = for {
-            userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+            userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
           } yield UsersGetRequestV1(userProfile)
 
           RouteUtilV1.runJsonRouteWithFuture(
@@ -57,7 +54,7 @@ class UsersRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
             /* check if email or iri was supplied */
             val requestMessage = if (identifier == "email") {
               for {
-                userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+                userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
               } yield UserProfileByEmailGetRequestV1(
                 email = value,
                 userProfileType = UserProfileTypeV1.RESTRICTED,
@@ -65,7 +62,7 @@ class UsersRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
               )
             } else {
               for {
-                userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+                userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
                 userIri = stringFormatter.validateAndEscapeIri(
                             value,
                             throw BadRequestException(s"Invalid user IRI $value")
@@ -91,7 +88,7 @@ class UsersRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
           /* get user's project memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")
@@ -115,7 +112,7 @@ class UsersRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
           /* get user's project admin memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")
@@ -139,7 +136,7 @@ class UsersRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
           /* get user's group memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")

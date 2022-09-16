@@ -18,7 +18,6 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
@@ -32,8 +31,8 @@ import org.knora.webapi.routing.RouteUtilADM
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-class CreateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
+class CreateListItemsRouteADM(routeData: KnoraRouteData)
+    extends KnoraRoute(routeData)
     with Authenticator
     with ListADMJsonProtocol {
 
@@ -62,7 +61,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
 
         val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedListRootNodeCreatePayload)
-          requestingUser <- getUserADM(requestContext, appConfig)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
 
           // check if the requesting user is allowed to perform operation
           _ =
@@ -116,7 +115,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
 
         val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedCreateChildNodePeyload)
-          requestingUser <- getUserADM(requestContext, appConfig)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
 
           // check if the requesting user is allowed to perform operation
           _ =

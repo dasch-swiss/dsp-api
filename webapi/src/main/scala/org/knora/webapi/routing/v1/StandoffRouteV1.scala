@@ -16,7 +16,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.Authenticator
@@ -27,9 +26,7 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * A route used to convert XML to standoff.
  */
-class StandoffRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
-    with Authenticator {
+class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
    * Returns the route.
@@ -70,7 +67,7 @@ class StandoffRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
 
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-            userProfile <- getUserADM(requestContext, appConfig)
+            userProfile <- getUserADM(requestContext, routeData.appConfig)
 
             allParts: Map[Name, String] <- allPartsFuture
 

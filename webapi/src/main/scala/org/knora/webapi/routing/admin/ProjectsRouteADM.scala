@@ -29,14 +29,13 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import org.knora.webapi.IRI
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
+class ProjectsRouteADM(routeData: KnoraRouteData)
+    extends KnoraRoute(routeData)
     with Authenticator
     with ProjectsADMJsonProtocol {
 
@@ -73,7 +72,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       val requestMessage: Future[ProjectsGetRequestADM] = for {
         requestingUser <- getUserADM(
                             requestContext = requestContext,
-                            appConfig
+                            routeData.appConfig
                           )
       } yield ProjectsGetRequestADM(
         requestingUser = requestingUser
@@ -109,7 +108,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
 
         val requestMessage: Future[ProjectCreateRequestADM] = for {
           projectCreatePayload <- toFuture(projectCreatePayload)
-          requestingUser       <- getUserADM(requestContext, appConfig)
+          requestingUser       <- getUserADM(requestContext, routeData.appConfig)
         } yield ProjectCreateRequestADM(
           createRequest = projectCreatePayload,
           requestingUser = requestingUser,
@@ -132,7 +131,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
       val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
         requestingUser <- getUserADM(
                             requestContext = requestContext,
-                            appConfig
+                            routeData.appConfig
                           )
       } yield ProjectsKeywordsGetRequestADM(
         requestingUser = requestingUser
@@ -157,7 +156,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectKeywordsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield ProjectKeywordsGetRequestADM(
           projectIri = checkedProjectIri,
@@ -182,7 +181,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           checkedProjectIri =
             stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
@@ -210,7 +209,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           shortNameDec = stringFormatter.validateAndEscapeProjectShortname(
                            value,
@@ -240,7 +239,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(
                                value,
@@ -276,7 +275,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessage: Future[ProjectChangeRequestADM] = for {
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
-                                appConfig
+                                routeData.appConfig
                               )
           } yield ProjectChangeRequestADM(
             projectIri = checkedProjectIri,
@@ -307,7 +306,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectChangeRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield ProjectChangeRequestADM(
           projectIri = checkedProjectIri,
@@ -334,7 +333,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           checkedProjectIri =
             stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
@@ -362,7 +361,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           shortNameDec = stringFormatter.validateAndEscapeProjectShortname(
                            value,
@@ -392,7 +391,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(
                                value,
@@ -422,7 +421,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           checkedProjectIri =
             stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
@@ -450,7 +449,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           checkedShortname = stringFormatter.validateAndEscapeProjectShortname(
                                value,
@@ -480,7 +479,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           checkedShortcode = stringFormatter.validateProjectShortcode(
                                value,
@@ -510,7 +509,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
 
         } yield ProjectRestrictedViewSettingsGetRequestADM(
@@ -536,7 +535,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
           shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
 
@@ -563,7 +562,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
-                              appConfig
+                              routeData.appConfig
                             )
         } yield ProjectRestrictedViewSettingsGetRequestADM(
           identifier = ProjectIdentifierADM(maybeShortcode = Some(value)),
@@ -602,7 +601,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     val httpEntityFuture: Future[HttpEntity.Chunked] = for {
       requestingUser <- getUserADM(
                           requestContext = requestContext,
-                          appConfig
+                          routeData.appConfig
                         )
 
       requestMessage = ProjectDataGetRequestADM(

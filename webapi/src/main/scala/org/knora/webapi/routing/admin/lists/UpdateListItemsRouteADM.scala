@@ -18,7 +18,6 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -30,8 +29,8 @@ import org.knora.webapi.routing.RouteUtilADM
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
+class UpdateListItemsRouteADM(routeData: KnoraRouteData)
+    extends KnoraRoute(routeData)
     with Authenticator
     with ListADMJsonProtocol {
 
@@ -58,7 +57,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
             NodeNameChangePayloadADM(ListName.make(apiRequest.name).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeNameChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, appConfig)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield NodeNameChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeNameRequest = namePayload,
@@ -90,7 +89,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
             NodeLabelsChangePayloadADM(Labels.make(apiRequest.labels).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeLabelsChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, appConfig)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield NodeLabelsChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeLabelsRequest = labelsPayload,
@@ -122,7 +121,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
             NodeCommentsChangePayloadADM(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, appConfig)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield NodeCommentsChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeCommentsRequest = commentsPayload,
@@ -151,7 +150,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
           val requestMessage: Future[NodePositionChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, appConfig)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield NodePositionChangeRequestADM(
             nodeIri = nodeIri,
             changeNodePositionRequest = apiRequest,
@@ -198,7 +197,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           payload        <- toFuture(validatedChangeNodeInfoPayload)
-          requestingUser <- getUserADM(requestContext, appConfig)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
           // check if the requesting user is allowed to perform operation
           _ = if (
                 !requestingUser.permissions.isProjectAdmin(

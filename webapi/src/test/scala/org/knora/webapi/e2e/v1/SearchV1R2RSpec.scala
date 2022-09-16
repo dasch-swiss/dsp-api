@@ -24,7 +24,7 @@ import org.knora.webapi.routing.v1.SearchRouteV1
  */
 class SearchV1R2RSpec extends R2RSpec {
 
-  private val searchPath = new SearchRouteV1(routeData, appConfig).makeRoute
+  private val searchPath = new SearchRouteV1(routeData).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

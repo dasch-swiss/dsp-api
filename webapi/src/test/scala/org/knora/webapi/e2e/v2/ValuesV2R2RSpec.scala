@@ -37,8 +37,8 @@ class ValuesV2R2RSpec extends R2RSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val valuesPath = new ValuesRouteV2(routeData, appConfig).makeRoute
-  private val searchPath = new SearchRouteV2(routeData, appConfig).makeRoute
+  private val valuesPath = new ValuesRouteV2(routeData).makeRoute
+  private val searchPath = new SearchRouteV2(routeData).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

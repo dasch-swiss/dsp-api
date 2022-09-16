@@ -13,7 +13,6 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -28,9 +27,7 @@ import org.knora.webapi.routing.RouteUtilV2
 /**
  * Provides a function for API routes that deal with search.
  */
-class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
-    with Authenticator {
+class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"
   private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
@@ -172,9 +169,9 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
               throw BadRequestException(s"Invalid search string: '$searchStr'")
             )
 
-          if (escapedSearchStr.length < appConfig.v2.fulltextSearch.searchValueMinLength) {
+          if (escapedSearchStr.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
             throw BadRequestException(
-              s"A search value is expected to have at least length of ${appConfig.v2.fulltextSearch.searchValueMinLength}, but '$escapedSearchStr' given of length ${escapedSearchStr.length}."
+              s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$escapedSearchStr' given of length ${escapedSearchStr.length}."
             )
           }
 
@@ -187,7 +184,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
           val requestMessage: Future[FullTextSearchCountRequestV2] = for {
-            requestingUser <- getUserADM(requestContext, appConfig)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield FullTextSearchCountRequestV2(
             searchValue = escapedSearchStr,
             limitToProject = limitToProject,
@@ -199,7 +196,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = RouteUtilV2.getOntologySchema(requestContext),
@@ -223,9 +220,9 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
             throw BadRequestException(s"Invalid search string: '$searchStr'")
           )
 
-        if (escapedSearchStr.length < appConfig.v2.fulltextSearch.searchValueMinLength) {
+        if (escapedSearchStr.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
           throw BadRequestException(
-            s"A search value is expected to have at least length of ${appConfig.v2.fulltextSearch.searchValueMinLength}, but '$escapedSearchStr' given of length ${escapedSearchStr.length}."
+            s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$escapedSearchStr' given of length ${escapedSearchStr.length}."
           )
         }
 
@@ -248,7 +245,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
         val requestMessage: Future[FulltextSearchRequestV2] = for {
-          requestingUser <- getUserADM(requestContext, appConfig)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
         } yield FulltextSearchRequestV2(
           searchValue = escapedSearchStr,
           offset = offset,
@@ -264,7 +261,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          appConfig = appConfig,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = targetSchema,
@@ -280,7 +277,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
 
           val requestMessage: Future[GravsearchCountRequestV2] = for {
-            requestingUser <- getUserADM(requestContext, appConfig)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield GravsearchCountRequestV2(
             constructQuery = constructQuery,
             requestingUser = requestingUser
@@ -289,7 +286,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = RouteUtilV2.getOntologySchema(requestContext),
@@ -305,7 +302,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           {
             val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
             val requestMessage: Future[GravsearchCountRequestV2] = for {
-              requestingUser <- getUserADM(requestContext, appConfig)
+              requestingUser <- getUserADM(requestContext, routeData.appConfig)
             } yield GravsearchCountRequestV2(
               constructQuery = constructQuery,
               requestingUser = requestingUser
@@ -314,7 +311,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessage,
               requestContext = requestContext,
-              appConfig = appConfig,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = RouteUtilV2.getOntologySchema(requestContext),
@@ -334,7 +331,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
       val requestMessage: Future[GravsearchRequestV2] = for {
-        requestingUser <- getUserADM(requestContext, appConfig)
+        requestingUser <- getUserADM(requestContext, routeData.appConfig)
       } yield GravsearchRequestV2(
         constructQuery = constructQuery,
         targetSchema = targetSchema,
@@ -345,7 +342,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
       RouteUtilV2.runRdfRouteWithFuture(
         requestMessageF = requestMessage,
         requestContext = requestContext,
-        appConfig = appConfig,
+        appConfig = routeData.appConfig,
         appActor = appActor,
         log = log,
         targetSchema = targetSchema,
@@ -363,7 +360,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
           val requestMessage: Future[GravsearchRequestV2] = for {
-            requestingUser <- getUserADM(requestContext, appConfig)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield GravsearchRequestV2(
             constructQuery = constructQuery,
             targetSchema = targetSchema,
@@ -374,7 +371,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = targetSchema,
@@ -395,9 +392,9 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
               throw BadRequestException(s"Invalid search string: '$searchval'")
             )
 
-          if (searchString.length < appConfig.v2.fulltextSearch.searchValueMinLength) {
+          if (searchString.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
             throw BadRequestException(
-              s"A search value is expected to have at least length of ${appConfig.v2.fulltextSearch.searchValueMinLength}, but '$searchString' given of length ${searchString.length}."
+              s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$searchString' given of length ${searchString.length}."
             )
           }
 
@@ -408,7 +405,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
           val requestMessage: Future[SearchResourceByLabelCountRequestV2] = for {
-            requestingUser <- getUserADM(requestContext, appConfig)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield SearchResourceByLabelCountRequestV2(
             searchValue = searchString,
             limitToProject = limitToProject,
@@ -419,7 +416,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            appConfig = appConfig,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = RouteUtilV2.getOntologySchema(requestContext),
@@ -438,9 +435,9 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
           throw BadRequestException(s"Invalid search string: '$searchval'")
         )
 
-      if (searchString.length < appConfig.v2.fulltextSearch.searchValueMinLength) {
+      if (searchString.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
         throw BadRequestException(
-          s"A search value is expected to have at least length of ${appConfig.v2.fulltextSearch.searchValueMinLength}, but '$searchString' given of length ${searchString.length}."
+          s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$searchString' given of length ${searchString.length}."
         )
       }
 
@@ -455,7 +452,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
       val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
       val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
-        requestingUser <- getUserADM(requestContext, appConfig)
+        requestingUser <- getUserADM(requestContext, routeData.appConfig)
       } yield SearchResourceByLabelRequestV2(
         searchValue = searchString,
         offset = offset,
@@ -468,7 +465,7 @@ class SearchRouteV2(routeData: KnoraRouteData, appConfig: AppConfig)
       RouteUtilV2.runRdfRouteWithFuture(
         requestMessageF = requestMessage,
         requestContext = requestContext,
-        appConfig = appConfig,
+        appConfig = routeData.appConfig,
         appActor = appActor,
         log = log,
         targetSchema = RouteUtilV2.getOntologySchema(requestContext),

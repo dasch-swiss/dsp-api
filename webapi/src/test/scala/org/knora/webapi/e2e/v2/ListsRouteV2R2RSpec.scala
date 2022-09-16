@@ -31,7 +31,7 @@ import org.knora.webapi.util.FileUtil
  */
 class ListsRouteV2R2RSpec extends R2RSpec {
 
-  private val listsPath = new ListsRouteV2(routeData, appConfig).makeRoute
+  private val listsPath = new ListsRouteV2(routeData).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

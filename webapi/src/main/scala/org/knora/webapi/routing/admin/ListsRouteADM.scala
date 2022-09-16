@@ -8,7 +8,6 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.admin.lists._
@@ -16,11 +15,11 @@ import org.knora.webapi.routing.admin.lists._
 /**
  * Provides an akka-http-routing function for API routes that deal with lists.
  */
-class ListsRouteADM(routeData: KnoraRouteData, appConfig: AppConfig) extends KnoraRoute(routeData, appConfig) {
-  private val getNodeRoute: GetListItemsRouteADM       = new GetListItemsRouteADM(routeData, appConfig)
-  private val createNodeRoute: CreateListItemsRouteADM = new CreateListItemsRouteADM(routeData, appConfig)
-  private val deleteNodeRoute: DeleteListItemsRouteADM = new DeleteListItemsRouteADM(routeData, appConfig)
-  private val updateNodeRoute: UpdateListItemsRouteADM = new UpdateListItemsRouteADM(routeData, appConfig)
+class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
+  private val getNodeRoute: GetListItemsRouteADM       = new GetListItemsRouteADM(routeData)
+  private val createNodeRoute: CreateListItemsRouteADM = new CreateListItemsRouteADM(routeData)
+  private val deleteNodeRoute: DeleteListItemsRouteADM = new DeleteListItemsRouteADM(routeData)
+  private val updateNodeRoute: UpdateListItemsRouteADM = new UpdateListItemsRouteADM(routeData)
 
   override def makeRoute: Route =
     getNodeRoute.makeRoute ~

@@ -27,22 +27,23 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 /**
- * Data needed to be passed to each route.
+ * Data that needs to be passed to each route.
  *
- * @param system   the actor system.
- * @param appActor the main application actor.
+ * @param system      the actor system.
+ * @param appActor    the main application actor.
+ * @param appConfig   the application's configuration.
  */
 case class KnoraRouteData(system: akka.actor.ActorSystem, appActor: akka.actor.ActorRef, appConfig: AppConfig)
 
 /**
  * An abstract class providing functionality that is commonly used in implementing Knora routes.
  *
- * @param routeData a [[KnoraRouteData]] providing access to the application.
+ * @param routeData   a [[KnoraRouteData]] providing access to the application.
  */
-abstract class KnoraRoute(routeData: KnoraRouteData, appConfig: AppConfig) {
+abstract class KnoraRoute(routeData: KnoraRouteData) {
 
   implicit protected val system: ActorSystem                = routeData.system
-  implicit protected val timeout: Timeout                   = appConfig.defaultTimeoutAsDuration
+  implicit protected val timeout: Timeout                   = routeData.appConfig.defaultTimeoutAsDuration
   implicit protected val executionContext: ExecutionContext = system.dispatcher
   implicit protected val stringFormatter: StringFormatter   = StringFormatter.getGeneralInstance
   implicit protected val appActor: ActorRef                 = routeData.appActor

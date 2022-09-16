@@ -15,7 +15,6 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 
@@ -28,7 +27,7 @@ import org.knora.webapi.core.domain.AppState
  *
  * TODO: This should probably be refactored into a ZIO-HTTP middleware, when the transistion to ZIO-HTTP is done.
  */
-class RejectingRoute(system: akka.actor.ActorSystem, runtime: Runtime[State], appConfig: AppConfig) { self =>
+class RejectingRoute(routeData: KnoraRouteData, runtime: Runtime[State]) { self =>
 
   val log: Logger = Logger(this.getClass)
 
@@ -52,7 +51,7 @@ class RejectingRoute(system: akka.actor.ActorSystem, runtime: Runtime[State], ap
   def makeRoute: Route =
     path(Remaining) { wholePath =>
       // check to see if route is on the rejection list
-      val rejectSeq: Seq[Option[Boolean]] = appConfig.routesToReject.map { pathToReject: String =>
+      val rejectSeq: Seq[Option[Boolean]] = routeData.appConfig.routesToReject.map { pathToReject: String =>
         if (wholePath.contains(pathToReject.toCharArray)) {
           Some(true)
         } else {

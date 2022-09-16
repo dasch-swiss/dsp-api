@@ -11,14 +11,13 @@ import akka.http.scaladsl.server.Route
 
 import java.util.UUID
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-class DeletePermissionRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
+class DeletePermissionRouteADM(routeData: KnoraRouteData)
+    extends KnoraRoute(routeData)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
@@ -37,7 +36,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData, appConfig: AppConfig)
     path(permissionsBasePath / Segment) { iri =>
       delete { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext, appConfig)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
         } yield PermissionDeleteRequestADM(
           permissionIri = iri,
           requestingUser = requestingUser,

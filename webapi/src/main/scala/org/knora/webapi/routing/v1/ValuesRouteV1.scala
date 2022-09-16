@@ -18,7 +18,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
@@ -37,9 +36,7 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides an Akka routing function for API routes that deal with values.
  */
-class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
-    with Authenticator {
+class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
    * Returns the route.
@@ -613,7 +610,7 @@ class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage = for {
           userADM <- getUserADM(
                        requestContext = requestContext,
-                       appConfig
+                       routeData.appConfig
                      )
         } yield makeVersionHistoryRequestMessage(iris = iris, userADM = userADM)
 
@@ -630,7 +627,7 @@ class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessageFuture = for {
             userADM <- getUserADM(
                          requestContext = requestContext,
-                         appConfig
+                         routeData.appConfig
                        )
             request <- makeCreateValueRequestMessage(apiRequest = apiRequest, userADM = userADM)
           } yield request
@@ -648,7 +645,7 @@ class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage = for {
           userADM <- getUserADM(
                        requestContext = requestContext,
-                       appConfig
+                       routeData.appConfig
                      )
         } yield makeGetValueRequest(valueIriStr = valueIriStr, userADM = userADM)
 
@@ -665,7 +662,7 @@ class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessageFuture = for {
             userADM <- getUserADM(
                          requestContext = requestContext,
-                         appConfig
+                         routeData.appConfig
                        )
             request <- apiRequest match {
                          case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
@@ -696,7 +693,7 @@ class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage = for {
           userADM <- getUserADM(
                        requestContext = requestContext,
-                       appConfig
+                       routeData.appConfig
                      )
           params        = requestContext.request.uri.query().toMap
           deleteComment = params.get("deleteComment")
@@ -714,7 +711,7 @@ class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage = for {
           userADM <- getUserADM(
                        requestContext = requestContext,
-                       appConfig
+                       routeData.appConfig
                      )
         } yield makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userADM = userADM)
 
@@ -731,7 +728,7 @@ class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
         val requestMessage = for {
           userADM <- getUserADM(
                        requestContext = requestContext,
-                       appConfig
+                       routeData.appConfig
                      )
         } yield makeLinkValueGetRequestMessage(iris = iris, userADM = userADM)
 
@@ -748,7 +745,7 @@ class ValuesRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessage = for {
             userADM <- getUserADM(
                          requestContext = requestContext,
-                         appConfig
+                         routeData.appConfig
                        )
             resourceIri = stringFormatter.validateAndEscapeIri(
                             resIriStr,

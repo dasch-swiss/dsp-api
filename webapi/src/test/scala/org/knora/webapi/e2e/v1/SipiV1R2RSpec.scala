@@ -31,8 +31,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
  */
 class SipiV1R2RSpec extends R2RSpec {
 
-  private val resourcesPath = new ResourcesRouteV1(routeData, appConfig).makeRoute
-  private val valuesPath    = new ValuesRouteV1(routeData, appConfig).makeRoute
+  private val resourcesPath = new ResourcesRouteV1(routeData).makeRoute
+  private val valuesPath    = new ValuesRouteV1(routeData).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

@@ -9,15 +9,14 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
 
-class ProjectsRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
-    extends KnoraRoute(routeData, appConfig)
+class ProjectsRouteV1(routeData: KnoraRouteData)
+    extends KnoraRoute(routeData)
     with Authenticator
     with ProjectV1JsonProtocol {
 
@@ -30,7 +29,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
         /* returns all projects */
         requestContext =>
           val requestMessage = for {
-            userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+            userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
           } yield ProjectsGetRequestV1(
             userProfile = Some(userProfile)
           )
@@ -49,7 +48,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
           val requestMessage = if (identifier != "iri") { // identify project by shortname.
             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
             for {
-              userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
             } yield ProjectInfoByShortnameGetRequestV1(
               shortname = shortNameDec,
               userProfileV1 = Some(userProfile)
@@ -58,7 +57,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData, appConfig: AppConfig)
             val checkedProjectIri =
               stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
             for {
-              userProfile <- getUserADM(requestContext, appConfig).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
             } yield ProjectInfoByIRIGetRequestV1(
               iri = checkedProjectIri,
               userProfileV1 = Some(userProfile)
