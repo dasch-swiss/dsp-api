@@ -698,7 +698,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       values.foreach { value =>
         value.valueContent match {
           case fileValueContent: StillImageFileValueContentV2 => {
-            println("StillImageFileValueContentV2")
             if (!routeData.appConfig.sipi.imageMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
@@ -714,7 +713,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             }
           }
           case fileValueContent: TextFileValueContentV2 => {
-            println("TextFileValueContentV2")
             if (!routeData.appConfig.sipi.textMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
