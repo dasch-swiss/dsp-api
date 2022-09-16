@@ -12,8 +12,6 @@ import akka.util.Timeout
 import zio._
 import zio.macros.accessible
 
-import scala.concurrent.ExecutionContext
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.KnoraSystemInstances

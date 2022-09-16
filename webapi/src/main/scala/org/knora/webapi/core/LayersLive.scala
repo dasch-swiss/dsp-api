@@ -44,7 +44,7 @@ object LayersLive {
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
       ApiRoutes.layer,
-      AppConfig.layer,
+      AppConfig.live,
       AppRouter.layer,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,

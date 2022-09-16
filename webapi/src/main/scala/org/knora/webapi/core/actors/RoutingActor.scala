@@ -7,7 +7,6 @@ package org.knora.webapi.core.actors
 
 import akka.actor.Actor
 import akka.actor.ActorSystem
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 
 import scala.concurrent.ExecutionContext

@@ -13,6 +13,8 @@ import scala.util.Success
 import scala.util.Try
 
 import dsp.errors.FileWriteException
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.util.cache.CacheUtil
 
 import typesafe._
@@ -254,11 +256,25 @@ object AppConfig {
   /**
    * Application configuration from application.conf
    */
-  val layer: ZLayer[Any, Nothing, AppConfig] =
+  val live: ZLayer[Any, Nothing, AppConfig] =
     ZLayer {
       for {
         c <- configFromSource.orDie
+        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
+        _ <- ZIO.attempt(StringFormatter.init(c)).orDie   // needs early init before first usage
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Live Initialized <<<"))
+
+  /**
+   * Application configuration from test.conf for testing
+   */
+  val test: ZLayer[Any, Nothing, AppConfig] =
+    ZLayer {
+      for {
+        c <- configFromSource.orDie
+        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie     // needs early init before first usage
+        _ <- ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
+      } yield c
+    }.tap(_ => ZIO.logInfo(">>> AppConfig Test Initialized <<<"))
 
 }

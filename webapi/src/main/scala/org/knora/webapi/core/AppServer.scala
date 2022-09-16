@@ -9,12 +9,10 @@ import zio._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.domain.AppState
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -179,18 +177,15 @@ object AppServer {
    */
   def init(test: Boolean = false): ZIO[AppServerEnvironment, Nothing, AppServer] =
     for {
-      state <- ZIO.service[State]
-      ts    <- ZIO.service[TriplestoreService]
-      ru    <- ZIO.service[RepositoryUpdater]
-      as    <- ZIO.service[ActorSystem]
-      ar    <- ZIO.service[AppRouter]
-      iiifs <- ZIO.service[IIIFService]
-      cs    <- ZIO.service[CacheService]
-      hs    <- ZIO.service[HttpServer]
-      c     <- ZIO.service[AppConfig]
-      _     <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
-      _ = if (test) ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
-          else ZIO.attempt(StringFormatter.init(c)).orDie
+      state    <- ZIO.service[State]
+      ts       <- ZIO.service[TriplestoreService]
+      ru       <- ZIO.service[RepositoryUpdater]
+      as       <- ZIO.service[ActorSystem]
+      ar       <- ZIO.service[AppRouter]
+      iiifs    <- ZIO.service[IIIFService]
+      cs       <- ZIO.service[CacheService]
+      hs       <- ZIO.service[HttpServer]
+      c        <- ZIO.service[AppConfig]
       appServer = AppServer(state, ts, ru, as, ar, iiifs, cs, hs, c)
     } yield appServer
 
