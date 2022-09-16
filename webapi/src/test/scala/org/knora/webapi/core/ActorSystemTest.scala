@@ -15,11 +15,10 @@ object ActorSystemTest {
   def layer(sys: akka.actor.ActorSystem): ZLayer[AppConfig, Nothing, ActorSystem] =
     ZLayer.scoped {
       for {
-        config  <- ZIO.service[AppConfig]
-        context <- ZIO.executor.map(_.asExecutionContext)
+        appConfig <- ZIO.service[AppConfig]
+        context   <- ZIO.executor.map(_.asExecutionContext)
       } yield new ActorSystem {
         override val system: akka.actor.ActorSystem             = sys
-        override val appConfig                                  = config
         override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(appConfig)
       }
     }

@@ -17,7 +17,6 @@ import org.knora.webapi.store.cache.settings.CacheServiceSettings
 @accessible
 trait ActorSystem {
   val system: akka.actor.ActorSystem
-  val appConfig: AppConfig
   val cacheServiceSettings: CacheServiceSettings
 }
 
@@ -50,8 +49,7 @@ object ActorSystem {
         actorSystem <- ZIO.acquireRelease(acquire(context))(release _)
       } yield new ActorSystem {
         override val system: akka.actor.ActorSystem             = actorSystem
-        override val appConfig                                  = config
-        override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(appConfig)
+        override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(config)
       }
     }
 }
