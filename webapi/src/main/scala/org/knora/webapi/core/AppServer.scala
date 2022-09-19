@@ -152,7 +152,7 @@ final case class AppServer(
       _ <- checkCacheService
       _ <- ZIO.logInfo("=> Startup checks finished")
       _ <- ZIO.logInfo(s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}")
-      _  = if (appConfig.allowReloadOverHttp) ZIO.logWarning("Resetting DB over HTTP is turned ON")
+      _ <- if (appConfig.allowReloadOverHttp) ZIO.logWarning("Resetting DB over HTTP is turned ON") else ZIO.succeed(())
       _ <- state.set(AppState.Running)
     } yield ()
 }

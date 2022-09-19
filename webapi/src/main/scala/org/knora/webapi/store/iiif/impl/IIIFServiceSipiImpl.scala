@@ -334,8 +334,6 @@ object IIIFServiceSipiImpl {
       for {
         config     <- ZIO.service[AppConfig]
         jwtService <- ZIO.service[JWTService]
-        // HINT: Scope does not work when used together with unsafeRun to
-        // bridge over to Akka. TODO Need to change this as soon as Akka is removed
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }
