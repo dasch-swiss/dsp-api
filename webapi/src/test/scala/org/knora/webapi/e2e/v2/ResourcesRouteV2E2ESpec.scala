@@ -25,6 +25,7 @@ import spray.json.JsonParser
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -47,7 +48,6 @@ import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import scala.collection.mutable.ArrayBuffer
 
 /**
  * Tests the API v2 resources route.
