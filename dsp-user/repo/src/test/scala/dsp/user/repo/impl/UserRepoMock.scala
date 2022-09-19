@@ -91,7 +91,7 @@ final case class UserRepoMock(
     (for {
       usernameExists <- lookupTableUsernameToUuid.contains(username).commit
       _ <- usernameExists match {
-             case false => ZIO.succeed(()) // username does not exist
+             case false => ZIO.unit // username does not exist
              case true  => ZIO.fail(None)  // username does exist
            }
     } yield ()).tap(_ => ZIO.logInfo(s"Username '${username.value}' was checked"))
@@ -103,7 +103,7 @@ final case class UserRepoMock(
     (for {
       emailExists <- lookupTableEmailToUuid.contains(email).commit
       _ <- emailExists match {
-             case false => ZIO.succeed(()) // email does not exist
+             case false => ZIO.unit // email does not exist
              case true  => ZIO.fail(None)  // email does exist
            }
     } yield ()).tap(_ => ZIO.logInfo(s"Email '${email.value}' was checked"))
