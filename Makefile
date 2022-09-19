@@ -102,7 +102,7 @@ stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack usin
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
-stack-restart: stack-up ## re-starts the knora-stack: fuseki, sipi, api.
+stack-restart: ## re-starts the knora-stack: fuseki, sipi, api.
 	@docker compose -f docker-compose.yml down
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
@@ -348,11 +348,11 @@ clean-sipi-projects: ## deletes all files uploaded within a project
 	@rm -rf sipi/images/originals/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
 
 .PHONY: check
-check: # Run code formating check 
+check: ## Run code formating check 
 	@sbt "check"
 
 .PHONY: fmt
-fmt: # Run code formating fix
+fmt: ## Run code formating fix
 	@sbt "fmt"
 
 
