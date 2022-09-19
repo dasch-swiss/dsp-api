@@ -86,7 +86,7 @@ env-file: ## write the env file used by knora-stack.
 #################################
 
 .PHONY: stack-up
-stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, api.
+stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, api.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	@docker compose -f docker-compose.yml up -d
@@ -98,12 +98,16 @@ stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack b
 
 .PHONY: stack-up-ci
 stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
-stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: fuseki, sipi, redis, api.
+stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: fuseki, sipi, api.
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
-stack-restart: stack-up ## re-starts the knora-stack: fuseki, sipi, redis, api.
-	@docker compose -f docker-compose.yml restart
+stack-restart: stack-up ## re-starts the knora-stack: fuseki, sipi, api.
+	@docker compose -f docker-compose.yml down
+	@docker compose -f docker-compose.yml up -d db
+	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+	@docker compose -f docker-compose.yml up -d
+	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
 
 .PHONY: stack-restart-api
 stack-restart-api: ## re-starts the api. Usually used after loading data into fuseki.
@@ -129,10 +133,6 @@ stack-logs-sipi: ## prints out and follows the logs of the 'sipi' container runn
 .PHONY: stack-logs-sipi-no-follow
 stack-logs-sipi-no-follow: ## prints out the logs of the 'sipi' container running in knora-stack.
 	@docker compose -f docker-compose.yml logs sipi
-
-.PHONY: stack-logs-redis
-stack-logs-redis: ## prints out and follows the logs of the 'redis' container running in knora-stack.
-	@docker compose -f docker-compose.yml logs -f redis
 
 .PHONY: stack-logs-api
 stack-logs-api: ## prints out and follows the logs of the 'api' container running in knora-stack.
@@ -164,11 +164,11 @@ stack-config: env-file
 
 ## stack without api
 .PHONY: stack-without-api
-stack-without-api: stack-up ## starts the knora-stack without knora-api: fuseki, sipi, redis.
+stack-without-api: stack-up ## starts the knora-stack without knora-api: fuseki and sipi only.
 	@docker compose -f docker-compose.yml stop api
 
 .PHONY: stack-without-api-and-sipi
-stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: fuseki, redis.
+stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: fuseki only.
 	@docker compose -f docker-compose.yml stop api
 	@docker compose -f docker-compose.yml stop sipi
 

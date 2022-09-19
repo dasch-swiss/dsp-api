@@ -41,12 +41,12 @@ import org.knora.webapi.util.SipiUtil
 /**
  * Makes requests to Sipi.
  *
- * @param config      The application's configuration
+ * @param appConfig   The application's configuration
  * @param jwt         The JWT Service to handle JWT Tokens
  * @param httpClient  The HTTP Client
  */
 case class IIIFServiceSipiImpl(
-  config: AppConfig,
+  appConfig: AppConfig,
   jwt: JWTService,
   httpClient: CloseableHttpClient
 ) extends IIIFService {
@@ -61,7 +61,7 @@ case class IIIFServiceSipiImpl(
     import SipiKnoraJsonResponseProtocol._
 
     for {
-      url             <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
+      url             <- ZIO.succeed(appConfig.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
       request         <- ZIO.succeed(new HttpGet(url))
       sipiResponseStr <- doSipiRequest(request).orDie
       sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]).orDie
@@ -103,7 +103,7 @@ case class IIIFServiceSipiImpl(
 
     // builds the url for the operation
     def moveFileUrl(token: String) =
-      ZIO.succeed(s"${config.sipi.internalBaseUrl}/${config.sipi.moveFileRoute}?token=$token")
+      ZIO.succeed(s"${appConfig.sipi.internalBaseUrl}/${appConfig.sipi.moveFileRoute}?token=$token")
 
     // build the form to send together with the request
     val formParams = new util.ArrayList[NameValuePair]()
@@ -149,7 +149,7 @@ case class IIIFServiceSipiImpl(
 
     def deleteUrl(token: String): ZIO[Any, Nothing, String] =
       ZIO.succeed(
-        s"${config.sipi.internalBaseUrl}/${config.sipi.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
+        s"${appConfig.sipi.internalBaseUrl}/${appConfig.sipi.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
       )
 
     for {
@@ -213,7 +213,7 @@ case class IIIFServiceSipiImpl(
    */
   def getStatus(): UIO[IIIFServiceStatusResponse] =
     for {
-      request  <- ZIO.succeed(new HttpGet(config.sipi.internalBaseUrl + "/server/test.html"))
+      request  <- ZIO.succeed(new HttpGet(appConfig.sipi.internalBaseUrl + "/server/test.html"))
       response <- doSipiRequest(request).fold(_ => IIIFServiceStatusNOK, _ => IIIFServiceStatusOK)
     } yield response
 
@@ -225,7 +225,7 @@ case class IIIFServiceSipiImpl(
    */
   private def doSipiRequest(request: HttpRequest): Task[String] = {
     val targetHost: HttpHost =
-      new HttpHost(config.sipi.internalHost, config.sipi.internalPort, config.sipi.internalProtocol)
+      new HttpHost(appConfig.sipi.internalHost, appConfig.sipi.internalPort, appConfig.sipi.internalProtocol)
     val httpContext: HttpClientContext               = HttpClientContext.create()
     var maybeResponse: Option[CloseableHttpResponse] = None
 
