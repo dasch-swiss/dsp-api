@@ -29,9 +29,6 @@ object Main extends ZIOApp {
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ core.LayersLive.dspLayersLive
 
   /* Here we start our Application */
-  override def run =
-    (for {
-      never <- ZIO.never
-    } yield never).provideLayer(AppServer.live)
+  override def run = AppServer.live.launch
 
 }
