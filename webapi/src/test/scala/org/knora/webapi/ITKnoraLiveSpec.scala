@@ -37,7 +37,7 @@ import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack and
- * provides access to settings and logging.
+ * provides access to configuration and logging.
  */
 abstract class ITKnoraLiveSpec
     extends AnyWordSpec
