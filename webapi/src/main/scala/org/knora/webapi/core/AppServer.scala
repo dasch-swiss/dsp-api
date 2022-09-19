@@ -134,25 +134,25 @@ final case class AppServer(
   /**
    * Initiates the startup of the DSP-API server.
    *
-   * @param requiresRepository  If `true`, checks if repository service is running, updates data if necessary and loads ontology cache.
-   *                            If `false`, checks if repository service is running but doesn't run upgrades and doesn't load ontology cache.
-   * @param requiresIIIFService If `true`, ensures that the IIIF service is running.
+   * @param requiresAdditionalRepositoryChecks  If `true`, checks if repository service is running, updates data if necessary and loads ontology cache.
+   *                                            If `false`, checks if repository service is running but doesn't run upgrades and doesn't load ontology cache.
+   * @param requiresIIIFService                 If `true`, ensures that the IIIF service is running.
    */
   def start(
-    requiresRepository: Boolean,
+    requiresAdditionalRepositoryChecks: Boolean,
     requiresIIIFService: Boolean
   ) =
     for {
       _ <- ZIO.logInfo("=> Startup checks initiated")
       _ <- checkTriplestoreService
-      _ <- upgradeRepository(requiresRepository)
+      _ <- upgradeRepository(requiresAdditionalRepositoryChecks)
       _ <- buildAllCaches
-      _ <- populateOntologyCaches(requiresRepository)
+      _ <- populateOntologyCaches(requiresAdditionalRepositoryChecks)
       _ <- checkIIIFService(requiresIIIFService)
       _ <- checkCacheService
       _ <- ZIO.logInfo("=> Startup checks finished")
       _ <- ZIO.logInfo(s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}")
-      _ <- if (appConfig.allowReloadOverHttp) ZIO.logWarning("Resetting DB over HTTP is turned ON") else ZIO.succeed(())
+      _ <- if (appConfig.allowReloadOverHttp) ZIO.logWarning("Resetting DB over HTTP is turned ON") else ZIO.unit
       _ <- state.set(AppState.Running)
     } yield ()
 }
@@ -194,7 +194,7 @@ object AppServer {
     ZLayer {
       for {
         appServer <- AppServer.init()
-        _         <- appServer.start(requiresRepository = true, requiresIIIFService = true)
+        _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true)
       } yield ()
     }
 
@@ -206,7 +206,7 @@ object AppServer {
     ZLayer {
       for {
         appServer <- AppServer.init()
-        _         <- appServer.start(requiresRepository = false, requiresIIIFService = true)
+        _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = true)
       } yield ()
     }
 
@@ -218,7 +218,7 @@ object AppServer {
     ZLayer {
       for {
         appServer <- AppServer.init()
-        _         <- appServer.start(requiresRepository = false, requiresIIIFService = false)
+        _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = false)
       } yield ()
     }
 }
