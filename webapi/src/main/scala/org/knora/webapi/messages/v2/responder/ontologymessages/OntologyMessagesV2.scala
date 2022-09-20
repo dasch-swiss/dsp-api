@@ -25,6 +25,7 @@ import dsp.schema.domain.Cardinality._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -37,7 +38,6 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -88,7 +88,6 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[CreateOntologyRequestV2]] representing the input.
    */
@@ -97,7 +96,6 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] =
     Future {
@@ -398,7 +396,6 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[CreatePropertyRequestV2]] representing the input.
    */
@@ -407,7 +404,6 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] =
     Future {
@@ -495,7 +491,6 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[CreateClassRequestV2]] representing the input.
    */
@@ -504,7 +499,6 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] =
     Future {
@@ -571,7 +565,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
    */
@@ -580,7 +573,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] =
     Future {
@@ -656,7 +648,6 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangeCardinalitiesRequestV2]] representing the input.
    */
@@ -665,7 +656,6 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] =
     Future {
@@ -724,7 +714,6 @@ object CanDeleteCardinalitiesFromClassRequestV2
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
    */
@@ -733,7 +722,6 @@ object CanDeleteCardinalitiesFromClassRequestV2
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CanDeleteCardinalitiesFromClassRequestV2] =
     Future {
@@ -791,7 +779,6 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
    */
@@ -800,7 +787,6 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteCardinalitiesFromClassRequestV2] =
     Future {
@@ -927,7 +913,6 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
    */
@@ -937,7 +922,6 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
     Future {
@@ -980,7 +964,6 @@ object ChangePropertyLabelsOrCommentsRequestV2
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
    */
@@ -989,7 +972,6 @@ object ChangePropertyLabelsOrCommentsRequestV2
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] =
     Future {
@@ -1051,7 +1033,6 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DeletePropertyCommentRequestV2]] representing the input.
    */
@@ -1060,7 +1041,6 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeletePropertyCommentRequestV2] =
     Future {
@@ -1122,7 +1102,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
    */
@@ -1131,7 +1110,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] =
     Future {
@@ -1193,7 +1171,6 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DeleteClassCommentRequestV2]] representing the input.
    */
@@ -1202,7 +1179,6 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteClassCommentRequestV2] =
     Future {
@@ -1245,7 +1221,6 @@ object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrder
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeGuiOrderRequestV2] =
     Future {
@@ -1314,7 +1289,6 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
    */
@@ -1323,7 +1297,6 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] =
     Future {
@@ -1668,12 +1641,12 @@ case class ReadOntologyV2(
 
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument =
-    toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    toOntologySchema(targetSchema).generateJsonLD(targetSchema, appConfig)
 
-  private def generateJsonLD(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl): JsonLDDocument = {
+  private def generateJsonLD(targetSchema: ApiV2Schema, appConfig: AppConfig): JsonLDDocument = {
     // Get the ontologies of all Knora entities mentioned in class definitions.
 
     val knoraOntologiesFromClasses: Set[SmartIri] = classes.values.flatMap { classInfo =>
@@ -1748,7 +1721,7 @@ case class ReadOntologyV2(
     val jsonClasses: Vector[JsonLDObject] = classes.values.map { readClassInfo =>
       userLang match {
         case Some(lang) =>
-          readClassInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+          readClassInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, appConfig = appConfig)
         case None => readClassInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
       }
     }.toVector
@@ -1756,7 +1729,11 @@ case class ReadOntologyV2(
     val jsonProperties: Vector[JsonLDObject] = properties.values.map { readPropertyInfo =>
       userLang match {
         case Some(lang) =>
-          readPropertyInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+          readPropertyInfo.toJsonLDWithSingleLanguage(
+            targetSchema = targetSchema,
+            userLang = lang,
+            appConfig = appConfig
+          )
         case None => readPropertyInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
       }
     }.toVector
@@ -1767,7 +1744,7 @@ case class ReadOntologyV2(
           readIndividualInfo.toJsonLDWithSingleLanguage(
             targetSchema = targetSchema,
             userLang = lang,
-            settings = settings
+            appConfig = appConfig
           )
         case None => readIndividualInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
       }
@@ -2035,7 +2012,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
 
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument =
     toOntologySchema(targetSchema).generateJsonLD(targetSchema)
@@ -2297,12 +2274,12 @@ sealed trait EntityInfoContentV2 {
    */
   def getPredicateAndStringLiteralObjectWithLang(
     predicateIri: SmartIri,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     userLang: String
   ): Option[(SmartIri, String)] =
     getPredicateStringLiteralObject(
       predicateIri = predicateIri,
-      preferredLangs = Some(userLang, settings.fallbackLanguage)
+      preferredLangs = Some(userLang, appConfig.fallbackLanguage)
     ).map(obj => predicateIri -> obj)
 
   /**
@@ -2570,22 +2547,22 @@ sealed trait ReadEntityInfoV2 {
    *
    * @param targetSchema the API v2 schema in which the response will be returned.
    * @param userLang     the user's preferred language.
-   * @param settings     the application settings.
+   * @param appConfig    the application's configuration.
    * @return a JSON-LD object representing the entity.
    */
   def toJsonLDWithSingleLanguage(
     targetSchema: ApiV2Schema,
     userLang: String,
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): JsonLDObject = {
     val label: Option[(IRI, JsonLDString)] = entityInfoContent
-      .getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Label.toSmartIri, settings, userLang)
+      .getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Label.toSmartIri, appConfig, userLang)
       .map { case (k: SmartIri, v: String) =>
         (k.toString, JsonLDString(v))
       }
 
     val comment: Option[(IRI, JsonLDString)] = entityInfoContent
-      .getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Comment.toSmartIri, settings, userLang)
+      .getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Comment.toSmartIri, appConfig, userLang)
       .map { case (k: SmartIri, v: String) =>
         (k.toString, JsonLDString(v))
       }

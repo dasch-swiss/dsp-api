@@ -11,6 +11,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import zio._
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
@@ -56,19 +57,21 @@ object ApiRoutes {
   /**
    * All routes composed together.
    */
-  val layer: ZLayer[ActorSystem & AppRouter & core.State, Nothing, ApiRoutes] =
+  val layer: ZLayer[ActorSystem & AppRouter & core.State & AppConfig, Nothing, ApiRoutes] =
     ZLayer {
       for {
-        sys    <- ZIO.service[ActorSystem]
-        router <- ZIO.service[AppRouter]
+        sys       <- ZIO.service[ActorSystem]
+        router    <- ZIO.service[AppRouter]
+        appConfig <- ZIO.service[AppConfig]
         routeData <- ZIO.succeed(
                        KnoraRouteData(
                          system = sys.system,
-                         appActor = router.ref
+                         appActor = router.ref,
+                         appConfig = appConfig
                        )
                      )
         runtime <- ZIO.runtime[core.State]
-      } yield ApiRoutesImpl(routeData, runtime)
+      } yield ApiRoutesImpl(routeData, runtime, appConfig)
     }
 }
 
@@ -79,19 +82,19 @@ object ApiRoutes {
  * ALL requests go through each of the routes in ORDER.
  * The FIRST matching route is used for handling a request.
  */
-private final case class ApiRoutesImpl(routeData: KnoraRouteData, runtime: Runtime[core.State])
+private final case class ApiRoutesImpl(routeData: KnoraRouteData, runtime: Runtime[core.State], appConfig: AppConfig)
     extends ApiRoutes
     with AroundDirectives {
 
   val routes =
     logDuration {
       ServerVersion.addServerHeader {
-        DSPApiDirectives.handleErrors(routeData.system) {
+        DSPApiDirectives.handleErrors(routeData.system, appConfig) {
           CorsDirectives.cors(CorsSettings(routeData.system)) {
-            DSPApiDirectives.handleErrors(routeData.system) {
+            DSPApiDirectives.handleErrors(routeData.system, appConfig) {
               new HealthRoute(routeData, runtime).makeRoute ~
                 new VersionRoute().makeRoute ~
-                new RejectingRoute(routeData.system, runtime).makeRoute ~
+                new RejectingRoute(routeData, runtime).makeRoute ~
                 new ResourcesRouteV1(routeData).makeRoute ~
                 new ValuesRouteV1(routeData).makeRoute ~
                 new StandoffRouteV1(routeData).makeRoute ~

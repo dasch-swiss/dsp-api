@@ -5,22 +5,16 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.ActorSystem
 import spray.json.JsValue
 import spray.json.JsonParser
 
 import java.nio.file.Paths
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.FileUtil
 
-object ResourcesResponderV1SpecContextData {
-
-  implicit lazy val system: ActorSystem = ActorSystem("webapi")
-
-  val settings: KnoraSettingsImpl = KnoraSettings(system)
+final case class ResourcesResponderV1SpecContextData(appConfig: AppConfig) {
 
   /*
 
@@ -33,7 +27,7 @@ object ResourcesResponderV1SpecContextData {
     .readTextFile(
       Paths.get("..", "test_data/v1/expectedBookContextResponse.json")
     )
-    .replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
+    .replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
 
   val expectedBookResourceContextResponse: JsValue = JsonParser(expectedBookResourceContextResponseStr)
 
@@ -51,7 +45,7 @@ object ResourcesResponderV1SpecContextData {
           locations = None,
           preview = None,
           restype_iconsrc =
-            Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+            Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif"),
           restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
           restype_label = Some("Buch"),
           restype_name = Some("http://www.knora.org/ontology/0803/incunabula#book"),
@@ -74,7 +68,7 @@ object ResourcesResponderV1SpecContextData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
               ny = Some(3505),
               nx = Some(2613),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -87,7 +81,7 @@ object ResourcesResponderV1SpecContextData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                 ny = Some(128),
                 nx = Some(95),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -97,7 +91,7 @@ object ResourcesResponderV1SpecContextData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
                 ny = Some(110),
                 nx = Some(82),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -107,7 +101,7 @@ object ResourcesResponderV1SpecContextData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
                 ny = Some(219),
                 nx = Some(163),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -117,7 +111,7 @@ object ResourcesResponderV1SpecContextData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
                 ny = Some(438),
                 nx = Some(327),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -127,7 +121,7 @@ object ResourcesResponderV1SpecContextData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
                 ny = Some(876),
                 nx = Some(653),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -137,8 +131,7 @@ object ResourcesResponderV1SpecContextData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path =
-                  s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
                 ny = Some(1753),
                 nx = Some(1307),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -148,8 +141,7 @@ object ResourcesResponderV1SpecContextData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path =
-                  s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+                path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                 ny = Some(3505),
                 nx = Some(2613),
                 origname = Some("ad+s167_druck1=0001.tif"),
@@ -162,7 +154,7 @@ object ResourcesResponderV1SpecContextData {
               protocol = "file",
               duration = 0,
               fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+              path = s"${appConfig.sipi.externalBaseUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
               ny = Some(128),
               nx = Some(95),
               origname = Some("ad+s167_druck1=0001.tif"),
@@ -170,7 +162,7 @@ object ResourcesResponderV1SpecContextData {
             )
           ),
           restype_iconsrc =
-            Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
+            Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/page.gif"),
           restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
           restype_label = Some("Seite"),
           restype_name = Some("http://www.knora.org/ontology/0803/incunabula#page"),

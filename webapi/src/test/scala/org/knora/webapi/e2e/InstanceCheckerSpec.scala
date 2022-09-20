@@ -22,7 +22,9 @@ import org.knora.webapi.util.FileUtil
 class InstanceCheckerSpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
 

@@ -37,11 +37,11 @@ object LayersLive {
       with TriplestoreServiceManager
       with TriplestoreService
 
-  // all effect layers needed to provide the `Environment`
+  /**
+   * All effect layers needed to provide the `Environment`
+   */
   val dspLayersLive =
-    ZLayer.make[
-      DspEnvironmentLive
-    ](
+    ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
       ApiRoutes.layer,
       AppConfig.live,

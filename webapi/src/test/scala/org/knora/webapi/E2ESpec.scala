@@ -38,14 +38,13 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.settings._
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
 
 /**
- * This class can be used in End-to-End testing. It starts the Knora-API server
+ * This class can be used in End-to-End testing. It starts the DSP stack
  * and provides access to settings and logging.
  */
 abstract class E2ESpec
@@ -107,14 +106,14 @@ abstract class E2ESpec
 
   implicit lazy val system: akka.actor.ActorSystem     = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
-  implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
   val log: Logger                                      = Logger(this.getClass())
   val appActor                                         = router.ref
 
   // needed by some tests
-  val routeData  = KnoraRouteData(system, appActor)
-  val baseApiUrl = settings.internalKnoraApiBaseUrl
+  val appConfig  = config
+  val routeData  = KnoraRouteData(system, appActor, appConfig)
+  val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
@@ -256,23 +255,23 @@ abstract class E2ESpec
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(
         newOutputFile,
-        responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL")
+        responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
       )
       responseAsString
     } else {
-      FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
+      FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
     }
 
   private def createTmpFileDir(): Unit = {
     // check if tmp datadir exists and create it if not
-    val tmpFileDir = Path.of(settings.tmpDataDir)
+    val tmpFileDir = Path.of(appConfig.tmpDatadir)
 
     if (!Files.exists(tmpFileDir)) {
       try {
         Files.createDirectories(tmpFileDir)
       } catch {
         case e: Throwable =>
-          throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
+          throw FileWriteException(s"Tmp data directory ${appConfig.tmpDatadir} could not be created: ${e.getMessage}")
       }
     }
   }

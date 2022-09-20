@@ -18,13 +18,13 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors._
+import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 import messages.store.triplestoremessages.SparqlSelectRequest
 import messages.util.ResponderData
 import messages.util.rdf.SparqlSelectResult
 import messages.{SmartIri, StringFormatter}
-import settings.{KnoraDispatchers, KnoraSettingsImpl}
 
 /**
  * Responder helper methods.
@@ -63,11 +63,6 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   /**
-   * The application settings.
-   */
-  protected val settings: KnoraSettingsImpl = responderData.knoraSettings
-
-  /**
    * The Cache Service settings.
    */
   protected val cacheServiceSettings: CacheServiceSettings = responderData.cacheServiceSettings
@@ -85,7 +80,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   /**
    * The application's default timeout for `ask` messages.
    */
-  protected implicit val timeout: Timeout = settings.defaultTimeout
+  protected implicit val timeout: Timeout = responderData.appConfig.defaultTimeoutAsDuration
 
   /**
    * Provides logging

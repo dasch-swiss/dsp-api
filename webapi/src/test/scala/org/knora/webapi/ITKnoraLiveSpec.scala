@@ -31,14 +31,13 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.settings._
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.LogAspect
 
 /**
- * This class can be used in End-to-End testing. It starts the Knora server and
- * provides access to settings and logging.
+ * This class can be used in End-to-End testing. It starts the DSP stack and
+ * provides access to configuration and logging.
  */
 abstract class ITKnoraLiveSpec
     extends AnyWordSpec
@@ -99,10 +98,10 @@ abstract class ITKnoraLiveSpec
 
   implicit lazy val system: akka.actor.ActorSystem     = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
-  implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
   val log: Logger                                      = Logger(this.getClass())
   val appActor                                         = router.ref
+  val appConfig                                        = config
 
   // needed by some tests
   val baseApiUrl          = config.knoraApi.internalKnoraApiBaseUrl

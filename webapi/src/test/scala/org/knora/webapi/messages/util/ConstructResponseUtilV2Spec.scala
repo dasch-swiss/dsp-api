@@ -67,7 +67,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         calculateMayHaveMoreResults = false,
         appActor = appActor,
         targetSchema = ApiV2Complex,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = incunabulaUser
       )
 
@@ -108,7 +108,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         calculateMayHaveMoreResults = false,
         appActor = appActor,
         targetSchema = ApiV2Complex,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -150,7 +150,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         calculateMayHaveMoreResults = false,
         appActor = appActor,
         targetSchema = ApiV2Complex,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = incunabulaUser
       )
 
@@ -192,7 +192,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         calculateMayHaveMoreResults = false,
         appActor = appActor,
         targetSchema = ApiV2Complex,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -234,7 +234,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         calculateMayHaveMoreResults = false,
         appActor = appActor,
         targetSchema = ApiV2Complex,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = anonymousUser
       )
 
@@ -276,7 +276,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         calculateMayHaveMoreResults = false,
         appActor = appActor,
         targetSchema = ApiV2Complex,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -348,7 +348,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         calculateMayHaveMoreResults = false,
         appActor = appActor,
         targetSchema = ApiV2Complex,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = incunabulaUser
       )
 
@@ -421,7 +421,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         calculateMayHaveMoreResults = false,
         appActor = appActor,
         targetSchema = ApiV2Complex,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = incunabulaUser
       )
 

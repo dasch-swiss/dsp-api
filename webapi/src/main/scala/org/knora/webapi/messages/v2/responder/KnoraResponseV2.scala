@@ -14,10 +14,10 @@ import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * A trait for Knora API V2 response messages.
@@ -30,14 +30,14 @@ trait KnoraResponseV2 {
    * @param rdfFormat            the RDF format selected for the response.
    * @param targetSchema         the response schema.
    * @param schemaOptions        the schema options.
-   * @param settings             the application settings.
+   * @param appConfig            the application configuration.
    * @return a formatted string representing this response message.
    */
   def format(
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): String
 }
 
@@ -50,7 +50,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): String = {
     val targetApiV2Schema = targetSchema match {
       case apiV2Schema: ApiV2Schema => apiV2Schema
@@ -60,7 +60,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
     // Convert this response message to a JsonLDDocument.
     val jsonLDDocument: JsonLDDocument = toJsonLDDocument(
       targetSchema = targetApiV2Schema,
-      settings = settings,
+      appConfig = appConfig,
       schemaOptions = schemaOptions
     )
 
@@ -92,7 +92,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
    */
   protected def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument
 }
@@ -112,7 +112,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): String = {
     if (targetSchema != InternalSchema) {
       throw AssertionException(s"Response can be returned only in the internal schema")
@@ -147,7 +147,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
 case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     val (ontologyPrefixExpansion, resultProp) = targetSchema match {
@@ -176,7 +176,7 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
 final case class CanDoResponseV2(canDo: Boolean) extends KnoraJsonLDResponseV2 {
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {

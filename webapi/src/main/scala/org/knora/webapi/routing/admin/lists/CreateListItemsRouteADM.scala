@@ -61,7 +61,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedListRootNodeCreatePayload)
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
 
           // check if the requesting user is allowed to perform operation
           _ =
@@ -81,7 +81,6 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -116,7 +115,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedCreateChildNodePeyload)
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
 
           // check if the requesting user is allowed to perform operation
           _ =
@@ -136,7 +135,6 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )

@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import akka.stream.Materializer
 
 import java.time.Instant
 import java.util.UUID
@@ -65,9 +64,6 @@ import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
 class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
-
-  /* actor materializer needed for http requests */
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -181,7 +177,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           )
 
         // Check link targets and list nodes that should exist.
-
         _ <- checkStandoffLinkTargets(
                values = internalCreateResource.flatValues,
                requestingUser = createResourceRequestV2.requestingUser
@@ -198,7 +193,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // Get the definitions of the resource class and its properties, as well as of the classes of all
         // resources that are link targets.
-
         resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <-
           appActor
             .ask(
@@ -1507,7 +1501,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) =
       StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
         queryStandoff = queryStandoff,
-        settings = settings
+        appConfig = responderData.appConfig
       )
 
     for {
@@ -1613,7 +1607,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                 calculateMayHaveMoreResults = false,
                                                 appActor = appActor,
                                                 targetSchema = targetSchema,
-                                                settings = settings,
+                                                appConfig = responderData.appConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1704,7 +1698,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                 calculateMayHaveMoreResults = false,
                                                 appActor = appActor,
                                                 targetSchema = targetSchema,
-                                                settings = settings,
+                                                appConfig = responderData.appConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1794,7 +1788,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           }
 
       gravsearchUrl: String =
-        s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
+        s"${responderData.appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
     } yield gravsearchUrl
 
     val recoveredGravsearchUrlFuture = gravsearchUrlFuture.recover { case notFound: NotFoundException =>
@@ -2078,7 +2072,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               header = TEIHeader(
                 headerInfo = headerResource,
                 headerXSLT = headerXSLT,
-                settings = settings
+                appConfig = responderData.appConfig
               ),
               body = TEIBody(
                 bodyInfo = bodyTextValue,
@@ -2177,7 +2171,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         startNodeOnly = false,
                         maybeExcludeLinkProperty = excludePropertyInternal,
                         outbound = outbound, // true to query outbound edges, false to query inbound edges
-                        limit = settings.maxGraphBreadth
+                        limit = responderData.appConfig.v2.graphRoute.maxGraphBreadth
                       )
                       .toString()
                   )
@@ -2318,7 +2312,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                       maybeExcludeLinkProperty = excludePropertyInternal,
                       startNodeOnly = true,
                       outbound = true,
-                      limit = settings.maxGraphBreadth
+                      limit = responderData.appConfig.v2.graphRoute.maxGraphBreadth
                     )
                     .toString()
                 )
@@ -2567,7 +2561,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 }
 
                 val fileUrl: String =
-                  imageValueContent.makeFileUrl(projectADM = representation.projectADM, settings = settings)
+                  imageValueContent.makeFileUrl(
+                    projectADM = representation.projectADM,
+                    responderData.appConfig.sipi.externalBaseUrl
+                  )
 
                 JsonLDObject(
                   Map(
@@ -2608,7 +2605,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                           Seq(
                                             JsonLDObject(
                                               Map(
-                                                "id"      -> JsonLDString(settings.externalSipiIIIFGetUrl),
+                                                "id"      -> JsonLDString(responderData.appConfig.sipi.externalBaseUrl),
                                                 "type"    -> JsonLDString("ImageService3"),
                                                 "profile" -> JsonLDString("level1")
                                               )

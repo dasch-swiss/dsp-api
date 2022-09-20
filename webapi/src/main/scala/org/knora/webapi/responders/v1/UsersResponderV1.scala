@@ -98,7 +98,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 UserDataV1(
                   lang = propsMap.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
                     case Some(langList) => langList
-                    case None           => settings.fallbackLanguage
+                    case None           => responderData.appConfig.fallbackLanguage
                   },
                   user_id = Some(userIri),
                   email = propsMap.get(OntologyConstants.KnoraAdmin.Email),
@@ -454,7 +454,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       val userDataV1 = UserDataV1(
         lang = groupedUserData.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
           case Some(langList) => langList.head
-          case None           => settings.fallbackLanguage
+          case None           => responderData.appConfig.fallbackLanguage
         },
         user_id = Some(returnedUserIri),
         email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),
@@ -494,7 +494,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       val userDataV1 = UserDataV1(
         lang = groupedUserData.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
           case Some(langList) => langList.head
-          case None           => settings.fallbackLanguage
+          case None           => responderData.appConfig.fallbackLanguage
         },
         user_id = Some(returnedUserIri),
         email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),
