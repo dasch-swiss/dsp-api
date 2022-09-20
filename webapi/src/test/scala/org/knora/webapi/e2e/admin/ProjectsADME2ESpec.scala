@@ -55,7 +55,7 @@ class ProjectsADME2ESpec
   private val clientTestDataPath: Seq[String] = Seq("admin", "projects")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

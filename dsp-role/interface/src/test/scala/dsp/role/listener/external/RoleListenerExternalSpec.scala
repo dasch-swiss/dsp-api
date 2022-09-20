@@ -8,4 +8,4 @@ package dsp.role.listener.external
 /**
  * To be implemented...
  */
-object placeholder {}
+object placeholder

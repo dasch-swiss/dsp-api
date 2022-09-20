@@ -16,6 +16,7 @@ import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import dsp.errors.OntologyConstraintException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -29,12 +30,11 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateVal
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateValueResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * Converts data from SPARQL query results into [[ApiValueV1]] objects.
  */
-class ValueUtilV1(private val settings: KnoraSettingsImpl) {
+class ValueUtilV1(appConfig: AppConfig) {
 
   private val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -83,7 +83,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   }
 
   def makeSipiImagePreviewGetUrlFromFilename(projectShortcode: String, filename: String): String =
-    s"${settings.externalSipiIIIFGetUrl}/$projectShortcode/$filename/full/!128,128/0/default.jpg"
+    s"${appConfig.sipi.externalBaseUrl}/$projectShortcode/$filename/full/!128,128/0/default.jpg"
 
   /**
    * Creates a IIIF URL for accessing an image file via Sipi.
@@ -92,7 +92,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @return a Sipi IIIF URL.
    */
   def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String =
-    s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.projectShortcode}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+    s"${appConfig.sipi.externalBaseUrl}/${imageFileValueV1.projectShortcode}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
 
   /**
    * Creates a URL for accessing a document file via Sipi.
@@ -101,7 +101,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @return a Sipi  URL.
    */
   def makeSipiDocumentGetUrlFromFilename(documentFileValueV1: DocumentFileValueV1): String =
-    s"${settings.externalSipiIIIFGetUrl}/${documentFileValueV1.projectShortcode}/${documentFileValueV1.internalFilename}/file"
+    s"${appConfig.sipi.externalBaseUrl}/${documentFileValueV1.projectShortcode}/${documentFileValueV1.internalFilename}/file"
 
   /**
    * Creates a URL for accessing a archive file via Sipi.
@@ -110,7 +110,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @return a Sipi  URL.
    */
   def makeSipiArchiveGetUrlFromFilename(archiveFileValueV1: ArchiveFileValueV1): String =
-    s"${settings.externalSipiIIIFGetUrl}/${archiveFileValueV1.projectShortcode}/${archiveFileValueV1.internalFilename}/file"
+    s"${appConfig.sipi.externalBaseUrl}/${archiveFileValueV1.projectShortcode}/${archiveFileValueV1.internalFilename}/file"
 
   /**
    * Creates a URL for accessing a text file via Sipi.
@@ -119,7 +119,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @return a Sipi URL.
    */
   def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1): String =
-    s"${settings.externalSipiBaseUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
+    s"${appConfig.sipi.externalBaseUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
 
   /**
    * Creates a URL for accessing an audio file via Sipi.
@@ -128,7 +128,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @return a Sipi URL.
    */
   def makeSipiAudioFileGetUrlFromFilename(audioFileValue: AudioFileValueV1): String =
-    s"${settings.externalSipiIIIFGetUrl}/${audioFileValue.projectShortcode}/${audioFileValue.internalFilename}/file"
+    s"${appConfig.sipi.externalBaseUrl}/${audioFileValue.projectShortcode}/${audioFileValue.internalFilename}/file"
 
   /**
    * Creates a URL for accessing a video file via Sipi.
@@ -137,7 +137,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @return a Sipi URL.
    */
   def makeSipiVideoFileGetUrlFromFilename(videoFileValue: MovingImageFileValueV1): String =
-    s"${settings.externalSipiIIIFGetUrl}/${videoFileValue.projectShortcode}/${videoFileValue.internalFilename}/file"
+    s"${appConfig.sipi.externalBaseUrl}/${videoFileValue.projectShortcode}/${videoFileValue.internalFilename}/file"
 
   // A Map of MIME types to Knora API v1 binary format name.
   private val mimeType2V1Format = new ErrorHandlingMap(
@@ -251,7 +251,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       resourceClassIri.substring(resourceClassIri.lastIndexOf('/') + 1, resourceClassIri.lastIndexOf('#'))
 
     // create URL: combine salsah-address and port, project icons base path, ontology name, icon name
-    settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + ontologyName + '/' + iconsSrc
+    appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + ontologyName + '/' + iconsSrc
   }
 
   /**

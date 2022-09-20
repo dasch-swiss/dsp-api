@@ -8,4 +8,4 @@ package dsp.role.api
 /**
  * To be implemented...
  */
-object placeholder {}
+object placeholder

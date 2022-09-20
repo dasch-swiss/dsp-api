@@ -3,11 +3,13 @@ package org.knora.webapi.auth
 import spray.json.JsValue
 import zio._
 
+import scala.concurrent.duration
+
 import org.knora.webapi._
 import org.knora.webapi.config._
 import org.knora.webapi.routing.JWTHelper
 
-final case class JWTService(config: AppConfig) {
+final case class JWTService(secret: String, longevity: duration.Duration, issuer: String) {
 
   /**
    * Creates a new JWT token for a specific user and holds some additional
@@ -20,9 +22,9 @@ final case class JWTService(config: AppConfig) {
     ZIO.succeed {
       JWTHelper.createToken(
         userIri = id,
-        secret = config.jwtSecretKey,
-        longevity = config.jwtLongevityAsDuration,
-        issuer = config.knoraApi.externalKnoraApiHostPort,
+        secret = secret,
+        longevity = longevity,
+        issuer = issuer,
         content = content
       )
     }
@@ -33,6 +35,6 @@ object JWTService {
     ZLayer {
       for {
         config <- ZIO.service[AppConfig]
-      } yield JWTService(config)
+      } yield JWTService(config.jwtSecretKey, config.jwtLongevityAsDuration, config.knoraApi.externalKnoraApiHostPort)
     }
 }

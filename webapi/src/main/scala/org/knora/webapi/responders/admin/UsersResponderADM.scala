@@ -499,7 +499,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
         // hash the new password
-        encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
+        encoder = new BCryptPasswordEncoder(responderData.appConfig.bcryptPasswordStrength)
         newHashedPassword = Password
                               .make(encoder.encode(userUpdatePasswordPayload.newPassword.value))
                               .fold(e => throw e.head, value => value)
@@ -1673,7 +1673,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         userIri: IRI                   <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password
-        encoder        = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
+        encoder        = new BCryptPasswordEncoder(responderData.appConfig.bcryptPasswordStrength)
         hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.

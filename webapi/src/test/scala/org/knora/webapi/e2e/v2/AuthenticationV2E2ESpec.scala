@@ -196,7 +196,7 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
     }
 
     "authenticate with token in cookie" in {
-      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
+      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
       val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, token.get)
 
       val request  = Get(baseApiUrl + "/v2/authentication") ~> addHeader(cookieHeader)
@@ -205,7 +205,7 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
     }
 
     "fail authentication with invalid token in cookie" in {
-      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
+      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
       val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, "not_a_valid_token")
 
       val request  = Get(baseApiUrl + "/v2/authentication") ~> addHeader(cookieHeader)

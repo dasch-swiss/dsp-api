@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 class CacheSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = settings.defaultTimeout
+  private implicit val timeout: Timeout                 = appConfig.defaultTimeoutAsDuration
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

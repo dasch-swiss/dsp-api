@@ -360,7 +360,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         // need to be able to authenticate credentials with new password
         val resF = Authenticator.authenticateCredentialsV2(
           credentials =
-            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456"))
+            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456")),
+          appConfig
         )(system, appActor, executionContext)
 
         resF map { res =>
@@ -387,7 +388,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         // need to be able to authenticate credentials with new password
         val resF = Authenticator.authenticateCredentialsV2(
           credentials =
-            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321"))
+            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321")),
+          appConfig
         )(system, appActor, executionContext)
 
         resF map { res =>

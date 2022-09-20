@@ -19,7 +19,7 @@ import org.knora.webapi.messages.StringFormatter
 class CardinalitiesSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = settings.defaultTimeout
+  private implicit val timeout: Timeout                 = appConfig.defaultTimeoutAsDuration
 
   val freetestOntologyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
 
@@ -29,7 +29,7 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
+      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
       resF map { res => println(res); assert(res, "property is used in resource (instance of that resource class)") }
     }
 
@@ -38,7 +38,7 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTestResourceClass").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
+      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
       resF map { res =>
         println(res); assert(!res, "property is not used in resource (instance of that resource class)")
       }
@@ -49,7 +49,7 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
+      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
       resF map { res =>
         println(res); assert(!res, "property is not used in resource (instance of that resource class)")
       }
@@ -61,7 +61,7 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = anythingOntologyIri.makeEntityIri("Thing").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
+      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
       resF map { res => println(res); assert(res, "property is used in resource (instance of resource class)") }
     }
 
@@ -70,7 +70,7 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
+      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
       resF map { res => println(res); assert(res, "property is used in a resource of subclass") }
     }
 

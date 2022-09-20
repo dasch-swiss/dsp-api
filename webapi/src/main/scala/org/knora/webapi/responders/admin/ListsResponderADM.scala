@@ -798,7 +798,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                            .getNodePath(
                              queryNodeIri = queryNodeIri,
                              preferredLanguage = requestingUser.lang,
-                             fallbackLanguage = settings.fallbackLanguage
+                             fallbackLanguage = responderData.appConfig.fallbackLanguage
                            )
                            .toString()
                        }

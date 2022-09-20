@@ -27,7 +27,9 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
   private val resourcesPath = new ResourcesRouteV2(routeData).makeRoute
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

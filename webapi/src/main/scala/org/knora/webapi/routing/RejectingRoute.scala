@@ -17,7 +17,6 @@ import scala.util.Success
 
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
-import org.knora.webapi.settings.KnoraSettings
 
 /**
  * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
@@ -28,9 +27,8 @@ import org.knora.webapi.settings.KnoraSettings
  *
  * TODO: This should probably be refactored into a ZIO-HTTP middleware, when the transistion to ZIO-HTTP is done.
  */
-class RejectingRoute(system: akka.actor.ActorSystem, runtime: Runtime[State]) { self =>
+class RejectingRoute(routeData: KnoraRouteData, runtime: Runtime[State]) { self =>
 
-  val settings    = KnoraSettings(system)
   val log: Logger = Logger(this.getClass)
 
   /**
@@ -53,7 +51,7 @@ class RejectingRoute(system: akka.actor.ActorSystem, runtime: Runtime[State]) { 
   def makeRoute: Route =
     path(Remaining) { wholePath =>
       // check to see if route is on the rejection list
-      val rejectSeq: Seq[Option[Boolean]] = settings.routesToReject.map { pathToReject: String =>
+      val rejectSeq: Seq[Option[Boolean]] = routeData.appConfig.routesToReject.map { pathToReject: String =>
         if (wholePath.contains(pathToReject.toCharArray)) {
           Some(true)
         } else {

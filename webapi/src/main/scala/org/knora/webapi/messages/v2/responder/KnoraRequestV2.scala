@@ -18,7 +18,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * A trait for request messages that are constructed as an [[RdfModel]].
@@ -57,7 +56,6 @@ trait KnoraJsonLDRequestReaderV2[C] {
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
@@ -66,7 +64,6 @@ trait KnoraJsonLDRequestReaderV2[C] {
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }

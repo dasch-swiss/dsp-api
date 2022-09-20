@@ -78,7 +78,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield ResourcesGetRequestV2(
           resourceIris = Seq(resourceIri.toString),
@@ -91,7 +92,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = targetSchema,
@@ -108,14 +109,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessageFuture: Future[CreateValueRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                routeData.appConfig
                               )
             requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
                                                       requestDoc,
                                                       apiRequestID = UUID.randomUUID,
                                                       requestingUser = requestingUser,
                                                       appActor = appActor,
-                                                      settings = settings,
                                                       log = log
                                                     )
           } yield requestMessage
@@ -123,7 +124,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -142,14 +143,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessageFuture: Future[UpdateValueRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                routeData.appConfig
                               )
             requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
                                                       requestDoc,
                                                       apiRequestID = UUID.randomUUID,
                                                       requestingUser = requestingUser,
                                                       appActor = appActor,
-                                                      settings = settings,
                                                       log = log
                                                     )
           } yield requestMessage
@@ -157,7 +158,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -176,14 +177,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessageFuture: Future[DeleteValueRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                routeData.appConfig
                               )
             requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
                                                       requestDoc,
                                                       apiRequestID = UUID.randomUUID,
                                                       requestingUser = requestingUser,
                                                       appActor = appActor,
-                                                      settings = settings,
                                                       log = log
                                                     )
           } yield requestMessage
@@ -191,7 +192,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,

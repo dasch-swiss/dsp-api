@@ -129,9 +129,12 @@ final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
             _     <- ZIO.logInfo("health route start")
             ec    <- ZIO.executor.map(_.asExecutionContext)
             state <- ZIO.service[State]
-            requestingUser <- ZIO
-                                .fromFuture(_ => getUserADM(requestContext)(routeData.system, routeData.appActor, ec))
-                                .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
+            requestingUser <-
+              ZIO
+                .fromFuture(_ =>
+                  getUserADM(requestContext, routeData.appConfig)(routeData.system, routeData.appActor, ec)
+                )
+                .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
             result <- healthCheck(state)
             _      <- ZIO.logInfo("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())
           } yield result

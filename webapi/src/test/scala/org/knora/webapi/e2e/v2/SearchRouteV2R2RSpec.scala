@@ -51,12 +51,18 @@ import org.knora.webapi.util.MutableTestIri
 class SearchRouteV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val searchPath   = DSPApiDirectives.handleErrors(system)(new SearchRouteV2(routeData).makeRoute)
-  private val resourcePath = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).makeRoute)
-  private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV2(routeData).makeRoute)
-  private val valuesPath   = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).makeRoute)
+  private val searchPath =
+    DSPApiDirectives.handleErrors(system, appConfig)(new SearchRouteV2(routeData).makeRoute)
+  private val resourcePath =
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData).makeRoute)
+  private val standoffPath =
+    DSPApiDirectives.handleErrors(system, appConfig)(new StandoffRouteV2(routeData).makeRoute)
+  private val valuesPath =
+    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -79,7 +85,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
   private val clientTestDataPath: Seq[String] = Seq("v2", "search")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),

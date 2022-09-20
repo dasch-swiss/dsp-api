@@ -27,7 +27,7 @@ object CacheServiceManager {
   val layer: ZLayer[CacheService, Nothing, CacheServiceManager] =
     ZLayer {
       for {
-        cs <- ZIO.service[CacheService]
+        cacheService <- ZIO.service[CacheService]
       } yield new CacheServiceManager {
 
         val cacheServiceWriteUserTimer = Metric
@@ -73,7 +73,7 @@ object CacheServiceManager {
          */
         def putUserADM(value: UserADM): Task[Unit] =
           for {
-            res <- cs.putUserADM(value) @@ cacheServiceWriteUserTimer.trackDuration
+            res <- cacheService.putUserADM(value) @@ cacheServiceWriteUserTimer.trackDuration
             // _   <- cacheServiceWriteUserTimer.value.tap(value => ZIO.debug(value))
           } yield res
 
@@ -84,7 +84,7 @@ object CacheServiceManager {
          * @param id the project identifier.
          */
         def getUserADM(id: UserIdentifierADM): Task[Option[UserADM]] =
-          cs.getUserADM(id)
+          cacheService.getUserADM(id)
 
         /**
          * Stores the project under the IRI and additionally the IRI under the keys
@@ -98,7 +98,7 @@ object CacheServiceManager {
          */
         def putProjectADM(value: ProjectADM): Task[Unit] =
           for {
-            res <- cs.putProjectADM(value) @@ cacheServiceWriteProjectTimer.trackDuration
+            res <- cacheService.putProjectADM(value) @@ cacheServiceWriteProjectTimer.trackDuration
             // _   <- cacheServiceWriteProjectTimer.value.tap(value => ZIO.debug(value))
           } yield res
 
@@ -109,7 +109,7 @@ object CacheServiceManager {
          */
         def getProjectADM(id: ProjectIdentifierADM): Task[Option[ProjectADM]] =
           for {
-            res <- cs.getProjectADM(id) @@ cacheServiceReadProjectTimer.trackDuration
+            res <- cacheService.getProjectADM(id) @@ cacheServiceReadProjectTimer.trackDuration
             // _   <- cacheServiceReadProjectTimer.value.tap(value => ZIO.debug(value))
           } yield res
 
@@ -119,7 +119,7 @@ object CacheServiceManager {
          * @param k the key.
          */
         def getStringValue(k: String): Task[Option[String]] =
-          cs.getStringValue(k)
+          cacheService.getStringValue(k)
 
         /**
          * Store string or byte array value under key.
@@ -128,7 +128,7 @@ object CacheServiceManager {
          * @param v the value.
          */
         def writeStringValue(k: String, v: String): Task[Unit] =
-          cs.putStringValue(k, v)
+          cacheService.putStringValue(k, v)
 
         /**
          * Removes values for the provided keys. Any invalid keys are ignored.
@@ -136,19 +136,19 @@ object CacheServiceManager {
          * @param keys the keys.
          */
         def removeValues(keys: Set[String]): Task[Unit] =
-          cs.removeValues(keys)
+          cacheService.removeValues(keys)
 
         /**
          * Flushes (removes) all stored content from the store.
          */
         def flushDB(requestingUser: UserADM): Task[Unit] =
-          cs.flushDB(requestingUser)
+          cacheService.flushDB(requestingUser)
 
         /**
          * Pings the cache service to see if it is available.
          */
         def ping(): UIO[CacheServiceStatusResponse] =
-          cs.getStatus
+          cacheService.getStatus
       }
     }
 }

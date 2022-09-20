@@ -55,7 +55,9 @@ import org.knora.webapi.util._
 class ResourcesRouteV2E2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   private val anythingUserEmail             = SharedTestDataADM.anythingUser1.email
   private val password                      = SharedTestDataADM.testPass
@@ -94,7 +96,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
   private val clientTestDataPath: Seq[String] = Seq("v2", "resources")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   private def collectClientTestData(fileName: String, fileContent: String, fileExtension: String = "json"): Unit =
     clientTestDataCollector.addFile(
@@ -821,7 +823,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "not accept a graph request with an invalid depth (> max)" in {
       val request = Get(
-        s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=${settings.maxGraphBreadth + 1}"
+        s"$baseApiUrl/v2/graph/${URLEncoder
+            .encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=${appConfig.v2.graphRoute.maxGraphBreadth + 1}"
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -2106,7 +2109,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
       val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-      DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).makeRoute)
+      DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData).makeRoute)
       val auth = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it

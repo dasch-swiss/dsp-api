@@ -9,7 +9,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.Materializer
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import spray.json._
@@ -35,13 +34,9 @@ object AkkaHttpUtils extends LazyLogging {
     import DefaultJsonProtocol._
     import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
-    implicit val materializer: Materializer = Materializer.matFromSystem(system)
-
     val jsonFuture: Future[JsObject] = response match {
-      case HttpResponse(StatusCodes.OK, _, entity, _) =>
-        Unmarshal(entity).to[JsObject]
-      case other =>
-        throw new Exception(other.toString())
+      case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[JsObject]
+      case other                                      => throw new Exception(other.toString())
     }
 
     // FIXME: There is probably a better non blocking way of doing it.

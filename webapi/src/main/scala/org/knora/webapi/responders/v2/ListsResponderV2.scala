@@ -57,7 +57,11 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
                                                )
                                                .mapTo[ListGetResponseADM]
 
-    } yield ListGetResponseV2(list = listResponseADM.list, requestingUser.lang, settings.fallbackLanguage)
+    } yield ListGetResponseV2(
+      list = listResponseADM.list,
+      requestingUser.lang,
+      responderData.appConfig.fallbackLanguage
+    )
 
   /**
    * Gets a single list node from the triplestore.
@@ -80,6 +84,10 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
                                                        )
                                                      )
                                                      .mapTo[ChildNodeInfoGetResponseADM]
-    } yield NodeGetResponseV2(node = nodeResponse.nodeinfo, requestingUser.lang, settings.fallbackLanguage)
+    } yield NodeGetResponseV2(
+      node = nodeResponse.nodeinfo,
+      requestingUser.lang,
+      responderData.appConfig.fallbackLanguage
+    )
 
 }

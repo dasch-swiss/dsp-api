@@ -16,7 +16,9 @@ import org.knora.webapi.http.version.ServerVersion
  * End-to-End (E2E) test specification for testing the server response.
  */
 class ServerVersionE2ESpec extends E2ESpec {
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   "The Server" should {
     "return the custom 'Server' header with every response" in {
