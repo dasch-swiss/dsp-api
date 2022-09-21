@@ -147,7 +147,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                        .getList(
                          rootNodeIri = rootNodeIri,
                          preferredLanguage = userProfile.userData.lang,
-                         fallbackLanguage = settings.fallbackLanguage
+                         fallbackLanguage = responderData.appConfig.fallbackLanguage
                        )
                        .toString()
                    }
@@ -229,7 +229,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                            .getNodePath(
                              queryNodeIri = queryNodeIri,
                              preferredLanguage = userProfile.userData.lang,
-                             fallbackLanguage = settings.fallbackLanguage
+                             fallbackLanguage = responderData.appConfig.fallbackLanguage
                            )
                            .toString()
                        }

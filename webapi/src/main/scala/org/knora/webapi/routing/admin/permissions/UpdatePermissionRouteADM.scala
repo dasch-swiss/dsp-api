@@ -17,7 +17,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
 class UpdatePermissionRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
@@ -45,7 +44,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield PermissionChangeGroupRequestADM(
             permissionIri = permissionIri,
             changePermissionGroupRequest = apiRequest,
@@ -56,7 +55,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )
@@ -75,7 +73,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield PermissionChangeHasPermissionsRequestADM(
             permissionIri = permissionIri,
             changePermissionHasPermissionsRequest = apiRequest,
@@ -86,7 +84,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )
@@ -105,7 +102,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield PermissionChangeResourceClassRequestADM(
             permissionIri = permissionIri,
             changePermissionResourceClassRequest = apiRequest,
@@ -116,7 +113,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )
@@ -135,7 +131,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield PermissionChangePropertyRequestADM(
             permissionIri = permissionIri,
             changePermissionPropertyRequest = apiRequest,
@@ -146,7 +142,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )

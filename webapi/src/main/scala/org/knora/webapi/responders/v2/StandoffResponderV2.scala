@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import akka.stream.Materializer
 import akka.util.Timeout
 import org.xml.sax.SAXException
 
@@ -64,9 +63,6 @@ import org.knora.webapi.util.cache.CacheUtil
  */
 class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
-  /* actor materializer needed for http requests */
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
-
   private def xmlMimeTypes = Set(
     "text/xml",
     "application/xml"
@@ -98,7 +94,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
   private val xsltCacheName = "xsltCache"
 
   private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Future[GetStandoffResponseV2] = {
-    val requestMaxStartIndex = getStandoffRequestV2.offset + settings.standoffPerPage - 1
+    val requestMaxStartIndex = getStandoffRequestV2.offset + responderData.appConfig.standoffPerPage - 1
 
     for {
       resourceRequestSparql <- Future(
@@ -155,7 +151,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                                                             versionDate = None,
                                                             appActor = appActor,
                                                             targetSchema = getStandoffRequestV2.targetSchema,
-                                                            settings = settings,
+                                                            appConfig = responderData.appConfig,
                                                             requestingUser = getStandoffRequestV2.requestingUser
                                                           )
 
@@ -259,7 +255,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
           }
 
       xsltUrl: String =
-        s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
+        s"${responderData.appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
     } yield xsltUrl
 
@@ -1281,7 +1277,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     val firstTask = GetStandoffTask(
       resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
       valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      offset = settings.standoffPerPage, // the offset of the second page
+      offset = responderData.appConfig.standoffPerPage, // the offset of the second page
       requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
     )
 

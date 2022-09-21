@@ -21,6 +21,7 @@ import org.knora.webapi.settings.KnoraDispatchers
 /**
  * Runs Gravsearch type inspection using one or more type inspector implementations.
  *
+ * @param appActor      a reference to the application actor
  * @param responderData the Knora [[ResponderData]].
  * @param inferTypes    if true, use type inference.
  */

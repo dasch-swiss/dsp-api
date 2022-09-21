@@ -7,7 +7,6 @@ package org.knora.webapi.core.actors
 
 import akka.actor.Actor
 import akka.actor.ActorSystem
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 
 import scala.concurrent.ExecutionContext
@@ -62,8 +61,6 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -81,17 +78,10 @@ class RoutingActor(
   implicit val system: ActorSystem = context.system
   val log: Logger                  = Logger(this.getClass())
 
-  log.debug("entered the ApplicationActor constructor")
-
-  /**
-   * The application's configuration.
-   */
-  implicit val knoraSettings: KnoraSettingsImpl = KnoraSettings(system)
-
   /**
    * The Cache Service's configuration.
    */
-  implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
+  implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(appConfig)
 
   /**
    * Provides the default global execution context
@@ -99,14 +89,9 @@ class RoutingActor(
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   /**
-   * Timeout definition
-   */
-  implicit protected val timeout: Timeout = knoraSettings.defaultTimeout
-
-  /**
    * Data used in responders.
    */
-  val responderData: ResponderData = ResponderData(system, self, knoraSettings, cacheServiceSettings)
+  val responderData: ResponderData = ResponderData(system, self, appConfig, cacheServiceSettings)
 
   // V1 responders
   val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
@@ -138,6 +123,7 @@ class RoutingActor(
 
   def receive: Receive = {
 
+    // V1 request messages
     case ckanResponderRequestV1: CkanResponderRequestV1 =>
       ActorUtil.future2Message(sender(), ckanResponderV1.receive(ckanResponderRequestV1), log)
     case resourcesResponderRequestV1: ResourcesResponderRequestV1 =>
@@ -157,7 +143,7 @@ class RoutingActor(
     case projectsResponderRequestV1: ProjectsResponderRequestV1 =>
       ActorUtil.future2Message(sender(), projectsResponderV1.receive(projectsResponderRequestV1), log)
 
-    // Knora API V2 messages
+    // V2 request messages
     case ontologiesResponderRequestV2: OntologiesResponderRequestV2 =>
       ActorUtil.future2Message(sender(), ontologiesResponderV2.receive(ontologiesResponderRequestV2), log)
     case searchResponderRequestV2: SearchResponderRequestV2 =>
@@ -171,7 +157,7 @@ class RoutingActor(
     case listsResponderRequestV2: ListsResponderRequestV2 =>
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
-    // Knora Admin message
+    // Admin request messages
     case groupsResponderRequestADM: GroupsResponderRequestADM =>
       ActorUtil.future2Message(sender(), groupsResponderADM.receive(groupsResponderRequestADM), log)
     case listsResponderRequest: ListsResponderRequestADM =>

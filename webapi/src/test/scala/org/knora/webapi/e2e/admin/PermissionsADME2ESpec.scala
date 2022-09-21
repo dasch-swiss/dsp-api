@@ -31,7 +31,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
   private val clientTestDataPath: Seq[String] = Seq("admin", "permissions")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
   private val customDOAPIri           = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
   "The Permissions Route ('admin/permissions')" when {
     "getting permissions" should {

@@ -55,9 +55,12 @@ import org.knora.webapi.util.MutableTestIri
  */
 class ResourcesV1R2RSpec extends R2RSpec {
 
-  private val resourcesPathV1 = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV1(routeData).makeRoute)
-  private val resourcesPathV2 = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).makeRoute)
-  private val valuesPathV1    = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).makeRoute)
+  private val resourcesPathV1 =
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV1(routeData).makeRoute)
+  private val resourcesPathV2 =
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData).makeRoute)
+  private val valuesPathV1 =
+    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
 
   private val superUser      = SharedTestDataADM.superUser
   private val superUserEmail = superUser.email
@@ -82,7 +85,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
   private val password = SharedTestDataADM.testPass
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout * 2)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration * 2
+  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

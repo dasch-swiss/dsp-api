@@ -30,7 +30,7 @@ class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
           projectID = stringFormatter.validateProjectShortcode(
                         projectIDAndFile.head,
                         throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'")
@@ -49,7 +49,6 @@ class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )

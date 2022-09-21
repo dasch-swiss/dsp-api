@@ -41,7 +41,7 @@ class DeleteListItemsRouteADME2ESpec
   private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   // Collects client test data
   private def collectClientTestData(fileName: String, fileContent: String): Unit =

@@ -12,27 +12,24 @@ import zio.macros.accessible
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 @accessible
 trait ActorSystem {
   val system: akka.actor.ActorSystem
-  val settings: KnoraSettingsImpl
   val cacheServiceSettings: CacheServiceSettings
 }
 
 object ActorSystem {
 
-  private def acquire(config: AppConfig, ec: ExecutionContext): URIO[Any, actor.ActorSystem] =
+  private def acquire(executionContext: ExecutionContext): URIO[Any, actor.ActorSystem] =
     ZIO
       .attempt(
         akka.actor.ActorSystem(
           name = "webapi",
           config = None,
           classLoader = None,
-          defaultExecutionContext = Some(ec)
+          defaultExecutionContext = Some(executionContext)
         )
       )
       .tap(_ => ZIO.logInfo(">>> Acquire Actor System <<<"))
@@ -49,11 +46,10 @@ object ActorSystem {
       for {
         config      <- ZIO.service[AppConfig]
         context     <- ZIO.executor.map(_.asExecutionContext)
-        actorSystem <- ZIO.acquireRelease(acquire(config, context))(release _)
+        actorSystem <- ZIO.acquireRelease(acquire(context))(release _)
       } yield new ActorSystem {
         override val system: akka.actor.ActorSystem             = actorSystem
-        override val settings: KnoraSettingsImpl                = KnoraSettings(actorSystem)
-        override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(actorSystem.settings.config)
+        override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(config)
       }
     }
 }

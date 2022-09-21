@@ -23,10 +23,10 @@ object RdfFeatureFactory {
   /**
    * Initialises the [[RdfFeatureFactory]]. This method must be called once, on application startup.
    *
-   * @param settings the application settings.
+   * @param config the application configuration.
    */
   def init(config: AppConfig): Unit =
-    // Construct the SHACL validators, which need the application settings.
+    // Construct the SHACL validators
     this.synchronized {
       jenaShaclValidator = Some(
         new JenaShaclValidator(

@@ -38,7 +38,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with SessionJsonProtocol with Trip
   private val testPass      = java.net.URLEncoder.encode("test", "utf-8")
   private val wrongPass     = java.net.URLEncoder.encode("wrong", "utf-8")
 
-  val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
+  val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
 
   "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters" should {
 
@@ -100,7 +100,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with SessionJsonProtocol with Trip
             HttpCookie(
               KnoraAuthenticationCookieName,
               value = sid,
-              domain = Some(settings.cookieDomain),
+              domain = Some(appConfig.cookieDomain),
               path = Some("/"),
               httpOnly = true
             )
@@ -142,7 +142,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with SessionJsonProtocol with Trip
             HttpCookie(
               KnoraAuthenticationCookieName,
               "",
-              domain = Some(settings.cookieDomain),
+              domain = Some(appConfig.cookieDomain),
               path = Some("/"),
               httpOnly = true,
               expires = Some(DateTime(1970, 1, 1, 0, 0, 0)),
@@ -197,7 +197,7 @@ class AuthenticationV1E2ESpec extends E2ESpec with SessionJsonProtocol with Trip
             HttpCookie(
               KnoraAuthenticationCookieName,
               value = sid,
-              domain = Some(settings.cookieDomain),
+              domain = Some(appConfig.cookieDomain),
               path = Some("/"),
               httpOnly = true
             )

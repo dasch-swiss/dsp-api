@@ -11,20 +11,20 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.config.AppConfig
 
 /**
  * Collects E2E test requests and responses for use as client test data.
  *
  * @param settings the application settings.
  */
-class ClientTestDataCollector(settings: KnoraSettingsImpl) extends LazyLogging {
+class ClientTestDataCollector(appConfig: AppConfig) extends LazyLogging {
 
   // write the client test data into this folder
   private val tempClientTestDataFolder: Path = Path.of("/tmp/client_test_data", "test-data")
 
   // Are we configured to collect client test data?
-  private val collectClientTestData = settings.collectClientTestData
+  private val collectClientTestData = appConfig.clientTestDataService.collectClientTestData
   logger.debug(s"collectClientTestData: $collectClientTestData")
 
   /**

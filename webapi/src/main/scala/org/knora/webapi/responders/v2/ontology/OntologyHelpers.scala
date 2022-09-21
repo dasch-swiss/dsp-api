@@ -39,7 +39,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 object OntologyHelpers {
 
@@ -125,7 +124,6 @@ object OntologyHelpers {
    * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
    */
   def loadOntologyMetadata(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     internalOntologyIri: SmartIri
   )(implicit
@@ -1018,10 +1016,11 @@ object OntologyHelpers {
   /**
    * Gets the set of subjects that refer to an ontology or its entities.
    *
+   * @param appActor the store manager actor ref.
    * @param ontology the ontology.
    * @return the set of subjects that refer to the ontology or its entities.
    */
-  def getSubjectsUsingOntology(settings: KnoraSettingsImpl, appActor: ActorRef, ontology: ReadOntologyV2)(implicit
+  def getSubjectsUsingOntology(appActor: ActorRef, ontology: ReadOntologyV2)(implicit
     ec: ExecutionContext,
     timeout: Timeout
   ): Future[Set[IRI]] =
@@ -1070,12 +1069,12 @@ object OntologyHelpers {
   /**
    * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
    *
+   * @param appActor the store manager actor ref.
    * @param propertyIri the IRI of the property to be loaded.
    *
    * @return a [[PropertyInfoContentV2]] representing the property definition.
    */
   def loadPropertyDefinition(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     propertyIri: SmartIri
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[PropertyInfoContentV2] =
@@ -1515,12 +1514,12 @@ object OntologyHelpers {
   /**
    * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
    *
+   * @param appActor the store manager actor ref.
    * @param classIri the IRI of the class to be loaded.
    *
    * @return a [[ClassInfoContentV2]] representing the class definition.
    */
   def loadClassDefinition(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     classIri: SmartIri
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[ClassInfoContentV2] =
@@ -1702,7 +1701,6 @@ object OntologyHelpers {
    * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
    * an error message fitting for the "before update" case.
    *
-   * @param settings the application settings.
    * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
@@ -1710,13 +1708,11 @@ object OntologyHelpers {
    * @return a failed Future if the expected last modification date is not found.
    */
   def checkOntologyLastModificationDateBeforeUpdate(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
-      settings,
       appActor,
       internalOntologyIri = internalOntologyIri,
       expectedLastModificationDate = expectedLastModificationDate,
@@ -1729,7 +1725,6 @@ object OntologyHelpers {
    * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
    * an error message fitting for the "after update" case.
    *
-   * @param settings the application settings.
    * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
@@ -1737,13 +1732,11 @@ object OntologyHelpers {
    * @return a failed Future if the expected last modification date is not found.
    */
   def checkOntologyLastModificationDateAfterUpdate(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
-      settings,
       appActor,
       internalOntologyIri = internalOntologyIri,
       expectedLastModificationDate = expectedLastModificationDate,
@@ -1755,7 +1748,6 @@ object OntologyHelpers {
   /**
    * Checks that the last modification date of an ontology is the same as the one we expect it to be.
    *
-   * @param settings the application settings.
    * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
@@ -1764,7 +1756,6 @@ object OntologyHelpers {
    * @return a failed Future if the expected last modification date is not found.
    */
   private def checkOntologyLastModificationDate(
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant,
@@ -1772,7 +1763,6 @@ object OntologyHelpers {
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     for {
       existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
-                                                                settings,
                                                                 appActor,
                                                                 internalOntologyIri = internalOntologyIri
                                                               )
