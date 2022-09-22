@@ -37,11 +37,11 @@ if [[ -z "${TIMEOUT}" ]]; then
     TIMEOUT=360
 fi
 
-poll-knora() {
+check-health() {
     STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/health)
 
     if [ "${STATUS}" -eq 200 ]; then
-        echo "Knora started"
+        echo "DSP-API started"
         return 0
     else
         return 1
@@ -50,9 +50,9 @@ poll-knora() {
 
 attempt_counter=0
 
-until poll-knora; do
+until check-health; do
     if [ ${attempt_counter} -eq ${TIMEOUT} ]; then
-      echo "Timed out waiting for Knora to start"
+      echo "Timed out waiting for DSP-API to start"
       exit 1
     fi
 
