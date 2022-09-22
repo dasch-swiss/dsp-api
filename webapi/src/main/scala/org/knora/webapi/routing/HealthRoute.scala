@@ -27,12 +27,13 @@ trait HealthCheck {
     for {
       _        <- ZIO.logInfo("get application state")
       state    <- state.get
-      result   <- createResult(state)
+      result   <- setHealthState(state)
+      _        <- ZIO.logInfo("set health state")
       response <- createResponse(result)
       _        <- ZIO.logInfo("getting application state done")
     } yield response
 
-  private def createResult(state: AppState): UIO[HealthCheckResult] =
+  private def setHealthState(state: AppState): UIO[HealthCheckResult] =
     ZIO.succeed(
       state match {
         case AppState.Stopped                => unhealthy("Stopped. Please retry later.")

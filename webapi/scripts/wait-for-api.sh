@@ -41,7 +41,7 @@ check-health() {
     STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/health)
 
     if [ "${STATUS}" -eq 200 ]; then
-        echo "DSP-API started"
+        echo "==> DSP-API started"
         return 0
     else
         return 1
@@ -52,7 +52,7 @@ attempt_counter=0
 
 until check-health; do
     if [ ${attempt_counter} -eq ${TIMEOUT} ]; then
-      echo "Timed out waiting for DSP-API to start"
+      echo "==> Timed out waiting for DSP-API to start"
       exit 1
     fi
 

@@ -90,7 +90,7 @@ stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, api.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	@docker compose -f docker-compose.yml up -d
-	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+	$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-up-fast
 stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
@@ -107,12 +107,12 @@ stack-restart: ## re-starts the knora-stack: fuseki, sipi, api.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	@docker compose -f docker-compose.yml up -d
-	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+	$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-restart-api
 stack-restart-api: ## re-starts the api. Usually used after loading data into fuseki.
 	docker-compose -f docker-compose.yml restart api
-	@$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+	@$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-logs
 stack-logs: ## prints out and follows the logs of the running knora-stack.
@@ -348,11 +348,11 @@ clean-sipi-projects: ## deletes all files uploaded within a project
 	@rm -rf sipi/images/originals/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
 
 .PHONY: check
-check: ## Run code formating check 
+check: ## Run code formatting check 
 	@sbt "check"
 
 .PHONY: fmt
-fmt: ## Run code formating fix
+fmt: ## Run code formatting fix
 	@sbt "fmt"
 
 
