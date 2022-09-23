@@ -78,7 +78,7 @@ private object QueryHandler {
 
 }
 
-class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec() {
+class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

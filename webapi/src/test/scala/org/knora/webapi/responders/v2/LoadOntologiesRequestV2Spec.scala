@@ -20,7 +20,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesReq
 /**
  * Tests that the [[LoadOntologiesRequestV2]] request does not load invalid data into the cache.
  */
-class LoadOntologiesRequestV2Spec extends CoreSpec() with ImplicitSender {
+class LoadOntologiesRequestV2Spec extends CoreSpec with ImplicitSender {
   private val INVALID_ONTO_NAME = "http://www.knora.org/ontology/invalid"
 
   /**

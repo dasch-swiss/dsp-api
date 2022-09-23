@@ -13,7 +13,7 @@ import org.knora.webapi.util.FileUtil
 /**
  * Tests [[ResponseCheckerV2]].
  */
-class ResponseCheckerV2Spec extends CoreSpec() {
+class ResponseCheckerV2Spec extends CoreSpec {
 
   "ResponseCheckerV2" should {
     "not throw an exception if received and expected resource responses are the same" in {

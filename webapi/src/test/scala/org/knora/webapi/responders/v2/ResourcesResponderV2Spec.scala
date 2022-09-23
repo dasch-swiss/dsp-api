@@ -389,7 +389,7 @@ class GraphTestData {
 /**
  * Tests [[ResourcesResponderV2]].
  */
-class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
+class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   import ResourcesResponderV2Spec._
 
