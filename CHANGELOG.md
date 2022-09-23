@@ -1,5 +1,15 @@
 # Changelog
 
+### [24.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.2...v24.0.3) (2022-09-21)
+
+
+### Maintenance
+
+* application actor (DEV-956) ([#2166](https://www.github.com/dasch-swiss/dsp-api/issues/2166)) ([4852425](https://www.github.com/dasch-swiss/dsp-api/commit/48524250c73d5adc6965f5b8a2e2c587a82efdc3))
+* remove swagger route and docs annotations (DEV-1335) ([#2203](https://www.github.com/dasch-swiss/dsp-api/issues/2203)) ([bec5b8a](https://www.github.com/dasch-swiss/dsp-api/commit/bec5b8aafb3e32cbbb1fe9613f33e1d2b85a3bc1))
+* Replace Settings with AppConfig (DEV-1312) ([#2202](https://www.github.com/dasch-swiss/dsp-api/issues/2202)) ([9b76417](https://www.github.com/dasch-swiss/dsp-api/commit/9b7641750214df4a6164adb6d34889e15b16dff3))
+* update dependencies ([#2214](https://www.github.com/dasch-swiss/dsp-api/issues/2214)) ([3706acd](https://www.github.com/dasch-swiss/dsp-api/commit/3706acd4585fb1f90e53de7821baf49572147237))
+
 ### [24.0.2](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.1...v24.0.2) (2022-09-08)
 
 
