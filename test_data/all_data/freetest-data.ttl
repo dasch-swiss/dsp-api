@@ -8,6 +8,7 @@
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @prefix salsah-gui:  <http://www.knora.org/ontology/salsah-gui#> .
 @prefix freetest:    <http://www.knora.org/ontology/0001/freetest#> .
+@prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
 @prefix standoff:    <http://www.knora.org/ontology/standoff#> .
 
 # List
@@ -286,4 +287,25 @@
     knora-base:valueHasOrder     0 ;
     knora-base:valueHasString    "1" ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology>
+    a                                          freetest:FreetestWithAPropertyFromAnythingOntology ;
+    knora-base:attachedToUser                  <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+    knora-base:attachedToProject               <http://rdfh.ch/projects/0001> ;
+    knora-base:hasPermissions                  "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:creationDate                    "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    rdfs:label                                 "A FT with a property from an other ontology" ;
+    anything:hasIntegerUsedByOtherOntologies   <http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology/values/CYWRc1iuQ3-pKgIZ1RPasA> ;
+    knora-base:isDeleted                       false .
+
+<http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology/values/CYWRc1iuQ3-pKgIZ1RPasA>
+    a                            knora-base:IntValue ;
+    knora-base:valueHasUUID      "CYWRc1iuQ3-pKgIZ1RPasA"^^xsd:string ;
+    knora-base:isDeleted         false ;
+    knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime ;
+    knora-base:valueHasInteger   "1"^^xsd:integer ;
+    knora-base:valueHasOrder     0 ;
+    knora-base:valueHasString    "1" ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .

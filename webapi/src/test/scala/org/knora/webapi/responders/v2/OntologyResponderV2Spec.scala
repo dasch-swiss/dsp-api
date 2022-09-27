@@ -60,6 +60,10 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         name = "http://www.knora.org/data/0001/anything"
       ),
       RdfDataObject(
+        path = "test_data/ontologies/anything-onto.ttl",
+        name = "http://www.knora.org/ontology/0001/anything"
+      ),
+      RdfDataObject(
         path = "test_data/ontologies/freetest-onto.ttl",
         name = "http://www.knora.org/ontology/0001/freetest"
       ),
