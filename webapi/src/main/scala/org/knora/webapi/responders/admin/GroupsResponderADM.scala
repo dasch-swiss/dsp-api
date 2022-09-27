@@ -119,8 +119,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                   ProjectGetADM(
                     identifier = ProjectIdentifierADM(
                       maybeIri = Some(projectIri)
-                    ),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    )
                   )
                 )
                 .mapTo[Option[ProjectADM]]
@@ -446,8 +445,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.project.value)),
-                requestingUser = KnoraSystemInstances.Users.SystemUser
+                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.project.value))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -805,8 +803,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                requestingUser = KnoraSystemInstances.Users.SystemUser
+                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri))
               )
             )
             .mapTo[Option[ProjectADM]]

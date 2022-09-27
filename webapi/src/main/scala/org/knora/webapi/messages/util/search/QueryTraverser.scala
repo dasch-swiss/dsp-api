@@ -19,8 +19,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.responders.v2.ontology.Cache
 
 /**
@@ -216,7 +216,9 @@ object QueryTraverser {
    * @param appActor     a reference to the appActor to retrieve a [[ProjectADM]] by a shortcode.
    * @return a sequence of ontology IRIs which relate to the input RDF entity.
    */
-  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], appActor: ActorRef): Seq[SmartIri] =
+  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], appActor: ActorRef)(implicit
+    ec: ExecutionContext
+  ): Seq[SmartIri] =
     entity match {
       case IriRef(iri, _) => {
         val internal     = iri.toOntologySchema(InternalSchema)
@@ -232,10 +234,9 @@ object QueryTraverser {
               case None => Seq.empty
               case _ => {
                 // find the project with the shortcode
-                val projectFuture =
-                  appActor
-                    .ask(CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
-                    .mapTo[Option[ProjectADM]]
+                val projectFuture = appActor
+                  .ask(ProjectGetADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
+                  .mapTo[Option[ProjectADM]]
                 val projectMaybe = Await.result(projectFuture, 1.second)
                 projectMaybe match {
                   case None => Seq.empty
@@ -268,6 +269,7 @@ object QueryTraverser {
       patterns.flatMap { pattern =>
         pattern match {
           case ValuesPattern(_, values)             => values.toSeq
+          case BindPattern(_, expression)           => List(expression.asInstanceOf[Entity])
           case UnionPattern(blocks)                 => blocks.flatMap(block => getEntities(block))
           case StatementPattern(subj, pred, obj, _) => List(subj, pred, obj)
           case LuceneQueryPattern(subj, obj, _, _)  => List(subj, obj)

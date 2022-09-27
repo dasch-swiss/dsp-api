@@ -698,8 +698,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-                requestingUser = KnoraSystemInstances.Users.SystemUser
+                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -1637,8 +1636,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-                requestingUser = KnoraSystemInstances.Users.SystemUser
+                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject))
               )
             )
             .mapTo[Option[ProjectADM]]
