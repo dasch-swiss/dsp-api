@@ -7,6 +7,7 @@
 @prefix foaf:       <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix freetest: <http://www.knora.org/ontology/0001/freetest#> .
 @base <http://www.knora.org/ontology/0001/anything> .
 
 # A trivial ontology, used only for testing DSP API.
@@ -122,8 +123,6 @@
     salsah-gui:guiElement             salsah-gui:Spinbox ;
     salsah-gui:guiAttribute           "min=0",
                                       "max=-1" .
-
-
 
 :hasDecimal
     rdf:type                          owl:ObjectProperty ;
@@ -470,9 +469,13 @@
                       owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
                       salsah-gui:guiOrder "63"^^xsd:nonNegativeInteger ],
                     [ rdf:type            owl:Restriction ;
+                      owl:onProperty      freetest:hasIntegerProperty ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "64"^^xsd:nonNegativeInteger ],
+                    [ rdf:type            owl:Restriction ;
                       owl:onProperty      :hasBlueThingValue ;
                       owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
-                      salsah-gui:guiOrder "63"^^xsd:nonNegativeInteger ] ;
+                      salsah-gui:guiOrder "65"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    """Diese Resource-Klasse beschreibt ein blaues Ding"""@de ;
     rdfs:label      "Blaues Ding"@de,
                     "Chose bleue"@fr,

@@ -9,6 +9,7 @@
 @prefix salsah-gui:  <http://www.knora.org/ontology/salsah-gui#> .
 @prefix standoff:    <http://www.knora.org/ontology/standoff#> .
 @prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
+@prefix freetest:    <http://www.knora.org/ontology/0001/freetest#> .
 
 <http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg>
     a                            anything:Thing ;
@@ -691,6 +692,16 @@
     rdfs:label                   "A blue thing" ;
     knora-base:isDeleted         false .
 
+<http://rdfh.ch/0001/a-clear-blue-thing>
+    a                            anything:BlueThing ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:creationDate      "2016-10-17T19:16:04.916+02:00"^^xsd:dateTime ;
+    rdfs:label                   "A clear blue thing" ;
+    freetest:hasIntegerProperty  <http://rdfh.ch/0001/a-clear-blue-thing/values/xNmqM2SGSJepbBlV8PBJDg> ;
+    knora-base:isDeleted         false .
+
 <http://rdfh.ch/0001/a-thing>
     a                            anything:Thing ;
     knora-base:isDeleted         false ;
@@ -727,6 +738,17 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:valueHasUUID      "lsJayQ5KSa6ck44NrojHDg"^^xsd:string ;
+    knora-base:isDeleted         false ;
+    knora-base:valueCreationDate "2019-08-30T10:45:47.173572Z"^^xsd:dateTime ;
+    knora-base:valueHasInteger   999999999 ;
+    knora-base:valueHasOrder     0 ;
+    knora-base:valueHasString    "999999999" .
+
+<http://rdfh.ch/0001/a-clear-blue-thing/values/xNmqM2SGSJepbBlV8PBJDg>
+    a                            knora-base:IntValue ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:valueHasUUID      "xNmqM2SGSJepbBlV8PBJDg"^^xsd:string ;
     knora-base:isDeleted         false ;
     knora-base:valueCreationDate "2019-08-30T10:45:47.173572Z"^^xsd:dateTime ;
     knora-base:valueHasInteger   999999999 ;
