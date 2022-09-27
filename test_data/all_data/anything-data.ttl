@@ -751,9 +751,9 @@
     knora-base:valueHasUUID      "xNmqM2SGSJepbBlV8PBJDg"^^xsd:string ;
     knora-base:isDeleted         false ;
     knora-base:valueCreationDate "2019-08-30T10:45:47.173572Z"^^xsd:dateTime ;
-    knora-base:valueHasInteger   999999999 ;
+    knora-base:valueHasInteger   3 ;
     knora-base:valueHasOrder     0 ;
-    knora-base:valueHasString    "999999999" .
+    knora-base:valueHasString    "3" .
 
 <http://rdfh.ch/0001/GIi77e3NS76UyJH3uL6DrQ>
     a                            anything:Thing ;
