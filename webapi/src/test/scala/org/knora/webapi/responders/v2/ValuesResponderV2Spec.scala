@@ -80,6 +80,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private val firstIntValueVersionIri                   = new MutableTestIri
   private val intValueIri                               = new MutableTestIri
+  private val intValueIriForClearBlueThing              = new MutableTestIri
   private val intValueIriWithCustomPermissions          = new MutableTestIri
   private val intValueForRsyncIri                       = new MutableTestIri
   private val zeitglöckleinCommentWithoutStandoffIri    = new MutableTestIri
@@ -541,10 +542,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create an integer value that belongs to a property of another ontology" in {
-      val valueIri                                  = new MutableTestIri
       val resourceIri: IRI                          = aClearBlueThingIri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasIntegerProperty".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
 
       // Create the value.
       val intValue = 40
@@ -564,7 +564,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        valueIri.set(createValueResponse.valueIri)
+        intValueIriForClearBlueThing.set(createValueResponse.valueIri)
         integerValueUUID = createValueResponse.valueUUID
       }
 
@@ -575,7 +575,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybePreviousLastModDate = maybeResourceLastModDate,
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
-        expectedValueIri = valueIri.get,
+        expectedValueIri = intValueIriForClearBlueThing.get,
         requestingUser = anythingUser2
       )
 
@@ -586,8 +586,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "update an integer value that belongs to a property of another ontology" in {
-      val valueIri = new MutableTestIri
-      valueIri.set("http://rdfh.ch/0001/a-clear-blue-thing/values/xNmqM2SGSJepbBlV8PBJDg")
       val resourceIri: IRI                          = aClearBlueThingIri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasIntegerProperty".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
@@ -598,7 +596,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybePreviousLastModDate = maybeResourceLastModDate,
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
-        expectedValueIri = valueIri.get,
+        expectedValueIri = intValueIriForClearBlueThing.get,
         requestingUser = anythingUser2,
         checkLastModDateChanged = false
       )
@@ -610,7 +608,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
         propertyIri = propertyIri,
-        valueIri = valueIri.get,
+        valueIri = intValueIriForClearBlueThing.get,
         valueContent = IntegerValueContentV2(
           ontologySchema = ApiV2Complex,
           valueHasInteger = intValue
@@ -624,7 +622,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        valueIri.set(updateValueResponse.valueIri)
+        intValueIriForClearBlueThing.set(updateValueResponse.valueIri)
         assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
       }
 
@@ -635,7 +633,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybePreviousLastModDate = maybeResourceLastModDate,
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
-        expectedValueIri = valueIri.get,
+        expectedValueIri = intValueIriForClearBlueThing.get,
         requestingUser = anythingUser2
       )
 
@@ -651,6 +649,32 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       // Check that the permissions and UUID were deleted from the previous version of the value.
       assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
       assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
+    }
+
+    "delete an integer value that belongs to a property of another ontology" in {
+      val resourceIri: IRI                          = aClearBlueThingIri
+      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasIntegerProperty".toSmartIri
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
+
+      appActor ! DeleteValueRequestV2(
+        resourceIri = resourceIri,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
+        propertyIri = propertyIri,
+        valueIri = intValueIriForClearBlueThing.get,
+        valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+        deleteComment = Some("this value was incorrect"),
+        requestingUser = anythingUser2,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[SuccessResponseV2](timeout)
+
+      checkValueIsDeleted(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybeResourceLastModDate,
+        valueIri = intValueIriForClearBlueThing.get,
+        requestingUser = anythingUser2
+      )
     }
 
     "not update an integer value without a comment without changing it" in {
