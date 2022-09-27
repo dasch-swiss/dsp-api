@@ -43,10 +43,6 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
-    ),
-    RdfDataObject(
       path = "test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl",
       name = "http://www.knora.org/data/permissions"
     ),
