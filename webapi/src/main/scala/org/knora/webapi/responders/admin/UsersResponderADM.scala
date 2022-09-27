@@ -1205,8 +1205,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         maybeGroupADM <- appActor
                            .ask(
                              GroupGetADM(
-                               groupIri = groupIri,
-                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                               groupIri = groupIri
                              )
                            )
                            .mapTo[Option[GroupADM]]
@@ -1285,8 +1284,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         maybeGroupADM <- appActor
                            .ask(
                              GroupGetADM(
-                               groupIri = groupIri,
-                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                               groupIri = groupIri
                              )
                            )
                            .mapTo[Option[GroupADM]]
@@ -1892,9 +1890,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                              appActor
                                                                .ask(
                                                                  GroupGetADM(
-                                                                   groupIri = groupIri,
-                                                                   requestingUser =
-                                                                     KnoraSystemInstances.Users.SystemUser
+                                                                   groupIri = groupIri
                                                                  )
                                                                )
                                                                .mapTo[Option[GroupADM]]

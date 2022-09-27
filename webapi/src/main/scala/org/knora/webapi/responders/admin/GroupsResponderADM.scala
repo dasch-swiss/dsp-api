@@ -42,14 +42,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
    */
   def receive(msg: GroupsResponderRequestADM) = msg match {
-    case GroupsGetADM()        => groupsGetADM
-    case GroupsGetRequestADM() => groupsGetRequestADM
-    case GroupGetADM(groupIri, requestingUser) =>
-      groupGetADM(groupIri, requestingUser)
-    case MultipleGroupsGetRequestADM(groupIris, requestingUser) =>
-      multipleGroupsGetRequestADM(groupIris, requestingUser)
-    case GroupGetRequestADM(groupIri, requestingUser) =>
-      groupGetRequestADM(groupIri, requestingUser)
+    case GroupsGetADM()                         => groupsGetADM
+    case GroupsGetRequestADM()                  => groupsGetRequestADM
+    case GroupGetADM(groupIri)                  => groupGetADM(groupIri)
+    case MultipleGroupsGetRequestADM(groupIris) => multipleGroupsGetRequestADM(groupIris)
+    case GroupGetRequestADM(groupIri)           => groupGetRequestADM(groupIri)
     case GroupMembersGetRequestADM(groupIri, requestingUser) =>
       groupMembersGetRequestADM(groupIri, requestingUser)
     case GroupCreateRequestADM(newGroupInfo, requestingUser, apiRequestID) =>
@@ -209,12 +206,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
    *
    * @param groupIri       the IRI of the group requested.
-   * @param requestingUser the user initiating the request.
    * @return information about the group as a [[GroupADM]]
    */
   private def groupGetADM(
-    groupIri: IRI,
-    requestingUser: UserADM
+    groupIri: IRI
   ): Future[Option[GroupADM]] =
     for {
       sparqlQuery <- Future(
@@ -239,8 +234,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           FastFuture.successful(None)
         } else {
           statements2GroupADM(
-            statements = groupResponse.statements.head,
-            requestingUser = requestingUser
+            statements = groupResponse.statements.head
           )
         }
 
@@ -252,18 +246,15 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
    *
    * @param groupIri             the IRI of the group requested.
-   * @param requestingUser       the user initiating the request.
    * @return information about the group as a [[GroupGetResponseADM]].
    */
   private def groupGetRequestADM(
-    groupIri: IRI,
-    requestingUser: UserADM
+    groupIri: IRI
   ): Future[GroupGetResponseADM] =
     for {
       maybeGroupADM <-
         groupGetADM(
-          groupIri = groupIri,
-          requestingUser = requestingUser
+          groupIri = groupIri
         )
 
       result = maybeGroupADM match {
@@ -275,18 +266,15 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   /**
    * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
    *
-   * @param groupIris      the IRIs of the groups being requested.
-   * @param requestingUser the user initiating the request.
+   * @param groupIris      the IRIs of the groups being requested
    * @return information about the group as a set of [[GroupGetResponseADM]] objects.
    */
   private def multipleGroupsGetRequestADM(
-    groupIris: Set[IRI],
-    requestingUser: UserADM
+    groupIris: Set[IRI]
   ): Future[Set[GroupGetResponseADM]] = {
     val groupResponseFutures: Set[Future[GroupGetResponseADM]] = groupIris.map { groupIri =>
       groupGetRequestADM(
-        groupIri = groupIri,
-        requestingUser = requestingUser
+        groupIri = groupIri
       )
     }
 
@@ -310,8 +298,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     for {
       maybeGroupADM <-
         groupGetADM(
-          groupIri = groupIri,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+          groupIri = groupIri
         )
 
       _ = maybeGroupADM match {
@@ -488,8 +475,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         /* Verify that the group was created and updated  */
         maybeCreatedGroup <-
           groupGetADM(
-            groupIri = groupIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
+            groupIri = groupIri
           )
 
         createdGroup: GroupADM =
@@ -543,8 +529,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         /* Get the project IRI which also verifies that the group exists. */
         maybeGroupADM <-
           groupGetADM(
-            groupIri = groupIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
+            groupIri = groupIri
           )
 
         groupADM = maybeGroupADM.getOrElse(
@@ -621,8 +606,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         /* Get the project IRI which also verifies that the group exists. */
         maybeGroupADM <-
           groupGetADM(
-            groupIri = groupIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
+            groupIri = groupIri
           )
 
         groupADM = maybeGroupADM.getOrElse(
@@ -706,8 +690,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       /* Verify that the group exists. */
       maybeGroupADM <-
         groupGetADM(
-          groupIri = groupIri,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+          groupIri = groupIri
         )
 
       groupADM: GroupADM =
@@ -751,8 +734,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       /* Verify that the project was updated. */
       maybeUpdatedGroup <-
         groupGetADM(
-          groupIri = groupIri,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+          groupIri = groupIri
         )
 
       updatedGroup: GroupADM =
@@ -774,12 +756,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Helper method that turns SPARQL result rows into a [[GroupADM]].
    *
    * @param statements           results from the SPARQL query representing information about the group.
-   * @param requestingUser       the user that is making the request.
    * @return a [[GroupADM]] representing information about the group.
    */
   private def statements2GroupADM(
-    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
-    requestingUser: UserADM
+    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]])
   ): Future[Option[GroupADM]] = {
 
     log.debug("statements2GroupADM - statements: {}", statements)
