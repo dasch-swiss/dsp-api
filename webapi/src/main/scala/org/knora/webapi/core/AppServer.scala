@@ -41,7 +41,6 @@ final case class AppServer(
   private val checkTriplestoreService: ZIO[Any, Nothing, Unit] =
     for {
       _      <- state.set(AppState.WaitingForTriplestore)
-      _       = println("HELLO")
       status <- ts.checkTriplestore().map(_.triplestoreStatus)
       _ <- status match {
              case TriplestoreStatus.Available(_)        => ZIO.unit

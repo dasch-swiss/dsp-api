@@ -131,8 +131,7 @@ case class CacheServiceInMemImpl(
    * @param id the project's IRI
    * @return an optional [[ProjectADM]].
    */
-  def getProjectByIri(id: String) =
-    projects.get(id).commit
+  def getProjectByIri(id: String) = projects.get(id).commit
 
   /**
    * Retrieves the project stored under a SHORTCODE or SHORTNAME.
@@ -140,7 +139,7 @@ case class CacheServiceInMemImpl(
    * @param shortcodeOrShortname of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortcodeOrShortname(shortcodeOrShortname: String) =
+  def getProjectByShortcodeOrShortname(shortcodeOrShortname: String): ZIO[Any, Nothing, Option[ProjectADM]] =
     (for {
       iri     <- lut.get(shortcodeOrShortname).some
       project <- projects.get(iri).some
