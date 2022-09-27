@@ -38,6 +38,10 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
   val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
 
   override lazy val rdfDataObjects = List(
+    RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    ),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 

@@ -44,6 +44,10 @@ class ValuesV1R2RSpec extends R2RSpec {
   private val boringComment        = "This is a boring comment."
 
   override lazy val rdfDataObjects = List(
+    RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    ),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 

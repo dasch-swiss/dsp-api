@@ -650,6 +650,10 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
   private val valueUtilV1 = new ValueUtilV1(appConfig)
 
   override lazy val rdfDataObjects = List(
+    RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    ),
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
