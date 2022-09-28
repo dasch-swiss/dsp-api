@@ -134,12 +134,10 @@ final case class Sipi(
   audioMimeTypes: List[String],
   archiveMimeTypes: List[String]
 ) {
-  val internalBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
-                                                              ":" + internalPort
-                                                            else "")
-  val externalBaseUrl: String = "http://" + externalHost + (if (externalPort != 80)
-                                                              ":" + externalPort
-                                                            else "")
+  lazy val internalBaseUrl: String =
+    "http://" + internalHost + (if (internalPort != 80) ":" + internalPort else "")
+  lazy val externalBaseUrl: String =
+    "http://" + externalHost + (if (externalPort != 80) ":" + externalPort else "")
   val timeoutInSeconds: duration.Duration = scala.concurrent.duration.Duration(timeout)
 
 }
