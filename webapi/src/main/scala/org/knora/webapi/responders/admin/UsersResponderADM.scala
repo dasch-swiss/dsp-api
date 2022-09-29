@@ -40,6 +40,8 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
  * Provides information about Knora users to other responders.
@@ -755,13 +757,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           }
 
         // create the update request
-        updateUseResult <- updateUserADM(
-                             userIri = userIri,
-                             userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
-                             requestingUser = requestingUser,
-                             apiRequestID = apiRequestID
-                           )
-      } yield updateUseResult
+        updateUserResult <- updateUserADM(
+                              userIri = userIri,
+                              userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
+                              requestingUser = requestingUser,
+                              apiRequestID = apiRequestID
+                            )
+      } yield updateUserResult
 
     for {
       // run the task with an IRI lock
@@ -1516,8 +1518,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           }
 
       _ = if (userUpdatePayload.projects.isDefined) {
+            // get the projects of the updated user
+            val projectMemebershipsAfterUpdate =
+              appActor
+                .ask(UserProjectMembershipsGetRequestADM(userIri, requestingUser))
+                .mapTo[UserProjectMembershipsGetResponseADM]
+            val projectMemberships = Await.result(projectMemebershipsAfterUpdate, 3.seconds)
 
-            if (updatedUserADM.projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
+            if (projectMemberships.projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
               throw UpdateNotPerformedException(
                 "User's 'project' memberships were not updated. Please report this as a possible bug."
               )
