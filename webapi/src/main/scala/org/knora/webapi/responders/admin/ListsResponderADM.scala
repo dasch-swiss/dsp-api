@@ -941,8 +941,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       maybeProject <- appActor
                         .ask(
                           ProjectGetADM(
-                            identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value)),
-                            KnoraSystemInstances.Users.SystemUser
+                            identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value))
                           )
                         )
                         .mapTo[Option[ProjectADM]]
@@ -2270,8 +2269,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                           ProjectGetADM(
                             ProjectIdentifierADM(
                               maybeIri = Some(projectIri)
-                            ),
-                            KnoraSystemInstances.Users.SystemUser
+                            )
                           )
                         )
                         .mapTo[Option[ProjectADM]]

@@ -14,7 +14,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 object ResourceUtilV2Spec {}
 
-class ResourceUtilV2Spec extends CoreSpec() {
+class ResourceUtilV2Spec extends CoreSpec {
   implicit val timeout: Timeout             = appConfig.defaultTimeoutAsDuration
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

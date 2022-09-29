@@ -17,7 +17,7 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 /**
  * Tests [[GravsearchParser]].
  */
-class GravsearchParserSpec extends CoreSpec() {
+class GravsearchParserSpec extends CoreSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val Query: String =

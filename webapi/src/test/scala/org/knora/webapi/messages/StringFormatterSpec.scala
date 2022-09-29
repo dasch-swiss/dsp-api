@@ -19,7 +19,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
 /**
  * Tests [[StringFormatter]].
  */
-class StringFormatterSpec extends CoreSpec() {
+class StringFormatterSpec extends CoreSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   "The StringFormatter class" should {

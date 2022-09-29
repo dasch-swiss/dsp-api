@@ -79,7 +79,7 @@ private object CountQueryHandler {
 
 }
 
-class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends CoreSpec() {
+class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends CoreSpec {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

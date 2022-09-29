@@ -12,6 +12,7 @@ import org.eclipse.rdf4j.query.parser.QueryParser
 import org.eclipse.rdf4j.query.parser.sparql._
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 import dsp.errors.GravsearchException
 import org.knora.webapi._
@@ -344,27 +345,32 @@ object GravsearchParser {
 
     override def meet(node: algebra.ProjectionElemList): Unit = {
       // A ProjectionElemList represents the patterns in the CONSTRUCT clause. They're represented using
-      // parser-generated constants instead of literal values, so for now we just have to store them that way
-      // for now. Later, once we have the values of the constants, we will be able to build the CONSTRUCT clause.
+      // parser-generated constants instead of literal values, so for now we just have to store them that way.
+      // Later, once we have the values of the constants, we will be able to build the CONSTRUCT clause.
 
       var subj: Option[String] = None
       var pred: Option[String] = None
       var obj: Option[String]  = None
 
       for (projectionElem: algebra.ProjectionElem <- node.getElements.asScala) {
-        val sourceName: String = projectionElem.getSourceName
-        val targetName: String = projectionElem.getTargetName
+        val sourceName: String         = projectionElem.getName
+        val targetName: Option[String] = projectionElem.getProjectionAlias.toScala
 
         if (sourceName == targetName) {
           throw GravsearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
         }
 
-        projectionElem.getTargetName match {
-          case "subject"   => subj = Some(sourceName)
-          case "predicate" => pred = Some(sourceName)
-          case "object"    => obj = Some(sourceName)
-          case _ =>
-            GravsearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
+        projectionElem.getProjectionAlias.toScala match {
+          case Some(value) =>
+            value match {
+              case "subject"   => subj = Some(sourceName)
+              case "predicate" => pred = Some(sourceName)
+              case "object"    => obj = Some(sourceName)
+              case _ =>
+                GravsearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
+            }
+          case None =>
+            GravsearchException(s"Alias the projection element value should be mapped to was empty.")
         }
       }
 

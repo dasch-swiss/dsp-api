@@ -39,12 +39,14 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Tests [[ValuesResponderV2]].
  */
-class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
+class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val zeitglöckleinIri     = "http://rdfh.ch/0803/c5058f3a"
-  private val generationeIri       = "http://rdfh.ch/0803/c3f913666f"
-  private val aThingIri            = "http://rdfh.ch/0001/a-thing"
+  private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
+  private val generationeIri   = "http://rdfh.ch/0803/c3f913666f"
+  private val aThingIri        = "http://rdfh.ch/0001/a-thing"
+  private val freetestWithAPropertyFromAnythingOntologyIri =
+    "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
   private val aThingPictureIri     = "http://rdfh.ch/0001/a-thing-picture"
   private val sierraIri            = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
   private val thingPictureClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
@@ -63,11 +65,20 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    ),
+    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+    RdfDataObject(
       path = "test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula"
     ),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(
+      path = "test_data/ontologies/anything-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/anything"
+    )
   )
 
   // The default timeout for receiving reply messages from actors.
@@ -75,6 +86,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private val firstIntValueVersionIri                   = new MutableTestIri
   private val intValueIri                               = new MutableTestIri
+  private val intValueIriForFreetest                    = new MutableTestIri
   private val intValueIriWithCustomPermissions          = new MutableTestIri
   private val intValueForRsyncIri                       = new MutableTestIri
   private val zeitglöckleinCommentWithoutStandoffIri    = new MutableTestIri
@@ -319,7 +331,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         maybeUpdatedLastModDate = resource.lastModificationDate
       )
     }
-
     getValueFromResource(
       resource = resource,
       propertyIriInResult = propertyIriInResult,
@@ -534,6 +545,148 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       // Check that the permissions and UUID were deleted from the previous version of the value.
       assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
       assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
+    }
+
+    "create an integer value that belongs to a property of another ontology" in {
+      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
+      val propertyIri: SmartIri =
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+      // Create the value.
+      val intValue = 40
+
+      appActor ! CreateValueRequestV2(
+        CreateValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri =
+            "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+          propertyIri = propertyIri,
+          valueContent = IntegerValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasInteger = intValue
+          )
+        ),
+        requestingUser = anythingUser1,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        intValueIriForFreetest.set(createValueResponse.valueIri)
+        integerValueUUID = createValueResponse.valueUUID
+      }
+
+      // Read the value back to check that it was added correctly.
+
+      val valueFromTriplestore = getValue(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybeResourceLastModDate,
+        propertyIriForGravsearch = propertyIri,
+        propertyIriInResult = propertyIri,
+        expectedValueIri = intValueIriForFreetest.get,
+        requestingUser = anythingUser1
+      )
+
+      valueFromTriplestore.valueContent match {
+        case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
+        case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+      }
+    }
+
+    "update an integer value that belongs to a property of another ontology" in {
+      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
+      val propertyIri: SmartIri =
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
+
+      // Get the value before update.
+      val previousValueFromTriplestore: ReadValueV2 = getValue(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybeResourceLastModDate,
+        propertyIriForGravsearch = propertyIri,
+        propertyIriInResult = propertyIri,
+        expectedValueIri = intValueIriForFreetest.get,
+        requestingUser = anythingUser2,
+        checkLastModDateChanged = false
+      )
+
+      // Update the value.
+      val intValue: Int = 50
+
+      val updateValueContent: UpdateValueContentV2 = UpdateValueContentV2(
+        resourceIri = resourceIri,
+        resourceClassIri =
+          "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+        propertyIri = propertyIri,
+        valueIri = intValueIriForFreetest.get,
+        valueContent = IntegerValueContentV2(
+          ontologySchema = ApiV2Complex,
+          valueHasInteger = intValue
+        )
+      )
+
+      appActor ! UpdateValueRequestV2(
+        updateValueContent,
+        requestingUser = anythingUser2,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intValueIriForFreetest.set(updateValueResponse.valueIri)
+        assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
+      }
+
+      // Read the value back to check that it was added correctly.
+
+      val updatedValueFromTriplestore = getValue(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybeResourceLastModDate,
+        propertyIriForGravsearch = propertyIri,
+        propertyIriInResult = propertyIri,
+        expectedValueIri = intValueIriForFreetest.get,
+        requestingUser = anythingUser2
+      )
+
+      updatedValueFromTriplestore.valueContent match {
+        case savedValue: IntegerValueContentV2 =>
+          savedValue.valueHasInteger should ===(intValue)
+          updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+          updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
+
+        case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+      }
+
+      // Check that the permissions and UUID were deleted from the previous version of the value.
+      assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
+      assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
+    }
+
+    "delete an integer value that belongs to a property of another ontology" in {
+      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
+      val propertyIri: SmartIri =
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
+
+      appActor ! DeleteValueRequestV2(
+        resourceIri = resourceIri,
+        resourceClassIri =
+          "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+        propertyIri = propertyIri,
+        valueIri = intValueIriForFreetest.get,
+        valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+        deleteComment = Some("this value was incorrect"),
+        requestingUser = anythingUser2,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[SuccessResponseV2](timeout)
+
+      checkValueIsDeleted(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybeResourceLastModDate,
+        valueIri = intValueIriForFreetest.get,
+        requestingUser = anythingUser2
+      )
     }
 
     "not update an integer value without a comment without changing it" in {
