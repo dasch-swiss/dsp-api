@@ -290,14 +290,14 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology>
-    a                                          freetest:FreetestWithAPropertyFromAnythingOntology ;
-    knora-base:attachedToUser                  <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
-    knora-base:attachedToProject               <http://rdfh.ch/projects/0001> ;
-    knora-base:hasPermissions                  "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
-    knora-base:creationDate                    "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
-    rdfs:label                                 "A FT with a property from an other ontology" ;
-    anything:hasIntegerUsedByOtherOntologies   <http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology/values/CYWRc1iuQ3-pKgIZ1RPasA> ;
-    knora-base:isDeleted                       false .
+    a                                        freetest:FreetestWithAPropertyFromAnythingOntology ;
+    knora-base:attachedToUser                <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+    knora-base:attachedToProject             <http://rdfh.ch/projects/0001> ;
+    knora-base:hasPermissions                "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:creationDate                  "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    rdfs:label                               "A FT with a property from an other ontology" ;
+    anything:hasIntegerUsedByOtherOntologies <http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology/values/CYWRc1iuQ3-pKgIZ1RPasA> ;
+    knora-base:isDeleted                     false .
 
 <http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology/values/CYWRc1iuQ3-pKgIZ1RPasA>
     a                            knora-base:IntValue ;
