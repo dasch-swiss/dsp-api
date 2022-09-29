@@ -10,7 +10,9 @@ import akka.pattern._
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import java.util.UUID
+import scala.concurrent.Await
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
@@ -40,8 +42,6 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 /**
  * Provides information about Knora users to other responders.
