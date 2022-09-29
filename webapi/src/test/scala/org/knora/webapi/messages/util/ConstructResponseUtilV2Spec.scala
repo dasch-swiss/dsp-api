@@ -27,7 +27,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 /**
  * Tests [[ConstructResponseUtilV2]].
  */
-class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
+class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private implicit val timeout: Timeout                 = 10.seconds
   private val incunabulaUser                            = SharedTestDataADM.incunabulaProjectAdminUser

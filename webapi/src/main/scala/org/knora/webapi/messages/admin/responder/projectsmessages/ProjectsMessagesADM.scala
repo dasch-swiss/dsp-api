@@ -192,11 +192,9 @@ case class ProjectGetRequestADM(
  * of [[ProjectADM]]. Internal use only.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param requestingUser       the user making the request.
  */
 case class ProjectGetADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
+  identifier: ProjectIdentifierADM
 ) extends ProjectsResponderRequestADM
 
 /**

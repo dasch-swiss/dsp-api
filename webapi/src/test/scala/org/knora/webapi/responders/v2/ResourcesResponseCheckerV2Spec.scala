@@ -9,7 +9,7 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 
-class ResourcesResponseCheckerV2Spec extends CoreSpec() {
+class ResourcesResponseCheckerV2Spec extends CoreSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val resourcesResponderV2SpecFullData        = new ResourcesResponderV2SpecFullData

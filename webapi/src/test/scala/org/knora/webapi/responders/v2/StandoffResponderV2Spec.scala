@@ -23,7 +23,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 /**
  * Tests [[StandoffResponderV2]].
  */
-class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
+class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 30.seconds

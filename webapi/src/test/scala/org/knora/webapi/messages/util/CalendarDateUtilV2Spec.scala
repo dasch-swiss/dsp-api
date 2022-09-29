@@ -12,7 +12,7 @@ import org.knora.webapi.messages.util._
 /**
  * Tests [[CalendarDateUtilV2]].
  */
-class CalendarDateUtilV2Spec extends CoreSpec() {
+class CalendarDateUtilV2Spec extends CoreSpec {
   private def checkSingleDate(
     calendarDate: CalendarDateV2,
     expectedStartJDN: Int,

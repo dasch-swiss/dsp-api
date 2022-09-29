@@ -58,11 +58,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
    */
   def receive(msg: ProjectsResponderRequestADM) = msg match {
-    case ProjectsGetADM(requestingUser) => projectsGetADM(requestingUser)
-    case ProjectsGetRequestADM(requestingUser) =>
-      projectsGetRequestADM(requestingUser)
-    case ProjectGetADM(identifier, requestingUser) =>
-      getSingleProjectADM(identifier, requestingUser)
+    case ProjectsGetADM(requestingUser)        => projectsGetADM(requestingUser)
+    case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
+    case ProjectGetADM(identifier)             => getSingleProjectADM(identifier)
     case ProjectGetRequestADM(identifier, requestingUser) =>
       getSingleProjectADMRequest(identifier, requestingUser)
     case ProjectMembersGetRequestADM(identifier, requestingUser) =>
@@ -209,12 +207,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * Gets the project with the given project IRI, shortname, or shortcode and returns the information as a [[ProjectADM]].
    *
    * @param identifier           the IRI, shortname, or shortcode of the project.
-   * @param requestingUser       the user making the request.
+   * @param skipCache            if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
    * @return information about the project as a [[ProjectInfoV1]].
    */
   private def getSingleProjectADM(
     identifier: ProjectIdentifierADM,
-    requestingUser: UserADM,
     skipCache: Boolean = false
   ): Future[Option[ProjectADM]] =
     tracedFuture("admin-get-project") {
@@ -222,9 +219,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       // log.debug("getSingleProjectADM - projectIRI: {}", projectIri)
 
       log.debug(
-        s"getSingleProjectADM - id: {}, requester: {}, skipCache: {}",
+        s"getSingleProjectADM - id: {}, skipCache: {}",
         identifier.value,
-        requestingUser.username,
         skipCache
       )
 
@@ -267,8 +263,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     // log.debug("getSingleProjectADMRequest - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
     for {
       maybeProject: Option[ProjectADM] <- getSingleProjectADM(
-                                            identifier = identifier,
-                                            requestingUser = requestingUser
+                                            identifier = identifier
                                           )
 
       project = maybeProject match {
@@ -296,8 +291,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       /* Get project and verify permissions. */
       project <- getSingleProjectADM(
-                   identifier = identifier,
-                   requestingUser = KnoraSystemInstances.Users.SystemUser
+                   identifier = identifier
                  )
 
       _ =
@@ -379,8 +373,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     for {
       /* Get project and verify permissions. */
       project <- getSingleProjectADM(
-                   identifier = identifier,
-                   requestingUser = KnoraSystemInstances.Users.SystemUser
+                   identifier = identifier
                  )
 
       _ =
@@ -472,8 +465,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
-                        identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                        requestingUser = KnoraSystemInstances.Users.SystemUser
+                        identifier = ProjectIdentifierADM(maybeIri = Some(projectIri))
                       )
 
       keywords: Seq[String] = maybeProject match {
@@ -582,8 +574,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     for {
       // Get the project info.
       maybeProject: Option[ProjectADM] <- getSingleProjectADM(
-                                            identifier = projectIdentifier,
-                                            requestingUser = requestingUser
+                                            identifier = projectIdentifier
                                           )
 
       project: ProjectADM = maybeProject.getOrElse(
@@ -867,7 +858,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     for {
       maybeCurrentProject: Option[ProjectADM] <- getSingleProjectADM(
                                                    identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                                   requestingUser = requestingUser,
                                                    skipCache = true
                                                  )
 
@@ -903,7 +893,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       /* Verify that the project was updated. */
       maybeUpdatedProject <- getSingleProjectADM(
                                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                               requestingUser = KnoraSystemInstances.Users.SystemUser,
                                skipCache = true
                              )
 
@@ -1147,7 +1136,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // try to retrieve newly created project (will also add to cache)
         maybeNewProjectADM <- getSingleProjectADM(
                                 identifier = ProjectIdentifierADM(maybeIri = Some(newProjectIRI)),
-                                requestingUser = KnoraSystemInstances.Users.SystemUser,
                                 skipCache = true
                               )
 
@@ -1201,9 +1189,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
               // writing project to cache and afterwards returning the project found in the triplestore
               writeProjectADMToCache(project).map(_ => Some(project))
           }
-        case Some(user) =>
-          log.debug("getProjectFromCacheOrTriplestore - found in cache. returning user.")
-          FastFuture.successful(Some(user))
+        case Some(project) =>
+          log.debug("getProjectFromCacheOrTriplestore - found in cache. returning project.")
+          FastFuture.successful(Some(project))
       }
     } else {
       // caching disabled

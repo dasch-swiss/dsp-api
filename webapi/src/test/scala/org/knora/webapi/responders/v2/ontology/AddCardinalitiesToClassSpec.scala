@@ -34,11 +34,16 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val freeTestOntology = RdfDataObject(
-    path = "test_data/ontologies/freetest-onto.ttl",
-    name = "http://www.knora.org/ontology/0001/freetest"
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    ),
+    RdfDataObject(
+      path = "test_data/ontologies/anything-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/anything"
+    )
   )
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(freeTestOntology)
 
   private def getCardinalityCountFromTriplestore(classIri: SmartIri, propertyIri: SmartIri) = {
     val sparqlCountQuery =

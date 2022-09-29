@@ -15,7 +15,7 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 /**
  * Tests [[SparqlTransformer]].
  */
-class SparqlTransformerSpec extends CoreSpec() {
+class SparqlTransformerSpec extends CoreSpec {
 
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
