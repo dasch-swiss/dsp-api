@@ -70,8 +70,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
       val requestMessage = for {
         requestingUser <- getUserADM(requestContext, routeData.appConfig)
       } yield GroupGetRequestADM(
-        groupIri = checkedGroupIri,
-        requestingUser = requestingUser
+        groupIri = checkedGroupIri
       )
 
       RouteUtilADM.runJsonRoute(

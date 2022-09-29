@@ -760,8 +760,7 @@ object PermissionUtilADM extends LazyLogging {
       _ <- appActor
              .ask(
                MultipleGroupsGetRequestADM(
-                 groupIris = validatedProjectSpecificGroupIris,
-                 requestingUser = KnoraSystemInstances.Users.SystemUser
+                 groupIris = validatedProjectSpecificGroupIris
                )
              )
              .mapTo[Set[GroupGetResponseADM]]
