@@ -25,7 +25,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 /**
  * Tests [[SearchResponderV2]].
  */
-class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
+class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   override lazy val rdfDataObjects = List(
