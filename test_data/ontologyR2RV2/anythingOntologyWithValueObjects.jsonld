@@ -2884,6 +2884,26 @@
             "@id": "anything:hasInteger"
         },
         {
+            "rdfs:label": "Integer",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "@type": "owl:ObjectProperty",
+            "salsah-gui:guiAttribute": [
+                "max=-1",
+                "min=0"
+            ],
+            "knora-api:objectType": {
+                "@id": "knora-api:IntValue"
+            },
+            "salsah-gui:guiElement": {
+                "@id": "salsah-gui:Spinbox"
+            },
+            "@id": "anything:hasIntegerUsedByOtherOntologies"
+        },
+        {
             "rdfs:label": "Time interval",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
