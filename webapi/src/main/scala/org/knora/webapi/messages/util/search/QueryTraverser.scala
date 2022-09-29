@@ -216,9 +216,7 @@ object QueryTraverser {
    * @param appActor     a reference to the appActor to retrieve a [[ProjectADM]] by a shortcode.
    * @return a sequence of ontology IRIs which relate to the input RDF entity.
    */
-  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], appActor: ActorRef)(implicit
-    ec: ExecutionContext
-  ): Seq[SmartIri] =
+  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], appActor: ActorRef): Seq[SmartIri] =
     entity match {
       case IriRef(iri, _) => {
         val internal     = iri.toOntologySchema(InternalSchema)
