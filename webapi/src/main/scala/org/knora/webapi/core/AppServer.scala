@@ -113,13 +113,12 @@ final case class AppServer(
   private val checkCacheService: ZIO[Any, Nothing, Unit] =
     for {
       _ <- state.set(AppState.WaitingForCacheService)
-      _ <- cs.getStatus
-        .flatMap {
-          case CacheServiceStatusNOK =>
-            ZIO.logError("Cache service not running.") *> ZIO.die(new Exception("Cache service not running."))
-          case CacheServiceStatusOK =>
-            ZIO.unit
-        }
+      _ <- cs.getStatus.flatMap {
+             case CacheServiceStatusNOK =>
+               ZIO.logError("Cache service not running.") *> ZIO.die(new Exception("Cache service not running."))
+             case CacheServiceStatusOK =>
+               ZIO.unit
+           }
       _ <- state.set(AppState.CacheServiceReady)
     } yield ()
 
