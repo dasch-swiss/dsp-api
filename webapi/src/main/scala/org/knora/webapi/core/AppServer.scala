@@ -58,8 +58,7 @@ final case class AppServer(
   private def upgradeRepository(requiresRepository: Boolean): ZIO[Any, Nothing, Unit] =
     for {
       _ <- state.set(AppState.UpdatingRepository)
-      _ <- if (requiresRepository) ru.maybeUpgradeRepository.flatMap(response => ZIO.logInfo(response.message))
-           else ZIO.unit
+      _ <- ru.maybeUpgradeRepository.flatMap(response => ZIO.logInfo(response.message)).when(requiresRepository)
       _ <- state.set(AppState.RepositoryUpToDate)
     } yield ()
 
@@ -84,8 +83,7 @@ final case class AppServer(
   private def populateOntologyCaches(requiresRepository: Boolean): ZIO[Any, Nothing, Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
-      _ <- if (requiresRepository) ar.populateOntologyCaches
-           else ZIO.unit
+      _ <- ar.populateOntologyCaches.when(requiresRepository)
       _ <- state.set(AppState.OntologiesReady)
     } yield ()
 
@@ -97,19 +95,15 @@ final case class AppServer(
   private def checkIIIFService(requiresIIIFService: Boolean): ZIO[Any, Nothing, Unit] =
     for {
       _ <- state.set(AppState.WaitingForIIIFService)
-      _ <- if (requiresIIIFService)
-             iiifs
-               .getStatus()
-               .flatMap(status =>
-                 status match {
-                   case IIIFServiceStatusOK =>
-                     ZIO.logInfo("IIIF service running")
-                   case IIIFServiceStatusNOK =>
-                     ZIO.logError("IIIF service not running") *> ZIO.die(new Exception("IIIF service not running"))
-                 }
-               )
-           else
-             ZIO.unit
+      _ <- iiifs
+             .getStatus()
+             .flatMap {
+               case IIIFServiceStatusOK =>
+                 ZIO.logInfo("IIIF service running")
+               case IIIFServiceStatusNOK =>
+                 ZIO.logError("IIIF service not running") *> ZIO.die(new Exception("IIIF service not running"))
+             }
+             .when(requiresIIIFService)
       _ <- state.set(AppState.IIIFServiceReady)
     } yield ()
 
@@ -120,14 +114,12 @@ final case class AppServer(
     for {
       _ <- state.set(AppState.WaitingForCacheService)
       _ <- cs.getStatus
-             .flatMap(status =>
-               status match {
-                 case CacheServiceStatusNOK =>
-                   ZIO.logError("Cache service not running.") *> ZIO.die(new Exception("Cache service not running."))
-                 case CacheServiceStatusOK =>
-                   ZIO.unit
-               }
-             )
+        .flatMap {
+          case CacheServiceStatusNOK =>
+            ZIO.logError("Cache service not running.") *> ZIO.die(new Exception("Cache service not running."))
+          case CacheServiceStatusOK =>
+            ZIO.unit
+        }
       _ <- state.set(AppState.CacheServiceReady)
     } yield ()
 
@@ -141,7 +133,7 @@ final case class AppServer(
   def start(
     requiresAdditionalRepositoryChecks: Boolean,
     requiresIIIFService: Boolean
-  ) =
+  ): ZIO[Any, Nothing, Unit] =
     for {
       _ <- ZIO.logInfo("=> Startup checks initiated")
       _ <- checkTriplestoreService
@@ -152,7 +144,7 @@ final case class AppServer(
       _ <- checkCacheService
       _ <- ZIO.logInfo("=> Startup checks finished")
       _ <- ZIO.logInfo(s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}")
-      _ <- if (appConfig.allowReloadOverHttp) ZIO.logWarning("Resetting DB over HTTP is turned ON") else ZIO.unit
+      _ <- ZIO.logWarning("Resetting DB over HTTP is turned ON").when(appConfig.allowReloadOverHttp)
       _ <- state.set(AppState.Running)
     } yield ()
 }
