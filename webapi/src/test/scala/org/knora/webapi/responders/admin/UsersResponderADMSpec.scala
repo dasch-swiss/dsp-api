@@ -6,9 +6,11 @@
 package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
+import akka.pattern.ask
 import akka.testkit.ImplicitSender
 
 import java.util.UUID
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
@@ -21,10 +23,14 @@ import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
@@ -39,9 +45,10 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
   private val normalUser        = SharedTestDataADM.normalUser
 
-  private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
+  private val incunabulaProjectAdminUser = SharedTestDataADM.incunabulaProjectAdminUser
 
   private val imagesProject       = SharedTestDataADM.imagesProject
+  private val incunabulaProject   = SharedTestDataADM.incunabulaProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -97,11 +104,11 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
       "return a profile if the user (incunabula user) is known" in {
         appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeIri = Some(incunabulaUser.id)),
+          identifier = UserIdentifierADM(maybeIri = Some(incunabulaProjectAdminUser.id)),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
+        expectMsg(Some(incunabulaProjectAdminUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return 'NotFoundException' when the user is unknown" in {
@@ -135,11 +142,11 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
       "return a profile if the user (incunabula user) is known" in {
         appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeEmail = Some(incunabulaUser.email)),
+          identifier = UserIdentifierADM(maybeEmail = Some(incunabulaProjectAdminUser.email)),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
+        expectMsg(Some(incunabulaProjectAdminUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return 'NotFoundException' when the user is unknown" in {
@@ -173,11 +180,11 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
       "return a profile if the user (incunabula user) is known" in {
         appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeUsername = Some(incunabulaUser.username)),
+          identifier = UserIdentifierADM(maybeUsername = Some(incunabulaProjectAdminUser.username)),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
+        expectMsg(Some(incunabulaProjectAdminUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return 'NotFoundException' when the user is unknown" in {
@@ -359,8 +366,10 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // need to be able to authenticate credentials with new password
         val resF = Authenticator.authenticateCredentialsV2(
-          credentials =
-            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456")),
+          credentials = Some(
+            KnoraCredentialsV2
+              .KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456")
+          ),
           appConfig
         )(system, appActor, executionContext)
 
@@ -387,8 +396,10 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // need to be able to authenticate credentials with new password
         val resF = Authenticator.authenticateCredentialsV2(
-          credentials =
-            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321")),
+          credentials = Some(
+            KnoraCredentialsV2
+              .KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321")
+          ),
           appConfig
         )(system, appActor, executionContext)
 
@@ -556,10 +567,50 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         received.members.map(_.id) should contain(normalUser.id)
       }
 
+      "ADD user to project as project admin" in {
+        // get current project memberships
+        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
+        val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
+
+        // add user to images project (00FF)
+        appActor ! UserProjectMembershipAddRequestADM(
+          normalUser.id,
+          incunabulaProject.id,
+          incunabulaProjectAdminUser,
+          UUID.randomUUID()
+        )
+
+        val membershipUpdateResponse = expectMsgType[UserOperationResponseADM](timeout)
+
+        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
+        val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        membershipsAfterUpdate.projects.map(_.id).sorted should equal(
+          Seq(imagesProject.id, incunabulaProject.id).sorted
+        )
+
+        val projectMemebershipsAfterUpdate =
+          appActor
+            .ask(UserProjectMembershipsGetRequestADM(normalUser.id, rootUser))(timeout)
+            .mapTo[UserProjectMembershipsGetResponseADM]
+        val projectMemberships = Await.result(projectMemebershipsAfterUpdate, 3.seconds)
+        projectMemberships.projects.map(_.id).sorted should equal(Seq(imagesProject.id, incunabulaProject.id).sorted)
+
+        appActor ! ProjectMembersGetRequestADM(
+          ProjectIdentifierADM(maybeIri = Some(incunabulaProject.id)),
+          requestingUser = KnoraSystemInstances.Users.SystemUser
+        )
+        val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
+
+        received.members.map(_.id) should contain(normalUser.id)
+      }
+
       "DELETE user from project" in {
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
-        membershipsBeforeUpdate.projects should equal(Seq(imagesProject))
+        membershipsBeforeUpdate.projects.map(_.id).sorted should equal(
+          Seq(imagesProject.id, incunabulaProject.id).sorted
+        )
 
         appActor ! UserProjectMembershipRemoveRequestADM(
           normalUser.id,
@@ -571,7 +622,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
-        membershipsAfterUpdate.projects should equal(Seq())
+        membershipsAfterUpdate.projects should equal(Seq(incunabulaProject))
 
         appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
@@ -646,7 +697,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
 
-        received.members should contain(normalUser.ofType(UserInformationTypeADM.Restricted))
+        received.members.map(_.id) should contain(normalUser.id)
       }
 
       "DELETE user from project admin group" in {
