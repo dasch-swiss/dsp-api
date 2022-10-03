@@ -75,13 +75,13 @@ trait HealthCheck {
       )
       .orDie
 
-  private val status = (isHealthy: Boolean) => if (isHealthy) "healthy" else "unhealthy"
+  private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
 
-  private val statusCode = (isStatusOk: Boolean) => if (isStatusOk) StatusCodes.OK else StatusCodes.ServiceUnavailable
+  private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
 
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
-  private val unhealthy = (message: String) =>
+  private def unhealthy(message: String) =
     HealthCheckResult(
       name = "AppState",
       severity = "non fatal",
