@@ -13,8 +13,7 @@ import org.knora.webapi.core.domain.AppState
 @accessible
 trait State {
   def set(v: AppState): UIO[Unit]
-  val get: UIO[AppState]
-
+  def get: UIO[AppState]
 }
 
 object State {
