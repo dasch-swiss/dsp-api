@@ -1525,18 +1525,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           }
 
       _ = if (userUpdatePayload.projects.isDefined) {
-            // get the projects of the updated user
-            val projectMemebershipsAfterUpdate =
-              appActor
-                .ask(UserProjectMembershipsGetRequestADM(userIri, requestingUser))
-                .mapTo[UserProjectMembershipsGetResponseADM]
-            val projectMemberships = Await.result(projectMemebershipsAfterUpdate, 3.seconds)
-
-            if (projectMemberships.projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
-              throw UpdateNotPerformedException(
-                "User's 'project' memberships were not updated. Please report this as a possible bug."
-              )
-            }
+            for {
+              projects <- userProjectMembershipsGetADM(
+                            userIri = userIri,
+                            requestingUser = requestingUser
+                          )
+              _ =
+                if (projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
+                  throw UpdateNotPerformedException(
+                    "User's 'project' memberships were not updated. Please report this as a possible bug."
+                  )
+                }
+            } yield UserProjectMembershipsGetResponseADM(projects)
           }
 
       _ = if (userUpdatePayload.systemAdmin.isDefined) {
