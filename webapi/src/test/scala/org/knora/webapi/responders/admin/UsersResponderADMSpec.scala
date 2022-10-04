@@ -6,11 +6,9 @@
 package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
-import akka.pattern.ask
 import akka.testkit.ImplicitSender
 
 import java.util.UUID
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
