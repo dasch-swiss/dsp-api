@@ -567,6 +567,43 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         received.members.map(_.id) should contain(normalUser.id)
       }
 
+      "not ADD user to project as project admin of another project" in {
+        // get current project memberships
+        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
+        val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
+
+        // try to add user to incunabula project but as project admin of another project
+        appActor ! UserProjectMembershipAddRequestADM(
+          normalUser.id,
+          incunabulaProject.id,
+          anythingAdminUser,
+          UUID.randomUUID()
+        )
+
+        expectMsg(
+          timeout,
+          Failure(
+            ForbiddenException("User's project membership can only be changed by a project or system administrator")
+          )
+        )
+
+        // check that the user is still only member of one project
+        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
+
+        val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        membershipsAfterUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
+
+        // check that the user was not added to the project
+        appActor ! ProjectMembersGetRequestADM(
+          ProjectIdentifierADM(maybeIri = Some(incunabulaProject.id)),
+          requestingUser = KnoraSystemInstances.Users.SystemUser
+        )
+        val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
+
+        received.members.map(_.id) should not contain (normalUser.id)
+      }
+
       "ADD user to project as project admin" in {
         // get current project memberships
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
@@ -588,13 +625,6 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         membershipsAfterUpdate.projects.map(_.id).sorted should equal(
           Seq(imagesProject.id, incunabulaProject.id).sorted
         )
-
-        val projectMemebershipsAfterUpdate =
-          appActor
-            .ask(UserProjectMembershipsGetRequestADM(normalUser.id, rootUser))(timeout)
-            .mapTo[UserProjectMembershipsGetResponseADM]
-        val projectMemberships = Await.result(projectMemebershipsAfterUpdate, 3.seconds)
-        projectMemberships.projects.map(_.id).sorted should equal(Seq(imagesProject.id, incunabulaProject.id).sorted)
 
         appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(incunabulaProject.id)),
