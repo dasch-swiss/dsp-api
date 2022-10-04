@@ -312,18 +312,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           getUserFromCacheOrTriplestore(identifier)
         }
 
-      // check if the requesting user is project admin of one of the projects the user belongs to
-      isRequestingUserProjectAdmin = maybeUserADM match {
-                                       case Some(user) =>
-                                         user.projects.map(p => requestingUser.permissions.isProjectAdmin(p.id))
-                                       case None => Seq(false)
-                                     }
-
       // return the correct amount of information depending on either the request or user permission
       finalResponse: Option[UserADM] =
         if (
           requestingUser.permissions.isSystemAdmin || requestingUser
-            .isSelf(identifier) || requestingUser.isSystemUser || isRequestingUserProjectAdmin.contains(true)
+            .isSelf(identifier) || requestingUser.isSystemUser
         ) {
           // return everything or what was requested
           maybeUserADM.map(user => user.ofType(userInformationType))
@@ -1474,7 +1467,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       /* Verify that the user was updated */
       maybeUpdatedUserADM <- getSingleUserADM(
                                identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                               requestingUser = requestingUser,
+                               requestingUser = KnoraSystemInstances.Users.SystemUser,
                                userInformationType = UserInformationTypeADM.Full,
                                skipCache = true
                              )
