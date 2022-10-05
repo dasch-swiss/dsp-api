@@ -11,14 +11,13 @@ import zio.metrics.Metric
 
 import java.time.temporal.ChronoUnit
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages._
 import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.config.AppConfig
 
 @accessible
 trait CacheServiceManager {
