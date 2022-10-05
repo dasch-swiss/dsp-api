@@ -51,8 +51,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
     "asked about a group identified by 'iri' " should {
       "return group info if the group is known " in {
         appActor ! GroupGetRequestADM(
-          groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser
+          groupIri = imagesReviewerGroup.id
         )
 
         expectMsg(GroupGetResponseADM(imagesReviewerGroup))
@@ -60,8 +59,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the group is unknown " in {
         appActor ! GroupGetRequestADM(
-          groupIri = "http://rdfh.ch/groups/notexisting",
-          requestingUser = rootUser
+          groupIri = "http://rdfh.ch/groups/notexisting"
         )
 
         expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>

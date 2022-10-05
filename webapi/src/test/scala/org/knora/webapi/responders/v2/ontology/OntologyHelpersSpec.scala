@@ -26,11 +26,17 @@ class OntologyHelpersSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private implicit val timeout                          = 10.seconds
-  private val freeTestOntology = RdfDataObject(
-    path = "test_data/ontologies/freetest-onto.ttl",
-    name = "http://www.knora.org/ontology/0001/freetest"
+
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    ),
+    RdfDataObject(
+      path = "test_data/ontologies/anything-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/anything"
+    )
   )
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(freeTestOntology)
 
   val freetestOntologyIri: SmartIri =
     "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri.toOntologySchema(InternalSchema)

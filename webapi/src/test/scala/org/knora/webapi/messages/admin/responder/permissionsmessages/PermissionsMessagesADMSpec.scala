@@ -22,7 +22,7 @@ import org.knora.webapi.sharedtestdata._
 /**
  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
  */
-class PermissionsMessagesADMSpec extends CoreSpec() {
+class PermissionsMessagesADMSpec extends CoreSpec {
 
   "Administrative Permission Get Requests" should {
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionsForProjectGetRequestADM is not valid" in {

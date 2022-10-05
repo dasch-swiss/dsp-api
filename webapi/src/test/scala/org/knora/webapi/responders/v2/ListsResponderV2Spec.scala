@@ -25,7 +25,7 @@ object ListsResponderV2Spec {
 /**
  * Tests [[ListsResponderV2]].
  */
-class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
+class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
 
   import ListsResponderV2Spec._
 

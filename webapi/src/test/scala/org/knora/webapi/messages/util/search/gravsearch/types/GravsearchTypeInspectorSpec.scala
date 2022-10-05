@@ -23,7 +23,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 /**
  * Tests Gravsearch type inspection.
  */
-class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
+class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
