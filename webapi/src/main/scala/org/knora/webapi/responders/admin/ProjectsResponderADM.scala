@@ -208,15 +208,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    *
    * @param identifier           the IRI, shortname, or shortcode of the project.
    * @param skipCache            if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
-   * @return information about the project as a [[ProjectInfoV1]].
+   * @return information about the project as an optional [[ProjectADM]].
    */
-  private def getSingleProjectADM(
+  def getSingleProjectADM(
     identifier: ProjectIdentifierADM,
     skipCache: Boolean = false
   ): Future[Option[ProjectADM]] =
     tracedFuture("admin-get-project") {
-
-      // log.debug("getSingleProjectADM - projectIRI: {}", projectIri)
 
       log.debug(
         s"getSingleProjectADM - id: {}, skipCache: {}",
@@ -251,16 +249,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * as a [[ProjectGetResponseADM]].
    *
    * @param identifier           the IRI, shortname, or shortcode of the project.
-   *
    * @param requestingUser       the user making the request.
-   * @return information about the project as a [[ProjectInfoResponseV1]].
+   * @return information about the project as a [[ProjectGetResponseADM]].
    * @throws NotFoundException when no project for the given IRI can be found
    */
   private def getSingleProjectADMRequest(
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Future[ProjectGetResponseADM] =
-    // log.debug("getSingleProjectADMRequest - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
     for {
       maybeProject: Option[ProjectADM] <- getSingleProjectADM(
                                             identifier = identifier

@@ -755,13 +755,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           }
 
         // create the update request
-        updateUseResult <- updateUserADM(
-                             userIri = userIri,
-                             userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
-                             requestingUser = requestingUser,
-                             apiRequestID = apiRequestID
-                           )
-      } yield updateUseResult
+        updateUserResult <- updateUserADM(
+                              userIri = userIri,
+                              userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
+                              requestingUser = requestingUser,
+                              apiRequestID = apiRequestID
+                            )
+      } yield updateUserResult
 
     for {
       // run the task with an IRI lock
@@ -1467,7 +1467,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       /* Verify that the user was updated */
       maybeUpdatedUserADM <- getSingleUserADM(
                                identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                               requestingUser = requestingUser,
+                               requestingUser = KnoraSystemInstances.Users.SystemUser,
                                userInformationType = UserInformationTypeADM.Full,
                                skipCache = true
                              )
@@ -1516,12 +1516,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           }
 
       _ = if (userUpdatePayload.projects.isDefined) {
-
-            if (updatedUserADM.projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
-              throw UpdateNotPerformedException(
-                "User's 'project' memberships were not updated. Please report this as a possible bug."
-              )
-            }
+            for {
+              projects <- userProjectMembershipsGetADM(
+                            userIri = userIri,
+                            requestingUser = requestingUser
+                          )
+              _ =
+                if (projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
+                  throw UpdateNotPerformedException(
+                    "User's 'project' memberships were not updated. Please report this as a possible bug."
+                  )
+                }
+            } yield UserProjectMembershipsGetResponseADM(projects)
           }
 
       _ = if (userUpdatePayload.systemAdmin.isDefined) {
