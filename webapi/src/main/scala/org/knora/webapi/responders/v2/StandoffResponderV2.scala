@@ -668,8 +668,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         appActor
           .ask(
             ProjectGetADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
-              requestingUser = requestingUser
+              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString))
             )
           )
           .mapTo[Option[ProjectADM]]

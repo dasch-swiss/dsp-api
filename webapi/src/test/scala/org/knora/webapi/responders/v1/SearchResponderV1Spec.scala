@@ -175,7 +175,7 @@ object SearchResponderV1Spec {
 /**
  * Tests [[SearchResponderV1]].
  */
-class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
+class SearchResponderV1Spec extends CoreSpec with ImplicitSender {
 
   import SearchResponderV1Spec._
 

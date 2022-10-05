@@ -14,7 +14,7 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSort
 /**
  * Tests [[TopologicalSortUtil]].
  */
-class TopologicalSortUtilSpec extends CoreSpec() {
+class TopologicalSortUtilSpec extends CoreSpec {
   type NodeT = Graph[Int, DiHyperEdge]#NodeT
 
   private def nodesToValues(orders: Set[Vector[NodeT]]): Set[Vector[Int]] =

@@ -515,11 +515,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-      ontologiesForInferenceMaybe <-
+      ontologiesForInferenceMaybe: Option[Set[SmartIri]] <-
         QueryTraverser.getOntologiesRelevantForInference(
           inputQuery.whereClause,
           appActor
         )
+
       nonTriplestoreSpecificPrequery: SelectQuery =
         QueryTraverser.transformConstructToSelect(
           inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
@@ -545,7 +546,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         )
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
-      _                                 = log.debug(triplestoreSpecificPrequerySparql)
 
       start = System.currentTimeMillis()
       tryPrequeryResponseNotMerged =

@@ -1,5 +1,25 @@
 # Changelog
 
+### [24.0.5](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.4...v24.0.5) (2022-10-05)
+
+
+### Bug Fixes
+
+* Timeout for multiple Gravsearch queries (DEV-1379) ([#2234](https://www.github.com/dasch-swiss/dsp-api/issues/2234)) ([c63567b](https://www.github.com/dasch-swiss/dsp-api/commit/c63567b5ea4b96c8b6b88600f351c3016d5aec23))
+
+
+### Maintenance
+
+* app actor cleanup ([#2230](https://www.github.com/dasch-swiss/dsp-api/issues/2230)) ([a67c98f](https://www.github.com/dasch-swiss/dsp-api/commit/a67c98f67793066ab46fe607f24f046b0abcfc44))
+
+### [24.0.4](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.3...v24.0.4) (2022-09-29)
+
+
+### Bug Fixes
+
+* API returns invalid file URLs, due to including the port ([#2223](https://www.github.com/dasch-swiss/dsp-api/issues/2223)) ([1a0b09c](https://www.github.com/dasch-swiss/dsp-api/commit/1a0b09c4244e65a55d45072ab69bd699c6cc5aa8))
+* Value update or deletion doesn't work for properties of other ontology (DEV-1367) ([#2222](https://www.github.com/dasch-swiss/dsp-api/issues/2222)) ([472b375](https://www.github.com/dasch-swiss/dsp-api/commit/472b375e2950264ddd12b09f0497d3b720e80267))
+
 ### [24.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.2...v24.0.3) (2022-09-21)
 
 

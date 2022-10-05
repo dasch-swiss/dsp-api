@@ -76,7 +76,7 @@ class RoutingActor(
 ) extends Actor {
 
   implicit val system: ActorSystem = context.system
-  val log: Logger                  = Logger(this.getClass())
+  val log: Logger                  = Logger(this.getClass)
 
   /**
    * The Cache Service's configuration.

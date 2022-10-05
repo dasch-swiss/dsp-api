@@ -32,13 +32,13 @@ object ActorSystem {
           defaultExecutionContext = Some(executionContext)
         )
       )
-      .tap(_ => ZIO.logInfo(">>> Acquire Actor System <<<"))
+      .zipLeft(ZIO.logInfo(">>> Acquire Actor System <<<"))
       .orDie
 
   private def release(system: akka.actor.ActorSystem): URIO[Any, actor.Terminated] =
     ZIO
       .fromFuture(_ => system.terminate())
-      .tap(_ => ZIO.logInfo(">>> Release Actor System <<<"))
+      .zipLeft(ZIO.logInfo(">>> Release Actor System <<<"))
       .orDie
 
   val layer: ZLayer[AppConfig, Nothing, ActorSystem] =
@@ -46,7 +46,7 @@ object ActorSystem {
       for {
         config      <- ZIO.service[AppConfig]
         context     <- ZIO.executor.map(_.asExecutionContext)
-        actorSystem <- ZIO.acquireRelease(acquire(context))(release _)
+        actorSystem <- ZIO.acquireRelease(acquire(context))(release)
       } yield new ActorSystem {
         override val system: akka.actor.ActorSystem             = actorSystem
         override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(config)

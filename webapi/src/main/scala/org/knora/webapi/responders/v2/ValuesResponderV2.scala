@@ -95,6 +95,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           appActor
             .ask(propertyInfoRequestForSubmittedProperty)
             .mapTo[ReadOntologyV2]
+
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
                                                                  submittedInternalPropertyIri
                                                                )
@@ -120,27 +121,25 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // corresponding link property, whose objects we will need to query. Get ontology information about the
         // adjusted property.
 
-        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <- getAdjustedInternalPropertyInfo(
-                                                              submittedPropertyIri =
-                                                                createValueRequest.createValue.propertyIri,
-                                                              maybeSubmittedValueType = Some(
-                                                                createValueRequest.createValue.valueContent.valueType
-                                                              ),
-                                                              propertyInfoForSubmittedProperty =
-                                                                propertyInfoForSubmittedProperty,
-                                                              requestingUser = createValueRequest.requestingUser
-                                                            )
+        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <-
+          getAdjustedInternalPropertyInfo(
+            submittedPropertyIri = createValueRequest.createValue.propertyIri,
+            maybeSubmittedValueType = Some(createValueRequest.createValue.valueContent.valueType),
+            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+            requestingUser = createValueRequest.requestingUser
+          )
 
         adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
 
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
         // so we can see objects that the user doesn't have permission to see.
 
-        resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
-                                          resourceIri = createValueRequest.createValue.resourceIri,
-                                          propertyInfo = adjustedInternalPropertyInfo,
-                                          requestingUser = KnoraSystemInstances.Users.SystemUser
-                                        )
+        resourceInfo: ReadResourceV2 <-
+          getResourceWithPropertyValues(
+            resourceIri = createValueRequest.createValue.resourceIri,
+            propertyInfo = adjustedInternalPropertyInfo,
+            requestingUser = KnoraSystemInstances.Users.SystemUser
+          )
 
         // Check that the user has permission to modify the resource.
 
@@ -152,15 +151,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Check that the resource has the rdf:type that the client thinks it has.
 
-        _ = if (
-              resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri.toOntologySchema(
-                InternalSchema
-              )
-            ) {
-              throw BadRequestException(
-                s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>"
-              )
-            }
+        _ =
+          if (
+            resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri
+              .toOntologySchema(InternalSchema)
+          ) {
+            throw BadRequestException(
+              s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>"
+            )
+          }
 
         // Get the definition of the resource class.
 
@@ -221,8 +220,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Check that the resource class's cardinality for the submitted property allows another value to be added
         // for that property.
 
-        currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values
-                                                   .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+        currentValuesForProp: Seq[ReadValueV2] =
+          resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
         _ =
           if (
@@ -270,54 +269,56 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
              }
 
         // Get the default permissions for the new value.
-        defaultValuePermissions: String <- ResourceUtilV2.getDefaultValuePermissions(
-                                             projectIri = resourceInfo.projectADM.id,
-                                             resourceClassIri = resourceInfo.resourceClassIri,
-                                             propertyIri = submittedInternalPropertyIri,
-                                             requestingUser = createValueRequest.requestingUser,
-                                             appActor = appActor
-                                           )
+        defaultValuePermissions: String <-
+          ResourceUtilV2.getDefaultValuePermissions(
+            projectIri = resourceInfo.projectADM.id,
+            resourceClassIri = resourceInfo.resourceClassIri,
+            propertyIri = submittedInternalPropertyIri,
+            requestingUser = createValueRequest.requestingUser,
+            appActor = appActor
+          )
 
         // Did the user submit permissions for the new value?
-        newValuePermissionLiteral <- createValueRequest.createValue.permissions match {
-                                       case Some(permissions: String) =>
-                                         // Yes. Validate them.
-                                         for {
-                                           validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
-                                                                           permissionLiteral = permissions,
-                                                                           appActor = appActor
-                                                                         )
+        newValuePermissionLiteral <-
+          createValueRequest.createValue.permissions match {
+            case Some(permissions: String) =>
+              // Yes. Validate them.
+              for {
+                validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
+                                                permissionLiteral = permissions,
+                                                appActor = appActor
+                                              )
 
-                                           // Is the requesting user a system admin, or an admin of this project?
-                                           _ = if (
-                                                 !(createValueRequest.requestingUser.permissions.isProjectAdmin(
-                                                   createValueRequest.requestingUser.id
-                                                 ) || createValueRequest.requestingUser.permissions.isSystemAdmin)
-                                               ) {
+                // Is the requesting user a system admin, or an admin of this project?
+                _ = if (
+                      !(createValueRequest.requestingUser.permissions.isProjectAdmin(
+                        createValueRequest.requestingUser.id
+                      ) || createValueRequest.requestingUser.permissions.isSystemAdmin)
+                    ) {
 
-                                                 // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                      // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
-                                                 val permissionComparisonResult: PermissionComparisonResult =
-                                                   PermissionUtilADM.comparePermissionsADM(
-                                                     entityCreator = createValueRequest.requestingUser.id,
-                                                     entityProject = resourceInfo.projectADM.id,
-                                                     permissionLiteralA = validatedCustomPermissions,
-                                                     permissionLiteralB = defaultValuePermissions,
-                                                     requestingUser = createValueRequest.requestingUser
-                                                   )
+                      val permissionComparisonResult: PermissionComparisonResult =
+                        PermissionUtilADM.comparePermissionsADM(
+                          entityCreator = createValueRequest.requestingUser.id,
+                          entityProject = resourceInfo.projectADM.id,
+                          permissionLiteralA = validatedCustomPermissions,
+                          permissionLiteralB = defaultValuePermissions,
+                          requestingUser = createValueRequest.requestingUser
+                        )
 
-                                                 if (permissionComparisonResult == AGreaterThanB) {
-                                                   throw ForbiddenException(
-                                                     s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
-                                                   )
-                                                 }
-                                               }
-                                         } yield validatedCustomPermissions
+                      if (permissionComparisonResult == AGreaterThanB) {
+                        throw ForbiddenException(
+                          s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
+                        )
+                      }
+                    }
+              } yield validatedCustomPermissions
 
-                                       case None =>
-                                         // No. Use the default permissions.
-                                         FastFuture.successful(defaultValuePermissions)
-                                     }
+            case None =>
+              // No. Use the default permissions.
+              FastFuture.successful(defaultValuePermissions)
+          }
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
@@ -339,12 +340,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Check that the value was written correctly to the triplestore.
 
-        verifiedValue: VerifiedValueV2 <- verifyValue(
-                                            resourceIri = createValueRequest.createValue.resourceIri,
-                                            propertyIri = submittedInternalPropertyIri,
-                                            unverifiedValue = unverifiedValue,
-                                            requestingUser = createValueRequest.requestingUser
-                                          )
+        verifiedValue: VerifiedValueV2 <-
+          verifyValue(
+            resourceIri = createValueRequest.createValue.resourceIri,
+            propertyIri = submittedInternalPropertyIri,
+            unverifiedValue = unverifiedValue,
+            requestingUser = createValueRequest.requestingUser
+          )
 
       } yield CreateValueResponseV2(
         valueIri = verifiedValue.newValueIri,
@@ -374,10 +376,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     )
     } yield taskResult
 
-    // Since PR #1230, the cardinalities in knora-base don't allow you to create a file value
-    // without creating a new resource, but we leave this line here in case it's needed again
-    // someday:
-    //
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
     ResourceUtilV2.doSipiPostUpdate(
@@ -1018,6 +1016,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     ): Future[UpdateValueResponseV2] =
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
+
         resourcePropertyValue: ResourcePropertyValue <-
           getResourcePropertyValue(
             resourceIri = updateValuePermissionsV2.resourceIri,
@@ -1038,7 +1037,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             permissionLiteral = updateValuePermissionsV2.permissions,
             appActor = appActor
           )
-
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
         // different from the current ones.
 
@@ -1046,7 +1044,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           PermissionUtilADM.parsePermissions(
             currentValue.permissions
           )
-
         newPermissionsParsed: Map[EntityPermission, Set[IRI]] =
           PermissionUtilADM.parsePermissions(
             updateValuePermissionsV2.permissions,
