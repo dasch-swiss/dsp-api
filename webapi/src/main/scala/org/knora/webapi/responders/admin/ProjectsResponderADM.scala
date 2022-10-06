@@ -239,8 +239,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             log.debug("getSingleProjectADM - could not retrieve project: {}", identifier.value)
           }
 
-        _ = appActor.ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
-
       } yield maybeProjectADM
     }
 
