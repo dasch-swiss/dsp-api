@@ -8,7 +8,6 @@ package org.knora.webapi.messages.util.search
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
-import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent._
@@ -205,7 +204,6 @@ trait ConstructToSelectTransformer extends WhereTransformer {
  */
 object QueryTraverser {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = Duration(5, SECONDS)
 
   /**
    * Helper method that analyzed an RDF Entity and returns a sequence of Ontology IRIs that are being referenced by the entity.
@@ -237,9 +235,10 @@ object QueryTraverser {
                 // find the project with the shortcode
 
                 for {
-                  projectMaybe <- appActor
-                                    .ask(ProjectGetADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
-                                    .mapTo[Option[ProjectADM]]
+                  projectMaybe <-
+                    appActor
+                      .ask(ProjectGetADM(ProjectIdentifierADM(maybeShortcode = shortcode)))(Duration(100, SECONDS))
+                      .mapTo[Option[ProjectADM]]
                   projectOntologies = projectMaybe match {
                                         case None => Seq.empty
                                         // return all ontologies of the project
