@@ -60,20 +60,6 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
 
-        /* Images project */
-        appActor ! ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
-          requestingUser = SharedTestDataADM.rootUser
-        )
-        expectMsg(ProjectGetResponseADM(SharedTestDataADM.imagesProject))
-
-        /* 'SystemProject' */
-        appActor ! ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.systemProject.id)),
-          requestingUser = SharedTestDataADM.rootUser
-        )
-        expectMsg(ProjectGetResponseADM(SharedTestDataADM.systemProject))
-
       }
 
       "return information about a project identified by shortname" in {
