@@ -63,7 +63,7 @@ object AppRouter {
         val populateOntologyCaches: UIO[Unit] = {
 
           val request = LoadOntologiesRequestV2(requestingUser = KnoraSystemInstances.Users.SystemUser)
-          val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(3, scala.concurrent.duration.SECONDS))
+          val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(60, scala.concurrent.duration.SECONDS))
 
           for {
             response <- ZIO.fromFuture(_ => (ref.ask(request)(timeout)).mapTo[SuccessResponseV2]).orDie

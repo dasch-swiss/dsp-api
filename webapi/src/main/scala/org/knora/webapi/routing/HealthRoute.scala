@@ -27,48 +27,35 @@ trait HealthCheck {
     for {
       _        <- ZIO.logInfo("get application state")
       state    <- state.get
-      result   <- createResult(state)
+      result   <- setHealthState(state)
+      _        <- ZIO.logInfo("set health state")
       response <- createResponse(result)
       _        <- ZIO.logInfo("getting application state done")
     } yield response
 
-  private def createResult(state: AppState): UIO[HealthCheckResult] =
-    ZIO
-      .attempt(
-        state match {
-          case AppState.Stopped    => unhealthy("Stopped. Please retry later.")
-          case AppState.StartingUp => unhealthy("Starting up. Please retry later.")
-          case AppState.WaitingForTriplestore =>
-            unhealthy("Waiting for triplestore. Please retry later.")
-          case AppState.TriplestoreReady =>
-            unhealthy("Triplestore ready. Please retry later.")
-          case AppState.UpdatingRepository =>
-            unhealthy("Updating repository. Please retry later.")
-          case AppState.RepositoryUpToDate =>
-            unhealthy("Repository up to date. Please retry later.")
-          case AppState.CreatingCaches => unhealthy("Creating caches. Please retry later.")
-          case AppState.CachesReady    => unhealthy("Caches ready. Please retry later.")
-          case AppState.UpdatingSearchIndex =>
-            unhealthy("Updating search index. Please retry later.")
-          case AppState.SearchIndexReady =>
-            unhealthy("Search index ready. Please retry later.")
-          case AppState.LoadingOntologies =>
-            unhealthy("Loading ontologies. Please retry later.")
-          case AppState.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
-          case AppState.WaitingForIIIFService =>
-            unhealthy("Waiting for IIIF service. Please retry later.")
-          case AppState.IIIFServiceReady =>
-            unhealthy("IIIF service ready. Please retry later.")
-          case AppState.WaitingForCacheService =>
-            unhealthy("Waiting for cache service. Please retry later.")
-          case AppState.CacheServiceReady =>
-            unhealthy("Cache service ready. Please retry later.")
-          case AppState.MaintenanceMode =>
-            unhealthy("Application is in maintenance mode. Please retry later.")
-          case AppState.Running => healthy
-        }
-      )
-      .orDie
+  private def setHealthState(state: AppState): UIO[HealthCheckResult] =
+    ZIO.succeed(
+      state match {
+        case AppState.Stopped                => unhealthy("Stopped. Please retry later.")
+        case AppState.StartingUp             => unhealthy("Starting up. Please retry later.")
+        case AppState.WaitingForTriplestore  => unhealthy("Waiting for triplestore. Please retry later.")
+        case AppState.TriplestoreReady       => unhealthy("Triplestore ready. Please retry later.")
+        case AppState.UpdatingRepository     => unhealthy("Updating repository. Please retry later.")
+        case AppState.RepositoryUpToDate     => unhealthy("Repository up to date. Please retry later.")
+        case AppState.CreatingCaches         => unhealthy("Creating caches. Please retry later.")
+        case AppState.CachesReady            => unhealthy("Caches ready. Please retry later.")
+        case AppState.UpdatingSearchIndex    => unhealthy("Updating search index. Please retry later.")
+        case AppState.SearchIndexReady       => unhealthy("Search index ready. Please retry later.")
+        case AppState.LoadingOntologies      => unhealthy("Loading ontologies. Please retry later.")
+        case AppState.OntologiesReady        => unhealthy("Ontologies ready. Please retry later.")
+        case AppState.WaitingForIIIFService  => unhealthy("Waiting for IIIF service. Please retry later.")
+        case AppState.IIIFServiceReady       => unhealthy("IIIF service ready. Please retry later.")
+        case AppState.WaitingForCacheService => unhealthy("Waiting for cache service. Please retry later.")
+        case AppState.CacheServiceReady      => unhealthy("Cache service ready. Please retry later.")
+        case AppState.MaintenanceMode        => unhealthy("Application is in maintenance mode. Please retry later.")
+        case AppState.Running                => healthy
+      }
+    )
 
   private def createResponse(result: HealthCheckResult): UIO[HttpResponse] =
     ZIO
@@ -94,12 +81,12 @@ trait HealthCheck {
 
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
-  private def unhealthy(str: String) =
+  private def unhealthy(message: String) =
     HealthCheckResult(
       name = "AppState",
       severity = "non fatal",
       status = false,
-      message = str
+      message = message
     )
 
   private val healthy =

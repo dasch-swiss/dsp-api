@@ -1,5 +1,13 @@
 # Changelog
 
+### [24.0.6](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.5...v24.0.6) (2022-10-06)
+
+
+### Bug Fixes
+
+* Ask timeouts when requesting projects (DEV-1386) ([#2235](https://www.github.com/dasch-swiss/dsp-api/issues/2235)) ([1820367](https://www.github.com/dasch-swiss/dsp-api/commit/1820367f4e7b9d844f4abd7d98ae75e41133161b))
+* User can't be edited by project admin (DEV-1373) ([#2232](https://www.github.com/dasch-swiss/dsp-api/issues/2232)) ([e0b1433](https://www.github.com/dasch-swiss/dsp-api/commit/e0b143382fbf1c55146f775a720562d6ea7444d0))
+
 ### [24.0.5](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.4...v24.0.5) (2022-10-05)
 
 
