@@ -155,7 +155,7 @@ stack-down: ## stops the dsp-stack.
 	@docker compose -f docker-compose.yml down
 
 .PHONY: stack-down-delete-volumes
-stack-down-delete-volumes: ## stops the dsp-stack and deletes any created volumes (deletes the database!).
+stack-down-delete-volumes: clean-local-tmp clean-sipi-projects clean-sipi-tmp ## stops the dsp-stack and deletes any created volumes (deletes the database!).
 	@docker compose -f docker-compose.yml down --volumes
 
 .PHONY: stack-config
@@ -332,7 +332,7 @@ clean-metals: ## clean SBT and Metals related stuff
 	@rm -rf .metals
 	@rm -rf target
 
-clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp ## clean build artifacts
+clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp clean-sipi-projects ## clean build artifacts
 	@rm -rf .env
 
 .PHONY: clean-sipi-tmp
