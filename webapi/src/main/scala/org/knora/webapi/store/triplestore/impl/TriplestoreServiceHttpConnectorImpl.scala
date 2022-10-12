@@ -1034,7 +1034,7 @@ object TriplestoreServiceHttpConnectorImpl {
     // Configure total max or per route limits for persistent connections
     // that can be kept in the pool or leased by the connection manager.
     connManager.setMaxTotal(100)
-    connManager.setDefaultMaxPerRoute(10)
+    connManager.setDefaultMaxPerRoute(15)
 
     // Sipi custom default request config
     val defaultRequestConfig = RequestConfig
