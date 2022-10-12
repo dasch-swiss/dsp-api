@@ -70,7 +70,8 @@ lazy val root: Project = Project(id = "root", file("."))
     git.useGitDescribe := true,
     // override generated version string because docker hub rejects '+' in tags
     ThisBuild / version ~= (_.replace('+', '-')),
-    publish / skip := true
+    publish / skip := true,
+    name           := "dsp-api"
   )
 
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
