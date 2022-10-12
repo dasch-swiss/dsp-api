@@ -807,6 +807,9 @@ object GravsearchParser {
       // Successive statements are connected by Joins.
       node.visitChildren(this)
 
+    override def meet(node: algebra.AggregateFunctionCall): Unit =
+      unsupported(node)
+
     override def meetOther(node: algebra.QueryModelNode): Unit =
       unsupported(node)
   }
