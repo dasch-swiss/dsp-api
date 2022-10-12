@@ -6,8 +6,8 @@
 package org.knora.webapi.messages.util.search
 
 import akka.actor.ActorRef
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
-import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent._
@@ -204,7 +204,6 @@ trait ConstructToSelectTransformer extends WhereTransformer {
  */
 object QueryTraverser {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = Duration(5, SECONDS)
 
   /**
    * Helper method that analyzed an RDF Entity and returns a sequence of Ontology IRIs that are being referenced by the entity.
@@ -225,20 +224,21 @@ object QueryTraverser {
         val maybeOntoIri = map.get(internal)
         maybeOntoIri match {
           // if the map contains an ontology IRI corresponding to the entity IRI, then this can be returned
-          case Some(iri) => Future(Seq(iri))
+          case Some(iri) => FastFuture.successful(Seq(iri))
           case None => {
             // if the map doesn't contain a corresponding ontology IRI, then the entity IRI points to a resource or value
             // in that case, all ontologies of the project, to which the entity belongs, should be returned.
             val shortcode = internal.getProjectCode
             shortcode match {
-              case None => Future(Seq.empty)
+              case None => FastFuture.successful(Seq.empty)
               case Some(_) => {
                 // find the project with the shortcode
 
                 for {
-                  projectMaybe <- appActor
-                                    .ask(ProjectGetADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
-                                    .mapTo[Option[ProjectADM]]
+                  projectMaybe <-
+                    appActor
+                      .ask(ProjectGetADM(ProjectIdentifierADM(maybeShortcode = shortcode)))(Duration(100, SECONDS))
+                      .mapTo[Option[ProjectADM]]
                   projectOntologies = projectMaybe match {
                                         case None => Seq.empty
                                         // return all ontologies of the project
@@ -250,7 +250,7 @@ object QueryTraverser {
           }
         }
       }
-      case _ => Future(Seq.empty)
+      case _ => FastFuture.successful(Seq.empty)
     }
 
   /**
