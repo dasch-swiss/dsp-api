@@ -25,7 +25,7 @@ object Dependencies {
   val ZioJsonVersion              = "0.3.0"
   val ZioConfigVersion            = "3.0.2"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioLoggingVersion           = "2.1.1"
+  val ZioLoggingVersion           = "2.1.2"
   val ZioMetricsConnectorsVersion = "2.0.0"
   val ZioPreludeVersion           = "1.0.0-RC16"
 
@@ -57,8 +57,8 @@ object Dependencies {
 
   // logging
   val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
-  val slf4jApi       = "org.slf4j"                   % "slf4j-api"       % "2.0.2" // the logging interface
-  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.1" // the logging implementation
+  val slf4jApi       = "org.slf4j"                   % "slf4j-api"       % "2.0.3" // the logging interface
+  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.3" // the logging implementation
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
@@ -74,7 +74,7 @@ object Dependencies {
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "5.7.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.72"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
@@ -89,8 +89,8 @@ object Dependencies {
   val icu4j           = "com.ibm.icu"                % "icu4j"            % "71.1"
   val jakartaJSON     = "org.glassfish"              % "jakarta.json"     % "2.0.1"
   val jodd            = "org.jodd"                   % "jodd"             % "3.2.7"
-  val rdf4jClient     = "org.eclipse.rdf4j"          % "rdf4j-client"     % "4.1.3"
-  val rdf4jShacl      = "org.eclipse.rdf4j"          % "rdf4j-shacl"      % "4.1.3"
+  val rdf4jClient     = "org.eclipse.rdf4j"          % "rdf4j-client"     % "4.2.0"
+  val rdf4jShacl      = "org.eclipse.rdf4j"          % "rdf4j-shacl"      % "4.2.0"
   val saxonHE         = "net.sf.saxon"               % "Saxon-HE"         % "11.4"
   val scalaGraph      = "org.scala-graph"           %% "graph-core"       % "1.13.5" // Scala 3 incompatible
   val scallop         = "org.rogach"                %% "scallop"          % "4.1.0"  // Scala 3 compatible
@@ -104,8 +104,8 @@ object Dependencies {
   val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % AkkaActorVersion // Scala 3 compatible
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.8.4"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.8.4"
-  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"         // Scala 3 compatible
-  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.3"
+  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.14"         // Scala 3 compatible
+  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.5"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
