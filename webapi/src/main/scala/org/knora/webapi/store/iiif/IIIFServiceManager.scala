@@ -35,17 +35,19 @@ object IIIFServiceManager {
   val layer: ZLayer[IIIFService, Nothing, IIIFServiceManager] =
     ZLayer {
       for {
-        iiifs <- ZIO.service[IIIFService]
-      } yield new IIIFServiceManager {
-
-        override def receive(message: IIIFRequest) = message match {
-          case req: GetFileMetadataRequest                     => iiifs.getFileMetadata(req)
-          case req: MoveTemporaryFileToPermanentStorageRequest => iiifs.moveTemporaryFileToPermanentStorage(req)
-          case req: DeleteTemporaryFileRequest                 => iiifs.deleteTemporaryFile(req)
-          case req: SipiGetTextFileRequest                     => iiifs.getTextFileRequest(req)
-          case IIIFServiceGetStatus                            => iiifs.getStatus()
-          case other                                           => ZIO.logError(s"IIIFServiceManager received an unexpected message: $other")
-        }
-      }
+        iiifService <- ZIO.service[IIIFService]
+      } yield IIIFServiceManagerImpl(iiifService)
     }
+
+  private final case class IIIFServiceManagerImpl(iiifService: IIIFService) extends IIIFServiceManager {
+
+    override def receive(message: IIIFRequest) = message match {
+      case req: GetFileMetadataRequest                     => iiifService.getFileMetadata(req)
+      case req: MoveTemporaryFileToPermanentStorageRequest => iiifService.moveTemporaryFileToPermanentStorage(req)
+      case req: DeleteTemporaryFileRequest                 => iiifService.deleteTemporaryFile(req)
+      case req: SipiGetTextFileRequest                     => iiifService.getTextFileRequest(req)
+      case IIIFServiceGetStatus                            => iiifService.getStatus()
+      case other                                           => ZIO.logError(s"IIIFServiceManager received an unexpected message: $other")
+    }
+  }
 }
