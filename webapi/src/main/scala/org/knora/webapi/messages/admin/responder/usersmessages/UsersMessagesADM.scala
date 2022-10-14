@@ -839,7 +839,8 @@ case class UserChangeRequestADM(
 
   // change project memberships (could also involve changing projectAdmin memberships)
   if (
-    projects.isDefined && projectsAdmin.isDefined && parametersCount > 2 || projects.isDefined && !projectsAdmin.isDefined && parametersCount > 1
+    projects.isDefined && projectsAdmin.isDefined && parametersCount > 2 ||
+    projects.isDefined && !projectsAdmin.isDefined && parametersCount > 1
   ) {
     throw BadRequestException("Too many parameters sent for project membership change.")
   }
