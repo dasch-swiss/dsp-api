@@ -78,7 +78,7 @@ object Dependencies {
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
-  val jedis   = "redis.clients"  % "jedis"   % "4.2.3"
+  val jedis   = "redis.clients"  % "jedis"   % "4.3.0"
 
   // serialization
   val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
