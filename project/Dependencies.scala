@@ -78,7 +78,7 @@ object Dependencies {
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
-  val jedis   = "redis.clients"  % "jedis"   % "4.2.3"
+  val jedis   = "redis.clients"  % "jedis"   % "4.3.0"
 
   // serialization
   val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
@@ -96,7 +96,7 @@ object Dependencies {
   val scallop         = "org.rogach"                %% "scallop"          % "4.1.0"  // Scala 3 compatible
   val titaniumJSONLD  = "com.apicatalog"             % "titanium-json-ld" % "1.3.1"
   val xmlunitCore     = "org.xmlunit"                % "xmlunit-core"     % "2.9.0"
-  val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.13.4"
+  val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.13.4.2"
 
   // test
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
