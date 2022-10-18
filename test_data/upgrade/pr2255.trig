@@ -2,6 +2,11 @@
 @prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 
+# http://rdfh.ch/projects/0001 
+#   9 times as a subject
+#   4 times as an object
+#   13 occurences in total
+
 <http://rdfh.ch/projects/0001>
     a                              knora-admin:knoraProject ;
     knora-admin:projectShortname   "anything"^^xsd:string ;
