@@ -22,8 +22,6 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
-    var count = 0
-
     ProjectsIrisToChange.shortcodesToUuids.foreach { iri =>
       val iriToFind   = iri._1
       val iriToChange = iri._2
@@ -31,8 +29,6 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
 
       for (statement: Statement <- model) {
         if (statement.subj.stringValue == iriToFind) {
-          count = count + 1
-
           statementsToRemove += statement
 
           statementsToAdd += nodeFactory.makeStatement(
@@ -43,8 +39,6 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
         }
 
         if (statement.obj.stringValue == iriToFind) {
-          count = count + 1
-
           statementsToRemove += statement
 
           statementsToAdd += nodeFactory.makeStatement(
@@ -60,7 +54,7 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
     model.addStatements(statementsToAdd.toSet)
 
     log.info(
-      s"Transformed $count projectIris."
+      s"Transformed ${statementsToAdd.iterator.size} project IRIs."
     )
   }
 }
