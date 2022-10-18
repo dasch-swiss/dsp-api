@@ -20,13 +20,15 @@ import org.knora.webapi.core.domain.AppState
  */
 class HealthRouteE2ESpec extends E2ESpec {
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   // Directory path for generated client test data
   private val clientTestDataPath: Seq[String] = Seq("system", "health")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   "The Health Route" should {
 

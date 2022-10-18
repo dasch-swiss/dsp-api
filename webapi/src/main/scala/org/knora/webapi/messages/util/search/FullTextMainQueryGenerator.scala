@@ -6,10 +6,10 @@
 package org.knora.webapi.messages.util.search
 
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 object FullTextMainQueryGenerator {
 
@@ -64,6 +64,7 @@ object FullTextMainQueryGenerator {
    * @param valueObjectIris the IRIs of the value objects to be queried.
    * @param targetSchema    the target API schema.
    * @param schemaOptions   the schema options submitted with the request.
+   * @param appConfig       the application's configuration.
    * @return a [[ConstructQuery]].
    */
   def createMainQuery(
@@ -71,7 +72,7 @@ object FullTextMainQueryGenerator {
     valueObjectIris: Set[IRI],
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): ConstructQuery = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -175,7 +176,7 @@ object FullTextMainQueryGenerator {
                 leftArg = standoffStartIndexVar,
                 operator = CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
                 rightArg = XsdLiteral(
-                  value = (settings.standoffPerPage - 1).toString,
+                  value = (appConfig.standoffPerPage - 1).toString,
                   datatype = OntologyConstants.Xsd.Integer.toSmartIri
                 )
               )

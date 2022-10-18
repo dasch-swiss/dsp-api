@@ -7,20 +7,19 @@ package org.knora.webapi.core
 
 import zio._
 
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 object ActorSystemTest {
 
-  def layer(sys: akka.actor.ActorSystem): ZLayer[Any, Nothing, ActorSystem] =
-    ZLayer
-      .succeed(
-        new ActorSystem {
-          override val system: akka.actor.ActorSystem             = sys
-          override val settings: KnoraSettingsImpl                = KnoraSettings(system)
-          override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
-        }
-      )
-      .tap(_ => ZIO.logInfo(">>> ActorSystemTest Initialized <<<"))
+  def layer(sys: akka.actor.ActorSystem): ZLayer[AppConfig, Nothing, ActorSystem] =
+    ZLayer.scoped {
+      for {
+        appConfig <- ZIO.service[AppConfig]
+        context   <- ZIO.executor.map(_.asExecutionContext)
+      } yield new ActorSystem {
+        override val system: akka.actor.ActorSystem             = sys
+        override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(appConfig)
+      }
+    }
 }

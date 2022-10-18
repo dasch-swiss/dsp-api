@@ -36,7 +36,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol with SessionJs
   private val clientTestDataPath: Seq[String] = Seq("admin", "groups")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   private val imagesUser01Email = SharedTestDataADM.imagesUser01.email
   private val testPass          = SharedTestDataADM.testPass

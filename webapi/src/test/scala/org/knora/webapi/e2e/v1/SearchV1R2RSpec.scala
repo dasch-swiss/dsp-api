@@ -26,7 +26,9 @@ class SearchV1R2RSpec extends R2RSpec {
 
   private val searchPath = new SearchRouteV1(routeData).makeRoute
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

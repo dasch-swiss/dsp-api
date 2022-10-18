@@ -31,7 +31,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.store.iiif.api.IIIFService
@@ -41,14 +40,16 @@ import org.knora.webapi.util.SipiUtil
 
 /**
  * Makes requests to Sipi.
+ *
+ * @param appConfig   The application's configuration
+ * @param jwt         The JWT Service to handle JWT Tokens
+ * @param httpClient  The HTTP Client
  */
 case class IIIFServiceSipiImpl(
-  config: AppConfig,
+  appConfig: AppConfig,
   jwt: JWTService,
   httpClient: CloseableHttpClient
 ) extends IIIFService {
-
-  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   /**
    * Asks Sipi for metadata about a file, served from the 'knora.json' route.
@@ -60,9 +61,8 @@ case class IIIFServiceSipiImpl(
     import SipiKnoraJsonResponseProtocol._
 
     for {
-      url     <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
-      request <- ZIO.succeed(new HttpGet(url))
-      // _               <- ZIO.debug(request)
+      url             <- ZIO.succeed(appConfig.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
+      request         <- ZIO.succeed(new HttpGet(url))
       sipiResponseStr <- doSipiRequest(request).orDie
       sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]).orDie
     } yield GetFileMetadataResponse(
@@ -103,7 +103,7 @@ case class IIIFServiceSipiImpl(
 
     // builds the url for the operation
     def moveFileUrl(token: String) =
-      ZIO.succeed(s"${config.sipi.internalBaseUrl}/${config.sipi.v2.moveFileRoute}?token=$token")
+      ZIO.succeed(s"${appConfig.sipi.internalBaseUrl}/${appConfig.sipi.moveFileRoute}?token=$token")
 
     // build the form to send together with the request
     val formParams = new util.ArrayList[NameValuePair]()
@@ -149,7 +149,7 @@ case class IIIFServiceSipiImpl(
 
     def deleteUrl(token: String): ZIO[Any, Nothing, String] =
       ZIO.succeed(
-        s"${config.sipi.internalBaseUrl}/${config.sipi.v2.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
+        s"${appConfig.sipi.internalBaseUrl}/${appConfig.sipi.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
       )
 
     for {
@@ -213,7 +213,7 @@ case class IIIFServiceSipiImpl(
    */
   def getStatus(): UIO[IIIFServiceStatusResponse] =
     for {
-      request  <- ZIO.succeed(new HttpGet(config.sipi.internalBaseUrl + "/server/test.html"))
+      request  <- ZIO.succeed(new HttpGet(appConfig.sipi.internalBaseUrl + "/server/test.html"))
       response <- doSipiRequest(request).fold(_ => IIIFServiceStatusNOK, _ => IIIFServiceStatusOK)
     } yield response
 
@@ -225,7 +225,7 @@ case class IIIFServiceSipiImpl(
    */
   private def doSipiRequest(request: HttpRequest): Task[String] = {
     val targetHost: HttpHost =
-      new HttpHost(config.sipi.internalHost, config.sipi.internalPort, config.sipi.internalProtocol)
+      new HttpHost(appConfig.sipi.internalHost, appConfig.sipi.internalPort, appConfig.sipi.internalProtocol)
     val httpContext: HttpClientContext               = HttpClientContext.create()
     var maybeResponse: Option[CloseableHttpResponse] = None
 
@@ -280,7 +280,7 @@ object IIIFServiceSipiImpl {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
+  private def acquire(config: AppConfig): URIO[Any, CloseableHttpClient] = ZIO.attemptBlocking {
 
     // timeout from config
     val sipiTimeoutMillis: Int = config.sipi.timeoutInSeconds.toMillis.toInt
@@ -313,14 +313,12 @@ object IIIFServiceSipiImpl {
       .setSocketTimeout(sipiTimeoutMillis)
       .build()
 
-    // Create an HttpClient with the given custom dependencies and configuration.
-    val httpClient: CloseableHttpClient = HttpClients
+    // Return an HttpClient with the given custom dependencies and configuration.
+    HttpClients
       .custom()
       .setConnectionManager(connManager)
       .setDefaultRequestConfig(defaultRequestConfig)
       .build()
-
-    httpClient
   }.tap(_ => ZIO.logInfo(">>> Acquire Sipi IIIF Service <<<")).orDie
 
   /**
@@ -334,12 +332,8 @@ object IIIFServiceSipiImpl {
   val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] =
     ZLayer.scoped {
       for {
-        config <- ZIO.service[AppConfig]
-        // _          <- ZIO.debug(config)
+        config     <- ZIO.service[AppConfig]
         jwtService <- ZIO.service[JWTService]
-        // HINT: Scope does not work when used together with unsafeRun to
-        // bridge over to Akka. Need to change this as soon Akka is removed
-        // httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }

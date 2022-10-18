@@ -8,10 +8,10 @@ package org.knora.webapi.util.rdf
 import java.nio.file.Paths
 
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.FileUtil
 
 /**
@@ -117,9 +117,10 @@ class KnoraResponseV2Spec() extends CoreSpec {
    * A test implementation of [[KnoraJsonLDResponseV2]].
    */
   case class JsonLDTestResponse(jsonLDDocument: JsonLDDocument) extends KnoraJsonLDResponseV2 {
+
     override protected def toJsonLDDocument(
       targetSchema: ApiV2Schema,
-      settings: KnoraSettingsImpl,
+      appConfig: AppConfig,
       schemaOptions: Set[SchemaOption]
     ): JsonLDDocument = jsonLDDocument
   }
@@ -138,7 +139,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
         schemaOptions = Set.empty,
-        settings = settings
+        appConfig = appConfig
       )
 
       // Parse the JSON-LD to a JsonLDDocument.
@@ -166,7 +167,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
         rdfFormat = Turtle,
         targetSchema = ApiV2Complex,
         schemaOptions = Set.empty,
-        settings = settings
+        appConfig = appConfig
       )
 
       // Parse the Turtle to an RDF4J Model.
@@ -188,7 +189,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
         rdfFormat = JsonLD,
         targetSchema = ApiV2Complex,
         schemaOptions = Set(FlatJsonLD),
-        settings = settings
+        appConfig = appConfig
       )
 
       val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
@@ -202,7 +203,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
         schemaOptions = Set(HierarchicalJsonLD),
-        settings = settings
+        appConfig = appConfig
       )
 
       val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
@@ -216,7 +217,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
         schemaOptions = Set(FlatJsonLD),
-        settings = settings
+        appConfig = appConfig
       )
 
       val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)

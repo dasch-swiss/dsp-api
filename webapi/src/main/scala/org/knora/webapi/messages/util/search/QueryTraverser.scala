@@ -6,8 +6,8 @@
 package org.knora.webapi.messages.util.search
 
 import akka.actor.ActorRef
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
-import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent._
@@ -19,8 +19,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.responders.v2.ontology.Cache
 
 /**
@@ -204,7 +204,6 @@ trait ConstructToSelectTransformer extends WhereTransformer {
  */
 object QueryTraverser {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = Duration(5, SECONDS)
 
   /**
    * Helper method that analyzed an RDF Entity and returns a sequence of Ontology IRIs that are being referenced by the entity.
@@ -216,38 +215,42 @@ object QueryTraverser {
    * @param appActor     a reference to the appActor to retrieve a [[ProjectADM]] by a shortcode.
    * @return a sequence of ontology IRIs which relate to the input RDF entity.
    */
-  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], appActor: ActorRef): Seq[SmartIri] =
+  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], appActor: ActorRef)(implicit
+    ec: ExecutionContext
+  ): Future[Seq[SmartIri]] =
     entity match {
       case IriRef(iri, _) => {
         val internal     = iri.toOntologySchema(InternalSchema)
         val maybeOntoIri = map.get(internal)
         maybeOntoIri match {
           // if the map contains an ontology IRI corresponding to the entity IRI, then this can be returned
-          case Some(iri) => Seq(iri)
+          case Some(iri) => FastFuture.successful(Seq(iri))
           case None => {
             // if the map doesn't contain a corresponding ontology IRI, then the entity IRI points to a resource or value
             // in that case, all ontologies of the project, to which the entity belongs, should be returned.
             val shortcode = internal.getProjectCode
             shortcode match {
-              case None => Seq.empty
-              case _ => {
+              case None => FastFuture.successful(Seq.empty)
+              case Some(_) => {
                 // find the project with the shortcode
-                val projectFuture =
-                  appActor
-                    .ask(CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
-                    .mapTo[Option[ProjectADM]]
-                val projectMaybe = Await.result(projectFuture, 1.second)
-                projectMaybe match {
-                  case None => Seq.empty
-                  // return all ontologies of the project
-                  case Some(project) => project.ontologies.map(_.toSmartIri)
-                }
+
+                for {
+                  projectMaybe <-
+                    appActor
+                      .ask(ProjectGetADM(ProjectIdentifierADM(maybeShortcode = shortcode)))(Duration(100, SECONDS))
+                      .mapTo[Option[ProjectADM]]
+                  projectOntologies = projectMaybe match {
+                                        case None => Seq.empty
+                                        // return all ontologies of the project
+                                        case Some(project) => project.ontologies.map(_.toSmartIri)
+                                      }
+                } yield projectOntologies
               }
             }
           }
         }
       }
-      case _ => Seq.empty
+      case _ => FastFuture.successful(Seq.empty)
     }
 
   /**
@@ -268,6 +271,7 @@ object QueryTraverser {
       patterns.flatMap { pattern =>
         pattern match {
           case ValuesPattern(_, values)             => values.toSeq
+          case BindPattern(_, expression)           => List(expression.asInstanceOf[Entity])
           case UnionPattern(blocks)                 => blocks.flatMap(block => getEntities(block))
           case StatementPattern(subj, pred, obj, _) => List(subj, pred, obj)
           case LuceneQueryPattern(subj, obj, _, _)  => List(subj, obj)
@@ -286,9 +290,11 @@ object QueryTraverser {
       // from the cache, get the map from entity to the ontology where the entity is defined
       entityMap = ontoCache.entityDefinedInOntology
       // resolve all entities from the WHERE clause to the ontology where they are defined
-      relevantOntologies = entities.flatMap(resolveEntity(_, entityMap, storeManager)).toSet
+      relevantOntologies <-
+        Future.sequence(entities.map(resolveEntity(_, entityMap, storeManager)(executionContext)))
+      relevantOntologiesSet = relevantOntologies.flatten.toSet
       relevantOntologiesMaybe =
-        relevantOntologies match {
+        relevantOntologiesSet match {
           case Nil        => None // if nothing was found, then None should be returned
           case ontologies =>
             // if only knora-base was found, then None should be returned too

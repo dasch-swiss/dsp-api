@@ -213,8 +213,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           maybeGroup <- appActor
                           .ask(
                             GroupGetADM(
-                              groupIri = groupIri,
-                              requestingUser = KnoraSystemInstances.Users.SystemUser
+                              groupIri = groupIri
                             )
                           )
                           .mapTo[Option[GroupADM]]
@@ -698,8 +697,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-                requestingUser = KnoraSystemInstances.Users.SystemUser
+                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -720,8 +718,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 appActor
                   .ask(
                     GroupGetADM(
-                      groupIri = createRequest.forGroup,
-                      requestingUser = KnoraSystemInstances.Users.SystemUser
+                      groupIri = createRequest.forGroup
                     )
                   )
                   .mapTo[Option[GroupADM]]
@@ -1637,8 +1634,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-                requestingUser = KnoraSystemInstances.Users.SystemUser
+                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -1665,8 +1661,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 appActor
                   .ask(
                     GroupGetADM(
-                      groupIri = createRequest.forGroup.get,
-                      requestingUser = KnoraSystemInstances.Users.SystemUser
+                      groupIri = createRequest.forGroup.get
                     )
                   )
                   .mapTo[Option[GroupADM]]

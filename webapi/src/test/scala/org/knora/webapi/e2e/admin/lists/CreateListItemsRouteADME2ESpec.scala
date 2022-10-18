@@ -43,7 +43,7 @@ class CreateListItemsRouteADME2ESpec
   private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -57,6 +57,11 @@ class CreateListItemsRouteADME2ESpec
 
   val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.anythingAdminUser,
+    "test"
+  )
+
+  val beolAdminUserCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.beolUser,
     "test"
   )
 
@@ -257,6 +262,28 @@ class CreateListItemsRouteADME2ESpec
         )
         // store list IRI for next test
         newListIri.set(listInfo.id)
+      }
+
+      "create a list using bad project IRI, created in the old way with bad UUID version" in {
+        val createListRequest: String =
+          s"""{
+             |    "projectIri": "${SharedTestDataADM.BEOL_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
+             |}""".stripMargin
+
+        val request = Post(
+          baseApiUrl + s"/admin/lists",
+          HttpEntity(ContentTypes.`application/json`, createListRequest)
+        ) ~> addCredentials(beolAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // TODO-mro: implementation of DEV-1400 should break this tes - list with old BEOL IRI shouldn;t be created
+        response.status should be(StatusCodes.OK)
+
+        val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+
+        val listInfo = receivedList.listinfo
+        listInfo.projectIri should be(SharedTestDataADM.BEOL_PROJECT_IRI)
       }
 
       "return a ForbiddenException if the user creating the list is not project or system admin" in {

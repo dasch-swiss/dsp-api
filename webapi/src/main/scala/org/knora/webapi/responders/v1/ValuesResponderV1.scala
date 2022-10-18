@@ -56,7 +56,7 @@ import org.knora.webapi.util._
  */
 class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData) {
   // Converts SPARQL query results to ApiValueV1 objects.
-  val valueUtilV1 = new ValueUtilV1(settings)
+  val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
 
   /**
    * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.

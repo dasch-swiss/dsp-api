@@ -34,7 +34,7 @@ object OntologyResponderV1Spec {
 /**
  * Tests [[OntologyResponderV1]].
  */
-class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
+class OntologyResponderV1Spec extends CoreSpec with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 10.seconds

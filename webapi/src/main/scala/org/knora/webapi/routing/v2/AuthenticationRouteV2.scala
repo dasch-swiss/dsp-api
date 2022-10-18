@@ -33,7 +33,8 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
         requestContext =>
           requestContext.complete {
             doAuthenticateV2(
-              requestContext = requestContext
+              requestContext = requestContext,
+              routeData.appConfig
             )
           }
       } ~
@@ -61,7 +62,8 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
                     maybeUsername = apiRequest.username
                   ),
                   password = apiRequest.password
-                )
+                ),
+                routeData.appConfig
               )
             }
           }
@@ -69,7 +71,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
         delete { // logout
           requestContext =>
             requestContext.complete {
-              doLogoutV2(requestContext)
+              doLogoutV2(requestContext, routeData.appConfig)
             }
         }
     } ~
@@ -77,7 +79,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
         get { // html login interface (necessary for IIIF Authentication API support)
           requestContext =>
             requestContext.complete {
-              presentLoginFormV2(requestContext)
+              presentLoginFormV2(requestContext, routeData.appConfig)
             }
         } ~
           post { // called by html login interface (necessary for IIIF Authentication API support)
@@ -90,7 +92,8 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
                         maybeUsername = Some(username)
                       ),
                       password = password
-                    )
+                    ),
+                    routeData.appConfig
                   )
                 }
               }

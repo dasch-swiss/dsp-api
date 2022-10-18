@@ -7,300 +7,35 @@
 
 ## Introduction
 
-Knora's responsibilities include:
+DSP-API's responsibilites are:
 
-- Receiving, validating, authenticating, and authorising HTTP requests from
-  clients (which may be web browsers or other software) to query or update
-  data in a Knora repository.
-- Querying and updating the repository on behalf of clients.
-- Filtering query results according to the user's permissions.
-- Transforming query results into DSP-API responses.
-- Ensuring that ontologies and data in the triplestore are consistent and
-  conform to the requirements of the
-  [knora-base](../../../02-knora-ontologies/knora-base.md) ontology.
-- Managing the versioning of data in the triplestore.
-- Working with [Sipi](http://sipi.io) to store files that cannot be stored
-  as RDF data.
+- Querying, creating, updating, and deleting data
+- Creating, updating and deleting data models (ontologies)
+- Managing projects and users
+- Authentication of clients
+- Authorisation of clients' requests
 
-Knora is written in [Scala](http://www.scala-lang.org/), using the
+DSP-API is developed with [Scala](http://www.scala-lang.org/) and uses the
 [Akka](http://akka.io/) framework for message-based concurrency. It is
-designed to work with any standards-compliant triplestore via
-the [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/), but is currently
-tested only with [Apache Jena Fuseki](https://jena.apache.org) (with support
-for other triplestores coming soon).
+designed to work with the [Apache Jena Fuseki](https://jena.apache.org) triplestore
+which is compliant to the [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/).
+For file storage, it uses [Sipi](http://sipi.io).
 
-## Knora APIs
+## DSP-API Versions
 
-Knora supports different versions of its API for working with humanities data:
+DSP-API supports different versions of its API for working with humanities data:
 
-- [DSP-API v2](../../../03-apis/api-v2/index.md), a standards-based
-  API currently under development.
-- [DSP-API v1](../../../03-apis/api-v1/index.md), a stable, legacy API
-  that focuses on maintaining compatibility with applications that used
-  Knora's prototype software.
+- [DSP-API v2](../../../03-apis/api-v2/index.md), the actual DSP-API that should be used
+- [DSP-API v1](../../../03-apis/api-v1/index.md), legacy API compatibile with applications 
+  that used the prototype software.
 
 There is also a [Knora admin API](../../../03-apis/api-admin/index.md) for
-administering Knora repositories.
+administering DSP projects.
 
-The Knora code base includes some functionality that is shared by these different
+The DSP-API code base includes some functionality that is shared by these different
 APIs, as well as separate packages for each API. Internally, Knora APIs v1 and v2 both
 use functionality in the admin API. DSP-API v1 uses some functionality from
 API v2, but API v2 does not depend on API v1.
-
-## Design Diagram
-
-![A high-level diagram of Knora.](figures/design-diagram.png "A high-level diagram of Knora.")
-
-## Modules
-
-### HTTP Module
-
-- `org.knora.webapi.routing`: Knora's [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html) routes.
-  Each routing class matches URL patterns for requests involving some particular
-  type of data in the repository. Routes are API-specific. For example,
-  `ResourcesRouteV2` matches URL paths starting with `/v2/resources`, which
-  represent requests involving Knora resources.
-- `org.knora.webapi.http`: a few HTTP-related constants and utilities.
-
-### Responders Module
-
-- `org.knora.webapi.responders`: Each responder is an actor that is responsible for managing
-  some particular type of data in the repository. A responder receives messages from
-  a route, does some work (e.g. querying the triplestore), and returns a reply
-  message. Responders are API-specific and can communicate with other responders
-  via messages. For example, in API v2, `ResourcesResponderV2` handles requests
-  involving resources, and delegates some of its tasks to `ValuesResponderV2`,
-  which is responsible for requests involving values.
-
-### Store Module
-
-- `org.knora.webapi.store`: Contains actors that connect to triplestores. The
-  most important one is `HttpTriplestoreConnector`, which communicates with
-  triplestores via the
-  [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/).
-
-### Shared Between Modules
-
-- `org.knora.webapi`: Contains core classes such as `Main`, which starts the
-  Knora server, and `SettingsImpl`, which represents the application settings
-  that are loaded using the [Typesafe Config](https://github.com/lightbend/config)
-  library.
-- `org.knora.webapi.util`: Utilities needed by different parts of the application,
-  such as parsing and formatting tools.
-- `org.knora.webapi.messages`: The Akka messages used by each responder.
-- `org.knora.webapi.messages.twirl`: Text-generation templates for use with
-  [the Twirl template engine](https://github.com/playframework/twirl). Knora
-  uses Twirl to generate SPARQL requests and other types of text documents.
-
-## Actor Supervision and Creation
-
-At system start, the main application supervisor actor is created in
-`LiveCore.scala`:
-
-```scala
-    /**
-      * The main application supervisor actor which is at the top of the actor
-      * hierarchy. All other actors are instantiated as child actors. Further,
-      * this actor is responsible for the execution of the startup and shutdown
-      * sequences.
-      */
-    lazy val appActor: ActorRef = system.actorOf(
-        Props(new ApplicationActor with LiveManagers)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-        name = APPLICATION_MANAGER_ACTOR_NAME
-    )
-```
-
-and through mixin also the store and responder manager actors:
-
-```scala
-    /**
-     * The actor that forwards messages to actors that deal with persistent storage.
-     */
-    lazy val storeManager: ActorRef = context.actorOf(
-        Props(new StoreManager(self) with LiveActorMaker)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-        name = StoreManagerActorName
-    )
-
-    /**
-     * The actor that forwards messages to responder actors to handle API requests.
-     */
-    lazy val responderManager: ActorRef = context.actorOf(
-        Props(new ResponderManager(self) with LiveActorMaker)
-          .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-        name = RESPONDER_MANAGER_ACTOR_NAME
-    )
-```
-
-
-The `ApplicationActor` is the first actor in the application. All other actors
-are children of this actor and thus it takes also the role of the supervisor
-actor. It accepts messages for starting and stopping the Knora-API, holds the
-current state of the application, and is responsible for coordination of
-the startup and shutdown sequence. Further, it forwards any messages meant
-for responders or the store to the respective actor.
-
-In most cases, there is only one instance of each supervised actor; such
-actors do their work asynchronously in futures, so there would be no
-advantage in using an actor pool. A few actors do have pools of instances,
-because they do their work synchronously; this allows concurrency to be controlled
-by setting the size of each pool. These pools are configured in `application.conf`
-under `akka.actor.deployment`.
-
-The `ApplicationActor` also starts the HTTP service as part of the startup
-sequence:
-
-```scala
-    /**
-     * Starts the Knora-API server.
-     *
-     * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
-     * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
-     * @param retryCnt            how many times was this command tried
-     */
-    def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = {
-
-        val bindingFuture: Future[Http.ServerBinding] = Http()
-          .bindAndHandle(
-              Route.handlerFlow(apiRoutes),
-              knoraSettings.internalKnoraApiHost,
-              knoraSettings.internalKnoraApiPort
-          )
-
-        bindingFuture onComplete {
-            case Success(_) =>
-
-                // Transition to ready state
-                self ! AppReady()
-
-                if (knoraSettings.prometheusEndpoint) {
-                    // Load Kamon monitoring
-                    Kamon.loadModules()
-                }
-
-                // Kick of startup procedure.
-                self ! InitStartUp(ignoreRepository, requiresIIIFService)
-
-            case Failure(ex) =>
-                if (retryCnt < 5) {
-                    logger.error(
-                        "Failed to bind to {}:{}! - {} - retryCnt: {}",
-                        knoraSettings.internalKnoraApiHost,
-                        knoraSettings.internalKnoraApiPort,
-                        ex.getMessage,
-                        retryCnt
-                    )
-                    self ! AppStart(ignoreRepository, requiresIIIFService, retryCnt + 1)
-                } else {
-                    logger.error(
-                        "Failed to bind to {}:{}! - {}",
-                        knoraSettings.internalKnoraApiHost,
-                        knoraSettings.internalKnoraApiPort,
-                        ex.getMessage
-                    )
-                    self ! AppStop()
-                }
-        }
-    }
-```
-
-
-## Coordinated Application Startup
-
-To coordinate necessary startup tasks, the application goes through a few states at startup:
-
-  - Stopped: Application starting. Http layer is still not started.
-  - StartingUp: Http layer is started. Only '/health' and monitoring routes are working.
-  - WaitingForRepository: Repository check is initiated but not yet finished.
-  - RepositoryReady: Repository check has finished and repository is available.
-  - CreatingCaches: Creating caches is initiated but not yet finished.
-  - CachesReady: Caches are created and ready for use.
-  - LoadingOntologies: Loading of ontologies is initiated but not yet finished.
-  - OntologiesReady: Ontologies are loaded.
-  - MaintenanceMode: During backup or other maintenance tasks, so that access to the API is closed
-  - Running: Running state. All APIs are open.
-
-During the `WaitingForRepository` state, if the repository is not configured or
-available, the system will indefinitely retry to access it. This allows for
-prolonged startup times of the repository. Also, if checking the repository
-returns an error, e.g., because the repository data needs to be migrated first,
-the application will shutdown.
-
-## Concurrency
-
-In general, Knora is written in a functional style, avoiding shared mutable
-state. This makes it easier to reason about concurrency, and
-eliminates an important potential source of bugs (see [Out of the Tar Pit](http://curtclifton.net/papers/MoseleyMarks06a.pdf)).
-
-The routes and actors in Knora use Akka's `ask` pattern,
-rather than the `tell` pattern, to send messages and receive responses,
-because this simplifies the code considerably (using `tell` would
-require actors to maintain complex mutable state), with no apparent
-reduction in performance.
-
-To manage asynchronous communication between actors, the DSP-API
-server uses Scala's `Future` monad extensively. See
-[Futures with Akka](futures-with-akka.md) for details.
-
-We use Akka's asynchronous logging interface (see [Akka Logging](http://doc.akka.io/docs/akka/current/scala/logging.html)).
-
-## What the Responders Do
-
-In Knora, a responder is an actor that receives a
-request message (a Scala case class) in the `ask` pattern, does some work
-(e.g. getting data from the triplestore), and returns a reply message (another
-case class). These reply messages are are defined in `org.knora.webapi.messages`.
-A responder can produce a reply representing a complete API
-response, or part of a response that will be used by another responder.
-If it's a complete API response, there is an API-specific mechanism for
-converting it into the response format that the client expects.
-
-## Store Module (org.knora.webapi.store package)
-
-The store module is used for accessing the triplestore and other
-external storage providers.
-
-All access to the Store module goes through the `StoreManager`
-supervisor actor. The `StoreManager` creates pools of actors, such as
-`HttpTriplestoreActor`, that interface with the storage providers.
-
-The contents of the `store` package are not used directly by other
-packages, which interact with the `store` package only by sending
-messages to `StoreManager`.
-
-Parsing of SPARQL query results is handled by this module.
-
-See [Store Module](store-module.md) for a more detailed discussion.
-
-## Triplestore Access
-
-SPARQL queries are generated from templates, using the
-[Twirl](https://github.com/playframework/twirl) template engine. For
-example, if we're querying a resource, the template will contain a
-placeholder for the resource's IRI. The templates can be found under
-`src/main/twirl/queries/sparql`.
-
-To perform a SPARQL SELECT query, a responder sends a `SparqlSelectRequest`
-message to the `storeManager` actor, like this:
-
-```scala
-        for {
-            isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
-                entityIri = entityIri,
-                ignoreKnoraConstraints = ignoreKnoraConstraints,
-                ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject
-            ).toString())
-
-            isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]
-```
-
-
-The reply message, `SparqlSelectResponse`, is a data structure containing the rows
-that were returned as the query result.
-
-To perform a SPARQL CONSTRUCT query, you can use `SparqlExtendedConstructRequest`,
-and the response will be a `SparqlExtendedConstructResponse`.
 
 ## Error Handling
 
@@ -319,9 +54,6 @@ The error-handling design has these aims:
     a triplestore failure), log it, but don't do this with errors caused
     by bad input.
 6.  When logging errors, include the full JVM stack trace.
-
-The design does not yet include, but could easily accommodate,
-translations of error messages into different languages.
 
 A hierarchy of exception classes is defined in `Exceptions.scala`,
 representing different sorts of errors that could occur. The hierarchy

@@ -6,8 +6,6 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import spray.json.JsValue
 
 import java.util.UUID
@@ -40,10 +38,6 @@ import org.knora.webapi.util._
  * Static data for testing [[ResourcesResponderV1]].
  */
 object ResourcesResponderV1Spec {
-  private val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
 
   private val ReiseInsHeiligelandThreeValues: ResourceSearchResponseV1 = ResourceSearchResponseV1(
     resources = Vector(
@@ -647,7 +641,13 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
   implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val valueUtilV1 = new ValueUtilV1(settings)
+  private val resourcesResponderV1SpecContextData: ResourcesResponderV1SpecContextData =
+    new ResourcesResponderV1SpecContextData(appConfig)
+
+  private val resourcesResponderV1SpecFullData: ResourcesResponderV1SpecFullData =
+    new ResourcesResponderV1SpecFullData(appConfig)
+
+  private val valueUtilV1 = new ValueUtilV1(appConfig)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -910,7 +910,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
         compareResourceFullResponses(
           received = response,
-          expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse
+          expected = resourcesResponderV1SpecFullData.expectedBookResourceFullResponse
         )
       }
     }
@@ -925,7 +925,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
         compareResourceFullResponses(
           received = response,
-          expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse
+          expected = resourcesResponderV1SpecFullData.expectedPageResourceFullResponse
         )
       }
     }
@@ -940,7 +940,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
       val response: JsValue = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
 
-      response should be(ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
+      response should be(resourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
     }
 
     "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
@@ -954,7 +954,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case response: ResourceContextResponseV1 =>
         compareResourcePartOfContextResponses(
           received = response,
-          expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse
+          expected = resourcesResponderV1SpecContextData.expectedPageResourceContextResponse
         )
       }
     }
@@ -1163,7 +1163,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
           )
         ),
         resource_reference = Set(nonexistentIri),
-        mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+        mapping = resourcesResponderV1SpecFullData.dummyMapping,
         mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
       )
 
@@ -1226,7 +1226,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
             startIndex = 1
           )
         ),
-        mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+        mapping = resourcesResponderV1SpecFullData.dummyMapping,
         mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
         resource_reference = Set("http://rdfh.ch/0803/c5058f3a")
       )

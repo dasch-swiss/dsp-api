@@ -123,7 +123,17 @@
     salsah-gui:guiAttribute           "min=0",
                                       "max=-1" .
 
-
+:hasIntegerUsedByOtherOntologies
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "Ganzzahl"@de,
+                                      "Nombre entier"@fr,
+                                      "Intero"@it,
+                                      "Integer"@en ;
+    knora-base:objectClassConstraint  knora-base:IntValue ;
+    salsah-gui:guiElement             salsah-gui:Spinbox ;
+    salsah-gui:guiAttribute           "min=0",
+                                      "max=-1" .
 
 :hasDecimal
     rdf:type                          owl:ObjectProperty ;

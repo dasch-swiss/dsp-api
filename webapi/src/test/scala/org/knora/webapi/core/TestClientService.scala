@@ -1,7 +1,6 @@
 package org.knora.webapi.testservices
 
 import akka.http.scaladsl.client.RequestBuilding
-import akka.stream.Materializer
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -37,8 +36,6 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
 
@@ -64,8 +61,6 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     with RequestBuilding {
 
   implicit val system: akka.actor.ActorSystem     = sys
-  implicit val settings: KnoraSettingsImpl        = KnoraSettings(system)
-  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
   case class TestClientTimeoutException(msg: String) extends Exception

@@ -63,7 +63,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
 
     for {
       // FIXME: need to call directly into the State service
-      value: Boolean <- FastFuture.successful(settings.allowReloadOverHTTP)
+      value: Boolean <- FastFuture.successful(responderData.appConfig.allowReloadOverHttp)
       _ = if (!value) {
             throw ForbiddenException(
               "The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"
