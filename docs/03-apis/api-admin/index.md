@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 
-# Knora Admin API
+# DSP Admin API
 
-The Knora admin API makes it possible to administer Knora projects, users, user groups, permissions, and hierarchical lists.
+The DSP Admin API makes it possible to administer projects, users, user groups, permissions, and hierarchical lists.
 
 - [Introduction](introduction.md)
 - [Overview](overview.md)

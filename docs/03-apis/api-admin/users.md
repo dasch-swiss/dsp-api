@@ -130,8 +130,7 @@ specified by the `id` in the request body as below:
 ### Delete user
 
   - Required permission: SystemAdmin / self
-  - Remark: The same as updating a user and changing `status` to
-    `false`. To un-delete, set `status` to `true`.
+  - Remark: The same as updating a user and changing `status` to `false`. To un-delete, set `status` to `true`.
   - PUT: `/admin/users/iri/<userIri>/Status`
   - BODY:
   
@@ -144,8 +143,7 @@ specified by the `id` in the request body as below:
 ### Delete user (-\update user)**
 
   - Required permission: SystemAdmin / self
-  - Remark: The same as updating a user and changing `status` to
-    `false`. To un-delete, set `status` to `true`.
+  - Remark: The same as updating a user and changing `status` to `false`. To un-delete, set `status` to `true`.
   - DELETE: `/admin/users/iri/<userIri>`
   - BODY: empty
 
@@ -158,12 +156,13 @@ specified by the `id` in the request body as below:
 
 ### Add/remove user to/from project
 
-  - Required permission: SystemAdmin / ProjectAdmin / self (if
-    project self-assignment is enabled)
+  - Required permission: SystemAdmin / ProjectAdmin / self (if project self-assignment is enabled)
   - Required information: project IRI, user IRI
   - Effects: `knora-base:isInProject` user property
   - POST / DELETE: `/admin/users/iri/<userIri>/project-memberships/<projectIri>`
   - BODY: empty
+
+Note: When a user is project admin in the same project, his project admin membership will be removed as well.
 
 ## User's group membership operations
 
@@ -178,6 +177,8 @@ specified by the `id` in the request body as below:
   - Effects: `knora-base:isInProjectAdminGroup` user property
   - POST / DELETE: `/admin/users/iri/<userIri>/project-admin-memberships/<projectIri>`
   - BODY: empty
+
+Note: In order to add a user to a project admin group, the user needs to be member of that project.
 
 ### Get user's group memberships**
 
