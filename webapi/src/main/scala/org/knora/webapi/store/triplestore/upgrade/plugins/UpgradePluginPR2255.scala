@@ -22,35 +22,37 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
-    val iriToFind   = "http://rdfh.ch/projects/0001"
-    val iriToChange = "http://rdfh.ch/projects/0123456789"
-    val updatedNode = nodeFactory.makeIriNode(iriToChange)
-
     var count = 0
 
-    for (statement: Statement <- model) {
-      if (statement.subj.stringValue == iriToFind) {
-        count = count + 1
+    ProjectsIrisToChange.shortcodesToUuids.foreach { iri =>
+      val iriToFind   = iri._1
+      val iriToChange = iri._2
+      val updatedNode = nodeFactory.makeIriNode(iriToChange)
 
-        statementsToRemove += statement
+      for (statement: Statement <- model) {
+        if (statement.subj.stringValue == iriToFind) {
+          count = count + 1
 
-        statementsToAdd += nodeFactory.makeStatement(
-          subj = updatedNode,
-          pred = statement.pred,
-          obj = statement.obj
-        )
-      }
+          statementsToRemove += statement
 
-      if (statement.obj.stringValue == iriToFind) {
-        count = count + 1
+          statementsToAdd += nodeFactory.makeStatement(
+            subj = updatedNode,
+            pred = statement.pred,
+            obj = statement.obj
+          )
+        }
 
-        statementsToRemove += statement
+        if (statement.obj.stringValue == iriToFind) {
+          count = count + 1
 
-        statementsToAdd += nodeFactory.makeStatement(
-          subj = statement.subj,
-          pred = statement.pred,
-          obj = updatedNode
-        )
+          statementsToRemove += statement
+
+          statementsToAdd += nodeFactory.makeStatement(
+            subj = statement.subj,
+            pred = statement.pred,
+            obj = updatedNode
+          )
+        }
       }
     }
 
@@ -61,4 +63,11 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
       s"Transformed $count projectIris."
     )
   }
+}
+
+object ProjectsIrisToChange {
+  val prefix = "http://rdfh.ch/projects/"
+  val shortcodesToUuids: Map[String, String] = Map(
+    s"${prefix}0001" -> s"${prefix}Lw3FC39BSzCwvmdOaTyLqQ"
+  )
 }
