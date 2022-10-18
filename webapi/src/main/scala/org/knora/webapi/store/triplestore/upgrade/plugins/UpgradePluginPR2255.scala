@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.Logger
 
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
+import org.apache.jena.sparql.function.library.uuid
 
 /**
  * Transforms a repository for DSP-API PR2255.
@@ -22,32 +23,32 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
-    ProjectsIrisToChange.shortcodesToUuids.foreach { iri =>
-      val iriToFind   = iri._1
-      val iriToChange = iri._2
+    ProjectsIrisToChange.shortcodesToUuids.foreach { case (iriToFind, iriToChange) =>
       val updatedNode = nodeFactory.makeIriNode(iriToChange)
 
-      for (statement: Statement <- model) {
-        if (statement.subj.stringValue == iriToFind) {
-          statementsToRemove += statement
+      for {
+        statement <- model
 
-          statementsToAdd += nodeFactory.makeStatement(
-            subj = updatedNode,
-            pred = statement.pred,
-            obj = statement.obj
-          )
-        }
+        _ = if (statement.subj.stringValue == iriToFind) {
+              statementsToRemove += statement
 
-        if (statement.obj.stringValue == iriToFind) {
-          statementsToRemove += statement
+              statementsToAdd += nodeFactory.makeStatement(
+                subj = updatedNode,
+                pred = statement.pred,
+                obj = statement.obj
+              )
+            }
 
-          statementsToAdd += nodeFactory.makeStatement(
-            subj = statement.subj,
-            pred = statement.pred,
-            obj = updatedNode
-          )
-        }
-      }
+        _ = if (statement.obj.stringValue == iriToFind) {
+              statementsToRemove += statement
+
+              statementsToAdd += nodeFactory.makeStatement(
+                subj = statement.subj,
+                pred = statement.pred,
+                obj = updatedNode
+              )
+            }
+      } yield ()
     }
 
     model.removeStatements(statementsToRemove.toSet)
