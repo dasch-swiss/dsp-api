@@ -24,7 +24,7 @@ class UpgradePluginPR2255Spec extends UpgradePluginSpec with LazyLogging {
 
       // Check project IRI was changed.
       val subj =
-        nodeFactory.makeIriNode(ProjectsIrisToChange.shortcodesToUuids.head._2)
+        nodeFactory.makeIriNode("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
 
       model
         .find(
@@ -37,7 +37,7 @@ class UpgradePluginPR2255Spec extends UpgradePluginSpec with LazyLogging {
         case Some(statement: Statement) =>
           statement.subj match {
             case node: IriNode =>
-              assert(node.iri == ProjectsIrisToChange.shortcodesToUuids.head._2)
+              assert(node.iri == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
 
             case _ => ()
           }
