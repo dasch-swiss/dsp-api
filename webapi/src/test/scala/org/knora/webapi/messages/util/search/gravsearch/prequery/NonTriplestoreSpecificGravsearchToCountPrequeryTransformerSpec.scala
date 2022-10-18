@@ -9,6 +9,7 @@ import scala.concurrent.duration._
 
 import dsp.errors.AssertionException
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -30,13 +31,18 @@ private object CountQueryHandler {
   def transformQuery(
     query: String,
     appActor: ActorRef,
-    responderData: ResponderData
+    responderData: ResponderData,
+    appConfig: AppConfig
   )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 
     val typeInspectionRunner =
-      new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
+      new GravsearchTypeInspectionRunner(
+        appActor,
+        responderData = responderData,
+        inferTypes = true
+      )
 
     val typeInspectionResultFuture = typeInspectionRunner.inspectTypes(constructQuery.whereClause, anythingUser)
 
@@ -73,7 +79,7 @@ private object CountQueryHandler {
 
 }
 
-class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends CoreSpec() {
+class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends CoreSpec {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -340,7 +346,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilter,
           appActor,
-          responderData
+          responderData,
+          appConfig
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
@@ -353,7 +360,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
           appActor,
-          responderData
+          responderData,
+          appConfig
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)

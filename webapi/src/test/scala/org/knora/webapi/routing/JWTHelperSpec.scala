@@ -21,48 +21,48 @@ class JWTHelperSpec extends CoreSpec with ImplicitSender {
     "create a token" in {
       val token: String = JWTHelper.createToken(
         userIri = SharedTestDataADM.anythingUser1.id,
-        secret = settings.jwtSecretKey,
-        longevity = settings.jwtLongevity,
-        issuer = settings.externalKnoraApiHostPort,
+        secret = appConfig.jwtSecretKey,
+        longevity = appConfig.jwtLongevityAsDuration,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort,
         content = Map("foo" -> JsString("bar"))
       )
 
       JWTHelper.extractUserIriFromToken(
         token = token,
-        secret = settings.jwtSecretKey,
-        issuer = settings.externalKnoraApiHostPort
+        secret = appConfig.jwtSecretKey,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(Some(SharedTestDataADM.anythingUser1.id))
 
       JWTHelper.extractContentFromToken(
         token = token,
-        secret = settings.jwtSecretKey,
+        secret = appConfig.jwtSecretKey,
         contentName = "foo",
-        issuer = settings.externalKnoraApiHostPort
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(Some("bar"))
     }
 
     "validate a token" in {
       JWTHelper.validateToken(
         token = validToken,
-        secret = settings.jwtSecretKey,
-        issuer = settings.externalKnoraApiHostPort
+        secret = appConfig.jwtSecretKey,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(true)
     }
 
     "extract the user's IRI" in {
       JWTHelper.extractUserIriFromToken(
         token = validToken,
-        secret = settings.jwtSecretKey,
-        issuer = settings.externalKnoraApiHostPort
+        secret = appConfig.jwtSecretKey,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(Some(SharedTestDataADM.anythingUser1.id))
     }
 
     "extract application-specific content" in {
       JWTHelper.extractContentFromToken(
         token = validToken,
-        secret = settings.jwtSecretKey,
+        secret = appConfig.jwtSecretKey,
         contentName = "foo",
-        issuer = settings.externalKnoraApiHostPort
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(Some("bar"))
     }
 
@@ -72,8 +72,8 @@ class JWTHelperSpec extends CoreSpec with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = invalidToken,
-        secret = settings.jwtSecretKey,
-        issuer = settings.externalKnoraApiHostPort
+        secret = appConfig.jwtSecretKey,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -83,8 +83,8 @@ class JWTHelperSpec extends CoreSpec with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = tokenWithInvalidSubject,
-        secret = settings.jwtSecretKey,
-        issuer = settings.externalKnoraApiHostPort
+        secret = appConfig.jwtSecretKey,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -94,8 +94,8 @@ class JWTHelperSpec extends CoreSpec with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = tokenWithMissingExp,
-        secret = settings.jwtSecretKey,
-        issuer = settings.externalKnoraApiHostPort
+        secret = appConfig.jwtSecretKey,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -105,8 +105,8 @@ class JWTHelperSpec extends CoreSpec with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = expiredToken,
-        secret = settings.jwtSecretKey,
-        issuer = settings.externalKnoraApiHostPort
+        secret = appConfig.jwtSecretKey,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -116,8 +116,8 @@ class JWTHelperSpec extends CoreSpec with ImplicitSender {
 
       JWTHelper.validateToken(
         token = tokenWithDifferentIssuer,
-        secret = settings.jwtSecretKey,
-        issuer = settings.externalKnoraApiHostPort
+        secret = appConfig.jwtSecretKey,
+        issuer = appConfig.knoraApi.externalKnoraApiHostPort
       ) should be(false)
     }
   }

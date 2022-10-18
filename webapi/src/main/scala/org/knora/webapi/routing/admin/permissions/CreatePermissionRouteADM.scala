@@ -17,7 +17,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
 class CreatePermissionRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
@@ -41,7 +40,7 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
         /* create a new administrative permission */
         entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => requestContext =>
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield AdministrativePermissionCreateRequestADM(
             createRequest = apiRequest,
             requestingUser = requestingUser,
@@ -51,7 +50,6 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )
@@ -68,7 +66,7 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
         /* create a new default object access permission */
         entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest => requestContext =>
           val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield DefaultObjectAccessPermissionCreateRequestADM(
             createRequest = apiRequest,
             requestingUser = requestingUser,
@@ -78,7 +76,6 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            settings = settings,
             appActor = appActor,
             log = log
           )

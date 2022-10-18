@@ -26,7 +26,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
-class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
+class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
 
   private val timeout = 30.seconds
 

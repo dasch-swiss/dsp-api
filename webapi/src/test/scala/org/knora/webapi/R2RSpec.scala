@@ -27,8 +27,6 @@ import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
 
@@ -90,13 +88,13 @@ abstract class R2RSpec
     }
 
   // main difference to other specs (no own systen and executionContext defined)
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  lazy val rdfDataObjects                       = List.empty[RdfDataObject]
-  val log: Logger                               = Logger(this.getClass())
-  val appActor                                  = router.ref
+  lazy val rdfDataObjects = List.empty[RdfDataObject]
+  val log: Logger         = Logger(this.getClass())
+  val appActor            = router.ref
 
   // needed by some tests
-  val routeData = KnoraRouteData(system, appActor)
+  val routeData = KnoraRouteData(system, appActor, config)
+  val appConfig = config
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
@@ -154,10 +152,10 @@ abstract class R2RSpec
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(
         newOutputFile,
-        responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL")
+        responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
       )
       responseAsString
     } else {
-      FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
+      FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
     }
 }

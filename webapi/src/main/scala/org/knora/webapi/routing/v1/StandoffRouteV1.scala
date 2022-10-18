@@ -67,7 +67,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-            userProfile <- getUserADM(requestContext)
+            userProfile <- getUserADM(requestContext, routeData.appConfig)
 
             allParts: Map[Name, String] <- allPartsFuture
 
@@ -114,7 +114,6 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessageFuture,
             requestContext,
-            settings,
             appActor,
             log
           )

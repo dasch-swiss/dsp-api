@@ -33,7 +33,9 @@ class ListsRouteV2R2RSpec extends R2RSpec {
 
   private val listsPath = new ListsRouteV2(routeData).makeRoute
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    appConfig.defaultTimeoutAsDuration
+  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -41,7 +43,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
   private val clientTestDataPath: Seq[String] = Seq("v2", "lists")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

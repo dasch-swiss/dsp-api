@@ -22,8 +22,6 @@ import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.util.LogAspect
 
@@ -84,14 +82,14 @@ abstract class CoreSpec
 
   implicit lazy val system: actor.ActorSystem          = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
-  implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
   val log: Logger                                      = Logger(this.getClass())
   val appActor                                         = router.ref
 
   // needed by some tests
-  val cacheServiceSettings = new CacheServiceSettings(system.settings.config)
-  val responderData        = ResponderData(system, appActor, settings, cacheServiceSettings)
+  val appConfig            = config
+  val cacheServiceSettings = new CacheServiceSettings(appConfig)
+  val responderData        = ResponderData(system, appActor, appConfig, cacheServiceSettings)
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */

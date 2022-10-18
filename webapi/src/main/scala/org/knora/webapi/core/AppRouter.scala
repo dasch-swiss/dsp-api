@@ -12,8 +12,6 @@ import akka.util.Timeout
 import zio._
 import zio.macros.accessible
 
-import scala.concurrent.ExecutionContext
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -45,9 +43,8 @@ object AppRouter {
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
         runtime                   <- ZIO.runtime[Any]
-      } yield new AppRouter { self =>
-        implicit val system: akka.actor.ActorSystem     = as.system
-        implicit val executionContext: ExecutionContext = system.dispatcher
+      } yield new AppRouter {
+        implicit val system: akka.actor.ActorSystem = as.system
 
         val ref: ActorRef = system.actorOf(
           Props(
@@ -66,7 +63,7 @@ object AppRouter {
         val populateOntologyCaches: UIO[Unit] = {
 
           val request = LoadOntologiesRequestV2(requestingUser = KnoraSystemInstances.Users.SystemUser)
-          val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(3, scala.concurrent.duration.SECONDS))
+          val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(60, scala.concurrent.duration.SECONDS))
 
           for {
             response <- ZIO.fromFuture(_ => (ref.ask(request)(timeout)).mapTo[SuccessResponseV2]).orDie

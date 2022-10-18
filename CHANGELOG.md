@@ -1,5 +1,50 @@
 # Changelog
 
+### [24.0.7](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.6...v24.0.7) (2022-10-07)
+
+
+### Bug Fixes
+
+* DSP-API project IRI validation fails for BEOL project IRI ([#2240](https://www.github.com/dasch-swiss/dsp-api/issues/2240)) ([4b63a72](https://www.github.com/dasch-swiss/dsp-api/commit/4b63a729ab260b123979f5c2ba4a3aaff27197f8))
+
+### [24.0.6](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.5...v24.0.6) (2022-10-06)
+
+
+### Bug Fixes
+
+* Ask timeouts when requesting projects (DEV-1386) ([#2235](https://www.github.com/dasch-swiss/dsp-api/issues/2235)) ([1820367](https://www.github.com/dasch-swiss/dsp-api/commit/1820367f4e7b9d844f4abd7d98ae75e41133161b))
+* User can't be edited by project admin (DEV-1373) ([#2232](https://www.github.com/dasch-swiss/dsp-api/issues/2232)) ([e0b1433](https://www.github.com/dasch-swiss/dsp-api/commit/e0b143382fbf1c55146f775a720562d6ea7444d0))
+
+### [24.0.5](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.4...v24.0.5) (2022-10-05)
+
+
+### Bug Fixes
+
+* Timeout for multiple Gravsearch queries (DEV-1379) ([#2234](https://www.github.com/dasch-swiss/dsp-api/issues/2234)) ([c63567b](https://www.github.com/dasch-swiss/dsp-api/commit/c63567b5ea4b96c8b6b88600f351c3016d5aec23))
+
+
+### Maintenance
+
+* app actor cleanup ([#2230](https://www.github.com/dasch-swiss/dsp-api/issues/2230)) ([a67c98f](https://www.github.com/dasch-swiss/dsp-api/commit/a67c98f67793066ab46fe607f24f046b0abcfc44))
+
+### [24.0.4](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.3...v24.0.4) (2022-09-29)
+
+
+### Bug Fixes
+
+* API returns invalid file URLs, due to including the port ([#2223](https://www.github.com/dasch-swiss/dsp-api/issues/2223)) ([1a0b09c](https://www.github.com/dasch-swiss/dsp-api/commit/1a0b09c4244e65a55d45072ab69bd699c6cc5aa8))
+* Value update or deletion doesn't work for properties of other ontology (DEV-1367) ([#2222](https://www.github.com/dasch-swiss/dsp-api/issues/2222)) ([472b375](https://www.github.com/dasch-swiss/dsp-api/commit/472b375e2950264ddd12b09f0497d3b720e80267))
+
+### [24.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.2...v24.0.3) (2022-09-21)
+
+
+### Maintenance
+
+* application actor (DEV-956) ([#2166](https://www.github.com/dasch-swiss/dsp-api/issues/2166)) ([4852425](https://www.github.com/dasch-swiss/dsp-api/commit/48524250c73d5adc6965f5b8a2e2c587a82efdc3))
+* remove swagger route and docs annotations (DEV-1335) ([#2203](https://www.github.com/dasch-swiss/dsp-api/issues/2203)) ([bec5b8a](https://www.github.com/dasch-swiss/dsp-api/commit/bec5b8aafb3e32cbbb1fe9613f33e1d2b85a3bc1))
+* Replace Settings with AppConfig (DEV-1312) ([#2202](https://www.github.com/dasch-swiss/dsp-api/issues/2202)) ([9b76417](https://www.github.com/dasch-swiss/dsp-api/commit/9b7641750214df4a6164adb6d34889e15b16dff3))
+* update dependencies ([#2214](https://www.github.com/dasch-swiss/dsp-api/issues/2214)) ([3706acd](https://www.github.com/dasch-swiss/dsp-api/commit/3706acd4585fb1f90e53de7821baf49572147237))
+
 ### [24.0.2](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.1...v24.0.2) (2022-09-08)
 
 

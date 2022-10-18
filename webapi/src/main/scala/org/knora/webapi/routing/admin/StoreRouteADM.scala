@@ -56,7 +56,6 @@ class StoreRouteADM(routeData: KnoraRouteData)
             RouteUtilADM.runJsonRoute(
               requestMessageF = requestMessage,
               requestContext = requestContext,
-              settings = settings,
               appActor = appActor,
               log = log
             )(timeout = 479999.milliseconds, executionContext = executionContext)

@@ -8,4 +8,4 @@ package dsp.role.route
 /**
  * To be implemented...
  */
-object placeholder {}
+object placeholder

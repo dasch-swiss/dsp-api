@@ -175,7 +175,7 @@ object SearchResponderV1Spec {
 /**
  * Tests [[SearchResponderV1]].
  */
-class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
+class SearchResponderV1Spec extends CoreSpec with ImplicitSender {
 
   import SearchResponderV1Spec._
 
@@ -221,8 +221,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         ),
         iconlabel = Some("Buch"),
         icontitle = Some("Buch"),
-        iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-        preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+        iconsrc = Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif"),
+        preview_path = Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif"),
         obj_id = "http://rdfh.ch/0803/c5058f3a"
       ),
       SearchResultRowV1(
@@ -243,8 +243,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         ),
         iconlabel = Some("Buch"),
         icontitle = Some("Buch"),
-        iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-        preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+        iconsrc = Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif"),
+        preview_path = Some(appConfig.salsah1.baseUrl + appConfig.salsah1.projectIconsBasepath + "incunabula/book.gif"),
         obj_id = "http://rdfh.ch/0803/ff17e5ef9601"
       )
     )

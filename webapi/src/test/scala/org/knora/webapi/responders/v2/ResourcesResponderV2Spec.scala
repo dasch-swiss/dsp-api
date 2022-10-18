@@ -389,7 +389,7 @@ class GraphTestData {
 /**
  * Tests [[ResourcesResponderV2]].
  */
-class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
+class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   import ResourcesResponderV2Spec._
 
@@ -1902,7 +1902,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resource.deletionInfo should not be (None)
         resource.lastModificationDate should not be (None)
         resource.creationDate should equal(aThingCreationDate)
-        println(resource)
       }
     }
 
@@ -2210,7 +2209,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       appActor ! eraseRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        // println(msg.cause)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -2266,7 +2264,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       appActor ! eraseRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        // println(msg.cause)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 

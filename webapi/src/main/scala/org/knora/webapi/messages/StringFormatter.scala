@@ -43,7 +43,6 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
 
@@ -225,7 +224,7 @@ object StringFormatter {
   /**
    * Initialises the general instance of [[StringFormatter]].
    *
-   * @param settings the application settings.
+   * @param config the application's configuration.
    */
   def init(config: AppConfig): Unit =
     this.synchronized {
@@ -2594,12 +2593,10 @@ class StringFormatter private (
   /**
    * Constructs a path for accessing a file that has been uploaded to Sipi's temporary storage.
    *
-   * @param settings the application settings.
    * @param filename the filename.
    * @return a URL for accessing the file.
    */
-  def makeSipiTempFilePath(settings: KnoraSettingsImpl, filename: String): String =
-    s"/tmp/$filename"
+  def makeSipiTempFilePath(filename: String): String = s"/tmp/$filename"
 
   /**
    * Checks whether an IRI already exists in the triplestore.

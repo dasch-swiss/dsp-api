@@ -4,17 +4,24 @@ import com.typesafe.config.ConfigFactory
 import zio._
 import zio.config._
 
+import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import scala.concurrent.duration
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
+import dsp.errors.FileWriteException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
+import org.knora.webapi.util.cache.CacheUtil
 
 import typesafe._
 import magnolia._
 
 /**
- * Represents (eventually) the complete configuration as defined in application.conf.
+ * Represents the configuration as defined in application.conf.
  */
 final case class AppConfig(
   testing: Boolean = false,
@@ -27,25 +34,64 @@ final case class AppConfig(
   jwtLongevity: String,
   cookieDomain: String,
   allowReloadOverHttp: Boolean,
-  knoraApi: KnoraAPI,
+  fallbackLanguage: String,
+  knoraApi: KnoraApi,
   sipi: Sipi,
   ark: Ark,
+  salsah1: Salsah1,
+  caches: List[CacheConfig],
+  tmpDatadir: String,
+  datadir: String,
+  maxResultsPerSearchResultPage: Int,
+  standoffPerPage: Int,
+  v2: V2,
+  gui: Gui,
+  routesToReject: List[String],
   triplestore: Triplestore,
-  shacl: Shacl
+  shacl: Shacl,
+  cacheService: CacheService,
+  clientTestDataService: ClientTestDataService
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
+  val defaultTimeoutAsDuration =
+    scala.concurrent.duration.Duration.apply(defaultTimeout).asInstanceOf[duration.FiniteDuration]
+  val cacheConfigs: Seq[org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig] = caches.map { c =>
+    CacheUtil.KnoraCacheConfig(
+      c.cacheName,
+      c.maxElementsInMemory,
+      c.overflowToDisk,
+      c.eternal,
+      c.timeToLiveSeconds,
+      c.timeToIdleSeconds
+    )
+  }
+
+  // create the directories
+  val tmpDataDirCreation: Try[Path] = Try {
+    Files.createDirectories(Paths.get(tmpDatadir))
+  }
+  tmpDataDirCreation match {
+    case Success(_) => ZIO.logInfo(s"Created tmp directory $tmpDatadir")
+    case Failure(e) => throw FileWriteException(s"Tmp data directory $tmpDatadir could not be created: ${e.getMessage}")
+  }
+
+  val dataDirCreation: Try[Path] = Try {
+    Files.createDirectories(Paths.get(datadir))
+  }
+  dataDirCreation match {
+    case Success(_) => ZIO.logInfo(s"Created directory $datadir")
+    case Failure(e) => throw FileWriteException(s"Data directory $datadir could not be created: ${e.getMessage}")
+  }
+
 }
 
-final case class KnoraAPI(
+final case class KnoraApi(
   internalHost: String,
   internalPort: Int,
   externalProtocol: String,
   externalHost: String,
   externalPort: Int
 ) {
-  val internalKnoraApiHostPort: String = internalHost + (if (internalPort != 80)
-                                                           ":" + internalPort
-                                                         else "")
   val internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                                       ":" + internalPort
                                                                     else "")
@@ -79,7 +125,8 @@ final case class Sipi(
   externalHost: String,
   externalPort: Int,
   fileServerPath: String,
-  v2: V2,
+  moveFileRoute: String,
+  deleteTempFileRoute: String,
   imageMimeTypes: List[String],
   documentMimeTypes: List[String],
   textMimeTypes: List[String],
@@ -87,24 +134,60 @@ final case class Sipi(
   audioMimeTypes: List[String],
   archiveMimeTypes: List[String]
 ) {
-  def internalBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
-                                                              ":" + internalPort
-                                                            else "")
-  def externalBaseUrl: String = "http://" + externalHost + (if (externalPort != 80)
-                                                              ":" + externalPort
-                                                            else "")
+  val internalBaseUrl: String =
+    internalProtocol + "://" + internalHost + (if (internalPort != 80) ":" + internalPort else "")
+  val externalBaseUrl: String =
+    externalProtocol + "://" + externalHost + (if (externalPort != 80) ":" + externalPort else "")
   val timeoutInSeconds: duration.Duration = scala.concurrent.duration.Duration(timeout)
-}
 
-final case class V2(
-  fileMetadataRoute: String,
-  moveFileRoute: String,
-  deleteTempFileRoute: String
-)
+}
 
 final case class Ark(
   resolver: String,
   assignedNumber: Int
+)
+
+final case class Salsah1(
+  baseUrl: String,
+  projectIconsBasepath: String
+)
+
+final case class CacheConfig(
+  cacheName: String,
+  maxElementsInMemory: Int,
+  overflowToDisk: Boolean,
+  eternal: Boolean,
+  timeToLiveSeconds: Int,
+  timeToIdleSeconds: Int
+)
+
+final case class V2(
+  resourcesSequence: ResourcesSequence,
+  fulltextSearch: FulltextSearch,
+  graphRoute: GraphRoute
+)
+
+final case class ResourcesSequence(
+  resultsPerPage: Int
+)
+
+final case class FulltextSearch(
+  searchValueMinLength: Int
+)
+
+final case class GraphRoute(
+  defaultGraphDepth: Int,
+  maxGraphDepth: Int,
+  maxGraphBreadth: Int
+)
+
+final case class Gui(
+  defaultIconSize: DefaultIconSize
+)
+
+final case class DefaultIconSize(
+  dimX: Int,
+  dimY: Int
 )
 
 final case class Triplestore(
@@ -114,21 +197,13 @@ final case class Triplestore(
   queryTimeout: String,
   gravsearchTimeout: String,
   autoInit: Boolean,
-  profileQueries: Boolean,
-  fuseki: Fuseki
+  fuseki: Fuseki,
+  profileQueries: Boolean
 ) {
   val queryTimeoutAsDuration      = zio.Duration.fromScala(scala.concurrent.duration.Duration(queryTimeout))
   val gravsearchTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(gravsearchTimeout))
 }
 
-/**
- * Fuseki specific configuration.
- *
- * @param port
- * @param repositoryName
- * @param username
- * @param password
- */
 final case class Fuseki(
   port: Int,
   repositoryName: String,
@@ -141,6 +216,20 @@ final case class Shacl(
 ) {
   val shapesDirPath = Paths.get(shapesDir)
 }
+
+final case class CacheService(
+  enabled: Boolean,
+  redis: Redis
+)
+
+final case class Redis(
+  host: String,
+  port: Int
+)
+
+final case class ClientTestDataService(
+  collectClientTestData: Boolean
+)
 
 /**
  * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading
@@ -158,29 +247,32 @@ object AppConfig {
   /**
    * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
    */
-  private val config: IO[ReadError[String], AppConfig] = read(descriptor[AppConfig].mapKey(toKebabCase) from source)
+  private val configFromSource: IO[ReadError[String], AppConfig] = read(
+    descriptor[AppConfig].mapKey(toKebabCase) from source
+  )
 
   /**
-   * Live configuration reading from application.conf and initializing StringFormater for live
+   * Application configuration from application.conf
    */
   val live: ZLayer[Any, Nothing, AppConfig] =
     ZLayer {
       for {
-        c <- config.orDie
-        _ <- ZIO.attempt(StringFormatter.init(c)).orDie   // needs early init before first usage
+        c <- configFromSource.orDie
         _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
+        _ <- ZIO.attempt(StringFormatter.init(c)).orDie   // needs early init before first usage
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Live Initialized <<<"))
 
   /**
-   * Test configuration reading from application.conf and initializing StringFormater for tests
+   * Application configuration from test.conf for testing
    */
   val test: ZLayer[Any, Nothing, AppConfig] =
     ZLayer {
       for {
-        c <- config.orDie
-        _ <- ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
+        c <- configFromSource.orDie
         _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie     // needs early init before first usage
+        _ <- ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Test Initialized <<<"))
+
 }

@@ -26,7 +26,7 @@ class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
     path("v1" / "ckan") {
       get { requestContext =>
         val requestMessage = for {
-          userProfile                 <- getUserADM(requestContext)
+          userProfile                 <- getUserADM(requestContext, routeData.appConfig)
           params                       = requestContext.request.uri.query().toMap
           project: Option[Seq[String]] = params.get("project").map(_.split(",").toSeq)
           limit: Option[Int]           = params.get("limit").map(_.toInt)
@@ -41,7 +41,6 @@ class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
           requestContext,
-          settings,
           appActor,
           log
         )

@@ -10,13 +10,13 @@ import scala.concurrent.ExecutionContext
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo
 import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -26,13 +26,13 @@ import org.knora.webapi.settings.KnoraSettingsImpl
  * @param constructClause      the CONSTRUCT clause from the input query.
  * @param typeInspectionResult the result of type inspection of the input query.
  * @param querySchema          the ontology schema used in the input query.
- * @param settings             application settings.
+ * @param appConfig             application configuration.
  */
 class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,
-  settings: KnoraSettingsImpl
+  appConfig: AppConfig
 ) extends AbstractPrequeryGenerator(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
@@ -355,8 +355,8 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
    * @return the LIMIT, if any.
    */
   def getLimit: Int =
-    // get LIMIT from settings
-    settings.v2ResultsPerPage
+    // get LIMIT from appConfig
+    appConfig.v2.resourcesSequence.resultsPerPage
 
   /**
    * Gets the OFFSET to be used in the prequery (needed for paging).

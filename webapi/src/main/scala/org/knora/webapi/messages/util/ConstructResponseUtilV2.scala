@@ -19,6 +19,7 @@ import dsp.errors.AssertionException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -41,7 +42,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffRespon
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.ActorUtil
 
 object ConstructResponseUtilV2 {
@@ -1114,7 +1114,7 @@ object ConstructResponseUtilV2 {
    * @param versionDate               if defined, represents the requested time in the the resources' version history.
    * @param responderManager          the Knora responder manager.
    * @param targetSchema              the schema of the response.
-   * @param settings                  the application's settings.
+   * @param appConfig                 the application's configuration.
    * @param requestingUser            the user making the request.
    * @return a [[LinkValueContentV2]].
    */
@@ -1127,7 +1127,7 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
@@ -1162,7 +1162,7 @@ object ConstructResponseUtilV2 {
                               appActor = appActor,
                               requestingUser = requestingUser,
                               targetSchema = targetSchema,
-                              settings = settings
+                              appConfig = appConfig
                             )
         } yield linkValue.copy(
           nestedResource = Some(nestedResource)
@@ -1183,7 +1183,7 @@ object ConstructResponseUtilV2 {
    * @param versionDate          if defined, represents the requested time in the the resources' version history.
    * @param responderManager     the Knora responder manager.
    * @param targetSchema         the schema of the response.
-   * @param settings             the application's settings.
+   * @param appConfig            the application's configuration.
    * @param requestingUser       the user making the request.
    * @return a [[ValueContentV2]] representing a value.
    */
@@ -1195,7 +1195,7 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant] = None,
     appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
@@ -1344,7 +1344,7 @@ object ConstructResponseUtilV2 {
                   .mapTo[NodeGetResponseV2]
             } yield listNode.copy(
               listNodeLabel = nodeResponse.node
-                .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage)
+                .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = appConfig.fallbackLanguage)
             )
 
           case ApiV2Complex => FastFuture.successful(listNode)
@@ -1385,7 +1385,7 @@ object ConstructResponseUtilV2 {
           appActor = appActor,
           requestingUser = requestingUser,
           targetSchema = targetSchema,
-          settings = settings
+          appConfig = appConfig
         )
 
       case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
@@ -1415,7 +1415,7 @@ object ConstructResponseUtilV2 {
    * @param versionDate              if defined, represents the requested time in the the resources' version history.
    * @param responderManager         the Knora responder manager.
    * @param targetSchema             the schema of the response.
-   * @param settings                 the application's settings.
+   * @param appConfig                the application's configuration.
    * @param requestingUser           the user making the request.
    * @return a [[ReadResourceV2]].
    */
@@ -1427,7 +1427,7 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
@@ -1496,7 +1496,7 @@ object ConstructResponseUtilV2 {
                   appActor = appActor,
                   requestingUser = requestingUser,
                   targetSchema = targetSchema,
-                  settings = settings
+                  appConfig = appConfig
                 )
 
               attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
@@ -1607,7 +1607,7 @@ object ConstructResponseUtilV2 {
    * @param versionDate                  if defined, represents the requested time in the the resources' version history.
    * @param responderManager             the Knora responder manager.
    * @param targetSchema                 the schema of response.
-   * @param settings                     the application's settings.
+   * @param appConfig                    the application's configuration.
    * @param requestingUser               the user making the request.
    * @return a collection of [[ReadResourceV2]] representing the search results.
    */
@@ -1621,7 +1621,7 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
@@ -1643,7 +1643,7 @@ object ConstructResponseUtilV2 {
         versionDate = versionDate,
         appActor = appActor,
         targetSchema = targetSchema,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = requestingUser
       )
     }.toVector
@@ -1653,7 +1653,8 @@ object ConstructResponseUtilV2 {
 
       // If we got a full page of results from the triplestore (before filtering for permissions), there
       // might be at least one more page of results that the user could request.
-      mayHaveMoreResults = calculateMayHaveMoreResults && pageSizeBeforeFiltering == settings.v2ResultsPerPage
+      mayHaveMoreResults =
+        calculateMayHaveMoreResults && pageSizeBeforeFiltering == appConfig.v2.resourcesSequence.resultsPerPage
     } yield ReadResourcesSequenceV2(
       resources = resources,
       hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris,

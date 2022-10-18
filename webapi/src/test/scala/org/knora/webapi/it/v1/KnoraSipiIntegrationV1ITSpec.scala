@@ -332,7 +332,7 @@ class KnoraSipiIntegrationV1ITSpec
     "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
       // To be able to run packaged tests inside Docker, we need to copy
       // the file first to a place which is shared with sipi
-      val dest: Path = FileUtil.createTempFile(settings, Some("jpg"))
+      val dest: Path = FileUtil.createTempFile(Some("jpg"), appConfig)
       Files.copy(pathToChlaus, dest, StandardCopyOption.REPLACE_EXISTING)
 
       // Upload the image to Sipi.

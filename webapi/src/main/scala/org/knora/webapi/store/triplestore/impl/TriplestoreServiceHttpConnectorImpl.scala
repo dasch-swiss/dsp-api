@@ -532,7 +532,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * Initialize the Jena Fuseki triplestore. Currently only works for
    * 'knora-test' and 'knora-test-unit' repository names. To be used, the
    * API needs to be started with 'KNORA_WEBAPI_TRIPLESTORE_AUTOINIT' set
-   * to 'true' (settings.triplestoreAutoInit). This is set to `true` for tests
+   * to 'true' (appConfig.triplestore.autoInit). This is set to `true` for tests
    * (`test/resources/test.conf`). Usage is only recommended for automated
    * testing and not for production use.
    */
@@ -1034,7 +1034,7 @@ object TriplestoreServiceHttpConnectorImpl {
     // Configure total max or per route limits for persistent connections
     // that can be kept in the pool or leased by the connection manager.
     connManager.setMaxTotal(100)
-    connManager.setDefaultMaxPerRoute(10)
+    connManager.setDefaultMaxPerRoute(15)
 
     // Sipi custom default request config
     val defaultRequestConfig = RequestConfig

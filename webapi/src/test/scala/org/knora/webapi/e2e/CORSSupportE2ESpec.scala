@@ -21,7 +21,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
  */
 class CORSSupportE2ESpec extends E2ESpec {
 
-  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(appConfig.defaultTimeoutAsDuration)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

@@ -73,7 +73,7 @@ final case class ProjectRepoMock(
     (for {
       exists <- lookupTableShortCodeToUuid.contains(shortCode).commit
       _ <- if (exists) ZIO.fail(None) // project shortcode does exist
-           else ZIO.succeed(()) // project shortcode does not exist
+           else ZIO.unit // project shortcode does not exist
     } yield ()).tapBoth(
       _ => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', project not found."),
       uuid => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', found project with UUID '$uuid'.")

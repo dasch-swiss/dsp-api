@@ -35,7 +35,7 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
   private val normalUserEmailEnc    = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
   private val testPass              = java.net.URLEncoder.encode("test", "utf-8")
 
-  val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
+  val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

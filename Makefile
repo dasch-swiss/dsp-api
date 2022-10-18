@@ -72,74 +72,74 @@ docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image ## publis
 #################################
 
 .PHONY: print-env-file
-print-env-file: ## prints the env file used by knora-stack
+print-env-file: ## prints the env file used by dsp-stack
 	@cat .env
 
 .PHONY: env-file
-env-file: ## write the env file used by knora-stack.
+env-file: ## write the env file used by dsp-stack.
 	@echo DOCKERHOST=$(DOCKERHOST) > .env
 	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
 #################################
-## Knora Stack Targets
+## DSP Stack Targets
 #################################
 
 .PHONY: stack-up
-stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, api.
+stack-up: docker-build env-file ## starts the dsp-stack: fuseki, sipi, api.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	@docker compose -f docker-compose.yml up -d
-	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+	$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-up-fast
-stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
+stack-up-fast: docker-build-knora-api-image env-file ## starts the dsp-stack by skipping rebuilding most of the images (only api image is rebuilt).
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-up-ci
 stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
-stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: fuseki, sipi, redis, api.
+stack-up-ci: docker-build env-file print-env-file ## starts the dsp-stack using 'knora-test-unit' repository: fuseki, sipi, api.
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
-stack-restart: stack-up ## re-starts the knora-stack: fuseki, sipi, redis, api.
-	@docker compose -f docker-compose.yml restart
+stack-restart: ## re-starts the dsp-stack: fuseki, sipi, api.
+	@docker compose -f docker-compose.yml down
+	@docker compose -f docker-compose.yml up -d db
+	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+	@docker compose -f docker-compose.yml up -d
+	$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-restart-api
 stack-restart-api: ## re-starts the api. Usually used after loading data into fuseki.
 	docker-compose -f docker-compose.yml restart api
-	@$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+	@$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-logs
-stack-logs: ## prints out and follows the logs of the running knora-stack.
+stack-logs: ## prints out and follows the logs of the running dsp-stack.
 	@docker compose -f docker-compose.yml logs -f
 
 .PHONY: stack-logs-db
-stack-logs-db: ## prints out and follows the logs of the 'db' container running in knora-stack.
+stack-logs-db: ## prints out and follows the logs of the 'db' container running in dsp-stack.
 	@docker compose -f docker-compose.yml logs -f db
 
 .PHONY: stack-logs-db-no-follow
-stack-logs-db-no-follow: ## prints out the logs of the 'db' container running in knora-stack.
+stack-logs-db-no-follow: ## prints out the logs of the 'db' container running in dsp-stack.
 	@docker-compose -f docker-compose.yml logs db
 
 .PHONY: stack-logs-sipi
-stack-logs-sipi: ## prints out and follows the logs of the 'sipi' container running in knora-stack.
+stack-logs-sipi: ## prints out and follows the logs of the 'sipi' container running in dsp-stack.
 	@docker compose -f docker-compose.yml logs -f sipi
 
 .PHONY: stack-logs-sipi-no-follow
-stack-logs-sipi-no-follow: ## prints out the logs of the 'sipi' container running in knora-stack.
+stack-logs-sipi-no-follow: ## prints out the logs of the 'sipi' container running in dsp-stack.
 	@docker compose -f docker-compose.yml logs sipi
 
-.PHONY: stack-logs-redis
-stack-logs-redis: ## prints out and follows the logs of the 'redis' container running in knora-stack.
-	@docker compose -f docker-compose.yml logs -f redis
-
 .PHONY: stack-logs-api
-stack-logs-api: ## prints out and follows the logs of the 'api' container running in knora-stack.
+stack-logs-api: ## prints out and follows the logs of the 'api' container running in dsp-stack.
 	@docker compose -f docker-compose.yml logs -f api
 
 .PHONY: stack-logs-api-no-follow
-stack-logs-api-no-follow: ## prints out the logs of the 'api' container running in knora-stack.
+stack-logs-api-no-follow: ## prints out the logs of the 'api' container running in dsp-stack.
 	@docker compose -f docker-compose.yml logs api
 
 .PHONY: stack-health
@@ -151,11 +151,11 @@ stack-status:
 	@docker compose -f docker-compose.yml ps
 
 .PHONY: stack-down
-stack-down: ## stops the knora-stack.
+stack-down: ## stops the dsp-stack.
 	@docker compose -f docker-compose.yml down
 
 .PHONY: stack-down-delete-volumes
-stack-down-delete-volumes: ## stops the knora-stack and deletes any created volumes (deletes the database!).
+stack-down-delete-volumes: clean-local-tmp clean-sipi-projects clean-sipi-tmp ## stops the dsp-stack and deletes any created volumes (deletes the database!).
 	@docker compose -f docker-compose.yml down --volumes
 
 .PHONY: stack-config
@@ -164,11 +164,11 @@ stack-config: env-file
 
 ## stack without api
 .PHONY: stack-without-api
-stack-without-api: stack-up ## starts the knora-stack without knora-api: fuseki, sipi, redis.
+stack-without-api: stack-up ## starts the dsp-stack without dsp-api: fuseki and sipi only.
 	@docker compose -f docker-compose.yml stop api
 
 .PHONY: stack-without-api-and-sipi
-stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: fuseki, redis.
+stack-without-api-and-sipi: stack-up ## starts the dsp-stack without dsp-api and sipi: fuseki only.
 	@docker compose -f docker-compose.yml stop api
 	@docker compose -f docker-compose.yml stop sipi
 
@@ -332,7 +332,7 @@ clean-metals: ## clean SBT and Metals related stuff
 	@rm -rf .metals
 	@rm -rf target
 
-clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp ## clean build artifacts
+clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp clean-sipi-projects ## clean build artifacts
 	@rm -rf .env
 
 .PHONY: clean-sipi-tmp
@@ -348,11 +348,11 @@ clean-sipi-projects: ## deletes all files uploaded within a project
 	@rm -rf sipi/images/originals/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
 
 .PHONY: check
-check: # Run code formating check 
+check: ## Run code formatting check 
 	@sbt "check"
 
 .PHONY: fmt
-fmt: # Run code formating fix
+fmt: ## Run code formatting fix
 	@sbt "fmt"
 
 

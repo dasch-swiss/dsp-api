@@ -8,7 +8,7 @@ package org.knora.webapi.messages.util
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 /**
@@ -16,12 +16,11 @@ import org.knora.webapi.store.cache.settings.CacheServiceSettings
  *
  * @param system   the actor system.
  * @param appActor the main application actor.
- * @param knoraSetting the application settings.
  * @param cacheServiceSettings the cache service part of the settings.
  */
 case class ResponderData(
   system: ActorSystem,
   appActor: ActorRef,
-  knoraSettings: KnoraSettingsImpl,
+  appConfig: AppConfig,
   cacheServiceSettings: CacheServiceSettings
 )

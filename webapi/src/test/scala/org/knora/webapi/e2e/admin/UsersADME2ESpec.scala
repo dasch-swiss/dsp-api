@@ -85,7 +85,7 @@ class UsersADME2ESpec
   private val clientTestDataPath: Seq[String] = Seq("admin", "users")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   /**
    * Convenience method returning the users project memberships.

@@ -40,6 +40,7 @@ object ValuesResponderV1Spec {
   private val imagesUser = SharedTestDataADM.imagesUser01
 
   private val anythingUser = SharedTestDataADM.anythingUser1
+
 }
 
 /**
@@ -47,6 +48,7 @@ object ValuesResponderV1Spec {
  */
 class ValuesResponderV1Spec extends CoreSpec with ImplicitSender {
   implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private val resourcesResponderV1SpecFullData          = ResourcesResponderV1SpecFullData(appConfig)
 
   import ValuesResponderV1Spec._
 
@@ -2067,7 +2069,7 @@ class ValuesResponderV1Spec extends CoreSpec with ImplicitSender {
           )
         ),
         resource_reference = Set(nonexistentIri),
-        mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+        mapping = resourcesResponderV1SpecFullData.dummyMapping,
         mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
       )
 
