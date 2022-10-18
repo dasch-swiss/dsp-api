@@ -1229,10 +1229,28 @@ class UsersADME2ESpec
     }
 
     "used to modify project admin group membership" should {
-      "add user to project admin group" in {
+      "add user to project admin group only if he is already member of that project" in {
+        // add user as project admin to images project - returns a BadRequest because user is not member of the project
+        val requestWithoutBeingMember = Post(
+          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
+        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val responseWithoutBeingMember: HttpResponse = singleAwaitingRequest(requestWithoutBeingMember)
+
+        assert(responseWithoutBeingMember.status === StatusCodes.BadRequest)
+
+        // add user as member to images project
+        val requestAddUserToProject = Post(
+          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val responseAddUserToProject: HttpResponse = singleAwaitingRequest(requestAddUserToProject)
+
+        assert(responseAddUserToProject.status === StatusCodes.OK)
+
+        // verfiy that user is not yet project admin in images project
         val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
         membershipsBeforeUpdate should equal(Seq())
 
+        // add user as project admin to images project
         val request = Post(
           baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
         ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
@@ -1240,8 +1258,8 @@ class UsersADME2ESpec
 
         assert(response.status === StatusCodes.OK)
 
+        // verify that user has been added as project admin to images project
         val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-
         membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject))
 
         clientTestDataCollector.addFile(
@@ -1282,6 +1300,33 @@ class UsersADME2ESpec
             text = responseToString(response)
           )
         )
+      }
+
+      "remove user from project which also removes him from project admin group" in {
+        // add user as project admin to images project
+        val requestAddUserAsProjectAdmin = Post(
+          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
+        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val responseAddUserAsProjectAdmin: HttpResponse = singleAwaitingRequest(requestAddUserAsProjectAdmin)
+
+        assert(responseAddUserAsProjectAdmin.status === StatusCodes.OK)
+
+        // verify that user has been added as project admin to images project
+        val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
+
+        // remove user as project member from images project
+        val request = Delete(
+          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        assert(response.status === StatusCodes.OK)
+
+        // verify that user has also been removed as project admin from images project
+        val projectAdminMembershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
+
+        projectAdminMembershipsAfterUpdate should equal(Seq())
       }
 
     }

@@ -29,7 +29,7 @@ DSP-API supports different versions of its API for working with humanities data:
 - [DSP-API v1](../../../03-apis/api-v1/index.md), legacy API compatibile with applications 
   that used the prototype software.
 
-There is also a [Knora admin API](../../../03-apis/api-admin/index.md) for
+There is also an [Admin API](../../../03-apis/api-admin/index.md) for
 administering DSP projects.
 
 The DSP-API code base includes some functionality that is shared by these different
