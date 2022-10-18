@@ -1,18 +1,48 @@
 package dsp.api.main
 
-import dsp.schema.repo.SchemaRepo
-import dsp.schema.repo.SchemaRepoLive
-import zio.Console.printLine
 import zio._
+import dsp.user.route.UserRoutes
+import dsp.user.handler.UserHandler
+import dsp.user.repo.impl.UserRepoLive
+import zio.logging.removeDefaultLoggers
+import zio.metrics.connectors.MetricsConfig
+import zio.logging.backend.SLF4J
 
 object MainApp extends ZIOAppDefault {
-  val effect: ZIO[SchemaRepo, Nothing, Unit] =
-    for {
-      profile <- SchemaRepo.lookup("user1").orDie
-      // _       <- printLine(profile).orDie
-      // _       <- printLine(42).orDie
-    } yield ()
 
-  val mainApp: ZIO[Any, Nothing, Unit] = effect.provide(SchemaRepoLive.layer)
-  def run: ZIO[Any, Nothing, Unit]     = mainApp
+  /**
+   * Configures Metrics to be run at a set interval, in our case every five
+   * seconds
+   */
+  val metricsConfig =
+    ZLayer.succeed(MetricsConfig(5.seconds))
+  override val run: Task[Unit] =
+    ZIO
+      .serviceWithZIO[DspServer](server => server.start())
+      .provide(
+        // ZLayer.Debug.mermaid,
+        DspServer.layer,
+        // Routes
+        UserRoutes.layer,
+        // VetRoutes.layer,
+        // OwnerRoutes.layer,
+        // VisitRoutes.layer,
+        // // Repositories
+        UserRepoLive.layer,
+        // OwnerServiceLive.layer,
+        // PetServiceLive.layer,
+        // VetServiceLive.layer,
+        // VisitServiceLive.layer,
+        // Migrations.layer,
+        // QuillContext.dataSourceLayer,
+        // // Handlers
+        UserHandler.layer,
+        // // Operations
+        SLF4J.slf4j,
+        removeDefaultLoggers
+        // newrelic.newRelicLayer,
+        // newrelic.NewRelicConfig.fromEnvLayer,
+        // metricsConfig
+      )
+
 }

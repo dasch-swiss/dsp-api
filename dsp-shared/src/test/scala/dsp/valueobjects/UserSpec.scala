@@ -8,7 +8,7 @@ package dsp.valueobjects
 import zio.prelude.Validation
 import zio.test._
 
-import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import dsp.valueobjects.User._
 
 /**
@@ -37,69 +37,69 @@ object UserSpec extends ZIOSpecDefault {
   private val usernameTest = suite("Username")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Username.make("") == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
+        Username.make("") == Validation.fail(ValidationException(UserErrorMessages.UsernameMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         Username.make(invalidUsername) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass too short value and return an error") {
       assertTrue(
         Username.make(tooShortUsername) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass too long value and return an error") {
       assertTrue(
         Username.make(tooLongUsername) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' as the first char and return an error") {
       assertTrue(
         Username.make(invalidUsernameWithUnderscoreAsFirstChar) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' as the last char and return an error") {
       assertTrue(
         Username.make(invalidUsernameWithUnderscoreAsLastChar) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' used multiple times in a row and return an error") {
       assertTrue(
         Username.make(invalidUsernameWithMultipleUnderscoresInRow) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' as the first char and return an error") {
       assertTrue(
         Username.make(invalidUsernameWithDotAsFirstChar) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' as the last char and return an error") {
       assertTrue(
         Username.make(invalidUsernameWithDotAsLastChar) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' used multiple times in a row and return an error") {
       assertTrue(
         Username.make(invalidUsernameWithMultipleDotsInRow) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
+          ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
@@ -110,12 +110,12 @@ object UserSpec extends ZIOSpecDefault {
 
   private val emailTest = suite("Email")(
     test("pass an empty value and return an error") {
-      assertTrue(Email.make("") == Validation.fail(BadRequestException(UserErrorMessages.EmailMissing)))
+      assertTrue(Email.make("") == Validation.fail(ValidationException(UserErrorMessages.EmailMissing)))
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         Email.make(invalidEmailAddress) == Validation.fail(
-          BadRequestException(UserErrorMessages.EmailInvalid)
+          ValidationException(UserErrorMessages.EmailInvalid)
         )
       )
     },
@@ -127,7 +127,7 @@ object UserSpec extends ZIOSpecDefault {
   private val givenNameTest = suite("GivenName")(
     test("pass an empty value and return an error") {
       assertTrue(
-        GivenName.make("") == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
+        GivenName.make("") == Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -138,7 +138,7 @@ object UserSpec extends ZIOSpecDefault {
   private val familyNameTest = suite("FamilyName")(
     test("pass an empty value and return an error") {
       assertTrue(
-        FamilyName.make("") == Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
+        FamilyName.make("") == Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -149,7 +149,7 @@ object UserSpec extends ZIOSpecDefault {
   private val passwordTest = suite("Password")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Password.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
+        Password.make("") == Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -161,7 +161,7 @@ object UserSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(
         PasswordHash.make("", PasswordStrength(12)) == Validation.fail(
-          BadRequestException(UserErrorMessages.PasswordMissing)
+          ValidationException(UserErrorMessages.PasswordMissing)
         )
       )
     },

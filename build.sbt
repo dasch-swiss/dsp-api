@@ -261,6 +261,18 @@ lazy val webapiJavaTestOptions = Seq(
 // DSP's new codebase
 //////////////////////////////////////
 
+// dsp-api-main project
+
+lazy val dspApiMain = project
+  .in(file("dsp-api-main"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "dspApiMain",
+    libraryDependencies ++= Dependencies.dspApiMainLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(userInterface, userHandler, userRepo)
+
 // Role projects
 
 lazy val roleInterface = project

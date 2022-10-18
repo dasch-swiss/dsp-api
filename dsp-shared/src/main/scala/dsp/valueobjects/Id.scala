@@ -12,6 +12,10 @@ import scala.util.Try
 
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
+import zio.json.JsonCodec
+import zio.json.DeriveJsonCodec
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
 sealed trait Id
 object Id {
@@ -79,6 +83,11 @@ object Id {
    * Companion object for UserId. Contains factory methods for creating UserId instances.
    */
   object UserId {
+
+    implicit val decoder: JsonDecoder[UserId] = JsonDecoder[Iri.UserIri].mapOrFail { case iri =>
+      UserId.fromIri(iri).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[UserId] = JsonEncoder[String].contramap((userId: UserId) => userId.iri.value)
 
     private val userIriPrefix = "http://rdfh.ch/users/"
 

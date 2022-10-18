@@ -12,6 +12,10 @@ import scala.util.Try
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
+import zio.json.JsonCodec
+import zio.json.DeriveJsonCodec
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
 sealed trait Iri {
   val value: String
@@ -165,8 +169,13 @@ object Iri {
   /**
    * UserIri value object.
    */
-  sealed abstract case class UserIri private (value: String) extends Iri
+  sealed case class UserIri private (value: String) extends Iri
   object UserIri {
+    implicit val decoder: JsonDecoder[UserIri] = JsonDecoder[String].mapOrFail { case value =>
+      UserIri.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
+
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))

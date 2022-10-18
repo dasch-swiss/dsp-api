@@ -21,12 +21,12 @@ object Dependencies {
   val JenaVersion      = "4.6.1"
 
   val ZioVersion                  = "2.0.2"
-  val ZioHttpVersion              = "2.0.0-RC4"
+  val ZioHttpVersion              = "2.0.0-RC10"
   val ZioJsonVersion              = "0.3.0"
   val ZioConfigVersion            = "3.0.2"
   val ZioSchemaVersion            = "0.2.0"
   val ZioLoggingVersion           = "2.1.2"
-  val ZioMetricsConnectorsVersion = "2.0.0"
+  val ZioMetricsConnectorsVersion = "2.0.0-RC6"
   val ZioPreludeVersion           = "1.0.0-RC16"
 
   // ZIO - all Scala 3 compatible
@@ -176,7 +176,10 @@ object Dependencies {
 
   val dspApiMainLibraryDependencies = Seq(
     zio,
-    zioMacros
+    zioMacros,
+    zioHttp,
+    zioJson,
+    zioMetricsConnectors
   )
 
   // schema project dependencies
@@ -200,7 +203,9 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4j,
+    zioJson,
+    zioHttp
   )
   val userHandlerLibraryDependencies = Seq(
     bouncyCastle,
@@ -210,7 +215,8 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4j,
+    zioJson
   )
   val userCoreLibraryDependencies = Seq(
     bouncyCastle,
@@ -220,7 +226,8 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4j,
+    zioJson
   )
   val userRepoLibraryDependencies = Seq(
     zio,
@@ -228,7 +235,8 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4j,
+    zioJson
   )
 
   // role projects dependencies
@@ -281,7 +289,8 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4j,
+    zioJson
   )
 
   // project project dependencies
