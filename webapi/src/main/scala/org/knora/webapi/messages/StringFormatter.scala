@@ -2766,11 +2766,7 @@ class StringFormatter private (
    * @return TRUE for correct versions, FALSE for incorrect.
    */
   def isUuidVersion4Or5(s: IRI): Boolean =
-    if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
-      true
-    } else {
-      false
-    }
+    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
 
   /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
@@ -2861,13 +2857,14 @@ class StringFormatter private (
     s"$projectIri/mappings"
 
   /**
-   * Creates a new project IRI based on a UUID or project shortcode.
+   * Creates a new project IRI based on a UUID.
    *
-   * @param shortcode the required project shortcode.
    * @return a new project IRI.
    */
-  def makeRandomProjectIri(shortcode: String): IRI =
-    s"http://$IriDomain/projects/$shortcode"
+  def makeRandomProjectIri: IRI = {
+    val uuid = makeRandomBase64EncodedUuid
+    s"http://$IriDomain/projects/$uuid"
+  }
 
   /**
    * Creates a new group IRI based on a UUID.
