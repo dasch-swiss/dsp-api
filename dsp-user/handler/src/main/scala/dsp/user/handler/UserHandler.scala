@@ -92,6 +92,36 @@ final case class UserHandler(repo: UserRepo) {
     } yield ()
 
   /**
+   * Migrates an existing user. Same as [[createUser]] but with an existing ID.
+   *
+   * @param id  the user's id
+   *  @param username  the user's username
+   *  @param email  the user's email
+   *  @param givenName  the user's givenName
+   *  @param familyName  the user's familyName
+   *  @param password  the user's password (hashed)
+   *  @param language  the user's language
+   *  @param role  the user's role
+   */
+  def migrateUser(
+    id: UserId,
+    username: Username,
+    email: Email,
+    givenName: GivenName,
+    familyName: FamilyName,
+    password: PasswordHash,
+    language: LanguageCode,
+    status: UserStatus
+  ): IO[Throwable, UserId] =
+    (for {
+      // _      <- checkIfIdExists(id)            // TODO implement this
+      _      <- checkIfUsernameTaken(username) // TODO reserve username
+      _      <- checkIfEmailTaken(email)       // TODO reserve email
+      user   <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
+      userId <- repo.storeUser(user)
+    } yield userId).tap(userId => ZIO.logInfo(s"Migrated user with ID '${userId}'"))
+
+  /**
    * Creates a new user
    *
    *  @param username  the user's username

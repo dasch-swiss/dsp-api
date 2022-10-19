@@ -8,14 +8,12 @@ import zio.logging.removeDefaultLoggers
 import zio.metrics.connectors.MetricsConfig
 import zio.logging.backend.SLF4J
 
-object MainApp extends ZIOAppDefault {
+object DspMain extends ZIOAppDefault {
 
   /**
-   * Configures Metrics to be run at a set interval, in our case every five
-   * seconds
+   * Configures Metrics to be run at a set interval, in this case every five seconds
    */
-  val metricsConfig =
-    ZLayer.succeed(MetricsConfig(5.seconds))
+  val metricsConfig = ZLayer.succeed(MetricsConfig(5.seconds))
   override val run: Task[Unit] =
     ZIO
       .serviceWithZIO[DspServer](server => server.start())
@@ -24,24 +22,13 @@ object MainApp extends ZIOAppDefault {
         DspServer.layer,
         // Routes
         UserRoutes.layer,
-        // VetRoutes.layer,
-        // OwnerRoutes.layer,
-        // VisitRoutes.layer,
         // // Repositories
         UserRepoLive.layer,
-        // OwnerServiceLive.layer,
-        // PetServiceLive.layer,
-        // VetServiceLive.layer,
-        // VisitServiceLive.layer,
-        // Migrations.layer,
-        // QuillContext.dataSourceLayer,
         // // Handlers
         UserHandler.layer,
         // // Operations
         SLF4J.slf4j,
         removeDefaultLoggers
-        // newrelic.newRelicLayer,
-        // newrelic.NewRelicConfig.fromEnvLayer,
         // metricsConfig
       )
 

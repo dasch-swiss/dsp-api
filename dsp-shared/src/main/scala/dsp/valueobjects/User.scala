@@ -8,6 +8,9 @@ package dsp.valueobjects
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import zio._
+import zio.json.JsonCodec
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Assertion._
 import zio.prelude.Subtype
 import zio.prelude.Validation
@@ -16,9 +19,6 @@ import java.security.SecureRandom
 import scala.util.matching.Regex
 
 import dsp.errors.ValidationException
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
-import zio.json.JsonCodec
 
 object User {
 
@@ -29,6 +29,7 @@ object User {
    */
   final case class Username private (value: String)
   object Username { self =>
+    // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[Username] =
       JsonCodec[String].transformOrFail(
         value => Username.make(value).toEitherWith(e => e.head.getMessage()),
@@ -86,6 +87,7 @@ object User {
    */
   final case class Email private (value: String)
   object Email { self =>
+    // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[Email] =
       JsonCodec[String].transformOrFail(
         value => Email.make(value).toEitherWith(e => e.head.getMessage()),
@@ -110,11 +112,13 @@ object User {
    */
   final case class GivenName private (value: String)
   object GivenName { self =>
+    // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[GivenName] =
       JsonCodec[String].transformOrFail(
         value => GivenName.make(value).toEitherWith(e => e.head.getMessage()),
         givenName => givenName.value
       )
+
     def make(value: String): Validation[ValidationException, GivenName] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
@@ -128,11 +132,13 @@ object User {
    */
   final case class FamilyName private (value: String)
   object FamilyName { self =>
-    implicit val decoder: JsonDecoder[FamilyName] = JsonDecoder[String].mapOrFail { case value =>
-      FamilyName.make(value).toEitherWith(e => e.head.getMessage())
-    }
-    implicit val encoder: JsonEncoder[FamilyName] =
-      JsonEncoder[String].contramap((familyName: FamilyName) => familyName.value)
+    // the codec defines how to decode/encode the object from/into json
+    implicit val codec: JsonCodec[FamilyName] =
+      JsonCodec[String].transformOrFail(
+        value => FamilyName.make(value).toEitherWith(e => e.head.getMessage()),
+        familyName => familyName.value
+      )
+
     def make(value: String): Validation[ValidationException, FamilyName] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
@@ -188,11 +194,16 @@ object User {
 
   }
   object PasswordHash {
-    implicit val decoder: JsonDecoder[PasswordHash] = JsonDecoder[(String, Int)].mapOrFail {
-      case (value: String, passwordStrength: Int) =>
-        val ps = PasswordStrength.make(passwordStrength).fold(e => throw new Exception(e.head), v => v)
-        PasswordHash.make(value, ps).toEitherWith(e => e.head.getMessage())
+    // TODO: get the passwordstrength from config instead
+
+    // the decoder defines how to decode json to an object
+    implicit val decoder: JsonDecoder[PasswordHash] = JsonDecoder[(String, PasswordStrength)].mapOrFail {
+      case (password: String, passwordStrengthInt: Int) =>
+        val passwordStrength =
+          PasswordStrength.make(passwordStrengthInt).fold(e => throw new ValidationException(e.head), v => v)
+        PasswordHash.make(password, passwordStrength).toEitherWith(e => e.head.getMessage())
     }
+    // the encoder defines how to encode the object into json
     implicit val encoder: JsonEncoder[PasswordHash] =
       JsonEncoder[String].contramap((passwordHash: PasswordHash) => passwordHash.value)
 
@@ -220,11 +231,15 @@ object User {
    * PasswordStrength value object.
    */
   object PasswordStrength extends Subtype[Int] {
+
+    // the decoder defines how to decode json to an object
     implicit val decoder: JsonDecoder[PasswordStrength] = JsonDecoder[Int].mapOrFail { case value =>
       PasswordStrength.make(value).toEitherWith(e => e.head)
     }
+    // the encoder defines how to encode the object into json
     implicit val encoder: JsonEncoder[PasswordStrength] =
-      JsonEncoder[Int].contramap((passwordStrength: PasswordStrength) => passwordStrength)
+      JsonEncoder[Int].contramap(passwordStrength => passwordStrength)
+
     override def assertion = assert {
       greaterThanOrEqualTo(4) &&
       lessThanOrEqualTo(31)
@@ -237,11 +252,14 @@ object User {
    */
   final case class UserStatus private (value: Boolean)
   object UserStatus {
-    implicit val decoder: JsonDecoder[UserStatus] = JsonDecoder[Boolean].mapOrFail { case value =>
-      UserStatus.make(value).toEitherWith(e => e.head.getMessage())
-    }
-    implicit val encoder: JsonEncoder[UserStatus] =
-      JsonEncoder[Boolean].contramap((userStatus: UserStatus) => userStatus.value)
+
+    // the codec defines how to decode/encode the object from/into json
+    implicit val codec: JsonCodec[UserStatus] =
+      JsonCodec[Boolean].transformOrFail(
+        value => UserStatus.make(value).toEitherWith(e => e.head.getMessage()),
+        userStatus => userStatus.value
+      )
+
     def make(value: Boolean): Validation[ValidationException, UserStatus] =
       Validation.succeed(UserStatus(value))
   }
@@ -251,11 +269,14 @@ object User {
    */
   final case class SystemAdmin private (value: Boolean)
   object SystemAdmin {
-    implicit val decoder: JsonDecoder[SystemAdmin] = JsonDecoder[Boolean].mapOrFail { case value =>
-      SystemAdmin.make(value).toEitherWith(e => e.head.getMessage())
-    }
-    implicit val encoder: JsonEncoder[SystemAdmin] =
-      JsonEncoder[Boolean].contramap((systemAdmin: SystemAdmin) => systemAdmin.value)
+
+    // the codec defines how to decode/encode the object from/into json
+    implicit val codec: JsonCodec[SystemAdmin] =
+      JsonCodec[Boolean].transformOrFail(
+        value => SystemAdmin.make(value).toEitherWith(e => e.head.getMessage()),
+        systemAdmin => systemAdmin.value
+      )
+
     def make(value: Boolean): Validation[ValidationException, SystemAdmin] =
       Validation.succeed(SystemAdmin(value))
   }

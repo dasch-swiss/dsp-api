@@ -5,13 +5,17 @@ import zhttp.http._
 import zio._
 import zio.json._
 import zio.prelude.Validation
+import zio.prelude.ZValidation.Failure
+import zio.prelude.ZValidation.Success
 
 import dsp.errors.ValidationException
 import dsp.user.handler.UserHandler
+import dsp.valueobjects.Id
+import dsp.valueobjects.Iri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 
-object CreateUser {
+object MigrateUser {
 
   /**
    * The route to create a user
@@ -22,35 +26,40 @@ object CreateUser {
    */
   def route(req: Request, userHandler: UserHandler): ZIO[Any, ValidationException, Response] =
     for {
-      userCreatePayload <-
-        req.bodyAsString.map(_.fromJson[CreateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
+      userMigratePayload <-
+        req.bodyAsString.map(_.fromJson[MigrateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
 
-      r <- userCreatePayload match {
+      r <- userMigratePayload match {
              case Left(e) => {
                ZIO.fail(ValidationException(s"Payload invalid: $e"))
              }
 
              case Right(u) => {
+               val iri = Iri.UserIri.make(u.iri)
+               val id = iri match {
+                 case Failure(_, errors) => Validation.failNonEmptyChunk(errors)
+                 case Success(_, value)  => Id.UserId.fromIri(value)
+               }
                val givenName  = GivenName.make(u.givenName)
                val familyName = FamilyName.make(u.familyName)
                val username   = Username.make(u.username)
                val email      = Email.make(u.email)
-               val password =
-                 PasswordHash.make(u.password, PasswordStrength(12)) // TODO use password strength from config instead
-               val language = LanguageCode.make(u.language)
-               val status   = UserStatus.make(u.status)
+               val password   = PasswordHash.make(u.password, PasswordStrength(12))
+               val language   = LanguageCode.make(u.language)
+               val status     = UserStatus.make(u.status)
 
                (for {
                  validationResult <-
                    Validation
-                     .validate(givenName, familyName, username, email, password, language, status)
+                     .validate(id, givenName, familyName, username, email, password, language, status)
                      .toZIO
                      .mapError(e => ValidationException(e.getMessage()))
 
-                 (givenName, familyName, username, email, password, language, status) = validationResult
+                 (id, givenName, familyName, username, email, password, language, status) = validationResult
 
                  userId <- userHandler
-                             .createUser(
+                             .migrateUser(
+                               id,
                                username,
                                email,
                                givenName,
@@ -67,8 +76,9 @@ object CreateUser {
     } yield r
 
   /**
-   * The payload needed to create a user.
+   * The payload needed to migrate a user. It is the same as [[CreateUserPayload]] but with the existing IRI.
    *
+   * @param iri
    * @param givenName
    * @param familyName
    * @param username
@@ -77,7 +87,8 @@ object CreateUser {
    * @param language
    * @param status
    */
-  final case class CreateUserPayload private (
+  final case class MigrateUserPayload private (
+    iri: String,
     givenName: String,
     familyName: String,
     username: String,
@@ -87,8 +98,8 @@ object CreateUser {
     status: Boolean
   ) {}
 
-  object CreateUserPayload {
-    implicit val decoder: JsonDecoder[CreateUserPayload] = DeriveJsonDecoder.gen[CreateUserPayload]
+  object MigrateUserPayload {
+    implicit val decoder: JsonDecoder[MigrateUserPayload] = DeriveJsonDecoder.gen[MigrateUserPayload]
   }
 
 }
