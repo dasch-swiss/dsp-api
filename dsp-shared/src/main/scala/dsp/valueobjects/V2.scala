@@ -222,11 +222,7 @@ object V2UuidValidation {
    * @return TRUE for correct versions, FALSE for incorrect.
    */
   def isUuidVersion4Or5(s: String): Boolean =
-    // println("VERSION", getUUIDVersion(s), s)
-    // TODO-mpro: below condition is a quickfix, should be removed in DEV-1400
-    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
-      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
-    } else true
+    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.
