@@ -5,11 +5,11 @@
 
 package dsp.valueobjects
 
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
 
 /**
  * LanguageCode value object.

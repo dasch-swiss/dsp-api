@@ -5,19 +5,14 @@
 
 package dsp.user.domain
 
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
-import zio.json.DeriveJsonEncoder
-import zio._
-import zio.json.DeriveJsonDecoder
-import zio.json.JsonCodec
-import zio.json.DeriveJsonCodec
 
 /**
  * Represents the user domain object.

@@ -5,6 +5,8 @@
 
 package dsp.valueobjects
 
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -12,10 +14,6 @@ import scala.util.Try
 
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
-import zio.json.JsonCodec
-import zio.json.DeriveJsonCodec
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
 
 sealed trait Id
 object Id {

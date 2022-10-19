@@ -6,16 +6,14 @@
 package dsp.valueobjects
 
 import org.apache.commons.validator.routines.UrlValidator
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import scala.util.Try
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
-import zio.json.JsonCodec
-import zio.json.DeriveJsonCodec
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
 
 sealed trait Iri {
   val value: String
