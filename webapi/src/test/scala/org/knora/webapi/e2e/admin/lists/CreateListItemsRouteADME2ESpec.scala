@@ -264,7 +264,7 @@ class CreateListItemsRouteADME2ESpec
         newListIri.set(listInfo.id)
       }
 
-      "create a list using bad project IRI, created in the old way with bad UUID version" in {
+      "not create a list using bad project IRI, created in the old way with bad UUID version" in {
         val createListRequest: String =
           s"""{
              |    "projectIri": "${SharedTestDataADM.BEOL_PROJECT_IRI}",
@@ -277,13 +277,7 @@ class CreateListItemsRouteADME2ESpec
           HttpEntity(ContentTypes.`application/json`, createListRequest)
         ) ~> addCredentials(beolAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-        // TODO-mro: implementation of DEV-1400 should break this tes - list with old BEOL IRI shouldn;t be created
-        response.status should be(StatusCodes.OK)
-
-        val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
-
-        val listInfo = receivedList.listinfo
-        listInfo.projectIri should be(SharedTestDataADM.BEOL_PROJECT_IRI)
+        response.status should be(StatusCodes.BadRequest)
       }
 
       "return a ForbiddenException if the user creating the list is not project or system admin" in {
