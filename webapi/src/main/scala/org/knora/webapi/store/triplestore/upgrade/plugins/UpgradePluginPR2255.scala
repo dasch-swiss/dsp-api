@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.Logger
 
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-import org.apache.jena.sparql.function.library.uuid
 
 /**
  * Transforms a repository for DSP-API PR2255.
@@ -23,13 +22,13 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
-    ProjectsIrisToChange.shortcodesToUuids.foreach { case (iriToFind, iriToChange) =>
-      val updatedNode = nodeFactory.makeIriNode(iriToChange)
+    ProjectsIrisToChange.newToOldIrisMap.foreach { case (oldiri, newIri) =>
+      val updatedNode = nodeFactory.makeIriNode(newIri)
 
       for {
         statement <- model
 
-        _ = if (statement.subj.stringValue == iriToFind) {
+        _ = if (statement.subj.stringValue == oldiri) {
               statementsToRemove += statement
 
               statementsToAdd += nodeFactory.makeStatement(
@@ -39,7 +38,7 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
               )
             }
 
-        _ = if (statement.obj.stringValue == iriToFind) {
+        _ = if (statement.obj.stringValue == oldiri) {
               statementsToRemove += statement
 
               statementsToAdd += nodeFactory.makeStatement(
@@ -62,7 +61,7 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
 
 object ProjectsIrisToChange {
   val prefix = "http://rdfh.ch/projects/"
-  val shortcodesToUuids: Map[String, String] = Map(
+  val newToOldIrisMap: Map[String, String] = Map(
     s"${prefix}0001" -> s"${prefix}Lw3FC39BSzCwvmdOaTyLqQ",
     s"${prefix}00FF" -> s"${prefix}MTvoB0EJRrqovzRkWXqfkA",
     s"${prefix}0101" -> s"${prefix}WtDaFRUwSH6duM8PRpGi_A",

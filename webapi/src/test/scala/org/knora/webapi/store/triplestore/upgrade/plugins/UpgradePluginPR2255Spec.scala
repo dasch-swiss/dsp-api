@@ -7,42 +7,38 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
 
-import dsp.errors.AssertionException
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR2255Spec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   "Upgrade plugin PR2255" should {
-    "transform project IRIs" in {
+    "transform all project IRIs, that no old project IRI can be found in the data" in {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2255.trig")
+
+      val numberOfStatementsBeforeTransformation = model.iterator.size
 
       // Use the plugin to transform the input.
       val plugin = new UpgradePluginPR2255(log)
       plugin.transform(model)
 
-      // Check project IRI was changed.
-      val subj =
-        nodeFactory.makeIriNode("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
+      val numberOfStatementsAfterTransformation = model.iterator.size
 
-      model
-        .find(
-          subj = Some(subj),
-          pred = None,
-          obj = None
-        )
-        .toSet
-        .headOption match {
-        case Some(statement: Statement) =>
-          statement.subj match {
-            case node: IriNode =>
-              assert(node.iri == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
+      // there should be the same number of statements before and after the transformation
+      assert(numberOfStatementsBeforeTransformation == numberOfStatementsAfterTransformation)
 
-            case _ => ()
-          }
+      // Check projects IRIs was changed.
+      ProjectsIrisToChange.newToOldIrisMap.foreach { case (oldIri, _) =>
+        for {
+          statement <- model
 
-        case None => throw AssertionException(s"No statement found with subject: $subj")
+          // there shoudln't be any old project IRI in the data anymore,
+          // both as a subject and an object
+          _ = assert(statement.subj.stringValue != oldIri)
+          _ = assert(statement.obj.stringValue != oldIri)
+
+        } yield ()
       }
     }
   }
