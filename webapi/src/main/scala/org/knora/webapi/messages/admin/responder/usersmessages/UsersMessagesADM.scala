@@ -837,13 +837,16 @@ case class UserChangeRequestADM(
     throw BadRequestException("Too many parameters sent for system admin membership change.")
   }
 
-  // change project memberships
-  if (projects.isDefined && parametersCount > 1) {
+  // change project memberships (could also involve changing projectAdmin memberships)
+  if (
+    projects.isDefined && projectsAdmin.isDefined && parametersCount > 2 ||
+    projects.isDefined && !projectsAdmin.isDefined && parametersCount > 1
+  ) {
     throw BadRequestException("Too many parameters sent for project membership change.")
   }
 
-  // change projectAdmin memberships
-  if (projectsAdmin.isDefined && parametersCount > 1) {
+  // change projectAdmin memberships only (without changing project memberships)
+  if (projectsAdmin.isDefined && !projects.isDefined && parametersCount > 1) {
     throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
   }
 
