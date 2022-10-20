@@ -247,11 +247,11 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "create a new administrative permission for a new project" in {
-        val projectIri = "http://rdfh.ch/projects/3333"
+        val projectIri = "http://rdfh.ch/projects/Fti-cwr3QICVH1DjE_cvCQ"
         val projectPayload =
           s"""
              |{
-             |	"projectIri": "$projectIri",
+             |	  "id": "$projectIri",
              |    "shortname": "newprojectWithIri",
              |    "shortcode": "3333",
              |    "longname": "new project with a custom IRI",
@@ -260,7 +260,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
              |    "logo": "/fu/bar/baz.jpg",
              |    "status": true,
              |    "selfjoin": false
-             |
              |}
              |""".stripMargin
 
@@ -285,7 +284,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
         val permissionResponse: HttpResponse = singleAwaitingRequest(permissionRequest)
         assert(permissionResponse.status === StatusCodes.OK)
-
       }
 
       "create a default object access permission" in {

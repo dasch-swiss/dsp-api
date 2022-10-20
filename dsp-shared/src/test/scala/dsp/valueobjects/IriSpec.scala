@@ -21,8 +21,10 @@ object IriSpec extends ZIOSpecDefault {
   val groupIriWithUUIDVersion3   = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
   val validListIri               = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
   val listIriWithUUIDVersion3    = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
-  val validProjectIri            = "http://rdfh.ch/projects/0001"
+  val invalidProjectIri          = "http://rdfh.ch/projects/0001"
+  val validProjectIri            = "http://rdfh.ch/projects/CwQ8hXF9Qlm1gl2QE6pTpg"
   val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
+  val builtInProjectIri          = "http://www.knora.org/ontology/knora-admin#SystemProject"
   val validRoleIri               = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
   val roleIriWithUUIDVersion3    = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
   val validUserIri               = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
@@ -145,9 +147,17 @@ object IriSpec extends ZIOSpecDefault {
         )
       )
     },
+    test("pass an invalid IRI containing the shortcode and return and error") {
+      assertTrue(
+        ProjectIri.make(invalidIri) == Validation.fail(
+          ValidationException(IriErrorMessages.ProjectIriInvalid)
+        )
+      )
+    },
     test("pass a valid value and successfully create value object") {
       assertTrue(ProjectIri.make(validProjectIri).toOption.get.value == validProjectIri) &&
-      assertTrue(ProjectIri.make(Option(validProjectIri)).getOrElse(null).get.value == validProjectIri)
+      assertTrue(ProjectIri.make(Option(validProjectIri)).getOrElse(null).get.value == validProjectIri) &&
+      assertTrue(ProjectIri.make(builtInProjectIri).toOption.get.value == builtInProjectIri)
     },
     test("successfully validate passing None") {
       assertTrue(
