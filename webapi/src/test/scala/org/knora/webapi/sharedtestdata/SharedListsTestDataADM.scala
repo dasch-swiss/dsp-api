@@ -11,7 +11,7 @@ object SharedListsTestDataADM {
 
   val otherTreeListInfo: ListRootNodeInfoADM = ListRootNodeInfoADM(
     id = "http://rdfh.ch/lists/0001/otherTreeList",
-    projectIri = "http://rdfh.ch/projects/0001",
+    projectIri = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
     name = None,
     labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Tree list root", Some("en")))),
     comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
@@ -70,7 +70,7 @@ object SharedListsTestDataADM {
 
   val treeListInfo: ListRootNodeInfoADM = ListRootNodeInfoADM(
     id = "http://rdfh.ch/lists/0001/treeList",
-    projectIri = "http://rdfh.ch/projects/0001",
+    projectIri = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
     name = Some("treelistroot"),
     labels = StringLiteralSequenceV2(
       Vector(

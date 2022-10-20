@@ -1,4 +1,3 @@
-
 {
     "@graph": [
         {
@@ -11,7 +10,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:pagenum": {
@@ -92,7 +91,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:pagenum": {
@@ -173,7 +172,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:pagenum": {
@@ -254,7 +253,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:pagenum": {
@@ -335,7 +334,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:pagenum": {
@@ -416,7 +415,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:pagenum": {
@@ -497,7 +496,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:pagenum": {

@@ -34,7 +34,7 @@ included in the request body, for example:
 ```json
 {
     "forGroup":"http://rdfh.ch/groups/0001/thing-searcher", 
-    "forProject":"http://rdfh.ch/projects/0001", 
+    "forProject":"http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ", 
     "hasPermissions":[
       {
         "additionalInformation":null,
@@ -60,7 +60,7 @@ As a response, the created administrative permission and its IRI are returned as
 {
     "administrative_permission": {
         "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-        "forProject": "http://rdfh.ch/projects/0001",
+        "forProject": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
         "hasPermissions": [
             {
                 "additionalInformation": null,
@@ -118,7 +118,7 @@ default object access permission for a group of a project the request body would
 ```json
 {
     "forGroup":"http://rdfh.ch/groups/0001/thing-searcher",
-    "forProject":"http://rdfh.ch/projects/0001",
+    "forProject":"http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
     "forProperty":null,
     "forResourceClass":null,
     "hasPermissions":[
@@ -160,7 +160,7 @@ a resource class of a specific project:
 {
     "id": "http://rdfh.ch/permissions/00FF/fSw7w1sI5IwDjEfFi1jOeQ",
     "forGroup":null,
-    "forProject":"http://rdfh.ch/projects/00FF",
+    "forProject":"http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
     "forProperty":null,
     "forResourceClass":"http://www.knora.org/ontology/00FF/images#bild",
     "hasPermissions":[
@@ -179,7 +179,7 @@ The response contains the newly created permission and its IRI, as:
 {
     "default_object_access_permission": {
         "forGroup": null,
-        "forProject": "http://rdfh.ch/projects/00FF",
+        "forProject": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
         "forProperty": null,
         "forResourceClass": "http://www.knora.org/ontology/00FF/images#bild",
         "hasPermissions": [
