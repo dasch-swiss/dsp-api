@@ -1,6 +1,8 @@
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
 <http://rdfh.ch/projects/0001>
     a                              knora-admin:knoraProject ;
@@ -52,3 +54,11 @@
                                       <http://rdfh.ch/projects/00FF>,
                                       <http://rdfh.ch/projects/0001> ;
     knora-admin:isInGroup             <http://rdfh.ch/groups/00FF/images-reviewer> .
+
+    <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping>
+    rdf:type                                      knora-base:XMLToStandoffMapping ;
+    rdfs:label                                    "A custom standoff mapping with a specified default transformation" ;
+    knora-base:hasMappingElement                  <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/SKxguRHKRCGP0asM896oyA>,
+                                                  <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/-ytUQrLUSCaeggs61G1UIg>,
+                                                  <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/kSI_5ncYTbuvq9C912qEng> ;
+    knora-base:mappingHasDefaultXSLTransformation <http://rdfh.ch/0001/xsl-text-representation> .

@@ -69,7 +69,7 @@ object IriSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(GroupIri.make(validGroupIri).toOption.get.value == validGroupIri) &&
-      assertTrue(GroupIri.make(Option(validGroupIri)).getOrElse(null).get.value == validGroupIri)
+      assertTrue(GroupIri.make(Some(validGroupIri)).fold(e => throw e.head, v => v).get.value == validGroupIri)
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -111,7 +111,7 @@ object IriSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(ListIri.make(validListIri).toOption.get.value == validListIri) &&
-      assertTrue(ListIri.make(Option(validListIri)).getOrElse(null).get.value == validListIri)
+      assertTrue(ListIri.make(Some(validListIri)).fold(e => throw e.head, v => v).get.value == validListIri)
     },
     test("successfully validate passing None") {
       assertTrue(
