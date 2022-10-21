@@ -61,7 +61,7 @@ Construct {
 }
 FROM <http://www.knora.org/data/0001/anything>
 WHERE {
-    BIND(<http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/update-standard-mapping> as ?mapping)
+    BIND(<http://rdfh.ch/projects/0001/mappings/update-standard-mapping> as ?mapping)
     ?mapping ?p ?o .
 
     OPTIONAL {
@@ -76,7 +76,7 @@ WHERE {
 }
 ```
 
-5. Find differences to update by hand (to avoid massive IRI update) the `knora-ontologies/standoff-data.ttl`, pay attention to namespaces (e.g. replace all `http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/update-standard-mapping` by `http://rdfh.ch/standoff/mappings/StandardMapping`)!
+5. Find differences to update by hand (to avoid massive IRI update) the `knora-ontologies/standoff-data.ttl`, pay attention to namespaces (e.g. replace all `http://rdfh.ch/projects/0001/mappings/update-standard-mapping` by `http://rdfh.ch/standoff/mappings/StandardMapping`)!
 6. Prepare an upgrade script of an existing Knora base
 
 ## HTML

@@ -134,30 +134,30 @@
     knora-base:valueHasUUID      "51vqUgh-SwCFtJXbwYMPhQ" .
 
 
-<http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping>
+<http://rdfh.ch/projects/0001/mappings/freetestCustomMapping>
     rdf:type                                      knora-base:XMLToStandoffMapping ;
     rdfs:label                                    "A custom standoff mapping with a specified default transformation" ;
-    knora-base:hasMappingElement                  <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping/elements/SKxguRHKRCGP0asM896oyA>,
-                                                  <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping/elements/-ytUQrLUSCaeggs61G1UIg>,
-                                                  <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping/elements/kSI_5ncYTbuvq9C912qEng> ;
+    knora-base:hasMappingElement                  <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/SKxguRHKRCGP0asM896oyA>,
+                                                  <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/-ytUQrLUSCaeggs61G1UIg>,
+                                                  <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/kSI_5ncYTbuvq9C912qEng> ;
     knora-base:mappingHasDefaultXSLTransformation <http://rdfh.ch/0001/xsl-text-representation> .
 
-<http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping/elements/SKxguRHKRCGP0asM896oyA>
+<http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/SKxguRHKRCGP0asM896oyA>
     rdf:type                                   knora-base:MappingElement ;
     knora-base:mappingElementRequiresSeparator false ;
     knora-base:mappingHasStandoffClass         standoff:StandoffRootTag ;
-    knora-base:mappingHasXMLAttribute          <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping/elements/ADc1qtrKRsaQQwIHiIqLPw> ;
+    knora-base:mappingHasXMLAttribute          <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/ADc1qtrKRsaQQwIHiIqLPw> ;
     knora-base:mappingHasXMLClass              "noClass" ;
     knora-base:mappingHasXMLNamespace          "noNamespace" ;
     knora-base:mappingHasXMLTagname            "text" .
 
-<http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping/elements/ADc1qtrKRsaQQwIHiIqLPw>
+<http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/ADc1qtrKRsaQQwIHiIqLPw>
     rdf:type                              knora-base:MappingXMLAttribute ;
     knora-base:mappingHasStandoffProperty standoff:standoffRootTagHasDocumentType ;
     knora-base:mappingHasXMLAttributename "documentType" ;
     knora-base:mappingHasXMLNamespace     "noNamespace" .
 
-<http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping/elements/-ytUQrLUSCaeggs61G1UIg>
+<http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/-ytUQrLUSCaeggs61G1UIg>
     rdf:type                                   knora-base:MappingElement ;
     knora-base:mappingElementRequiresSeparator false ;
     knora-base:mappingHasStandoffClass         standoff:StandoffParagraphTag ;
@@ -165,7 +165,7 @@
     knora-base:mappingHasXMLNamespace          "noNamespace" ;
     knora-base:mappingHasXMLTagname            "section" .
 
-<http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping/elements/kSI_5ncYTbuvq9C912qEng>
+<http://rdfh.ch/projects/0001/mappings/freetestCustomMapping/elements/kSI_5ncYTbuvq9C912qEng>
     rdf:type                                   knora-base:MappingElement ;
     knora-base:mappingElementRequiresSeparator false ;
     knora-base:mappingHasStandoffClass         standoff:StandoffItalicTag ;
@@ -179,7 +179,7 @@
     knora-base:hasPermissions                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:isDeleted                     false ;
     knora-base:valueCreationDate             "2022-02-24T11:21:27.625681Z"^^xsd:dateTime ;
-    knora-base:valueHasMapping               <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ/mappings/freetestCustomMapping> ;
+    knora-base:valueHasMapping               <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping> ;
     knora-base:valueHasMaxStandoffStartIndex 2 ;
     knora-base:valueHasOrder                 0 ;
     knora-base:valueHasStandoff              <http://rdfh.ch/0001/free-test-instance-01/values/has-text-value-03/standoff/0>,

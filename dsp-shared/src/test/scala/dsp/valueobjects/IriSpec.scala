@@ -160,11 +160,10 @@ object IriSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       def makeProjectIri(iri: String) = ProjectIri.make(iri).fold(e => throw e.head, v => v)
+      val optionalProjectIri          = ProjectIri.make(Some(validProjectIri)).fold(e => throw e.head, v => v)
 
       assertTrue(makeProjectIri(validProjectIri).value == validProjectIri) &&
-      assertTrue(
-        ProjectIri.make(Option(validProjectIri)).fold(e => throw e.head, v => v).get.value == validProjectIri
-      ) &&
+      assertTrue(optionalProjectIri.get.value == validProjectIri) &&
       assertTrue(makeProjectIri(builtInProjectIri).value == builtInProjectIri)
     },
     test("successfully validate passing None") {
