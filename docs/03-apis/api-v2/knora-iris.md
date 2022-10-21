@@ -16,8 +16,6 @@ Knora project regardless of where it is hosted. The IRIs of ontologies that
 are built into Knora do not contain shortcodes; these ontologies implicitly
 belong to the Knora system project.
 
-A user-created ontology IRI must always include its project shortcode.
-
 Project ID `0000` is reserved for shared ontologies
 (see [Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies)).
 
@@ -208,12 +206,14 @@ follows:
   - Standoff tag:
     `http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID/values/VALUE_UUID/STANDOFF_UUID`
   - XML-to-standoff mapping:
-    `http://rdfh.ch/PROJECT_SHORTCODE/mappings/MAPPING_NAME`
+    `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME`
   - XML-to-standoff mapping element:
-    `http://rdfh.ch/PROJECT_SHORTCODE/mappings/MAPPING_NAME/elements/MAPPING_ELEMENT_UUID`
-  - Project: `http://rdfh.ch/projects/PROJECT_SHORTCODE` (or `http://rdfh.ch/projects/PROJECT_UUID`)
+    `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME/elements/MAPPING_ELEMENT_UUID`
+  - Project: `http://rdfh.ch/projects/PROJECT_UUID`
   - Group: `http://rdfh.ch/groups/PROJECT_SHORTCODE/GROUP_UUID`
   - Permission:
     `http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID`
   - Lists: `http://rdfh.ch/lists/PROJECT_SHORTCODE/LIST_UUID`
   - User: `http://rdfh.ch/users/USER_UUID`
+
+  DSP-API supports `PROJECT_UUID` which are UUID version 4 or 5.
