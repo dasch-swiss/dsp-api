@@ -331,8 +331,10 @@ clean-metals: ## clean SBT and Metals related stuff
 	@rm -rf .bsp
 	@rm -rf .metals
 	@rm -rf target
+	@sbt "clean"
 
-clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp clean-sipi-projects ## clean build artifacts
+
+clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp ## clean build artifacts
 	@rm -rf .env
 
 .PHONY: clean-sipi-tmp
