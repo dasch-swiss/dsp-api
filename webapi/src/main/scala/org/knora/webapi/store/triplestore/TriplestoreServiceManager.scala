@@ -41,7 +41,7 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
  */
 @accessible
 trait TriplestoreServiceManager {
-  def receive(message: TriplestoreRequest): ZIO[Any, Nothing, Any]
+  def receive(message: TriplestoreRequest): UIO[Any]
 }
 
 object TriplestoreServiceManager {
