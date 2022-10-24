@@ -119,10 +119,10 @@ try:
 
     h.raise_for_status()
 
-    print("?textProperty=" + urllib.parse.quote_plus("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText") + "&mappingIri=" + urllib.parse.quote_plus("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLTEIMapping") + "&gravsearchTemplateIri=" + urllib.parse.quote_plus(g.json()['res_id']) + "&teiHeaderXSLTIri=" + urllib.parse.quote_plus(h.json()['res_id']))
+    print("?textProperty=" + urllib.parse.quote_plus("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText") + "&mappingIri=" + urllib.parse.quote_plus("http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ/mappings/BEOLTEIMapping") + "&gravsearchTemplateIri=" + urllib.parse.quote_plus(g.json()['res_id']) + "&teiHeaderXSLTIri=" + urllib.parse.quote_plus(h.json()['res_id']))
 
     print("textProp "  + "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText")
-    print("mappingIRI: " + "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLTEIMapping")
+    print("mappingIRI: " + "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ/mappings/BEOLTEIMapping")
     print("gravsearchTemplateIri: " + g.json()['res_id'])
     print("teiHeaderXSLTIri " + h.json()['res_id'])
 

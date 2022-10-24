@@ -672,7 +672,7 @@ class KnoraSipiIntegrationV1ITSpec
         baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
           "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
           "&mappingIri=" + URLEncoder.encode(
-            "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI",
+            "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ/mappings/BEOLToTEI",
             "UTF-8"
           ) +
           "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
@@ -741,7 +741,7 @@ class KnoraSipiIntegrationV1ITSpec
         baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
           "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
           "&mappingIri=" + URLEncoder.encode(
-            "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI",
+            "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ/mappings/BEOLToTEI",
             "UTF-8"
           ) +
           "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
