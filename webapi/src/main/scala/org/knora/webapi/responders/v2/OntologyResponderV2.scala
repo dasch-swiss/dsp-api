@@ -598,8 +598,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         if (
           !(requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin)
         ) {
-          // println(s"requestingUser: $requestingUser")
-          // println(s"requestingUser.permissionData.isProjectAdmin(<${projectIri.toString}>): ${requestingUser.permissionData.isProjectAdmin(projectIri.toString)}")
           throw ForbiddenException(
             s"A new ontology in the project ${createOntologyRequest.projectIri} can only be created by an admin of that project, or by a system admin."
           )
