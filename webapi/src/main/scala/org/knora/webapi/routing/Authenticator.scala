@@ -469,8 +469,7 @@ object Authenticator extends InstrumentationSupport {
   val AUTHENTICATION_INVALIDATION_CACHE_NAME = "authenticationInvalidationCache"
 
   val sessionStore: scala.collection.mutable.Map[String, UserADM] = scala.collection.mutable.Map()
-  // implicit val timeout: Timeout                                   = Duration(5, SECONDS)
-  val log: Logger = Logger(LoggerFactory.getLogger(this.getClass))
+  val log: Logger                                                 = Logger(LoggerFactory.getLogger(this.getClass))
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
