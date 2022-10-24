@@ -2,7 +2,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 
-<http://rdfh.ch/projects/0105> a knora-admin:knoraProject ;
+<http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> a knora-admin:knoraProject ;
         knora-admin:projectLongname "Test Project"^^xsd:string ;
         knora-admin:projectShortname "test-project"^^xsd:string ;
         knora-admin:projectShortcode "0105"^^xsd:string ;
@@ -14,42 +14,42 @@
 <http://rdfh.ch/groups/0105/group-without-language-attribute-1> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Group without language string 1"^^xsd:string ;
                                                knora-admin:groupDescriptions "A group description without language attribute."^^xsd:string ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0105/group-without-language-attribute-2> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Group without language string 2"^^xsd:string ;
                                                knora-admin:groupDescriptions "A group description without language attribute." ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0105/group-without-language-attribute-3> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Group without language string 3"^^xsd:string ;
                                                knora-admin:groupDescription "A group description with old predicate name and without language attribute."^^xsd:string ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0105/group-without-language-attribute-4> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Group without language string 4"^^xsd:string ;
                                                knora-admin:groupDescription "A group description with old predicate name and without language attribute." ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0105/group-with-language-attribute-de> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Group with language string"^^xsd:string ;
                                                knora-admin:groupDescriptions "Eine Gruppe mit Sprachattribut."@de ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0105/group-with-language-attribute-en> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Group with language string"^^xsd:string ;
                                                knora-admin:groupDescriptions "A group with language attribute."@en ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 

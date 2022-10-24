@@ -10,7 +10,7 @@
 <http://www.knora.org/ontology/7777/test> {
     <http://www.knora.org/ontology/7777/test> rdf:type owl:Ontology ;
         rdfs:label "PluginPR2018 test object #1" ;
-        knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+        knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> .
 }
 
 # A test ontology that does not contain knora-base:lastModificationDate

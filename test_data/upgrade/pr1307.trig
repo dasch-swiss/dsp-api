@@ -11,7 +11,7 @@
     <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g> a anything:Thing;
       rdfs:label "Something with a lot of markup";
       knora-base:isDeleted false;
-      knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+      knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ>;
       knora-base:creationDate "2018-05-30T13:44:11.749Z"^^xsd:dateTime;
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
       knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;

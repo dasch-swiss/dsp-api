@@ -8,7 +8,7 @@
 <http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9ma>
     a                            knora-base:Resource ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298+00:00"^^xsd:dateTime ;
     rdfs:label                   "a thing" ;
@@ -17,7 +17,7 @@
 <http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mb>
     a                               knora-base:Resource ;
     knora-base:attachedToUser       <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:hasPermissions       "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:creationDate         "2018-08-07T13:27:18.518+00:00"^^xsd:dateTime ;
     knora-base:lastModificationDate "2019-11-29T10:00:01.673298+00:00"^^xsd:dateTime ;
@@ -27,7 +27,7 @@
 <http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mc>
     a                               knora-base:Resource ;
     knora-base:attachedToUser       <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:hasPermissions       "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:creationDate         "2018-08-07T13:27:18.518123Z"^^xsd:dateTime ;
     knora-base:lastModificationDate "2019-11-29T10:00:01.673298+02:00"^^xsd:dateTime ;
