@@ -70,8 +70,10 @@ trait Authenticator extends InstrumentationSupport {
    * with the generated session id for the client to save.
    *
    * @param requestContext       a [[RequestContext]] containing the http request
-   *
+   * @param appConfig            the application's configuration.
    * @param system               the current [[ActorSystem]]
+   * @param appActor             a reference to the application actor
+   * @param executionContext     the current execution context
    * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
    *         the generated session id.
    */
@@ -128,8 +130,10 @@ trait Authenticator extends InstrumentationSupport {
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
    *
    * @param credentials          the user supplied [[KnoraPasswordCredentialsV2]] containing the user's login information.
-   *
+   * @param appConfig            the application's configuration.
    * @param system               the current [[ActorSystem]]
+   * @param appActor             a reference to the application actor
+   * @param executionContext     the current execution context
    * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
    *         the generated session id.
    */
@@ -184,6 +188,15 @@ trait Authenticator extends InstrumentationSupport {
     } yield httpResponse
   }
 
+  /**
+   * Returns a simple login form for testing purposes
+   *
+   * @param requestContext    a [[RequestContext]] containing the http request
+   * @param appConfig         the application's configuration.
+   * @param system            the current [[ActorSystem]]
+   * @param executionContext  the current execution context
+   * @return                  a [[HttpResponse]] with an html login form
+   */
   def presentLoginFormV2(
     requestContext: RequestContext,
     appConfig: AppConfig
@@ -239,9 +252,11 @@ trait Authenticator extends InstrumentationSupport {
    * generated.
    *
    * @param requestContext       a [[RequestContext]] containing the http request
-   *
+   * @param appConfig            the application's configuration.
    * @param system               the current [[ActorSystem]]
-   * @return a [[RequestContext]]
+   * @param appActor             a reference to the application actor
+   * @param executionContext  the current execution context
+   * @return a [[HttpResponse]]
    */
   def doAuthenticateV1(requestContext: RequestContext, appConfig: AppConfig)(implicit
     system: ActorSystem,
@@ -278,7 +293,10 @@ trait Authenticator extends InstrumentationSupport {
    * Checks if the credentials provided in [[RequestContext]] are valid.
    *
    * @param requestContext a [[RequestContext]] containing the http request
+   * @param appConfig            the application's configuration.
    * @param system         the current [[ActorSystem]]
+   * @param appActor             a reference to the application actor
+   * @param executionContext  the current execution context
    * @return a [[HttpResponse]]
    */
   def doAuthenticateV2(requestContext: RequestContext, appConfig: AppConfig)(implicit
@@ -403,9 +421,11 @@ trait Authenticator extends InstrumentationSupport {
    * corresponding error is returned.
    *
    * @param requestContext       a [[RequestContext]] containing the http request
-   *
+   * @param appConfig            the application's configuration.
    * @param system               the current [[ActorSystem]]
-   * @return a [[UserProfileV1]]
+   * @param appActor             a reference to the application actor
+   * @param executionContext  the current execution context
+   * @return a [[UserADM]]
    */
   def getUserADM(requestContext: RequestContext, appConfig: AppConfig)(implicit
     system: ActorSystem,
@@ -464,6 +484,8 @@ object Authenticator extends InstrumentationSupport {
    * @param credentials          the user supplied and extracted credentials.
    * @param appConfig            the application's configuration
    * @param system               the current [[ActorSystem]]
+   * @param appActor             a reference to the application actor
+   * @param executionContext  the current execution context
    * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
    *         will be thrown.
    * @throws BadCredentialsException when no credentials are supplied; when user is not active;
@@ -535,7 +557,8 @@ object Authenticator extends InstrumentationSupport {
    * Tries to extract the credentials from the requestContext (parameters, auth headers, token)
    *
    * @param requestContext a [[RequestContext]] containing the http request
-   * @return [[KnoraCredentialsV2]].
+   * @param appConfig            the application's configuration.
+   * @return an optional [[KnoraCredentialsV2]].
    */
   private def extractCredentialsV2(
     requestContext: RequestContext,
@@ -563,7 +586,7 @@ object Authenticator extends InstrumentationSupport {
    * Tries to extract credentials supplied as URL parameters.
    *
    * @param requestContext the HTTP request context.
-   * @return [[KnoraCredentialsV2]].
+   * @return an optional [[KnoraCredentialsV2]].
    */
   private def extractCredentialsFromParametersV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
     // extract email/password from parameters
@@ -704,7 +727,10 @@ object Authenticator extends InstrumentationSupport {
    * with authenticated credentials.
    *
    * @param credentials          the user supplied credentials.
-   *
+   * @param appConfig            the application's configuration.
+   * @param system               the current [[ActorSystem]]
+   * @param appActor             a reference to the application actor
+   * @param executionContext  the current execution context
    * @return a [[UserADM]]
    * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
    */
@@ -770,9 +796,8 @@ object Authenticator extends InstrumentationSupport {
    * Tries to get a [[UserADM]].
    *
    * @param identifier           the IRI, email, or username of the user to be queried
-   *
    * @param system               the current akka actor system
-   * @param timeout              the timeout of the query
+   * @param appActor             a reference to the application actor
    * @param executionContext     the current execution context
    * @return a [[UserADM]]
    * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
@@ -780,7 +805,6 @@ object Authenticator extends InstrumentationSupport {
   private def getUserByIdentifier(identifier: UserIdentifierADM)(implicit
     system: ActorSystem,
     appActor: ActorRef,
-    timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[UserADM] = tracedFuture("authenticator-get-user-by-identifier") {
     for {
@@ -812,6 +836,7 @@ object Authenticator extends InstrumentationSupport {
    * This also needs to be changed in all the places that base32 is used to calculate the cookie name, e.g., sipi.
    *
    * @param appConfig the application's configuration.
+   * @return the calculated cookie name as [[String]]
    */
   def calculateCookieName(appConfig: AppConfig): String = {
     //
@@ -920,7 +945,7 @@ object JWTHelper {
    * @param secret      the secret used to encode the token.
    * @param contentName the name of the content field to be extracted.
    * @param issuer      the principal that issued the JWT.
-   * @return the string value of the specified content field.
+   * @return the [[String]] value of the specified content field.
    */
   def extractContentFromToken(token: String, secret: String, contentName: String, issuer: String): Option[String] =
     decodeToken(token, secret, issuer) match {
@@ -938,6 +963,7 @@ object JWTHelper {
    *
    * @param token  the token to be decoded.
    * @param secret the secret used to encode the token.
+   * @param issuer      the principal that issued the JWT.
    * @return the token's header and claim, or `None` if the token is invalid.
    */
   private def decodeToken(token: String, secret: String, issuer: String): Option[(JwtHeader, JwtClaim)] = {
