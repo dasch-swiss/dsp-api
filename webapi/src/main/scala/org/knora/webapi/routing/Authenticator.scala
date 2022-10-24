@@ -15,7 +15,6 @@ import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.ByteString
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.codec.binary.Base32
 import org.slf4j.LoggerFactory
@@ -470,8 +469,8 @@ object Authenticator extends InstrumentationSupport {
   val AUTHENTICATION_INVALIDATION_CACHE_NAME = "authenticationInvalidationCache"
 
   val sessionStore: scala.collection.mutable.Map[String, UserADM] = scala.collection.mutable.Map()
-  implicit val timeout: Timeout                                   = Duration(5, SECONDS)
-  val log: Logger                                                 = Logger(LoggerFactory.getLogger(this.getClass))
+  // implicit val timeout: Timeout                                   = Duration(5, SECONDS)
+  val log: Logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -816,7 +815,7 @@ object Authenticator extends InstrumentationSupport {
               userInformationTypeADM = UserInformationTypeADM.Full,
               requestingUser = KnoraSystemInstances.Users.SystemUser
             )
-          )
+          )(Duration(100, SECONDS))
           .mapTo[Option[UserADM]]
 
       user = maybeUserADM match {
