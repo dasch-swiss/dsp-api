@@ -58,12 +58,12 @@ object Dependencies {
   // logging
   val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
   val slf4jApi       = "org.slf4j"                   % "slf4j-api"       % "2.0.3" // the logging interface
-  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.3" // the logging implementation
+  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.4" // the logging implementation
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.8" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.8" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.9" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.9" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -73,12 +73,12 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "5.7.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "5.7.4" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.72"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
-  val jedis   = "redis.clients"  % "jedis"   % "4.3.0"
+  val jedis   = "redis.clients"  % "jedis"   % "4.3.1"
 
   // serialization
   val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
@@ -86,7 +86,7 @@ object Dependencies {
   // other
   val diff            = "com.sksamuel.diff"          % "diff"             % "1.1.11"
   val gwtServlet      = "com.google.gwt"             % "gwt-servlet"      % "2.10.0"
-  val icu4j           = "com.ibm.icu"                % "icu4j"            % "71.1"
+  val icu4j           = "com.ibm.icu"                % "icu4j"            % "72.1"
   val jakartaJSON     = "org.glassfish"              % "jakarta.json"     % "2.0.1"
   val jodd            = "org.jodd"                   % "jodd"             % "3.2.7"
   val rdf4jClient     = "org.eclipse.rdf4j"          % "rdf4j-client"     % "4.2.0"
