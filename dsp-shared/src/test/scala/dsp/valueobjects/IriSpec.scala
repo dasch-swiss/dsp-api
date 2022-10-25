@@ -6,6 +6,7 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
+import zio.test.Assertion._
 import zio.test._
 
 import dsp.errors.BadRequestException
@@ -110,8 +111,14 @@ object IriSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(ListIri.make(validListIri).toOption.get.value == validListIri) &&
-      assertTrue(ListIri.make(Some(validListIri)).fold(e => throw e.head, v => v).get.value == validListIri)
+      val listIri      = ListIri.make(validListIri)
+      val maybeListIri = ListIri.make(Some(validListIri))
+
+      (for {
+        iri      <- listIri
+        maybeIri <- maybeListIri
+      } yield assertTrue(iri.value == validListIri) &&
+        assert(maybeIri)(isSome(equalTo(iri)))).toZIO
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -159,12 +166,16 @@ object IriSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      def makeProjectIri(iri: String) = ProjectIri.make(iri).fold(e => throw e.head, v => v)
-      val optionalProjectIri          = ProjectIri.make(Some(validProjectIri)).fold(e => throw e.head, v => v)
+      def makeProjectIri(iri: String) = ProjectIri.make(iri)
+      val maybeProjectIri             = ProjectIri.make(Some(validProjectIri))
 
-      assertTrue(makeProjectIri(validProjectIri).value == validProjectIri) &&
-      assertTrue(optionalProjectIri.get.value == validProjectIri) &&
-      assertTrue(makeProjectIri(builtInProjectIri).value == builtInProjectIri)
+      (for {
+        iri      <- makeProjectIri(validProjectIri)
+        iri2     <- makeProjectIri(builtInProjectIri)
+        maybeIri <- maybeProjectIri
+      } yield assertTrue(iri.value == validProjectIri) &&
+        assertTrue(iri2.value == builtInProjectIri) &&
+        assert(maybeIri)(isSome(equalTo(iri)))).toZIO
     },
     test("successfully validate passing None") {
       assertTrue(
