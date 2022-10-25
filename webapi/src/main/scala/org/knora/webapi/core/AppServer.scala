@@ -38,7 +38,7 @@ final case class AppServer(
   /**
    * Checks if the TriplestoreService is running and the repository is properly initialized.
    */
-  private val checkTriplestoreService: ZIO[Any, Nothing, Unit] =
+  private val checkTriplestoreService: UIO[Unit] =
     for {
       _      <- state.set(AppState.WaitingForTriplestore)
       status <- ts.checkTriplestore().map(_.triplestoreStatus)
@@ -55,7 +55,7 @@ final case class AppServer(
    *
    * @param requiresRepository If `true`, calls the RepositoryUpdater to initiate the repository, otherwise returns ()
    */
-  private def upgradeRepository(requiresRepository: Boolean): ZIO[Any, Nothing, Unit] =
+  private def upgradeRepository(requiresRepository: Boolean): UIO[Unit] =
     for {
       _ <- state.set(AppState.UpdatingRepository)
       _ <- ru.maybeUpgradeRepository.flatMap(response => ZIO.logInfo(response.message)).when(requiresRepository)
@@ -65,7 +65,7 @@ final case class AppServer(
   /**
    * Initiates building of all caches
    */
-  private val buildAllCaches: ZIO[Any, Nothing, Unit] =
+  private val buildAllCaches: UIO[Unit] =
     for {
       _ <- state.set(AppState.CreatingCaches)
       _ <- ZIO.attempt {
@@ -80,7 +80,7 @@ final case class AppServer(
    *
    * @param requiresRepository If `true`, calls the AppRouter to populate the ontology caches, otherwise returns ()
    */
-  private def populateOntologyCaches(requiresRepository: Boolean): ZIO[Any, Nothing, Unit] =
+  private def populateOntologyCaches(requiresRepository: Boolean): UIO[Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
       _ <- ar.populateOntologyCaches.when(requiresRepository)
@@ -92,7 +92,7 @@ final case class AppServer(
    *
    * @param requiresIIIFService If `true`, checks the status of the IIIFService instance, otherwise returns ()
    */
-  private def checkIIIFService(requiresIIIFService: Boolean): ZIO[Any, Nothing, Unit] =
+  private def checkIIIFService(requiresIIIFService: Boolean): UIO[Unit] =
     for {
       _ <- state.set(AppState.WaitingForIIIFService)
       _ <- iiifs
@@ -110,7 +110,7 @@ final case class AppServer(
   /**
    * Checks if the Cache service is running
    */
-  private val checkCacheService: ZIO[Any, Nothing, Unit] =
+  private val checkCacheService: UIO[Unit] =
     for {
       _ <- state.set(AppState.WaitingForCacheService)
       _ <- cs.getStatus.flatMap {
@@ -132,7 +132,7 @@ final case class AppServer(
   def start(
     requiresAdditionalRepositoryChecks: Boolean,
     requiresIIIFService: Boolean
-  ): ZIO[Any, Nothing, Unit] =
+  ): UIO[Unit] =
     for {
       _ <- ZIO.logInfo("=> Startup checks initiated")
       _ <- checkTriplestoreService

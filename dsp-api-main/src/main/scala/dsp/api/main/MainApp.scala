@@ -13,6 +13,6 @@ object MainApp extends ZIOAppDefault {
       // _       <- printLine(42).orDie
     } yield ()
 
-  val mainApp: ZIO[Any, Nothing, Unit] = effect.provide(SchemaRepoLive.layer)
-  def run: ZIO[Any, Nothing, Unit]     = mainApp
+  val mainApp: UIO[Unit] = effect.provide(SchemaRepoLive.layer)
+  def run: UIO[Unit]     = mainApp
 }
