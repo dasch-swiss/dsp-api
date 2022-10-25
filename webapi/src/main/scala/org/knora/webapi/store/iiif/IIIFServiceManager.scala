@@ -27,7 +27,7 @@ trait IIIFServiceManager {
    * incoming Akka messages to calls to ZIO based implementations. Each ZIO response
    * is then translated back to Akka through [[ActorUtil.zio2Message]].
    */
-  def receive(message: IIIFRequest): ZIO[Any, Nothing, Any]
+  def receive(message: IIIFRequest): UIO[Any]
 
 }
 

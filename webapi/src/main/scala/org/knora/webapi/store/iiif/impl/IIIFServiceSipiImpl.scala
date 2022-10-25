@@ -147,7 +147,7 @@ case class IIIFServiceSipiImpl(
       )
     )
 
-    def deleteUrl(token: String): ZIO[Any, Nothing, String] =
+    def deleteUrl(token: String): UIO[String] =
       ZIO.succeed(
         s"${appConfig.sipi.internalBaseUrl}/${appConfig.sipi.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
       )

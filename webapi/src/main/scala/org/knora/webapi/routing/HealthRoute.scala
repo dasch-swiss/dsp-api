@@ -23,7 +23,7 @@ import org.knora.webapi.util.LogAspect
  */
 trait HealthCheck {
 
-  protected def healthCheck(state: State): ZIO[Any, Nothing, HttpResponse] =
+  protected def healthCheck(state: State): UIO[HttpResponse] =
     for {
       _        <- ZIO.logInfo("get application state")
       state    <- state.get
