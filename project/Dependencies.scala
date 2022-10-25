@@ -179,7 +179,10 @@ object Dependencies {
     zioMacros,
     zioHttp,
     zioJson,
-    zioMetricsConnectors
+    zioMetricsConnectors,
+    zioLogging,
+    zioLoggingSlf4j,
+    logbackClassic
   )
 
   // schema project dependencies
@@ -204,6 +207,7 @@ object Dependencies {
     zioTestSbt % Test,
     zioLogging,
     zioLoggingSlf4j,
+    logbackClassic,
     zioJson,
     zioHttp
   )
@@ -216,6 +220,7 @@ object Dependencies {
     zioTestSbt % Test,
     zioLogging,
     zioLoggingSlf4j,
+    logbackClassic,
     zioJson
   )
   val userCoreLibraryDependencies = Seq(
@@ -227,6 +232,7 @@ object Dependencies {
     zioTestSbt % Test,
     zioLogging,
     zioLoggingSlf4j,
+    logbackClassic,
     zioJson
   )
   val userRepoLibraryDependencies = Seq(
@@ -236,6 +242,7 @@ object Dependencies {
     zioTestSbt % Test,
     zioLogging,
     zioLoggingSlf4j,
+    logbackClassic,
     zioJson
   )
 
