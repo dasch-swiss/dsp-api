@@ -39,7 +39,7 @@ class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                        projectIDAndFile(1),
                        throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'")
                      )
-          _ = log.info(s"/admin/files route called for filename $filename by user: $requestingUser")
+          _ = log.info(s"/admin/files route called for filename $filename by user: ${requestingUser.id}")
         } yield SipiFileInfoGetRequestADM(
           projectID = projectID,
           filename = filename,
