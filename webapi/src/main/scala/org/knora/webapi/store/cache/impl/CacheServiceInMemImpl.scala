@@ -76,7 +76,7 @@ case class CacheServiceInMemImpl(
    * @param id the user's IRI.
    * @return an optional [[UserADM]].
    */
-  def getUserByIri(id: String): ZIO[Any, Nothing, Option[UserADM]] =
+  def getUserByIri(id: String): UIO[Option[UserADM]] =
     users.get(id).commit
 
   /**
@@ -85,7 +85,7 @@ case class CacheServiceInMemImpl(
    * @param usernameOrEmail of the user.
    * @return an optional [[UserADM]].
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[UserADM]] =
+  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[UserADM]] =
     (for {
       iri  <- lut.get(usernameOrEmail).some
       user <- users.get(iri).some
