@@ -1,5 +1,18 @@
 # Changelog
 
+### [24.0.9](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.8...v24.0.9) (2022-10-25)
+
+
+### Bug Fixes
+
+* Ask timeouts with GetUserADM (DEV-1443) ([#2267](https://www.github.com/dasch-swiss/dsp-api/issues/2267)) ([3f77b6e](https://www.github.com/dasch-swiss/dsp-api/commit/3f77b6e5708e94f7531c5df09164cbfce20b9fc1))
+* Don't log hashes (DEV-1442) ([#2265](https://www.github.com/dasch-swiss/dsp-api/issues/2265)) ([adaf4b0](https://www.github.com/dasch-swiss/dsp-api/commit/adaf4b0ca982464e38672b2cc3aaac04c802b49f))
+
+
+### Maintenance
+
+* update dependencies ([#2264](https://www.github.com/dasch-swiss/dsp-api/issues/2264)) ([41d5315](https://www.github.com/dasch-swiss/dsp-api/commit/41d53150e3fee7d91d6c67fda3511e02644e38e3))
+
 ### [24.0.8](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.7...v24.0.8) (2022-10-18)
 
 
