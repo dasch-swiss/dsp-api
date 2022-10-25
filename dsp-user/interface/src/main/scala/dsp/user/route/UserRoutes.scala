@@ -14,7 +14,7 @@ import dsp.user.handler.UserHandler
 /**
  * An http app that:
  *   - Accepts a `Request` and returns a `Response`
- *   - May fail with type of `Throwable`
+ *   - May fail with type of `ValidationException`
  *   - Uses a `UserHandler` as the environment
  */
 final case class UserRoutes(userHandler: UserHandler) {

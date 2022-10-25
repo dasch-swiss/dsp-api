@@ -25,46 +25,50 @@ object CreateUser {
       userCreatePayload <-
         req.bodyAsString.map(_.fromJson[CreateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
 
-      r <- userCreatePayload match {
-             case Left(e) => {
-               ZIO.fail(ValidationException(s"Payload invalid: $e"))
-             }
+      response <-
+        userCreatePayload match {
+          case Left(e) => {
+            ZIO.fail(ValidationException(s"Payload invalid: $e"))
+          }
 
-             case Right(u) => {
-               val givenName  = GivenName.make(u.givenName)
-               val familyName = FamilyName.make(u.familyName)
-               val username   = Username.make(u.username)
-               val email      = Email.make(u.email)
-               val password =
-                 PasswordHash.make(u.password, PasswordStrength(12)) // TODO use password strength from config instead
-               val language = LanguageCode.make(u.language)
-               val status   = UserStatus.make(u.status)
+          case Right(u) => {
+            val givenName  = GivenName.make(u.givenName)
+            val familyName = FamilyName.make(u.familyName)
+            val username   = Username.make(u.username)
+            val email      = Email.make(u.email)
+            val password =
+              PasswordHash.make(
+                u.password,
+                PasswordStrength(12)
+              ) // TODO use password strength from config instead
+            val language = LanguageCode.make(u.language)
+            val status   = UserStatus.make(u.status)
 
-               (for {
-                 validationResult <-
-                   Validation
-                     .validate(givenName, familyName, username, email, password, language, status)
-                     .toZIO
-                     .mapError(e => ValidationException(e.getMessage()))
+            (for {
+              validationResult <-
+                Validation
+                  .validate(givenName, familyName, username, email, password, language, status)
+                  .toZIO
+                  .mapError(e => ValidationException(e.getMessage()))
 
-                 (givenName, familyName, username, email, password, language, status) = validationResult
+              (givenName, familyName, username, email, password, language, status) = validationResult
 
-                 userId <- userHandler
-                             .createUser(
-                               username,
-                               email,
-                               givenName,
-                               familyName,
-                               password,
-                               language,
-                               status
-                             )
-                             .mapError(e => ValidationException(e.getMessage()))
-                 user <- userHandler.getUserById(userId).orDie
-               } yield Response.json(user.toJson))
-             }
-           }
-    } yield r
+              userId <- userHandler
+                          .createUser(
+                            username,
+                            email,
+                            givenName,
+                            familyName,
+                            password,
+                            language,
+                            status
+                          )
+                          .mapError(e => ValidationException(e.getMessage()))
+              user <- userHandler.getUserById(userId).orDie
+            } yield Response.json(user.toJson))
+          }
+        }
+    } yield response
 
   /**
    * The payload needed to create a user.
@@ -85,7 +89,7 @@ object CreateUser {
     password: String,
     language: String,
     status: Boolean
-  ) {}
+  )
 
   object CreateUserPayload {
     implicit val decoder: JsonDecoder[CreateUserPayload] = DeriveJsonDecoder.gen[CreateUserPayload]

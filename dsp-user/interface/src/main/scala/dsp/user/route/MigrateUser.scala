@@ -96,7 +96,7 @@ object MigrateUser {
     password: String,
     language: String,
     status: Boolean
-  ) {}
+  )
 
   object MigrateUserPayload {
     implicit val decoder: JsonDecoder[MigrateUserPayload] = DeriveJsonDecoder.gen[MigrateUserPayload]
