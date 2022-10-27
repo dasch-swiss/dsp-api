@@ -231,7 +231,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val mappingResponse         = createMapping(pathToFreetestCustomMapping, "FreetestCustomMapping")
       val mappingResponseDocument = responseToJsonLDDocument(mappingResponse)
       mappingResponse.status should equal(StatusCodes.OK)
-      // does this make sense? or how this is created? if uses projectIRI as prefix to create standoff iri then all need to be changed
+
       val mappingIRI = mappingResponseDocument.body.requireString("@id")
       mappingIRI should equal(freetestCustomMappingIRI)
     }

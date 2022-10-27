@@ -164,7 +164,7 @@ object IriSpec extends ZIOSpecDefault {
         )
       )
     },
-    test("pass an invalid IRI containing the shortcode and return and error") {
+    test("pass an invalid IRI containing the shortcode and return an error") {
       assertTrue(
         ProjectIri.make(invalidIri) == Validation.fail(
           ValidationException(IriErrorMessages.ProjectIriInvalid)

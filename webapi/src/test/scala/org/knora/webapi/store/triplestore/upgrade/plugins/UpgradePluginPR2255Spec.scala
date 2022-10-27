@@ -29,19 +29,19 @@ class UpgradePluginPR2255Spec extends UpgradePluginSpec with LazyLogging {
       // there should be the same number of statements before and after the transformation
       assert(numberOfStatementsBeforeTransformation == numberOfStatementsAfterTransformation)
 
-      // Check projects IRIs was changed.
+      // Check projects IRIs were changed.
       ProjectsIrisToChange.newToOldIrisMap.foreach { case (oldIri, _) =>
         for {
           statement <- model
 
-          // there shoudln't be any old project IRI in the data anymore, both as a subject and object
+          // there shouldn't be any old project IRIs in the data anymore, neither as subject nor as object
           _ = assert(statement.subj.stringValue != oldIri)
           _ = assert(statement.obj.stringValue != oldIri)
         } yield ()
       }
     }
 
-    "not transform Standoff mappings, which IRIs contain project IRI" in {
+    "not transform Standoff mappings, whose IRIs contain project IRIs" in {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2255.trig")
       val standoffMappingIriNode: IriNode =
         nodeFactory.makeIriNode("http://rdfh.ch/projects/0001/mappings/freetestCustomMapping")

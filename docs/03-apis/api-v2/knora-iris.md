@@ -186,7 +186,7 @@ Knora generates IRIs for data that it creates in the triplestore. Each
 generated data IRI contains one or more [UUID](https://tools.ietf.org/html/rfc4122)
 identifiers to make it unique. To keep data IRIs relatively short, each UUID is
 [base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5), without padding;
-thus each UUID is a 22-character string.
+thus each UUID is a 22-character string. DSP-API supports UUID version 4 or 5.
 
 Data IRIs are not currently intended to be dereferenced as URLs.
 Instead, each Knora resource has a separate [permalink](permalinks.md).
@@ -215,5 +215,3 @@ follows:
     `http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID`
   - Lists: `http://rdfh.ch/lists/PROJECT_SHORTCODE/LIST_UUID`
   - User: `http://rdfh.ch/users/USER_UUID`
-
-  DSP-API supports `PROJECT_UUID` which are UUID version 4 or 5.
