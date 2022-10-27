@@ -10008,6 +10008,70 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       }
     }
 
+    "perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure Island'" in {
+
+      val searchValueUriEncoded: String = URLEncoder.encode(
+        "Treasure Island",
+        "UTF-8"
+      )
+      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
+        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
+        "UTF-8"
+      )
+      val offset: Int = 0
+
+      val request =
+        "/v2/searchbylabel/" + searchValueUriEncoded +
+          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
+          "&offset=" + offset
+
+      Get(request) ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        val expectedAnswerJSONLD = readOrWriteTextFile(
+          responseAs[String],
+          Paths.get("..", "test_data/searchR2RV2/SearchbylabelSimple.jsonld"),
+          writeTestDataFiles
+        )
+
+        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+      }
+    }
+
+    "perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure'" in {
+
+      val searchValueUriEncoded: String = URLEncoder.encode(
+        "Treasure",
+        "UTF-8"
+      )
+      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
+        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
+        "UTF-8"
+      )
+      val offset: Int = 0
+
+      val request =
+        "/v2/searchbylabel/" + searchValueUriEncoded +
+          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
+          "&offset=" + offset
+
+      Get(request) ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        val expectedAnswerJSONLD = readOrWriteTextFile(
+          responseAs[String],
+          Paths.get("..", "test_data/searchR2RV2/SearchbylabelSimple.jsonld"),
+          writeTestDataFiles
+        )
+
+        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+      }
+    }
+
     "perform a searchbylabel search for a label with special characters" in {
 
       val searchValueUriEncoded: String = URLEncoder.encode(
@@ -10039,5 +10103,34 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
       }
     }
+
+    "perform a searchbylabel search for the label 'Treasure Island' but providing the wrong class" in {
+
+      val searchValueUriEncoded: String = URLEncoder.encode(
+        "Treasure",
+        "UTF-8"
+      )
+      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
+        "http://0.0.0.0:3333/ontology/0001/books/v2#Page",
+        "UTF-8"
+      )
+      val offset: Int = 0
+
+      val request =
+        "/v2/searchbylabel/" + searchValueUriEncoded +
+          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
+          "&offset=" + offset
+
+      Get(request) ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        val expectedAnswerJSONLD = "{}"
+
+        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+      }
+    }
+
   }
 }
