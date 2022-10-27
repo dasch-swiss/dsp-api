@@ -55,7 +55,7 @@ class DrawingsGodsV1Spec extends CoreSpec with TriplestoreJsonProtocol {
    */
   "Using the DrawingsGods project data" should {
 
-    val drawingsGodsProjectIri  = "http://rdfh.ch/projects/0105"
+    val drawingsGodsProjectIri  = "http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw"
     val drawingsGodsOntologyIri = "http://www.knora.org/ontology/0105/drawings-gods"
     val rootUserIri             = "http://rdfh.ch/users/root"
     val rootUser                = new MutableUserADM

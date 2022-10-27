@@ -20,7 +20,7 @@
   incunabula:publoc <http://rdfh.ch/0803/21abac2162/values/40e459f18201>;
   incunabula:title <http://rdfh.ch/0803/21abac2162/values/f76660458201>;
   incunabula:url <http://rdfh.ch/0803/21abac2162/values/8abc888d079e04>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
@@ -151,7 +151,7 @@
   incunabula:partOf <http://rdfh.ch/0803/c5058f3a>;
   incunabula:partOfValue <http://rdfh.ch/0803/4f11adaf/values/0490c077-a754-460b-9633-c78bfe97c784>;
   incunabula:seqnum <http://rdfh.ch/0803/4f11adaf/values/f3c585ce03>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
@@ -223,7 +223,7 @@
   knora-base:valueHasString "ad+s167_druck1=0002.tif" .
 
 <http://rdfh.ch/0803/5e51519c4407> a knora-base:Region;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05>;
   knora-base:creationDate "Z"^^xsd:dateTime;
   knora-base:hasColor <http://rdfh.ch/0803/5e51519c4407/values/59b04e21ed2a>;
@@ -283,7 +283,7 @@
   incunabula:pagenum <http://rdfh.ch/0803/8a0b1e75/values/61cb927602>;
   incunabula:partOf <http://rdfh.ch/0803/c5058f3a>;
   incunabula:partOfValue <http://rdfh.ch/0803/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
@@ -359,7 +359,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 
 <http://rdfh.ch/0803/9935159f67> a incunabula:book;
   incunabula:title <http://rdfh.ch/0803/9935159f67/values/e6e02fe39801>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
@@ -400,7 +400,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
   incunabula:publoc <http://rdfh.ch/0803/c3f913666f/values/965ef721b901>;
   incunabula:title <http://rdfh.ch/0803/c3f913666f/values/8ab7aa3cb801>, <http://rdfh.ch/0803/c3f913666f/values/4de1fd75b801>;
   incunabula:url <http://rdfh.ch/0803/c3f913666f/values/dfdbf0cdb901>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-03-02T15:05:15Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
@@ -783,7 +783,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
   incunabula:publoc <http://rdfh.ch/0803/c5058f3a/values/0ca74ce5>;
   incunabula:title <http://rdfh.ch/0803/c5058f3a/values/c3295339>;
   incunabula:url <http://rdfh.ch/0803/c5058f3a/values/10e00c7acc2704>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
@@ -895,7 +895,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
   knora-base:valueHasString "GW 4168" .
 
 <http://rdfh.ch/0803/cb1a74e3e2f6> a knora-base:LinkObj;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
   knora-base:hasComment <http://rdfh.ch/0803/cb1a74e3e2f6/values/dfe0ce1e099e04>;
@@ -938,7 +938,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
   incunabula:publoc <http://rdfh.ch/0803/e41ab5695c/values/45c33d6e6b01>;
   incunabula:title <http://rdfh.ch/0803/e41ab5695c/values/391cf1886a01>, <http://rdfh.ch/0803/e41ab5695c/values/fc4544c26a01>;
   incunabula:url <http://rdfh.ch/0803/e41ab5695c/values/10102f00089e04>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
@@ -1085,7 +1085,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
   knora-base:valueHasString "Sant Brigitten gebettly" .
 
 <http://rdfh.ch/0803/miscResource> a incunabula:misc;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:creationDate "2016-03-02T15:05:15Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";

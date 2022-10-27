@@ -1090,7 +1090,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(_.value).map(_.toSmartIri)
         newProjectIRI: IRI <- checkOrCreateEntityIri(
                                 customProjectIri,
-                                stringFormatter.makeRandomProjectIri(createProjectRequest.shortcode.value)
+                                stringFormatter.makeRandomProjectIri
                               )
 
         maybeLongname = createProjectRequest.longname match {

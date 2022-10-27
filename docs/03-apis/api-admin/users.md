@@ -223,7 +223,7 @@ The following is an example for user information stored in the `admin` named gra
     knora-admin:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
     knora-admin:preferredLanguage "de"^^xsd:string ;
     knora-admin:status "true"^^xsd:boolean ;
-    knora-admin:isInProject <http://rdfh.ch/projects/00FF> ;
+    knora-admin:isInProject <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
-    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> .
 ```

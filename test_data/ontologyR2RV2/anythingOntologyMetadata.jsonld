@@ -7,7 +7,7 @@
             },
             "rdfs:label": "The anything ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
+                "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/anything/v2"
@@ -19,7 +19,7 @@
             },
             "rdfs:label": "The free test ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
+                "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2"
@@ -31,7 +31,7 @@
             },
             "rdfs:label": "A minimal ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
+                "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/minimal/v2"
@@ -43,7 +43,7 @@
             },
             "rdfs:label": "The something ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
+                "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/something/v2"

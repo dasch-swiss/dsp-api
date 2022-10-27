@@ -1040,7 +1040,7 @@ class OntologyV2R2RSpec extends R2RSpec {
              |      }
              |   ],
              |   "knora-api:attachedToProject": {
-             |      "@id": "http://rdfh.ch/projects/0001"
+             |      "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
              |   },
              |   "@type": "owl:Ontology",
              |   "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2",
@@ -1118,7 +1118,7 @@ class OntologyV2R2RSpec extends R2RSpec {
              |      }
              |   ],
              |   "knora-api:attachedToProject": {
-             |      "@id": "http://rdfh.ch/projects/0001"
+             |      "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
              |   },
              |   "@type": "owl:Ontology",
              |   "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2",
@@ -3120,7 +3120,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |    "knora-api:valueHasComment" : "this is the number five"
          |  },
          |  "knora-api:attachedToProject" : {
-         |    "@id" : "http://rdfh.ch/projects/0001"
+         |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
          |  },
          |  "rdfs:label" : "my blue test class thing instance",
          |  "@context" : {
@@ -3401,7 +3401,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |    "knora-api:valueHasComment" : "this is the number five"
          |  },
          |  "knora-api:attachedToProject" : {
-         |    "@id" : "http://rdfh.ch/projects/0001"
+         |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
          |  },
          |  "rdfs:label" : "test class instance",
          |  "@context" : {

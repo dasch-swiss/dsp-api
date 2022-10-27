@@ -107,7 +107,7 @@ For example, here is a request to create a resource with various value types:
     }
   },
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
+    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
   },
   "rdfs:label" : "test thing",
   "@context" : {
@@ -133,7 +133,7 @@ by adding `knora-api:attachedToUser`. For example:
     "knora-api:booleanValueAsBoolean" : true
   },
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
+    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
   },
   "knora-api:attachedToUser" : {
     "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -189,7 +189,7 @@ can also have a custom creation date specified by adding `knora-api:creationDate
    "@id" : "http://rdfh.ch/0001/oveR1dQltEUwNrls9Lu5Rw",
    "@type" : "anything:Thing",
    "knora-api:attachedToProject" : {
-     "@id" : "http://rdfh.ch/projects/0001"
+     "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
    },
    "anything:hasInteger" : {
        "@id" : "http://rdfh.ch/0001/oveR1dQltEUwNrls9Lu5Rw/values/IN4R19yYR0ygi3K2VEHpUQ",
@@ -352,7 +352,7 @@ The response to requesting a deleted resource will look as the following example
         "@type": "xsd:anyURI"
     },
     "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0001"
+        "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
     },
     "knora-api:userHasPermission": "CR",
     "knora-api:attachedToUser": {
