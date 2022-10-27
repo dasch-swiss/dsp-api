@@ -97,7 +97,7 @@
 <http://rdfh.ch/0001/book-instance-01>
     a                            books:Book ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     books:hasTitle               <http://rdfh.ch/0001/book-instance-01/values/has-title-value-01> ;
@@ -107,7 +107,7 @@
 <http://rdfh.ch/0001/book-instance-02>
     a                            books:Book ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     books:hasTitle               <http://rdfh.ch/0001/book-instance-01/values/has-title-value-02> ;
@@ -118,7 +118,7 @@
 <http://rdfh.ch/0001/book-instance-03>
     a                            books:Book ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     books:hasTitle               <http://rdfh.ch/0001/book-instance-03/values/has-title-value-03> ;
@@ -129,7 +129,7 @@
 <http://rdfh.ch/0001/book-instance-04>
     a                            books:Book ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     books:hasTitle               <http://rdfh.ch/0001/book-instance-04/values/has-title-value-04> ;
@@ -140,7 +140,7 @@
 <http://rdfh.ch/0001/page-instance-01>
     a                            books:Page ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     books:hasPageNumber          <http://rdfh.ch/0001/page-instance-01/values/has-page-number-value-01> ;

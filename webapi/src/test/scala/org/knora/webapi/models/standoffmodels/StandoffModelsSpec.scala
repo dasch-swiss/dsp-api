@@ -56,7 +56,7 @@ class StandoffModelsSpec extends CoreSpec {
              |  "knora-api:mappingHasName": "$mappingName",
              |  "rdfs:label": "custom mapping",
              |  "knora-api:attachedToProject": {
-             |    "@id": "http://rdfh.ch/projects/0001"
+             |    "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
              |  },
              |  "@context": {
              |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",

@@ -19,5 +19,5 @@ images:titel  rdf:type                owl:ObjectProperty ;
 <http://0.0.0.0:3333/ontology/00FF/images/v2>
         rdf:type                        owl:Ontology ;
         rdfs:label                      "The images demo ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/00FF> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .

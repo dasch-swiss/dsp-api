@@ -1,4 +1,3 @@
-
 {
     "@graph": [
         {
@@ -12,7 +11,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -44,7 +43,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -107,7 +106,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -139,7 +138,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -202,7 +201,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -234,7 +233,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -297,7 +296,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -329,7 +328,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -392,7 +391,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -424,7 +423,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -487,7 +486,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -519,7 +518,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -582,7 +581,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -614,7 +613,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -677,7 +676,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -709,7 +708,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -772,7 +771,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -804,7 +803,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {
@@ -867,7 +866,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:partOfValue": {
@@ -899,7 +898,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0803"
+                        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
                     },
                     "knora-api:userHasPermission": "RV",
                     "knora-api:creationDate": {

@@ -45,7 +45,7 @@ class ResourcesMessagesV2Spec extends CoreSpec {
     }
 
     "fail if given IRI is not a resource IRI" in {
-      val resourceIri = "http://rdfh.ch/projects/0001"
+      val resourceIri = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
       val caught = intercept[BadRequestException](
         ResourceHistoryEventsGetRequestV2(
           resourceIri = resourceIri,

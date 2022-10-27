@@ -108,11 +108,9 @@ object Iri {
       if (value.isEmpty) {
         Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
       } else {
-        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
-
         if (!V2IriValidation.isKnoraProjectIriStr(value)) {
           Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (!V2IriValidation.isKnoraBuiltInProjectIriStr(value) && !V2UuidValidation.isUuidVersion4Or5(value)) {
           Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val eitherValue = Try(
