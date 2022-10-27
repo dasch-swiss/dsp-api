@@ -2269,7 +2269,7 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
-    knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    knora-base:valueCreationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     knora-base:isDeleted         false .
 
 # Video Sequence Resource
@@ -2355,7 +2355,7 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
-    knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    knora-base:valueCreationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     knora-base:isDeleted         false .
 
 # Audio Sequence Resource
