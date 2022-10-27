@@ -151,7 +151,7 @@
     a                            books:Book ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-    knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
+    knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     books:hasTitle               <http://rdfh.ch/0001/book-instance-05/values/has-title-value-05> ;
     rdfs:label                   "this / is + a - test & with \\ special ( characters ) in | the || label" ;
