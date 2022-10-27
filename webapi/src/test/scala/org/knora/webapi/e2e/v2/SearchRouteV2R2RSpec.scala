@@ -92,6 +92,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+    RdfDataObject(path = "test_data/ontologies/books-onto.ttl", name = "http://www.knora.org/ontology/0001/books"),
+    RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
     RdfDataObject(
       path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
       name = "http://www.knora.org/data/admin"
@@ -103,8 +105,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     RdfDataObject(
       path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
       name = "http://www.knora.org/data/0666/gravsearchtest1"
-    ),
-    RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    )
   )
 
   "The Search v2 Endpoint" should {
@@ -10008,26 +10009,25 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a searchbylabel search for a label with special characters" in {
-      // HTTP GET to http://host/v2/searchbylabel/searchValue[limitToResourceClass=resourceClassIRI]
-      // [limitToProject=projectIRI][offset=Integer]
-      // encode the search string: "this / is + a - test & with \ special ( characters ) in | the || label"
-      val searchValueUriEncoded: String =
-        "this%20%2F%20is%20%2B%20a%20-%20test%20%26%20with%20%5C%20special%20(%20characters%20)%20in%20%7C%20the%20%7C%7C%20label"
-      // val limitToResourceClassUriEncoded: String =
-      //   "http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fbooks%23Book" // "http%3A%2F%2F0.0.0.0%3A3333%2Fontology%2F0001%2Fbooks%2Fv2%23Book"
+
+      val searchValueUriEncoded: String = URLEncoder.encode(
+        "this / is + a - test & with \\ special ( characters ) in | the || label",
+        "UTF-8"
+      )
+      val limitToResourceClassUriEncoded: String = URLEncoder.encode(
+        "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
+        "UTF-8"
+      )
       val offset: Int = 0
 
-      Get(
+      val request =
         "/v2/searchbylabel/" + searchValueUriEncoded +
-          // "?limitToResourceClass=" + limitToResourceClassUriEncoded +
+          "?limitToResourceClass=" + limitToResourceClassUriEncoded +
           "&offset=" + offset
-      ) ~> searchPath ~> check {
+
+      Get(request) ~> searchPath ~> check {
 
         assert(status == StatusCodes.OK, response.toString)
-
-        println(responseAs[String])
-
-        // Thread.sleep(1000000)
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
