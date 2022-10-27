@@ -7389,6 +7389,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "rdfs:comment": "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource.",
             "@type": "owl:ObjectProperty",
@@ -7644,6 +7645,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
@@ -7661,6 +7663,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "knora-api:subjectType": {
                 "@id": "knora-api:Resource"
@@ -7724,6 +7727,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
@@ -7741,6 +7745,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "knora-api:subjectType": {
                 "@id": "knora-api:Resource"
@@ -7950,6 +7955,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "rdfs:comment": "Indicates the position of a resource within a compound object. Typically used to indicate the order of pages within a book or similar resource.",
             "@type": "owl:ObjectProperty",

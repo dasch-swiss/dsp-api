@@ -2310,7 +2310,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
       val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
 
-      // get the newly created sequence reource
+      // get the newly created sequence resource
       val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
       val sequenceResponse   = singleAwaitingRequest(sequenceGetRequest)
       assert(sequenceResponse.status == StatusCodes.OK)
