@@ -217,6 +217,7 @@ object OntologyConstants {
     val HasLinkToValue: IRI    = KnoraBasePrefixExpansion + "hasLinkToValue"
     val IsPartOf: IRI          = KnoraBasePrefixExpansion + "isPartOf"
     val IsPartOfValue: IRI     = KnoraBasePrefixExpansion + "isPartOfValue"
+    val Seqnum: IRI            = KnoraBasePrefixExpansion + "seqnum"
     val IsSequenceOf: IRI      = KnoraBasePrefixExpansion + "isSequenceOf"
     val IsSequenceOfValue: IRI = KnoraBasePrefixExpansion + "isSequenceOfValue"
     val HasSequenceBounds: IRI = KnoraBasePrefixExpansion + "hasSequenceBounds"
@@ -830,6 +831,7 @@ object OntologyConstants {
 
     val IsPartOf: IRI                = KnoraApiV2PrefixExpansion + "isPartOf"
     val IsPartOfValue: IRI           = KnoraApiV2PrefixExpansion + "isPartOfValue"
+    val Seqnum: IRI                  = KnoraApiV2PrefixExpansion + "seqnum"
     val IsSequenceOf: IRI            = KnoraApiV2PrefixExpansion + "isSequenceOf"
     val IsSequenceOfValue: IRI       = KnoraApiV2PrefixExpansion + "isSequenceOfValue"
     val HasSequenceBounds: IRI       = KnoraApiV2PrefixExpansion + "hasSequenceBounds"
@@ -985,6 +987,7 @@ object OntologyConstants {
 
     val IsPartOf: IRI          = KnoraApiV2PrefixExpansion + "isPartOf"
     val IsRegionOf: IRI        = KnoraApiV2PrefixExpansion + "isRegionOf"
+    val Seqnum: IRI            = KnoraApiV2PrefixExpansion + "seqnum"
     val IsSequenceOf: IRI      = KnoraApiV2PrefixExpansion + "isSequenceOf"
     val IsSequenceOfValue: IRI = KnoraApiV2PrefixExpansion + "isSequenceOfValue"
     val HasSequenceBounds: IRI = KnoraApiV2PrefixExpansion + "hasSequenceBounds"
