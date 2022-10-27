@@ -164,7 +164,7 @@ object InstanceCheckerSpec {
       |    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/cUnhrC1DT821lwVWQSwEgg0"
       |  },
       |  "knora-api:attachedToProject" : {
-      |    "@id" : "http://rdfh.ch/projects/0001"
+      |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
       |  },
       |  "knora-api:attachedToUser" : {
       |    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -226,7 +226,7 @@ object InstanceCheckerSpec {
       |    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/cUnhrC1DT821lwVWQSwEgg0"
       |  },
       |  "knora-api:attachedToProject" : {
-      |    "@id" : "http://rdfh.ch/projects/0001"
+      |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
       |  },
       |  "knora-api:attachedToUser" : {
       |    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -284,7 +284,7 @@ object InstanceCheckerSpec {
       |    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/cUnhrC1DT821lwVWQSwEgg0"
       |  },
       |  "knora-api:attachedToProject" : {
-      |    "@id" : "http://rdfh.ch/projects/0001"
+      |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
       |  },
       |  "knora-api:attachedToUser" : {
       |    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -338,7 +338,7 @@ object InstanceCheckerSpec {
       |    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/cUnhrC1DT821lwVWQSwEgg0"
       |  },
       |  "knora-api:attachedToProject" : {
-      |    "@id" : "http://rdfh.ch/projects/0001"
+      |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
       |  },
       |  "knora-api:attachedToUser" : {
       |    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -404,7 +404,7 @@ object InstanceCheckerSpec {
       |    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/cUnhrC1DT821lwVWQSwEgg0"
       |  },
       |  "knora-api:attachedToProject" : {
-      |    "@id" : "http://rdfh.ch/projects/0001"
+      |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
       |  },
       |  "knora-api:attachedToUser" : {
       |    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -489,7 +489,7 @@ object InstanceCheckerSpec {
       |              "value": "Anything Project"
       |            }
       |          ],
-      |          "id": "http://rdfh.ch/projects/0001",
+      |          "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
       |          "keywords": [],
       |          "logo": null,
       |          "longname": "Anything Project",
@@ -511,7 +511,7 @@ object InstanceCheckerSpec {
       |    "password": null,
       |    "permissions": {
       |      "administrativePermissionsPerProject": {
-      |        "http://rdfh.ch/projects/0001": [
+      |        "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
       |          {
       |            "additionalInformation": null,
       |            "name": "ProjectResourceCreateAllPermission",
@@ -520,7 +520,7 @@ object InstanceCheckerSpec {
       |        ]
       |      },
       |      "groupsPerProject": {
-      |        "http://rdfh.ch/projects/0001": [
+      |        "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
       |          "http://rdfh.ch/groups/0001/thing-searcher",
       |          "http://www.knora.org/ontology/knora-admin#ProjectMember"
       |        ]
@@ -533,7 +533,7 @@ object InstanceCheckerSpec {
       |            "value": "Anything Project"
       |          }
       |        ],
-      |        "id": "http://rdfh.ch/projects/0001",
+      |        "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
       |        "keywords": [],
       |        "logo": null,
       |        "longname": "Anything Project",
@@ -567,7 +567,7 @@ object InstanceCheckerSpec {
       |  "status" : true,
       |  "permissions": {
       |    "administrativePermissionsPerProject": {
-      |      "http://rdfh.ch/projects/0001": [
+      |      "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
       |        {
       |          "additionalInformation": null,
       |          "name": "ProjectResourceCreateAllPermission",
@@ -576,13 +576,13 @@ object InstanceCheckerSpec {
       |      ]
       |    },
       |    "groupsPerProject": {
-      |      "http://rdfh.ch/projects/0001": [
+      |      "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
       |        "http://rdfh.ch/groups/0001/thing-searcher",
       |        "http://www.knora.org/ontology/knora-admin#ProjectMember"
       |      ]
       |    }
       |  },
-      |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+      |  "projects" : [ "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ" ],
       |  "groups" : []
       |}
         """.stripMargin
@@ -599,7 +599,7 @@ object InstanceCheckerSpec {
       |  "status" : true,
       |  "permissions": {
       |    "administrativePermissionsPerProject": {
-      |      "http://rdfh.ch/projects/0001": [
+      |      "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
       |        {
       |          "additionalInformation": null,
       |          "name": "ProjectResourceCreateAllPermission",
@@ -608,13 +608,13 @@ object InstanceCheckerSpec {
       |      ]
       |    },
       |    "groupsPerProject": {
-      |      "http://rdfh.ch/projects/0001": [
+      |      "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
       |        "http://rdfh.ch/groups/0001/thing-searcher",
       |        "http://www.knora.org/ontology/knora-admin#ProjectMember"
       |      ]
       |    }
       |  },
-      |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+      |  "projects" : [ "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ" ],
       |  "groups" : []
       |}
         """.stripMargin
@@ -632,7 +632,7 @@ object InstanceCheckerSpec {
       |  "status" : "invalidValue",
       |  "permissions": {
       |    "administrativePermissionsPerProject": {
-      |      "http://rdfh.ch/projects/0001": [
+      |      "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
       |        {
       |          "additionalInformation": null,
       |          "name": "ProjectResourceCreateAllPermission",
@@ -641,13 +641,13 @@ object InstanceCheckerSpec {
       |      ]
       |    },
       |    "groupsPerProject": {
-      |      "http://rdfh.ch/projects/0001": [
+      |      "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
       |        "http://rdfh.ch/groups/0001/thing-searcher",
       |        "http://www.knora.org/ontology/knora-admin#ProjectMember"
       |      ]
       |    }
       |  },
-      |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+      |  "projects" : [ "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ" ],
       |  "groups" : []
       |}
         """.stripMargin

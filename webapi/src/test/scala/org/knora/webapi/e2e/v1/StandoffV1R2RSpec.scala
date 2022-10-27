@@ -685,7 +685,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                         {
-                          "project_id": "http://rdfh.ch/projects/0001",
+                          "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                           "res_id": "http://rdfh.ch/0001/a-thing",
                           "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                           "richtext_value": {
@@ -748,7 +748,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                     {
-                      "project_id": "http://rdfh.ch/projects/0001",
+                      "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                       "richtext_value": {
                             "xml": ${JsString(xmlStrToSend)},
                             "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
@@ -908,7 +908,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -971,7 +971,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -1034,7 +1034,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -1101,7 +1101,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -1140,7 +1140,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -1176,7 +1176,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -1212,7 +1212,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -1251,7 +1251,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -1287,7 +1287,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/0001",
+                  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
@@ -1395,7 +1395,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                     {
-                      "project_id": "http://rdfh.ch/projects/0001",
+                      "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
                       "res_id": "http://rdfh.ch/0001/a-thing",
                       "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                       "richtext_value": {

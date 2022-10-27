@@ -27,9 +27,7 @@ class FileModelsSpec extends CoreSpec {
   private val fileNameArchive                   = "archive.zip"
 
   "FileModelsUtil," when {
-
     "creating a JSON-LD context," should {
-
       "handle `anything` ontology correctly" in {
         val expectedContext = """"@context" : {
                                 |    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -73,14 +71,11 @@ class FileModelsSpec extends CoreSpec {
         )
         context should equal(expectedContext)
       }
-
     }
   }
 
   "FileModels," when {
-
     "creating an UploadFileRequest," should {
-
       "create a valid representation of a DocumentRepresentation with default values" in {
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -222,7 +217,6 @@ class FileModelsSpec extends CoreSpec {
     }
 
     "generating a JSON-LD representation of a UploadFileRequest," should {
-
       "correctly serialize a DocumentRepresentation with default values" in {
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -236,7 +230,7 @@ class FileModelsSpec extends CoreSpec {
             "knora-api:fileValueHasFilename" -> fileNamePDF
           ).toJson,
           "knora-api:attachedToProject" -> Map(
-            "@id" -> "http://rdfh.ch/projects/0001"
+            "@id" -> "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
           ).toJson,
           "rdfs:label" -> "test label".toJson,
           "@context" -> Map(
@@ -289,11 +283,9 @@ class FileModelsSpec extends CoreSpec {
         ).toJson
         json should equal(expectedJSON)
       }
-
     }
 
     "generating a message representation of a UploadFileRequest," should {
-
       "correctly serialize a DocumentRepresentation with default values" in {
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -411,7 +403,6 @@ class FileModelsSpec extends CoreSpec {
     }
 
     "creating a ChangeFileRequest," should {
-
       "create a valid representation of a DocumentRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
         val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
@@ -570,11 +561,9 @@ class FileModelsSpec extends CoreSpec {
         change.className should equal("ArchiveRepresentation")
         change.ontologyName should equal("knora-api")
       }
-
     }
 
     "generating a JSON-LD representation of a ChangeFileRequest," should {
-
       "correctly serialize a DocumentRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
         val valueIRI    = stringFormatter.makeRandomResourceIri("7777")
@@ -639,7 +628,6 @@ class FileModelsSpec extends CoreSpec {
     }
 
     "generating a message representation of a ChangeFileRequest," should {
-
       "correctly serialize a DocumentRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
         val valueIRI    = stringFormatter.makeRandomResourceIri("7777")

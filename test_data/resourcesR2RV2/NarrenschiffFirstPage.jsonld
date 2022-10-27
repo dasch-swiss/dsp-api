@@ -1,4 +1,3 @@
-
 {
     "knora-api:arkUrl": {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7bbb8e59b703A",
@@ -9,7 +8,7 @@
         "@type": "xsd:anyURI"
     },
     "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
     },
     "knora-api:userHasPermission": "RV",
     "incunabula:pagenum": {
@@ -64,7 +63,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "knora-api:userHasPermission": "RV",
             "knora-api:creationDate": {

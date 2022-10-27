@@ -1,4 +1,3 @@
-
 {
     "knora-api:arkUrl": {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/0JhgKcqoRIeRRG6ownArSwb",
@@ -6,7 +5,7 @@
     },
     "rdfs:label": "thing with one hidden thing",
     "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0001"
+        "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
     },
     "knora-api:userHasPermission": "V",
     "knora-api:creationDate": {

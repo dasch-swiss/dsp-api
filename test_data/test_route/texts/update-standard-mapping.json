@@ -1,7 +1,7 @@
 {
   "knora-api:mappingHasName": "update-standard-mapping",
   "knora-api:attachedToProject": {
-    "@id": "http://rdfh.ch/projects/0001"
+    "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
   },
   "rdfs:label": "update-standard-mapping",
   "@context": {

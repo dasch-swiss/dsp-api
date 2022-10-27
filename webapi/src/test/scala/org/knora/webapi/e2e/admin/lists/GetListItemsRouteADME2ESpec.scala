@@ -81,7 +81,7 @@ class GetListItemsRouteADME2ESpec
 
     "return all lists belonging to the images project" in {
       val request = Get(
-        baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF"
+        baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2FMTvoB0EJRrqovzRkWXqfkA"
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -106,7 +106,7 @@ class GetListItemsRouteADME2ESpec
 
     "return all lists belonging to the anything project" in {
       val request = Get(
-        baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001"
+        baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ"
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
 

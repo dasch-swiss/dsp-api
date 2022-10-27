@@ -13,7 +13,7 @@
     a                            beol:person ;
     rdfs:label                   "Testperson1" ;
     knora-base:isDeleted         false ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-base:creationDate      "2018-06-04T08:55:34.086Z"^^xsd:dateTime ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
@@ -44,7 +44,7 @@
     a                            beol:person ;
     rdfs:label                   "Testperson2" ;
     knora-base:isDeleted         false ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-base:creationDate      "2018-06-04T08:56:22.513Z"^^xsd:dateTime ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
@@ -75,7 +75,7 @@
     a                            beol:person ;
     rdfs:label                   "Testperson3" ;
     knora-base:isDeleted         false ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-base:creationDate      "2020-09-21T07:14:09.621165Z"^^xsd:dateTime ;
     knora-base:hasPermissions    "CR knora-admin:Creator|V knora-admin:UnknownUser" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
@@ -106,7 +106,7 @@
     a                            beol:letter ;
     rdfs:label                   "Testbrief1" ;
     knora-base:isDeleted         false ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-base:creationDate      "2018-06-04T08:56:33.879Z"^^xsd:dateTime ;
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
@@ -216,7 +216,7 @@
     a                            beol:letter ;
     rdfs:label                   "letter to self" ;
     knora-base:isDeleted         false ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-base:creationDate      "2020-09-18T10:46:06.442289Z"^^xsd:dateTime ;
     knora-base:hasPermissions    "CR knora-admin:Creator|V knora-admin:UnknownUser" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
@@ -299,7 +299,7 @@
     knora-base:creationDate         "2017-09-01T14:15:04.846+02:00"^^xsd:dateTime ;
     knora-base:lastModificationDate "2017-09-01T15:21:16.480+02:00"^^xsd:dateTime ;
     knora-base:hasPermissions       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-base:attachedToUser       <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
     beol:title                      <http://rdfh.ch/0801/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> .
 
@@ -319,7 +319,7 @@
     knora-base:isDeleted              false ;
     knora-base:creationDate           "2017-09-01T15:21:10.735+02:00"^^xsd:dateTime ;
     knora-base:hasPermissions         "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
-    knora-base:attachedToProject      <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:attachedToProject      <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-base:attachedToUser         <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
     knora-base:hasStillImageFileValue <http://rdfh.ch/0801/page_resource/values/DX6m0TSuRGesYXA0iQyA9A> ;
     beol:partOf                       <http://rdfh.ch/0801/letter_resource> ;
@@ -1750,7 +1750,7 @@
 <http://rdfh.ch/lists/0801/subject_index>
     a                            knora-base:ListNode ;
     knora-base:isRootNode        true ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-base:hasSubListNode    <http://rdfh.ch/lists/0801/mathematics>,
                                  <http://rdfh.ch/lists/0801/other_sciences>,
                                  <http://rdfh.ch/lists/0801/professional_activity>,

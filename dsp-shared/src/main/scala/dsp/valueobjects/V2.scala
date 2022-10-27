@@ -116,7 +116,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraProjectIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
+    (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -222,11 +222,7 @@ object V2UuidValidation {
    * @return TRUE for correct versions, FALSE for incorrect.
    */
   def isUuidVersion4Or5(s: String): Boolean =
-    // println("VERSION", getUUIDVersion(s), s)
-    // TODO-mpro: below condition is a quickfix, should be removed in DEV-1400
-    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
-      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
-    } else true
+    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.

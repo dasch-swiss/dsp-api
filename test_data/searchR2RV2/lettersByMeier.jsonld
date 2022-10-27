@@ -1,4 +1,3 @@
-
 {
     "knora-api:arkUrl": {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD",
@@ -6,7 +5,7 @@
     },
     "rdfs:label": "Testbrief1",
     "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+        "@id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
     },
     "knora-api:userHasPermission": "RV",
     "knora-api:creationDate": {
@@ -83,7 +82,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+                "@id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
             },
             "knora-api:creationDate": {
                 "@value": "2018-06-04T08:56:22.513Z",

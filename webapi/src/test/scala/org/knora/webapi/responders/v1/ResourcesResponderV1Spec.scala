@@ -171,7 +171,7 @@ object ResourcesResponderV1Spec {
       restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
       restype_id = "http://www.knora.org/ontology/0001/anything#Thing",
       person_id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-      project_id = "http://rdfh.ch/projects/0001"
+      project_id = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
     ),
     ext_res_id = ExternalResourceIDV1(
       pid = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
@@ -196,7 +196,7 @@ object ResourcesResponderV1Spec {
       restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
       restype_id = "http://www.knora.org/ontology/0001/anything#Thing",
       person_id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-      project_id = "http://rdfh.ch/projects/0001"
+      project_id = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
     ),
     ext_res_id = ExternalResourceIDV1(
       pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -1085,7 +1085,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       val resourceCreateRequest = ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#misc",
         label = "Test-Misc",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
         values = valuesToBeCreated,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
@@ -1125,7 +1125,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       val resourceCreateRequest = ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book",
         label = "Test-Book",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
         values = valuesToBeCreated,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
@@ -1183,7 +1183,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book",
         label = "Book with reference to nonexistent resource",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
         values = valuesToBeCreated,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
@@ -1542,7 +1542,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/knora-base#Resource",
         label = "Test Resource",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1558,7 +1558,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0001/anything#Thing",
         label = "Test Resource",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1612,7 +1612,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0001/anything#BlueThing",
         label = "Test Thing",
-        projectIri = "http://rdfh.ch/projects/0001",
+        projectIri = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
         values = valuesToBeCreated,
         file = None,
         userProfile = SharedTestDataADM.anythingUser1,

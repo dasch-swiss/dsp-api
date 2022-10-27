@@ -44,7 +44,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol 
           |{
           |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
           |    "label": "Testperson",
-          |    "project_id": "http://rdfh.ch/projects/00FF",
+          |    "project_id": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
           |    "properties": {
           |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
           |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
@@ -69,7 +69,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol 
           |{
           |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
           |    "label": "Testperson",
-          |    "project_id": "http://rdfh.ch/projects/00FF",
+          |    "project_id": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
           |    "properties": {
           |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
           |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
@@ -91,7 +91,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol 
           |{
           |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
           |    "label": "Testperson",
-          |    "project_id": "http://rdfh.ch/projects/00FF",
+          |    "project_id": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
           |    "properties": {
           |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
           |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]

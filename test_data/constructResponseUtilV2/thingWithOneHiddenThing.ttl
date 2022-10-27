@@ -8,7 +8,7 @@
   <http://www.knora.org/ontology/0001/anything#hasInteger> <http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ>;
   <http://www.knora.org/ontology/0001/anything#hasOtherThing> <http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ>;
   <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> <http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ>;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:creationDate "2020-04-07T09:12:56.710717Z"^^xsd:dateTime;
   knora-base:hasLinkTo <http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ>;
@@ -46,7 +46,7 @@
 <http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ> a <http://www.knora.org/ontology/0001/anything#Thing>,
     knora-base:Resource;
   <http://www.knora.org/ontology/0001/anything#hasInteger> <http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ/values/PVPAa37xR--K_wxQwlvSsg>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ>;
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
   knora-base:creationDate "2020-04-07T09:12:56.710717Z"^^xsd:dateTime;
   knora-base:hasPermissions "V knora-admin:Creator";
