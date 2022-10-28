@@ -1801,7 +1801,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def getUserFromCacheOrTriplestore(
     identifier: UserIdentifierADM
-  ): Future[Option[UserADM]] = // tracedFuture("admin-user-get-user-from-cache-or-triplestore") {
+  ): Future[Option[UserADM]] = tracedFuture("admin-user-get-user-from-cache-or-triplestore") {
     if (cacheServiceSettings.cacheServiceEnabled) {
       // caching enabled
       getUserFromCache(identifier).flatMap {
@@ -1830,7 +1830,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       log.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
       getUserFromTriplestore(identifier = identifier)
     }
-  // }
+  }
 
   /**
    * Tries to retrieve a [[UserADM]] from the triplestore.

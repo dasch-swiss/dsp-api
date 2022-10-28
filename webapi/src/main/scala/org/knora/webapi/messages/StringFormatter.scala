@@ -1666,8 +1666,6 @@ class StringFormatter private (
   /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
    *
-   * If the param `revert` is set to `true`, the string is unescaped.
-   *
    * @param s        a string.
    * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
    *                 a carriage return (`\r`).
@@ -1697,6 +1695,17 @@ class StringFormatter private (
       SparqlEscapeOutput,
       SparqlEscapeInput
     )
+
+  /**
+   * Replaces all characters that have a special meaning in the Lucene Query Parser syntax and normalizes spaces.
+   *
+   * @param s  a string
+   * @return   the normalized string
+   */
+  def replaceLuceneQueryParserSyntaxCharacters(s: String): String = {
+    val stringWithoutSpecialCharacters = s.replaceAll("[\\+\\-&\\|!\\(\\)\\{\\}\\[\\]\\^\"~\\*\\?:\\\\]", " ")
+    StringUtils.normalizeSpace(stringWithoutSpecialCharacters)
+  }
 
   /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.

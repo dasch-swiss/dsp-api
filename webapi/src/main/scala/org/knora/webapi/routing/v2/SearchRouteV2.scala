@@ -429,11 +429,12 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     "v2" / "searchbylabel" / Segment
   ) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
     get { requestContext =>
-      val searchString =
+      val sparqlEncodedSearchString =
         stringFormatter.toSparqlEncodedString(
           searchval,
           throw BadRequestException(s"Invalid search string: '$searchval'")
         )
+      val searchString = stringFormatter.replaceLuceneQueryParserSyntaxCharacters(sparqlEncodedSearchString)
 
       if (searchString.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
         throw BadRequestException(
