@@ -3,7 +3,7 @@
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/book=instance=05I",
         "@type": "xsd:anyURI"
     },
-    "rdfs:label": "this / is + a - test & with \\ special ( characters ) in | the || label",
+    "rdfs:label": "this .,:; is + a - test & with \\ special ( characters ) in [] {} | the || label?!",
     "knora-api:versionArkUrl": {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/book=instance=05I.20191129T100000673298Z",
         "@type": "xsd:anyURI"

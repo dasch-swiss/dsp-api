@@ -10075,7 +10075,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     "perform a searchbylabel search for a label with special characters" in {
 
       val searchValueUriEncoded: String = URLEncoder.encode(
-        "this / is + a - test & with \\ special ( characters ) in | the || label",
+        "this .,:; is + a - test & with \\ special ( characters ) in [] {} | the || label?!",
         "UTF-8"
       )
       val limitToResourceClassUriEncoded: String = URLEncoder.encode(

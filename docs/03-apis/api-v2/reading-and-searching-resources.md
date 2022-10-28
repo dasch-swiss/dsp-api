@@ -462,12 +462,17 @@ character:
    - Zeitglöcklein des Lebens
 
 With each character added to the last term, the selection gets more
-specific. The first term should at least contain four characters. To
+specific. The first term should at least contain three characters. To
 make this kind of "search as you type" possible, a wildcard character is
 automatically added to the last search term. 
-Search by label automatically adds Lucene operators, 
-search strings are expected not to contain any characters with a special meaning in 
-[Lucene Query Parser syntax](../../07-lucene/index.md).
+
+Characters provided by the user that have a special meaning in the Lucene Query Parser 
+syntax are replaced by a whitespace character for this search. If a user types "Zeit-Glöcklein" 
+it is interpreted as "Zeit Glöcklein". Whitespace is normalized afterwards. The special
+characters that are replaced are: 
+`+`, `-`, `&`, `|`, `!`, `(`, `)`, `[`, `]`, `{`, `}`, `^`, `"`, `~`, `*`, `?`, `:`, `\`
+
+If the `rdfs:label` of a resource contains a special character, it is found nonetheless.
 
 ```
 HTTP GET to http://host/v2/searchbylabel/searchValue[limitToResourceClass=resourceClassIRI]
