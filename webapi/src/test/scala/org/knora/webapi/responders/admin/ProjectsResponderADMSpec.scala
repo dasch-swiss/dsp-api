@@ -62,6 +62,16 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       }
 
+      "return information about a project identified by UUID" in {
+        /* Incunabula project */
+        appActor ! ProjectGetRequestADM(
+          identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProjectUuid)),
+          requestingUser = SharedTestDataADM.rootUser
+        )
+        expectMsg(ProjectGetResponseADM(SharedTestDataADM.anythingProject))
+
+      }
+
       "return information about a project identified by shortname" in {
         appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.incunabulaProject.shortname)),
@@ -449,10 +459,27 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
      */
 
     "used to query members" should {
-
       "return all members of a project identified by IRI" in {
         appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
+          SharedTestDataADM.rootUser
+        )
+        val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
+        val members                                = received.members
+
+        members.size should be(4)
+
+        members.map(_.id) should contain allElementsOf Seq(
+          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Restricted),
+          SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.Restricted),
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Restricted),
+          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.Restricted)
+        ).map(_.id)
+      }
+
+      "return all members of a project identified by UUID" in {
+        appActor ! ProjectMembersGetRequestADM(
+          ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProjectUuid)),
           SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
