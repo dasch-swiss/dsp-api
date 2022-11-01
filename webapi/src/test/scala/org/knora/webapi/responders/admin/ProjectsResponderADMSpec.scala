@@ -53,7 +53,6 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return information about a project identified by IRI" in {
-        /* Incunabula project */
         appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.incunabulaProject.id)),
           requestingUser = SharedTestDataADM.rootUser
@@ -63,12 +62,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return information about a project identified by UUID" in {
-        /* Incunabula project */
         appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProjectUuid)),
           requestingUser = SharedTestDataADM.rootUser
         )
-        expectMsg(ProjectGetResponseADM(SharedTestDataADM.anythingProject))
+        expectMsg(ProjectGetResponseADM(SharedTestDataADM.imagesProject))
 
       }
 
