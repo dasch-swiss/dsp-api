@@ -190,7 +190,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           checkedProjectIri =
             stringFormatter.validateAndEscapeProjectIri(
               iri,
-              throw BadRequestException(s"Invalid project ${routeResolver.toUpperCase} $value")
+              throw BadRequestException(s"Invalid project ${routeResolver.toUpperCase}: $value")
             )
 
         } yield ProjectGetRequestADM(
@@ -347,7 +347,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           checkedProjectIri =
             stringFormatter.validateAndEscapeProjectIri(
               iri,
-              throw BadRequestException(s"Invalid project ${routeResolver.toUpperCase} $value")
+              throw BadRequestException(s"Invalid project ${routeResolver.toUpperCase}: $value")
             )
 
         } yield ProjectMembersGetRequestADM(
