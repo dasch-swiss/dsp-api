@@ -49,14 +49,14 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
       addProject() ~
       getKeywords() ~
       getProjectKeywords() ~
-      getProjectByIriOrUuid("iri") ~
-      getProjectByIriOrUuid("uuid") ~
+      getProjectByIri() ~
+      getProjectByUuid() ~
       getProjectByShortname() ~
       getProjectByShortcode() ~
       changeProject() ~
       deleteProject() ~
-      getProjectMembersByIriOrUuid("iri") ~
-      getProjectMembersByIriOrUuid("uuid") ~
+      getProjectMembersByIri() ~
+      getProjectMembersByUuid() ~
       getProjectMembersByShortname() ~
       getProjectMembersByShortcode() ~
       getProjectAdminMembersByIri() ~
@@ -175,11 +175,42 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns a single project identified through IRI or UUID
+   * Returns a single project identified through IRI
    */
-  private def getProjectByIriOrUuid(routeResolver: String): Route =
-    path(projectsBasePath / routeResolver / Segment) { value =>
-      val iri: String = if (routeResolver == "uuid") s"http://rdfh.ch/projects/$value" else value
+  private def getProjectByIri(): Route =
+    path(projectsBasePath / "iri" / Segment) { value =>
+      get { requestContext =>
+        val requestMessage: Future[ProjectGetRequestADM] = for {
+          requestingUser <- getUserADM(
+                              requestContext = requestContext,
+                              routeData.appConfig
+                            )
+          checkedProjectIri =
+            stringFormatter.validateAndEscapeProjectIri(
+              value,
+              throw BadRequestException(s"Invalid project IRI: $value")
+            )
+
+        } yield ProjectGetRequestADM(
+          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+          requestingUser = requestingUser
+        )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          appActor = appActor,
+          log = log
+        )
+      }
+    }
+
+  /**
+   * Returns a single project identified through UUID
+   */
+  private def getProjectByUuid(): Route =
+    path(projectsBasePath / "uuid" / Segment) { value =>
+      val iri: String = s"http://rdfh.ch/projects/$value"
 
       get { requestContext =>
         val requestMessage: Future[ProjectGetRequestADM] = for {
@@ -190,7 +221,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           checkedProjectIri =
             stringFormatter.validateAndEscapeProjectIri(
               iri,
-              throw BadRequestException(s"Invalid project ${routeResolver.toUpperCase}: $value")
+              throw BadRequestException(s"Invalid project UUID: $value")
             )
 
         } yield ProjectGetRequestADM(
@@ -332,11 +363,42 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns all members part of a project identified through IRI or UUID
+   * Returns all members part of a project identified through IRI
    */
-  private def getProjectMembersByIriOrUuid(routeResolver: String): Route =
-    path(projectsBasePath / routeResolver / Segment / "members") { value =>
-      val iri: String = if (routeResolver == "uuid") s"http://rdfh.ch/projects/$value" else value
+  private def getProjectMembersByIri(): Route =
+    path(projectsBasePath / "iri" / Segment / "members") { value =>
+      get { requestContext =>
+        val requestMessage: Future[ProjectMembersGetRequestADM] = for {
+          requestingUser <- getUserADM(
+                              requestContext = requestContext,
+                              routeData.appConfig
+                            )
+          checkedProjectIri =
+            stringFormatter.validateAndEscapeProjectIri(
+              value,
+              throw BadRequestException(s"Invalid project IRI: $value")
+            )
+
+        } yield ProjectMembersGetRequestADM(
+          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+          requestingUser = requestingUser
+        )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          appActor = appActor,
+          log = log
+        )
+      }
+    }
+
+  /**
+   * Returns all members part of a project identified through UUID
+   */
+  private def getProjectMembersByUuid(): Route =
+    path(projectsBasePath / "uuid" / Segment / "members") { value =>
+      val iri: String = s"http://rdfh.ch/projects/$value"
 
       get { requestContext =>
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
@@ -347,7 +409,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           checkedProjectIri =
             stringFormatter.validateAndEscapeProjectIri(
               iri,
-              throw BadRequestException(s"Invalid project ${routeResolver.toUpperCase}: $value")
+              throw BadRequestException(s"Invalid project UUID: $value")
             )
 
         } yield ProjectMembersGetRequestADM(
