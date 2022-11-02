@@ -22,7 +22,7 @@ trait AroundDirectives extends InstrumentationSupport {
     val start = System.currentTimeMillis()
     mapResponse { resp =>
       val took    = System.currentTimeMillis() - start
-      val message = s"[${resp.status.intValue()}] ${ctx.request.method.name} " + s"${ctx.request.uri} took: ${took}ms"
+      val message = s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${took}ms"
       if (resp.status.isFailure()) metricsLogger.warn(message) else metricsLogger.debug(message)
       resp
     }
