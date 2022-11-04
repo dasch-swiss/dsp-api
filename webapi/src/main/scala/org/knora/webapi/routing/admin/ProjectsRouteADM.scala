@@ -34,6 +34,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
+
 class ProjectsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
@@ -127,7 +128,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
   }
 
-  /* returns all unique keywords for all projects as a list */
+  /* Returns all unique keywords for all projects as a list */
   private def getKeywords(): Route = path(projectsBasePath / "Keywords") {
     get { requestContext =>
       val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
@@ -148,7 +149,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
   }
 
-  /* returns all keywords for a single project */
+  /* Returns all keywords for a single project */
   private def getProjectKeywords(): Route =
     path(projectsBasePath / "iri" / Segment / "Keywords") { value =>
       get { requestContext =>
@@ -185,14 +186,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedProjectIri =
-            stringFormatter.validateAndEscapeProjectIri(
-              value,
-              throw BadRequestException(s"Invalid project IRI: $value")
-            )
+
+          validatedValue = ProjectIri.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+          identifier = ProjectIdentifierADM.Iri(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -218,14 +216,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedProjectIri =
-            stringFormatter.validateAndEscapeProjectIri(
-              iri,
-              throw BadRequestException(s"Invalid project UUID: $value")
-            )
+
+          validatedValue = ProjectIri.make(iri).fold(e => throw e.head, v => v)
 
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+          identifier = ProjectIdentifierADM.Iri(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -239,7 +234,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * returns a single project identified through shortname.
+   * Returns a single project identified through shortname.
    */
   private def getProjectByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment) { value =>
@@ -249,13 +244,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          shortNameDec = stringFormatter.validateAndEscapeProjectShortname(
-                           value,
-                           throw BadRequestException(s"Invalid project shortname $value")
-                         )
+
+          validatedValue = ShortName.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeShortname = Some(shortNameDec)),
+          identifier = ProjectIdentifierADM.Shortname(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -269,7 +262,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * returns a single project identified through shortcode.
+   * Returns a single project identified through shortcode.
    */
   private def getProjectByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment) { value =>
@@ -279,13 +272,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(
-                               value,
-                               throw BadRequestException(s"Invalid project shortcode $value")
-                             )
+
+          validatedValue = ShortCode.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)),
+          identifier = ProjectIdentifierADM.Shortcode(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -373,14 +364,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedProjectIri =
-            stringFormatter.validateAndEscapeProjectIri(
-              value,
-              throw BadRequestException(s"Invalid project IRI: $value")
-            )
+
+          validatedValue = ProjectIri.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+          identifier = ProjectIdentifierADM.Iri(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -406,14 +394,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedProjectIri =
-            stringFormatter.validateAndEscapeProjectIri(
-              iri,
-              throw BadRequestException(s"Invalid project UUID: $value")
-            )
+
+          // validatedValue = Base64Uuid.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+          identifier = ProjectIdentifierADM.Uuid(iri),
           requestingUser = requestingUser
         )
 
@@ -427,7 +412,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * returns all members part of a project identified through shortname
+   * Returns all members part of a project identified through shortname
    */
   private def getProjectMembersByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "members") { value =>
@@ -437,13 +422,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          shortNameDec = stringFormatter.validateAndEscapeProjectShortname(
-                           value,
-                           throw BadRequestException(s"Invalid project shortname $value")
-                         )
+          validatedValue = ShortName.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeShortname = Some(shortNameDec)),
+          identifier = ProjectIdentifierADM.Shortname(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -457,7 +439,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * returns all members part of a project identified through shortcode
+   * Returns all members part of a project identified through shortcode
    */
   private def getProjectMembersByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "members") { value =>
@@ -467,13 +449,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(
-                               value,
-                               throw BadRequestException(s"Invalid project shortcode $value")
-                             )
+
+          validatedValue = ShortCode.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)),
+          identifier = ProjectIdentifierADM.Shortcode(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -487,7 +467,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * returns all admin members part of a project identified through iri
+   * Returns all admin members part of a project identified through iri
    */
   private def getProjectAdminMembersByIri(): Route =
     path(projectsBasePath / "iri" / Segment / "admin-members") { value =>
@@ -497,11 +477,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedProjectIri =
-            stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+
+          validatedValue = ProjectIri.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+          identifier = ProjectIdentifierADM.Iri(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -515,7 +495,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * returns all admin members part of a project identified through shortname
+   * Returns all admin members part of a project identified through shortname
    */
   private def getProjectAdminMembersByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "admin-members") { value =>
@@ -525,13 +505,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedShortname = stringFormatter.validateAndEscapeProjectShortname(
-                               value,
-                               throw BadRequestException(s"Invalid project shortname $value")
-                             )
+
+          validatedValue = ShortName.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeShortname = Some(checkedShortname)),
+          identifier = ProjectIdentifierADM.Shortname(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -545,7 +523,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * returns all admin members part of a project identified through shortcode
+   * Returns all admin members part of a project identified through shortcode
    */
   private def getProjectAdminMembersByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "admin-members") { value =>
@@ -555,13 +533,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          checkedShortcode = stringFormatter.validateProjectShortcode(
-                               value,
-                               throw BadRequestException(s"Invalid project shortcode $value")
-                             )
+
+          validatedValue = ShortCode.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)),
+          identifier = ProjectIdentifierADM.Shortcode(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -586,8 +562,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
+          validatedValue = ProjectIri.make(value).fold(e => throw e.head, v => v)
+
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(value)),
+          identifier = ProjectIdentifierADM.Iri(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -611,10 +589,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+
+          validatedValue = ShortName.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeShortname = Some(shortNameDec)),
+          identifier = ProjectIdentifierADM.Shortname(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -638,8 +617,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
+
+          validatedValue = ShortCode.make(value).fold(e => throw e.head, v => v)
+
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeShortcode = Some(value)),
+          identifier = ProjectIdentifierADM.Shortcode(validatedValue),
           requestingUser = requestingUser
         )
 
@@ -670,7 +652,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   private def getProjectDataEntity(projectIri: IRI): Route = { requestContext =>
-    val projectIdentifier = ProjectIdentifierADM(maybeIri = Some(projectIri))
+    val validatedValue    = ProjectIri.make(projectIri).fold(e => throw e.head, v => v)
+    val projectIdentifier = ProjectIdentifierADM.Iri(validatedValue)
 
     val httpEntityFuture: Future[HttpEntity.Chunked] = for {
       requestingUser <- getUserADM(
