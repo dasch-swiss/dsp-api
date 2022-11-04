@@ -19,12 +19,14 @@ import scala.util.Success
 import scala.util.Try
 
 import dsp.errors._
+import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetADM
@@ -93,6 +95,20 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       projectDataGetRequestADM(projectIdentifier, requestingUser)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
+
+  /**
+   * Helper method that gets right identifier to perform the DB request.
+   *
+   * @param identifier either IRI, Shortname, Shortcode or UUID if the project.
+   * @return identified identifer as [[String]]
+   */
+  private def getId(identifier: ProjectIdentifierADM): String =
+    identifier match {
+      case Iri(value)       => value.value
+      case Shortname(value) => value.value
+      case Shortcode(value) => value.value
+      case Uuid(value)      => s"http://rdfh.ch/projects/${value}"
+    }
 
   /**
    * Gets all the projects and returns them as a sequence containing [[ProjectADM]].
@@ -218,7 +234,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       log.debug(
         s"getSingleProjectADM - id: {}, skipCache: {}",
-        identifier.value,
+        identifier,
         skipCache
       )
 
@@ -234,9 +250,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         _ =
           if (maybeProjectADM.nonEmpty) {
-            log.debug("getSingleProjectADM - successfully retrieved project: {}", identifier.value)
+            log.debug("getSingleProjectADM - successfully retrieved project: {}", identifier)
           } else {
-            log.debug("getSingleProjectADM - could not retrieve project: {}", identifier.value)
+            log.debug("getSingleProjectADM - could not retrieve project: {}", identifier)
           }
 
       } yield maybeProjectADM
@@ -262,7 +278,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       project = maybeProject match {
                   case Some(p) => p
-                  case None    => throw NotFoundException(s"Project '${identifier.value}' not found")
+                  case None    => throw NotFoundException(s"Project '${identifier}' not found")
                 }
     } yield ProjectGetResponseADM(
       project = project
@@ -290,7 +306,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       _ =
         if (project.isEmpty) {
-          throw NotFoundException(s"Project '${identifier.value}' not found.")
+          throw NotFoundException(s"Project '${identifier}' not found.")
         } else {
           if (
             !requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(
@@ -304,9 +320,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                .getProjectMembers(
-                                 maybeIri = identifier.toIriOption,
-                                 maybeShortname = identifier.toShortnameOption,
-                                 maybeShortcode = identifier.toShortcodeOption
+                                 maybeIri = Some(getId(identifier)),
+                                 maybeShortname = Some(getId(identifier)),
+                                 maybeShortcode = Some(getId(identifier))
                                )
                                .toString()
                            )
@@ -372,7 +388,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       _ =
         if (project.isEmpty) {
-          throw NotFoundException(s"Project '${identifier.value}' not found.")
+          throw NotFoundException(s"Project '${identifier}' not found.")
         } else {
           if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id)) {
             throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
@@ -382,9 +398,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                .getProjectAdminMembers(
-                                 maybeIri = identifier.toIriOption,
-                                 maybeShortname = identifier.toShortnameOption,
-                                 maybeShortcode = identifier.toShortcodeOption
+                                 maybeIri = Some(getId(identifier)),
+                                 maybeShortname = Some(getId(identifier)),
+                                 maybeShortcode = Some(getId(identifier))
                                )
                                .toString()
                            )
@@ -459,7 +475,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
-                        identifier = ProjectIdentifierADM(maybeIri = Some(projectIri))
+                        identifier =
+                          ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
                       )
 
       keywords: Seq[String] = maybeProject match {
@@ -572,7 +589,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                           )
 
       project: ProjectADM = maybeProject.getOrElse(
-                              throw NotFoundException(s"Project '${projectIdentifier.value}' not found.")
+                              throw NotFoundException(s"Project '${projectIdentifier}' not found.")
                             )
 
       // Check that the user has permission to download the data.
@@ -675,43 +692,52 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     requestingUser: UserADM
   ): Future[Option[ProjectRestrictedViewSettingsADM]] =
     // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestrictedViewSettings resource. How to send the client the correct NotFound reply?
-    for {
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getProjects(
-                           maybeIri = identifier.toIriOption,
-                           maybeShortname = identifier.toShortnameOption,
-                           maybeShortcode = identifier.toShortcodeOption
-                         )
-                         .toString()
-                     )
+    {
+      val id = identifier match {
+        case Iri(value)       => (Some(value.value), None, None)
+        case Shortname(value) => (None, Some(value.value), None)
+        case Shortcode(value) => (None, None, Some(value.value))
+        case Uuid(value)      => (Some(s"http://rdfh.ch/projects/${value}"), None, None)
+      }
 
-      projectResponse <- appActor
-                           .ask(
-                             SparqlExtendedConstructRequest(
-                               sparql = sparqlQuery
-                             )
+      for {
+        sparqlQuery <- Future(
+                         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                           .getProjects(
+                             maybeIri = id._1,
+                             maybeShortname = id._2,
+                             maybeShortcode = id._3
                            )
-                           .mapTo[SparqlExtendedConstructResponse]
+                           .toString()
+                       )
 
-      restrictedViewSettings =
-        if (projectResponse.statements.nonEmpty) {
+        projectResponse <- appActor
+                             .ask(
+                               SparqlExtendedConstructRequest(
+                                 sparql = sparqlQuery
+                               )
+                             )
+                             .mapTo[SparqlExtendedConstructResponse]
 
-          val (_, propsMap): (SubjectV2, Map[SmartIri, Seq[LiteralV2]]) = projectResponse.statements.head
+        restrictedViewSettings =
+          if (projectResponse.statements.nonEmpty) {
 
-          val size = propsMap
-            .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
-          val watermark = propsMap
-            .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
+            val (_, propsMap): (SubjectV2, Map[SmartIri, Seq[LiteralV2]]) = projectResponse.statements.head
 
-          Some(ProjectRestrictedViewSettingsADM(size, watermark))
-        } else {
-          None
-        }
+            val size = propsMap
+              .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize.toSmartIri)
+              .map(_.head.asInstanceOf[StringLiteralV2].value)
+            val watermark = propsMap
+              .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark.toSmartIri)
+              .map(_.head.asInstanceOf[StringLiteralV2].value)
 
-    } yield restrictedViewSettings
+            Some(ProjectRestrictedViewSettingsADM(size, watermark))
+          } else {
+            None
+          }
+
+      } yield restrictedViewSettings
+    }
 
   /**
    * Get project's restricted view settings.
@@ -726,9 +752,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     requestingUser: UserADM
   ): Future[ProjectRestrictedViewSettingsGetResponseADM] = {
 
-    val maybeIri       = identifier.toIriOption
-    val maybeShortname = identifier.toShortnameOption
-    val maybeShortcode = identifier.toShortcodeOption
+    // TODO-MP: wtf?
+    val maybeIri       = Some(getId(identifier))
+    val maybeShortname = Some(getId(identifier))
+    val maybeShortcode = Some(getId(identifier))
 
     for {
       maybeSettings: Option[ProjectRestrictedViewSettingsADM] <- projectRestrictedViewSettingsGetADM(
@@ -850,10 +877,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
 
     for {
-      maybeCurrentProject: Option[ProjectADM] <- getSingleProjectADM(
-                                                   identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                                   skipCache = true
-                                                 )
+      maybeCurrentProject: Option[ProjectADM] <-
+        getSingleProjectADM(
+          identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v)),
+          skipCache = true
+        )
 
       _ = if (maybeCurrentProject.isEmpty) {
             throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
@@ -885,10 +913,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
              .mapTo[SparqlUpdateResponse]
 
       /* Verify that the project was updated. */
-      maybeUpdatedProject <- getSingleProjectADM(
-                               identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                               skipCache = true
-                             )
+      maybeUpdatedProject <-
+        getSingleProjectADM(
+          identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v)),
+          skipCache = true
+        )
 
       updatedProject: ProjectADM =
         maybeUpdatedProject.getOrElse(
@@ -1128,10 +1157,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                .mapTo[SparqlUpdateResponse]
 
         // try to retrieve newly created project (will also add to cache)
-        maybeNewProjectADM <- getSingleProjectADM(
-                                identifier = ProjectIdentifierADM(maybeIri = Some(newProjectIRI)),
-                                skipCache = true
-                              )
+        maybeNewProjectADM <-
+          getSingleProjectADM(
+            identifier = ProjectIdentifierADM.Iri(ProjectIri.make(newProjectIRI).fold(e => throw e.head, v => v)),
+            skipCache = true
+          )
 
         // check to see if we could retrieve the new project
         newProjectADM = maybeNewProjectADM.getOrElse(
@@ -1198,18 +1228,27 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    */
   private def getProjectFromTriplestore(
     identifier: ProjectIdentifierADM
-  ): Future[Option[ProjectADM]] =
+  ): Future[Option[ProjectADM]] = {
+    val id = identifier match {
+      case Iri(value)       => (Some(value.value), None, None)
+      case Shortname(value) => (None, Some(value.value), None)
+      case Shortcode(value) => (None, None, Some(value.value))
+      case Uuid(value)      => (Some(s"http://rdfh.ch/projects/${value}"), None, None)
+    }
+
     for {
 
       sparqlQuery <- Future(
                        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                          .getProjects(
-                           maybeIri = identifier.toIriOption,
-                           maybeShortname = identifier.toShortnameOption,
-                           maybeShortcode = identifier.toShortcodeOption
+                           maybeIri = id._1,
+                           maybeShortname = None,
+                           maybeShortcode = None
                          )
                          .toString()
                      )
+
+      _ = println(1111, identifier, getId(identifier))
 
       projectResponse <- appActor
                            .ask(
@@ -1239,6 +1278,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
     } yield maybeProjectADM
+  }
 
   /**
    * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
