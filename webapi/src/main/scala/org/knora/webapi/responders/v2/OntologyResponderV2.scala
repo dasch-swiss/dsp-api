@@ -14,6 +14,7 @@ import scala.concurrent.Future
 import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
+import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -608,7 +609,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+              identifier =
+                ProjectIdentifierADM.Iri(ProjectIri.make(projectIri.toString).fold(e => throw e.head, v => v)),
               requestingUser = requestingUser
             )
           )

@@ -18,6 +18,7 @@ import scala.util.Try
 import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
+import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -1582,14 +1583,15 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                       }
 
       // Get information about the project in which the resources will be created.
-      projectInfoResponse <- appActor
-                               .ask(
-                                 ProjectGetRequestADM(
-                                   identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                   requestingUser = requestingUser
-                                 )
-                               )
-                               .mapTo[ProjectGetResponseADM]
+      projectInfoResponse <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v)),
+              requestingUser = requestingUser
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       projectADM = projectInfoResponse.project
 
@@ -2457,14 +2459,15 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           }
 
       // Get project info
-      projectResponse <- appActor
-                           .ask(
-                             ProjectGetRequestADM(
-                               identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                               requestingUser = userProfile
-                             )
-                           )
-                           .mapTo[ProjectGetResponseADM]
+      projectResponse <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v)),
+              requestingUser = userProfile
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       // Ensure that the project isn't the system project or the shared ontologies project.
 

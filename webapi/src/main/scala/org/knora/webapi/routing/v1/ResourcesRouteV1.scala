@@ -35,6 +35,7 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -297,10 +298,8 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       apiRequest: CreateResourceApiRequestV1,
       userADM: UserADM
     ): Future[ResourceCreateRequestV1] = {
-      val projectIri = stringFormatter.validateAndEscapeIri(
-        apiRequest.project_id,
-        throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}")
-      )
+      val projectIri = ProjectIri.make(apiRequest.project_id).fold(e => throw e.head, v => v)
+
       val resourceTypeIri = stringFormatter.validateAndEscapeIri(
         apiRequest.restype_id,
         throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}")
@@ -316,7 +315,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                         appActor
                                           .ask(
                                             ProjectGetRequestADM(
-                                              ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                                              identifier = ProjectIdentifierADM.Iri(projectIri),
                                               requestingUser = userADM
                                             )
                                           )
@@ -363,7 +362,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       } yield ResourceCreateRequestV1(
         resourceTypeIri = resourceTypeIri,
         label = label,
-        projectIri = projectIri,
+        projectIri = projectIri.value,
         values = valuesToBeCreated,
         file = file,
         userProfile = userADM,
@@ -443,17 +442,18 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
 
       for {
-        projectShortcode: String <- for {
-                                      projectResponse: ProjectGetResponseADM <-
-                                        appActor
-                                          .ask(
-                                            ProjectGetRequestADM(
-                                              identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
-                                              requestingUser = userProfile
-                                            )
-                                          )
-                                          .mapTo[ProjectGetResponseADM]
-                                    } yield projectResponse.project.shortcode
+        projectShortcode: String <-
+          for {
+            projectResponse: ProjectGetResponseADM <-
+              appActor
+                .ask(
+                  ProjectGetRequestADM(
+                    identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectId).fold(e => throw e.head, v => v)),
+                    requestingUser = userProfile
+                  )
+                )
+                .mapTo[ProjectGetResponseADM]
+          } yield projectResponse.project.shortcode
 
         resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
           resourceRequest.map { createResourceRequest =>

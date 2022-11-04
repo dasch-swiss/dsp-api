@@ -10,7 +10,6 @@ import zio.stm._
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
@@ -119,10 +118,11 @@ case class CacheServiceInMemImpl(
    * @return an optional [[ProjectADM]]
    */
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    (identifier.hasType match {
-      case ProjectIdentifierType.IRI       => getProjectByIri(identifier.toIri)
-      case ProjectIdentifierType.SHORTCODE => getProjectByShortcodeOrShortname(identifier.toShortcode)
-      case ProjectIdentifierType.SHORTNAME => getProjectByShortcodeOrShortname(identifier.toShortname)
+    (identifier match {
+      case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value.value)
+      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcodeOrShortname(value.value)
+      case ProjectIdentifierADM.Shortname(value) => getProjectByShortcodeOrShortname(value.value)
+      case ProjectIdentifierADM.Uuid(value)      => getProjectByIri(value)
     }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
 
   /**

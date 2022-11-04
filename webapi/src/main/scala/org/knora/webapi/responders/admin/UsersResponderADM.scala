@@ -15,6 +15,7 @@ import scala.concurrent.Future
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
+import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.User._
 import org.knora.webapi._
 import org.knora.webapi.instrumentation.InstrumentationSupport
@@ -908,16 +909,16 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                 case None           => Seq.empty[IRI]
                               }
 
-      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-                                                               appActor
-                                                                 .ask(
-                                                                   ProjectGetADM(
-                                                                     identifier =
-                                                                       ProjectIdentifierADM(maybeIri = Some(projectIri))
-                                                                   )
-                                                                 )
-                                                                 .mapTo[Option[ProjectADM]]
-                                                             }
+      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] =
+        projectIris.map { projectIri =>
+          appActor
+            .ask(
+              ProjectGetADM(
+                identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
+              )
+            )
+            .mapTo[Option[ProjectADM]]
+        }
       maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
       projects: Seq[ProjectADM]               = maybeProjects.flatten
 
@@ -1945,15 +1946,16 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         // _ = log.debug("statements2UserADM - groups: {}", MessageUtil.toSource(groups))
 
-        maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-                                                                 appActor
-                                                                   .ask(
-                                                                     ProjectGetADM(
-                                                                       ProjectIdentifierADM(maybeIri = Some(projectIri))
-                                                                     )
-                                                                   )
-                                                                   .mapTo[Option[ProjectADM]]
-                                                               }
+        maybeProjectFutures: Seq[Future[Option[ProjectADM]]] =
+          projectIris.map { projectIri =>
+            appActor
+              .ask(
+                ProjectGetADM(
+                  identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
+                )
+              )
+              .mapTo[Option[ProjectADM]]
+          }
         maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
         projects: Seq[ProjectADM]               = maybeProjects.flatten
 

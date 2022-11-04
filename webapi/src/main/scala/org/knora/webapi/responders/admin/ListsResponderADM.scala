@@ -938,13 +938,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-      maybeProject <- appActor
-                        .ask(
-                          ProjectGetADM(
-                            identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value))
-                          )
-                        )
-                        .mapTo[Option[ProjectADM]]
+      maybeProject <-
+        appActor
+          .ask(
+            ProjectGetADM(
+              identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri.value).fold(e => throw e.head, v => v))
+            )
+          )
+          .mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project
@@ -2267,9 +2268,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       maybeProject <- appActor
                         .ask(
                           ProjectGetADM(
-                            ProjectIdentifierADM(
-                              maybeIri = Some(projectIri)
-                            )
+                            ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
                           )
                         )
                         .mapTo[Option[ProjectADM]]

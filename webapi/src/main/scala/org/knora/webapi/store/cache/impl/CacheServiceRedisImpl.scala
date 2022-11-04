@@ -13,7 +13,6 @@ import zio._
 import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
@@ -105,17 +104,18 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     } yield ()
 
   /**
-   * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
+   * Retrieves the project stored under the identifier, either Iri, Shortcode, Shortname or Uuid.
    *
    * @param identifier the project identifier.
    */
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    // The data is stored under the IRI key.
-    // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
-    identifier.hasType match {
-      case ProjectIdentifierType.IRI       => getProjectByIri(identifier.toIri)
-      case ProjectIdentifierType.SHORTCODE => getProjectByShortcodeOrShortname(identifier.toShortcode)
-      case ProjectIdentifierType.SHORTNAME => getProjectByShortcodeOrShortname(identifier.toShortname)
+    // The data is stored under the Iri
+    // Additionally, the Shortcode, Shortname and Uuid point to the Iri
+    identifier match {
+      case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value.value)
+      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcodeOrShortname(value.value)
+      case ProjectIdentifierADM.Shortname(value) => getProjectByShortcodeOrShortname(value.value)
+      case ProjectIdentifierADM.Uuid(value)      => getProjectByIri(value)
     }
 
   /**

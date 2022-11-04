@@ -13,6 +13,7 @@ import scala.concurrent.Future
 
 import dsp.errors._
 import dsp.valueobjects.Group.GroupStatus
+import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -114,8 +115,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               appActor
                 .ask(
                   ProjectGetADM(
-                    identifier = ProjectIdentifierADM(
-                      maybeIri = Some(projectIri)
+                    identifier = ProjectIdentifierADM.Iri(
+                      ProjectIri.make(projectIri).fold(e => throw e.head, v => v)
                     )
                   )
                 )
@@ -420,9 +421,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                }
              )
 
+        iri = createRequest.project.value
         nameExists <- groupByNameAndProjectExists(
                         name = createRequest.name.value,
-                        projectIri = createRequest.project.value
+                        projectIri = iri
                       )
         _ = if (nameExists) {
               throw DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists")
@@ -432,7 +434,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.project.value))
+                identifier = ProjectIdentifierADM.Iri(ProjectIri.make(iri).fold(e => throw e.head, v => v))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -783,7 +785,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri))
+                identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
               )
             )
             .mapTo[Option[ProjectADM]]

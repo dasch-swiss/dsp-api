@@ -16,6 +16,7 @@ import scala.util.Success
 
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
+import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -2672,17 +2673,21 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   ): Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectInfoResponse: ProjectGetResponseADM <- appActor
-                                                      .ask(
-                                                        ProjectGetRequestADM(
-                                                          identifier = ProjectIdentifierADM(maybeIri =
-                                                            Some(projectResourceHistoryEventsGetRequest.projectIri)
-                                                          ),
-                                                          requestingUser =
-                                                            projectResourceHistoryEventsGetRequest.requestingUser
-                                                        )
-                                                      )
-                                                      .mapTo[ProjectGetResponseADM]
+      projectInfoResponse: ProjectGetResponseADM <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = ProjectIdentifierADM
+                .Iri(
+                  ProjectIri.make(projectResourceHistoryEventsGetRequest.projectIri).fold(e => throw e.head, v => v)
+                ),
+              // ProjectIdentifierADM(maybeIri =
+              // Some(projectResourceHistoryEventsGetRequest.projectIri)
+              // ),
+              requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
