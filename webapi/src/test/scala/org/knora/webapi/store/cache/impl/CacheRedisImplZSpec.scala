@@ -9,6 +9,8 @@ import zio._
 import zio.test.Assertion._
 import zio.test._
 
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Project._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -18,8 +20,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.config.RedisTestConfig
 import org.knora.webapi.testcontainers.RedisTestContainer
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Project._
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceRedisImpl]].

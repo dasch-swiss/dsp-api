@@ -15,6 +15,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import org.knora.webapi._
@@ -31,7 +32,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import dsp.valueobjects.Iri.ProjectIri
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.

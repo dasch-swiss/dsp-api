@@ -11,6 +11,7 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
+import zio.prelude.Validation
 
 import java.util.UUID
 import scala.concurrent.duration._
@@ -18,6 +19,7 @@ import scala.concurrent.duration._
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
+import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi._
@@ -29,8 +31,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
-import dsp.valueobjects.Iri.ProjectIri
-import zio.prelude.Validation
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
