@@ -18,7 +18,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Project
+import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -505,140 +505,54 @@ case class ProjectADM(
   }
 }
 
+/**
+ * Represents the project's identifier, which can be an IRI, shortcode, shortname or UUID.
+ */
 sealed trait ProjectIdentifierADM
 object ProjectIdentifierADM {
-  case class Iri(value: ProjectIri)              extends ProjectIdentifierADM
-  case class Shortcode(value: Project.ShortCode) extends ProjectIdentifierADM
-  case class Shortname(value: Project.ShortName) extends ProjectIdentifierADM
-  case class Uuid(value: String)                 extends ProjectIdentifierADM
+  case class Iri(value: ProjectIri)      extends ProjectIdentifierADM
+  case class Shortcode(value: ShortCode) extends ProjectIdentifierADM
+  case class Shortname(value: ShortName) extends ProjectIdentifierADM
+  case class Uuid(value: String)         extends ProjectIdentifierADM
+
+  def asIriOption(id: ProjectIdentifierADM): Option[String] =
+    id match {
+      case Iri(value) => Some(value.value)
+      case _          => None
+    }
+
+  def asShortcodeOption(id: ProjectIdentifierADM): Option[String] =
+    id match {
+      case Shortcode(value) => Some(value.value)
+      case _                => None
+    }
+
+  def asShortnameOption(id: ProjectIdentifierADM): Option[String] =
+    id match {
+      case Shortname(value) => Some(value.value)
+      case _                => None
+    }
+
+  def asUuidOption(id: ProjectIdentifierADM): Option[String] =
+    id match {
+      case Uuid(value) => Some(s"http://rdfh.ch/projects/${value}")
+      case _           => None
+    }
+
+  /**
+   * Helper method that gets right identifier value.
+   *
+   * @param identifier either IRI, Shortname, Shortcode or UUID if the project.
+   * @return identifer's value as [[String]]
+   */
+  def getId(identifier: ProjectIdentifierADM): String =
+    identifier match {
+      case Iri(value)       => value.value
+      case Shortname(value) => value.value
+      case Shortcode(value) => value.value
+      case Uuid(value)      => s"http://rdfh.ch/projects/${value}"
+    }
 }
-
-// /**
-//  * The ProjectIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
-//  * validated and escaped.
-//  */
-// object ProjectIdentifierADM {
-//   def apply(maybeIri: Option[IRI] = None, maybeShortname: Option[String] = None, maybeShortcode: Option[String] = None)(
-//     implicit sf: StringFormatter
-//   ): ProjectIdentifierADM = {
-
-//     val parametersCount: Int = List(
-//       maybeIri,
-//       maybeShortname,
-//       maybeShortcode
-//     ).flatten.size
-
-//     // something needs to be set
-//     if (parametersCount == 0) throw BadRequestException("Empty project identifier is not allowed.")
-
-//     if (parametersCount > 1) throw BadRequestException("Only one option allowed for project identifier.")
-
-//     new ProjectIdentifierADM(
-//       maybeIri =
-//         sf.validateAndEscapeOptionalProjectIri(maybeIri, throw BadRequestException(s"Invalid user project $maybeIri")),
-//       maybeShortname = sf.validateAndEscapeOptionalProjectShortname(
-//         maybeShortname,
-//         throw BadRequestException(s"Invalid user project shortname $maybeShortname")
-//       ),
-//       maybeShortcode = sf.validateAndEscapeOptionalProjectShortcode(
-//         maybeShortcode,
-//         throw BadRequestException(s"Invalid user project shortcode $maybeShortcode")
-//       )
-//     )
-//   }
-// }
-
-// /**
-//  * Represents the project's identifier. It can be an IRI, shortcode or shortname.
-//  *
-//  * @param maybeIri       the project's IRI.
-//  * @param maybeShortname the project's shortname.
-//  * @param maybeShortcode the project's shortcode
-//  */
-// class ProjectIdentifierADM private (
-//   maybeIri: Option[IRI] = None,
-//   maybeShortname: Option[String] = None,
-//   maybeShortcode: Option[String] = None
-// ) {
-
-//   // squash and return value.
-//   val value: String = List(
-//     maybeIri,
-//     maybeShortname,
-//     maybeShortcode
-//   ).flatten.head
-
-//   def hasType: ProjectIdentifierType =
-//     if (maybeIri.isDefined) {
-//       ProjectIdentifierType.IRI
-//     } else if (maybeShortcode.isDefined) {
-//       ProjectIdentifierType.SHORTCODE
-//     } else {
-//       ProjectIdentifierType.SHORTNAME
-//     }
-
-//   /**
-//    * Tries to return the value as an IRI.
-//    */
-//   def toIri: IRI =
-//     maybeIri.getOrElse(
-//       throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type.")
-//     )
-
-//   /**
-//    * Returns an optional value of the identifier.
-//    */
-//   def toIriOption: Option[IRI] =
-//     maybeIri
-
-//   /**
-//    * Tries to return the value as an SHORTNAME.
-//    */
-//   def toShortname: String =
-//     maybeShortname.getOrElse(
-//       throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTNAME' type.")
-//     )
-
-//   /**
-//    * Returns an optional value of the identifier.
-//    */
-//   def toShortnameOption: Option[String] =
-//     maybeShortname
-
-//   /**
-//    * Tries to return the value as an SHORTCODE.
-//    */
-//   def toShortcode: String =
-//     maybeShortcode.getOrElse(
-//       throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTCODE' type.")
-//     )
-
-//   /**
-//    * Returns an optional value of the identifier.
-//    */
-//   def toShortcodeOption: Option[String] =
-//     maybeShortcode
-
-//   /**
-//    * Returns the string representation
-//    */
-//   override def toString: IRI =
-//     s"ProjectIdentifierADM(${this.value})"
-
-// }
-
-// /**
-//  * Project identifier types:
-//  *  - IRI
-//  *  - Shortcode
-//  *  - Shortname
-//  */
-// sealed trait ProjectIdentifierType
-// object ProjectIdentifierType {
-//   case object IRI       extends ProjectIdentifierType
-//   case object SHORTCODE extends ProjectIdentifierType
-//   case object SHORTNAME extends ProjectIdentifierType
-// }
 
 /**
  * Represents the project's restricted view settings.
