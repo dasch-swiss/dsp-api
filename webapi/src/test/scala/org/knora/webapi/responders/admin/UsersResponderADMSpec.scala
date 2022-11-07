@@ -31,6 +31,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import dsp.valueobjects.Iri.ProjectIri
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
@@ -50,6 +51,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+  val imagesProjectIri     = ProjectIri.make(imagesProject.id).fold(e => throw e.head, v => v)
+  val incunabulaProjectIri = ProjectIri.make(incunabulaProject.id).fold(e => throw e.head, v => v)
 
   "The UsersResponder " when {
     "asked about all users" should {
@@ -557,9 +561,10 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
+          ProjectIdentifierADM.Iri(imagesProjectIri),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
+
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
 
         received.members.map(_.id) should contain(normalUser.id)
@@ -594,7 +599,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // check that the user was not added to the project
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(incunabulaProject.id)),
+          ProjectIdentifierADM.Iri(incunabulaProjectIri),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -625,7 +630,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         )
 
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(incunabulaProject.id)),
+          ProjectIdentifierADM.Iri(incunabulaProjectIri),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -687,7 +692,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // also check that the user has been removed from the project's list of users
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
+          ProjectIdentifierADM.Iri(imagesProjectIri),
           requestingUser = rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -729,7 +734,6 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
     }
 
     "asked to update the user's project admin group membership" should {
-
       "Not ADD user to project admin group if he is not a member of that project" in {
         // get the current project admin memberships (should be empty)
         appActor ! UserProjectAdminMembershipsGetRequestADM(
@@ -797,7 +801,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // get project admins for images project (should contain normal user)
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
+          ProjectIdentifierADM.Iri(imagesProjectIri),
           requestingUser = rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -831,7 +835,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         membershipsAfterUpdate.projects should equal(Seq())
 
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
+          ProjectIdentifierADM.Iri(imagesProjectIri),
           requestingUser = rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)

@@ -17,6 +17,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
+import dsp.valueobjects.Iri.ProjectIri
+import dsp.valueobjects.Project._
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].
@@ -77,22 +79,23 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
   val projectTests = suite("CacheInMemImplZSpec - project")(
     test("successfully store a project and retrieve by IRI")(
       for {
+        iri              <- ProjectIri.make(project.id).toZIO
         _                <- CacheService.putProjectADM(project)
-        retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
+        retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Iri(iri))
       } yield assert(retrievedProject)(equalTo(Some(project)))
     ) +
       test("successfully store a project and retrieve by SHORTCODE")(
         for {
-          _ <- CacheService.putProjectADM(project)
-          retrievedProject <-
-            CacheService.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
+          shortcode        <- ShortCode.make(project.shortcode).toZIO
+          _                <- CacheService.putProjectADM(project)
+          retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Shortcode(shortcode))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       ) +
       test("successfully store a project and retrieve by SHORTNAME")(
         for {
-          _ <- CacheService.putProjectADM(project)
-          retrievedProject <-
-            CacheService.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
+          shortname        <- ShortName.make(project.shortname).toZIO
+          _                <- CacheService.putProjectADM(project)
+          retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Shortname(shortname))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       )
   )

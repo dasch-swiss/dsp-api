@@ -14,6 +14,8 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserA
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Project._
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.serialization.CacheSerialization]].
@@ -53,18 +55,30 @@ class CacheServiceManagerSpec extends CoreSpec {
     }
 
     "successfully retrieve a project by IRI" in {
-      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
-      expectMsg(Some(project))
+      for {
+        iri <- Iri.ProjectIri.make(project.id)
+      } yield {
+        appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Iri(iri))
+        expectMsg(Some(project))
+      }
     }
 
     "successfully retrieve a project by SHORTNAME" in {
-      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
-      expectMsg(Some(project))
+      for {
+        shortname <- ShortName.make(project.shortname)
+      } yield {
+        appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Shortname(shortname))
+        expectMsg(Some(project))
+      }
     }
 
     "successfully retrieve a project by SHORTCODE" in {
-      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
-      expectMsg(Some(project))
+      for {
+        shortcode <- ShortCode.make(project.shortcode)
+      } yield {
+        appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Shortcode(shortcode))
+        expectMsg(Some(project))
+      }
     }
   }
 }

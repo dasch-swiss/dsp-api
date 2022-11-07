@@ -10,7 +10,6 @@ import dsp.errors.OntologyConstraintException
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
  * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
@@ -50,26 +49,6 @@ class ProjectsMessagesADMSpec extends CoreSpec {
           selfjoin = false
         )
       )
-    }
-  }
-
-  "The ProjectIdentifierADM class" should {
-    "return without throwing when the project IRI is valid" in {
-      ProjectIdentifierADM(maybeIri =
-        Some(SharedTestDataADM.incunabulaProject.id)
-      ).value shouldBe SharedTestDataADM.incunabulaProject.id
-      ProjectIdentifierADM(maybeIri =
-        Some(SharedTestDataADM.defaultSharedOntologiesProject.id)
-      ).value shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
-      ProjectIdentifierADM(maybeIri =
-        Some(SharedTestDataADM.systemProject.id)
-      ).value shouldBe SharedTestDataADM.systemProject.id
-    }
-
-    "return a 'BadRequestException' when the project IRI is invalid" in {
-      assertThrows[BadRequestException] {
-        ProjectIdentifierADM(maybeIri = Some("http://not-valid.org"))
-      }
     }
   }
 }
