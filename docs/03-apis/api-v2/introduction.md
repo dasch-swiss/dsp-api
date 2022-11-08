@@ -111,8 +111,8 @@ complex schema is used by default in the response, unless the request specifical
 asks for the simple schema. The client can specify the desired schema by using
 an HTTP header or a URL parameter:
 
-  - the HTTP header `X-Knora-Accept-Schema`
-  - the URL parameter `schema`
+- the HTTP header `X-Knora-Accept-Schema`
+- the URL parameter `schema`
 
 Both the HTTP header and the URL parameter accept the values `simple` or
 `complex`.
