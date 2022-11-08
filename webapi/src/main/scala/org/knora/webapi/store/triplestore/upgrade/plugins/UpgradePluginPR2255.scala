@@ -13,7 +13,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 /**
  * Transforms a repository for DSP-API PR2255.
  * Transforms incorrect value of project IRIs from the one containing either shortcode or
- * not suppored UUID version to UUID v4 base64 encoded.
+ * not supported UUID version to UUID v4 base64 encoded.
  */
 class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
@@ -34,7 +34,8 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
               statementsToAdd += nodeFactory.makeStatement(
                 subj = updatedNode,
                 pred = statement.pred,
-                obj = statement.obj
+                obj = statement.obj,
+                context = statement.context
               )
             }
 
@@ -44,7 +45,8 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
               statementsToAdd += nodeFactory.makeStatement(
                 subj = statement.subj,
                 pred = statement.pred,
-                obj = updatedNode
+                obj = updatedNode,
+                context = statement.context
               )
             }
       } yield ()
