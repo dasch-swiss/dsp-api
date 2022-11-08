@@ -20,12 +20,12 @@ object Dependencies {
   val AkkaHttpVersion  = "10.2.10"
   val JenaVersion      = "4.6.1"
 
-  val ZioVersion                  = "2.0.2"
+  val ZioVersion                  = "2.0.3"
   val ZioHttpVersion              = "2.0.0-RC4"
   val ZioJsonVersion              = "0.3.0"
   val ZioConfigVersion            = "3.0.2"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioLoggingVersion           = "2.1.2"
+  val ZioLoggingVersion           = "2.1.3"
   val ZioMetricsConnectorsVersion = "2.0.0"
   val ZioPreludeVersion           = "1.0.0-RC16"
 
@@ -62,8 +62,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.9" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.9" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.11" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.11" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -73,7 +73,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "5.7.4" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "5.7.5" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.72"
 
   // caching
@@ -96,7 +96,7 @@ object Dependencies {
   val scallop         = "org.rogach"                %% "scallop"          % "4.1.0"  // Scala 3 compatible
   val titaniumJSONLD  = "com.apicatalog"             % "titanium-json-ld" % "1.3.1"
   val xmlunitCore     = "org.xmlunit"                % "xmlunit-core"     % "2.9.0"
-  val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.13.4.2"
+  val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.14.0"
 
   // test
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
