@@ -1820,6 +1820,8 @@
                       owl:cardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :lastModificationDate ;
+#                      TODO: replace line to make the lastModificationDate mandatory
+#                      owl:cardinality "1"^^xsd:nonNegativeInteger ],
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :deleteDate ;
