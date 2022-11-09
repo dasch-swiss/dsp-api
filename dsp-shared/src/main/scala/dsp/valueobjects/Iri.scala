@@ -133,6 +133,22 @@ object Iri {
   }
 
   /**
+   * Base64Uuid value object.
+   * This is base64 encoded UUID version without paddings.
+   *
+   * @param value to validate.
+   */
+  sealed abstract case class Base64Uuid private (value: String)
+  object Base64Uuid {
+    def make(value: String): Validation[ValidationException, Base64Uuid] =
+      if (value.isEmpty) {
+        Validation.fail(ValidationException("UUID is missing."))
+      } else if (!V2UuidValidation.isUuidVersion4Or5(value)) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      } else Validation.succeed(new Base64Uuid(value) {})
+  }
+
+  /**
    * RoleIri value object.
    */
   sealed abstract case class RoleIri private (value: String) extends Iri
