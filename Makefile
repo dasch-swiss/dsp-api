@@ -96,6 +96,13 @@ stack-up: docker-build env-file ## starts the dsp-stack: fuseki, sipi, api.
 stack-up-fast: docker-build-knora-api-image env-file ## starts the dsp-stack by skipping rebuilding most of the images (only api image is rebuilt).
 	docker-compose -f docker-compose.yml up -d
 
+.PHONY: stack-up-fast-app-db-sipi
+stack-up-fast-app-db-sipi: env-file ## starts the dsp-stack by skipping rebuilding, starts: app, db and sipi
+	@docker compose -f docker-compose.yml up -d app
+	@docker compose -f docker-compose.yml up -d db
+	@docker compose -f docker-compose.yml up -d sipi
+	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+
 .PHONY: stack-up-ci
 stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
 stack-up-ci: docker-build env-file print-env-file ## starts the dsp-stack using 'knora-test-unit' repository: fuseki, sipi, api.
