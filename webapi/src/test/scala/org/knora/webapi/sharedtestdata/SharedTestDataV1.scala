@@ -462,7 +462,7 @@ object SharedTestDataV1 {
   /**
    * *********************************
    */
-  val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/00FE"
+  val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/oIjhUsZmQLuJ0VMGvJ2pfg"
 
   def dokubibProjectInfo = ProjectInfoV1(
     id = DOKUBIB_PROJECT_IRI,
