@@ -741,16 +741,6 @@ class ProjectsADME2ESpec
         val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
         keywords should be(Seq.empty[String])
       }
-
-      "return 'NotFound' when the project IRI is unknown" in {
-        val notexistingIriEnc = URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
-        val request = Get(baseApiUrl + s"/admin/projects/iri/$notexistingIriEnc/Keywords") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
-        )
-        val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.NotFound)
-      }
     }
 
     "used to dump project data" should {
