@@ -9,19 +9,12 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import zio._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
-import org.knora.webapi.routing.AroundDirectives
-import org.knora.webapi.routing.HealthRoute
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RejectingRoute
-import org.knora.webapi.routing.VersionRoute
 import org.knora.webapi.routing.admin.FilesRouteADM
 import org.knora.webapi.routing.admin.GroupsRouteADM
 import org.knora.webapi.routing.admin.ListsRouteADM
@@ -47,6 +40,7 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
+import zio._
 
 trait ApiRoutes {
   val routes: Route

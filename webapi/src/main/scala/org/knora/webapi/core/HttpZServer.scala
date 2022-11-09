@@ -7,28 +7,26 @@ package org.knora.webapi.core
 
 import akka.http.scaladsl.Http
 import zio._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routingz.ApiZRoutes
 
 /**
- * The Akka based HTTP server
+ * The ZIO-Http based HTTP server
  */
-trait HttpServer {
+trait HttpZServer {
   val serverBinding: Http.ServerBinding
 }
 
-object HttpServer {
-  val layer: ZLayer[core.ActorSystem & AppConfig & ApiRoutes, Nothing, HttpServer] =
+object HttpZServer {
+  val layer: ZLayer[AppConfig & ApiZRoutes, Nothing, HttpZServer] =
     ZLayer.scoped {
       for {
-        as        <- ZIO.service[core.ActorSystem]
         config    <- ZIO.service[AppConfig]
         apiRoutes <- ZIO.service[ApiRoutes]
 
         binding <- {
-          implicit val system: akka.actor.ActorSystem = as.system
 
           ZIO.acquireRelease {
             ZIO

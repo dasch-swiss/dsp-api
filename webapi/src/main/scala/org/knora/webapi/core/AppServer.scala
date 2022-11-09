@@ -186,7 +186,7 @@ object AppServer {
       for {
         appServer <- AppServer.init()
         _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true)
-      } yield ()
+      } yield (
     }
 
   /**
