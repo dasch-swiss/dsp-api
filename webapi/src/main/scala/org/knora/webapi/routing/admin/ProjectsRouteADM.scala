@@ -187,10 +187,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ProjectIri.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(validatedValue),
+          identifier = ProjectIdentifierADM.Iri(value),
           requestingUser = requestingUser
         )
 
@@ -217,10 +215,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ProjectIri.make(iri).fold(e => throw e.head, v => v)
-
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(validatedValue),
+          identifier = ProjectIdentifierADM.Iri(value),
           requestingUser = requestingUser
         )
 
@@ -245,10 +241,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ShortName.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(validatedValue),
+          identifier = ProjectIdentifierADM.Shortname(value),
           requestingUser = requestingUser
         )
 
@@ -273,10 +267,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ShortCode.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode(validatedValue),
+          identifier = ProjectIdentifierADM.Shortcode(value),
           requestingUser = requestingUser
         )
 
@@ -365,10 +357,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ProjectIri.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(validatedValue),
+          identifier = ProjectIdentifierADM.Iri(value),
           requestingUser = requestingUser
         )
 
@@ -395,8 +385,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          // validatedValue = Base64Uuid.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectMembersGetRequestADM(
           identifier = ProjectIdentifierADM.Uuid(iri),
           requestingUser = requestingUser
@@ -422,10 +410,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               requestContext = requestContext,
                               routeData.appConfig
                             )
-          validatedValue = ShortName.make(value).fold(e => throw e.head, v => v)
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(validatedValue),
+          identifier = ProjectIdentifierADM.Shortname(value),
           requestingUser = requestingUser
         )
 
@@ -450,10 +437,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ShortCode.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode(validatedValue),
+          identifier = ProjectIdentifierADM.Shortcode(value),
           requestingUser = requestingUser
         )
 
@@ -478,10 +463,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ProjectIri.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(validatedValue),
+          identifier = ProjectIdentifierADM.Iri(value),
           requestingUser = requestingUser
         )
 
@@ -506,10 +489,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ShortName.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(validatedValue),
+          identifier = ProjectIdentifierADM.Shortname(value),
           requestingUser = requestingUser
         )
 
@@ -534,10 +515,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ShortCode.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode(validatedValue),
+          identifier = ProjectIdentifierADM.Shortcode(value),
           requestingUser = requestingUser
         )
 
@@ -562,10 +541,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ProjectIri.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(validatedValue),
+          identifier = ProjectIdentifierADM.Iri(value),
           requestingUser = requestingUser
         )
 
@@ -590,10 +567,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ShortName.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(validatedValue),
+          identifier = ProjectIdentifierADM.Shortname(value),
           requestingUser = requestingUser
         )
 
@@ -618,10 +593,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-          validatedValue = ShortCode.make(value).fold(e => throw e.head, v => v)
-
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode(validatedValue),
+          identifier = ProjectIdentifierADM.Shortcode(value),
           requestingUser = requestingUser
         )
 
@@ -652,9 +625,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   private def getProjectDataEntity(projectIri: IRI): Route = { requestContext =>
-    val validatedValue    = ProjectIri.make(projectIri).fold(e => throw e.head, v => v)
-    val projectIdentifier = ProjectIdentifierADM.Iri(validatedValue)
-
+    val projectIdentifier = ProjectIdentifierADM.Iri(projectIri)
     val httpEntityFuture: Future[HttpEntity.Chunked] = for {
       requestingUser <- getUserADM(
                           requestContext = requestContext,

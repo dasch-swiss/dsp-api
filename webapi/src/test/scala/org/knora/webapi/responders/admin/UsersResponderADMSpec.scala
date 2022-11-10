@@ -15,7 +15,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import org.knora.webapi._
@@ -51,9 +50,6 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  val imagesProjectIri     = ProjectIri.make(imagesProject.id).fold(e => throw e.head, v => v)
-  val incunabulaProjectIri = ProjectIri.make(incunabulaProject.id).fold(e => throw e.head, v => v)
 
   "The UsersResponder " when {
     "asked about all users" should {
@@ -561,7 +557,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Iri(imagesProjectIri),
+          ProjectIdentifierADM.Iri(imagesProject.id),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
 
@@ -599,7 +595,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // check that the user was not added to the project
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Iri(incunabulaProjectIri),
+          ProjectIdentifierADM.Iri(incunabulaProject.id),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -630,7 +626,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         )
 
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Iri(incunabulaProjectIri),
+          ProjectIdentifierADM.Iri(incunabulaProject.id),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -692,7 +688,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // also check that the user has been removed from the project's list of users
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Iri(imagesProjectIri),
+          ProjectIdentifierADM.Iri(imagesProject.id),
           requestingUser = rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -801,7 +797,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // get project admins for images project (should contain normal user)
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM.Iri(imagesProjectIri),
+          ProjectIdentifierADM.Iri(imagesProject.id),
           requestingUser = rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -835,7 +831,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         membershipsAfterUpdate.projects should equal(Seq())
 
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM.Iri(imagesProjectIri),
+          ProjectIdentifierADM.Iri(imagesProject.id),
           requestingUser = rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)

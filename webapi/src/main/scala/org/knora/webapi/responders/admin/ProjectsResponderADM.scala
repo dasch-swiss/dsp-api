@@ -19,7 +19,6 @@ import scala.util.Success
 import scala.util.Try
 
 import dsp.errors._
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
@@ -264,7 +263,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       project = maybeProject match {
                   case Some(p) => p
-                  case None    => throw NotFoundException(s"Project '${identifier}' not found")
+                  case None    => throw NotFoundException(s"Project '${getId(identifier)}' not found")
                 }
     } yield ProjectGetResponseADM(
       project = project
@@ -292,7 +291,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       _ =
         if (project.isEmpty) {
-          throw NotFoundException(s"Project '${identifier}' not found.")
+          throw NotFoundException(s"Project '${getId(identifier)}' not found.")
         } else {
           if (
             !requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(
@@ -374,7 +373,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       _ =
         if (project.isEmpty) {
-          throw NotFoundException(s"Project '${identifier}' not found.")
+          throw NotFoundException(s"Project '${getId(identifier)}' not found.")
         } else {
           if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id)) {
             throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
@@ -461,8 +460,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
-                        identifier =
-                          ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
+                        identifier = ProjectIdentifierADM.Iri(projectIri)
                       )
 
       keywords: Seq[String] = maybeProject match {
@@ -575,7 +573,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                           )
 
       project: ProjectADM = maybeProject.getOrElse(
-                              throw NotFoundException(s"Project '${projectIdentifier}' not found.")
+                              throw NotFoundException(s"Project '${getId(projectIdentifier)}' not found.")
                             )
 
       // Check that the user has permission to download the data.
@@ -849,7 +847,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     for {
       maybeCurrentProject: Option[ProjectADM] <-
         getSingleProjectADM(
-          identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v)),
+          identifier = ProjectIdentifierADM.Iri(projectIri),
           skipCache = true
         )
 
@@ -885,7 +883,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       /* Verify that the project was updated. */
       maybeUpdatedProject <-
         getSingleProjectADM(
-          identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v)),
+          identifier = ProjectIdentifierADM.Iri(projectIri),
           skipCache = true
         )
 
@@ -1129,7 +1127,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // try to retrieve newly created project (will also add to cache)
         maybeNewProjectADM <-
           getSingleProjectADM(
-            identifier = ProjectIdentifierADM.Iri(ProjectIri.make(newProjectIRI).fold(e => throw e.head, v => v)),
+            identifier = ProjectIdentifierADM.Iri(newProjectIRI),
             skipCache = true
           )
 

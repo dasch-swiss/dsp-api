@@ -942,7 +942,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         appActor
           .ask(
             ProjectGetADM(
-              identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri.value).fold(e => throw e.head, v => v))
+              identifier = ProjectIdentifierADM.Iri(projectIri.value)
             )
           )
           .mapTo[Option[ProjectADM]]
@@ -2268,7 +2268,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       maybeProject <- appActor
                         .ask(
                           ProjectGetADM(
-                            ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
+                            ProjectIdentifierADM.Iri(projectIri)
                           )
                         )
                         .mapTo[Option[ProjectADM]]

@@ -13,7 +13,6 @@ import scala.concurrent.Future
 
 import dsp.errors._
 import dsp.valueobjects.Group.GroupStatus
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -115,9 +114,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               appActor
                 .ask(
                   ProjectGetADM(
-                    identifier = ProjectIdentifierADM.Iri(
-                      ProjectIri.make(projectIri).fold(e => throw e.head, v => v)
-                    )
+                    identifier = ProjectIdentifierADM.Iri(projectIri)
                   )
                 )
                 .mapTo[Option[ProjectADM]]
@@ -434,7 +431,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri(ProjectIri.make(iri).fold(e => throw e.head, v => v))
+                identifier = ProjectIdentifierADM.Iri(iri)
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -785,7 +782,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
+                identifier = ProjectIdentifierADM.Iri(projectIri)
               )
             )
             .mapTo[Option[ProjectADM]]

@@ -13,7 +13,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent._
 import scala.concurrent.duration._
 
-import dsp.valueobjects.Project.ShortCode
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -240,9 +239,7 @@ object QueryTraverser {
                     appActor
                       .ask(
                         ProjectGetADM(
-                          ProjectIdentifierADM.Shortcode(
-                            ShortCode.make(shortcode).fold(e => throw e.head, v => v.get)
-                          )
+                          ProjectIdentifierADM.Shortcode(shortcode.toString)
                         )
                       )(Duration(100, SECONDS))
                       .mapTo[Option[ProjectADM]]

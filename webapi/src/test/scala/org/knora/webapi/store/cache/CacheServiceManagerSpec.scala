@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.cache
 
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Project._
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -55,30 +53,20 @@ class CacheServiceManagerSpec extends CoreSpec {
     }
 
     "successfully retrieve a project by IRI" in {
-      for {
-        iri <- Iri.ProjectIri.make(project.id)
-      } yield {
-        appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Iri(iri))
-        expectMsg(Some(project))
-      }
+      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Iri(project.id))
+      expectMsg(Some(project))
+
     }
 
     "successfully retrieve a project by SHORTNAME" in {
-      for {
-        shortname <- ShortName.make(project.shortname)
-      } yield {
-        appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Shortname(shortname))
-        expectMsg(Some(project))
-      }
+      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Shortname(project.shortname))
+      expectMsg(Some(project))
+
     }
 
     "successfully retrieve a project by SHORTCODE" in {
-      for {
-        shortcode <- ShortCode.make(project.shortcode)
-      } yield {
-        appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Shortcode(shortcode))
-        expectMsg(Some(project))
-      }
+      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.Shortcode(project.shortcode))
+      expectMsg(Some(project))
     }
   }
 }

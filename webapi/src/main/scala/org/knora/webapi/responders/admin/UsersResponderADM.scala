@@ -15,7 +15,6 @@ import scala.concurrent.Future
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
-import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.User._
 import org.knora.webapi._
 import org.knora.webapi.instrumentation.InstrumentationSupport
@@ -914,7 +913,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
+                identifier = ProjectIdentifierADM.Iri(projectIri)
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -1951,7 +1950,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             appActor
               .ask(
                 ProjectGetADM(
-                  identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v))
+                  identifier = ProjectIdentifierADM.Iri(projectIri)
                 )
               )
               .mapTo[Option[ProjectADM]]

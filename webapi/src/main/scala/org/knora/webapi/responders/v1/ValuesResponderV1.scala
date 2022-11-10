@@ -13,7 +13,6 @@ import scala.concurrent.Future
 
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -840,9 +839,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(
-                ProjectIri.make(resourceInfoResponse.resource_info.get.project_id).fold(e => throw e.head, v => v)
-              ),
+              identifier = ProjectIdentifierADM.Iri(resourceInfoResponse.resource_info.get.project_id),
               requestingUser = changeFileValueRequest.userProfile
             )
           )

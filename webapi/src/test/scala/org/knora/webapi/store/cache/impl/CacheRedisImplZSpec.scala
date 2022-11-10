@@ -9,8 +9,6 @@ import zio._
 import zio.test.Assertion._
 import zio.test._
 
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Project._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -69,23 +67,20 @@ object CacheRedisImplZSpec extends ZIOSpecDefault {
   val projectTests = suite("CacheRedisImplSpec - project")(
     test("successfully store a project and retrieve by IRI")(
       for {
-        iri              <- Iri.ProjectIri.make(project.id).toZIO
         _                <- CacheService.putProjectADM(project)
-        retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Iri(iri))
+        retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Iri(project.id))
       } yield assert(retrievedProject)(equalTo(Some(project)))
     ) +
       test("successfully store a project and retrieve by SHORTCODE")(
         for {
-          shortcode        <- ShortCode.make(project.shortcode).toZIO
           _                <- CacheService.putProjectADM(project)
-          retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Shortcode(shortcode))
+          retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Shortcode(project.shortcode))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       ) +
       test("successfully store a project and retrieve by SHORTNAME")(
         for {
-          shortname        <- ShortName.make(project.shortname).toZIO
           _                <- CacheService.putProjectADM(project)
-          retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Shortname(shortname))
+          retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Shortname(project.shortname))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       )
   )

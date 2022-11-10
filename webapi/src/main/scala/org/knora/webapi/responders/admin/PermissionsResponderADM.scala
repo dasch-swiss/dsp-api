@@ -14,7 +14,6 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 
 import dsp.errors._
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -698,8 +697,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier =
-                  ProjectIdentifierADM.Iri(ProjectIri.make(createRequest.forProject).fold(e => throw e.head, v => v))
+                identifier = ProjectIdentifierADM.Iri(createRequest.forProject)
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -1636,8 +1634,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier =
-                  ProjectIdentifierADM.Iri(ProjectIri.make(createRequest.forProject).fold(e => throw e.head, v => v))
+                identifier = ProjectIdentifierADM.Iri(createRequest.forProject)
               )
             )
             .mapTo[Option[ProjectADM]]

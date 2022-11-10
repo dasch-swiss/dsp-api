@@ -16,7 +16,6 @@ import scala.util.Success
 
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -2677,13 +2676,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM
-                .Iri(
-                  ProjectIri.make(projectResourceHistoryEventsGetRequest.projectIri).fold(e => throw e.head, v => v)
-                ),
-              // ProjectIdentifierADM(maybeIri =
-              // Some(projectResourceHistoryEventsGetRequest.projectIri)
-              // ),
+              identifier = ProjectIdentifierADM.Iri(projectResourceHistoryEventsGetRequest.projectIri),
               requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
             )
           )

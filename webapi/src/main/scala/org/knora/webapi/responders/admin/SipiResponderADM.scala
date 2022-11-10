@@ -12,7 +12,6 @@ import scala.concurrent.Future
 
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.Project.ShortCode
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
@@ -123,9 +122,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                           appActor
                             .ask(
                               ProjectRestrictedViewSettingsGetADM(
-                                identifier = ProjectIdentifierADM.Shortcode(
-                                  ShortCode.make(request.projectID).fold(e => throw e.head, v => v)
-                                ),
+                                identifier = ProjectIdentifierADM.Shortcode(request.projectID),
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                               )
                             )

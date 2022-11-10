@@ -18,7 +18,6 @@ import scala.concurrent.Future
 import dsp.errors.AssertionException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -1571,8 +1570,7 @@ object ConstructResponseUtilV2 {
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier =
-                ProjectIdentifierADM.Iri(ProjectIri.make(resourceAttachedToProject).fold(e => throw e.head, v => v)),
+              identifier = ProjectIdentifierADM.Iri(resourceAttachedToProject),
               requestingUser = requestingUser
             )
           )

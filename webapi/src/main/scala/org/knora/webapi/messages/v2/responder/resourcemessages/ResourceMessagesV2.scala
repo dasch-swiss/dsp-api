@@ -16,7 +16,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors._
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -703,8 +702,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier =
-                ProjectIdentifierADM.Iri(ProjectIri.make(projectIri.toString).fold(e => throw e.head, v => v)),
+              identifier = ProjectIdentifierADM.Iri(projectIri.toString),
               requestingUser = requestingUser
             )
           )

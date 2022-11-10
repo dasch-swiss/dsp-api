@@ -18,7 +18,6 @@ import scala.util.Try
 import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -1587,7 +1586,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v)),
+              identifier = ProjectIdentifierADM.Iri(projectIri),
               requestingUser = requestingUser
             )
           )
@@ -2463,7 +2462,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(ProjectIri.make(projectIri).fold(e => throw e.head, v => v)),
+              identifier = ProjectIdentifierADM.Iri(projectIri),
               requestingUser = userProfile
             )
           )

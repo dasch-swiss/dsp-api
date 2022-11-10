@@ -119,9 +119,9 @@ case class CacheServiceInMemImpl(
    */
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     (identifier match {
-      case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value.value)
-      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcodeOrShortname(value.value)
-      case ProjectIdentifierADM.Shortname(value) => getProjectByShortcodeOrShortname(value.value)
+      case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value)
+      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcodeOrShortname(value)
+      case ProjectIdentifierADM.Shortname(value) => getProjectByShortcodeOrShortname(value)
       case ProjectIdentifierADM.Uuid(value)      => getProjectByIri(value)
     }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
 

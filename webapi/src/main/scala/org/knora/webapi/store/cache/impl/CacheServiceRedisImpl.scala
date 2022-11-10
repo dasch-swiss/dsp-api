@@ -112,9 +112,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     // The data is stored under the Iri
     // Additionally, the Shortcode, Shortname and Uuid point to the Iri
     identifier match {
-      case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value.value)
-      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcodeOrShortname(value.value)
-      case ProjectIdentifierADM.Shortname(value) => getProjectByShortcodeOrShortname(value.value)
+      case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value)
+      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcodeOrShortname(value)
+      case ProjectIdentifierADM.Shortname(value) => getProjectByShortcodeOrShortname(value)
       case ProjectIdentifierADM.Uuid(value)      => getProjectByIri(value)
     }
 
