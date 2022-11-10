@@ -72,23 +72,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   )
 
   /**
-   * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
-   */
-  def receive(message: ResourcesResponderRequestV2): Future[Product] = message match {
-    case msg: ResourcesGetRequestV2                   => getResourcesV2(msg)
-    case msg: ResourcesPreviewGetRequestV2            => getResourcePreviewV2(msg)
-    case msg: ResourceTEIGetRequestV2                 => getResourceAsTeiV2(msg)
-    case msg: CreateResourceRequestV2                 => createResourceV2(msg)
-    case msg: UpdateResourceMetadataRequestV2         => updateResourceMetadataV2(msg)
-    case msg: DeleteOrEraseResourceRequestV2          => deleteOrEraseResourceV2(msg)
-    case msg: GraphDataGetRequestV2                   => getGraphDataResponseV2(msg)
-    case msg: ResourceVersionHistoryGetRequestV2      => getResourceHistoryV2(msg)
-    case msg: ResourceIIIFManifestGetRequestV2        => getIIIFManifestV2(msg)
-    case msg: ResourceHistoryEventsGetRequestV2       => getResourceHistoryEvents(msg)
-    case msg: ProjectResourcesWithHistoryGetRequestV2 => getProjectResourceHistoryEvents(msg)
-  }
-
-  /**
    * Creates a new resource.
    *
    * @param createResourceRequestV2 the request to create the resource.
