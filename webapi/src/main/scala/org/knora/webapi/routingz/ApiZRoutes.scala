@@ -56,6 +56,13 @@ private final case class ApiZRoutesImpl(routeData: KnoraRouteData, runtime: Runt
     extends ApiZRoutes
     with AroundDirectives {
 
+  /**
+   * Needed middleware for the following directives:
+   * - logDuration
+   * - ServerVersion.addServerHeader
+   * - DSPApiDirectives.handleErrors
+   * - CorsDirectives.cors(CorsSettings(routeData.system))
+   */
   val routes =
     logDuration {
       ServerVersion.addServerHeader {
