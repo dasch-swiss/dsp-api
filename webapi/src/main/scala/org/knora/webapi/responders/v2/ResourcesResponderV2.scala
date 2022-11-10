@@ -7,61 +7,53 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  DefaultObjectAccessPermissionsStringForResourceClassGetADM,
+  DefaultObjectAccessPermissionsStringResponseADM,
+  ResourceCreateOperation
+}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
+import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
-import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
-import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
-import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
+import org.knora.webapi.messages.util.PermissionUtilADM.{
+  AGreaterThanB,
+  DeletePermission,
+  ModifyPermission,
+  PermissionComparisonResult
+}
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.JsonLDArray
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDInt
-import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.util.rdf.JsonLDObject
-import org.knora.webapi.messages.util.rdf.JsonLDString
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.{
+  GetMappingRequestV2,
+  GetMappingResponseV2,
+  GetXSLTransformationRequestV2,
+  GetXSLTransformationResponseV2
+}
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
@@ -82,75 +74,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   /**
    * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: ResourcesResponderRequestV2) = msg match {
-    case ResourcesGetRequestV2(
-          resIris,
-          propertyIri,
-          valueUuid,
-          versionDate,
-          withDeleted,
-          targetSchema,
-          schemaOptions,
-          requestingUser
-        ) =>
-      getResourcesV2(
-        resIris,
-        propertyIri,
-        valueUuid,
-        versionDate,
-        withDeleted,
-        showDeletedValues = false,
-        targetSchema,
-        schemaOptions,
-        requestingUser
-      )
-    case ResourcesPreviewGetRequestV2(
-          resIris,
-          withDeletedResource,
-          targetSchema,
-          requestingUser
-        ) =>
-      getResourcePreviewV2(resIris, withDeletedResource, targetSchema, requestingUser)
-    case ResourceTEIGetRequestV2(
-          resIri,
-          textProperty,
-          mappingIri,
-          gravsearchTemplateIri,
-          headerXSLTIri,
-          requestingUser
-        ) =>
-      getResourceAsTeiV2(
-        resIri,
-        textProperty,
-        mappingIri,
-        gravsearchTemplateIri,
-        headerXSLTIri,
-        requestingUser
-      )
-
-    case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
-
-    case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 =>
-      updateResourceMetadataV2(updateResourceMetadataRequestV2)
-
-    case deleteOrEraseResourceRequestV2: DeleteOrEraseResourceRequestV2 =>
-      deleteOrEraseResourceV2(deleteOrEraseResourceRequestV2)
-
-    case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
-
-    case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 =>
-      getResourceHistoryV2(resourceHistoryRequest)
-
-    case resourceIIIFManifestRequest: ResourceIIIFManifestGetRequestV2 => getIIIFManifestV2(resourceIIIFManifestRequest)
-
-    case resourceHistoryEventsRequest: ResourceHistoryEventsGetRequestV2 =>
-      getResourceHistoryEvents(resourceHistoryEventsRequest)
-
-    case projectHistoryEventsRequestV2: ProjectResourcesWithHistoryGetRequestV2 =>
-      getProjectResourceHistoryEvents(projectHistoryEventsRequestV2)
-
-    case other =>
-      handleUnexpectedMessage(other, log, this.getClass.getName)
+  def receive(message: ResourcesResponderRequestV2): Future[Product] = message match {
+    case msg: ResourcesGetRequestV2                   => getResourcesV2(msg)
+    case msg: ResourcesPreviewGetRequestV2            => getResourcePreviewV2(msg)
+    case msg: ResourceTEIGetRequestV2                 => getResourceAsTeiV2(msg)
+    case msg: CreateResourceRequestV2                 => createResourceV2(msg)
+    case msg: UpdateResourceMetadataRequestV2         => updateResourceMetadataV2(msg)
+    case msg: DeleteOrEraseResourceRequestV2          => deleteOrEraseResourceV2(msg)
+    case msg: GraphDataGetRequestV2                   => getGraphDataResponseV2(msg)
+    case msg: ResourceVersionHistoryGetRequestV2      => getResourceHistoryV2(msg)
+    case msg: ResourceIIIFManifestGetRequestV2        => getIIIFManifestV2(msg)
+    case msg: ResourceHistoryEventsGetRequestV2       => getResourceHistoryEvents(msg)
+    case msg: ProjectResourcesWithHistoryGetRequestV2 => getProjectResourceHistoryEvents(msg)
   }
 
   /**
@@ -159,7 +94,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param createResourceRequestV2 the request to create the resource.
    * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
    */
-  private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
+  def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
 
     def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
       for {
@@ -387,7 +322,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param updateResourceMetadataRequestV2 the update request.
    * @return a [[UpdateResourceMetadataResponseV2]].
    */
-  private def updateResourceMetadataV2(
+  def updateResourceMetadataV2(
     updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2
   ): Future[UpdateResourceMetadataResponseV2] = {
     def makeTaskFuture: Future[UpdateResourceMetadataResponseV2] = {
@@ -539,7 +474,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param deleteOrEraseResourceV2 the request message.
    */
-  private def deleteOrEraseResourceV2(
+  def deleteOrEraseResourceV2(
     deleteOrEraseResourceV2: DeleteOrEraseResourceRequestV2
   ): Future[SuccessResponseV2] =
     if (deleteOrEraseResourceV2.erase) {
@@ -1168,7 +1103,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                   // it does have isRootNode property - it's a root node
                   case Right(true) =>
                     throw BadRequestException(
-                      s"<${listNodeIri}> is a root node. Root nodes cannot be set as values."
+                      s"<$listNodeIri> is a root node. Root nodes cannot be set as values."
                     )
                   // it deosn't exists or isn't valid list
                   case Left(_) =>
@@ -1538,6 +1473,19 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
   }
 
+  def getResourcesV2(msg: ResourcesGetRequestV2): Future[ReadResourcesSequenceV2] =
+    getResourcesV2(
+      msg.resourceIris,
+      msg.propertyIri,
+      msg.valueUuid,
+      msg.versionDate,
+      msg.withDeleted,
+      showDeletedValues = false,
+      msg.targetSchema,
+      msg.schemaOptions,
+      msg.requestingUser
+    )
+
   /**
    * Get one or several resources and return them as a sequence.
    *
@@ -1545,7 +1493,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param propertyIri          if defined, requests only the values of the specified explicit property.
    * @param valueUuid            if defined, requests only the value with the specified UUID.
    * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
-   * @param withDeleted          if defined, indicates if the deleted resource and values should be returned or not.
+   * @param showDeletedResources if defined, indicates if the deleted resource should be returned or not.
+   * @param showDeletedValues    if defined, indicates if the deleted values should be returned or not.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
    *
@@ -1557,7 +1506,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
-    withDeleted: Boolean = true,
+    showDeletedResources: Boolean = true,
     showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
@@ -1577,7 +1526,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         getResourcesFromTriplestore(
           resourceIris = resourceIris,
           preview = false,
-          withDeleted = withDeleted,
+          withDeleted = showDeletedResources,
           propertyIri = propertyIri,
           valueUuid = valueUuid,
           versionDate = versionDate,
@@ -1653,8 +1602,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                              }
 
     } yield responseWithDeletedResourcesReplaced
-
   }
+
+  def getResourcePreviewV2(msg: ResourcesPreviewGetRequestV2): Future[ReadResourcesSequenceV2] =
+    getResourcePreviewV2(msg.resourceIris, msg.withDeletedResource, msg.targetSchema, msg.requestingUser)
 
   /**
    * Get the preview of a resource.
@@ -1811,6 +1762,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     } yield gravsearchTemplate
 
   }
+
+  def getResourceAsTeiV2(msg: ResourceTEIGetRequestV2): Future[ResourceTEIGetResponseV2] =
+    getResourceAsTeiV2(
+      msg.resourceIri,
+      msg.textProperty,
+      msg.mappingIri,
+      msg.gravsearchTemplateIri,
+      msg.headerXSLTIri,
+      msg.requestingUser
+    )
 
   /**
    * Returns a resource as TEI/XML.
@@ -2090,7 +2051,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param graphDataGetRequest a [[GraphDataGetRequestV2]] specifying the characteristics of the graph.
    * @return a [[GraphDataGetResponseV2]] representing the requested graph.
    */
-  private def getGraphDataResponseV2(graphDataGetRequest: GraphDataGetRequestV2): Future[GraphDataGetResponseV2] = {
+  def getGraphDataResponseV2(graphDataGetRequest: GraphDataGetRequestV2): Future[GraphDataGetResponseV2] = {
     val excludePropertyInternal = graphDataGetRequest.excludeProperty.map(_.toOntologySchema(InternalSchema))
 
     /**
