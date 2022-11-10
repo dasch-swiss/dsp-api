@@ -5,12 +5,8 @@
 
 package org.knora.webapi.core.actors
 
-import akka.actor.Actor
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorSystem}
 import com.typesafe.scalalogging.Logger
-
-import scala.concurrent.ExecutionContext
-
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
@@ -35,37 +31,33 @@ import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequest
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.messages.v2.responder.listsmessages.ListsResponderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.{
+  CreateResourceRequestV2,
+  DeleteOrEraseResourceRequestV2,
+  GraphDataGetRequestV2,
+  ProjectResourcesWithHistoryGetRequestV2,
+  ResourceHistoryEventsGetRequestV2,
+  ResourceIIIFManifestGetRequestV2,
+  ResourceTEIGetRequestV2,
+  ResourceVersionHistoryGetRequestV2,
+  ResourcesGetRequestV2,
+  ResourcesPreviewGetRequestV2,
+  ResourcesResponderRequestV2,
+  UpdateResourceMetadataRequestV2
+}
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
-import org.knora.webapi.responders.admin.GroupsResponderADM
-import org.knora.webapi.responders.admin.ListsResponderADM
-import org.knora.webapi.responders.admin.PermissionsResponderADM
-import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.responders.admin.SipiResponderADM
-import org.knora.webapi.responders.admin.StoresResponderADM
-import org.knora.webapi.responders.admin.UsersResponderADM
-import org.knora.webapi.responders.v1.CkanResponderV1
-import org.knora.webapi.responders.v1.ListsResponderV1
-import org.knora.webapi.responders.v1.OntologyResponderV1
-import org.knora.webapi.responders.v1.ProjectsResponderV1
-import org.knora.webapi.responders.v1.ResourcesResponderV1
-import org.knora.webapi.responders.v1.SearchResponderV1
-import org.knora.webapi.responders.v1.StandoffResponderV1
-import org.knora.webapi.responders.v1.UsersResponderV1
-import org.knora.webapi.responders.v1.ValuesResponderV1
-import org.knora.webapi.responders.v2.ListsResponderV2
-import org.knora.webapi.responders.v2.OntologyResponderV2
-import org.knora.webapi.responders.v2.ResourcesResponderV2
-import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.responders.v2.StandoffResponderV2
-import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.responders.admin._
+import org.knora.webapi.responders.v1._
+import org.knora.webapi.responders.v2._
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.util.ActorUtil
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class RoutingActor(
   cacheServiceManager: CacheServiceManager,
@@ -121,67 +113,59 @@ class RoutingActor(
   val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData)
   val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
 
+  private def future2Message(fut: Future[Any]): Unit  = ActorUtil.future2Message(sender(), fut, log)
+  private def zio2Message[A](task: zio.Task[A]): Unit = ActorUtil.zio2Message(sender(), task, log, runtime)
   def receive: Receive = {
-
     // V1 request messages
-    case ckanResponderRequestV1: CkanResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), ckanResponderV1.receive(ckanResponderRequestV1), log)
-    case resourcesResponderRequestV1: ResourcesResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), resourcesResponderV1.receive(resourcesResponderRequestV1), log)
-    case valuesResponderRequestV1: ValuesResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), valuesResponderV1.receive(valuesResponderRequestV1), log)
-    case listsResponderRequestV1: ListsResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), listsResponderV1.receive(listsResponderRequestV1), log)
-    case searchResponderRequestV1: SearchResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), searchResponderV1.receive(searchResponderRequestV1), log)
-    case ontologyResponderRequestV1: OntologyResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), ontologyResponderV1.receive(ontologyResponderRequestV1), log)
-    case standoffResponderRequestV1: StandoffResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), standoffResponderV1.receive(standoffResponderRequestV1), log)
-    case usersResponderRequestV1: UsersResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), usersResponderV1.receive(usersResponderRequestV1), log)
-    case projectsResponderRequestV1: ProjectsResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), projectsResponderV1.receive(projectsResponderRequestV1), log)
+    case m: CkanResponderRequestV1      => future2Message(ckanResponderV1.receive(m))
+    case m: ResourcesResponderRequestV1 => future2Message(resourcesResponderV1.receive(m))
+    case m: ValuesResponderRequestV1    => future2Message(valuesResponderV1.receive(m))
+    case m: ListsResponderRequestV1     => future2Message(listsResponderV1.receive(m))
+    case m: SearchResponderRequestV1    => future2Message(searchResponderV1.receive(m))
+    case m: OntologyResponderRequestV1  => future2Message(ontologyResponderV1.receive(m))
+    case m: StandoffResponderRequestV1  => future2Message(standoffResponderV1.receive(m))
+    case m: UsersResponderRequestV1     => future2Message(usersResponderV1.receive(m))
+    case m: ProjectsResponderRequestV1  => future2Message(projectsResponderV1.receive(m))
 
     // V2 request messages
-    case ontologiesResponderRequestV2: OntologiesResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), ontologiesResponderV2.receive(ontologiesResponderRequestV2), log)
-    case searchResponderRequestV2: SearchResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), searchResponderV2.receive(searchResponderRequestV2), log)
-    case resourcesResponderRequestV2: ResourcesResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), resourcesResponderV2.receive(resourcesResponderRequestV2), log)
-    case valuesResponderRequestV2: ValuesResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), valuesResponderV2.receive(valuesResponderRequestV2), log)
-    case standoffResponderRequestV2: StandoffResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), standoffResponderV2.receive(standoffResponderRequestV2), log)
-    case listsResponderRequestV2: ListsResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
+    case m: OntologiesResponderRequestV2 => future2Message(ontologiesResponderV2.receive(m))
+    case m: SearchResponderRequestV2     => future2Message(searchResponderV2.receive(m))
+    case m: ResourcesResponderRequestV2  => routeToResourceResponder(m)
+    case m: ValuesResponderRequestV2     => future2Message(valuesResponderV2.receive(m))
+    case m: StandoffResponderRequestV2   => future2Message(standoffResponderV2.receive(m))
+    case m: ListsResponderRequestV2      => future2Message(listsResponderV2.receive(m))
 
     // Admin request messages
-    case groupsResponderRequestADM: GroupsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), groupsResponderADM.receive(groupsResponderRequestADM), log)
-    case listsResponderRequest: ListsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), listsResponderADM.receive(listsResponderRequest), log)
-    case permissionsResponderRequestADM: PermissionsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), permissionsResponderADM.receive(permissionsResponderRequestADM), log)
-    case projectsResponderRequestADM: ProjectsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), projectsResponderADM.receive(projectsResponderRequestADM), log)
-    case storeResponderRequestADM: StoreResponderRequestADM =>
-      ActorUtil.future2Message(sender(), storeResponderADM.receive(storeResponderRequestADM), log)
-    case usersResponderRequestADM: UsersResponderRequestADM =>
-      ActorUtil.future2Message(sender(), usersResponderADM.receive(usersResponderRequestADM), log)
-    case sipiResponderRequestADM: SipiResponderRequestADM =>
-      ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
-    case msg: CacheServiceRequest =>
-      ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), appConfig, log, runtime)
-    case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), appConfig, log, runtime)
-    case msg: TriplestoreRequest =>
-      ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), appConfig, log, runtime)
+    case m: GroupsResponderRequestADM      => future2Message(groupsResponderADM.receive(m))
+    case m: ListsResponderRequestADM       => future2Message(listsResponderADM.receive(m))
+    case m: PermissionsResponderRequestADM => future2Message(permissionsResponderADM.receive(m))
+    case m: ProjectsResponderRequestADM    => future2Message(projectsResponderADM.receive(m))
+    case m: StoreResponderRequestADM       => future2Message(storeResponderADM.receive(m))
+    case m: UsersResponderRequestADM       => future2Message(usersResponderADM.receive(m))
+    case m: SipiResponderRequestADM        => future2Message(sipiRouterADM.receive(m))
+    case m: CacheServiceRequest            => zio2Message(cacheServiceManager.receive(m))
+    case m: IIIFRequest                    => zio2Message(iiifServiceManager.receive(m))
+    case m: TriplestoreRequest             => zio2Message(triplestoreManager.receive(m))
 
     case other =>
       throw UnexpectedMessageException(
         s"RoutingActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
       )
   }
-
+  private def routeToResourceResponder(message: ResourcesResponderRequestV2): Unit = {
+    val future = message match {
+      case m: ResourcesGetRequestV2                   => resourcesResponderV2.getResourcesV2(m)
+      case m: ResourcesPreviewGetRequestV2            => resourcesResponderV2.getResourcePreviewV2(m)
+      case m: ResourceTEIGetRequestV2                 => resourcesResponderV2.getResourceAsTeiV2(m)
+      case m: CreateResourceRequestV2                 => resourcesResponderV2.createResourceV2(m)
+      case m: UpdateResourceMetadataRequestV2         => resourcesResponderV2.updateResourceMetadataV2(m)
+      case m: DeleteOrEraseResourceRequestV2          => resourcesResponderV2.deleteOrEraseResourceV2(m)
+      case m: GraphDataGetRequestV2                   => resourcesResponderV2.getGraphDataResponseV2(m)
+      case m: ResourceVersionHistoryGetRequestV2      => resourcesResponderV2.getResourceHistoryV2(m)
+      case m: ResourceIIIFManifestGetRequestV2        => resourcesResponderV2.getIIIFManifestV2(m)
+      case m: ResourceHistoryEventsGetRequestV2       => resourcesResponderV2.getResourceHistoryEvents(m)
+      case m: ProjectResourcesWithHistoryGetRequestV2 => resourcesResponderV2.getProjectResourceHistoryEvents(m)
+    }
+    future2Message(future)
+  }
 }
