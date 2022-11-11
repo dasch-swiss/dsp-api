@@ -225,14 +225,21 @@ object V2UuidValidation {
     getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
 
   /**
-   * Gets the last segment of IRI, decodes UUID and gets the version.
-   * @param s the string (IRI) to be checked.
+   * Gets the last segment of IRI, decodes UUID and gets its version.
+   * @param s the IRI [[String]] to be checked.
    * @return UUID version.
    */
   def getUUIDVersion(s: String): Int = {
-    val encodedUUID = s.split("/").last
+    val encodedUUID = getUuidFromIri(s)
     decodeUuid(encodedUUID).version()
   }
+
+  /**
+   * Gets the last IRI segment - Base64 encoded UUID
+   * @param iri the IRI [[String]] to get the UUID from.
+   * @return Base64 encoded UUID as [[String]]
+   */
+  def getUuidFromIri(iri: String): String = iri.split("/").last
 
   /**
    * Calls `decodeUuidWithErr`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
