@@ -205,9 +205,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     } yield result
 
   /**
-   * Gets the project with the given project IRI, shortname, or shortcode and returns the information as a [[ProjectADM]].
+   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
    *
-   * @param identifier           the IRI, shortname, or shortcode of the project.
+   * @param identifier           the IRI, shortname, shortcode or UUID of the project.
    * @param skipCache            if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
    * @return information about the project as an optional [[ProjectADM]].
    */
@@ -219,7 +219,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       log.debug(
         s"getSingleProjectADM - id: {}, skipCache: {}",
-        identifier,
+        getId(identifier),
         skipCache
       )
 
@@ -235,19 +235,19 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         _ =
           if (maybeProjectADM.nonEmpty) {
-            log.debug("getSingleProjectADM - successfully retrieved project: {}", identifier)
+            log.debug("getSingleProjectADM - successfully retrieved project: {}", getId(identifier))
           } else {
-            log.debug("getSingleProjectADM - could not retrieve project: {}", identifier)
+            log.debug("getSingleProjectADM - could not retrieve project: {}", getId(identifier))
           }
 
       } yield maybeProjectADM
     }
 
   /**
-   * Gets the project with the given project IRI, shortname, or shortcode and returns the information
+   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
    * as a [[ProjectGetResponseADM]].
    *
-   * @param identifier           the IRI, shortname, or shortcode of the project.
+   * @param identifier           the IRI, shortname, shortcode or UUID of the project.
    * @param requestingUser       the user making the request.
    * @return information about the project as a [[ProjectGetResponseADM]].
    * @throws NotFoundException when no project for the given IRI can be found
@@ -270,10 +270,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     )
 
   /**
-   * Gets the members of a project with the given IRI, shortname, oder shortcode. Returns an empty list
+   * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
    * if none are found.
    *
-   * @param identifier           the IRI, shortname, or shortcode of the project.
+   * @param identifier           the IRI, shortname, shortcode or UUID of the project.
    * @param requestingUser       the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
@@ -353,10 +353,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     } yield ProjectMembersGetResponseADM(members = users)
 
   /**
-   * Gets the admin members of a project with the given IRI, shortname, or shortcode. Returns an empty list
+   * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
    * if none are found
    *
-   * @param identifier           the IRI, shortname, or shortcode of the project.
+   * @param identifier           the IRI, shortname, shortcode or UUID of the project.
    * @param requestingUser       the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
@@ -666,7 +666,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   /**
    * Get project's restricted view settings.
    *
-   * @param identifier           the project's identifier (IRI / shortcode / shortname)
+   * @param identifier           the project's identifier (IRI / shortcode / shortname / UUID)
    *
    * @param requestingUser       the user making the request.
    * @return [[ProjectRestrictedViewSettingsADM]]
@@ -1208,8 +1208,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                          .toString()
                      )
 
-      _ = println(1111, identifier, getId(identifier))
-
       projectResponse <- appActor
                            .ask(
                              SparqlExtendedConstructRequest(
@@ -1229,11 +1227,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       maybeProjectADM: Option[ProjectADM] =
         if (projectResponse.statements.nonEmpty) {
-          log.debug("getProjectFromTriplestore - triplestore hit for: {}", identifier)
+          log.debug("getProjectFromTriplestore - triplestore hit for: {}", getId(identifier))
           val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
           Some(statements2ProjectADM(statements = projectResponse.statements.head, ontologies = projectOntologies))
         } else {
-          log.debug("getProjectFromTriplestore - no triplestore hit for: {}", identifier)
+          log.debug("getProjectFromTriplestore - no triplestore hit for: {}", getId(identifier))
           None
         }
     } yield maybeProjectADM
@@ -1356,10 +1354,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     val result = appActor.ask(CacheServiceGetProjectADM(identifier)).mapTo[Option[ProjectADM]]
     result.map {
       case Some(project) =>
-        log.debug("getProjectFromCache - cache hit for: {}", identifier)
+        log.debug("getProjectFromCache - cache hit for: {}", getId(identifier))
         Some(project.unescape)
       case None =>
-        log.debug("getUserProjectCache - no cache hit for: {}", identifier)
+        log.debug("getUserProjectCache - no cache hit for: {}", getId(identifier))
         None
     }
   }

@@ -231,7 +231,7 @@ object QueryTraverser {
             val shortcode = internal.getProjectCode
             shortcode match {
               case None => FastFuture.successful(Seq.empty)
-              case Some(_) => {
+              case Some(value) => {
                 // find the project with the shortcode
 
                 for {
@@ -239,7 +239,7 @@ object QueryTraverser {
                     appActor
                       .ask(
                         ProjectGetADM(
-                          ProjectIdentifierADM.Shortcode(shortcode.toString)
+                          ProjectIdentifierADM.Shortcode(value)
                         )
                       )(Duration(100, SECONDS))
                       .mapTo[Option[ProjectADM]]
