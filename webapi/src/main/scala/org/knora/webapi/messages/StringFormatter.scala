@@ -345,6 +345,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    */
   def toSparql: String
 
+  def toIri: IRI = toString
+
   /**
    * Returns `true` if this is a Knora data or definition IRI.
    */
