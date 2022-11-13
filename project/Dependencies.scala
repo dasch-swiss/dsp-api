@@ -26,7 +26,7 @@ object Dependencies {
   val ZioConfigVersion            = "3.0.2"
   val ZioSchemaVersion            = "0.2.0"
   val ZioLoggingVersion           = "2.1.3"
-  val ZioMetricsConnectorsVersion = "2.0.0"
+  val ZioMetricsConnectorsVersion = "2.0.1"
   val ZioPreludeVersion           = "1.0.0-RC16"
 
   // ZIO - all Scala 3 compatible
