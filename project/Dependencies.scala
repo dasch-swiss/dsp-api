@@ -25,7 +25,7 @@ object Dependencies {
   val ZioJsonVersion              = "0.3.0"
   val ZioConfigVersion            = "3.0.2"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioLoggingVersion           = "2.1.3"
+  val ZioLoggingVersion           = "2.1.4"
   val ZioMetricsConnectorsVersion = "2.0.1"
   val ZioPreludeVersion           = "1.0.0-RC16"
 
@@ -89,8 +89,8 @@ object Dependencies {
   val icu4j           = "com.ibm.icu"                % "icu4j"            % "72.1"
   val jakartaJSON     = "org.glassfish"              % "jakarta.json"     % "2.0.1"
   val jodd            = "org.jodd"                   % "jodd"             % "3.2.7"
-  val rdf4jClient     = "org.eclipse.rdf4j"          % "rdf4j-client"     % "4.2.0"
-  val rdf4jShacl      = "org.eclipse.rdf4j"          % "rdf4j-shacl"      % "4.2.0"
+  val rdf4jClient     = "org.eclipse.rdf4j"          % "rdf4j-client"     % "4.2.1"
+  val rdf4jShacl      = "org.eclipse.rdf4j"          % "rdf4j-shacl"      % "4.2.1"
   val saxonHE         = "net.sf.saxon"               % "Saxon-HE"         % "11.4"
   val scalaGraph      = "org.scala-graph"           %% "graph-core"       % "1.13.5" // Scala 3 incompatible
   val scallop         = "org.rogach"                %% "scallop"          % "4.1.0"  // Scala 3 compatible
