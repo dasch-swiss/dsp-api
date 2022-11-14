@@ -8,26 +8,33 @@ import zhttp.http.Response
 import zio.ZLayer
 import zhttp.service.Server
 import dsp.api.main.DspMiddleware
+import dsp.config.AppConfig
 
 final case class DspServer(
-  userRoutes: UserRoutes
+  userRoutes: UserRoutes,
+  appConfig: AppConfig
 ) {
 
   // adds up the routes of all slices
-  val allRoutes: Http[Any, Throwable, Request, Response] =
+  val dspRoutes: Http[Any, Throwable, Request, Response] =
     userRoutes.routes // ++ projectRoutes.routes
 
-  def start() =
-    for {
-      port <- System.envOrElse("PORT", "4444").map(_.toInt)
-      _    <- Server.start(port, allRoutes @@ DspMiddleware.logging)
-    } yield ()
+  // starts the server with the provided settings from the appConfig
+  def start() = {
+    val port = appConfig.knoraApi.externalPort
+    Server.start(port, dspRoutes @@ DspMiddleware.logging)
+  }
+
+  // for {
+  //   port <- System.envOrElse("PORT", "4444").map(_.toInt)
+  //   _    <- Server.start(port, dspRoutes @@ DspMiddleware.logging)
+  // } yield ()
 
 }
 
 object DspServer {
 
-  val layer: ZLayer[UserRoutes, Nothing, DspServer] =
-    ZLayer.fromFunction(userRoutes => DspServer.apply(userRoutes))
+  val layer: ZLayer[AppConfig & UserRoutes, Nothing, DspServer] =
+    ZLayer.fromFunction(DspServer.apply _)
 
 }
