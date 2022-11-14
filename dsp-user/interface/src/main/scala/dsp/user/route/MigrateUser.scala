@@ -27,7 +27,7 @@ object MigrateUser {
   def route(req: Request, userHandler: UserHandler): ZIO[Any, ValidationException, Response] =
     for {
       userMigratePayload <-
-        req.bodyAsString.map(_.fromJson[MigrateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
+        req.body.asString.map(_.fromJson[MigrateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
 
       r <- userMigratePayload match {
              case Left(e) => {

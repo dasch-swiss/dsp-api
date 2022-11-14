@@ -29,7 +29,7 @@ final case class UserRoutes(userHandler: UserHandler) {
                 msg,
                 _
               ) => // TODO: what else can go wrong that we can treat besides validation of input?
-            ZIO.succeed(Response.text(msg).setStatus(Status.BAD_REQUEST))
+            ZIO.succeed(Response.text(msg).setStatus(Status.BadRequest))
         }
 
     // POST /admin/users/migration
@@ -41,7 +41,7 @@ final case class UserRoutes(userHandler: UserHandler) {
                 msg,
                 _
               ) => // TODO: what else can go wrong that we can treat besides validation of input?
-            ZIO.succeed(Response.text(msg).setStatus(Status.BAD_REQUEST))
+            ZIO.succeed(Response.text(msg).setStatus(Status.BadRequest))
         }
 
     // GET /admin/users/:id

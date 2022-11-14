@@ -23,7 +23,7 @@ object CreateUser {
   def route(req: Request, userHandler: UserHandler): ZIO[Any, ValidationException, Response] =
     for {
       userCreatePayload <-
-        req.bodyAsString.map(_.fromJson[CreateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
+        req.body.asString.map(_.fromJson[CreateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
 
       response <-
         userCreatePayload match {
