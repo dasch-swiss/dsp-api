@@ -17,7 +17,6 @@ object DspMiddleware {
           Random.nextUUID.flatMap { requestId =>
             ZIO.logAnnotate("RequestId", requestId.toString) {
               for {
-                _      <- ZIO.logDebug(s"Request: $request")
                 result <- http(request)
               } yield result
             }
