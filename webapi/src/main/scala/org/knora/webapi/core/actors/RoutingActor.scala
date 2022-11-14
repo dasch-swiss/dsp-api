@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{
   CreateResourceRequestV2,
   DeleteOrEraseResourceRequestV2,
   GraphDataGetRequestV2,
+  HelloResourcesV2Req,
   ProjectResourcesWithHistoryGetRequestV2,
   ResourceHistoryEventsGetRequestV2,
   ResourceIIIFManifestGetRequestV2,
@@ -115,6 +116,7 @@ class RoutingActor(
 
   private def future2Message(fut: Future[Any]): Unit  = ActorUtil.future2Message(sender(), fut, log)
   private def zio2Message[A](task: zio.Task[A]): Unit = ActorUtil.zio2Message(sender(), task, log, runtime)
+
   def receive: Receive = {
     // V1 request messages
     case m: CkanResponderRequestV1      => future2Message(ckanResponderV1.receive(m))
@@ -130,7 +132,7 @@ class RoutingActor(
     // V2 request messages
     case m: OntologiesResponderRequestV2 => future2Message(ontologiesResponderV2.receive(m))
     case m: SearchResponderRequestV2     => future2Message(searchResponderV2.receive(m))
-    case m: ResourcesResponderRequestV2  => routeToResourceResponder(m)
+    case m: ResourcesResponderRequestV2  => future2Message(resourcesResponderV2.receive(m))
     case m: ValuesResponderRequestV2     => future2Message(valuesResponderV2.receive(m))
     case m: StandoffResponderRequestV2   => future2Message(standoffResponderV2.receive(m))
     case m: ListsResponderRequestV2      => future2Message(listsResponderV2.receive(m))
@@ -151,21 +153,5 @@ class RoutingActor(
       throw UnexpectedMessageException(
         s"RoutingActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
       )
-  }
-  private def routeToResourceResponder(message: ResourcesResponderRequestV2): Unit = {
-    val future = message match {
-      case m: ResourcesGetRequestV2                   => resourcesResponderV2.getResourcesV2(m)
-      case m: ResourcesPreviewGetRequestV2            => resourcesResponderV2.getResourcePreviewV2(m)
-      case m: ResourceTEIGetRequestV2                 => resourcesResponderV2.getResourceAsTeiV2(m)
-      case m: CreateResourceRequestV2                 => resourcesResponderV2.createResourceV2(m)
-      case m: UpdateResourceMetadataRequestV2         => resourcesResponderV2.updateResourceMetadataV2(m)
-      case m: DeleteOrEraseResourceRequestV2          => resourcesResponderV2.deleteOrEraseResourceV2(m)
-      case m: GraphDataGetRequestV2                   => resourcesResponderV2.getGraphDataResponseV2(m)
-      case m: ResourceVersionHistoryGetRequestV2      => resourcesResponderV2.getResourceHistoryV2(m)
-      case m: ResourceIIIFManifestGetRequestV2        => resourcesResponderV2.getIIIFManifestV2(m)
-      case m: ResourceHistoryEventsGetRequestV2       => resourcesResponderV2.getResourceHistoryEvents(m)
-      case m: ProjectResourcesWithHistoryGetRequestV2 => resourcesResponderV2.getProjectResourceHistoryEvents(m)
-    }
-    future2Message(future)
   }
 }
