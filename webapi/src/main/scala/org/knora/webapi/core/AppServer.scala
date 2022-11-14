@@ -150,7 +150,7 @@ final case class AppServer(
 
 object AppServer {
 
-  private type AppServerEnvironment =
+  type AppServerEnvironment =
     State
       with TriplestoreService
       with RepositoryUpdater

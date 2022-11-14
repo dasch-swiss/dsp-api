@@ -9,6 +9,7 @@ import akka.http.scaladsl.util.FastFuture
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   DefaultObjectAccessPermissionsStringForResourceClassGetADM,
@@ -42,12 +43,15 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.{
   GetXSLTransformationResponseV2
 }
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
+import org.knora.webapi.messages.v2.responder.{KnoraResponseV2, SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.v2.service._
 import org.knora.webapi.store.iiif.errors.SipiException
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util._
+import zio.ZIO
+import zio.json._
 
 import java.time.Instant
 import java.util.UUID
@@ -77,21 +81,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     values: Map[SmartIri, Seq[UnverifiedValueV2]],
     hasStandoffLink: Boolean
   )
-
-  def receive(message: ResourcesResponderRequestV2): Future[Product] = message match {
-    case m: ResourcesGetRequestV2                   => getResourcesV2(m)
-    case m: ResourcesPreviewGetRequestV2            => getResourcePreviewV2(m)
-    case m: ResourceTEIGetRequestV2                 => getResourceAsTeiV2(m)
-    case m: CreateResourceRequestV2                 => createResourceV2(m)
-    case m: UpdateResourceMetadataRequestV2         => updateResourceMetadataV2(m)
-    case m: DeleteOrEraseResourceRequestV2          => deleteOrEraseResourceV2(m)
-    case m: GraphDataGetRequestV2                   => getGraphDataResponseV2(m)
-    case m: ResourceVersionHistoryGetRequestV2      => getResourceHistoryV2(m)
-    case m: ResourceIIIFManifestGetRequestV2        => getIIIFManifestV2(m)
-    case m: ResourceHistoryEventsGetRequestV2       => getResourceHistoryEvents(m)
-    case m: ProjectResourcesWithHistoryGetRequestV2 => getProjectResourceHistoryEvents(m)
-    case m: HelloResourcesV2Req                     => getHelloResourcesV2(m)
-  }
 
   /**
    * Creates a new resource.
@@ -704,7 +693,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
    *                                   have custom permissions. This is a map of property IRIs to permission strings.
    * @param creationDate               the versionDate to be attached to the resource and its values.
-   *
    * @param requestingUser             the user making the request.
    * @return a [[ResourceReadyToCreate]].
    */
@@ -1049,9 +1037,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * values. For each link, if the target is expected to exist, checks that it exists and that the user has
    * permission to see it.
    *
-   * @param values               the values to be checked.
-   *
-   * @param requestingUser       the user making the request.
+   * @param values         the values to be checked.
+   * @param requestingUser the user making the request.
    */
   private def checkStandoffLinkTargets(
     values: Iterable[CreateValueInNewResourceV2],
@@ -1269,7 +1256,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceReadyToCreate the resource that should have been created.
    * @param projectIri            the IRI of the project in which the resource should have been created.
-   *
    * @param requestingUser        the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
@@ -1405,15 +1391,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   /**
    * Gets the requested resources from the triplestore.
    *
-   * @param resourceIris         the Iris of the requested resources.
-   * @param preview              `true` if a preview of the resource is requested.
-   * @param withDeleted          if defined, indicates if the deleted resources and values should be returned or not.
-   * @param propertyIri          if defined, requests only the values of the specified explicit property.
-   * @param valueUuid            if defined, requests only the value with the specified UUID.
-   * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
-   *                             Cannot be used in conjunction with `preview`.
-   * @param queryStandoff        `true` if standoff should be queried.
-   *
+   * @param resourceIris  the Iris of the requested resources.
+   * @param preview       `true` if a preview of the resource is requested.
+   * @param withDeleted   if defined, indicates if the deleted resources and values should be returned or not.
+   * @param propertyIri   if defined, requests only the values of the specified explicit property.
+   * @param valueUuid     if defined, requests only the value with the specified UUID.
+   * @param versionDate   if defined, requests the state of the resources at the specified time in the past.
+   *                      Cannot be used in conjunction with `preview`.
+   * @param queryStandoff `true` if standoff should be queried.
    * @return a map of resource IRIs to RDF data.
    */
   private def getResourcesFromTriplestore(
@@ -1496,7 +1481,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param showDeletedValues    if defined, indicates if the deleted values should be returned or not.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
-   *
    * @param requestingUser       the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
@@ -1609,10 +1593,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   /**
    * Get the preview of a resource.
    *
-   * @param resourceIris         the resource to query for.
-   * @param withDeleted          indicates if the deleted resource should be returned or not.
-   *
-   * @param requestingUser       the the user making the request.
+   * @param resourceIris   the resource to query for.
+   * @param withDeleted    indicates if the deleted resource should be returned or not.
+   * @param requestingUser the the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
   private def getResourcePreviewV2(
@@ -1683,7 +1666,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * Obtains a Gravsearch template from Sipi.
    *
    * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
-   *
    * @param requestingUser        the user making the request.
    * @return the Gravsearch template.
    */
@@ -2667,8 +2649,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceIri     the IRI of the resource.
    * @param resourceHistory the full representations of the resource in each point in its history.
-   *
-   * @param requestingUser             the user making the request.
+   * @param requestingUser  the user making the request.
    * @return the full history of resource as sequence of [[ResourceAndValueHistoryEvent]].
    */
   def extractEventsFromHistory(
@@ -2725,10 +2706,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   /**
    * Returns the full representation of a resource at a given date.
    *
-   * @param resourceIri                the IRI of the resource.
-   * @param versionHist                the history info of the version; i.e. versionDate and author.
-   *
-   * @param requestingUser             the user making the request.
+   * @param resourceIri    the IRI of the resource.
+   * @param versionHist    the history info of the version; i.e. versionDate and author.
+   * @param requestingUser the user making the request.
    * @return the full representation of the resource at the given version date.
    */
   private def getResourceAtGivenTime(
@@ -2752,7 +2732,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * Returns a createResource event as [[ResourceAndValueHistoryEvent]] with request body of the form [[ResourceEventBody]].
    *
    * @param resourceAtTimeOfCreation the full representation of the resource at creation date.
-   * @param versionInfoAtCreation the history info of the version; i.e. versionDate and author.
+   * @param versionInfoAtCreation    the history info of the version; i.e. versionDate and author.
    * @return a createResource event.
    */
   private def getResourceCreationEvent(
@@ -2812,7 +2792,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * Returns a value event as [[ResourceAndValueHistoryEvent]] with body of the form [[ValueEventBody]].
    *
    * @param resourceAtGivenTime the full representation of the resource at the given time.
-   * @param versionHist the history info of the version; i.e. versionDate and author.
+   * @param versionHist         the history info of the version; i.e. versionDate and author.
    * @param allResourceVersions all full representations of resource for each version date in its history.
    * @return a create/update/delete value event.
    */
@@ -2835,7 +2815,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             )
           if (valuesWithGivenVersion.nonEmpty) {
             acc + (propIri -> valuesWithGivenVersion.head)
-          } else { acc }
+          } else {
+            acc
+          }
       }
 
       valuesWithVersionDate
@@ -2912,10 +2894,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * of the value, it determines the type of the update and returns eventType: updateValuePermission/updateValueContent
    * together with the request body necessary to do the update.
    *
-   * @param propertyIri the IRI of the property.
+   * @param propertyIri           the IRI of the property.
    * @param currentVersionOfValue the current value version.
-   * @param allResourceVersions all versions of resource.
-   * @param resourceAtGivenTime the full representation of the resource at time of value update.
+   * @param allResourceVersions   all versions of resource.
+   * @param resourceAtGivenTime   the full representation of the resource at time of value update.
    * @return (eventType, update event request body)
    */
   private def getValueUpdateEventType(
@@ -3068,6 +3050,31 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     }
   }
 
-  def getHelloResourcesV2(m: HelloResourcesV2Req): Future[HelloResourcesV2Resp] =
-    Future.successful(HelloResourcesV2Resp(s"Hello user '${m.requestingUser.username}'!'"))
+  def getHelloResourcesV2(m: HelloResourcesV2Req) =
+    ResourcesRestService.bar(m)
+}
+
+object ResourcesRestService {
+
+  case class FooResponse(username: String, query: String) extends KnoraResponseV2 {
+    override def format(
+      rdfFormat: RdfFormat,
+      targetSchema: OntologySchema,
+      schemaOptions: Set[SchemaOption],
+      appConfig: AppConfig
+    ): String = this.toJson
+  }
+
+  object FooResponse {
+    implicit val encoder: JsonEncoder[FooResponse] =
+      DeriveJsonEncoder.gen[FooResponse]
+  }
+  def bar(m: HelloResourcesV2Req) = {
+    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.resourcesByCreationDate().toString
+
+    ZIO
+      .service[TriplestoreService]
+      .flatMap(ts => ts.sparqlHttpSelect(query))
+      .map(r => FooResponse(s"${m.requestingUser.username}", r.toString))
+  }
 }
