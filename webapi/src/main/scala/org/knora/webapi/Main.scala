@@ -6,8 +6,8 @@ package org.knora.webapi
 
 import zio._
 import zio.logging.backend.SLF4J
-
 import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.AppServer.AppServerEnvironment
 
 object Main extends ZIOApp {
 
@@ -29,6 +29,6 @@ object Main extends ZIOApp {
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ core.LayersLive.dspLayersLive
 
   /* Here we start our Application */
-  override def run = AppServer.live.launch
+  override def run: ZIO[AppServerEnvironment, Nothing, Nothing] = AppServer.live.launch
 
 }

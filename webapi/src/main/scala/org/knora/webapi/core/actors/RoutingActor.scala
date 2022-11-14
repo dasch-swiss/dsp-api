@@ -5,7 +5,7 @@
 
 package org.knora.webapi.core.actors
 
-import akka.actor.{Actor, ActorSystem}
+import akka.actor.{Actor, ActorRef, ActorSystem}
 import com.typesafe.scalalogging.Logger
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
@@ -31,21 +31,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequest
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.messages.v2.responder.listsmessages.ListsResponderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.{
-  CreateResourceRequestV2,
-  DeleteOrEraseResourceRequestV2,
-  GraphDataGetRequestV2,
-  HelloResourcesV2Req,
-  ProjectResourcesWithHistoryGetRequestV2,
-  ResourceHistoryEventsGetRequestV2,
-  ResourceIIIFManifestGetRequestV2,
-  ResourceTEIGetRequestV2,
-  ResourceVersionHistoryGetRequestV2,
-  ResourcesGetRequestV2,
-  ResourcesPreviewGetRequestV2,
-  ResourcesResponderRequestV2,
-  UpdateResourceMetadataRequestV2
-}
+import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
@@ -56,7 +42,9 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ActorUtil
+import zio.Unsafe
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -65,7 +53,7 @@ class RoutingActor(
   iiifServiceManager: IIIFServiceManager,
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
-  runtime: zio.Runtime[Any]
+  runtime: zio.Runtime[TriplestoreService]
 ) extends Actor {
 
   implicit val system: ActorSystem = context.system
@@ -132,7 +120,7 @@ class RoutingActor(
     // V2 request messages
     case m: OntologiesResponderRequestV2 => future2Message(ontologiesResponderV2.receive(m))
     case m: SearchResponderRequestV2     => future2Message(searchResponderV2.receive(m))
-    case m: ResourcesResponderRequestV2  => future2Message(resourcesResponderV2.receive(m))
+    case m: ResourcesResponderRequestV2  => routeResourcesResponderRequestV2(m)
     case m: ValuesResponderRequestV2     => future2Message(valuesResponderV2.receive(m))
     case m: StandoffResponderRequestV2   => future2Message(standoffResponderV2.receive(m))
     case m: ListsResponderRequestV2      => future2Message(listsResponderV2.receive(m))
@@ -154,4 +142,33 @@ class RoutingActor(
         s"RoutingActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
       )
   }
+  def routeResourcesResponderRequestV2(message: ResourcesResponderRequestV2) = message match {
+    case m: ResourcesGetRequestV2              => future2Message(resourcesResponderV2.getResourcesV2(m))
+    case m: ResourcesPreviewGetRequestV2       => future2Message(resourcesResponderV2.getResourcePreviewV2(m))
+    case m: ResourceTEIGetRequestV2            => future2Message(resourcesResponderV2.getResourceAsTeiV2(m))
+    case m: CreateResourceRequestV2            => future2Message(resourcesResponderV2.createResourceV2(m))
+    case m: UpdateResourceMetadataRequestV2    => future2Message(resourcesResponderV2.updateResourceMetadataV2(m))
+    case m: DeleteOrEraseResourceRequestV2     => future2Message(resourcesResponderV2.deleteOrEraseResourceV2(m))
+    case m: GraphDataGetRequestV2              => future2Message(resourcesResponderV2.getGraphDataResponseV2(m))
+    case m: ResourceVersionHistoryGetRequestV2 => future2Message(resourcesResponderV2.getResourceHistoryV2(m))
+    case m: ResourceIIIFManifestGetRequestV2   => future2Message(resourcesResponderV2.getIIIFManifestV2(m))
+    case m: ResourceHistoryEventsGetRequestV2  => future2Message(resourcesResponderV2.getResourceHistoryEvents(m))
+    case m: ProjectResourcesWithHistoryGetRequestV2 =>
+      future2Message(resourcesResponderV2.getProjectResourceHistoryEvents(m))
+    case m: HelloResourcesV2Req => runZio(sender(), resourcesResponderV2.getHelloResourcesV2(m), runtime)
+  }
+
+  def runZio[A](
+    sender: ActorRef,
+    zioTask: zio.ZIO[TriplestoreService, Nothing, A],
+    runtime: zio.Runtime[TriplestoreService]
+  ): Unit =
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          zioTask.foldCause(
+            cause => {},
+            success => sender ! success)
+        )
+    }
 }
