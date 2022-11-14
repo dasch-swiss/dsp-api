@@ -1040,7 +1040,7 @@ class OntologyV2R2RSpec extends R2RSpec {
              |      }
              |   ],
              |   "knora-api:attachedToProject": {
-             |      "@id": "http://rdfh.ch/projects/0001"
+             |      "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
              |   },
              |   "@type": "owl:Ontology",
              |   "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2",
@@ -1118,7 +1118,7 @@ class OntologyV2R2RSpec extends R2RSpec {
              |      }
              |   ],
              |   "knora-api:attachedToProject": {
-             |      "@id": "http://rdfh.ch/projects/0001"
+             |      "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
              |   },
              |   "@type": "owl:Ontology",
              |   "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2",
@@ -3120,7 +3120,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |    "knora-api:valueHasComment" : "this is the number five"
          |  },
          |  "knora-api:attachedToProject" : {
-         |    "@id" : "http://rdfh.ch/projects/0001"
+         |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
          |  },
          |  "rdfs:label" : "my blue test class thing instance",
          |  "@context" : {
@@ -3401,7 +3401,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |    "knora-api:valueHasComment" : "this is the number five"
          |  },
          |  "knora-api:attachedToProject" : {
-         |    "@id" : "http://rdfh.ch/projects/0001"
+         |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
          |  },
          |  "rdfs:label" : "test class instance",
          |  "@context" : {
@@ -3864,6 +3864,44 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(cardinality == MustHaveOne)
     }
   }
+
+  "return isSequenceOf and isPartOf properties from knora-base marked as isEditable" in {
+    val requestUrl = s"/v2/ontologies/allentities/$knoraApiWithValueObjectsOntologySegment"
+    Get(requestUrl) ~> ontologiesPath ~> check {
+      val responseStr: String = responseAs[String]
+      assert(status == StatusCodes.OK, response.toString)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      val graph           = responseJsonDoc.body.requireArray(JsonLDKeywords.GRAPH).value.map(_.asInstanceOf[JsonLDObject])
+
+      val isSequenceOfIsEditable = graph
+        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.IsSequenceOf)
+        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
+      val isSequenceOfValueIsEditable = graph
+        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.IsSequenceOfValue)
+        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
+      val hasSequenceBoundsIsEditable = graph
+        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.HasSequenceBounds)
+        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
+      val isPartOfIsEditable = graph
+        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.IsPartOf)
+        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
+      val isPartOfValueIsEditable = graph
+        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.IsPartOfValue)
+        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
+      val seqnumIsEditable = graph
+        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.Seqnum)
+        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
+
+      assert(isSequenceOfIsEditable)
+      assert(isSequenceOfValueIsEditable)
+      assert(hasSequenceBoundsIsEditable)
+      assert(isPartOfIsEditable)
+      assert(isPartOfValueIsEditable)
+      assert(seqnumIsEditable)
+
+    }
+  }
+
   "not create a property with invalid gui attribute" in {
     val params =
       s"""{

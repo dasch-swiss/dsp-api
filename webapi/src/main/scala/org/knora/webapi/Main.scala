@@ -23,7 +23,7 @@ object Main extends ZIOApp {
    * and cleaned up when the Runtime is shutdown.
    */
   override def bootstrap: ZLayer[
-    ZIOAppArgs with Scope,
+    ZIOAppArgs,
     Any,
     Environment
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ core.LayersLive.dspLayersLive

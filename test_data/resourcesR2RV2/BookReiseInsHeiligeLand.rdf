@@ -20,7 +20,7 @@
         <knora-api:valueAsString>Reise ins Heilige Land</knora-api:valueAsString>
       </knora-api:TextValue>
     </incunabula:title>
-    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0803"/>
+    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"/>
     <knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI"
     >http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W</knora-api:arkUrl>
     <incunabula:citation>

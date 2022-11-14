@@ -1666,8 +1666,6 @@ class StringFormatter private (
   /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
    *
-   * If the param `revert` is set to `true`, the string is unescaped.
-   *
    * @param s        a string.
    * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
    *                 a carriage return (`\r`).
@@ -1697,6 +1695,17 @@ class StringFormatter private (
       SparqlEscapeOutput,
       SparqlEscapeInput
     )
+
+  /**
+   * Replaces all characters that have a special meaning in the Lucene Query Parser syntax and normalizes spaces.
+   *
+   * @param s  a string
+   * @return   the normalized string
+   */
+  def replaceLuceneQueryParserSyntaxCharacters(s: String): String = {
+    val stringWithoutSpecialCharacters = s.replaceAll("[\\+\\-&\\|!\\(\\)\\{\\}\\[\\]\\^\"~\\*\\?:\\\\]", " ")
+    StringUtils.normalizeSpace(stringWithoutSpecialCharacters)
+  }
 
   /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.
@@ -2766,11 +2775,7 @@ class StringFormatter private (
    * @return TRUE for correct versions, FALSE for incorrect.
    */
   def isUuidVersion4Or5(s: IRI): Boolean =
-    if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
-      true
-    } else {
-      false
-    }
+    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
 
   /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
@@ -2861,13 +2866,14 @@ class StringFormatter private (
     s"$projectIri/mappings"
 
   /**
-   * Creates a new project IRI based on a UUID or project shortcode.
+   * Creates a new project IRI based on a UUID.
    *
-   * @param shortcode the required project shortcode.
    * @return a new project IRI.
    */
-  def makeRandomProjectIri(shortcode: String): IRI =
-    s"http://$IriDomain/projects/$shortcode"
+  def makeRandomProjectIri: IRI = {
+    val uuid = makeRandomBase64EncodedUuid
+    s"http://$IriDomain/projects/$uuid"
+  }
 
   /**
    * Creates a new group IRI based on a UUID.

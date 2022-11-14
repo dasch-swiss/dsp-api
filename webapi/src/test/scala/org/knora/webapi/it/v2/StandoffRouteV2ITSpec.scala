@@ -58,9 +58,9 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   private val pathToFreetestXMLTextValue = "../test_data/test_route/texts/freetestXMLTextValue.xml"
   private val freetestXSLTFile           = "freetestCustomMappingTransformation.xsl"
   private val pathToFreetestXSLTFile     = s"../test_data/test_route/texts/$freetestXSLTFile"
-  private val freetestCustomMappingIRI   = "http://rdfh.ch/projects/0001/mappings/FreetestCustomMapping"
+  private val freetestCustomMappingIRI   = s"$ANYTHING_PROJECT_IRI/mappings/FreetestCustomMapping"
   private val freetestCustomMappingWithTranformationIRI =
-    "http://rdfh.ch/projects/0001/mappings/FreetestCustomMappingWithTransformation"
+    s"$ANYTHING_PROJECT_IRI/mappings/FreetestCustomMappingWithTransformation"
   private val freetestOntologyIRI  = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
   private val freetestTextValueIRI = new MutableTestIri
   private val freetestXSLTIRI      = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
@@ -104,7 +104,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     val jsonLDEntity = Map(
       "@type" -> "freetest:FreeTest".toJson,
       "knora-api:attachedToProject" -> Map(
-        "@id" -> "http://rdfh.ch/projects/0001".toJson
+        "@id" -> "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ".toJson
       ).toJson,
       "rdfs:label" -> "obj_inst1".toJson,
       "freetest:hasText" -> Map(
@@ -138,7 +138,6 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   }
 
   "The Standoff v2 Endpoint" should {
-
     "create a text value with standard mapping" in {
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
       val response = createResourceWithTextValue(
@@ -176,7 +175,6 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     }
 
     "create a mapping from a XML" in {
-
       val xmlFileToSend = Paths.get(pathToLetterMapping)
 
       val mappingParams =
@@ -233,6 +231,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val mappingResponse         = createMapping(pathToFreetestCustomMapping, "FreetestCustomMapping")
       val mappingResponseDocument = responseToJsonLDDocument(mappingResponse)
       mappingResponse.status should equal(StatusCodes.OK)
+
       val mappingIRI = mappingResponseDocument.body.requireString("@id")
       mappingIRI should equal(freetestCustomMappingIRI)
     }

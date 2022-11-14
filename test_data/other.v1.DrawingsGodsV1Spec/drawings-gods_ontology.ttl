@@ -7,7 +7,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.knora.org/ontology/0105/drawings-gods> a owl:Ontology;
-  knora-base:attachedToProject <http://rdfh.ch/projects/0105> ;
+  knora-base:attachedToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
   knora-base:lastModificationDate "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
 
 drawings-gods:Annotation a owl:Class;

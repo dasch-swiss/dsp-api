@@ -10,7 +10,7 @@
 	<beol:hasAuthorValue rdf:resource="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw/values/J19v80MsQr-IUEUEdQrpZQ"/>
 	<beol:hasRecipientValue rdf:resource="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw/values/ZxFoMvc2SSmsvqHxWnGf7A"/>
 	<knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0801/42dfmzZYQZODMN6crzM1gwv</knora-api:arkUrl>
-	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
+	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"/>
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:creationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp">2019-02-19T10:44:26.443655Z</knora-api:creationDate>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
@@ -40,7 +40,7 @@
     <beol:hasGivenName rdf:resource="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA/values/rHiRwvy-TuaBHi_C2-jl4A"/>
     <beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA/values/bA4QPVEqSmyWE6Wq4Vp-Xg"/>
     <knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0801/ONh6zMXCSu6hhH0ejHCOwAl</knora-api:arkUrl>
-    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
+    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"/>
     <knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
     <knora-api:creationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp">2019-02-19T10:44:26.443377Z</knora-api:creationDate>
     <knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
@@ -71,7 +71,7 @@
     <beol:hasGivenName rdf:resource="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ/values/IczV-yEQQfqFEy1iAmgAIQ"/>
     <beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ/values/HKAx-HaBTeGojOQ_H7P7gA"/>
     <knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0801/MKVdi4vQTFCOA1f9ToYEWQp</knora-api:arkUrl>
-    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
+    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"/>
     <knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
     <knora-api:creationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp">2019-02-19T10:44:26.443586Z</knora-api:creationDate>
     <knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>

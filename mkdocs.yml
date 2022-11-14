@@ -43,8 +43,8 @@ nav:
                             - Getting Lists: 03-apis/api-v2/getting-lists.md
                             - XML to Standoff Mapping: 03-apis/api-v2/xml-to-standoff-mapping.md
                             - Gravsearch - Virtual Graph Search: 03-apis/api-v2/query-language.md
-                            - Editing Resources: 03-apis/api-v2/editing-resources.md
-                            - Editing Values: 03-apis/api-v2/editing-values.md
+                            - Creating and Editing Resources: 03-apis/api-v2/editing-resources.md
+                            - Creating and Editing Values: 03-apis/api-v2/editing-values.md
                             - Querying, Creating, and Updating Ontologies: 03-apis/api-v2/ontology-information.md
                             - TEI/XML: 03-apis/api-v2/tei-xml.md
                             - Permalinks: 03-apis/api-v2/permalinks.md
