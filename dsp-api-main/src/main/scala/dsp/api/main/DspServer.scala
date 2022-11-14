@@ -25,11 +25,6 @@ final case class DspServer(
     Server.start(port, dspRoutes @@ DspMiddleware.logging)
   }
 
-  // for {
-  //   port <- System.envOrElse("PORT", "4444").map(_.toInt)
-  //   _    <- Server.start(port, dspRoutes @@ DspMiddleware.logging)
-  // } yield ()
-
 }
 
 object DspServer {

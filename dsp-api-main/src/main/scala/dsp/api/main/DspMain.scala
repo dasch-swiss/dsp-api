@@ -19,9 +19,10 @@ object DspMain extends ZIOAppDefault {
     ZIO
       .serviceWithZIO[DspServer](server => server.start())
       .provide(
+        // ZLayer.Debug.mermaid,
+
         // configuration
         AppConfig.live,
-        // ZLayer.Debug.mermaid,
         DspServer.layer,
         // Routes
         UserRoutes.layer,

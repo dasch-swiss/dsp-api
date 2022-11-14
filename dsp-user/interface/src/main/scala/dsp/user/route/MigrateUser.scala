@@ -49,26 +49,15 @@ object MigrateUser {
                val status     = UserStatus.make(u.status)
 
                (for {
-                 validationResult <-
+                 userId <-
                    Validation
-                     .validate(id, givenName, familyName, username, email, password, language, status)
-                     .toZIO
-                     .mapError(e => ValidationException(e.getMessage()))
-
-                 (id, givenName, familyName, username, email, password, language, status) = validationResult
-
-                 userId <- userHandler
-                             .migrateUser(
-                               id,
-                               username,
-                               email,
-                               givenName,
-                               familyName,
-                               password,
-                               language,
-                               status
-                             )
-                             .mapError(e => ValidationException(e.getMessage()))
+                     .validateWith(id, username, email, givenName, familyName, password, language, status)(
+                       userHandler
+                         .migrateUser(_, _, _, _, _, _, _, _)
+                         .mapError(e => ValidationException(e.getMessage()))
+                     )
+                     // in case of errors, all errors are collected and returned in a list
+                     .fold(e => ZIO.fail(ValidationException(e.map(err => err.getMessage()).toCons.toString)), v => v)
                  user <- userHandler.getUserById(userId).orDie
                } yield Response.json(user.toJson))
              }

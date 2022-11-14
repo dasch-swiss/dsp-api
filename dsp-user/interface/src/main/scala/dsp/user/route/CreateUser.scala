@@ -18,7 +18,7 @@ object CreateUser {
    *
    * @param req
    * @param userHandler
-   * @return the user as json
+   * @return a response with the user as json
    */
   def route(req: Request, userHandler: UserHandler): ZIO[Any, ValidationException, Response] =
     for {
@@ -45,25 +45,13 @@ object CreateUser {
             val status   = UserStatus.make(u.status)
 
             (for {
-              validationResult <-
+              userId <-
                 Validation
-                  .validate(givenName, familyName, username, email, password, language, status)
-                  .toZIO
-                  .mapError(e => ValidationException(e.getMessage()))
-
-              (givenName, familyName, username, email, password, language, status) = validationResult
-
-              userId <- userHandler
-                          .createUser(
-                            username,
-                            email,
-                            givenName,
-                            familyName,
-                            password,
-                            language,
-                            status
-                          )
-                          .mapError(e => ValidationException(e.getMessage()))
+                  .validateWith(username, email, givenName, familyName, password, language, status)(
+                    userHandler.createUser(_, _, _, _, _, _, _).mapError(e => ValidationException(e.getMessage()))
+                  )
+                  // in case of errors, all errors are collected and returned in a list
+                  .fold(e => ZIO.fail(ValidationException(e.map(err => err.getMessage()).toCons.toString)), v => v)
               user <- userHandler.getUserById(userId).orDie
             } yield Response.json(user.toJson))
           }
