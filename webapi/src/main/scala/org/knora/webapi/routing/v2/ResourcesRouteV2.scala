@@ -6,33 +6,20 @@
 package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{PathMatcher, Route}
+import dsp.errors.BadRequestException
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
+import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-
-import dsp.errors.BadRequestException
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilV2
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
@@ -63,7 +50,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       getResourceHistory() ~
       getResourceHistoryEvents() ~
       getProjectResourceAndValueHistory() ~
-      getResources() ~
+      getResources ~
+      getResourcesSync ~
       getResourcesPreview() ~
       getResourcesTei() ~
       getResourcesGraph() ~
@@ -338,7 +326,22 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     }
 
-  private def getResources(): Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
+  private def getResourcesSync: Route = path(resourcesBasePath / "sync" / Segments) { _ =>
+    get { requestContext =>
+      val message = getUserADM(requestContext, routeData.appConfig).map(HelloResourcesV2Req)
+      RouteUtilV2.runRdfRouteWithFuture(
+        requestMessageF = message,
+        requestContext = requestContext,
+        appConfig = routeData.appConfig,
+        appActor = appActor,
+        log = log,
+        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+      )
+    }
+  }
+
+  private def getResources: Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
     get { requestContext =>
       if (resIris.size > routeData.appConfig.v2.resourcesSequence.resultsPerPage)
         throw BadRequestException(
@@ -364,19 +367,13 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
       }
 
-      val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
       val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
+        requestingUser <- getUserADM(requestContext = requestContext, routeData.appConfig)
       } yield ResourcesGetRequestV2(
         resourceIris = resourceIris,
         versionDate = versionDate,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions,
+        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext),
         requestingUser = requestingUser
       )
 
@@ -386,8 +383,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         appConfig = routeData.appConfig,
         appActor = appActor,
         log = log,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions
+        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
       )
     }
   }

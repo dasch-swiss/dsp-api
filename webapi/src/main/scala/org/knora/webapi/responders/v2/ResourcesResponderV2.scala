@@ -10,14 +10,22 @@ import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  DefaultObjectAccessPermissionsStringForResourceClassGetADM,
+  ResourceCreateOperation
+}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
+import org.knora.webapi.messages.util.PermissionUtilADM.{
+  AGreaterThanB,
+  DeletePermission,
+  ModifyPermission,
+  PermissionComparisonResult
+}
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.ConstructQuery
@@ -27,7 +35,12 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{
+  GetMappingRequestV2,
+  GetMappingResponseV2,
+  GetXSLTransformationRequestV2,
+  GetXSLTransformationResponseV2
+}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
@@ -64,6 +77,21 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     values: Map[SmartIri, Seq[UnverifiedValueV2]],
     hasStandoffLink: Boolean
   )
+
+  def receive(message: ResourcesResponderRequestV2): Future[Product] = message match {
+    case m: ResourcesGetRequestV2                   => getResourcesV2(m)
+    case m: ResourcesPreviewGetRequestV2            => getResourcePreviewV2(m)
+    case m: ResourceTEIGetRequestV2                 => getResourceAsTeiV2(m)
+    case m: CreateResourceRequestV2                 => createResourceV2(m)
+    case m: UpdateResourceMetadataRequestV2         => updateResourceMetadataV2(m)
+    case m: DeleteOrEraseResourceRequestV2          => deleteOrEraseResourceV2(m)
+    case m: GraphDataGetRequestV2                   => getGraphDataResponseV2(m)
+    case m: ResourceVersionHistoryGetRequestV2      => getResourceHistoryV2(m)
+    case m: ResourceIIIFManifestGetRequestV2        => getIIIFManifestV2(m)
+    case m: ResourceHistoryEventsGetRequestV2       => getResourceHistoryEvents(m)
+    case m: ProjectResourcesWithHistoryGetRequestV2 => getProjectResourceHistoryEvents(m)
+    case m: HelloResourcesV2Req                     => getHelloResourcesV2(m)
+  }
 
   /**
    * Creates a new resource.
@@ -3039,4 +3067,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         updateMetadataEvent
     }
   }
+
+  def getHelloResourcesV2(m: HelloResourcesV2Req): Future[HelloResourcesV2Resp] =
+    Future.successful(HelloResourcesV2Resp(s"Hello user '${m.requestingUser.username}'!'"))
 }
