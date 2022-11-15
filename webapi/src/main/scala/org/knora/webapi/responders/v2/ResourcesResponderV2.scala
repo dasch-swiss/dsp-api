@@ -11,22 +11,14 @@ import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  DefaultObjectAccessPermissionsStringForResourceClassGetADM,
-  ResourceCreateOperation
-}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.PermissionUtilADM.{
-  AGreaterThanB,
-  DeletePermission,
-  ModifyPermission,
-  PermissionComparisonResult
-}
+import org.knora.webapi.messages.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.ConstructQuery
@@ -36,12 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.{
-  GetMappingRequestV2,
-  GetMappingResponseV2,
-  GetXSLTransformationRequestV2,
-  GetXSLTransformationResponseV2
-}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.{KnoraResponseV2, SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
@@ -3056,7 +3043,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
 object ResourcesRestService {
 
-  case class FooResponse(username: String, query: String) extends KnoraResponseV2 {
+  case class FooResponse(rows:List[Row]) extends KnoraResponseV2 {
     override def format(
       rdfFormat: RdfFormat,
       targetSchema: OntologySchema,
@@ -3064,17 +3051,28 @@ object ResourcesRestService {
       appConfig: AppConfig
     ): String = this.toJson
   }
-
   object FooResponse {
     implicit val encoder: JsonEncoder[FooResponse] =
       DeriveJsonEncoder.gen[FooResponse]
   }
-  def bar(m: HelloResourcesV2Req) = {
+
+  final case class Row(lastModificationDate: String, resourceIri: String)
+    object Row{
+    implicit val encoder: JsonEncoder[Row] =
+      DeriveJsonEncoder.gen[Row]
+  }
+
+ def bar(m: HelloResourcesV2Req) = {
     val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.resourcesByCreationDate().toString
+
+    def mkResponse(r: SparqlSelectResult) = {
+      val listOfRows= r.results.bindings.map(row => Row(row.rowMap("creationDate"), row.rowMap("resource"))).toList
+      FooResponse(listOfRows)
+    }
 
     ZIO
       .service[TriplestoreService]
       .flatMap(ts => ts.sparqlHttpSelect(query))
-      .map(r => FooResponse(s"${m.requestingUser.username}", r.toString))
+      .map(r => mkResponse(r))
   }
 }
