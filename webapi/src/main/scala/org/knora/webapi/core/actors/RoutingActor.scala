@@ -5,7 +5,7 @@
 
 package org.knora.webapi.core.actors
 
-import akka.actor.{Actor, ActorRef, ActorSystem}
+import akka.actor.{Actor, ActorSystem}
 import com.typesafe.scalalogging.Logger
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
@@ -44,7 +44,6 @@ import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ActorUtil
-import zio.Unsafe
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -102,8 +101,7 @@ class RoutingActor(
   val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData)
   val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
 
-  private def future2Message(fut: Future[Any]): Unit  = ActorUtil.future2Message(sender(), fut, log)
-  private def zio2Message[A](task: zio.Task[A]): Unit = ActorUtil.zio2Message(sender(), task, log, runtime)
+  private def future2Message(fut: Future[Any]): Unit = ActorUtil.future2Message(sender(), fut, log)
 
   def receive: Receive = {
     // V1 request messages
@@ -133,9 +131,9 @@ class RoutingActor(
     case m: StoreResponderRequestADM       => future2Message(storeResponderADM.receive(m))
     case m: UsersResponderRequestADM       => future2Message(usersResponderADM.receive(m))
     case m: SipiResponderRequestADM        => future2Message(sipiRouterADM.receive(m))
-    case m: CacheServiceRequest            => zio2Message(cacheServiceManager.receive(m))
-    case m: IIIFRequest                    => zio2Message(iiifServiceManager.receive(m))
-    case m: TriplestoreRequest             => zio2Message(triplestoreManager.receive(m))
+    case m: CacheServiceRequest            =>  ActorUtil.zio2Message(sender(), cacheServiceManager.receive(m), log, runtime)
+    case m: IIIFRequest                    =>  ActorUtil.zio2Message(sender(), iiifServiceManager.receive(m), log, runtime)
+    case m: TriplestoreRequest             =>  ActorUtil.zio2Message(sender(), triplestoreManager.receive(m), log, runtime)
 
     case other =>
       throw UnexpectedMessageException(
@@ -155,20 +153,7 @@ class RoutingActor(
     case m: ResourceHistoryEventsGetRequestV2  => future2Message(resourcesResponderV2.getResourceHistoryEvents(m))
     case m: ProjectResourcesWithHistoryGetRequestV2 =>
       future2Message(resourcesResponderV2.getProjectResourceHistoryEvents(m))
-    case m: HelloResourcesV2Req => runZio(sender(), resourcesResponderV2.getHelloResourcesV2(m), runtime)
+    case m: HelloResourcesV2Req =>
+      ActorUtil.zio2Message(sender(), resourcesResponderV2.getHelloResourcesV2(m), log, runtime)
   }
-
-  def runZio[A](
-    sender: ActorRef,
-    zioTask: zio.ZIO[TriplestoreService, Nothing, A],
-    runtime: zio.Runtime[TriplestoreService]
-  ): Unit =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          zioTask.foldCause(
-            cause => {},
-            success => sender ! success)
-        )
-    }
 }

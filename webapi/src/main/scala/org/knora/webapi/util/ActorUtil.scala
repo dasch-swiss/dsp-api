@@ -30,7 +30,7 @@ object ActorUtil {
    *
    * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
    */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: Logger, runtime: Runtime[Any]): Unit =
+  def zio2Message[R, E, A](sender: ActorRef, zioTask: zio.ZIO[R, E, A], log: Logger, runtime: Runtime[R]): Unit =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
@@ -46,7 +46,7 @@ object ActorUtil {
    * @param cause the failures and defects that need to be handled.
    * @param sender the actor that made the request in the `ask` pattern.
    */
-  def handleCause(cause: Cause[Throwable], sender: ActorRef, log: Logger): Unit =
+  def handleCause[E](cause: Cause[E], sender: ActorRef, log: Logger): Unit =
     cause match {
       case Fail(value, _) =>
         value match {
