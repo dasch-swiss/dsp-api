@@ -18,6 +18,8 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusRe
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
+import dsp.valueobjects.Project
+import dsp.valueobjects.Iri
 
 /**
  * In-Memory Cache implementation
@@ -120,8 +122,8 @@ case class CacheServiceInMemImpl(
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     (identifier match {
       case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value)
-      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcodeOrShortname(value)
-      case ProjectIdentifierADM.Shortname(value) => getProjectByShortcodeOrShortname(value)
+      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcode(value)
+      case ProjectIdentifierADM.Shortname(value) => getProjectByShortname(value)
       case ProjectIdentifierADM.Uuid(value)      => getProjectByIri(value)
     }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
 
@@ -131,17 +133,29 @@ case class CacheServiceInMemImpl(
    * @param id the project's IRI
    * @return an optional [[ProjectADM]].
    */
-  def getProjectByIri(id: String) = projects.get(id).commit
+  def getProjectByIri(id: Iri.ProjectIri) = projects.get(id.value).commit
 
   /**
-   * Retrieves the project stored under a SHORTCODE or SHORTNAME.
+   * Retrieves the project stored under a SHORTNAME.
    *
-   * @param shortcodeOrShortname of the project.
+   * @param shortname of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortcodeOrShortname(shortcodeOrShortname: String): UIO[Option[ProjectADM]] =
+  def getProjectByShortname(shortname: Project.ShortName): UIO[Option[ProjectADM]] =
     (for {
-      iri     <- lut.get(shortcodeOrShortname).some
+      iri     <- lut.get(shortname.value).some
+      project <- projects.get(iri).some
+    } yield project).commit.unsome
+
+  /**
+   * Retrieves the project stored under a SHORTCODE.
+   *
+   * @param shortcode of the project.
+   * @return an optional [[ProjectADM]]
+   */
+  def getProjectByShortcode(shortcode: Project.ShortCode): UIO[Option[ProjectADM]] =
+    (for {
+      iri     <- lut.get(shortcode.value).some
       project <- projects.get(iri).some
     } yield project).commit.unsome
 

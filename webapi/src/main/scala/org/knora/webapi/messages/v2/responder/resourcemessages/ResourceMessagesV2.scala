@@ -702,7 +702,9 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(projectIri.toString),
+              identifier = ProjectIdentifierADM.Iri
+                .fromString(projectIri.toString)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = requestingUser
             )
           )

@@ -913,7 +913,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri(projectIri)
+                identifier = ProjectIdentifierADM.Iri
+                  .fromString(projectIri)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -1950,7 +1952,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             appActor
               .ask(
                 ProjectGetADM(
-                  identifier = ProjectIdentifierADM.Iri(projectIri)
+                  identifier = ProjectIdentifierADM.Iri
+                    .fromString(projectIri)
+                    .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                 )
               )
               .mapTo[Option[ProjectADM]]

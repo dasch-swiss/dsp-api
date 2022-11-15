@@ -697,7 +697,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri(createRequest.forProject)
+                identifier = ProjectIdentifierADM.Iri
+                  .fromString(createRequest.forProject)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -1634,7 +1636,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri(createRequest.forProject)
+                identifier = ProjectIdentifierADM.Iri
+                  .fromString(createRequest.forProject)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]

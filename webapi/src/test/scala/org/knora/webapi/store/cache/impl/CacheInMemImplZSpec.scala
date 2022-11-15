@@ -17,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
+import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].
@@ -77,20 +78,34 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
   val projectTests = suite("CacheInMemImplZSpec - project")(
     test("successfully store a project and retrieve by IRI")(
       for {
-        _                <- CacheService.putProjectADM(project)
-        retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Iri(project.id))
+        _ <- CacheService.putProjectADM(project)
+        retrievedProject <- CacheService.getProjectADM(
+                              ProjectIdentifierADM.Iri
+                                .fromString(project.id)
+                                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+                            )
       } yield assert(retrievedProject)(equalTo(Some(project)))
     ) +
       test("successfully store a project and retrieve by SHORTCODE")(
         for {
-          _                <- CacheService.putProjectADM(project)
-          retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Shortcode(project.shortcode))
+          _ <- CacheService.putProjectADM(project)
+          retrievedProject <-
+            CacheService.getProjectADM(
+              ProjectIdentifierADM.Shortcode
+                .fromString(project.shortcode)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
         } yield assert(retrievedProject)(equalTo(Some(project)))
       ) +
       test("successfully store a project and retrieve by SHORTNAME")(
         for {
-          _                <- CacheService.putProjectADM(project)
-          retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM.Shortname(project.shortname))
+          _ <- CacheService.putProjectADM(project)
+          retrievedProject <-
+            CacheService.getProjectADM(
+              ProjectIdentifierADM.Shortname
+                .fromString(project.shortname)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
         } yield assert(retrievedProject)(equalTo(Some(project)))
       )
   )

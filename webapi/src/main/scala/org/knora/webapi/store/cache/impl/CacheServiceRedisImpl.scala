@@ -24,6 +24,10 @@ import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
 import org.knora.webapi.store.cache.config.RedisConfig
 import org.knora.webapi.store.cache.serialization.CacheSerialization
+import dsp.valueobjects.Project
+import dsp.valueobjects.Iri
+import net.sf.saxon.regex.OpNothing
+import dsp.errors.BadRequestException
 
 case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
 
@@ -113,8 +117,8 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     // Additionally, the Shortcode, Shortname and Uuid point to the Iri
     identifier match {
       case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value)
-      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcodeOrShortname(value)
-      case ProjectIdentifierADM.Shortname(value) => getProjectByShortcodeOrShortname(value)
+      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcode(value)
+      case ProjectIdentifierADM.Shortname(value) => getProjectByShortname(value)
       case ProjectIdentifierADM.Uuid(value)      => getProjectByIri(value)
     }
 
@@ -124,22 +128,36 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    * @param id the project's IRI
    * @return an optional [[ProjectADM]].
    */
-  def getProjectByIri(id: String): Task[Option[ProjectADM]] =
+  def getProjectByIri(id: Iri.ProjectIri): Task[Option[ProjectADM]] =
     (for {
-      bytes   <- getBytesValue(id).some
+      bytes   <- getBytesValue(id.value).some
       project <- CacheSerialization.deserialize[ProjectADM](bytes).some
     } yield project).unsome
 
   /**
-   * Retrieves the project stored under a SHORTCODE or SHORTNAME.
+   * Retrieves the project stored under a SHORTNAME.
    *
-   * @param shortcodeOrShortname of the project.
+   * @param shortname of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortcodeOrShortname(shortcodeOrShortname: String): Task[Option[ProjectADM]] =
+  def getProjectByShortname(shortname: Project.ShortName): Task[Option[ProjectADM]] =
     (for {
-      iri     <- getStringValue(shortcodeOrShortname).some
-      project <- getProjectByIri(iri).some
+      iri     <- getStringValue(shortname.value).some
+      validIri = Iri.ProjectIri.make(iri).getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+      project <- getProjectByIri(validIri).some
+    } yield project).unsome
+
+  /**
+   * Retrieves the project stored under a SHORTCODE.
+   *
+   * @param shortcode of the project.
+   * @return an optional [[ProjectADM]]
+   */
+  def getProjectByShortcode(shortcode: Project.ShortCode): Task[Option[ProjectADM]] =
+    (for {
+      iri     <- getStringValue(shortcode.value).some
+      validIri = Iri.ProjectIri.make(iri).getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+      project <- getProjectByIri(validIri).some
     } yield project).unsome
 
   /**

@@ -309,17 +309,20 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       )
 
       for {
-        projectShortcode: String <- for {
-                                      projectResponse: ProjectGetResponseADM <-
-                                        appActor
-                                          .ask(
-                                            ProjectGetRequestADM(
-                                              identifier = ProjectIdentifierADM.Iri(projectIri),
-                                              requestingUser = userADM
-                                            )
-                                          )
-                                          .mapTo[ProjectGetResponseADM]
-                                    } yield projectResponse.project.shortcode
+        projectShortcode: String <-
+          for {
+            projectResponse: ProjectGetResponseADM <-
+              appActor
+                .ask(
+                  ProjectGetRequestADM(
+                    identifier = ProjectIdentifierADM.Iri
+                      .fromString(projectIri)
+                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+                    requestingUser = userADM
+                  )
+                )
+                .mapTo[ProjectGetResponseADM]
+          } yield projectResponse.project.shortcode
 
         file: Option[FileValueV1] <- apiRequest.file match {
                                        case Some(filename) =>
@@ -447,7 +450,9 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
               appActor
                 .ask(
                   ProjectGetRequestADM(
-                    identifier = ProjectIdentifierADM.Iri(projectId),
+                    identifier = ProjectIdentifierADM.Iri
+                      .fromString(projectId)
+                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
                     requestingUser = userProfile
                   )
                 )

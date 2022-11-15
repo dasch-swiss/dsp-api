@@ -460,7 +460,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
-                        identifier = ProjectIdentifierADM.Iri(projectIri)
+                        identifier = ProjectIdentifierADM.Iri
+                          .fromString(projectIri)
+                          .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                       )
 
       keywords: Seq[String] = maybeProject match {
@@ -847,7 +849,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     for {
       maybeCurrentProject: Option[ProjectADM] <-
         getSingleProjectADM(
-          identifier = ProjectIdentifierADM.Iri(projectIri),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString(projectIri)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           skipCache = true
         )
 
@@ -883,7 +887,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       /* Verify that the project was updated. */
       maybeUpdatedProject <-
         getSingleProjectADM(
-          identifier = ProjectIdentifierADM.Iri(projectIri),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString(projectIri)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           skipCache = true
         )
 
@@ -1127,7 +1133,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // try to retrieve newly created project (will also add to cache)
         maybeNewProjectADM <-
           getSingleProjectADM(
-            identifier = ProjectIdentifierADM.Iri(newProjectIRI),
+            identifier = ProjectIdentifierADM.Iri
+              .fromString(newProjectIRI)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
             skipCache = true
           )
 
@@ -1201,6 +1209,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       sparqlQuery <- Future(
                        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                          .getProjects(
+                           // maybeIri = identifier.asIriOption,
                            maybeIri = asIriOption(identifier),
                            maybeShortname = asShortnameOption(identifier),
                            maybeShortcode = asShortcodeOption(identifier)

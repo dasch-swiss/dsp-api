@@ -839,7 +839,9 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(resourceInfoResponse.resource_info.get.project_id),
+              identifier = ProjectIdentifierADM.Iri
+                .fromString(resourceInfoResponse.resource_info.get.project_id)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = changeFileValueRequest.userProfile
             )
           )

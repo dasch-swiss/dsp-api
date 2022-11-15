@@ -22,6 +22,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.responders.v2.ontology.Cache
+import dsp.errors.BadRequestException
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -239,7 +240,9 @@ object QueryTraverser {
                     appActor
                       .ask(
                         ProjectGetADM(
-                          ProjectIdentifierADM.Shortcode(value)
+                          ProjectIdentifierADM.Shortcode
+                            .fromString(value)
+                            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                         )
                       )(Duration(100, SECONDS))
                       .mapTo[Option[ProjectADM]]

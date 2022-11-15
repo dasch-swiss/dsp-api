@@ -43,6 +43,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.ActorUtil
+import dsp.errors.BadRequestException
 
 object ConstructResponseUtilV2 {
 
@@ -1570,7 +1571,9 @@ object ConstructResponseUtilV2 {
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(resourceAttachedToProject),
+              identifier = ProjectIdentifierADM.Iri
+                .fromString(resourceAttachedToProject)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = requestingUser
             )
           )

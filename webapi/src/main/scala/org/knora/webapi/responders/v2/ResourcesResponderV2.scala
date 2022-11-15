@@ -2676,7 +2676,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(projectResourceHistoryEventsGetRequest.projectIri),
+              identifier = ProjectIdentifierADM.Iri
+                .fromString(projectResourceHistoryEventsGetRequest.projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
             )
           )

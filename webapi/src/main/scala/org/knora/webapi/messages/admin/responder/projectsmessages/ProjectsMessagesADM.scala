@@ -28,6 +28,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
+import zio.prelude.Validation
+import dsp.errors.ValidationException
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -510,35 +512,53 @@ case class ProjectADM(
  */
 sealed trait ProjectIdentifierADM
 object ProjectIdentifierADM {
-  case class Iri(value: String) extends ProjectIdentifierADM {
-    def apply(value: String): ProjectIri = ProjectIri.make(value).fold(e => throw e.head, v => v)
+  case class Iri(value: ProjectIri) extends ProjectIdentifierADM
+  object Iri {
+    def fromString(value: String): Validation[ValidationException, Iri] =
+      ProjectIri.make(value).map {
+        Iri(_)
+      }
   }
 
-  case class Shortcode(value: String) extends ProjectIdentifierADM {
-    def apply(value: String): ShortCode = ShortCode.make(value).fold(e => throw e.head, v => v)
+  case class Shortcode(value: ShortCode) extends ProjectIdentifierADM
+  object Shortcode {
+    def fromString(value: String): Validation[ValidationException, Shortcode] =
+      ShortCode.make(value).map {
+        Shortcode(_)
+      }
   }
 
-  case class Shortname(value: String) extends ProjectIdentifierADM {
-    def apply(value: String): ShortName = ShortName.make(value).fold(e => throw e.head, v => v)
+  case class Shortname(value: ShortName) extends ProjectIdentifierADM
+  object Shortname {
+    def fromString(value: String): Validation[ValidationException, Shortname] =
+      ShortName.make(value).map {
+        Shortname(_)
+      }
   }
 
-  case class Uuid(value: String) extends ProjectIdentifierADM
+  case class Uuid(value: ProjectIri) extends ProjectIdentifierADM
+  object Uuid {
+    def fromString(value: String): Validation[ValidationException, Iri] =
+      ProjectIri.make(s"http://rdfh.ch/projects/${value}").map {
+        Iri(_)
+      }
+  }
 
   def asIriOption(id: ProjectIdentifierADM): Option[String] =
     id match {
-      case Iri(value) => Some(value)
+      case Iri(value) => Some(value.value)
       case _          => None
     }
 
   def asShortcodeOption(id: ProjectIdentifierADM): Option[String] =
     id match {
-      case Shortcode(value) => Some(value)
+      case Shortcode(value) => Some(value.value)
       case _                => None
     }
 
   def asShortnameOption(id: ProjectIdentifierADM): Option[String] =
     id match {
-      case Shortname(value) => Some(value)
+      case Shortname(value) => Some(value.value)
       case _                => None
     }
 
@@ -556,9 +576,9 @@ object ProjectIdentifierADM {
    */
   def getId(identifier: ProjectIdentifierADM): String =
     identifier match {
-      case Iri(value)       => value
-      case Shortname(value) => value
-      case Shortcode(value) => value
+      case Iri(value)       => value.value
+      case Shortname(value) => value.value
+      case Shortcode(value) => value.value
       case Uuid(value)      => s"http://rdfh.ch/projects/${value}"
     }
 }

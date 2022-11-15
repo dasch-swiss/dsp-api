@@ -188,7 +188,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(value),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -206,8 +208,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   private def getProjectByUuid(): Route =
     path(projectsBasePath / "uuid" / Segment) { value =>
-      val iri: String = s"http://rdfh.ch/projects/$value"
-
       get { requestContext =>
         val requestMessage: Future[ProjectGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -216,7 +216,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(value),
+          identifier = ProjectIdentifierADM.Uuid
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -242,7 +244,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(value),
+          identifier = ProjectIdentifierADM.Shortname
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -268,7 +272,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode(value),
+          identifier = ProjectIdentifierADM.Shortcode
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -358,7 +364,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(value),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -376,8 +384,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   private def getProjectMembersByUuid(): Route =
     path(projectsBasePath / "uuid" / Segment / "members") { value =>
-      val iri: String = s"http://rdfh.ch/projects/$value"
-
       get { requestContext =>
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -386,7 +392,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Uuid(iri),
+          identifier = ProjectIdentifierADM.Uuid
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -412,7 +420,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(value),
+          identifier = ProjectIdentifierADM.Shortname
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -438,7 +448,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode(value),
+          identifier = ProjectIdentifierADM.Shortcode
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -464,7 +476,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(value),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -490,7 +504,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(value),
+          identifier = ProjectIdentifierADM.Shortname
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -516,7 +532,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectAdminMembersGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode(value),
+          identifier = ProjectIdentifierADM.Shortcode
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -542,7 +560,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(value),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -568,7 +588,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(value),
+          identifier = ProjectIdentifierADM.Shortname
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -594,7 +616,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                             )
 
         } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode(value),
+          identifier = ProjectIdentifierADM.Shortcode
+            .fromString(value)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser
         )
 
@@ -625,7 +649,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   private def getProjectDataEntity(projectIri: IRI): Route = { requestContext =>
-    val projectIdentifier = ProjectIdentifierADM.Iri(projectIri)
     val httpEntityFuture: Future[HttpEntity.Chunked] = for {
       requestingUser <- getUserADM(
                           requestContext = requestContext,
@@ -633,7 +656,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                         )
 
       requestMessage = ProjectDataGetRequestADM(
-                         projectIdentifier = projectIdentifier,
+                         projectIdentifier = ProjectIdentifierADM.Iri
+                           .fromString(projectIri)
+                           .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
                          requestingUser = requestingUser
                        )
 

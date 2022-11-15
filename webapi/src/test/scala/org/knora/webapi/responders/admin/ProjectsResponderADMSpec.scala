@@ -54,7 +54,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return information about a project identified by IRI" in {
         appActor ! ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri(SharedTestDataADM.incunabulaProject.id),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString(SharedTestDataADM.incunabulaProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
@@ -63,7 +65,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return information about a project identified by shortname" in {
         appActor ! ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname(SharedTestDataADM.incunabulaProject.shortname),
+          identifier = ProjectIdentifierADM.Shortname
+            .fromString(SharedTestDataADM.incunabulaProject.shortname)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
@@ -71,7 +75,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project IRI is unknown" in {
         appActor ! ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri("http://rdfh.ch/projects/notexisting"),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString("http://rdfh.ch/projects/notexisting")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
@@ -80,7 +86,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project shortname is unknown " in {
         appActor ! ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname("wrongshortname"),
+          identifier = ProjectIdentifierADM.Shortname
+            .fromString("wrongshortname")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
@@ -88,7 +96,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project shortcode is unknown " in {
         appActor ! ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode("9999"),
+          identifier = ProjectIdentifierADM.Shortcode
+            .fromString("9999")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found")))
@@ -100,7 +110,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return restricted view settings using project IRI" in {
         appActor ! ProjectRestrictedViewSettingsGetADM(
-          identifier = ProjectIdentifierADM.Iri(SharedTestDataADM.imagesProject.id),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString(SharedTestDataADM.imagesProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Some(expectedResult))
@@ -108,7 +120,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return restricted view settings using project SHORTNAME" in {
         appActor ! ProjectRestrictedViewSettingsGetADM(
-          identifier = ProjectIdentifierADM.Shortname(SharedTestDataADM.imagesProject.shortname),
+          identifier = ProjectIdentifierADM.Shortname
+            .fromString(SharedTestDataADM.imagesProject.shortname)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Some(expectedResult))
@@ -116,7 +130,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return restricted view settings using project SHORTCODE" in {
         appActor ! ProjectRestrictedViewSettingsGetADM(
-          identifier = ProjectIdentifierADM.Shortcode(SharedTestDataADM.imagesProject.shortcode),
+          identifier = ProjectIdentifierADM.Shortcode
+            .fromString(SharedTestDataADM.imagesProject.shortcode)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Some(expectedResult))
@@ -124,7 +140,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project IRI is unknown" in {
         appActor ! ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Iri("http://rdfh.ch/projects/notexisting"),
+          identifier = ProjectIdentifierADM.Iri
+            .fromString("http://rdfh.ch/projects/notexisting")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
@@ -132,7 +150,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project SHORTCODE is unknown" in {
         appActor ! ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortcode("9999"),
+          identifier = ProjectIdentifierADM.Shortcode
+            .fromString("9999")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
@@ -140,7 +160,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project SHORTNAME is unknown" in {
         appActor ! ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ProjectIdentifierADM.Shortname("wrongshortname"),
+          identifier = ProjectIdentifierADM.Shortname
+            .fromString("wrongshortname")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
@@ -450,7 +472,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
     "used to query members" should {
       "return all members of a project identified by IRI" in {
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Iri(SharedTestDataADM.imagesProject.id),
+          ProjectIdentifierADM.Iri
+            .fromString(SharedTestDataADM.imagesProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -468,7 +492,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all members of a project identified by shortname" in {
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Shortname(SharedTestDataADM.imagesProject.shortname),
+          ProjectIdentifierADM.Shortname
+            .fromString(SharedTestDataADM.imagesProject.shortname)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -486,7 +512,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all members of a project identified by shortcode" in {
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Shortcode(SharedTestDataADM.imagesProject.shortcode),
+          ProjectIdentifierADM.Shortcode
+            .fromString(SharedTestDataADM.imagesProject.shortcode)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -504,7 +532,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project IRI is unknown (project membership)" in {
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Iri("http://rdfh.ch/projects/notexisting"),
+          ProjectIdentifierADM.Iri
+            .fromString("http://rdfh.ch/projects/notexisting")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
@@ -512,7 +542,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project shortname is unknown (project membership)" in {
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Shortname("wrongshortname"),
+          ProjectIdentifierADM.Shortname
+            .fromString("wrongshortname")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
@@ -520,7 +552,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project shortcode is unknown (project membership)" in {
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM.Shortcode("9999"),
+          ProjectIdentifierADM.Shortcode
+            .fromString("9999")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
@@ -528,7 +562,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all project admin members of a project identified by IRI" in {
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM.Iri(SharedTestDataADM.imagesProject.id),
+          ProjectIdentifierADM.Iri
+            .fromString(SharedTestDataADM.imagesProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -544,7 +580,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all project admin members of a project identified by shortname" in {
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM.Shortname(SharedTestDataADM.imagesProject.shortname),
+          ProjectIdentifierADM.Shortname
+            .fromString(SharedTestDataADM.imagesProject.shortname)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -560,7 +598,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all project admin members of a project identified by shortcode" in {
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM.Shortcode(SharedTestDataADM.imagesProject.shortcode),
+          ProjectIdentifierADM.Shortcode
+            .fromString(SharedTestDataADM.imagesProject.shortcode)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -576,7 +616,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM.Iri("http://rdfh.ch/projects/notexisting"),
+          ProjectIdentifierADM.Iri
+            .fromString("http://rdfh.ch/projects/notexisting")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
@@ -584,7 +626,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM.Shortname("wrongshortname"),
+          ProjectIdentifierADM.Shortname
+            .fromString("wrongshortname")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
@@ -592,7 +636,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project shortcode is unknown (project admin membership)" in {
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM.Shortcode("9999"),
+          ProjectIdentifierADM.Shortcode
+            .fromString("9999")
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))

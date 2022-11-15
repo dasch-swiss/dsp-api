@@ -1586,7 +1586,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(projectIri),
+              identifier = ProjectIdentifierADM.Iri
+                .fromString(projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = requestingUser
             )
           )
@@ -2462,7 +2464,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri(projectIri),
+              identifier = ProjectIdentifierADM.Iri
+                .fromString(projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = userProfile
             )
           )

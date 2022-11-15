@@ -114,7 +114,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               appActor
                 .ask(
                   ProjectGetADM(
-                    identifier = ProjectIdentifierADM.Iri(projectIri)
+                    identifier = ProjectIdentifierADM.Iri
+                      .fromString(projectIri)
+                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                   )
                 )
                 .mapTo[Option[ProjectADM]]
@@ -431,7 +433,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri(iri)
+                identifier = ProjectIdentifierADM.Iri
+                  .fromString(iri)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -782,7 +786,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri(projectIri)
+                identifier = ProjectIdentifierADM.Iri
+                  .fromString(projectIri)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]
