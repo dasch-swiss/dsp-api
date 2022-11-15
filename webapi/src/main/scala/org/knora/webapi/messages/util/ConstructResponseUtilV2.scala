@@ -16,6 +16,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import org.knora.webapi._
@@ -43,7 +44,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.ActorUtil
-import dsp.errors.BadRequestException
 
 object ConstructResponseUtilV2 {
 

@@ -10,9 +10,11 @@ import akka.pattern._
 
 import scala.concurrent.Future
 
+import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
@@ -28,8 +30,6 @@ import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API

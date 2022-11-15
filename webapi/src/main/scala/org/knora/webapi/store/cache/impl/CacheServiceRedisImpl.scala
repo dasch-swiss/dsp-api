@@ -10,10 +10,12 @@ import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 import zio._
 
+import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
@@ -26,10 +28,6 @@ import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
 import org.knora.webapi.store.cache.config.RedisConfig
 import org.knora.webapi.store.cache.serialization.CacheSerialization
-import dsp.valueobjects.Project
-import dsp.valueobjects.Iri
-import net.sf.saxon.regex.OpNothing
-import dsp.errors.BadRequestException
 
 case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
 

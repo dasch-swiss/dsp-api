@@ -13,6 +13,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent._
 import scala.concurrent.duration._
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -22,7 +23,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.responders.v2.ontology.Cache
-import dsp.errors.BadRequestException
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.

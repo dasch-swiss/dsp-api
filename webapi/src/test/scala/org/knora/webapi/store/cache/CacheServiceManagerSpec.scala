@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.cache
 
+import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -14,7 +15,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserA
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.serialization.CacheSerialization]].
