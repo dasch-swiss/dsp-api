@@ -24,7 +24,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
@@ -839,7 +839,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri
+              identifier = IriIdentifier
                 .fromString(resourceInfoResponse.resource_info.get.project_id)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = changeFileValueRequest.userProfile

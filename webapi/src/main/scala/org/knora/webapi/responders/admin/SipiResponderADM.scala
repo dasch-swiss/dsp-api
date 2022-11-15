@@ -29,7 +29,7 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import dsp.errors.BadRequestException
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -123,7 +123,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                           appActor
                             .ask(
                               ProjectRestrictedViewSettingsGetADM(
-                                identifier = ProjectIdentifierADM.Shortcode
+                                identifier = ShortcodeIdentifier
                                   .fromString(request.projectID)
                                   .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
                                 requestingUser = KnoraSystemInstances.Users.SystemUser

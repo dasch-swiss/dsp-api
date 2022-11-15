@@ -460,7 +460,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
-                        identifier = ProjectIdentifierADM.Iri
+                        identifier = IriIdentifier
                           .fromString(projectIri)
                           .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                       )
@@ -849,7 +849,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     for {
       maybeCurrentProject: Option[ProjectADM] <-
         getSingleProjectADM(
-          identifier = ProjectIdentifierADM.Iri
+          identifier = IriIdentifier
             .fromString(projectIri)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           skipCache = true
@@ -887,7 +887,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       /* Verify that the project was updated. */
       maybeUpdatedProject <-
         getSingleProjectADM(
-          identifier = ProjectIdentifierADM.Iri
+          identifier = IriIdentifier
             .fromString(projectIri)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           skipCache = true
@@ -1133,7 +1133,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // try to retrieve newly created project (will also add to cache)
         maybeNewProjectADM <-
           getSingleProjectADM(
-            identifier = ProjectIdentifierADM.Iri
+            identifier = IriIdentifier
               .fromString(newProjectIRI)
               .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
             skipCache = true

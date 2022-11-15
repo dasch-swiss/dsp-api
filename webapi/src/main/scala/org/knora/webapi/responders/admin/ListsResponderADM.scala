@@ -25,7 +25,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePay
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -942,7 +942,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         appActor
           .ask(
             ProjectGetADM(
-              identifier = ProjectIdentifierADM.Iri
+              identifier = IriIdentifier
                 .fromString(projectIri.value)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
@@ -2270,7 +2270,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       maybeProject <- appActor
                         .ask(
                           ProjectGetADM(
-                            ProjectIdentifierADM.Iri
+                            IriIdentifier
                               .fromString(projectIri)
                               .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                           )

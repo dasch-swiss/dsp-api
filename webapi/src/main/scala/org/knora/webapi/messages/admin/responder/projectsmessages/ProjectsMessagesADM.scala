@@ -30,6 +30,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import zio.prelude.Validation
 import dsp.errors.ValidationException
+import dsp.valueobjects.Iri._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -512,60 +513,84 @@ case class ProjectADM(
  */
 sealed trait ProjectIdentifierADM
 object ProjectIdentifierADM {
-  case class Iri(value: ProjectIri) extends ProjectIdentifierADM
-  object Iri {
-    def fromString(value: String): Validation[ValidationException, Iri] =
+
+  /**
+   * Represents [[IriIdentifier]] identifier.
+   *
+   * @param value that constructs the identifier in the type of [[ProjectIri]] value object.
+   */
+  final case class IriIdentifier(value: ProjectIri) extends ProjectIdentifierADM
+  object IriIdentifier {
+    def fromString(value: String): Validation[ValidationException, IriIdentifier] =
       ProjectIri.make(value).map {
-        Iri(_)
+        IriIdentifier(_)
       }
   }
 
-  case class Shortcode(value: ShortCode) extends ProjectIdentifierADM
-  object Shortcode {
-    def fromString(value: String): Validation[ValidationException, Shortcode] =
+  /**
+   * Represents [[ShortcodeIdentifier]] identifier.
+   *
+   * @param value that constructs the identifier in the type of [[ShortCode]] value object.
+   */
+  final case class ShortcodeIdentifier(value: ShortCode) extends ProjectIdentifierADM
+  object ShortcodeIdentifier {
+    def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
       ShortCode.make(value).map {
-        Shortcode(_)
+        ShortcodeIdentifier(_)
       }
   }
 
-  case class Shortname(value: ShortName) extends ProjectIdentifierADM
-  object Shortname {
-    def fromString(value: String): Validation[ValidationException, Shortname] =
+  /**
+   * Represents [[ShortnameIdentifier]] identifier.
+   *
+   * @param value that constructs the identifier in the type of [[ShortName]] value object.
+   */
+  final case class ShortnameIdentifier(value: ShortName) extends ProjectIdentifierADM
+  object ShortnameIdentifier {
+    def fromString(value: String): Validation[ValidationException, ShortnameIdentifier] =
       ShortName.make(value).map {
-        Shortname(_)
+        ShortnameIdentifier(_)
       }
   }
 
-  case class Uuid(value: ProjectIri) extends ProjectIdentifierADM
-  object Uuid {
-    def fromString(value: String): Validation[ValidationException, Iri] =
-      ProjectIri.make(s"http://rdfh.ch/projects/${value}").map {
-        Iri(_)
+  /**
+   * Represents [[UuidIdentifier]] identifier.
+   *
+   * @param value that constructs the identifier in the type of [[Base64Uuid]] value object.
+   */
+  final case class UuidIdentifier(value: Base64Uuid) extends ProjectIdentifierADM
+  // TODO-mpro: UuidIdentifier isn't fully used yet since the value object needs
+  object UuidIdentifier {
+    def fromString(value: String): Validation[ValidationException, UuidIdentifier] =
+      Base64Uuid.make(value).map {
+        UuidIdentifier(_)
       }
+
+    def makeProjectIri(uuid: String) = s"http://rdfh.ch/projects/${uuid}"
   }
 
   def asIriOption(id: ProjectIdentifierADM): Option[String] =
     id match {
-      case Iri(value) => Some(value.value)
-      case _          => None
+      case IriIdentifier(value) => Some(value.value)
+      case _                    => None
     }
 
   def asShortcodeOption(id: ProjectIdentifierADM): Option[String] =
     id match {
-      case Shortcode(value) => Some(value.value)
-      case _                => None
+      case ShortcodeIdentifier(value) => Some(value.value)
+      case _                          => None
     }
 
   def asShortnameOption(id: ProjectIdentifierADM): Option[String] =
     id match {
-      case Shortname(value) => Some(value.value)
-      case _                => None
+      case ShortnameIdentifier(value) => Some(value.value)
+      case _                          => None
     }
 
   def asUuidOption(id: ProjectIdentifierADM): Option[String] =
     id match {
-      case Uuid(value) => Some(s"http://rdfh.ch/projects/${value}")
-      case _           => None
+      case UuidIdentifier(value) => Some(UuidIdentifier.makeProjectIri(value.value))
+      case _                     => None
     }
 
   /**
@@ -576,10 +601,10 @@ object ProjectIdentifierADM {
    */
   def getId(identifier: ProjectIdentifierADM): String =
     identifier match {
-      case Iri(value)       => value.value
-      case Shortname(value) => value.value
-      case Shortcode(value) => value.value
-      case Uuid(value)      => s"http://rdfh.ch/projects/${value}"
+      case IriIdentifier(value)       => value.value
+      case ShortnameIdentifier(value) => value.value
+      case ShortcodeIdentifier(value) => value.value
+      case UuidIdentifier(value)      => UuidIdentifier.makeProjectIri(value.value)
     }
 }
 

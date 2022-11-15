@@ -24,6 +24,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
@@ -2676,7 +2677,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri
+              identifier = IriIdentifier
                 .fromString(projectResourceHistoryEventsGetRequest.projectIri)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = projectResourceHistoryEventsGetRequest.requestingUser

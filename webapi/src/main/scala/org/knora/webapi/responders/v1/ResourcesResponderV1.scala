@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCre
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
@@ -1586,7 +1586,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri
+              identifier = IriIdentifier
                 .fromString(projectIri)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = requestingUser
@@ -2464,7 +2464,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM.Iri
+              identifier = IriIdentifier
                 .fromString(projectIri)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = userProfile

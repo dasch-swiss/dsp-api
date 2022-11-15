@@ -13,6 +13,8 @@ import zio._
 import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
@@ -116,10 +118,10 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     // The data is stored under the Iri
     // Additionally, the Shortcode, Shortname and Uuid point to the Iri
     identifier match {
-      case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value)
-      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcode(value)
-      case ProjectIdentifierADM.Shortname(value) => getProjectByShortname(value)
-      case ProjectIdentifierADM.Uuid(value)      => getProjectByIri(value)
+      case IriIdentifier(value)       => getProjectByIri(value)
+      case ShortcodeIdentifier(value) => getProjectByShortcode(value)
+      case ShortnameIdentifier(value) => getProjectByShortname(value)
+      case UuidIdentifier(value)      => getProjectByIri(value)
     }
 
   /**
@@ -158,6 +160,18 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
       iri     <- getStringValue(shortcode.value).some
       validIri = Iri.ProjectIri.make(iri).getOrElseWith(e => throw BadRequestException(e.head.getMessage))
       project <- getProjectByIri(validIri).some
+    } yield project).unsome
+
+  /**
+   * Retrieves the project stored under and extracted from the IRI.
+   *
+   * @param id the project's UUID
+   * @return an optional [[ProjectADM]].
+   */
+  def getProjectByIri(id: Iri.Base64Uuid): Task[Option[ProjectADM]] =
+    (for {
+      bytes   <- getBytesValue(UuidIdentifier.makeProjectIri(id.value)).some
+      project <- CacheSerialization.deserialize[ProjectADM](bytes).some
     } yield project).unsome
 
   /**

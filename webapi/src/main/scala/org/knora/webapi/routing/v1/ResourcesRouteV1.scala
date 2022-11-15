@@ -42,7 +42,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
@@ -315,7 +315,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
               appActor
                 .ask(
                   ProjectGetRequestADM(
-                    identifier = ProjectIdentifierADM.Iri
+                    identifier = IriIdentifier
                       .fromString(projectIri)
                       .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
                     requestingUser = userADM
@@ -450,7 +450,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
               appActor
                 .ask(
                   ProjectGetRequestADM(
-                    identifier = ProjectIdentifierADM.Iri
+                    identifier = IriIdentifier
                       .fromString(projectId)
                       .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
                     requestingUser = userProfile

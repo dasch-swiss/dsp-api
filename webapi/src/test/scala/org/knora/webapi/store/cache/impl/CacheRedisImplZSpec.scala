@@ -11,7 +11,7 @@ import zio.test._
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -70,7 +70,7 @@ object CacheRedisImplZSpec extends ZIOSpecDefault {
       for {
         _ <- CacheService.putProjectADM(project)
         retrievedProject <- CacheService.getProjectADM(
-                              ProjectIdentifierADM.Iri
+                              IriIdentifier
                                 .fromString(project.id)
                                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                             )
@@ -81,7 +81,7 @@ object CacheRedisImplZSpec extends ZIOSpecDefault {
           _ <- CacheService.putProjectADM(project)
           retrievedProject <-
             CacheService.getProjectADM(
-              ProjectIdentifierADM.Shortcode
+              ShortcodeIdentifier
                 .fromString(project.shortcode)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
@@ -92,7 +92,7 @@ object CacheRedisImplZSpec extends ZIOSpecDefault {
           _ <- CacheService.putProjectADM(project)
           retrievedProject <-
             CacheService.getProjectADM(
-              ProjectIdentifierADM.Shortname
+              ShortnameIdentifier
                 .fromString(project.shortname)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )

@@ -8,8 +8,11 @@ package org.knora.webapi.store.cache.impl
 import zio._
 import zio.stm._
 
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
@@ -18,8 +21,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusRe
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
-import dsp.valueobjects.Project
-import dsp.valueobjects.Iri
 
 /**
  * In-Memory Cache implementation
@@ -121,10 +122,10 @@ case class CacheServiceInMemImpl(
    */
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     (identifier match {
-      case ProjectIdentifierADM.Iri(value)       => getProjectByIri(value)
-      case ProjectIdentifierADM.Shortcode(value) => getProjectByShortcode(value)
-      case ProjectIdentifierADM.Shortname(value) => getProjectByShortname(value)
-      case ProjectIdentifierADM.Uuid(value)      => getProjectByIri(value)
+      case IriIdentifier(value)       => getProjectByIri(value)
+      case ShortcodeIdentifier(value) => getProjectByShortcode(value)
+      case ShortnameIdentifier(value) => getProjectByShortname(value)
+      case UuidIdentifier(value)      => getProjectByUuid(value)
     }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
 
   /**
@@ -158,6 +159,15 @@ case class CacheServiceInMemImpl(
       iri     <- lut.get(shortcode.value).some
       project <- projects.get(iri).some
     } yield project).commit.unsome
+
+  /**
+   * Retrieves the project stored under and extracted from the IRI.
+   *
+   * @param id the project's UUID
+   * @return an optional [[ProjectADM]].
+   */
+  def getProjectByUuid(id: Iri.Base64Uuid) =
+    projects.get(UuidIdentifier.makeProjectIri(id.value)).commit
 
   /**
    * Store string or byte array value under key.

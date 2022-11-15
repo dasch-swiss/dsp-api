@@ -20,7 +20,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -114,7 +114,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               appActor
                 .ask(
                   ProjectGetADM(
-                    identifier = ProjectIdentifierADM.Iri
+                    identifier = IriIdentifier
                       .fromString(projectIri)
                       .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                   )
@@ -433,7 +433,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri
+                identifier = IriIdentifier
                   .fromString(iri)
                   .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
@@ -786,7 +786,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri
+                identifier = IriIdentifier
                   .fromString(projectIri)
                   .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )

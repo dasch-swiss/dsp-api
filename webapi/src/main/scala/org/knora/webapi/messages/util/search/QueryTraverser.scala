@@ -20,7 +20,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.responders.v2.ontology.Cache
 import dsp.errors.BadRequestException
 
@@ -240,7 +240,7 @@ object QueryTraverser {
                     appActor
                       .ask(
                         ProjectGetADM(
-                          ProjectIdentifierADM.Shortcode
+                          ShortcodeIdentifier
                             .fromString(value)
                             .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                         )

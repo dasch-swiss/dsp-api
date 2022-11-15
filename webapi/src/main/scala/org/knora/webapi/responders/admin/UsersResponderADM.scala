@@ -27,7 +27,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionD
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserChangeRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
@@ -913,7 +913,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM.Iri
+                identifier = IriIdentifier
                   .fromString(projectIri)
                   .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
@@ -1952,7 +1952,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             appActor
               .ask(
                 ProjectGetADM(
-                  identifier = ProjectIdentifierADM.Iri
+                  identifier = IriIdentifier
                     .fromString(projectIri)
                     .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                 )
