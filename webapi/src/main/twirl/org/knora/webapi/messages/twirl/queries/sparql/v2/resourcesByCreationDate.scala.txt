@@ -2,16 +2,16 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT DISTINCT ?resource ?orderByValue
+SELECT DISTINCT ?resource ?creationDate
 WHERE {
     ?resource knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
         rdf:type <http://www.knora.org/ontology/0001/anything#Thing> .
     FILTER NOT EXISTS {
         ?resource knora-base:isDeleted true .
     }
-   ?resource <http://www.knora.org/ontology/knora-base#creationDate> ?orderByValue .
+   ?resource <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate .
 }
 ORDER BY
-    ASC(?orderByValue)
+    ASC(?creationDate)
     ASC(?resource)
 OFFSET 0

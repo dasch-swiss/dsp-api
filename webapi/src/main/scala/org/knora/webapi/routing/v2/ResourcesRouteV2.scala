@@ -6,7 +6,7 @@
 package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.server.{PathMatcher, RequestContext, Route}
 import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -169,7 +169,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       val projectIri: SmartIri = RouteUtilV2
         .getProject(requestContext)
         .getOrElse(throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
+      val params: Map[IRI, IRI] = getQueryParamsMap(requestContext)
 
       val resourceClassStr: String =
         params.getOrElse(
@@ -177,7 +177,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           throw BadRequestException(s"This route requires the parameter 'resourceClass'")
         )
       val resourceClass: SmartIri =
-        resourceClassStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr"))
+        validateResourceClass(resourceClassStr)
 
       if (!(resourceClass.isKnoraApiV2EntityIri && resourceClass.getOntologySchema.contains(ApiV2Complex))) {
         throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr")
@@ -239,7 +239,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             resourceIriStr,
             throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
           )
-        val params: Map[String, String] = requestContext.request.uri.query().toMap
+        val params: Map[IRI, IRI] = getQueryParamsMap(requestContext)
         val startDate: Option[Instant] = params
           .get("startDate")
           .map(dateStr =>
@@ -326,18 +326,24 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     }
 
+  private def getRequiredStringQueryParam(requestContext: RequestContext, key: String): String =
+    getQueryParamsMap(requestContext).getOrElse(
+      key,
+      throw BadRequestException(s"This route requires the parameter '$key'")
+    )
+  private def getQueryParamsMap(requestContext: RequestContext): Map[String, String] =
+    requestContext.request.uri.query().toMap
+  private def validateResourceClass(resourceClass: String): SmartIri =
+    resourceClass.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClass"))
   private def getResourcesSync: Route = path(resourcesBasePath / "sync" / Segments) { _ =>
-    get { requestContext =>
-      val message = getUserADM(requestContext, routeData.appConfig).map(HelloResourcesV2Req)
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = message,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-      )
+    get { ctx =>
+      val appConfig = routeData.appConfig
+      val message =
+        for {
+          user         <- getUserADM(ctx, appConfig)
+          resourceClass = validateResourceClass(getRequiredStringQueryParam(ctx, "resourceClass"))
+        } yield HelloResourcesV2Req(user, resourceClass.toIri)
+      RouteUtilV2.runRdfRouteWithFuture(message, ctx, appConfig, appActor, log, ApiV2Simple, Set.empty)
     }
   }
 
@@ -352,7 +358,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
       }
 
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
+      val params: Map[IRI, IRI] = getQueryParamsMap(requestContext)
 
       // Was a version date provided?
       val versionDate: Option[Instant] = params.get("version").map { versionStr =>
@@ -431,7 +437,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       val resourceIri: IRI =
         stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
 
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
+      val params: Map[IRI, IRI] = getQueryParamsMap(requestContext)
 
       // the the property that represents the text
       val textProperty: SmartIri = getTextPropertyFromParams(params)
@@ -473,8 +479,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           resIriStr,
           throw BadRequestException(s"Invalid resource IRI: <$resIriStr>")
         )
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
-      val depth: Int                  = params.get(Depth).map(_.toInt).getOrElse(routeData.appConfig.v2.graphRoute.defaultGraphDepth)
+      val params: Map[IRI, IRI] = getQueryParamsMap(requestContext)
+      val depth: Int            = params.get(Depth).map(_.toInt).getOrElse(routeData.appConfig.v2.graphRoute.defaultGraphDepth)
 
       if (depth < 1) {
         throw BadRequestException(s"$Depth must be at least 1")
