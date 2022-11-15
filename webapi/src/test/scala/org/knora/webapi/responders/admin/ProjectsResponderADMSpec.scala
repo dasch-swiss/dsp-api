@@ -41,6 +41,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   private val rootUser = SharedTestDataADM.rootUser
 
+  private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
+
   "The ProjectsResponderADM" when {
     "used to query for project information" should {
       "return information for every project" in {
@@ -77,11 +79,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'NotFoundException' when the project IRI is unknown" in {
         appActor ! ProjectGetRequestADM(
           identifier = IriIdentifier
-            .fromString("http://rdfh.ch/projects/notexisting")
+            .fromString(notExistingProjectButValidProjectIri)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
-        expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
+        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found")))
 
       }
 
@@ -142,11 +144,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'NotFoundException' when the project IRI is unknown" in {
         appActor ! ProjectRestrictedViewSettingsGetRequestADM(
           identifier = IriIdentifier
-            .fromString("http://rdfh.ch/projects/notexisting")
+            .fromString(notExistingProjectButValidProjectIri)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
-        expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
+        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
       }
 
       "return 'NotFoundException' when the project SHORTCODE is unknown" in {
@@ -414,14 +416,14 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
         appActor ! ProjectChangeRequestADM(
-          projectIri = "http://rdfh.ch/projects/notexisting",
+          projectIri = notExistingProjectButValidProjectIri,
           changeProjectRequest = ChangeProjectApiRequestADM(longname = Some("new long name")).validateAndEscape,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
         expectMsg(
           Failure(
-            NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found. Aborting update request.")
+            NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request.")
           )
         )
       }
@@ -534,11 +536,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'NotFound' when the project IRI is unknown (project membership)" in {
         appActor ! ProjectMembersGetRequestADM(
           IriIdentifier
-            .fromString("http://rdfh.ch/projects/notexisting")
+            .fromString(notExistingProjectButValidProjectIri)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           SharedTestDataADM.rootUser
         )
-        expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
+        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
       }
 
       "return 'NotFound' when the project shortname is unknown (project membership)" in {
@@ -618,11 +620,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
         appActor ! ProjectAdminMembersGetRequestADM(
           IriIdentifier
-            .fromString("http://rdfh.ch/projects/notexisting")
+            .fromString(notExistingProjectButValidProjectIri)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           SharedTestDataADM.rootUser
         )
-        expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
+        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
       }
 
       "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
@@ -676,11 +678,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project IRI is unknown" in {
         appActor ! ProjectKeywordsGetRequestADM(
-          projectIri = "http://rdfh.ch/projects/notexisting",
+          projectIri = notExistingProjectButValidProjectIri,
           SharedTestDataADM.rootUser
         )
 
-        expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
+        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
       }
     }
   }
