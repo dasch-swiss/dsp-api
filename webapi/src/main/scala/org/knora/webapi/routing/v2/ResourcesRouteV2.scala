@@ -342,7 +342,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         for {
           user         <- getUserADM(ctx, appConfig)
           resourceClass = validateResourceClass(getRequiredStringQueryParam(ctx, "resourceClass"))
-        } yield HelloResourcesV2Req(user, resourceClass.toIri)
+        } yield HelloResourcesV2Req(user, resourceClass.toOntologySchema(InternalSchema).toIri)
       RouteUtilV2.runRdfRouteWithFuture(message, ctx, appConfig, appActor, log, ApiV2Simple, Set.empty)
     }
   }
