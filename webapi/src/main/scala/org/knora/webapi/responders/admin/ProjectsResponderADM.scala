@@ -305,9 +305,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                .getProjectMembers(
-                                 maybeIri = asIriOption(identifier),
-                                 maybeShortname = asShortnameOption(identifier),
-                                 maybeShortcode = asShortcodeOption(identifier)
+                                 maybeIri = identifier.asIriOption,
+                                 maybeShortname = identifier.asShortnameOption,
+                                 maybeShortcode = identifier.asShortcodeOption
                                )
                                .toString()
                            )
@@ -383,9 +383,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                .getProjectAdminMembers(
-                                 maybeIri = asIriOption(identifier),
-                                 maybeShortname = asShortnameOption(identifier),
-                                 maybeShortcode = asShortcodeOption(identifier)
+                                 maybeIri = identifier.asIriOption,
+                                 maybeShortname = identifier.asShortnameOption,
+                                 maybeShortcode = identifier.asShortcodeOption
                                )
                                .toString()
                            )
@@ -682,9 +682,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       sparqlQuery <- Future(
                        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                          .getProjects(
-                           maybeIri = asIriOption(identifier),
-                           maybeShortname = asShortnameOption(identifier),
-                           maybeShortcode = asShortcodeOption(identifier)
+                           maybeIri = identifier.asIriOption,
+                           maybeShortname = identifier.asShortnameOption,
+                           maybeShortcode = identifier.asShortcodeOption
                          )
                          .toString()
                      )
@@ -1210,9 +1210,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                          .getProjects(
                            // maybeIri = identifier.asIriOption,
-                           maybeIri = asIriOption(identifier),
-                           maybeShortname = asShortnameOption(identifier),
-                           maybeShortcode = asShortcodeOption(identifier)
+                           maybeIri = identifier.asIriOption,
+                           maybeShortname = identifier.asShortnameOption,
+                           maybeShortcode = identifier.asShortcodeOption
                          )
                          .toString()
                      )
