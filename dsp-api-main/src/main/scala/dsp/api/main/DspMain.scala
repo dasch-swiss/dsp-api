@@ -17,20 +17,20 @@ object DspMain extends ZIOAppDefault {
   val metricsConfig = ZLayer.succeed(MetricsConfig(5.seconds))
   override val run: Task[Unit] =
     ZIO
-      .serviceWithZIO[DspServer](server => server.start())
+      .serviceWithZIO[DspServer](_.start)
       .provide(
         // ZLayer.Debug.mermaid,
-
+        // server
+        DspServer.layer,
         // configuration
         AppConfig.live,
-        DspServer.layer,
-        // Routes
+        // routes
         UserRoutes.layer,
-        // Handlers
+        // handlers
         UserHandler.layer,
-        // Repositories
+        // repositories
         UserRepoLive.layer,
-        // Operations
+        // logging
         SLF4J.slf4j,
         removeDefaultLoggers
         // metricsConfig
