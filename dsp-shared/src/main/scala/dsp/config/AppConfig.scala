@@ -6,12 +6,14 @@ import zio.config._
 import zio.config.magnolia.descriptor
 import zio.config.typesafe.TypesafeConfigSource
 
+import dsp.valueobjects.User._
+
 /**
  * Configuration
  */
 final case class AppConfig(
   knoraApi: KnoraApi,
-  bcryptPasswordStrength: Int
+  bcryptPasswordStrength: PasswordStrength
 )
 
 final case class KnoraApi(
@@ -31,7 +33,7 @@ object AppConfig {
     TypesafeConfigSource.fromTypesafeConfig(ZIO.attempt(ConfigFactory.load().getConfig("app").resolve))
 
   /**
-   * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
+   * Instantiates the config class hierarchy using the data from the 'app' configuration from 'application.conf'.
    */
   private val configFromSource: IO[ReadError[String], AppConfig] = read(
     descriptor[AppConfig].mapKey(toKebabCase) from source

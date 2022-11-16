@@ -8,6 +8,7 @@ package dsp.valueobjects
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import zio._
+import zio.config.magnolia.Descriptor
 import zio.json.JsonCodec
 import zio.json.JsonDecoder
 import zio.json.JsonEncoder
@@ -240,13 +241,20 @@ object User {
     implicit val encoder: JsonEncoder[PasswordStrength] =
       JsonEncoder[Int].contramap(passwordStrength => passwordStrength)
 
+    // this is used for the configuration descriptor
+    implicit val descriptorForPasswordStrength: Descriptor[PasswordStrength] =
+      Descriptor[Int].transformOrFail(
+        int => PasswordStrength.make(int).toEitherWith(_.toString()),
+        r => Right(r.toInt)
+      )
+
     override def assertion = assert {
       greaterThanOrEqualTo(4) &&
       lessThanOrEqualTo(31)
     }
 
-    def unsafeMake(value: Int): PasswordStrength =
-      PasswordStrength.wrap(value)
+    // ignores the assertion!
+    def unsafeMake(value: Int): PasswordStrength = PasswordStrength.wrap(value)
 
   }
   type PasswordStrength = PasswordStrength.Type

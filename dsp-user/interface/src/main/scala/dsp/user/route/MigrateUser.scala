@@ -51,7 +51,10 @@ object MigrateUser {
             val familyName = FamilyName.make(u.familyName)
             val password = PasswordHash.make(
               u.password,
-              PasswordStrength.unsafeMake(appConfig.bcryptPasswordStrength)
+              // at this point in time the config has already been checked, so it is OK to use unsafeMake()
+              PasswordStrength.unsafeMake(
+                appConfig.bcryptPasswordStrength
+              )
             )
             val language = LanguageCode.make(u.language)
             val status   = UserStatus.make(u.status)
