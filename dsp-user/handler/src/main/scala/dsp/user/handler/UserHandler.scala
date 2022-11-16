@@ -75,7 +75,10 @@ final case class UserHandler(repo: UserRepo) {
       _ <- repo
              .checkIfUsernameExists(username)
              .mapError(_ => DuplicateValueException(s"Username '${username.value}' already taken"))
-             .tap(_ => ZIO.logInfo(s"Checked if username '${username.value}' is already taken"))
+             .tapBoth(
+               _ => ZIO.logInfo(s"Username '${username.value}' already taken"),
+               _ => ZIO.logInfo(s"Checked if username '${username.value}' is already taken")
+             )
     } yield ()
 
   /**
@@ -88,7 +91,10 @@ final case class UserHandler(repo: UserRepo) {
       _ <- repo
              .checkIfEmailExists(email)
              .mapError(_ => DuplicateValueException(s"Email '${email.value}' already taken"))
-             .tap(_ => ZIO.logInfo(s"Checked if email '${email.value}' is already taken"))
+             .tapBoth(
+               _ => ZIO.logInfo(s"Email '${email.value}' already taken"),
+               _ => ZIO.logInfo(s"Checked if email '${email.value}' is already taken")
+             )
     } yield ()
 
   /**

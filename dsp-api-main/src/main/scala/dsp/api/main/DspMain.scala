@@ -31,8 +31,8 @@ object DspMain extends ZIOAppDefault {
         // repositories
         UserRepoLive.layer,
         // slf4j facade, we use it with logback.xml
-        SLF4J.slf4j,
-        removeDefaultLoggers
+        removeDefaultLoggers,
+        SLF4J.slf4j
         // metricsConfig
       )
 
