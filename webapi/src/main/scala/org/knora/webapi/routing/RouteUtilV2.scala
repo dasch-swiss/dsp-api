@@ -16,7 +16,6 @@ import com.typesafe.scalalogging.Logger
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
-
 import dsp.errors.BadRequestException
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi._
@@ -31,6 +30,8 @@ import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
+
+import scala.util.{Failure, Success, Try}
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
@@ -196,6 +197,18 @@ object RouteUtilV2 {
     requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map { header =>
       val projectIriStr = header.value
       projectIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $projectIriStr"))
+    }
+
+  /**
+   * Gets the project IRI specified in a Knora-specific HTTP header.
+   *
+   * @param ctx the akka-http [[RequestContext]].
+   * @return the [[Try]] contains the specified project IRI, or if invalid a BadRequestException
+   */
+  def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): Try[SmartIri] =
+    getProject(ctx) match {
+      case None        => Failure(BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
+      case Some(value) => Success(value)
     }
 
   /**

@@ -15,6 +15,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeader
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
 import java.time.Instant
@@ -50,8 +51,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       getResourceHistory() ~
       getResourceHistoryEvents() ~
       getProjectResourceAndValueHistory() ~
+      getResourcesInfo ~
       getResources ~
-      getResourcesSync ~
       getResourcesPreview() ~
       getResourcesTei() ~
       getResourcesGraph() ~
@@ -176,8 +177,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           "resourceClass",
           throw BadRequestException(s"This route requires the parameter 'resourceClass'")
         )
-      val resourceClass: SmartIri =
-        validateResourceClass(resourceClassStr)
+      val resourceClass: SmartIri = getRequiredResourceClassFromQueryParams(requestContext)
 
       if (!(resourceClass.isKnoraApiV2EntityIri && resourceClass.getOntologySchema.contains(ApiV2Complex))) {
         throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr")
@@ -326,24 +326,28 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     }
 
+  private def getQueryParamsMap(requestContext: RequestContext): Map[String, String] =
+    requestContext.request.uri.query().toMap
   private def getRequiredStringQueryParam(requestContext: RequestContext, key: String): String =
     getQueryParamsMap(requestContext).getOrElse(
       key,
       throw BadRequestException(s"This route requires the parameter '$key'")
     )
-  private def getQueryParamsMap(requestContext: RequestContext): Map[String, String] =
-    requestContext.request.uri.query().toMap
-  private def validateResourceClass(resourceClass: String): SmartIri =
-    resourceClass.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClass"))
-  private def getResourcesSync: Route = path(resourcesBasePath / "sync" / Segments) { _ =>
+  private def getRequiredResourceClassFromQueryParams(ctx: RequestContext): SmartIri = {
+    val resourceClass = getRequiredStringQueryParam(ctx, "resourceClass")
+    resourceClass
+      .toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClass"))
+  }
+  private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
     get { ctx =>
-      val appConfig = routeData.appConfig
-      val message =
-        for {
-          user         <- getUserADM(ctx, appConfig)
-          resourceClass = validateResourceClass(getRequiredStringQueryParam(ctx, "resourceClass"))
-        } yield HelloResourcesV2Req(user, resourceClass.toOntologySchema(InternalSchema).toIri)
-      RouteUtilV2.runRdfRouteWithFuture(message, ctx, appConfig, appActor, log, ApiV2Simple, Set.empty)
+      val projectIri       = getRequiredProjectFromHeader(ctx).get
+      val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx)
+      val appConfig        = routeData.appConfig
+      val msg =
+        getUserADM(ctx, appConfig).map(user =>
+          GetResourceInfoRequestV2(user, projectIri.internalIri, resourceClassIri.internalIri)
+        )
+      RouteUtilV2.runRdfRouteWithFuture(msg, ctx, appConfig, appActor, log, ApiV2Simple, Set.empty)
     }
   }
 

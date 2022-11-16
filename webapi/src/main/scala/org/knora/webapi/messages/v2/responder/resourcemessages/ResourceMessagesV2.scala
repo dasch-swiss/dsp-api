@@ -49,7 +49,8 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   def requestingUser: UserADM
 }
 
-final case class HelloResourcesV2Req(requestingUser: UserADM, resourceClass: String) extends ResourcesResponderRequestV2
+final case class GetResourceInfoRequestV2(requestingUser: UserADM, projectIri: IRI, resourceClass: IRI)
+    extends ResourcesResponderRequestV2
 
 /**
  * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].

@@ -5,14 +5,12 @@
 
 package org.knora.webapi.core
 
-import akka.actor.ActorRef
-import akka.actor.Props
+import akka.actor.{ActorRef, Props}
 import akka.pattern._
 import akka.util.Timeout
-import zio._
-import zio.macros.accessible
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
+import org.knora.webapi.domain.resource.RestResourceInfoService
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -21,6 +19,8 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import zio._
+import zio.macros.accessible
 
 @accessible
 trait AppRouter {
@@ -31,7 +31,13 @@ trait AppRouter {
 
 object AppRouter {
   val layer: ZLayer[
-    core.ActorSystem with CacheServiceManager with IIIFServiceManager with TriplestoreServiceManager with AppConfig with TriplestoreService,
+    core.ActorSystem
+      with CacheServiceManager
+      with AppConfig
+      with IIIFServiceManager
+      with RestResourceInfoService
+      with TriplestoreService
+      with TriplestoreServiceManager,
     Nothing,
     AppRouter
   ] =
@@ -42,7 +48,7 @@ object AppRouter {
         iiifServiceManager        <- ZIO.service[IIIFServiceManager]
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
-        runtime                   <- ZIO.runtime[TriplestoreService]
+        runtime                   <- ZIO.runtime[RestResourceInfoService]
       } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem = as.system
 
