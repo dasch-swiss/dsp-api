@@ -1209,7 +1209,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       sparqlQuery <- Future(
                        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                          .getProjects(
-                           // maybeIri = identifier.asIriOption,
                            maybeIri = identifier.asIriOption,
                            maybeShortname = identifier.asShortnameOption,
                            maybeShortcode = identifier.asShortcodeOption

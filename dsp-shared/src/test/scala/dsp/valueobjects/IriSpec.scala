@@ -12,6 +12,7 @@ import zio.test._
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri._
+import dsp.valueobjects.V2UuidValidation._
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.
@@ -36,8 +37,8 @@ object IriSpec extends ZIOSpecDefault {
   val userIriWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
   val invalidUuid   = "MAgdcpn2MO211YYOplR32v"
-  val uuidVersion3  = userIriWithUUIDVersion3.split("/").last
-  val supportedUuid = validUserIri.split("/").last
+  val uuidVersion3  = getUuidFromIri(userIriWithUUIDVersion3)
+  val supportedUuid = getUuidFromIri(validUserIri)
 
   def spec = (groupIriTest + listIriTest + projectIriTest + uuidTest + RoleIriTest + UserIriTest)
 

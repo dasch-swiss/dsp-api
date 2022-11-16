@@ -32,6 +32,8 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 
+import ProjectIdentifierADM._
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
@@ -512,8 +514,6 @@ case class ProjectADM(
  * Represents the project's identifier, which can be an IRI, shortcode, shortname or UUID.
  */
 sealed trait ProjectIdentifierADM { self =>
-  import ProjectIdentifierADM._
-
   def asIriOption: Option[String] =
     self match {
       case IriIdentifier(value) => Some(value.value)
@@ -597,7 +597,7 @@ object ProjectIdentifierADM {
   }
 
   /**
-   * Helper method that gets right identifier value.
+   * Gets used identifier value.
    *
    * @param identifier either IRI, Shortname, Shortcode or UUID of the project.
    * @return identifier's value as [[String]]

@@ -10,6 +10,7 @@ import zio.test.Assertion._
 import zio.test._
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.V2UuidValidation
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -114,7 +115,7 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
         retrievedProject <-
           CacheService.getProjectADM(
             UuidIdentifier
-              .fromString(project.id.split("/").last)
+              .fromString(V2UuidValidation.getUuidFromIri(project.id))
               .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
           )
       } yield assert(retrievedProject)(equalTo(Some(project)))
