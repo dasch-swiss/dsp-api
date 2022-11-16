@@ -304,6 +304,12 @@ init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
+.PHONY: load-db-test-from-staging
+load-db-test-from-staging: init-db-test-empty ## load local database with data previously dumped from staging
+	@echo $@
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+
 .PHONY: init-db-test-from-prod
 init-db-test-from-prod: db_prod_dump.trig init-db-test-empty ## init local database with data from production
 	@echo $@

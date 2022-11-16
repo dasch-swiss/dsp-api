@@ -9,24 +9,15 @@ import akka.http.scaladsl.util.FastFuture
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  DefaultObjectAccessPermissionsStringForResourceClassGetADM,
-  ResourceCreateOperation
-}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.PermissionUtilADM.{
-  AGreaterThanB,
-  DeletePermission,
-  ModifyPermission,
-  PermissionComparisonResult
-}
+import org.knora.webapi.messages.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.ConstructQuery
@@ -36,22 +27,14 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.{
-  GetMappingRequestV2,
-  GetMappingResponseV2,
-  GetXSLTransformationRequestV2,
-  GetXSLTransformationResponseV2
-}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.{KnoraResponseV2, SuccessResponseV2, UpdateResultInProject}
+import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.v2.service._
 import org.knora.webapi.store.iiif.errors.SipiException
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util._
-import zio.ZIO
-import zio.json._
 
 import java.time.Instant
 import java.util.UUID
@@ -3048,45 +3031,5 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         }
         updateMetadataEvent
     }
-  }
-
-  def getHelloResourcesV2(m: HelloResourcesV2Req) =
-    ResourcesRestService.bar(m)
-}
-
-object ResourcesRestService {
-
-  case class FooResponse(rows: List[Row]) extends KnoraResponseV2 {
-    override def format(
-      rdfFormat: RdfFormat,
-      targetSchema: OntologySchema,
-      schemaOptions: Set[SchemaOption],
-      appConfig: AppConfig
-    ): String = this.toJson
-  }
-  object FooResponse {
-    implicit val encoder: JsonEncoder[FooResponse] =
-      DeriveJsonEncoder.gen[FooResponse]
-  }
-
-  final case class Row(lastModificationDate: String, resourceIri: String)
-  object Row {
-    implicit val encoder: JsonEncoder[Row] =
-      DeriveJsonEncoder.gen[Row]
-  }
-
-  def bar(m: HelloResourcesV2Req) = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.resourcesByCreationDate(m.resourceClass).toString
-
-    def mkResponse(r: SparqlSelectResult) = {
-      val listOfRows = r.results.bindings.map(row => Row(row.rowMap("creationDate"), row.rowMap("resource"))).toList
-      FooResponse(listOfRows)
-    }
-
-    for {
-      ts <- ZIO.service[TriplestoreService]
-      _  <- ZIO.debug(s"$m-> $query")
-      r  <- ts.sparqlHttpSelect(query)
-    } yield mkResponse(r)
   }
 }
