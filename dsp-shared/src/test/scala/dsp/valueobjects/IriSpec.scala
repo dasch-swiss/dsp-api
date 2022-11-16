@@ -35,7 +35,11 @@ object IriSpec extends ZIOSpecDefault {
   val validUserIri            = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
   val userIriWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
-  def spec = (groupIriTest + listIriTest + projectIriTest + RoleIriTest + UserIriTest)
+  val invalidUuid   = "MAgdcpn2MO211YYOplR32v"
+  val uuidVersion3  = userIriWithUUIDVersion3.split("/").last
+  val supportedUuid = validUserIri.split("/").last
+
+  def spec = (groupIriTest + listIriTest + projectIriTest + uuidTest + RoleIriTest + UserIriTest)
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
     test("pass an empty value and return an error") {
@@ -187,6 +191,27 @@ object IriSpec extends ZIOSpecDefault {
       assertTrue(
         ProjectIri.make(None) == Validation.succeed(None)
       )
+    }
+  )
+
+  private val uuidTest = suite("IriSpec - Base64Uuid")(
+    test("pass an empty value and return an error") {
+      assertTrue(Base64Uuid.make("") == Validation.fail(ValidationException(IriErrorMessages.UuidMissing)))
+    },
+    test("pass an invalid UUID  and return an error") {
+      assertTrue(
+        Base64Uuid.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(invalidIri)))
+      )
+    },
+    test("pass an valid UUID, which has not supported version 3") {
+      assertTrue(
+        Base64Uuid.make(uuidVersion3) == Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      )
+    },
+    test("pass valid UUID and successfully create value object") {
+      (for {
+        uuid <- Base64Uuid.make(supportedUuid)
+      } yield assertTrue(uuid.value == supportedUuid)).toZIO
     }
   )
 
