@@ -54,25 +54,25 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
         _             <- CacheService.putUserADM(user)
         retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
       } yield assertTrue(retrievedUser == Some(user))
-    } +
-      test("successfully store a user and retrieve by USERNAME")(
-        for {
-          _             <- CacheService.putUserADM(user)
-          retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
-        } yield assert(retrievedUser)(equalTo(Some(user)))
-      ) +
-      test("successfully store a user and retrieve by EMAIL")(
-        for {
-          _             <- CacheService.putUserADM(user)
-          retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
-        } yield assert(retrievedUser)(equalTo(Some(user)))
-      ) +
-      test("successfully store and retrieve a user with special characters in his name")(
-        for {
-          _             <- CacheService.putUserADM(userWithApostrophe)
-          retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(userWithApostrophe.id)))
-        } yield assert(retrievedUser)(equalTo(Some(userWithApostrophe)))
-      )
+    },
+    test("successfully store a user and retrieve by USERNAME")(
+      for {
+        _             <- CacheService.putUserADM(user)
+        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+      } yield assert(retrievedUser)(equalTo(Some(user)))
+    ),
+    test("successfully store a user and retrieve by EMAIL")(
+      for {
+        _             <- CacheService.putUserADM(user)
+        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+      } yield assert(retrievedUser)(equalTo(Some(user)))
+    ),
+    test("successfully store and retrieve a user with special characters in his name")(
+      for {
+        _             <- CacheService.putUserADM(userWithApostrophe)
+        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(userWithApostrophe.id)))
+      } yield assert(retrievedUser)(equalTo(Some(userWithApostrophe)))
+    )
   )
 
   val projectTests = suite("CacheInMemImplZSpec - project")(
@@ -85,29 +85,40 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
                                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                             )
       } yield assert(retrievedProject)(equalTo(Some(project)))
-    ) +
-      test("successfully store a project and retrieve by SHORTCODE")(
-        for {
-          _ <- CacheService.putProjectADM(project)
-          retrievedProject <-
-            CacheService.getProjectADM(
-              ShortcodeIdentifier
-                .fromString(project.shortcode)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-        } yield assert(retrievedProject)(equalTo(Some(project)))
-      ) +
-      test("successfully store a project and retrieve by SHORTNAME")(
-        for {
-          _ <- CacheService.putProjectADM(project)
-          retrievedProject <-
-            CacheService.getProjectADM(
-              ShortnameIdentifier
-                .fromString(project.shortname)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-        } yield assert(retrievedProject)(equalTo(Some(project)))
-      )
+    ),
+    test("successfully store a project and retrieve by SHORTCODE")(
+      for {
+        _ <- CacheService.putProjectADM(project)
+        retrievedProject <-
+          CacheService.getProjectADM(
+            ShortcodeIdentifier
+              .fromString(project.shortcode)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
+      } yield assert(retrievedProject)(equalTo(Some(project)))
+    ),
+    test("successfully store a project and retrieve by SHORTNAME")(
+      for {
+        _ <- CacheService.putProjectADM(project)
+        retrievedProject <-
+          CacheService.getProjectADM(
+            ShortnameIdentifier
+              .fromString(project.shortname)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
+      } yield assert(retrievedProject)(equalTo(Some(project)))
+    ),
+    test("successfully store a project and retrieve by UUID")(
+      for {
+        _ <- CacheService.putProjectADM(project)
+        retrievedProject <-
+          CacheService.getProjectADM(
+            UuidIdentifier
+              .fromString(project.id.split("/").last)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
+      } yield assert(retrievedProject)(equalTo(Some(project)))
+    )
   )
 
   val otherTests = suite("CacheInMemImplZSpec - other")(
@@ -116,13 +127,13 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
         _              <- CacheService.putStringValue("my-new-key", "my-new-value")
         retrievedValue <- CacheService.getStringValue("my-new-key")
       } yield assert(retrievedValue)(equalTo(Some("my-new-value")))
-    ) +
-      test("successfully delete stored value")(
-        for {
-          _              <- CacheService.putStringValue("my-new-key", "my-new-value")
-          _              <- CacheService.removeValues(Set("my-new-key"))
-          retrievedValue <- CacheService.getStringValue("my-new-key")
-        } yield assert(retrievedValue)(equalTo(None))
-      )
+    ),
+    test("successfully delete stored value")(
+      for {
+        _              <- CacheService.putStringValue("my-new-key", "my-new-value")
+        _              <- CacheService.removeValues(Set("my-new-key"))
+        retrievedValue <- CacheService.getStringValue("my-new-key")
+      } yield assert(retrievedValue)(equalTo(None))
+    )
   )
 }

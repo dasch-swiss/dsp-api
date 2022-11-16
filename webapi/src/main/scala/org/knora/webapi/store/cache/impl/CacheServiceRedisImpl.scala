@@ -10,7 +10,6 @@ import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 import zio._
 
-import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Project
@@ -130,9 +129,13 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    */
   def getProjectByIri(id: Iri.ProjectIri): Task[Option[ProjectADM]] =
     (for {
-      bytes   <- getBytesValue(id.value).some
-      project <- CacheSerialization.deserialize[ProjectADM](bytes).some
-    } yield project).unsome
+      bytes <- getBytesValue(id.value)
+      project <-
+        bytes match {
+          case Some(value) => CacheSerialization.deserialize[ProjectADM](value)
+          case None        => ZIO.succeed(None)
+        }
+    } yield project)
 
   /**
    * Retrieves the project stored under a SHORTNAME.
@@ -142,10 +145,14 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    */
   def getProjectByShortname(shortname: Project.ShortName): Task[Option[ProjectADM]] =
     (for {
-      iri     <- getStringValue(shortname.value).some
-      validIri = Iri.ProjectIri.make(iri).getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-      project <- getProjectByIri(validIri).some
-    } yield project).unsome
+      iri      <- getStringValue(shortname.value)
+      validIri <- Iri.ProjectIri.make(iri).toZIO
+      project <-
+        validIri match {
+          case Some(value) => getProjectByIri(value)
+          case None        => ZIO.succeed(None)
+        }
+    } yield project)
 
   /**
    * Retrieves the project stored under a SHORTCODE.
@@ -155,10 +162,14 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    */
   def getProjectByShortcode(shortcode: Project.ShortCode): Task[Option[ProjectADM]] =
     (for {
-      iri     <- getStringValue(shortcode.value).some
-      validIri = Iri.ProjectIri.make(iri).getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-      project <- getProjectByIri(validIri).some
-    } yield project).unsome
+      iri      <- getStringValue(shortcode.value)
+      validIri <- Iri.ProjectIri.make(iri).toZIO
+      project <-
+        validIri match {
+          case Some(value) => getProjectByIri(value)
+          case None        => ZIO.succeed(None)
+        }
+    } yield project)
 
   /**
    * Retrieves the project stored under and extracted from the IRI.
@@ -168,9 +179,13 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    */
   def getProjectByUuid(id: Iri.Base64Uuid): Task[Option[ProjectADM]] =
     (for {
-      bytes   <- getBytesValue(UuidIdentifier.makeProjectIri(id.value)).some
-      project <- CacheSerialization.deserialize[ProjectADM](bytes).some
-    } yield project).unsome
+      bytes <- getBytesValue(UuidIdentifier.makeProjectIri(id.value))
+      project <-
+        bytes match {
+          case Some(value) => CacheSerialization.deserialize[ProjectADM](value)
+          case None        => ZIO.succeed(None)
+        }
+    } yield project)
 
   /**
    * Store string value under key.

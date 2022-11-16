@@ -511,7 +511,34 @@ case class ProjectADM(
 /**
  * Represents the project's identifier, which can be an IRI, shortcode, shortname or UUID.
  */
-sealed trait ProjectIdentifierADM
+sealed trait ProjectIdentifierADM { self =>
+  import ProjectIdentifierADM._
+
+  def asIriOption: Option[String] =
+    self match {
+      case IriIdentifier(value) => Some(value.value)
+      case _                    => None
+    }
+
+  def asShortcodeOption: Option[String] =
+    self match {
+      case ShortcodeIdentifier(value) => Some(value.value)
+      case _                          => None
+    }
+
+  def asShortnameOption: Option[String] =
+    self match {
+      case ShortnameIdentifier(value) => Some(value.value)
+      case _                          => None
+    }
+
+  def asUuidOption: Option[String] =
+    self match {
+      case UuidIdentifier(value) => Some(UuidIdentifier.makeProjectIri(value.value))
+      case _                     => None
+    }
+}
+
 object ProjectIdentifierADM {
 
   /**
@@ -568,30 +595,6 @@ object ProjectIdentifierADM {
 
     def makeProjectIri(uuid: String) = s"http://rdfh.ch/projects/${uuid}"
   }
-
-  def asIriOption(id: ProjectIdentifierADM): Option[String] =
-    id match {
-      case IriIdentifier(value) => Some(value.value)
-      case _                    => None
-    }
-
-  def asShortcodeOption(id: ProjectIdentifierADM): Option[String] =
-    id match {
-      case ShortcodeIdentifier(value) => Some(value.value)
-      case _                          => None
-    }
-
-  def asShortnameOption(id: ProjectIdentifierADM): Option[String] =
-    id match {
-      case ShortnameIdentifier(value) => Some(value.value)
-      case _                          => None
-    }
-
-  def asUuidOption(id: ProjectIdentifierADM): Option[String] =
-    id match {
-      case UuidIdentifier(value) => Some(UuidIdentifier.makeProjectIri(value.value))
-      case _                     => None
-    }
 
   /**
    * Helper method that gets right identifier value.
