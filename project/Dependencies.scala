@@ -56,9 +56,12 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
-  val slf4jApi       = "org.slf4j"                   % "slf4j-api"       % "2.0.3" // the logging interface
-  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.4.4" // the logging implementation
+  val scalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"        % "3.9.5"  // Scala 3 compatible
+  val slf4jApi           = "org.slf4j"                   % "slf4j-api"            % "2.0.3"  // the logging interface
+  val logbackClassic     = "ch.qos.logback"              % "logback-classic"      % "1.4.4"  // the logging implementation
+  val logbackJsonClassic = "ch.qos.logback.contrib"      % "logback-json-classic" % "0.1.5"  // the logging implementation
+  val logbackJackson     = "ch.qos.logback.contrib"      % "logback-jackson"      % "0.1.5"  // the logging implementation
+  val jacksonDatabind    = "com.fasterxml.jackson.core"  % "jackson-databind"     % "2.14.0" // the logging implementation
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
@@ -84,19 +87,18 @@ object Dependencies {
   val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
 
   // other
-  val diff            = "com.sksamuel.diff"          % "diff"             % "1.1.11"
-  val gwtServlet      = "com.google.gwt"             % "gwt-servlet"      % "2.10.0"
-  val icu4j           = "com.ibm.icu"                % "icu4j"            % "72.1"
-  val jakartaJSON     = "org.glassfish"              % "jakarta.json"     % "2.0.1"
-  val jodd            = "org.jodd"                   % "jodd"             % "3.2.7"
-  val rdf4jClient     = "org.eclipse.rdf4j"          % "rdf4j-client"     % "4.2.1"
-  val rdf4jShacl      = "org.eclipse.rdf4j"          % "rdf4j-shacl"      % "4.2.1"
-  val saxonHE         = "net.sf.saxon"               % "Saxon-HE"         % "11.4"
-  val scalaGraph      = "org.scala-graph"           %% "graph-core"       % "1.13.5" // Scala 3 incompatible
-  val scallop         = "org.rogach"                %% "scallop"          % "4.1.0"  // Scala 3 compatible
-  val titaniumJSONLD  = "com.apicatalog"             % "titanium-json-ld" % "1.3.1"
-  val xmlunitCore     = "org.xmlunit"                % "xmlunit-core"     % "2.9.0"
-  val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.14.0"
+  val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
+  val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "72.1"
+  val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
+  val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.1"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.1"
+  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "11.4"
+  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.5" // Scala 3 incompatible
+  val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.1"
+  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.0"
 
   // test
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
@@ -182,7 +184,10 @@ object Dependencies {
     zioMetricsConnectors,
     zioLogging,
     zioLoggingSlf4j,
-    logbackClassic
+    logbackClassic,
+    logbackJsonClassic,
+    logbackJackson,
+    jacksonDatabind
   )
 
   // schema project dependencies

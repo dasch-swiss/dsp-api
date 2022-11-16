@@ -6,6 +6,7 @@ import zio._
 import zio.json._
 import zio.prelude.Validation
 
+import dsp.config.AppConfig
 import dsp.errors.ValidationException
 import dsp.user.handler.UserHandler
 import dsp.valueobjects.LanguageCode
@@ -16,44 +17,47 @@ object CreateUser {
   /**
    * The route to create a user
    *
-   * @param req
-   * @param userHandler
-   * @return a response with the user as json
+   * @param req         the request that was sent
+   * @param userHandler the userHandler that handles user actions
+   * @return            a response with the user as json
    */
-  def route(req: Request, userHandler: UserHandler): ZIO[Any, ValidationException, Response] =
+  def route(req: Request, userHandler: UserHandler): RIO[AppConfig, Response] =
     for {
+      // get the appConfig from the environment
+      appConfig <- ZIO.service[AppConfig]
+
       userCreatePayload <-
-        req.body.asString.map(_.fromJson[CreateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
+        req.body.asString.map(_.fromJson[CreateUserPayload]).orElseFail(ValidationException("Couldn't parse payload"))
 
       response <-
         userCreatePayload match {
           case Left(e) => {
-            ZIO.fail(ValidationException(s"Payload invalid: $e"))
+            ZIO.fail(ValidationException(s"Invalid payload: $e"))
           }
 
           case Right(u) => {
-            val givenName  = GivenName.make(u.givenName)
-            val familyName = FamilyName.make(u.familyName)
             val username   = Username.make(u.username)
             val email      = Email.make(u.email)
-            val password =
-              PasswordHash.make(
-                u.password,
-                PasswordStrength(12)
-              ) // TODO use password strength from config instead
+            val givenName  = GivenName.make(u.givenName)
+            val familyName = FamilyName.make(u.familyName)
+            val password = PasswordHash.make(
+              u.password,
+              PasswordStrength.unsafeMake(appConfig.bcryptPasswordStrength)
+            )
             val language = LanguageCode.make(u.language)
             val status   = UserStatus.make(u.status)
 
-            (for {
+            for {
               userId <-
                 Validation
                   .validateWith(username, email, givenName, familyName, password, language, status)(
-                    userHandler.createUser(_, _, _, _, _, _, _).mapError(e => ValidationException(e.getMessage()))
+                    userHandler.createUser _
                   )
                   // in case of errors, all errors are collected and returned in a list
+                  // TODO what should be the type of the exception?
                   .fold(e => ZIO.fail(ValidationException(e.map(err => err.getMessage()).toCons.toString)), v => v)
               user <- userHandler.getUserById(userId).orDie
-            } yield Response.json(user.toJson))
+            } yield Response.json(user.toJson)
           }
         }
     } yield response
@@ -61,19 +65,19 @@ object CreateUser {
   /**
    * The payload needed to create a user.
    *
-   * @param givenName
-   * @param familyName
    * @param username
    * @param email
+   * @param givenName
+   * @param familyName
    * @param password
    * @param language
    * @param status
    */
   final case class CreateUserPayload private (
-    givenName: String,
-    familyName: String,
     username: String,
     email: String,
+    givenName: String,
+    familyName: String,
     password: String,
     language: String,
     status: Boolean

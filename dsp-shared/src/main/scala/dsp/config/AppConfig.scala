@@ -40,10 +40,5 @@ object AppConfig {
   /**
    * Application configuration from application.conf
    */
-  val live: ULayer[AppConfig] =
-    ZLayer {
-      for {
-        c <- configFromSource.orDie
-      } yield c
-    }
+  val live: ULayer[AppConfig] = ZLayer(configFromSource.orDie)
 }

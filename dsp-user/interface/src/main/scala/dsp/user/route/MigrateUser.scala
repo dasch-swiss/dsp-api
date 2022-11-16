@@ -8,6 +8,7 @@ import zio.prelude.Validation
 import zio.prelude.ZValidation.Failure
 import zio.prelude.ZValidation.Success
 
+import dsp.config.AppConfig
 import dsp.errors.ValidationException
 import dsp.user.handler.UserHandler
 import dsp.valueobjects.Id
@@ -18,70 +19,76 @@ import dsp.valueobjects.User._
 object MigrateUser {
 
   /**
-   * The route to create a user
+   * The route to migrate an existing user
    *
-   * @param req
-   * @param userHandler
-   * @return the user as json
+   * @param req         the request that was sent
+   * @param userHandler the userHandler that handles user actions
+   * @return            a response with the user as json
    */
-  def route(req: Request, userHandler: UserHandler): ZIO[Any, ValidationException, Response] =
+  def route(req: Request, userHandler: UserHandler): RIO[AppConfig, Response] =
     for {
+      // get the appConfig from the environment
+      appConfig <- ZIO.service[AppConfig]
+
       userMigratePayload <-
-        req.body.asString.map(_.fromJson[MigrateUserPayload]).orElseFail(ValidationException("Couldn't parse input"))
+        req.body.asString.map(_.fromJson[MigrateUserPayload]).orElseFail(ValidationException("Couldn't parse payload"))
 
-      r <- userMigratePayload match {
-             case Left(e) => {
-               ZIO.fail(ValidationException(s"Payload invalid: $e"))
-             }
+      response <-
+        userMigratePayload match {
+          case Left(e) => {
+            ZIO.fail(ValidationException(s"Invalid payload: $e"))
+          }
 
-             case Right(u) => {
-               val iri = Iri.UserIri.make(u.iri)
-               val id = iri match {
-                 case Failure(_, errors) => Validation.failNonEmptyChunk(errors)
-                 case Success(_, value)  => Id.UserId.fromIri(value)
-               }
-               val givenName  = GivenName.make(u.givenName)
-               val familyName = FamilyName.make(u.familyName)
-               val username   = Username.make(u.username)
-               val email      = Email.make(u.email)
-               val password   = PasswordHash.make(u.password, PasswordStrength(12))
-               val language   = LanguageCode.make(u.language)
-               val status     = UserStatus.make(u.status)
+          case Right(u) => {
+            val iri = Iri.UserIri.make(u.iri)
+            val id = iri match {
+              case Failure(_, errors) => Validation.failNonEmptyChunk(errors)
+              case Success(_, value)  => Id.UserId.fromIri(value)
+            }
+            val username   = Username.make(u.username)
+            val email      = Email.make(u.email)
+            val givenName  = GivenName.make(u.givenName)
+            val familyName = FamilyName.make(u.familyName)
+            val password = PasswordHash.make(
+              u.password,
+              PasswordStrength.unsafeMake(appConfig.bcryptPasswordStrength)
+            )
+            val language = LanguageCode.make(u.language)
+            val status   = UserStatus.make(u.status)
 
-               (for {
-                 userId <-
-                   Validation
-                     .validateWith(id, username, email, givenName, familyName, password, language, status)(
-                       userHandler
-                         .migrateUser(_, _, _, _, _, _, _, _)
-                         .mapError(e => ValidationException(e.getMessage()))
-                     )
-                     // in case of errors, all errors are collected and returned in a list
-                     .fold(e => ZIO.fail(ValidationException(e.map(err => err.getMessage()).toCons.toString)), v => v)
-                 user <- userHandler.getUserById(userId).orDie
-               } yield Response.json(user.toJson))
-             }
-           }
-    } yield r
+            for {
+              userId <-
+                Validation
+                  .validateWith(id, username, email, givenName, familyName, password, language, status)(
+                    userHandler.migrateUser _
+                  )
+                  // in case of errors, all errors are collected and returned in a list
+                  // TODO what should be the type of the exception?
+                  .fold(e => ZIO.fail(ValidationException(e.map(err => err.getMessage()).toCons.toString)), v => v)
+              user <- userHandler.getUserById(userId).orDie
+            } yield Response.json(user.toJson)
+          }
+        }
+    } yield response
 
   /**
    * The payload needed to migrate a user. It is the same as [[CreateUserPayload]] but with the existing IRI.
    *
    * @param iri
-   * @param givenName
-   * @param familyName
    * @param username
    * @param email
+   * @param givenName
+   * @param familyName
    * @param password
    * @param language
    * @param status
    */
   final case class MigrateUserPayload private (
     iri: String,
-    givenName: String,
-    familyName: String,
     username: String,
     email: String,
+    givenName: String,
+    familyName: String,
     password: String,
     language: String,
     status: Boolean

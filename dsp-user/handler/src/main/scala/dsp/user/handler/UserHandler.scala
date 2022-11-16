@@ -131,6 +131,7 @@ final case class UserHandler(repo: UserRepo) {
    *  @param password  the user's password (hashed)
    *  @param language  the user's language
    *  @param role  the user's role
+   *  @return the UserId of the newly created user
    */
   def createUser(
     username: Username,
@@ -155,6 +156,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new username
+   *  @return the UserId of the newly created user
    */
   def updateUsername(id: UserId, newValue: Username): IO[RequestRejectedException, UserId] =
     (for {
@@ -171,6 +173,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new email
+   *  @return the UserId of the newly created user
    */
   def updateEmail(id: UserId, newValue: Email): IO[RequestRejectedException, UserId] =
     (for {
@@ -187,6 +190,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new given name
+   *  @return the UserId of the newly created user
    */
   def updateGivenName(id: UserId, newValue: GivenName): IO[RequestRejectedException, UserId] =
     (for {
@@ -201,6 +205,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new family name
+   *  @return the UserId of the newly created user
    */
   def updateFamilyName(id: UserId, newValue: FamilyName): IO[RequestRejectedException, UserId] =
     (for {
@@ -217,6 +222,7 @@ final case class UserHandler(repo: UserRepo) {
    *  @param newPassword  the new password
    *  @param currentPassword  the user's current password
    *  @param requestingUser  the requesting user
+   *  @return the UserId of the newly created user
    */
   def updatePassword(
     id: UserId,
@@ -249,6 +255,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new language
+   *  @return the UserId of the newly created user
    */
   def updateLanguage(id: UserId, newValue: LanguageCode): IO[RequestRejectedException, UserId] =
     (for {
@@ -262,6 +269,7 @@ final case class UserHandler(repo: UserRepo) {
    * Deletes the user which means that it is marked as deleted.
    *
    *  @param id  the user's ID
+   *  @return the UserId of the newly created user
    */
   def deleteUser(id: UserId): IO[NotFoundException, UserId] =
     (for {
@@ -277,9 +285,7 @@ final case class UserHandler(repo: UserRepo) {
  */
 object UserHandler {
   val layer: ZLayer[UserRepo, Nothing, UserHandler] =
-    ZLayer {
-      for {
-        repo <- ZIO.service[UserRepo]
-      } yield UserHandler(repo)
-    }.tap(_ => ZIO.logInfo(">>> User handler initialized <<<"))
+    ZLayer
+      .fromFunction(UserHandler.apply _)
+      .tap(_ => ZIO.logInfo(">>> User handler initialized <<<"))
 }

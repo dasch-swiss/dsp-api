@@ -244,6 +244,10 @@ object User {
       greaterThanOrEqualTo(4) &&
       lessThanOrEqualTo(31)
     }
+
+    def unsafeMake(value: Int): PasswordStrength =
+      PasswordStrength.wrap(value)
+
   }
   type PasswordStrength = PasswordStrength.Type
 

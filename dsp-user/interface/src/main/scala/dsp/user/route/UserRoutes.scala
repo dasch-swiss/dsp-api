@@ -8,52 +8,40 @@ package dsp.user.route
 import zhttp.http._
 import zio._
 
+import dsp.config.AppConfig
 import dsp.errors.ValidationException
 import dsp.user.handler.UserHandler
 
 /**
- * An http app that:
- *   - Accepts a `Request` and returns a `Response`
- *   - May fail with type of `ValidationException`
- *   - Uses a `UserHandler` as the environment
+ * The UserRoutes case class which needs an instance of a userHandler
  */
 final case class UserRoutes(userHandler: UserHandler) {
-  val routes: Http[Any, ValidationException, Request, Response] = Http.collectZIO[Request] {
 
+  /**
+   * The user related routes which need AppConfig in the environment
+   */
+  val routes: Http[AppConfig, ValidationException, Request, Response] = Http.collectZIO[Request] {
     // POST /admin/users
     case req @ (Method.POST -> !! / "admin" / "users") =>
       CreateUser
         .route(req, userHandler)
-        .catchSome {
-          case ValidationException(
-                msg,
-                _
-              ) => // TODO: what else can go wrong that we can treat besides validation of input?
-            ZIO.succeed(Response.text(msg).setStatus(Status.BadRequest))
+        .catchAll { e =>
+          ZIO.succeed(Response.text(e.getMessage).setStatus(Status.BadRequest))
         }
 
     // POST /admin/users/migration
     case req @ (Method.POST -> !! / "admin" / "users" / "migration") =>
       MigrateUser
         .route(req, userHandler)
-        .catchSome {
-          case ValidationException(
-                msg,
-                _
-              ) => // TODO: what else can go wrong that we can treat besides validation of input?
-            ZIO.succeed(Response.text(msg).setStatus(Status.BadRequest))
+        .catchAll { e =>
+          ZIO.succeed(Response.text(e.getMessage).setStatus(Status.BadRequest))
         }
 
-    // GET /admin/users/:id
-    case Method.GET -> !! / "admin" / "users" / id =>
-      ZIO.succeed(Response.text(s"hallo $id"))
-    // create value object UserId from id
-    // userHandler.getUserById(id).map {
-    //   case Some(user) =>
-    //     Response.json(user.toJson)
-    //   case None =>
-    //     Response.status(Status.NotFound)
-    // }
+    // GET /admin/users/:uuid
+    case Method.GET -> !! / "admin" / "users" / uuid =>
+      GetUser.route(uuid, userHandler).catchAll { e =>
+        ZIO.succeed(Response.text(e.getMessage).setStatus(Status.BadRequest))
+      }
 
   }
 }
@@ -63,5 +51,5 @@ final case class UserRoutes(userHandler: UserHandler) {
  */
 object UserRoutes {
   val layer: ZLayer[UserHandler, Nothing, UserRoutes] =
-    ZLayer.fromFunction(userHandler => UserRoutes.apply(userHandler))
+    ZLayer.fromFunction(UserRoutes.apply _)
 }
