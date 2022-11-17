@@ -69,7 +69,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
       getProjectRestrictedViewSettingsByShortcode() ~
       getProjectData()
 
-  /* return all projects */
+  /**
+   * Returns all projects.
+   */
   private def getProjects(): Route = path(projectsBasePath) {
     get { requestContext =>
       log.info("All projects requested.")
@@ -91,7 +93,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
   }
 
-  /* create a new project */
+  /**
+   * Creates a new project.
+   */
   private def addProject(): Route = path(projectsBasePath) {
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
@@ -129,7 +133,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
   }
 
-  /* Returns all unique keywords for all projects as a list */
+  /**
+   * Returns all unique keywords for all projects as a list.
+   */
   private def getKeywords(): Route = path(projectsBasePath / "Keywords") {
     get { requestContext =>
       val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
@@ -150,7 +156,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
   }
 
-  /* Returns all keywords for a single project */
+  /**
+   * Returns all keywords for a single project.
+   */
   private def getProjectKeywords(): Route =
     path(projectsBasePath / "iri" / Segment / "Keywords") { value =>
       get { requestContext =>
@@ -177,7 +185,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns a single project identified through IRI
+   * Returns a single project identified through the IRI.
    */
   private def getProjectByIri(): Route =
     path(projectsBasePath / "iri" / Segment) { value =>
@@ -205,7 +213,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns a single project identified through UUID
+   * Returns a single project identified through the Base64 encoded UUID.
    */
   private def getProjectByUuid(): Route =
     path(projectsBasePath / "uuid" / Segment) { value =>
@@ -233,7 +241,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns a single project identified through shortname.
+   * Returns a single project identified through the shortname.
    */
   private def getProjectByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment) { value =>
@@ -261,7 +269,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns a single project identified through shortcode.
+   * Returns a single project identified through the shortcode.
    */
   private def getProjectByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment) { value =>
@@ -289,7 +297,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * update a project identified by iri
+   * Updates a project identified by the IRI.
    */
   private def changeProject(): Route =
     path(projectsBasePath / "iri" / Segment) { value =>
@@ -323,7 +331,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * update project status to false
+   * Updates project status to false.
    */
   private def deleteProject(): Route =
     path(projectsBasePath / "iri" / Segment) { value =>
@@ -353,7 +361,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns all members part of a project identified through IRI
+   * Returns all members of a project identified through the IRI.
    */
   private def getProjectMembersByIri(): Route =
     path(projectsBasePath / "iri" / Segment / "members") { value =>
@@ -381,7 +389,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns all members part of a project identified through UUID
+   * Returns all members of a project identified through the Base64 encoded UUID.
    */
   private def getProjectMembersByUuid(): Route =
     path(projectsBasePath / "uuid" / Segment / "members") { value =>
@@ -409,7 +417,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns all members part of a project identified through shortname
+   * Returns all members of a project identified through the shortname.
    */
   private def getProjectMembersByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "members") { value =>
@@ -437,7 +445,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns all members part of a project identified through shortcode
+   * Returns all members of a project identified through the shortcode.
    */
   private def getProjectMembersByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "members") { value =>
@@ -465,7 +473,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns all admin members part of a project identified through iri
+   * Returns all admin members of a project identified through the IRI.
    */
   private def getProjectAdminMembersByIri(): Route =
     path(projectsBasePath / "iri" / Segment / "admin-members") { value =>
@@ -493,7 +501,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns all admin members part of a project identified through shortname
+   * Returns all admin members of a project identified through the shortname.
    */
   private def getProjectAdminMembersByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "admin-members") { value =>
@@ -521,7 +529,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns all admin members part of a project identified through shortcode
+   * Returns all admin members of a project identified through shortcode.
    */
   private def getProjectAdminMembersByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "admin-members") { value =>
@@ -549,7 +557,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns the project's restricted view settings identified through IRI.
+   * Returns the project's restricted view settings identified through the IRI.
    */
   private def getProjectRestrictedViewSettingsByIri(): Route =
     path(projectsBasePath / "iri" / Segment / "RestrictedViewSettings") { value: String =>
@@ -577,7 +585,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns the project's restricted view settings identified through shortname.
+   * Returns the project's restricted view settings identified through the shortname.
    */
   private def getProjectRestrictedViewSettingsByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "RestrictedViewSettings") { value: String =>

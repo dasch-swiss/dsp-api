@@ -40,7 +40,7 @@ object IriSpec extends ZIOSpecDefault {
   val uuidVersion3  = getUuidFromIri(userIriWithUUIDVersion3)
   val supportedUuid = getUuidFromIri(validUserIri)
 
-  def spec = (groupIriTest + listIriTest + projectIriTest + uuidTest + RoleIriTest + UserIriTest)
+  def spec = (groupIriTest + listIriTest + projectIriTest + uuidTest + roleIriTest + userIriTest)
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
     test("pass an empty value and return an error") {
@@ -216,7 +216,7 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
-  private val RoleIriTest = suite("IriSpec - roleIri")(
+  private val roleIriTest = suite("IriSpec - roleIri")(
     test("pass an empty value and return an error") {
       assertTrue(RoleIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing)))
     },
@@ -239,7 +239,7 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
-  private val UserIriTest = suite("IriSpec - UserIri")(
+  private val userIriTest = suite("IriSpec - UserIri")(
     test("pass an empty value and return an error") {
       assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
     },

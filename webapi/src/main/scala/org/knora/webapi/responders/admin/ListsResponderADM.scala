@@ -2267,15 +2267,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   protected def getDataNamedGraph(projectIri: IRI): Future[IRI] =
     for {
       /* Get the project information */
-      maybeProject <- appActor
-                        .ask(
-                          ProjectGetADM(
-                            IriIdentifier
-                              .fromString(projectIri)
-                              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-                          )
-                        )
-                        .mapTo[Option[ProjectADM]]
+      maybeProject <-
+        appActor
+          .ask(
+            ProjectGetADM(
+              IriIdentifier
+                .fromString(projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
+          )
+          .mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project

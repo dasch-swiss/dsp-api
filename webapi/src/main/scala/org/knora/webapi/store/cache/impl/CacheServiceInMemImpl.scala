@@ -129,15 +129,15 @@ case class CacheServiceInMemImpl(
     }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
 
   /**
-   * Retrieves the project stored under the IRI.
+   * Retrieves the project by the IRI.
    *
-   * @param id the project's IRI
+   * @param iri the project's IRI
    * @return an optional [[ProjectADM]].
    */
-  def getProjectByIri(id: Iri.ProjectIri) = projects.get(id.value).commit
+  def getProjectByIri(iri: Iri.ProjectIri) = projects.get(iri.value).commit
 
   /**
-   * Retrieves the project stored under a SHORTNAME.
+   * Retrieves the project by the SHORTNAME.
    *
    * @param shortname of the project.
    * @return an optional [[ProjectADM]]
@@ -149,7 +149,7 @@ case class CacheServiceInMemImpl(
     } yield project).commit.unsome
 
   /**
-   * Retrieves the project stored under a SHORTCODE.
+   * Retrieves the project by the SHORTCODE.
    *
    * @param shortcode of the project.
    * @return an optional [[ProjectADM]]
@@ -161,13 +161,13 @@ case class CacheServiceInMemImpl(
     } yield project).commit.unsome
 
   /**
-   * Retrieves the project stored under and extracted from the IRI.
+   * Retrieves the project by the UUID.
    *
-   * @param id the project's UUID
+   * @param uuid the project's UUID
    * @return an optional [[ProjectADM]].
    */
-  def getProjectByUuid(id: Iri.Base64Uuid) =
-    projects.get(UuidIdentifier.makeProjectIri(id.value)).commit
+  def getProjectByUuid(uuid: Iri.Base64Uuid) =
+    projects.get(UuidIdentifier.makeProjectIri(uuid.value)).commit
 
   /**
    * Store string or byte array value under key.

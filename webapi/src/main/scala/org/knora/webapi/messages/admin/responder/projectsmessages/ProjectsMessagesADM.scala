@@ -514,25 +514,25 @@ case class ProjectADM(
  * Represents the project's identifier, which can be an IRI, shortcode, shortname or UUID.
  */
 sealed trait ProjectIdentifierADM { self =>
-  def asIriOption: Option[String] =
+  def asIriIdentifierOption: Option[String] =
     self match {
       case IriIdentifier(value) => Some(value.value)
       case _                    => None
     }
 
-  def asShortcodeOption: Option[String] =
+  def asShortcodeIdentifierOption: Option[String] =
     self match {
       case ShortcodeIdentifier(value) => Some(value.value)
       case _                          => None
     }
 
-  def asShortnameOption: Option[String] =
+  def asShortnameIdentifierOption: Option[String] =
     self match {
       case ShortnameIdentifier(value) => Some(value.value)
       case _                          => None
     }
 
-  def asUuidOption: Option[String] =
+  def asUuidIdentifierOption: Option[String] =
     self match {
       case UuidIdentifier(value) => Some(UuidIdentifier.makeProjectIri(value.value))
       case _                     => None
@@ -586,7 +586,6 @@ object ProjectIdentifierADM {
    * @param value that constructs the identifier in the type of [[Base64Uuid]] value object.
    */
   final case class UuidIdentifier(value: Base64Uuid) extends ProjectIdentifierADM
-  // TODO-mpro: UuidIdentifier isn't fully used yet since the value object needs
   object UuidIdentifier {
     def fromString(value: String): Validation[ValidationException, UuidIdentifier] =
       Base64Uuid.make(value).map {
@@ -597,7 +596,7 @@ object ProjectIdentifierADM {
   }
 
   /**
-   * Gets used identifier value.
+   * Gets desired Project identifier value.
    *
    * @param identifier either IRI, Shortname, Shortcode or UUID of the project.
    * @return identifier's value as [[String]]
