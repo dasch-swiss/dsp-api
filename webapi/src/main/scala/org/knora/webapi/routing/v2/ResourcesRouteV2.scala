@@ -348,17 +348,13 @@ class ResourcesRouteV2(routeData: KnoraRouteData, runtime: zio.Runtime[RestResou
     resourceClass
       .toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClass"))
   }
-  private def runAndMapJsonResponse[R, E, A](
+  private def unsafeRunZioAndMapJsonResponse[R, E, A](
     zioAction: ZIO[R, E, A]
-  )(implicit r: Runtime[R], encoder: JsonEncoder[A]) = {
-    val result: Exit[E, A] = unsafeRunZio(zioAction)
-    val response =
-      result match {
-        case Failure(cause) => log.error(cause.prettyPrint); HttpResponse(InternalServerError)
-        case Success(dto)   => HttpResponse(status = OK, entity = HttpEntity(`application/json`, dto.toJson))
-      }
-    response
-  }
+  )(implicit r: Runtime[R], encoder: JsonEncoder[A]) =
+    unsafeRunZio(zioAction) match {
+      case Failure(cause) => log.error(cause.prettyPrint); HttpResponse(InternalServerError)
+      case Success(dto)   => HttpResponse(status = OK, entity = HttpEntity(`application/json`, dto.toJson))
+    }
   private def unsafeRunZio[R, E, A](zioAction: ZIO[R, E, A])(implicit r: Runtime[R]): Exit[E, A] =
     Unsafe.unsafe(implicit u => r.unsafe.run(zioAction))
   private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
@@ -366,7 +362,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, runtime: zio.Runtime[RestResou
       val projectIri       = getRequiredProjectFromHeader(ctx).get.internalIri
       val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx).internalIri
       val action           = RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri)
-      ctx.complete(runAndMapJsonResponse(action))
+      ctx.complete(unsafeRunZioAndMapJsonResponse(action))
     }
   }
 
