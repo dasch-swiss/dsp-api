@@ -9,9 +9,9 @@ package object webapi {
 
   /**
    * The version of `knora-base` and of the other built-in ontologies that this version of Knora requires.
-   * Must be the same as the object of `knora-base:ontologyVersion` in the `knora-base` ontology being used.
+   * Must be the same as the object of `` in the `knora-base` ontology being used.
    */
-  val KnoraBaseVersion: String = "knora-base v25"
+  val KnoraBaseVersion: String = "knora-base v26"
 
   /**
    * `IRI` is a synonym for `String`, used to improve code readability.

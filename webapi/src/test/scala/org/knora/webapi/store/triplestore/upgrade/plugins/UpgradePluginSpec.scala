@@ -6,14 +6,13 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.rdf._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.io.BufferedInputStream
-import java.io.FileInputStream
-
-import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
+import java.io.{BufferedInputStream, ByteArrayInputStream, FileInputStream}
+import scala.util.Using
 
 /**
  * Provides helper methods for specs that test upgrade plugins.
@@ -36,6 +35,15 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
     fileInputStream.close()
     rdfModel
   }
+
+  /**
+   * Parses a TriG String and returns it as an [[RdfModel]].
+   *
+   * @param s the [[String]] content of a "TriG file".
+   * @return an [[RdfModel]].
+   */
+  def stringToModel(s: String): RdfModel =
+    Using(new ByteArrayInputStream(s.getBytes))(rdfFormatUtil.inputStreamToRdfModel(_, TriG)).get
 
   /**
    * Wraps expected SPARQL SELECT results in a [[SparqlSelectResultBody]].

@@ -1,45 +1,56 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.messages.util.rdf.{RdfFeatureFactory, RdfModel, RdfNodeFactory, Statement}
+import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR2288Spec extends UpgradePluginSpec with LazyLogging {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
+
+  val plugin = new UpgradePluginPR2288(log)
+
+  val nf                = RdfFeatureFactory.getRdfNodeFactory()
+  val lastModDateIri    = nf.makeIriNode("http://www.knora.org/ontology/knora-base#lastModificationDate")
+  val thingWithoutIri   = nf.makeIriNode("http://rdfh.ch/0001/thing-without-mod-date")
+  val thingWithoutValue = nf.makeIriNode("\"2020-01-01T10:00:00.673298Z\"^^http://www.w3.org/2001/XMLSchema#dateTime")
+  val thingWithIri      = nf.makeIriNode("http://rdfh.ch/0001/thing-with-mod-date")
+  val thingWithValue    = nf.makeIriNode("\"2020-03-01T10:00:00.673298Z\"^^http://www.w3.org/2001/XMLSchema#dateTime")
+
+  val modelStr =
+    """
+      |@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+      |@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+      |@prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
+      |
+      |<http://rdfh.ch/0001/thing-without-mod-date>
+      |    a                            anything:Thing ;
+      |    knora-base:creationDate      "2020-01-01T10:00:00.673298Z"^^xsd:dateTime .
+      |
+      |<http://rdfh.ch/0001/thing-with-mod-date>
+      |    a                               anything:Thing ;
+      |    knora-base:creationDate         "2020-02-01T10:00:00.673298Z"^^xsd:dateTime ;
+      |    knora-base:lastModificationDate "2020-03-01T10:00:00.673298Z"^^xsd:dateTime  .
+      |
+      |""".stripMargin
 
   "Upgrade plugin PR2288" should {
-    "tata" in {
-      // Parse the input file.
-      val creationDateIriNode = nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-base#creationDate")
-      val lastModificationDateIriNode =
-        nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-base#lastModificationDate")
-      val model: RdfModel = trigFileToModel("test_data/upgrade/pr2288.trig")
-      val allWithCreationDateIterator = model.find(
-        subj = None,
-        pred = Some(creationDateIriNode),
-        obj = None,
-        context = None
-      )
+    "add a statement if creationDate is given but no lastModificationDate" in {
+      val model: RdfModel = stringToModel(modelStr)
+      val sizeBefore      = model.size
 
-      var statementsToAdd: List[Statement] = List()
-      while (allWithCreationDateIterator.hasNext) {
-        val current = allWithCreationDateIterator.next
-        val lastModification =
-          model.find(subj = Some(current.subj), pred = Some(lastModificationDateIriNode), obj = None, context = None)
-        if (lastModification.isEmpty) {
-          log.info(s"No lastMod found for ${current.subj} will add from creationDate ${current.obj}")
-          val newMod: Statement = nodeFactory.makeStatement(current.subj, lastModificationDateIriNode, current.obj)
-          statementsToAdd = statementsToAdd.prepended(newMod)
-        }
-        log.info("Would add: " + statementsToAdd.map(_.toString).mkString("\n"))
-        log.info(current.toString)
-      }
-
-      model.addStatements(statementsToAdd.toSet)
-      log.info("Model after:\n" + model.mkString("\n"))
-      // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2288(log)
       plugin.transform(model)
 
+      assert(model.size - sizeBefore == 1)
+      assert(
+        model.count(s =>
+          s.toString == nf.makeStatement(thingWithoutIri, lastModDateIri, thingWithoutValue).toString
+        ) == 1
+      )
+    }
+    "not change existing statements if creationDate and lastModificationDate are present" in {
+      val model: RdfModel = stringToModel(modelStr)
+      plugin.transform(model)
+      assert(
+        model.count(s => s.toString == nf.makeStatement(thingWithIri, lastModDateIri, thingWithValue).toString) == 1
+      )
     }
   }
 }
