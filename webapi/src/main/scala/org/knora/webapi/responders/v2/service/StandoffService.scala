@@ -4,7 +4,12 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{
+  GetMappingRequestV2,
+  GetMappingResponseV2,
+  GetXSLTransformationRequestV2,
+  GetXSLTransformationResponseV2
+}
 
 import scala.concurrent.Future
 

@@ -6,7 +6,10 @@ import akka.util.Timeout
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v2.responder.valuemessages.{GenerateSparqlToCreateMultipleValuesRequestV2, GenerateSparqlToCreateMultipleValuesResponseV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{
+  GenerateSparqlToCreateMultipleValuesRequestV2,
+  GenerateSparqlToCreateMultipleValuesResponseV2
+}
 
 import scala.concurrent.Future
 

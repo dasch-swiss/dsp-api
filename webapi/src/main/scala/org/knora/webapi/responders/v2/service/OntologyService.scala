@@ -4,7 +4,12 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, OntologyMetadataGetByIriRequestV2, ReadOntologyMetadataV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{
+  EntityInfoGetRequestV2,
+  EntityInfoGetResponseV2,
+  OntologyMetadataGetByIriRequestV2,
+  ReadOntologyMetadataV2
+}
 
 import scala.concurrent.Future
 

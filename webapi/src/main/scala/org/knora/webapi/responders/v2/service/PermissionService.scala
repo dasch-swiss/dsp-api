@@ -3,7 +3,10 @@ package org.knora.webapi.responders.v2.service
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  DefaultObjectAccessPermissionsStringForResourceClassGetADM,
+  DefaultObjectAccessPermissionsStringResponseADM
+}
 import org.knora.webapi.messages.util.ResponderData
 
 import scala.concurrent.Future

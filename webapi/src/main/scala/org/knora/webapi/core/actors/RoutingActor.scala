@@ -154,6 +154,11 @@ class RoutingActor(
     case m: ProjectResourcesWithHistoryGetRequestV2 =>
       future2Message(resourcesResponderV2.getProjectResourceHistoryEvents(m))
     case m: GetResourceInfoRequestV2 =>
-      ActorUtil.zio2Message(sender(), RestResourceInfoService.findByProjectAndResourceClass(m.projectIri,  m.resourceClass), log, runtime)
+      ActorUtil.zio2Message(
+        sender(),
+        RestResourceInfoService.findByProjectAndResourceClass(m.projectIri, m.resourceClass),
+        log,
+        runtime
+      )
   }
 }
