@@ -1,10 +1,7 @@
 package org.knora.webapi.slice.resourceinfo.api
 
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.util.rdf.RdfFormat
-import org.knora.webapi.messages.v2.responder.KnoraResponseV2
+import org.knora.webapi.IRI
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfo
-import org.knora.webapi.{IRI, OntologySchema, SchemaOption}
 import zio.json._
 
 import java.time.Instant
