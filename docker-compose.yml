@@ -24,7 +24,7 @@ services:
       - JVM_ARGS=-Xmx3G
 
   sipi:
-    image: daschswiss/knora-sipi:latest
+    image: daschswiss/knora-sipi:24.0.8-49-g68c9aba
 
     ports:
       - "1024:1024"
