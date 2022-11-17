@@ -10,7 +10,6 @@ import akka.http.scaladsl.server.Route
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import zio._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -47,6 +46,7 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 
 trait ApiRoutes {
   val routes: Route
@@ -57,7 +57,11 @@ object ApiRoutes {
   /**
    * All routes composed together.
    */
-  val layer: ZLayer[ActorSystem & AppRouter & core.State & AppConfig, Nothing, ApiRoutes] =
+  val layer: ZLayer[
+    ActorSystem with AppRouter with core.State with AppConfig with RestResourceInfoService,
+    Nothing,
+    ApiRoutes
+  ] =
     ZLayer {
       for {
         sys       <- ZIO.service[ActorSystem]
@@ -70,7 +74,7 @@ object ApiRoutes {
                          appConfig = appConfig
                        )
                      )
-        runtime <- ZIO.runtime[core.State]
+        runtime <- ZIO.runtime[core.State with RestResourceInfoService]
       } yield ApiRoutesImpl(routeData, runtime, appConfig)
     }
 }
@@ -82,8 +86,11 @@ object ApiRoutes {
  * ALL requests go through each of the routes in ORDER.
  * The FIRST matching route is used for handling a request.
  */
-private final case class ApiRoutesImpl(routeData: KnoraRouteData, runtime: Runtime[core.State], appConfig: AppConfig)
-    extends ApiRoutes
+private final case class ApiRoutesImpl(
+  routeData: KnoraRouteData,
+  runtime: Runtime[core.State with RestResourceInfoService],
+  appConfig: AppConfig
+) extends ApiRoutes
     with AroundDirectives {
 
   val routes =
@@ -108,7 +115,7 @@ private final case class ApiRoutesImpl(routeData: KnoraRouteData, runtime: Runti
                 new ProjectsRouteV1(routeData).makeRoute ~
                 new OntologiesRouteV2(routeData).makeRoute ~
                 new SearchRouteV2(routeData).makeRoute ~
-                new ResourcesRouteV2(routeData).makeRoute ~
+                new ResourcesRouteV2(routeData, runtime).makeRoute ~
                 new ValuesRouteV2(routeData).makeRoute ~
                 new StandoffRouteV2(routeData).makeRoute ~
                 new ListsRouteV2(routeData).makeRoute ~

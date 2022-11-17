@@ -47,17 +47,17 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.live,
       AppRouter.layer,
-      CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
+      CacheServiceManager.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       JWTService.layer,
+      LiveResourceInfoRepo.layer,
+      LiveRestResourceInfoService.layer,
       RepositoryUpdater.layer,
       State.layer,
-      TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      LiveRestResourceInfoService.layer,
-      LiveResourceInfoRepo.layer
+      TriplestoreServiceManager.layer
     )
 }

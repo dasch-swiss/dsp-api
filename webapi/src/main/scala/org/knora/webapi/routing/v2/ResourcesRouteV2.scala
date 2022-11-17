@@ -5,6 +5,9 @@
 
 package org.knora.webapi.routing.v2
 
+import akka.http.scaladsl.model.ContentTypes.`application/json`
+import akka.http.scaladsl.model.StatusCodes.{InternalServerError, OK}
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, RequestContext, Route}
 import dsp.errors.BadRequestException
@@ -17,6 +20,10 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeader
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
+import org.knora.webapi.slice.resourceinfo.api.{ListResponseDto, RestResourceInfoService}
+import zio.Exit.{Failure, Success}
+import zio.json._
+import zio.{Exit, Unsafe, ZIO}
 
 import java.time.Instant
 import java.util.UUID
@@ -25,9 +32,12 @@ import scala.concurrent.Future
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
-class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class ResourcesRouteV2(routeData: KnoraRouteData, runtime: zio.Runtime[RestResourceInfoService])
+    extends KnoraRoute(routeData)
+    with Authenticator {
 
-  val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
+  private implicit val r: zio.Runtime[RestResourceInfoService] = runtime
+  val resourcesBasePath: PathMatcher[Unit]                     = PathMatcher("v2" / "resources")
 
   private val Text_Property          = "textProperty"
   private val Mapping_Iri            = "mappingIri"
@@ -338,17 +348,28 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     resourceClass
       .toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClass"))
   }
+  private def unsafeRunZio[R, E, A](zioToRun: ZIO[R, E, A])(implicit r: zio.Runtime[R]): Exit[E, A] =
+    Unsafe.unsafe(implicit u => r.unsafe.run(zioToRun))
   private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
     get { ctx =>
-      val projectIri       = getRequiredProjectFromHeader(ctx).get
-      val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx)
-      val appConfig        = routeData.appConfig
-      val msg =
-        getUserADM(ctx, appConfig).map(user =>
-          GetResourceInfoRequestV2(user, projectIri.internalIri, resourceClassIri.internalIri)
-        )
-      RouteUtilV2.runRdfRouteWithFuture(msg, ctx, appConfig, appActor, log, ApiV2Simple, Set.empty)
+      val projectIri       = getRequiredProjectFromHeader(ctx).get.internalIri
+      val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx).internalIri
+      val action: ZIO[RestResourceInfoService, Nothing, ListResponseDto] =
+        RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri)
+      ctx.complete(runAndMapResponse(action))
     }
+  }
+
+  private def runAndMapResponse[R, E, A](
+    value: ZIO[R, E, A]
+  )(implicit r: zio.Runtime[R], encoder: zio.json.JsonEncoder[A]) = {
+    val result: Exit[E, A] = unsafeRunZio(value)
+    val response =
+      result match {
+        case Failure(cause) => log.error(cause.prettyPrint); HttpResponse(InternalServerError)
+        case Success(dto)   => HttpResponse(status = OK, entity = HttpEntity(`application/json`, dto.toJson))
+      }
+    response
   }
 
   private def getResources: Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
