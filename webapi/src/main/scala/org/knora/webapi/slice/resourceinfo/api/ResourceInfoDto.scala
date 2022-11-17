@@ -8,14 +8,7 @@ import org.knora.webapi.{IRI, OntologySchema, SchemaOption}
 import zio.json._
 
 import java.time.Instant
-final case class ListResponseDto private (resources: List[ResourceInfoDto], count: Int) extends KnoraResponseV2 {
-  override def format(
-    rdfFormat: RdfFormat,
-    targetSchema: OntologySchema,
-    schemaOptions: Set[SchemaOption],
-    appConfig: AppConfig
-  ): String = this.toJson
-}
+final case class ListResponseDto private (resources: List[ResourceInfoDto], count: Int)
 object ListResponseDto {
   def apply(list: List[ResourceInfoDto]): ListResponseDto =
     ListResponseDto(list, list.size)
