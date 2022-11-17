@@ -9,7 +9,6 @@ import akka.actor.{Actor, ActorSystem}
 import com.typesafe.scalalogging.Logger
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.domain.resource.RestResourceInfoService
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -39,6 +38,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderReque
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -154,6 +154,6 @@ class RoutingActor(
     case m: ProjectResourcesWithHistoryGetRequestV2 =>
       future2Message(resourcesResponderV2.getProjectResourceHistoryEvents(m))
     case m: GetResourceInfoRequestV2 =>
-      ActorUtil.zio2Message(sender(), RestResourceInfoService.findByResourceClass(m.projectIri,  m.resourceClass), log, runtime)
+      ActorUtil.zio2Message(sender(), RestResourceInfoService.findByProjectAndResourceClass(m.projectIri,  m.resourceClass), log, runtime)
   }
 }

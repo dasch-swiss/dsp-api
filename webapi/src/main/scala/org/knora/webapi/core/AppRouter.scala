@@ -10,11 +10,11 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
-import org.knora.webapi.domain.resource.RestResourceInfoService
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.settings._
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager

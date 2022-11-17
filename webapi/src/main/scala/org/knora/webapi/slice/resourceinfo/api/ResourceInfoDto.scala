@@ -1,15 +1,14 @@
-package org.knora.webapi.domain.resource
+package org.knora.webapi.slice.resourceinfo.api
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.{IRI, OntologySchema, SchemaOption}
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
-import zio.{UIO, ZIO}
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfo
+import org.knora.webapi.{IRI, OntologySchema, SchemaOption}
 import zio.json._
 
 import java.time.Instant
-
-final case class ListResponseDto private(resources: List[ResourceInfoDto], count: Int) extends KnoraResponseV2 {
+final case class ListResponseDto private (resources: List[ResourceInfoDto], count: Int) extends KnoraResponseV2 {
   override def format(
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
@@ -25,12 +24,6 @@ object ListResponseDto {
     DeriveJsonEncoder.gen[ListResponseDto]
 }
 
-final case class ResourceInfoDto private (
-  resourceIri: IRI,
-  creationDate: Instant,
-  modificationDate: Option[Instant],
-  isDeleted: Boolean
-)
 object ResourceInfoDto {
   def apply(info: ResourceInfo): ResourceInfoDto =
     ResourceInfoDto(info.iri, info.creationDate, info.modificationDate, info.isDeleted)
@@ -39,10 +32,9 @@ object ResourceInfoDto {
     DeriveJsonEncoder.gen[ResourceInfoDto]
 }
 
-trait RestResourceInfoService {
-  def findByResourceClass(projectIri: IRI, resourceClass: IRI): UIO[ListResponseDto]
-}
-object RestResourceInfoService {
-  def findByResourceClass(projectIri: IRI, resourceClass: IRI): ZIO[RestResourceInfoService, Nothing, ListResponseDto] =
-    ZIO.service[RestResourceInfoService].flatMap(_.findByResourceClass(projectIri, resourceClass))
-}
+final case class ResourceInfoDto private (
+  resourceIri: IRI,
+  creationDate: Instant,
+  modificationDate: Option[Instant],
+  isDeleted: Boolean
+)

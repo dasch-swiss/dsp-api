@@ -2,8 +2,9 @@ package org.knora.webapi.core
 
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.domain.resource.{LiveResourceInfoRepo, LiveRestResourceInfoService}
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.repo.LiveResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl

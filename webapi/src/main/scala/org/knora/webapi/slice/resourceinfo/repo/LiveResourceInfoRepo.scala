@@ -1,17 +1,18 @@
-package org.knora.webapi.domain.resource
+package org.knora.webapi.slice.resourceinfo.repo
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.twirl.queries.sparql.v2.txt.resourcesByCreationDate
 import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import org.knora.webapi.slice.resourceinfo.repo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import zio.{UIO, ZIO, ZLayer}
-import org.knora.webapi.messages.twirl.queries.sparql.v2.txt.resourcesByCreationDate
 
 import java.time.Instant
 
 final case class LiveResourceInfoRepo(ts: TriplestoreService) extends ResourceInfoRepo {
 
-  override def findByResourceClass(projectIri: IRI, resourceClass: IRI): UIO[List[ResourceInfo]] = {
-    val query      = resourcesByCreationDate(resourceClass, projectIri).toString
+  override def findByProjectAndResourceClass(projectIri: IRI, resourceClass: IRI): UIO[List[ResourceInfo]] = {
+    val query = resourcesByCreationDate(resourceClass, projectIri).toString
     ts.sparqlHttpSelect(query).map(toResourceInfoList)
   }
 
@@ -20,7 +21,7 @@ final case class LiveResourceInfoRepo(ts: TriplestoreService) extends ResourceIn
 
   private def toResourceInfo(row: VariableResultsRow): ResourceInfo = {
     val rowMap = row.rowMap
-    ResourceInfo(
+    repo.ResourceInfo(
       rowMap("resource"),
       Instant.parse(rowMap("creationDate")),
       rowMap.get("modificationDate").map(Instant.parse),
