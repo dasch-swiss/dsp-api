@@ -3,8 +3,7 @@ package dsp.api.main
 import dsp.user.route.UserRoutes
 import zhttp.http.Http
 import zio._
-import zhttp.http.Request
-import zhttp.http.Response
+import zhttp.http._
 import zio.ZLayer
 import zhttp.service.Server
 import dsp.api.main.DspMiddleware
@@ -16,12 +15,12 @@ final case class DspServer(
 ) {
 
   // adds up the routes of all slices
-  val dspRoutes: Http[AppConfig, Throwable, Request, Response] =
+  val dspRoutes: HttpApp[AppConfig, Throwable] =
     userRoutes.routes // ++ projectRoutes.routes
 
   // starts the server with the provided settings from the appConfig
   def start = {
-    val port = appConfig.knoraApi.externalPort
+    val port = appConfig.dspApi.externalPort
     Server.start(port, dspRoutes @@ DspMiddleware.logging)
   }
 

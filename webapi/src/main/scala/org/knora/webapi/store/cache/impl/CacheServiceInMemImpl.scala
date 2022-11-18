@@ -223,9 +223,6 @@ case class CacheServiceInMemImpl(
     ZIO.succeed(CacheServiceStatusOK)
 }
 
-/**
- * Companion object providing the layer with an initialized implementation
- */
 object CacheServiceInMemImpl {
   val layer: ZLayer[Any, Nothing, CacheService] =
     ZLayer {

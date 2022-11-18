@@ -1,9 +1,7 @@
 package dsp.api.main
 
 import zhttp.http.middleware.HttpMiddleware
-import zhttp.http.Http
-import zhttp.http.Request
-import zhttp.http.Response
+import zhttp.http._
 import zio._
 
 object DspMiddleware {
@@ -11,8 +9,8 @@ object DspMiddleware {
   val logging: HttpMiddleware[Any, Nothing] =
     new HttpMiddleware[Any, Nothing] {
       override def apply[R1 <: Any, E1 >: Nothing](
-        http: Http[R1, E1, Request, Response]
-      ): Http[R1, E1, Request, Response] =
+        http: HttpApp[R1, E1]
+      ): HttpApp[R1, E1] =
         Http.fromOptionFunction[Request] { request =>
           Random.nextUUID.flatMap { requestId =>
             ZIO.logAnnotate("RequestId", requestId.toString) {

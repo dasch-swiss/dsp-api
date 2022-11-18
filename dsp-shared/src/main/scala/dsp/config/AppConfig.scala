@@ -12,11 +12,11 @@ import dsp.valueobjects.User._
  * Configuration
  */
 final case class AppConfig(
-  knoraApi: KnoraApi,
+  dspApi: DspApi,
   bcryptPasswordStrength: PasswordStrength
 )
 
-final case class KnoraApi(
+final case class DspApi(
   internalHost: String,
   internalPort: Int,
   externalHost: String,

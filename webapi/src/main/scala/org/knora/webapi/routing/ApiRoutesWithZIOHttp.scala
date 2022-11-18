@@ -19,7 +19,7 @@ final case class ApiRoutesWithZIOHttp(
   healthRoute: HealthRouteWithZIOHttp
 ) {
   // adds up all the routes
-  val routes: Http[State, Nothing, Request, Response] =
+  val routes: HttpApp[State, Nothing] =
     healthRoute.route // TODO add more routes here with `++ projectRoutes.routes`
 
 }

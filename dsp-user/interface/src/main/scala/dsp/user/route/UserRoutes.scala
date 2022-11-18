@@ -20,7 +20,7 @@ final case class UserRoutes(userHandler: UserHandler) {
   /**
    * The user related routes which need AppConfig in the environment
    */
-  val routes: Http[AppConfig, ValidationException, Request, Response] = Http.collectZIO[Request] {
+  val routes: HttpApp[AppConfig, ValidationException] = Http.collectZIO[Request] {
     // POST /admin/users
     case req @ (Method.POST -> !! / "admin" / "users") =>
       CreateUser
@@ -46,9 +46,6 @@ final case class UserRoutes(userHandler: UserHandler) {
   }
 }
 
-/**
- * Companion object providing the layer with an initialized implementation of the UserHandler
- */
 object UserRoutes {
   val layer: ZLayer[UserHandler, Nothing, UserRoutes] =
     ZLayer.fromFunction(UserRoutes.apply _)

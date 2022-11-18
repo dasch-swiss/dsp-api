@@ -154,9 +154,6 @@ final case class ProjectHandler(repo: ProjectRepo) {
 
 }
 
-/**
- * Companion object providing the layer with an initialized implementation
- */
 object ProjectHandler {
   val layer: ZLayer[ProjectRepo, Nothing, ProjectHandler] =
     ZLayer {

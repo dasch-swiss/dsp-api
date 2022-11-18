@@ -286,9 +286,6 @@ final case class UserHandler(repo: UserRepo) {
 
 }
 
-/**
- * Companion object providing the layer with an initialized implementation
- */
 object UserHandler {
   val layer: ZLayer[UserRepo, Nothing, UserHandler] =
     ZLayer

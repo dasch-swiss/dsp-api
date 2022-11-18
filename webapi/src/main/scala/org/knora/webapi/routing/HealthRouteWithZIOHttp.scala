@@ -18,6 +18,12 @@ import org.knora.webapi.core.domain.AppState
  */
 trait HealthCheckWithZIOHttp {
 
+  /**
+   * gets the application state from a state service called `State`
+   *
+   * @param state the state service
+   * @return a response with the application state
+   */
   protected def healthCheck(state: State): UIO[Response] =
     for {
       _        <- ZIO.logDebug("get application state")
@@ -28,6 +34,12 @@ trait HealthCheckWithZIOHttp {
       _        <- ZIO.logDebug("getting application state done")
     } yield response
 
+  /**
+   * sets the application's health state to healthy or unhealthy according to the provided state
+   *
+   * @param state the application's state
+   * @return the result which is either unhealthy or healthy
+   */
   private def setHealthState(state: AppState): UIO[HealthCheckResult] =
     ZIO.succeed(
       state match {
@@ -52,6 +64,12 @@ trait HealthCheckWithZIOHttp {
       }
     )
 
+  /**
+   * creates the HTTP response from the health check result (healthy/unhealthy)
+   *
+   * @param result the result of the health check
+   * @return an HTTP response
+   */
   private def createResponse(result: HealthCheckResult): UIO[Response] =
     ZIO.succeed(
       Response
@@ -66,10 +84,30 @@ trait HealthCheckWithZIOHttp {
         .setStatus(statusCode(result.status))
     )
 
+  /**
+   * returns a string representation "healthy" or "unhealthy" from a boolean
+   *
+   * @param s a boolean from which to derive the state
+   * @return either "healthy" or "unhealthy"
+   */
   private def status(s: Boolean): String = if (s) "healthy" else "unhealthy"
 
+  /**
+   * returns the HTTP status according to the input boolean
+   *
+   * @param s a boolean from which to derive the HTTP status
+   * @return the HTTP status (OK or ServiceUnavailable)
+   */
   private def statusCode(s: Boolean): Status = if (s) Status.Ok else Status.ServiceUnavailable
 
+  /**
+   * The result of a health check which is either unhealthy or healthy.
+   *
+   * @param name      ???
+   * @param severity  ???
+   * @param status    the status (either false = unhealthy or true = healthy)
+   * @param message   the message
+   */
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
   private def unhealthy(message: String) =
@@ -97,7 +135,7 @@ final case class HealthRouteWithZIOHttp(state: State) extends HealthCheckWithZIO
   /**
    * Returns the route.
    */
-  val route: Http[State, Nothing, Request, Response] =
+  val route: HttpApp[State, Nothing] =
     Http.collectZIO[Request] { case Method.GET -> !! / "healthZ" =>
       for {
         //  ec    <- ZIO.executor.map(_.asExecutionContext) // TODO leave this for reference about how to get the execution context
