@@ -13,7 +13,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 /**
  * Transforms a repository for DSP-API PR2255.
  * Transforms incorrect value of project IRIs from the one containing either shortcode or
- * not suppored UUID version to UUID v4 base64 encoded.
+ * not supported UUID version to UUID v4 base64 encoded.
  */
 class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
@@ -34,7 +34,8 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
               statementsToAdd += nodeFactory.makeStatement(
                 subj = updatedNode,
                 pred = statement.pred,
-                obj = statement.obj
+                obj = statement.obj,
+                context = statement.context
               )
             }
 
@@ -44,7 +45,8 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
               statementsToAdd += nodeFactory.makeStatement(
                 subj = statement.subj,
                 pred = statement.pred,
-                obj = updatedNode
+                obj = updatedNode,
+                context = statement.context
               )
             }
       } yield ()
@@ -61,6 +63,18 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
 
 object ProjectsIrisToChange {
   val prefix = "http://rdfh.ch/projects/"
+
+  // KEEP it for reference, not a part of plugin and used only for replacement of
+  // IRIs existing in DSP-API repo
+  val onlyFoundInRepo: Map[String, String] = Map(
+    "0113" -> "bFURQB6zR1ugDFQL7EZy9Q",
+    "0666" -> "cXxbOh4xRce3uLUyXHujfg",
+    // beol in v1 test data
+    "0801" -> "bL0y8GRuTUiFmvF1oXbeFQ",
+    // dokubib in v1 test data
+    "00FE" -> "oIjhUsZmQLuJ0VMGvJ2pfg"
+  )
+
   val newToOldIrisMap: Map[String, String] = Map(
     s"${prefix}0001" -> s"${prefix}Lw3FC39BSzCwvmdOaTyLqQ",
     s"${prefix}00FF" -> s"${prefix}MTvoB0EJRrqovzRkWXqfkA",

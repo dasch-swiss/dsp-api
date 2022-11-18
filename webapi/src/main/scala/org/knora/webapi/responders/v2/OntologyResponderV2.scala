@@ -20,7 +20,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
@@ -608,7 +608,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+              identifier = IriIdentifier
+                .fromString(projectIri.toString)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = requestingUser
             )
           )

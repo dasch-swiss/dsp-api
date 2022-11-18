@@ -135,6 +135,24 @@ object Iri {
   }
 
   /**
+   * Base64Uuid value object.
+   * This is base64 encoded UUID version without paddings.
+   *
+   * @param value to validate.
+   */
+  sealed abstract case class Base64Uuid private (value: String)
+  object Base64Uuid {
+    def make(value: String): Validation[ValidationException, Base64Uuid] =
+      if (value.isEmpty) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidMissing))
+      } else if (!V2UuidValidation.hasUuidLength(value)) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(value)))
+      } else if (!V2UuidValidation.isUuidVersion4Or5(value)) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      } else Validation.succeed(new Base64Uuid(value) {})
+  }
+
+  /**
    * RoleIri value object.
    */
   sealed abstract case class RoleIri private (value: String) extends Iri
@@ -228,6 +246,8 @@ object IriErrorMessages {
   val RoleIriInvalid     = (iri: String) => s"Role IRI: $iri is invalid."
   val UserIriMissing     = "User IRI cannot be empty."
   val UserIriInvalid     = (iri: String) => s"User IRI: $iri is invalid."
+  val UuidMissing        = "UUID cannot be empty"
+  val UuidInvalid        = (uuid: String) => s"'$uuid' is not a UUID"
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
   val PropertyIriMissing = "Property IRI cannot be empty."
 }

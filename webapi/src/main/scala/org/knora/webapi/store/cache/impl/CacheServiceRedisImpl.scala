@@ -11,9 +11,11 @@ import redis.clients.jedis.JedisPoolConfig
 import zio._
 
 import dsp.errors.ForbiddenException
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
@@ -105,42 +107,85 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     } yield ()
 
   /**
-   * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
+   * Retrieves the project stored under the identifier, either Iri, Shortcode, Shortname or Uuid.
    *
    * @param identifier the project identifier.
    */
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    // The data is stored under the IRI key.
-    // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
-    identifier.hasType match {
-      case ProjectIdentifierType.IRI       => getProjectByIri(identifier.toIri)
-      case ProjectIdentifierType.SHORTCODE => getProjectByShortcodeOrShortname(identifier.toShortcode)
-      case ProjectIdentifierType.SHORTNAME => getProjectByShortcodeOrShortname(identifier.toShortname)
+    // The data is stored under the Iri
+    // Additionally, the Shortcode, Shortname and Uuid point to the Iri
+    identifier match {
+      case IriIdentifier(value)       => getProjectByIri(value)
+      case ShortcodeIdentifier(value) => getProjectByShortcode(value)
+      case ShortnameIdentifier(value) => getProjectByShortname(value)
+      case UuidIdentifier(value)      => getProjectByUuid(value)
     }
 
   /**
-   * Retrieves the project stored under the IRI.
+   * Retrieves the project by its IRI.
    *
    * @param id the project's IRI
    * @return an optional [[ProjectADM]].
    */
-  def getProjectByIri(id: String): Task[Option[ProjectADM]] =
+  def getProjectByIri(iri: Iri.ProjectIri): Task[Option[ProjectADM]] =
     (for {
-      bytes   <- getBytesValue(id).some
-      project <- CacheSerialization.deserialize[ProjectADM](bytes).some
-    } yield project).unsome
+      bytes <- getBytesValue(iri.value)
+      project <-
+        bytes match {
+          case Some(value) => CacheSerialization.deserialize[ProjectADM](value)
+          case None        => ZIO.succeed(None)
+        }
+    } yield project)
 
   /**
-   * Retrieves the project stored under a SHORTCODE or SHORTNAME.
+   * Retrieves the project by its SHORTNAME.
    *
-   * @param shortcodeOrShortname of the project.
+   * @param shortname of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortcodeOrShortname(shortcodeOrShortname: String): Task[Option[ProjectADM]] =
+  def getProjectByShortname(shortname: Project.ShortName): Task[Option[ProjectADM]] =
     (for {
-      iri     <- getStringValue(shortcodeOrShortname).some
-      project <- getProjectByIri(iri).some
-    } yield project).unsome
+      iri      <- getStringValue(shortname.value)
+      validIri <- Iri.ProjectIri.make(iri).toZIO
+      project <-
+        validIri match {
+          case Some(value) => getProjectByIri(value)
+          case None        => ZIO.succeed(None)
+        }
+    } yield project)
+
+  /**
+   * Retrieves the project by its SHORTCODE.
+   *
+   * @param shortcode of the project.
+   * @return an optional [[ProjectADM]]
+   */
+  def getProjectByShortcode(shortcode: Project.ShortCode): Task[Option[ProjectADM]] =
+    (for {
+      iri      <- getStringValue(shortcode.value)
+      validIri <- Iri.ProjectIri.make(iri).toZIO
+      project <-
+        validIri match {
+          case Some(value) => getProjectByIri(value)
+          case None        => ZIO.succeed(None)
+        }
+    } yield project)
+
+  /**
+   * Retrieves the project by its UUID.
+   *
+   * @param id the project's UUID
+   * @return an optional [[ProjectADM]].
+   */
+  def getProjectByUuid(uuid: Iri.Base64Uuid): Task[Option[ProjectADM]] =
+    (for {
+      bytes <- getBytesValue(UuidIdentifier.makeProjectIri(uuid.value))
+      project <-
+        bytes match {
+          case Some(value) => CacheSerialization.deserialize[ProjectADM](value)
+          case None        => ZIO.succeed(None)
+        }
+    } yield project)
 
   /**
    * Store string value under key.

@@ -20,7 +20,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -114,9 +114,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               appActor
                 .ask(
                   ProjectGetADM(
-                    identifier = ProjectIdentifierADM(
-                      maybeIri = Some(projectIri)
-                    )
+                    identifier = IriIdentifier
+                      .fromString(projectIri)
+                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                   )
                 )
                 .mapTo[Option[ProjectADM]]
@@ -420,9 +420,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                }
              )
 
+        iri = createRequest.project.value
         nameExists <- groupByNameAndProjectExists(
                         name = createRequest.name.value,
-                        projectIri = createRequest.project.value
+                        projectIri = iri
                       )
         _ = if (nameExists) {
               throw DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists")
@@ -432,7 +433,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.project.value))
+                identifier = IriIdentifier
+                  .fromString(iri)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -783,7 +786,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri))
+                identifier = IriIdentifier
+                  .fromString(projectIri)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]

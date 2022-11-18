@@ -32,7 +32,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
@@ -668,7 +668,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         appActor
           .ask(
             ProjectGetADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString))
+              identifier = IriIdentifier
+                .fromString(projectIri.toString)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
           .mapTo[Option[ProjectADM]]

@@ -42,7 +42,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
@@ -297,10 +297,8 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       apiRequest: CreateResourceApiRequestV1,
       userADM: UserADM
     ): Future[ResourceCreateRequestV1] = {
-      val projectIri = stringFormatter.validateAndEscapeIri(
-        apiRequest.project_id,
-        throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}")
-      )
+      val projectIri = apiRequest.project_id
+
       val resourceTypeIri = stringFormatter.validateAndEscapeIri(
         apiRequest.restype_id,
         throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}")
@@ -311,17 +309,20 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       )
 
       for {
-        projectShortcode: String <- for {
-                                      projectResponse: ProjectGetResponseADM <-
-                                        appActor
-                                          .ask(
-                                            ProjectGetRequestADM(
-                                              ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                              requestingUser = userADM
-                                            )
-                                          )
-                                          .mapTo[ProjectGetResponseADM]
-                                    } yield projectResponse.project.shortcode
+        projectShortcode: String <-
+          for {
+            projectResponse: ProjectGetResponseADM <-
+              appActor
+                .ask(
+                  ProjectGetRequestADM(
+                    identifier = IriIdentifier
+                      .fromString(projectIri)
+                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+                    requestingUser = userADM
+                  )
+                )
+                .mapTo[ProjectGetResponseADM]
+          } yield projectResponse.project.shortcode
 
         file: Option[FileValueV1] <- apiRequest.file match {
                                        case Some(filename) =>
@@ -443,17 +444,20 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
 
       for {
-        projectShortcode: String <- for {
-                                      projectResponse: ProjectGetResponseADM <-
-                                        appActor
-                                          .ask(
-                                            ProjectGetRequestADM(
-                                              identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
-                                              requestingUser = userProfile
-                                            )
-                                          )
-                                          .mapTo[ProjectGetResponseADM]
-                                    } yield projectResponse.project.shortcode
+        projectShortcode: String <-
+          for {
+            projectResponse: ProjectGetResponseADM <-
+              appActor
+                .ask(
+                  ProjectGetRequestADM(
+                    identifier = IriIdentifier
+                      .fromString(projectId)
+                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+                    requestingUser = userProfile
+                  )
+                )
+                .mapTo[ProjectGetResponseADM]
+          } yield projectResponse.project.shortcode
 
         resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
           resourceRequest.map { createResourceRequest =>
