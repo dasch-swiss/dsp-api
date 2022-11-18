@@ -138,7 +138,7 @@ final case class HealthRouteWithZIOHttp(state: State) extends HealthCheckWithZIO
   val route: HttpApp[State, Nothing] =
     Http.collectZIO[Request] { case Method.GET -> !! / "healthZ" =>
       for {
-        //  ec    <- ZIO.executor.map(_.asExecutionContext) // TODO leave this for reference about how to get the execution context
+        //  ec    <- ZIO.executor.map(_.asExecutionContext) // leave this for reference about how to get the execution context
         state    <- ZIO.service[State]
         response <- healthCheck(state)
       } yield response
