@@ -1,21 +1,20 @@
 package org.knora.webapi.core
 
-import zio.ZLayer
-
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.repo.LiveResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.iiif.impl.{IIIFServiceMockImpl, IIIFServiceSipiImpl}
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
+import org.knora.webapi.testcontainers.{FusekiTestContainer, SipiTestContainer}
 import org.knora.webapi.testservices.TestClientService
+import zio.ZLayer
 
 object LayersTest {
 
@@ -44,6 +43,8 @@ object LayersTest {
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
+      LiveRestResourceInfoService.layer,
+      LiveResourceInfoRepo.layer,
       // testcontainers
       SipiTestContainer.layer,
       FusekiTestContainer.layer,
@@ -70,6 +71,8 @@ object LayersTest {
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
+      LiveRestResourceInfoService.layer,
+      LiveResourceInfoRepo.layer,
       // testcontainers
       FusekiTestContainer.layer,
       // Test services
@@ -95,6 +98,8 @@ object LayersTest {
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
+      LiveRestResourceInfoService.layer,
+      LiveResourceInfoRepo.layer,
       // testcontainers
       FusekiTestContainer.layer,
       // Test services
@@ -120,6 +125,8 @@ object LayersTest {
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
+      LiveRestResourceInfoService.layer,
+      LiveResourceInfoRepo.layer,
       // testcontainers
       FusekiTestContainer.layer,
       // Test services
@@ -145,6 +152,8 @@ object LayersTest {
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
+      LiveRestResourceInfoService.layer,
+      LiveResourceInfoRepo.layer,
       // testcontainers
       FusekiTestContainer.layer,
       // Test services

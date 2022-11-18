@@ -7,7 +7,8 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import scala.concurrent.duration.DurationLong
 
 class UpgradePluginPR2288(log: Logger) extends UpgradePlugin {
-  private val nodeFactory     = RdfFeatureFactory.getRdfNodeFactory()
+  private val nodeFactory = RdfFeatureFactory.getRdfNodeFactory()
+
   private val creationDateIri = nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-base#creationDate")
   private val lastModDateIri  = nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-base#lastModificationDate")
 
@@ -23,8 +24,7 @@ class UpgradePluginPR2288(log: Logger) extends UpgradePlugin {
 
     val newStatements = statementsWithCreationDateIri
       .filter(subjectHasNoLastModificationDate)
-      .map(statement => nodeFactory.makeStatement(statement.subj, lastModDateIri, statement.obj))
-      .toSet
+      .map(s => nodeFactory.makeStatement(s.subj, lastModDateIri, s.obj, s.context))
 
     model.addStatements(newStatements)
 

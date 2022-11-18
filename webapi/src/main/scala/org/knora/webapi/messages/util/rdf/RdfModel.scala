@@ -6,10 +6,11 @@
 package org.knora.webapi.messages.util.rdf
 
 import scala.util.control.Exception.allCatch
-
 import dsp.errors.InvalidRdfException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
+
+import scala.collection.immutable.Iterable
 
 /**
  * Represents an RDF subject, predicate, or object.
@@ -210,7 +211,7 @@ trait RdfModel extends Iterable[Statement] {
    *
    * @param statements the statements to be added.
    */
-  def addStatements(statements: Set[Statement]): Unit =
+  def addStatements(statements: Iterable[Statement]): Unit =
     for (statement <- statements) {
       addStatement(statement)
     }
