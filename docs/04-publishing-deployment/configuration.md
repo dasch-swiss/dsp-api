@@ -57,8 +57,6 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.fuseki.username        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME        | admin                 |
 | app.triplestore.fuseki.password        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD        | test                  |
 | app.cache-service.enabled              | KNORA_WEBAPI_CACHE_SERVICE_ENABLED              | true                  |
-| app.cache-service.redis.host           | KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST           | localhost             |
-| app.cache-service.redis.port           | KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT           | 6379                  |
 
 ## Selectively Disabling Routes
 

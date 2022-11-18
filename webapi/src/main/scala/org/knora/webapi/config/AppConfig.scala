@@ -218,13 +218,7 @@ final case class Shacl(
 }
 
 final case class CacheService(
-  enabled: Boolean,
-  redis: Redis
-)
-
-final case class Redis(
-  host: String,
-  port: Int
+  enabled: Boolean
 )
 
 final case class ClientTestDataService(
