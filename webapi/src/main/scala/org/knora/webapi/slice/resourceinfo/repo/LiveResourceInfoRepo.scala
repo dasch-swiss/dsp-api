@@ -24,7 +24,8 @@ final case class LiveResourceInfoRepo(ts: TriplestoreService) extends ResourceIn
     repo.ResourceInfo(
       rowMap("resource"),
       Instant.parse(rowMap("creationDate")),
-      rowMap.get("lastModificationDate").map(Instant.parse),
+      Instant.parse(rowMap("lastModificationDate")),
+      rowMap.get("deleteDate").map(Instant.parse),
       rowMap("isDeleted").toBoolean
     )
   }

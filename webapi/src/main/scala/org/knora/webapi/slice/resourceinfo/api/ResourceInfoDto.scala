@@ -14,17 +14,17 @@ object ListResponseDto {
     DeriveJsonEncoder.gen[ListResponseDto]
 }
 
+final case class ResourceInfoDto private (
+  resourceIri: IRI,
+  creationDate: Instant,
+  lastModificationDate: Instant,
+  deleteDate: Option[Instant],
+  isDeleted: Boolean
+)
 object ResourceInfoDto {
   def apply(info: ResourceInfo): ResourceInfoDto =
-    ResourceInfoDto(info.iri, info.creationDate, info.lastModificationDate, info.isDeleted)
+    ResourceInfoDto(info.iri, info.creationDate, info.lastModificationDate, info.deleteDate, info.isDeleted)
 
   implicit val encoder: JsonEncoder[ResourceInfoDto] =
     DeriveJsonEncoder.gen[ResourceInfoDto]
 }
-
-final case class ResourceInfoDto private (
-  resourceIri: IRI,
-  creationDate: Instant,
-  lastModificationDate: Option[Instant],
-  isDeleted: Boolean
-)
