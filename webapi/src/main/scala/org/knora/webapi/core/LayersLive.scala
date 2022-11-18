@@ -1,6 +1,7 @@
 package org.knora.webapi.core
 
 import zio.ZLayer
+import zio.ULayer
 
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
@@ -16,6 +17,7 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.routing.ApiRoutesWithZIOHttp
 
 object LayersLive {
 
@@ -41,17 +43,18 @@ object LayersLive {
   /**
    * All effect layers needed to provide the `Environment`
    */
-  val dspLayersLive =
+  val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
       ApiRoutes.layer,
-      HealthRouteWithZIOHttp.layer, // TODO make this into a layer that combines all new routes
+      ApiRoutesWithZIOHttp.layer,   // this is the new layer that composes all new routes
+      HealthRouteWithZIOHttp.layer, // this is the new health route
       AppConfig.live,
       AppRouter.layer,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       HttpServer.layer,
-      HttpServerZIO.layer, // this is the new ZIO HTTP server layer
+      HttpServerWithZIOHttp.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       JWTService.layer,
