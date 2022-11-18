@@ -12,6 +12,7 @@ import zio.test._
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri._
+import dsp.valueobjects.V2UuidValidation._
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.
@@ -35,7 +36,11 @@ object IriSpec extends ZIOSpecDefault {
   val validUserIri            = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
   val userIriWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
-  def spec = (groupIriTest + listIriTest + projectIriTest + RoleIriTest + UserIriTest)
+  val invalidUuid   = "MAgdcpn2MO211YYOplR32v"
+  val uuidVersion3  = getUuidFromIri(userIriWithUUIDVersion3)
+  val supportedUuid = getUuidFromIri(validUserIri)
+
+  def spec = (groupIriTest + listIriTest + projectIriTest + uuidTest + roleIriTest + userIriTest)
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
     test("pass an empty value and return an error") {
@@ -190,7 +195,28 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
-  private val RoleIriTest = suite("IriSpec - roleIri")(
+  private val uuidTest = suite("IriSpec - Base64Uuid")(
+    test("pass an empty value and return an error") {
+      assertTrue(Base64Uuid.make("") == Validation.fail(ValidationException(IriErrorMessages.UuidMissing)))
+    },
+    test("pass an invalid UUID  and return an error") {
+      assertTrue(
+        Base64Uuid.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(invalidIri)))
+      )
+    },
+    test("pass an valid UUID, which has not supported version 3") {
+      assertTrue(
+        Base64Uuid.make(uuidVersion3) == Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      )
+    },
+    test("pass valid UUID and successfully create value object") {
+      (for {
+        uuid <- Base64Uuid.make(supportedUuid)
+      } yield assertTrue(uuid.value == supportedUuid)).toZIO
+    }
+  )
+
+  private val roleIriTest = suite("IriSpec - roleIri")(
     test("pass an empty value and return an error") {
       assertTrue(RoleIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing)))
     },
@@ -213,7 +239,7 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
-  private val UserIriTest = suite("IriSpec - UserIri")(
+  private val userIriTest = suite("IriSpec - UserIri")(
     test("pass an empty value and return an error") {
       assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
     },

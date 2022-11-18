@@ -13,7 +13,7 @@
 
 - `POST: /admin/projects` : create a new project  
 
-- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>` : returns a single project identified either through iri, shortname, or shortcode  
+- `GET: /admin/projects/[iri | shortname | shortcode | uuid]/<identifier>` : returns a single project identified either through iri, shortname, shortcode or UUID
 
 - `PUT: /admin/projects/iri/<identifier>` : update a project identified by iri  
 
@@ -23,7 +23,7 @@
 
 **Project Member Operations:**  
 
-- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode  
+- `GET: /admin/projects/[iri | shortname | shortcode | uuid]/<identifier>/members` : returns all members part of a project identified through iri, shortname, shortcode or UUID
 
 **Project Admin Member Operations:**  
 
