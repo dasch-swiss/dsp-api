@@ -62,18 +62,17 @@ class UpgradePluginPR2255(log: Logger) extends UpgradePlugin {
 }
 
 object ProjectsIrisToChange {
-  val prefix = "http://rdfh.ch/projects/"
-
-  // KEEP it for reference, not a part of plugin and used only for replacement of
-  // IRIs existing in DSP-API repo
-  val onlyFoundInRepo: Map[String, String] = Map(
+  /*
+  KEEP it for reference, not a part of plugin and used only for replacement of IRIs existing in DSP-API repo
     "0113" -> "bFURQB6zR1ugDFQL7EZy9Q",
     "0666" -> "cXxbOh4xRce3uLUyXHujfg",
     // beol in v1 test data
     "0801" -> "bL0y8GRuTUiFmvF1oXbeFQ",
     // dokubib in v1 test data
     "00FE" -> "oIjhUsZmQLuJ0VMGvJ2pfg"
-  )
+   */
+
+  val prefix = "http://rdfh.ch/projects/"
 
   val newToOldIrisMap: Map[String, String] = Map(
     s"${prefix}0001" -> s"${prefix}Lw3FC39BSzCwvmdOaTyLqQ",
