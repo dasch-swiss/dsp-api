@@ -37,11 +37,6 @@ object User {
         username => username.value
       )
 
-    // implicit val decoder: JsonDecoder[Username] = JsonDecoder[String].mapOrFail { case value =>
-    //   Username.make(value).toEitherWith(e => e.head.getMessage())
-    // }
-    // implicit val encoder: JsonEncoder[Username] = JsonEncoder[String].contramap((username: Username) => username.value)
-
     /**
      * A regex that matches a valid username
      * - 4 - 50 characters long
@@ -195,13 +190,14 @@ object User {
 
   }
   object PasswordHash {
-    // TODO: get the passwordstrength from config instead
+    // TODO: get the passwordstrength from appConfig instead (see CreateUser.scala as example)
 
     // the decoder defines how to decode json to an object
     implicit val decoder: JsonDecoder[PasswordHash] = JsonDecoder[(String, PasswordStrength)].mapOrFail {
       case (password: String, passwordStrengthInt: Int) =>
         val passwordStrength =
           PasswordStrength.make(passwordStrengthInt).fold(e => throw new ValidationException(e.head), v => v)
+
         PasswordHash.make(password, passwordStrength).toEitherWith(e => e.head.getMessage())
     }
     // the encoder defines how to encode the object into json
