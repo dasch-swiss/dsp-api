@@ -5,10 +5,10 @@
 
 package org.knora.webapi.routing
 
+import zhttp.http._
 import zio.ZLayer
 
 import org.knora.webapi.core._
-import zhttp.http._
 
 /**
  * The accumulated routes

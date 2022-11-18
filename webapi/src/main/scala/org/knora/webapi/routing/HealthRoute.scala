@@ -26,7 +26,7 @@ trait HealthCheck {
   protected def healthCheck(state: State): UIO[HttpResponse] =
     for {
       _        <- ZIO.logDebug("get application state")
-      state    <- state.get
+      state    <- state.getAppState
       result   <- setHealthState(state)
       _        <- ZIO.logDebug("set health state")
       response <- createResponse(result)

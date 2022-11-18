@@ -1,11 +1,12 @@
 package org.knora.webapi.core
 
-import zio.ZLayer
 import zio.ULayer
+import zio.ZLayer
 
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.ApiRoutesWithZIOHttp
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
@@ -17,7 +18,6 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.routing.ApiRoutesWithZIOHttp
 
 object LayersLive {
 
