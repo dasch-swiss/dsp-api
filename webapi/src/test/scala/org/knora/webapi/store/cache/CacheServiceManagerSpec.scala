@@ -5,9 +5,10 @@
 
 package org.knora.webapi.store.cache
 
+import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
@@ -53,17 +54,31 @@ class CacheServiceManagerSpec extends CoreSpec {
     }
 
     "successfully retrieve a project by IRI" in {
-      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
+      appActor ! CacheServiceGetProjectADM(
+        IriIdentifier
+          .fromString(project.id)
+          .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+      )
       expectMsg(Some(project))
+
     }
 
     "successfully retrieve a project by SHORTNAME" in {
-      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
+      appActor ! CacheServiceGetProjectADM(
+        ShortnameIdentifier
+          .fromString(project.shortname)
+          .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+      )
       expectMsg(Some(project))
+
     }
 
     "successfully retrieve a project by SHORTCODE" in {
-      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
+      appActor ! CacheServiceGetProjectADM(
+        ShortcodeIdentifier
+          .fromString(project.shortcode)
+          .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+      )
       expectMsg(Some(project))
     }
   }

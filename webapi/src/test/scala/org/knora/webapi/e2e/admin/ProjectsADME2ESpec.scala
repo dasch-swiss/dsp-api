@@ -57,6 +57,8 @@ class ProjectsADME2ESpec
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
+  private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
+
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
@@ -743,7 +745,7 @@ class ProjectsADME2ESpec
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
-        val notexistingIriEnc = URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
+        val notexistingIriEnc = URLEncoder.encode(notExistingProjectButValidProjectIri, "utf-8")
         val request = Get(baseApiUrl + s"/admin/projects/iri/$notexistingIriEnc/Keywords") ~> addCredentials(
           BasicHttpCredentials(rootEmail, testPass)
         )
