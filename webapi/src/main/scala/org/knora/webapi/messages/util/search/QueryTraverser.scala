@@ -13,6 +13,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent._
 import scala.concurrent.duration._
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -20,7 +21,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.responders.v2.ontology.Cache
 
 /**
@@ -231,13 +232,19 @@ object QueryTraverser {
             val shortcode = internal.getProjectCode
             shortcode match {
               case None => FastFuture.successful(Seq.empty)
-              case Some(_) => {
+              case Some(value) => {
                 // find the project with the shortcode
 
                 for {
                   projectMaybe <-
                     appActor
-                      .ask(ProjectGetADM(ProjectIdentifierADM(maybeShortcode = shortcode)))(Duration(100, SECONDS))
+                      .ask(
+                        ProjectGetADM(
+                          ShortcodeIdentifier
+                            .fromString(value)
+                            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+                        )
+                      )(Duration(100, SECONDS))
                       .mapTo[Option[ProjectADM]]
                   projectOntologies = projectMaybe match {
                                         case None => Seq.empty

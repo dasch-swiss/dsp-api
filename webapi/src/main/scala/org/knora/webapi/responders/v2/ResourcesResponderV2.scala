@@ -23,6 +23,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
@@ -2672,17 +2673,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   ): Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectInfoResponse: ProjectGetResponseADM <- appActor
-                                                      .ask(
-                                                        ProjectGetRequestADM(
-                                                          identifier = ProjectIdentifierADM(maybeIri =
-                                                            Some(projectResourceHistoryEventsGetRequest.projectIri)
-                                                          ),
-                                                          requestingUser =
-                                                            projectResourceHistoryEventsGetRequest.requestingUser
-                                                        )
-                                                      )
-                                                      .mapTo[ProjectGetResponseADM]
+      projectInfoResponse: ProjectGetResponseADM <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = IriIdentifier
+                .fromString(projectResourceHistoryEventsGetRequest.projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+              requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
