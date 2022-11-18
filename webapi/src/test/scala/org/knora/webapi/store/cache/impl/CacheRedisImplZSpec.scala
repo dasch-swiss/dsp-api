@@ -9,9 +9,11 @@ import zio._
 import zio.test.Assertion._
 import zio.test._
 
+import dsp.errors.BadRequestException
+import dsp.valueobjects.V2UuidValidation
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -49,41 +51,64 @@ object CacheRedisImplZSpec extends ZIOSpecDefault {
         _             <- CacheService.putUserADM(user)
         retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
       } yield assert(retrievedUser)(equalTo(Some(user)))
-    } @@ TestAspect.ignore +
-      test("successfully store a user and retrieve by USERNAME")(
-        for {
-          _             <- CacheService.putUserADM(user)
-          retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
-        } yield assert(retrievedUser)(equalTo(Some(user)))
-      ) @@ TestAspect.ignore +
-      test("successfully store a user and retrieve by EMAIL")(
-        for {
-          _             <- CacheService.putUserADM(user)
-          retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
-        } yield assert(retrievedUser)(equalTo(Some(user)))
-      ) @@ TestAspect.ignore
+    } @@ TestAspect.ignore,
+    test("successfully store a user and retrieve by USERNAME")(
+      for {
+        _             <- CacheService.putUserADM(user)
+        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+      } yield assert(retrievedUser)(equalTo(Some(user)))
+    ) @@ TestAspect.ignore,
+    test("successfully store a user and retrieve by EMAIL")(
+      for {
+        _             <- CacheService.putUserADM(user)
+        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+      } yield assert(retrievedUser)(equalTo(Some(user)))
+    ) @@ TestAspect.ignore
   )
 
   val projectTests = suite("CacheRedisImplSpec - project")(
     test("successfully store a project and retrieve by IRI")(
       for {
-        _                <- CacheService.putProjectADM(project)
-        retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
+        _ <- CacheService.putProjectADM(project)
+        retrievedProject <- CacheService.getProjectADM(
+                              IriIdentifier
+                                .fromString(project.id)
+                                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+                            )
       } yield assert(retrievedProject)(equalTo(Some(project)))
-    ) +
-      test("successfully store a project and retrieve by SHORTCODE")(
-        for {
-          _ <- CacheService.putProjectADM(project)
-          retrievedProject <-
-            CacheService.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
-        } yield assert(retrievedProject)(equalTo(Some(project)))
-      ) +
-      test("successfully store a project and retrieve by SHORTNAME")(
-        for {
-          _ <- CacheService.putProjectADM(project)
-          retrievedProject <-
-            CacheService.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
-        } yield assert(retrievedProject)(equalTo(Some(project)))
-      )
+    ),
+    test("successfully store a project and retrieve by SHORTCODE")(
+      for {
+        _ <- CacheService.putProjectADM(project)
+        retrievedProject <-
+          CacheService.getProjectADM(
+            ShortcodeIdentifier
+              .fromString(project.shortcode)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
+      } yield assert(retrievedProject)(equalTo(Some(project)))
+    ),
+    test("successfully store a project and retrieve by SHORTNAME")(
+      for {
+        _ <- CacheService.putProjectADM(project)
+        retrievedProject <-
+          CacheService.getProjectADM(
+            ShortnameIdentifier
+              .fromString(project.shortname)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
+      } yield assert(retrievedProject)(equalTo(Some(project)))
+    ),
+    test("successfully store a project and retrieve by UUID")(
+      for {
+        _ <- CacheService.putProjectADM(project)
+        retrievedProject <-
+          CacheService.getProjectADM(
+            UuidIdentifier
+              .fromString(V2UuidValidation.getUuidFromIri(project.id))
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
+      } yield assert(retrievedProject)(equalTo(Some(project)))
+    )
   )
 }

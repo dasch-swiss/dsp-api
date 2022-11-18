@@ -27,7 +27,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionD
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserChangeRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
@@ -908,16 +908,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                 case None           => Seq.empty[IRI]
                               }
 
-      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-                                                               appActor
-                                                                 .ask(
-                                                                   ProjectGetADM(
-                                                                     identifier =
-                                                                       ProjectIdentifierADM(maybeIri = Some(projectIri))
-                                                                   )
-                                                                 )
-                                                                 .mapTo[Option[ProjectADM]]
-                                                             }
+      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] =
+        projectIris.map { projectIri =>
+          appActor
+            .ask(
+              ProjectGetADM(
+                identifier = IriIdentifier
+                  .fromString(projectIri)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+              )
+            )
+            .mapTo[Option[ProjectADM]]
+        }
       maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
       projects: Seq[ProjectADM]               = maybeProjects.flatten
 
@@ -1945,15 +1947,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         // _ = log.debug("statements2UserADM - groups: {}", MessageUtil.toSource(groups))
 
-        maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-                                                                 appActor
-                                                                   .ask(
-                                                                     ProjectGetADM(
-                                                                       ProjectIdentifierADM(maybeIri = Some(projectIri))
-                                                                     )
-                                                                   )
-                                                                   .mapTo[Option[ProjectADM]]
-                                                               }
+        maybeProjectFutures: Seq[Future[Option[ProjectADM]]] =
+          projectIris.map { projectIri =>
+            appActor
+              .ask(
+                ProjectGetADM(
+                  identifier = IriIdentifier
+                    .fromString(projectIri)
+                    .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+                )
+              )
+              .mapTo[Option[ProjectADM]]
+          }
         maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
         projects: Seq[ProjectADM]               = maybeProjects.flatten
 

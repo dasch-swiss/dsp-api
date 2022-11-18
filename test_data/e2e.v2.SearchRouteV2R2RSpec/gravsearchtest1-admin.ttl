@@ -6,7 +6,7 @@
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 
-<http://rdfh.ch/projects/0666> a knora-admin:knoraProject ;
+<http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> a knora-admin:knoraProject ;
   knora-admin:projectShortname "test"^^xsd:string ;
   knora-admin:projectLongname "Test"^^xsd:string ;
   knora-admin:projectShortcode "0666"^^xsd:string ;
@@ -25,5 +25,5 @@
   knora-admin:familyName "test"^^xsd:string ;
   knora-admin:status "true"^^xsd:boolean ;
   knora-admin:preferredLanguage "en"^^xsd:string ;
-  knora-admin:isInProject <http://rdfh.ch/projects/0666> ;
+  knora-admin:isInProject <http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> ;
   knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
