@@ -11,8 +11,8 @@ import dsp.api.main.DspMiddleware
 import dsp.config.AppConfig
 
 final case class DspServer(
-  userRoutes: UserRoutes,
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  userRoutes: UserRoutes
 ) {
 
   // adds up the routes of all slices

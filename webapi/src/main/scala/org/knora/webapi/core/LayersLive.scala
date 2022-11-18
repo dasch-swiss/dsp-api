@@ -5,6 +5,7 @@ import zio.ZLayer
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -44,11 +45,13 @@ object LayersLive {
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
       ApiRoutes.layer,
+      HealthRouteWithZIOHttp.layer, // TODO make this into a layer that combines all new routes
       AppConfig.live,
       AppRouter.layer,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       HttpServer.layer,
+      HttpServerZIO.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       JWTService.layer,
