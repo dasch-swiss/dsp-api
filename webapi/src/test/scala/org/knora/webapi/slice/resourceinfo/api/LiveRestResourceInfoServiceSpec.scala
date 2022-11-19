@@ -30,7 +30,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
       test(
         """given two ResourceInfo exist
           | when findByProjectAndResourceClass
-          | then it should return all info sorted by lastModificationDate
+          | then it should return all info sorted by (lastModificationDate, ASC)
           |""".stripMargin.linesIterator.mkString("")
       ) {
         val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(10, DAYS), now.minus(9, DAYS))
@@ -45,7 +45,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
       },
       test(
         """given two ResourceInfo exist
-          | when findByProjectAndResourceClass ordered by CreationDate DESC
+          | when findByProjectAndResourceClass ordered by (creationDate, DESC)
           | then it should return all info sorted correctly 
           |""".stripMargin.linesIterator.mkString("")
       ) {
