@@ -21,7 +21,7 @@ import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeader
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepo.{DESC, creationDate}
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepo.{ASC, Order, OrderBy, lastModificationDate}
 import zio.Exit.{Failure, Success}
 import zio.json._
 import zio.{Exit, Runtime, Unsafe, ZIO}
@@ -339,6 +339,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData, runtime: zio.Runtime[RestResou
 
   private def getQueryParamsMap(requestContext: RequestContext): Map[String, String] =
     requestContext.request.uri.query().toMap
+  private def getStringQueryParam(requestContext: RequestContext, key: String): Option[String] =
+    getQueryParamsMap(requestContext).get(key)
   private def getRequiredStringQueryParam(requestContext: RequestContext, key: String): String =
     getQueryParamsMap(requestContext).getOrElse(
       key,
@@ -362,8 +364,16 @@ class ResourcesRouteV2(routeData: KnoraRouteData, runtime: zio.Runtime[RestResou
     get { ctx =>
       val projectIri       = getRequiredProjectFromHeader(ctx).get.internalIri
       val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx).internalIri
+      val orderBy = getStringQueryParam(ctx, "orderBy") match {
+        case None    => lastModificationDate
+        case Some(s) => OrderBy.make(s).getOrElse(throw BadRequestException(s"Invalid value '$s', for orderBy"))
+      }
+      val order: Order = getStringQueryParam(ctx, "order") match {
+        case None    => ASC
+        case Some(s) => Order.make(s).getOrElse(throw BadRequestException(s"Invalid value '$s', for order"))
+      }
       val action =
-        RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri, (creationDate, DESC))
+        RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri, (orderBy, order))
       ctx.complete(unsafeRunZioAndMapJsonResponse(action))
     }
   }

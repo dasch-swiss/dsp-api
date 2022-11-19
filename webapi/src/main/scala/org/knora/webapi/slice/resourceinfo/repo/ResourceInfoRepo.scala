@@ -18,10 +18,24 @@ object ResourceInfoRepo {
   sealed trait OrderBy
   case object creationDate         extends OrderBy
   case object lastModificationDate extends OrderBy
+  object OrderBy {
+    def make(str: String): Option[OrderBy] = str match {
+      case "creationDate"         => Some(creationDate)
+      case "lastModificationDate" => Some(lastModificationDate)
+      case _                      => None
+    }
+  }
 
   sealed trait Order
   case object ASC  extends Order
   case object DESC extends Order
+  object Order {
+    def make(str: String): Option[Order] = str match {
+      case "ASC"  => Some(ASC)
+      case "DESC" => Some(DESC)
+      case _      => None
+    }
+  }
 
   def findByProjectAndResourceClass(
     projectIri: IRI,
