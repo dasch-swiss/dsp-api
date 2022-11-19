@@ -11,3 +11,9 @@ case class ResourceInfo(
   deleteDate: Option[Instant],
   isDeleted: Boolean
 )
+object ResourceInfo {
+  def apply(iri: IRI, creationDate: Instant, lastModificationDate: Instant): ResourceInfo =
+    ResourceInfo(iri, creationDate, lastModificationDate, deleteDate = None, isDeleted = false)
+  def apply(iri: IRI, creationDate: Instant, lastModificationDate: Instant, deleteDate: Instant): ResourceInfo =
+    ResourceInfo(iri, creationDate, lastModificationDate, Some(deleteDate), isDeleted = true)
+}

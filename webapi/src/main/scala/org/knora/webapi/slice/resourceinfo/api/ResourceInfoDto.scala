@@ -5,10 +5,14 @@ import org.knora.webapi.slice.resourceinfo.repo.ResourceInfo
 import zio.json._
 
 import java.time.Instant
+
 final case class ListResponseDto private (resources: List[ResourceInfoDto], count: Int)
 object ListResponseDto {
-  def apply(list: List[ResourceInfoDto]): ListResponseDto =
-    ListResponseDto(list, list.size)
+  val empty: ListResponseDto = ListResponseDto(List.empty, 0)
+  def apply(list: List[ResourceInfoDto]): ListResponseDto = list match {
+    case Nil  => ListResponseDto.empty
+    case list => ListResponseDto(list, list.size)
+  }
 
   implicit val encoder: JsonEncoder[ListResponseDto] =
     DeriveJsonEncoder.gen[ListResponseDto]
