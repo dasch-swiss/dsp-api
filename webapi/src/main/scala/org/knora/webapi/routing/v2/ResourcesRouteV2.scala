@@ -21,9 +21,10 @@ import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeader
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepo.{DESC, creationDate}
 import zio.Exit.{Failure, Success}
 import zio.json._
-import zio.{Exit, Unsafe, ZIO, Runtime}
+import zio.{Exit, Runtime, Unsafe, ZIO}
 
 import java.time.Instant
 import java.util.UUID
@@ -361,7 +362,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData, runtime: zio.Runtime[RestResou
     get { ctx =>
       val projectIri       = getRequiredProjectFromHeader(ctx).get.internalIri
       val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx).internalIri
-      val action           = RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri)
+      val action =
+        RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri, (creationDate, DESC))
       ctx.complete(unsafeRunZioAndMapJsonResponse(action))
     }
   }

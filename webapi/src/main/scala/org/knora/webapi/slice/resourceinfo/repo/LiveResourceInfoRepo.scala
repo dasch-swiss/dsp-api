@@ -4,6 +4,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.twirl.queries.sparql.v2.txt.resourcesByCreationDate
 import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.slice.resourceinfo.repo
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepo.{Order, OrderBy}
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import zio.{UIO, ZIO, ZLayer}
 
@@ -11,9 +12,13 @@ import java.time.Instant
 
 final case class LiveResourceInfoRepo(ts: TriplestoreService) extends ResourceInfoRepo {
 
-  override def findByProjectAndResourceClass(projectIri: IRI, resourceClass: IRI): UIO[List[ResourceInfo]] = {
-    val query = resourcesByCreationDate(resourceClass, projectIri).toString
-    ts.sparqlHttpSelect(query).map(toResourceInfoList)
+  override def findByProjectAndResourceClass(
+    projectIri: IRI,
+    resourceClass: IRI,
+    ordering: (OrderBy, Order)
+  ): UIO[List[ResourceInfo]] = {
+    val query = resourcesByCreationDate(resourceClass, projectIri, ordering._1.toString, ordering._2.toString).toString
+    ZIO.debug(query) *> ts.sparqlHttpSelect(query).map(toResourceInfoList)
   }
 
   private def toResourceInfoList(result: SparqlSelectResult): List[ResourceInfo] =

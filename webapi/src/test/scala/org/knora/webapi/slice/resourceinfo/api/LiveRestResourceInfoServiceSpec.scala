@@ -1,5 +1,6 @@
 package org.knora.webapi.slice.resourceinfo.api
 
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepo.{creationDate, DESC}
 import org.knora.webapi.slice.resourceinfo.repo.TestResourceInfoRepo.{knownProjectIRI, knownResourceClass}
 import org.knora.webapi.slice.resourceinfo.repo.{ResourceInfo, TestResourceInfoRepo}
 import zio.test._
@@ -39,6 +40,26 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           actual <- RestResourceInfoService.findByProjectAndResourceClass(knownProjectIRI, knownResourceClass)
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto(_)).sortBy(_.lastModificationDate)
+          assertTrue(actual == ListResponseDto(items))
+        }
+      },
+      test(
+        """given two ResourceInfo exist
+          | when findByProjectAndResourceClass ordered by CreationDate DESC
+          | then it should return all info sorted correctly 
+          |""".stripMargin.linesIterator.mkString("")
+      ) {
+        val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(1, DAYS), now)
+        val given2 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(2, DAYS), now, now.plusSeconds(5))
+        for {
+          _ <- TestResourceInfoRepo.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
+          actual <- RestResourceInfoService.findByProjectAndResourceClass(
+                      knownProjectIRI,
+                      knownResourceClass,
+                      ordering = (creationDate, DESC)
+                    )
+        } yield {
+          val items = List(given1, given2).map(ResourceInfoDto(_)).sortBy(_.creationDate).reverse
           assertTrue(actual == ListResponseDto(items))
         }
       }
