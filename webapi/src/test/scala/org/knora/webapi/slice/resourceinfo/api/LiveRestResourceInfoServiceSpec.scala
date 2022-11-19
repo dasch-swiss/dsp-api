@@ -1,6 +1,6 @@
 package org.knora.webapi.slice.resourceinfo.api
 
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepo.{creationDate, DESC}
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepo.{DESC, creationDate}
 import org.knora.webapi.slice.resourceinfo.repo.TestResourceInfoRepo.{knownProjectIRI, knownResourceClass}
 import org.knora.webapi.slice.resourceinfo.repo.{ResourceInfo, TestResourceInfoRepo}
 import zio.test._
@@ -33,8 +33,8 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           | then it should return all info sorted by lastModificationDate
           |""".stripMargin.linesIterator.mkString("")
       ) {
-        val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(1, DAYS), now)
-        val given2 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(2, DAYS), now, now.plusSeconds(5))
+        val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(10, DAYS), now.minus(9, DAYS))
+        val given2 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(20, DAYS), now.minus(8, DAYS), now)
         for {
           _      <- TestResourceInfoRepo.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <- RestResourceInfoService.findByProjectAndResourceClass(knownProjectIRI, knownResourceClass)
@@ -49,8 +49,8 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           | then it should return all info sorted correctly 
           |""".stripMargin.linesIterator.mkString("")
       ) {
-        val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(1, DAYS), now)
-        val given2 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(2, DAYS), now, now.plusSeconds(5))
+        val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(10, DAYS), now.minus(9, DAYS))
+        val given2 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(20, DAYS), now.minus(8, DAYS), now)
         for {
           _ <- TestResourceInfoRepo.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <- RestResourceInfoService.findByProjectAndResourceClass(
