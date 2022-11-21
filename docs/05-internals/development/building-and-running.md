@@ -18,7 +18,7 @@ With [Docker](https://www.docker.com/) installed,
 
     to create the knora-test repository and initialize it with loading some test data into the triplestore (Fuseki). 
 
-1. Start the entire knora-stack (fuseki (db), sipi, redis, api, salsah1) with the following command:
+1. Start the entire knora-stack (fuseki (db), sipi, api, salsah1) with the following command:
 
     ```
     $ make stack-up
@@ -89,8 +89,8 @@ database container can be printed out using the following command:
 ```
 $ make stack-logs-db
 ```
-Similarly, the logs of the other containers can be printed out by running make with `stack-logs-api`, `stack-logs-sipi`, 
-or `stack-logs-redis`. These commands print out and follow the logs, to only print the logs out without following, use 
+Similarly, the logs of the other containers can be printed out by running make with `stack-logs-api` or `stack-logs-sipi`.
+These commands print out and follow the logs, to only print the logs out without following, use 
 `-no-follow` version of the commands for example:
 
  ```
