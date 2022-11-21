@@ -28,7 +28,7 @@ object User {
   /**
    * Username value object.
    */
-  final case class Username private (value: String)
+  sealed abstract case class Username private (value: String)
   object Username { self =>
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[Username] =
@@ -53,7 +53,7 @@ object User {
         Validation.fail(ValidationException(UserErrorMessages.UsernameMissing))
       } else {
         UsernameRegex.findFirstIn(value) match {
-          case Some(value) => Validation.succeed(Username(value))
+          case Some(value) => Validation.succeed(new Username(value) {})
           case None        => Validation.fail(ValidationException(UserErrorMessages.UsernameInvalid))
         }
       }
@@ -72,7 +72,7 @@ object User {
         .fold(
           e => {
             ZIO.logError(e.head.getMessage())
-            Validation.succeed(Username(value))
+            Validation.succeed(new Username(value) {})
           },
           v => Validation.succeed(v)
         )
@@ -81,7 +81,7 @@ object User {
   /**
    * Email value object.
    */
-  final case class Email private (value: String)
+  sealed abstract case class Email private (value: String)
   object Email { self =>
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[Email] =
@@ -97,7 +97,7 @@ object User {
         Validation.fail(ValidationException(UserErrorMessages.EmailMissing))
       } else {
         EmailRegex.findFirstIn(value) match {
-          case Some(value) => Validation.succeed(Email(value))
+          case Some(value) => Validation.succeed(new Email(value) {})
           case None        => Validation.fail(ValidationException(UserErrorMessages.EmailInvalid))
         }
       }
@@ -106,7 +106,7 @@ object User {
   /**
    * GivenName value object.
    */
-  final case class GivenName private (value: String)
+  sealed abstract case class GivenName private (value: String)
   object GivenName { self =>
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[GivenName] =
@@ -119,14 +119,14 @@ object User {
       if (value.isEmpty) {
         Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
       } else {
-        Validation.succeed(GivenName(value))
+        Validation.succeed(new GivenName(value) {})
       }
   }
 
   /**
    * FamilyName value object.
    */
-  final case class FamilyName private (value: String)
+  sealed abstract case class FamilyName private (value: String)
   object FamilyName { self =>
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[FamilyName] =
@@ -139,14 +139,14 @@ object User {
       if (value.isEmpty) {
         Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
       } else {
-        Validation.succeed(FamilyName(value))
+        Validation.succeed(new FamilyName(value) {})
       }
   }
 
   /**
    * Password value object.
    */
-  final case class Password private (value: String)
+  sealed abstract case class Password private (value: String)
   object Password { self =>
     private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
@@ -155,7 +155,7 @@ object User {
         Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
       } else {
         PasswordRegex.findFirstIn(value) match {
-          case Some(value) => Validation.succeed(Password(value))
+          case Some(value) => Validation.succeed(new Password(value) {})
           case None        => Validation.fail(ValidationException(UserErrorMessages.PasswordInvalid))
         }
       }
@@ -164,7 +164,7 @@ object User {
   /**
    * PasswordHash value object. Takes a string as input and hashes it.
    */
-  final case class PasswordHash private (value: String, passwordStrength: PasswordStrength) { self =>
+  sealed abstract case class PasswordHash private (value: String, passwordStrength: PasswordStrength) { self =>
 
     /**
      * Check password (in clear text). The password supplied in clear text is compared against the
@@ -218,7 +218,7 @@ object User {
                 new SecureRandom()
               )
             val hashedValue = encoder.encode(value)
-            Validation.succeed(PasswordHash(hashedValue, passwordStrength))
+            Validation.succeed(new PasswordHash(hashedValue, passwordStrength) {})
           case None => Validation.fail(ValidationException(UserErrorMessages.PasswordInvalid))
         }
       }
@@ -258,7 +258,7 @@ object User {
   /**
    * UserStatus value object.
    */
-  final case class UserStatus private (value: Boolean)
+  sealed abstract case class UserStatus private (value: Boolean)
   object UserStatus {
 
     // the codec defines how to decode/encode the object from/into json
@@ -269,13 +269,13 @@ object User {
       )
 
     def make(value: Boolean): Validation[ValidationException, UserStatus] =
-      Validation.succeed(UserStatus(value))
+      Validation.succeed(new UserStatus(value) {})
   }
 
   /**
    * SystemAdmin value object.
    */
-  final case class SystemAdmin private (value: Boolean)
+  sealed abstract case class SystemAdmin private (value: Boolean)
   object SystemAdmin {
 
     // the codec defines how to decode/encode the object from/into json
@@ -286,7 +286,7 @@ object User {
       )
 
     def make(value: Boolean): Validation[ValidationException, SystemAdmin] =
-      Validation.succeed(SystemAdmin(value))
+      Validation.succeed(new SystemAdmin(value) {})
   }
 }
 

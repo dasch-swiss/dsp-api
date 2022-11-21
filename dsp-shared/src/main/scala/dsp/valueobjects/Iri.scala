@@ -183,7 +183,7 @@ object Iri {
   /**
    * UserIri value object.
    */
-  sealed case class UserIri private (value: String) extends Iri
+  sealed abstract case class UserIri private (value: String) extends Iri
   object UserIri {
     implicit val decoder: JsonDecoder[UserIri] = JsonDecoder[String].mapOrFail { case value =>
       UserIri.make(value).toEitherWith(e => e.head.getMessage())
