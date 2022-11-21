@@ -1,7 +1,6 @@
 package dsp.api.main
 
 import dsp.user.route.UserRoutes
-import zhttp.http.Http
 import zio._
 import zhttp.http._
 import zio.ZLayer

@@ -120,7 +120,6 @@ final case class UserRepoLive(
     } yield id).commit.tap(_ => ZIO.logInfo(s"Deleted user: ${id}"))
 }
 
-
 object UserRepoLive {
   val layer: ZLayer[Any, Nothing, UserRepo] =
     ZLayer {
