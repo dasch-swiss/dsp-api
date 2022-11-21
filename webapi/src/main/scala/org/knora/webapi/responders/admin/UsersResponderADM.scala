@@ -2196,7 +2196,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Future[Unit] =
     if (cacheServiceSettings.cacheServiceEnabled) {
       val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
-      // only send to Redis if keys are not empty
+      // only send to cache if keys are not empty
       if (keys.nonEmpty) {
         val result = appActor.ask(CacheServiceRemoveValues(keys))
         result.map { res =>

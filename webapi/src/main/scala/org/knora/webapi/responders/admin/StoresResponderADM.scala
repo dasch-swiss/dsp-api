@@ -85,7 +85,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
       _ <- appActor.ask(CacheServiceFlushDB(systemUser))
-      _  = log.debug(s"resetTriplestoreContent - flushing Redis store done.")
+      _  = log.debug(s"resetTriplestoreContent - flushing cache store done.")
 
       result = ResetTriplestoreContentResponseADM(message = "success")
 

@@ -4,7 +4,7 @@
 
 set -e
 
-# The name of the Zip file that contains client test data download from Redis.
+# The name of the Zip file that contains client test data download from cache.
 zip_file_name=client-test-data.zip
 
 # Remove any existing client test data Zip file.
