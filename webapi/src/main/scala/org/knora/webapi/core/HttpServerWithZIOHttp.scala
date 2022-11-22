@@ -16,7 +16,8 @@ object HttpServerWithZIOHttp {
         routes    <- ZIO.service[ApiRoutesWithZIOHttp].map(_.routes)
         port       = appConfig.knoraApi.externalZioPort
         _         <- Server.start(port, routes).forkDaemon
+        _         <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
       } yield ()
-    }.tap(_ => ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<"))
+    }
 
 }

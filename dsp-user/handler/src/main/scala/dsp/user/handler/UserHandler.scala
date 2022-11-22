@@ -16,6 +16,7 @@ import dsp.user.domain.User
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
+import dsp.util.UuidGenerator
 
 /**
  * The user handler.
@@ -148,13 +149,15 @@ final case class UserHandler(repo: UserRepo) {
     language: LanguageCode,
     status: UserStatus
     // role: Role
-  ): IO[Throwable, UserId] =
+  ): ZIO[UuidGenerator, Throwable, UserId] =
     (for {
-      _      <- checkIfUsernameTaken(username) // TODO reserve username
-      _      <- checkIfEmailTaken(email)       // TODO reserve email
-      id     <- UserId.make().toZIO
-      user   <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
-      userId <- repo.storeUser(user)
+      uuidGenerator <- ZIO.service[UuidGenerator]
+      _             <- checkIfUsernameTaken(username) // TODO reserve username
+      _             <- checkIfEmailTaken(email)       // TODO reserve email
+      uuid          <- uuidGenerator.createRandomUuid
+      id            <- UserId.make(uuid).toZIO
+      user          <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
+      userId        <- repo.storeUser(user)
     } yield userId).tap(userId => ZIO.logInfo(s"Created user with ID '${userId}'"))
 
   /**
@@ -287,7 +290,7 @@ final case class UserHandler(repo: UserRepo) {
 }
 
 object UserHandler {
-  val layer: ZLayer[UserRepo, Nothing, UserHandler] =
+  val layer: ZLayer[UserRepo & UuidGenerator, Nothing, UserHandler] =
     ZLayer
       .fromFunction(UserHandler.apply _)
       .tap(_ => ZIO.logInfo(">>> User handler initialized <<<"))

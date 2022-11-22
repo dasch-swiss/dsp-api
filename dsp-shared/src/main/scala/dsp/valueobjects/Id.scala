@@ -100,23 +100,14 @@ object Id {
     }
 
     /**
-     * Generates a UserId instance from a given UUID and an IRI which is created from a prefix and the UUID.
-     *
-     * @return a new UserId instance
-     */
-    def fromUuid(uuid: UUID): Validation[Throwable, UserId] = {
-      val iri = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
-      Validation.succeed(new UserId(uuid, iri) {})
-    }
-
-    /**
      * Generates a UserId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
      *
+     * @param uuid a valid UUID has to be provided in order to create a UserId
+     *
      * @return a new UserId instance
      */
-    def make(): Validation[Throwable, UserId] = {
-      val uuid: UUID = UUID.randomUUID()
-      val iri        = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+    def make(uuid: UUID): Validation[Throwable, UserId] = {
+      val iri = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
       Validation.succeed(new UserId(uuid, iri) {})
     }
   }

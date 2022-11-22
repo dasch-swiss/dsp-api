@@ -11,6 +11,7 @@ import zio._
 import dsp.config.AppConfig
 import dsp.errors.ValidationException
 import dsp.user.handler.UserHandler
+import dsp.util.UuidGenerator
 
 /**
  * The UserRoutes case class which needs an instance of a userHandler
@@ -20,7 +21,7 @@ final case class UserRoutes(userHandler: UserHandler) {
   /**
    * The user related routes which need AppConfig in the environment
    */
-  val routes: HttpApp[AppConfig, ValidationException] = Http.collectZIO[Request] {
+  val routes: HttpApp[AppConfig & UuidGenerator, ValidationException] = Http.collectZIO[Request] {
     // POST /admin/users
     case req @ (Method.POST -> !! / "admin" / "users") =>
       CreateUser

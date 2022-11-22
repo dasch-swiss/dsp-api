@@ -21,7 +21,7 @@ object GetUser {
   def route(uuid: String, userHandler: UserHandler): Task[Response] = {
     val userUuid = UUID.fromString(uuid)
     for {
-      userId <- Id.UserId.fromUuid(userUuid).toZIO
+      userId <- Id.UserId.make(userUuid).toZIO
       user   <- userHandler.getUserById(userId)
     } yield Response.json(user.toJson)
   }

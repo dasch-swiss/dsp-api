@@ -17,6 +17,7 @@ import dsp.user.sharedtestdata.SharedTestData
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
+import dsp.util.UuidGeneratorTest
 
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].
@@ -91,7 +92,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         retrievedUsers <- userHandler.getUsers()
       } yield assertTrue(retrievedUsers.size == 3)
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val createUserTest = suite("createUser")(
     test("return an Error when creating a user if a username is already taken") {
@@ -182,7 +183,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         fails(equalTo(DuplicateValueException(s"Email '${email1.value}' already taken")))
       )
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val getUserByTest = suite("getUserBy")(
     test("store a user and retrieve by ID") {
@@ -219,7 +220,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test("return an Error if user not found by ID") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        newUserId   <- UserId.make().toZIO
+        uuid         = UuidGeneratorTest.testUuid
+        newUserId   <- UserId.make(uuid).toZIO
         error       <- userHandler.getUserById(newUserId).exit
       } yield assert(error)(fails(equalTo(NotFoundException(s"User with ID '${newUserId}' not found"))))
     },
@@ -300,7 +302,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         error       <- userHandler.getUserByEmail(email).exit
       } yield assert(error)(fails(equalTo(NotFoundException(s"User with Email '${email.value}' not found"))))
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val updateUserTest = suite("updateUser")(
     test("store a user and update the username") {
@@ -640,7 +642,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.language != language) &&
         assertTrue(retrievedUser.status == status)
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val deleteUserTest = suite("deleteUser")(
     test("delete a user") {
@@ -694,11 +696,12 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test("return an error if the ID of a user is not found when trying to delete the user") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        userId      <- UserId.make().toZIO
+        uuid         = UuidGeneratorTest.testUuid
+        userId      <- UserId.make(uuid).toZIO
         error       <- userHandler.deleteUser(userId).exit
       } yield assert(error)(
         fails(equalTo(NotFoundException(s"User with ID '${userId}' not found")))
       )
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
 }

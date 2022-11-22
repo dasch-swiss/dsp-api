@@ -8,6 +8,7 @@ import zio.logging.removeDefaultLoggers
 import zio.metrics.connectors.MetricsConfig
 import zio.logging.backend.SLF4J
 import dsp.config.AppConfig
+import dsp.util.UuidGeneratorLive
 
 object DspMain extends ZIOAppDefault {
 
@@ -32,8 +33,9 @@ object DspMain extends ZIOAppDefault {
         UserRepoLive.layer,
         // slf4j facade, we use it with logback.xml
         removeDefaultLoggers,
-        SLF4J.slf4j
+        SLF4J.slf4j,
         // metricsConfig
+        UuidGeneratorLive.layer
       )
 
 }

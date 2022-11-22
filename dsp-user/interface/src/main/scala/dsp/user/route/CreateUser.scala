@@ -11,6 +11,7 @@ import dsp.errors.ValidationException
 import dsp.user.handler.UserHandler
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
+import dsp.util.UuidGenerator
 
 object CreateUser {
 
@@ -21,7 +22,7 @@ object CreateUser {
    * @param userHandler the userHandler that handles user actions
    * @return            a response with the user as json
    */
-  def route(req: Request, userHandler: UserHandler): RIO[AppConfig, Response] =
+  def route(req: Request, userHandler: UserHandler): RIO[AppConfig & UuidGenerator, Response] =
     for {
       // get the appConfig from the environment
       appConfig <- ZIO.service[AppConfig]

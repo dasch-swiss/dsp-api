@@ -7,6 +7,7 @@ import zio.ZLayer
 import zhttp.service.Server
 import dsp.api.main.DspMiddleware
 import dsp.config.AppConfig
+import dsp.util.UuidGeneratorLive
 
 final case class DspServer(
   appConfig: AppConfig,
@@ -14,7 +15,7 @@ final case class DspServer(
 ) {
 
   // adds up the routes of all slices
-  val dspRoutes: HttpApp[AppConfig, Throwable] =
+  val dspRoutes: HttpApp[AppConfig & UuidGeneratorLive, Throwable] =
     userRoutes.routes // ++ projectRoutes.routes
 
   // starts the server with the provided settings from the appConfig
