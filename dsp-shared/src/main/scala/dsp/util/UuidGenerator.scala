@@ -17,6 +17,12 @@ trait UuidGenerator {
  * Live instance of the UuidGenerator
  */
 final case class UuidGeneratorLive() extends UuidGenerator {
+
+  /**
+   * Creates a random UUID
+   *
+   * @return a random UUID
+   */
   override def createRandomUuid: UIO[UUID] = ZIO.succeed(UUID.randomUUID())
 }
 object UuidGeneratorLive {
@@ -30,7 +36,14 @@ object UuidGeneratorLive {
  * @param uuid the provided UUID value
  */
 final case class UuidGeneratorTest(uuid: UUID) extends UuidGenerator {
+
+  /**
+   * For test reasons, the method returns always the same UUID
+   *
+   * @return a predictable UUID ("89ac5805-6c7f-4a95-aeb2-e85e74aa216d")
+   */
   override def createRandomUuid: UIO[UUID] = ZIO.succeed(uuid)
+
 }
 object UuidGeneratorTest {
   val testUuid = UUID.fromString("89ac5805-6c7f-4a95-aeb2-e85e74aa216d")
