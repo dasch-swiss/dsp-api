@@ -13,10 +13,10 @@ import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.user.api.UserRepo
 import dsp.user.domain.User
+import dsp.util.UuidGenerator
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import dsp.util.UuidGenerator
 
 /**
  * The user handler.

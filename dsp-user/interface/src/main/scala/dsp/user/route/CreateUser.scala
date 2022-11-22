@@ -9,9 +9,9 @@ import zio.prelude.Validation
 import dsp.config.AppConfig
 import dsp.errors.ValidationException
 import dsp.user.handler.UserHandler
+import dsp.util.UuidGenerator
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import dsp.util.UuidGenerator
 
 object CreateUser {
 

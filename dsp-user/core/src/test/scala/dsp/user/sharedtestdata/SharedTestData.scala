@@ -5,11 +5,12 @@
 
 package dsp.user.sharedtestdata
 
+import java.util.UUID
+
 import dsp.user.domain.User
 import dsp.valueobjects.Id
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import java.util.UUID
 
 object SharedTestData {
   // TODO check faker to create test data: https://index.scala-lang.org/bitblitconsulting/scala-faker

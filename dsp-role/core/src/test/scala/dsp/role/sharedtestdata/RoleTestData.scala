@@ -5,12 +5,13 @@
 
 package dsp.role.sharedtestdata
 
+import java.util.UUID
+
 import dsp.role.domain.Role
 import dsp.role.domain.RoleUser
 import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
-import java.util.UUID
 
 /**
  * Contains shared role test data.

@@ -7,11 +7,12 @@ package dsp.role.domain
 
 import zio.test._
 
+import java.util.UUID
+
 import dsp.role.sharedtestdata.RoleTestData
 import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
-import java.util.UUID
 
 /**
  * This spec is used to test [[RoleDomain]].
