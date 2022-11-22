@@ -2274,7 +2274,7 @@
 
 # Video Sequence Resource
 <http://rdfh.ch/0001/QUDQJ0U2RfWp5K-pY0g6Iw>
-    a                            anything:VideoSequencThing ;
+    a                            anything:VideoSequenceThing ;
     knora-base:isSequenceOf      <http://rdfh.ch/0001/zUelKon-SdmuL9iiHMgnGw> ;
     knora-base:isSequenceOfValue <http://rdfh.ch/0001/QUDQJ0U2RfWp5K-pY0g6Iw/values/VPDWlq3dSH-FNKIL9CX3vw> ;
     knora-base:hasSequenceBounds <http://rdfh.ch/0001/QUDQJ0U2RfWp5K-pY0g6Iw/values/8QR16dqWSLiatmna1a0-HA> ;
