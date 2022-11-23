@@ -9,6 +9,8 @@ import zio._
 import zio.test.Assertion._
 import zio.test._
 
+import java.util.UUID
+
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -18,7 +20,6 @@ import dsp.util.UuidGeneratorTest
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import java.util.UUID
 
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].

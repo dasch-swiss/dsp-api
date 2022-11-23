@@ -5,12 +5,12 @@
 
 package dsp.valueobjects
 
+import zio.json._
 import zio.prelude.Validation
 import zio.test._
 
 import dsp.errors.ValidationException
 import dsp.valueobjects.User._
-import zio.json._
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
