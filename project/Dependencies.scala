@@ -105,7 +105,7 @@ object Dependencies {
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.8.4"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.8.4"
   val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.14"         // Scala 3 compatible
-  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.5"
+  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.6"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
