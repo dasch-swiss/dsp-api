@@ -352,7 +352,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     val DropAllSparqlString =
       """
-      CLEAR ALL
+      CLEAR SILENT ALL
       """
 
     for {
