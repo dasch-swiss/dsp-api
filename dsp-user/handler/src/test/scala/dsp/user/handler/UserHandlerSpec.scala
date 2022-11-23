@@ -672,19 +672,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         usernameNotFound <- userHandler.getUserByUsername(username1).exit
         emailNotFound    <- userHandler.getUserByEmail(email1).exit
 
-        // create new user with same values
-
-        newUserId <- userHandler.createUser(
-                       username1,
-                       email1,
-                       givenName1,
-                       familyName1,
-                       password1,
-                       language,
-                       status
-                     )
       } yield assertTrue(id == userId) &&
-        assertTrue(userId != newUserId) &&
         assert(idNotFound)(fails(equalTo(NotFoundException(s"User with ID '${userId}' not found")))) &&
         assert(usernameNotFound)(
           fails(equalTo(NotFoundException(s"User with Username '${username1.value}' not found")))

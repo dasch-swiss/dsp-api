@@ -9,6 +9,9 @@ import zio._
 
 import java.util.UUID
 
+/**
+ * Handles UUID creation
+ */
 trait UuidGenerator {
   def createRandomUuid: UIO[UUID]
 }

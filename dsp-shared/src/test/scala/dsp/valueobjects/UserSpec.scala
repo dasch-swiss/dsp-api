@@ -10,6 +10,7 @@ import zio.test._
 
 import dsp.errors.ValidationException
 import dsp.valueobjects.User._
+import zio.json._
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -190,6 +191,20 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(
         PasswordStrength.make(12) == Validation.succeed(PasswordStrength(12))
       )
+    },
+    test("decode a PasswordHash from JSON") {
+      val passwordHashFromJson =
+        """[ "$2a$12$DulNTvjUALMJufhJ.FR37uqXOCeXp7HFHWzwcjodLlmhUSMe2XKT", 12 ]""".fromJson[PasswordHash]
+      val result = passwordHashFromJson match {
+        case Right(passwordHash) => passwordHash.value.startsWith("$2a")
+        case Left(_)             => false
+      }
+      assertTrue(result)
+    },
+    test("encode a PasswordHash into JSON") {
+      val passwordHash     = PasswordHash.make("test", PasswordStrength(12)).toOption.get.value
+      val passwordHashJson = passwordHash.toJson
+      assertTrue(passwordHashJson.startsWith(""""$2a"""))
     }
   )
 

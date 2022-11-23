@@ -190,7 +190,7 @@ object User {
 
   }
   object PasswordHash {
-    // TODO: get the passwordstrength from appConfig instead (see CreateUser.scala as example)
+    // TODO: get the passwordStrength from appConfig instead (see CreateUser.scala as example)
 
     // the decoder defines how to decode json to an object
     implicit val decoder: JsonDecoder[PasswordHash] = JsonDecoder[(String, PasswordStrength)].mapOrFail {
