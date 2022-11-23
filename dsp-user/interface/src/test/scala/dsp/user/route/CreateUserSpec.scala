@@ -137,10 +137,11 @@ object CreateUserSpec extends ZIOSpecDefault {
                       }""".stripMargin)
                   )
         response    <- CreateUser.route(request, userHandler).map(_.body)
+        uuid        <- UuidGeneratorTest.getCreatedUuids.head
         responseStr <- response.asString
       } yield assertTrue(
         responseStr.startsWith(
-          """{"id":"http://rdfh.ch/users/89ac5805-6c7f-4a95-aeb2-e85e74aa216d","givenName":"Hans","familyName":"Muster","username":"hansmuster","email":"hans.muster@example.org","password":"$2a"""
+          s"""{"id":"http://rdfh.ch/users/$uuid","givenName":"Hans","familyName":"Muster","username":"hansmuster","email":"hans.muster@example.org","password":"$$2a"""
         ) &&
           responseStr.endsWith(
             """"language":"en","status":true}"""

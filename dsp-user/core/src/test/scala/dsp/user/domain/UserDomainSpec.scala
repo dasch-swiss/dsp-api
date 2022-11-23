@@ -17,30 +17,7 @@ import dsp.valueobjects.User._
  */
 object UserDomainSpec extends ZIOSpecDefault {
 
-  def spec = suite("UserDomainSpec")( /* encodeUserTest, */ compareUsersTest, createUserTest, updateUserTest)
-
-  // private val encodeUserTest = suite("encodeUser")(
-  //   test("decode from JSON") {
-  //     val json = """{
-  //                  "givenName": "GivenName1",
-  //                  "familyName": "FamilyName1",
-  //                  "username": "username1",
-  //                  "email": "email1@email.com",
-  //                  "password": "password1",
-  //                  "language": "en",
-  //                  "status": true,
-  //                  "systemAdmin": false
-  //                }""".stripMargin
-  //     val decoded = JsonDecoder[String].decodeJson(json)
-
-  //     assertTrue(decoded == Right(SharedTestData.user1))
-  //   },
-  //   test("encode into JSON") {
-  //     assertTrue(
-  //       (user1.toJson == "{\"givenName\":\"GivenName1\",\"familyName\":\"FamilyName1\"}")
-  //     )
-  //   }
-  // )
+  def spec = suite("UserDomainSpec")(compareUsersTest, createUserTest, updateUserTest)
 
   private val compareUsersTest = suite("compareUsers")(
     test("compare two users") {

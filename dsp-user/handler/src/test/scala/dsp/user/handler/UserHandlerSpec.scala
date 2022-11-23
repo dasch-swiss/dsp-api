@@ -18,6 +18,7 @@ import dsp.util.UuidGeneratorTest
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
+import java.util.UUID
 
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].
@@ -220,7 +221,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test("return an Error if user not found by ID") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        uuid         = UuidGeneratorTest.testUuid
+        uuid         = UUID.randomUUID()
         newUserId   <- UserId.make(uuid).toZIO
         error       <- userHandler.getUserById(newUserId).exit
       } yield assert(error)(fails(equalTo(NotFoundException(s"User with ID '${newUserId}' not found"))))
@@ -684,7 +685,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test("return an error if the ID of a user is not found when trying to delete the user") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        uuid         = UuidGeneratorTest.testUuid
+        uuid         = UUID.randomUUID()
         userId      <- UserId.make(uuid).toZIO
         error       <- userHandler.deleteUser(userId).exit
       } yield assert(error)(
