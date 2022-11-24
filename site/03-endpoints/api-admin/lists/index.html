@@ -1,0 +1,3001 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../../assets/icons/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.4.3">
+    
+    
+      
+        <title>Lists Endpoint - DSP-API</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.6b80c2a2.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.cbb835fc.min.css">
+        
+          
+          
+          <meta name="theme-color" content="#7e56c2">
+        
+      
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="deep-purple" data-md-color-accent="deep-purple">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lists-endpoint" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="DSP-API" class="md-header__button md-logo" aria-label="DSP-API" data-md-component="logo">
+      
+  <img src="../../../assets/icons/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DSP-API
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Lists Endpoint
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/dsp-api" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/dsp-api
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../01-introduction/what-is-dsp/" class="md-tabs__link">
+        Introduction
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../02-dsp-ontologies/introduction/" class="md-tabs__link">
+        DSP Ontologies
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link md-tabs__link--active">
+        The DSP Endpoints
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../04-publishing-deployment/publishing/" class="md-tabs__link">
+        Publishing and Deployment
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    
+
+  
+  
+  
+    
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../05-internals/design/adr/0001-record-architecture-decisions/" class="md-tabs__link">
+        DSP Internals
+      </a>
+    </li>
+  
+
+  
+
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../06-sipi/" class="md-tabs__link">
+        SIPI
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../07-lucene/lucene-query-parser-syntax/" class="md-tabs__link">
+        Lucene
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../../../08-faq/" class="md-tabs__link">
+      Frequently Asked Questions
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../09-release-notes/" class="md-tabs__link">
+        Release Notes
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="DSP-API" class="md-nav__button md-logo" aria-label="DSP-API" data-md-component="logo">
+      
+  <img src="../../../assets/icons/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    DSP-API
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/dsp-api" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/dsp-api
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          Introduction
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Introduction" data-md-level="1">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Introduction
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/what-is-dsp/" class="md-nav__link">
+        What is DSP?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/file-formats/" class="md-nav__link">
+        File Formats in DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/standoff-rdf/" class="md-nav__link">
+        Standoff/RDF Text Markup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/example-project/" class="md-nav__link">
+        An Example Project
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          DSP Ontologies
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP Ontologies" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP Ontologies
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/knora-base/" class="md-nav__link">
+        The Knora Base Ontology
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/salsah-gui/" class="md-nav__link">
+        The SALSAH GUI Ontology
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          The DSP Endpoints
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="The DSP Endpoints" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          The DSP Endpoints
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2">
+          DSP-API V1
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V1" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V1
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/xml-to-standoff-mapping/" class="md-nav__link">
+        XML to Standoff Mapping
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/adding-resources/" class="md-nav__link">
+        Adding Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/reading-values/" class="md-nav__link">
+        Reading Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/adding-values/" class="md-nav__link">
+        Adding Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/changing-values/" class="md-nav__link">
+        Changing Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/delete-resources-and-values/" class="md-nav__link">
+        Deleting Resources and Values
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3">
+          DSP-API V2
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V2" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V2
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/knora-iris/" class="md-nav__link">
+        Knora IRIs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/reading-user-permissions/" class="md-nav__link">
+        Reading the User's Permissions on Resources and Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/getting-lists/" class="md-nav__link">
+        Getting Lists
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/xml-to-standoff-mapping/" class="md-nav__link">
+        XML to Standoff Mapping
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/query-language/" class="md-nav__link">
+        Gravsearch - Virtual Graph Search
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/editing-resources/" class="md-nav__link">
+        Creating and Editing Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/editing-values/" class="md-nav__link">
+        Creating and Editing Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/ontology-information/" class="md-nav__link">
+        Querying, Creating, and Updating Ontologies
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/tei-xml/" class="md-nav__link">
+        TEI/XML
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/permalinks/" class="md-nav__link">
+        Permalinks
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_4" type="checkbox" id="__nav_3_4" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_4">
+          Admin API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Admin API" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_4">
+          <span class="md-nav__icon md-icon"></span>
+          Admin API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../users/" class="md-nav__link">
+        Users Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../projects/" class="md-nav__link">
+        Projects Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../groups/" class="md-nav__link">
+        Groups Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Lists Endpoint
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Lists Endpoint
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#endpoint-overview" class="md-nav__link">
+    Endpoint Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list-item-operations" class="md-nav__link">
+    List Item Operations
+  </a>
+  
+    <nav class="md-nav" aria-label="List Item Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-lists" class="md-nav__link">
+    Get lists
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-list" class="md-nav__link">
+    Get list
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-lists-information" class="md-nav__link">
+    Get list's information
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-list-node-information" class="md-nav__link">
+    Get list node Information
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-lists-information-merged" class="md-nav__link">
+    Get list's information (merged)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-if-list-node-is-unused-and-can-be-deleted" class="md-nav__link">
+    Check if list node is unused and can be deleted
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-new-list" class="md-nav__link">
+    Create new list
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-new-child-node" class="md-nav__link">
+    Create new child node
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-lists-or-nodes-information" class="md-nav__link">
+    Update list's or node's information
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-list-or-nodes-name" class="md-nav__link">
+    Update list or node's name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-list-or-nodes-comments" class="md-nav__link">
+    Update list or node's comments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-a-list-or-a-node" class="md-nav__link">
+    Delete a list or a node
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-child-node-comments" class="md-nav__link">
+    Delete child node comments
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../permissions/" class="md-nav__link">
+        Permissions Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stores/" class="md-nav__link">
+        Stores Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_5" type="checkbox" id="__nav_3_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_5">
+          Util API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Util API" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_5">
+          <span class="md-nav__icon md-icon"></span>
+          Util API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-util/health/" class="md-nav__link">
+        Health
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-util/version/" class="md-nav__link">
+        Version
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Publishing and Deployment
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Publishing and Deployment" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Publishing and Deployment
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/publishing/" class="md-nav__link">
+        Publishing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/getting-started/" class="md-nav__link">
+        Getting Started with DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/configuration/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/updates/" class="md-nav__link">
+        Updating Repositories when Upgrading DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          DSP Internals
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP Internals" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          DSP Internals
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1" type="checkbox" id="__nav_5_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1">
+          Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Design" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_1">
+          <span class="md-nav__icon md-icon"></span>
+          Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_1" type="checkbox" id="__nav_5_1_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_1">
+          Architectural Decision Records (ADR)
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Architectural Decision Records (ADR)" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_1">
+          <span class="md-nav__icon md-icon"></span>
+          Architectural Decision Records (ADR)
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0001-record-architecture-decisions/" class="md-nav__link">
+        Record Architectural Decisions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0002-change-cache-service-manager-from-akka-actor-to-zlayer/" class="md-nav__link">
+        Change Cache Service Manager from Akka-Actor to ZLayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer/" class="md-nav__link">
+        Change IIIF Service Manager and Sipi implementation to zlayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer/" class="md-nav__link">
+        Change Triplestore Service Manager and Fuseki implementation to ZLayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0005-change-respondermanager-to-a-simple-case-class/" class="md-nav__link">
+        Change ResponderManager to a simple case class
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_2" type="checkbox" id="__nav_5_1_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_2">
+          DSP-API Design Principles
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API Design Principles" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API Design Principles
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/design-overview/" class="md-nav__link">
+        Design Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/futures-with-akka/" class="md-nav__link">
+        Futures with Akka
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/http-module/" class="md-nav__link">
+        HTTP Module
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/store-module/" class="md-nav__link">
+        Store Module
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/triplestore-updates/" class="md-nav__link">
+        Triplestore Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/consistency-checking/" class="md-nav__link">
+        Consistency Checking
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/rdf-api/" class="md-nav__link">
+        RDF Processing API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_3" type="checkbox" id="__nav_5_1_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_3">
+          DSP-API V1 Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V1 Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_3">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V1 Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v1/how-to-add-a-route/" class="md-nav__link">
+        How to Add an API v1 Route
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v1/json/" class="md-nav__link">
+        JSON in API v1
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_4" type="checkbox" id="__nav_5_1_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_4">
+          DSP-API V2 Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V2 Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_4">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V2 Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/overview/" class="md-nav__link">
+        API v2 Design Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ontology-schemas/" class="md-nav__link">
+        Ontology Schemas
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/smart-iris/" class="md-nav__link">
+        Smart IRIs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/content-wrappers/" class="md-nav__link">
+        Content Wrappers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/how-to-add-a-route/" class="md-nav__link">
+        How to Add an API v2 Route
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/json-ld/" class="md-nav__link">
+        JSON-LD Parsing and Formatting
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ontology-management/" class="md-nav__link">
+        Ontology Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/sipi/" class="md-nav__link">
+        DSP-API and Sipi
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/gravsearch/" class="md-nav__link">
+        Gravsearch Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/standoff/" class="md-nav__link">
+        Standoff Markup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ark/" class="md-nav__link">
+        Archival Resource Key (ARK)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/query-design/" class="md-nav__link">
+        SPARQL Query Design
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_5" type="checkbox" id="__nav_5_1_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_5">
+          Admin API Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Admin API Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_5">
+          <span class="md-nav__icon md-icon"></span>
+          Admin API Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-admin/administration/" class="md-nav__link">
+        Administration
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_2" type="checkbox" id="__nav_5_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_2">
+          Development
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Development" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_2">
+          <span class="md-nav__icon md-icon"></span>
+          Development
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/building-and-running/" class="md-nav__link">
+        Build and Running
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/vscode-config/" class="md-nav__link">
+        Setup Visual Studio Code for development of DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/testing/" class="md-nav__link">
+        Testing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/docker-cheat-sheet/" class="md-nav__link">
+        Docker Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/monitoring/" class="md-nav__link">
+        Monitoring DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/docker-compose/" class="md-nav__link">
+        Starting the DSP-Stack inside Docker Container
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/updating-repositories/" class="md-nav__link">
+        Updating Repositories
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/generating-client-test-data/" class="md-nav__link">
+        Generating Client Test Data
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/third-party/" class="md-nav__link">
+        Third-Party Dependencies
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          SIPI
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="SIPI" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          SIPI
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/setup-sipi-for-dsp-api/" class="md-nav__link">
+        Setting Up Sipi for DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/sipi-and-dsp-api/" class="md-nav__link">
+        Interaction between Sipi and DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7">
+          Lucene
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Lucene" data-md-level="1">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Lucene
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../07-lucene/lucene-query-parser-syntax/" class="md-nav__link">
+        Lucene Query Parser Syntax
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../08-faq/" class="md-nav__link">
+        Frequently Asked Questions
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_9">
+          Release Notes
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Release Notes" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Release Notes
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../09-release-notes/" class="md-nav__link">
+        Changelog
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#endpoint-overview" class="md-nav__link">
+    Endpoint Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list-item-operations" class="md-nav__link">
+    List Item Operations
+  </a>
+  
+    <nav class="md-nav" aria-label="List Item Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-lists" class="md-nav__link">
+    Get lists
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-list" class="md-nav__link">
+    Get list
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-lists-information" class="md-nav__link">
+    Get list's information
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-list-node-information" class="md-nav__link">
+    Get list node Information
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-lists-information-merged" class="md-nav__link">
+    Get list's information (merged)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-if-list-node-is-unused-and-can-be-deleted" class="md-nav__link">
+    Check if list node is unused and can be deleted
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-new-list" class="md-nav__link">
+    Create new list
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-new-child-node" class="md-nav__link">
+    Create new child node
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-lists-or-nodes-information" class="md-nav__link">
+    Update list's or node's information
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-list-or-nodes-name" class="md-nav__link">
+    Update list or node's name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-list-or-nodes-comments" class="md-nav__link">
+    Update list or node's comments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-a-list-or-a-node" class="md-nav__link">
+    Delete a list or a node
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-child-node-comments" class="md-nav__link">
+    Delete child node comments
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+  <a href="https://github.com/dasch-swiss/dsp-api/blob/main/docs/03-endpoints/api-admin/lists.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+<!---
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+-->
+
+<h1 id="lists-endpoint">Lists Endpoint</h1>
+<h2 id="endpoint-overview">Endpoint Overview</h2>
+<p><strong>List Item Operations:</strong></p>
+<ul>
+<li><code>GET: /admin/lists[?projectIri=&lt;projectIri&gt;]</code> : return all lists optionally filtered by project</li>
+<li><code>GET: /admin/lists/&lt;listItemIri&gt;</code> : return complete list with all children if IRI of the list (i.e. root node) is given
+If IRI of the child node is given, return the node with its immediate children</li>
+<li><code>GET: /admin/lists/infos/&lt;listIri&gt;</code> : return list information (without children)</li>
+<li><code>GET: /admin/lists/nodes/&lt;nodeIri&gt;</code> : return list node information (without children)</li>
+<li><code>GET: /admin/lists/&lt;listIri&gt;/info</code> : return list basic information (without children)</li>
+<li>
+<p><code>GET: /admin/lists/candelete/&lt;listItemIri&gt;</code> : check if list or its node is unused and can be deleted</p>
+</li>
+<li>
+<p><code>POST: /admin/lists</code> : create new list</p>
+</li>
+<li>
+<p><code>POST: /admin/lists/&lt;parentNodeIri&gt;</code> : create new child node under the supplied parent node IRI</p>
+</li>
+<li>
+<p><code>PUT: /admin/lists/&lt;listItemIri&gt;</code> : update node information (root or child)</p>
+</li>
+<li><code>PUT: /admin/lists/&lt;listItemIri&gt;/name</code> : update the name of the node (root or child)</li>
+<li><code>PUT: /admin/lists/&lt;listItemIri&gt;/labels</code> : update labels of the node (root or child)</li>
+<li><code>PUT: /admin/lists/&lt;listItemIri&gt;/comments</code> : update comments of the node (root or child)</li>
+<li>
+<p><code>PUT: /admin/lists/&lt;nodeIri&gt;/position</code> : update position of a child node within its current parent or by changing its 
+parent node</p>
+</li>
+<li>
+<p><code>DELETE: /admin/lists/&lt;listItemIri&gt;</code> : delete a list (i.e. root node) or a child node and all its children, if not used</p>
+</li>
+<li><code>DELETE: /admin/lists/comments/&lt;nodeIri&gt;</code> : delete comments of a node (child only)</li>
+</ul>
+<h2 id="list-item-operations">List Item Operations</h2>
+<h3 id="get-lists">Get lists</h3>
+<ul>
+<li>Required permission: none</li>
+<li>Return all lists optionally filtered by project</li>
+<li>GET: <code>/admin/lists[?projectIri=&lt;projectIri&gt;]</code></li>
+</ul>
+<h3 id="get-list">Get list</h3>
+<ul>
+<li>Required permission: none</li>
+<li>Return complete <code>list</code> (or <code>node</code>) including basic information of the list (or child node), <code>listinfo</code> (or <code>nodeinfo</code>),
+and all its children</li>
+<li>GET: <code>/admin/lists/&lt;listIri&gt;</code></li>
+</ul>
+<h3 id="get-lists-information">Get list's information</h3>
+<ul>
+<li>Required permission: none</li>
+<li>Return list information, <code>listinfo</code> (without children).</li>
+<li>GET: <code>/admin/lists/infos/&lt;listIri&gt;</code></li>
+</ul>
+<h3 id="get-list-node-information">Get list node Information</h3>
+<ul>
+<li>Required permission: none</li>
+<li>Return node information, <code>nodeinfo</code>, (without children).</li>
+<li>GET: <code>/admin/lists/nodes/&lt;nodeIri&gt;</code></li>
+</ul>
+<h3 id="get-lists-information-merged">Get list's information (merged)</h3>
+<ul>
+<li>Required permission: none</li>
+<li>Return list (or node) basic information, <code>listinfo</code> (or <code>nodeinfo</code>), without its children</li>
+<li>GET: <code>/admin/lists/&lt;listIri&gt;/info</code></li>
+</ul>
+<h3 id="check-if-list-node-is-unused-and-can-be-deleted">Check if list node is unused and can be deleted</h3>
+<ul>
+<li>Required permission: none</li>
+<li>GET: <code>/admin/lists/candelete/&lt;listItemIri&gt;</code></li>
+<li>Return simple JSON that confirms if the list node can be deleted</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;canDeleteList&quot;: true,
+    &quot;listIri&quot;: &quot;http://rdfh.ch/lists/0801/xxx&quot;
+}
+</code></pre>
+<p>List (root node or child node with all its children) can be deleted only if it (or one of its children) is not used.</p>
+<h3 id="create-new-list">Create new list</h3>
+<ul>
+<li>Required permission: SystemAdmin / ProjectAdmin</li>
+<li>Required fields: <code>projectIri</code>, <code>labels</code>, <code>comments</code></li>
+<li>POST: <code>/admin/lists</code></li>
+<li>BODY:</li>
+</ul>
+<pre><code class="language-json">    {
+        &quot;projectIri&quot;: &quot;someprojectiri&quot;,
+        &quot;labels&quot;: [{ &quot;value&quot;: &quot;New list&quot;, &quot;language&quot;: &quot;en&quot;}],
+        &quot;comments&quot;: []
+    } 
+</code></pre>
+<p>Additionally, each list can have an optional custom IRI (of <a href="../../api-v2/knora-iris/#iris-for-data">Knora IRI</a> form) specified by the <code>id</code> in the request body as below:</p>
+<pre><code class="language-json">  {
+    &quot;id&quot;: &quot;http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A&quot;,
+    &quot;projectIri&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;,
+    &quot;name&quot;: &quot;a new list&quot;,
+    &quot;labels&quot;: [{ &quot;value&quot;: &quot;New list with IRI&quot;, &quot;language&quot;: &quot;en&quot;}],
+    &quot;comments&quot;: [{ &quot;value&quot;: &quot;New comment&quot;, &quot;language&quot;: &quot;en&quot;}]
+  }
+</code></pre>
+<p>The response will contain the basic information of the list, <code>listinfo</code> and an empty list of its children, as below:</p>
+<pre><code class="language-json">{
+    &quot;list&quot;: {
+        &quot;children&quot;: [],
+        &quot;listinfo&quot;: {
+            &quot;comments&quot;: [{ &quot;value&quot;: &quot;New comment&quot;, &quot;language&quot;: &quot;en&quot;}],
+            &quot;id&quot;: &quot;http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A&quot;,
+            &quot;isRootNode&quot;: true,
+            &quot;labels&quot;: [
+                {
+                    &quot;value&quot;: &quot;New list with IRI&quot;,
+                    &quot;language&quot;: &quot;en&quot;
+                }
+            ],
+            &quot;name&quot;: &quot;a new list&quot;,
+            &quot;projectIri&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;
+        }
+    }
+}
+</code></pre>
+<h3 id="create-new-child-node">Create new child node</h3>
+<ul>
+<li>Required permission: SystemAdmin / ProjectAdmin</li>
+<li>Required fields: <code>parentNodeIri</code>, <code>projectIri</code>, <code>labels</code>,</li>
+<li>Appends a new child node under the supplied nodeIri. If the supplied nodeIri
+  is the listIri, then a new child node is appended to the top level. If a position is given
+  for the new child node, the node will be created and inserted in the specified position, otherwise
+  the node is appended to the end of parent's children.</li>
+<li>POST: <code>/admin/lists/&lt;parentNodeIri&gt;</code></li>
+<li>BODY:</li>
+</ul>
+<pre><code class="language-json">     {   
+         &quot;parentNodeIri&quot;: &quot;http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A&quot;,
+         &quot;projectIri&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;,
+         &quot;name&quot;: &quot;a child&quot;,
+         &quot;labels&quot;: [{ &quot;value&quot;: &quot;New List Node&quot;, &quot;language&quot;: &quot;en&quot;}]
+    }
+</code></pre>
+<p>Additionally, each child node can have an optional custom IRI (of <a href="../../api-v2/knora-iris/#iris-for-data">Knora IRI</a> form) specified by the <code>id</code> in the request body as below:</p>
+<pre><code class="language-json">{    &quot;id&quot;: &quot;http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w&quot;,
+     &quot;parentNodeIri&quot;: &quot;http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A&quot;,
+     &quot;projectIri&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;,
+     &quot;name&quot;: &quot;a child&quot;,
+     &quot;labels&quot;: [{ &quot;value&quot;: &quot;New List Node&quot;, &quot;language&quot;: &quot;en&quot;}]
+}
+</code></pre>
+<p>The response will contain the basic information of the node, <code>nodeinfo</code>, as below:</p>
+<pre><code class="language-json">{
+    &quot;nodeinfo&quot;: {
+        &quot;comments&quot;: [],
+        &quot;hasRootNode&quot;: &quot;http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A&quot;,
+        &quot;id&quot;: &quot;http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w&quot;,
+        &quot;labels&quot;: [
+            {
+                &quot;value&quot;: &quot;New List Node&quot;,
+                &quot;language&quot;: &quot;en&quot;
+            }
+        ],
+        &quot;name&quot;: &quot;a new child&quot;,
+        &quot;position&quot;: 1
+    }
+}
+</code></pre>
+<p>The new node can be created and inserted in a specific position which must be given in the payload as shown below. If necessary,
+according to the given position, the sibling nodes will be shifted. Note that <code>position</code> cannot have a value higher than the
+number of existing children.</p>
+<pre><code class="language-json">{   &quot;parentNodeIri&quot;: &quot;http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A&quot;,
+    &quot;projectIri&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;,
+    &quot;name&quot;: &quot;Inserted new child&quot;,
+    &quot;position&quot;: 0,
+    &quot;labels&quot;: [{ &quot;value&quot;: &quot;New List Node&quot;, &quot;language&quot;: &quot;en&quot;}]
+}
+</code></pre>
+<p>In case the new node should be appended to the list of current children, either <code>position: -1</code> must be given in the
+payload or the <code>position</code> parameter must be left out of the payload.</p>
+<h3 id="update-lists-or-nodes-information">Update list's or node's information</h3>
+<p>The basic information of a list (or node) such as its labels, comments, name, or all of them can be updated. The parameters that 
+must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
+list and the IRI of the project it belongs to. </p>
+<ul>
+<li>Required permission: SystemAdmin / ProjectAdmin</li>
+<li>Required fields: <code>listIri</code>, <code>projectIri</code></li>
+<li>Update list information</li>
+<li>PUT: <code>/admin/lists/&lt;listIri&gt;</code></li>
+<li>BODY:</li>
+</ul>
+<pre><code class="language-json"> {   &quot;listIri&quot;: &quot;http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A&quot;,
+      &quot;projectIri&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;,
+      &quot;name&quot;: &quot;new name for the list&quot;,
+      &quot;labels&quot;: [{ &quot;value&quot;: &quot;a new label for the list&quot;, &quot;language&quot;: &quot;en&quot;}],
+      &quot;comments&quot;: [{ &quot;value&quot;: &quot;a new comment for the list&quot;, &quot;language&quot;: &quot;en&quot;}]
+  }
+</code></pre>
+<p>The response will contain the basic information of the list, <code>listinfo</code> (or <code>nodeinfo</code>), without its children, as below:</p>
+<pre><code class="language-json">{
+    &quot;listinfo&quot;: {
+        &quot;comments&quot;: [
+            {
+                &quot;value&quot;: &quot;a new comment for the list&quot;,
+                &quot;language&quot;: &quot;en&quot;
+            }
+        ],
+        &quot;id&quot;: &quot;http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A&quot;,
+        &quot;isRootNode&quot;: true,
+        &quot;labels&quot;: [
+            {
+                &quot;value&quot;: &quot;a new label for the list&quot;,
+                &quot;language&quot;: &quot;en&quot;
+            }
+        ],
+        &quot;name&quot;: &quot;new name for the list&quot;,
+        &quot;projectIri&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;
+    }
+}
+</code></pre>
+<p>If only name of the list must be updated, it can be given as below in the body of the request:</p>
+<pre><code class="language-json">   {
+       &quot;listIri&quot;: &quot;listIri&quot;,
+       &quot;projectIri&quot;: &quot;someprojectiri&quot;,
+       &quot;name&quot;: &quot;another name&quot;
+  }
+</code></pre>
+<p>Alternatively, basic information <code>name</code>, <code>labels</code>, or <code>comments</code> of the root node (i.e. list) can be updated individually 
+as explained below.</p>
+<h3 id="update-list-or-nodes-name">Update list or node's name</h3>
+<ul>
+<li>Required permission: SystemAdmin / ProjectAdmin</li>
+<li>Update name of the list (i.e. root node) or a child node whose IRI is specified by <code>&lt;listItemIri&gt;</code>.</li>
+<li>PUT: <code>/admin/lists/&lt;listItemIri&gt;/name</code></li>
+<li>BODY:
+ The new name of the node must be given in the body of the request as shown below:
+ ```json
+{
+    "name": "a new name"
+}</li>
+</ul>
+<pre><code>There is no need to specify the project IRI because it is automatically extracted using the given `&lt;listItemIRI&gt;`.
+
+### Update list or node's labels
+
+ - Required permission: SystemAdmin / ProjectAdmin
+ - Update labels of the list (i.e. root node) or a child node whose IRI is specified by `&lt;listItemIri&gt;`.
+ - PUT: `/admin/lists/&lt;listItemIri&gt;/labels`
+ - BODY:
+ The new set of labels of the node must be given in the body of the request as shown below:
+ ```json
+{
+    &quot;labels&quot;: [{&quot;language&quot;: &quot;se&quot;, &quot;value&quot;: &quot;nya märkningen&quot;}]
+}
+</code></pre>
+<p>There is no need to specify the project IRI because it is automatically extracted using the given <code>&lt;listItemIRI&gt;</code>.</p>
+<h3 id="update-list-or-nodes-comments">Update list or node's comments</h3>
+<ul>
+<li>Required permission: SystemAdmin / ProjectAdmin</li>
+<li>Update comments of the list (i.e. root node) or a child node whose IRI is specified by <code>&lt;listItemIri&gt;</code>.</li>
+<li>PUT: <code>/admin/lists/&lt;listItemIri&gt;/labels</code></li>
+<li>BODY:
+ The new set of comments of the node must be given in the body of the request as shown below:
+ ```json
+{
+    "comments": [{"language": "se", "value": "nya kommentarer"}]
+}</li>
+</ul>
+<pre><code>There is no need to specify the project IRI because it is automatically extracted using the given `&lt;listItemIRI&gt;`.
+
+### Repositioning a child node
+
+The position of an existing child node can be updated. The child node can be either repositioned within its 
+current parent node, or can be added to another parent node in a specific position. The IRI of the parent node 
+and the new position of the child node must be given in the request body. 
+
+If a node is supposed to be repositioned to the end of a parent node's children, give `position: -1`.
+
+Suppose a parent node `parentNode1` has five children in positions 0-4, to change the position of its child node 
+`childNode4` from its original position 3 to position 1 the request body should specify the IRI of its parent node 
+and the new position as below:
+```json
+   {
+      &quot;parentNodeIri&quot;: &quot;&lt;parentNode1-IRI&gt;&quot;,
+      &quot;position&quot;: 1
+  }
+</code></pre>
+<p>Then the node <code>childNode4</code> will be put in position 1, and its siblings will be shifted accordingly. The new position given 
+in the request body cannot be the same as the child node's original position. If <code>position: -1</code> is given, the node will 
+be moved to the end of children list, and its siblings will be shifted to left. In case of repositioning the node 
+within its current parent, the maximum permitted position is the length of its children list, i.e. in this example the 
+highest allowed position is 4.</p>
+<p>To reposition a child node <code>childNode4</code> to another parent node <code>parentNode2</code> in a specific position, for 
+example <code>position: 3</code>, the IRI of the new parent node and the position the node must be placed within children of 
+<code>parentNode2</code> must be given as:</p>
+<pre><code class="language-json">   {
+      &quot;parentNodeIri&quot;: &quot;&lt;parentNode2-IRI&gt;&quot;,
+      &quot;position&quot;: 3
+  }
+</code></pre>
+<p>In this case, the <code>childNode4</code> is removed from the list of children of its old parent <code>parentNode1</code> and its old 
+siblings are shifted accordingly. Then the node <code>childNode4</code> is added to the specified new parent, i.e. <code>parentNode2</code>, in 
+the given position. The new siblings are shifted accordingly.</p>
+<p>Note that, the furthest the node can be placed is at the end of the list of the children of <code>parentNode2</code>. That means 
+if <code>parentNode2</code> had 3 children with positions 0-2, then <code>childNode4</code> can be placed in position 0-3 within children 
+of its new parent node. If the <code>position: -1</code> is given, the node will be appended to the end of new parent's children, 
+and new siblings will not be shifted. </p>
+<p>Values less than -1 are not permitted for parameter <code>position</code>.</p>
+<ul>
+<li>Required permission: SystemAdmin / ProjectAdmin</li>
+<li>Response: returns the updated parent node with all its children.</li>
+<li>Put <code>/admin/lists/&lt;nodeIri&gt;/position</code></li>
+</ul>
+<h3 id="delete-a-list-or-a-node">Delete a list or a node</h3>
+<p>An entire list or a single node of it can be completely deleted, if not in use. Before deleting an entire list 
+(i.e. root node), the data and ontologies are checked for any usage of the list or its children. If not in use, the list 
+and all its children are deleted.</p>
+<p>Similarily, before deleting a single node of a list, it is verified that the node itself and none of its children are used.
+If not in use, the node and all its children are deleted. Once a node is deleted, its parent node is updated by shifting the 
+remaining child nodes with respect to the position of the deleted node. </p>
+<ul>
+<li>Required permission: SystemAdmin / ProjectAdmin</li>
+<li>
+<p>Response:</p>
+<ul>
+<li>If the IRI of the list (i.e. root node) is given, the <code>iri</code> of the deleted list with a flag <code>deleted: true</code> is returned.</li>
+<li>If the IRI of a child node is given, the updated parent node is returned.</li>
+</ul>
+</li>
+<li>
+<p>Delete <code>/admin/lists/&lt;listItemIri&gt;</code></p>
+</li>
+</ul>
+<h3 id="delete-child-node-comments">Delete child node comments</h3>
+<p>Performing a DELETE request to route <code>/admin/lists/comments/&lt;nodeIri&gt;</code> deletes the comments of that node.
+As a response sipmle JSON is returned:</p>
+<pre><code class="language-json">{
+    &quot;commentsDeleted&quot;: true,
+    &quot;nodeIri&quot;: &quot;http://rdfh.ch/lists/0801/xxx&quot;
+}
+</code></pre>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      2022-11-24
+    
+  </small>
+</div>
+
+
+
+
+              
+            </article>
+            
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../groups/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Groups Endpoint" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Groups Endpoint
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../permissions/" class="md-footer__link md-footer__link--next" aria-label="Next: Permissions Endpoint" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Permissions Endpoint
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2021 - 2022 <a href='https://dasch.swiss' target='_blank'>Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.sections"], "search": "../../../assets/javascripts/workers/search.ecf98df9.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.2ab50757.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,4496 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../../assets/icons/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.4.3">
+    
+    
+      
+        <title>Querying, Creating, and Updating Ontologies - DSP-API</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.6b80c2a2.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.cbb835fc.min.css">
+        
+          
+          
+          <meta name="theme-color" content="#7e56c2">
+        
+      
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="deep-purple" data-md-color-accent="deep-purple">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#querying-creating-and-updating-ontologies" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="DSP-API" class="md-header__button md-logo" aria-label="DSP-API" data-md-component="logo">
+      
+  <img src="../../../assets/icons/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DSP-API
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Querying, Creating, and Updating Ontologies
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/dsp-api" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/dsp-api
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../01-introduction/what-is-dsp/" class="md-tabs__link">
+        Introduction
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../02-dsp-ontologies/introduction/" class="md-tabs__link">
+        DSP Ontologies
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link md-tabs__link--active">
+        The DSP Endpoints
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../04-publishing-deployment/publishing/" class="md-tabs__link">
+        Publishing and Deployment
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    
+
+  
+  
+  
+    
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../05-internals/design/adr/0001-record-architecture-decisions/" class="md-tabs__link">
+        DSP Internals
+      </a>
+    </li>
+  
+
+  
+
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../06-sipi/" class="md-tabs__link">
+        SIPI
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../07-lucene/lucene-query-parser-syntax/" class="md-tabs__link">
+        Lucene
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../../../08-faq/" class="md-tabs__link">
+      Frequently Asked Questions
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../09-release-notes/" class="md-tabs__link">
+        Release Notes
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="DSP-API" class="md-nav__button md-logo" aria-label="DSP-API" data-md-component="logo">
+      
+  <img src="../../../assets/icons/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    DSP-API
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/dsp-api" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/dsp-api
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          Introduction
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Introduction" data-md-level="1">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Introduction
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/what-is-dsp/" class="md-nav__link">
+        What is DSP?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/file-formats/" class="md-nav__link">
+        File Formats in DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/standoff-rdf/" class="md-nav__link">
+        Standoff/RDF Text Markup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/example-project/" class="md-nav__link">
+        An Example Project
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          DSP Ontologies
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP Ontologies" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP Ontologies
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/knora-base/" class="md-nav__link">
+        The Knora Base Ontology
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/salsah-gui/" class="md-nav__link">
+        The SALSAH GUI Ontology
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          The DSP Endpoints
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="The DSP Endpoints" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          The DSP Endpoints
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2">
+          DSP-API V1
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V1" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V1
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/xml-to-standoff-mapping/" class="md-nav__link">
+        XML to Standoff Mapping
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/adding-resources/" class="md-nav__link">
+        Adding Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/reading-values/" class="md-nav__link">
+        Reading Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/adding-values/" class="md-nav__link">
+        Adding Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/changing-values/" class="md-nav__link">
+        Changing Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v1/delete-resources-and-values/" class="md-nav__link">
+        Deleting Resources and Values
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3">
+          DSP-API V2
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V2" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V2
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knora-iris/" class="md-nav__link">
+        Knora IRIs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-user-permissions/" class="md-nav__link">
+        Reading the User's Permissions on Resources and Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-lists/" class="md-nav__link">
+        Getting Lists
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../xml-to-standoff-mapping/" class="md-nav__link">
+        XML to Standoff Mapping
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../query-language/" class="md-nav__link">
+        Gravsearch - Virtual Graph Search
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../editing-resources/" class="md-nav__link">
+        Creating and Editing Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../editing-values/" class="md-nav__link">
+        Creating and Editing Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Querying, Creating, and Updating Ontologies
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Querying, Creating, and Updating Ontologies
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#querying-ontology-information" class="md-nav__link">
+    Querying Ontology Information
+  </a>
+  
+    <nav class="md-nav" aria-label="Querying Ontology Information">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#querying-ontology-metadata" class="md-nav__link">
+    Querying Ontology Metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#querying-an-ontology" class="md-nav__link">
+    Querying an Ontology
+  </a>
+  
+    <nav class="md-nav" aria-label="Querying an Ontology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#differences-between-internal-and-external-ontologies" class="md-nav__link">
+    Differences Between Internal and External Ontologies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-ld-representation-of-an-ontology-in-the-simple-schema" class="md-nav__link">
+    JSON-LD Representation of an Ontology in the Simple Schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-ld-representation-of-an-ontology-in-the-complex-schema" class="md-nav__link">
+    JSON-LD Representation of an Ontology in the Complex Schema
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ontology-updates" class="md-nav__link">
+    Ontology Updates
+  </a>
+  
+    <nav class="md-nav" aria-label="Ontology Updates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-new-ontology" class="md-nav__link">
+    Creating a New Ontology
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-an-ontologys-metadata" class="md-nav__link">
+    Changing an Ontology's Metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-an-ontologys-comment" class="md-nav__link">
+    Deleting an Ontology's comment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-an-ontology" class="md-nav__link">
+    Deleting an Ontology
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-class-without-cardinalities" class="md-nav__link">
+    Creating a Class Without Cardinalities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-class-with-cardinalities" class="md-nav__link">
+    Creating a Class With Cardinalities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-labels-of-a-class" class="md-nav__link">
+    Changing the Labels of a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-comments-of-a-class" class="md-nav__link">
+    Changing the Comments of a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-the-comments-of-a-class" class="md-nav__link">
+    Deleting the Comments of a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-property" class="md-nav__link">
+    Creating a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-labels-of-a-property" class="md-nav__link">
+    Changing the Labels of a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-comments-of-a-property" class="md-nav__link">
+    Changing the Comments of a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-the-comments-of-a-property" class="md-nav__link">
+    Deleting the Comments of a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-gui-element-and-gui-attributes-of-a-property" class="md-nav__link">
+    Changing the GUI Element and GUI Attributes of a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-cardinalities-to-a-class" class="md-nav__link">
+    Adding Cardinalities to a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacing-the-cardinalities-of-a-class" class="md-nav__link">
+    Replacing the Cardinalities of a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-a-single-cardinality-from-a-class" class="md-nav__link">
+    Delete a single cardinality from a class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-gui-order-of-cardinalities" class="md-nav__link">
+    Changing the GUI Order of Cardinalities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-a-property" class="md-nav__link">
+    Deleting a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-a-class" class="md-nav__link">
+    Deleting a Class
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tei-xml/" class="md-nav__link">
+        TEI/XML
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../permalinks/" class="md-nav__link">
+        Permalinks
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_4" type="checkbox" id="__nav_3_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_4">
+          Admin API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Admin API" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_4">
+          <span class="md-nav__icon md-icon"></span>
+          Admin API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/users/" class="md-nav__link">
+        Users Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/projects/" class="md-nav__link">
+        Projects Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/groups/" class="md-nav__link">
+        Groups Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/lists/" class="md-nav__link">
+        Lists Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/permissions/" class="md-nav__link">
+        Permissions Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/stores/" class="md-nav__link">
+        Stores Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_5" type="checkbox" id="__nav_3_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_5">
+          Util API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Util API" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_5">
+          <span class="md-nav__icon md-icon"></span>
+          Util API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-util/health/" class="md-nav__link">
+        Health
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-util/version/" class="md-nav__link">
+        Version
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Publishing and Deployment
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Publishing and Deployment" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Publishing and Deployment
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/publishing/" class="md-nav__link">
+        Publishing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/getting-started/" class="md-nav__link">
+        Getting Started with DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/configuration/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/updates/" class="md-nav__link">
+        Updating Repositories when Upgrading DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          DSP Internals
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP Internals" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          DSP Internals
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1" type="checkbox" id="__nav_5_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1">
+          Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Design" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_1">
+          <span class="md-nav__icon md-icon"></span>
+          Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_1" type="checkbox" id="__nav_5_1_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_1">
+          Architectural Decision Records (ADR)
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Architectural Decision Records (ADR)" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_1">
+          <span class="md-nav__icon md-icon"></span>
+          Architectural Decision Records (ADR)
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0001-record-architecture-decisions/" class="md-nav__link">
+        Record Architectural Decisions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0002-change-cache-service-manager-from-akka-actor-to-zlayer/" class="md-nav__link">
+        Change Cache Service Manager from Akka-Actor to ZLayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer/" class="md-nav__link">
+        Change IIIF Service Manager and Sipi implementation to zlayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer/" class="md-nav__link">
+        Change Triplestore Service Manager and Fuseki implementation to ZLayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0005-change-respondermanager-to-a-simple-case-class/" class="md-nav__link">
+        Change ResponderManager to a simple case class
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_2" type="checkbox" id="__nav_5_1_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_2">
+          DSP-API Design Principles
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API Design Principles" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API Design Principles
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/design-overview/" class="md-nav__link">
+        Design Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/futures-with-akka/" class="md-nav__link">
+        Futures with Akka
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/http-module/" class="md-nav__link">
+        HTTP Module
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/store-module/" class="md-nav__link">
+        Store Module
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/triplestore-updates/" class="md-nav__link">
+        Triplestore Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/consistency-checking/" class="md-nav__link">
+        Consistency Checking
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/rdf-api/" class="md-nav__link">
+        RDF Processing API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_3" type="checkbox" id="__nav_5_1_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_3">
+          DSP-API V1 Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V1 Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_3">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V1 Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v1/how-to-add-a-route/" class="md-nav__link">
+        How to Add an API v1 Route
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v1/json/" class="md-nav__link">
+        JSON in API v1
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_4" type="checkbox" id="__nav_5_1_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_4">
+          DSP-API V2 Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V2 Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_4">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V2 Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/overview/" class="md-nav__link">
+        API v2 Design Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ontology-schemas/" class="md-nav__link">
+        Ontology Schemas
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/smart-iris/" class="md-nav__link">
+        Smart IRIs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/content-wrappers/" class="md-nav__link">
+        Content Wrappers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/how-to-add-a-route/" class="md-nav__link">
+        How to Add an API v2 Route
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/json-ld/" class="md-nav__link">
+        JSON-LD Parsing and Formatting
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ontology-management/" class="md-nav__link">
+        Ontology Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/sipi/" class="md-nav__link">
+        DSP-API and Sipi
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/gravsearch/" class="md-nav__link">
+        Gravsearch Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/standoff/" class="md-nav__link">
+        Standoff Markup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ark/" class="md-nav__link">
+        Archival Resource Key (ARK)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/query-design/" class="md-nav__link">
+        SPARQL Query Design
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_5" type="checkbox" id="__nav_5_1_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_5">
+          Admin API Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Admin API Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_5">
+          <span class="md-nav__icon md-icon"></span>
+          Admin API Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-admin/administration/" class="md-nav__link">
+        Administration
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_2" type="checkbox" id="__nav_5_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_2">
+          Development
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Development" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_2">
+          <span class="md-nav__icon md-icon"></span>
+          Development
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/building-and-running/" class="md-nav__link">
+        Build and Running
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/vscode-config/" class="md-nav__link">
+        Setup Visual Studio Code for development of DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/testing/" class="md-nav__link">
+        Testing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/docker-cheat-sheet/" class="md-nav__link">
+        Docker Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/monitoring/" class="md-nav__link">
+        Monitoring DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/docker-compose/" class="md-nav__link">
+        Starting the DSP-Stack inside Docker Container
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/updating-repositories/" class="md-nav__link">
+        Updating Repositories
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/generating-client-test-data/" class="md-nav__link">
+        Generating Client Test Data
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/third-party/" class="md-nav__link">
+        Third-Party Dependencies
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          SIPI
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="SIPI" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          SIPI
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/setup-sipi-for-dsp-api/" class="md-nav__link">
+        Setting Up Sipi for DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/sipi-and-dsp-api/" class="md-nav__link">
+        Interaction between Sipi and DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7">
+          Lucene
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Lucene" data-md-level="1">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Lucene
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../07-lucene/lucene-query-parser-syntax/" class="md-nav__link">
+        Lucene Query Parser Syntax
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../08-faq/" class="md-nav__link">
+        Frequently Asked Questions
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_9">
+          Release Notes
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Release Notes" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Release Notes
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../09-release-notes/" class="md-nav__link">
+        Changelog
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#querying-ontology-information" class="md-nav__link">
+    Querying Ontology Information
+  </a>
+  
+    <nav class="md-nav" aria-label="Querying Ontology Information">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#querying-ontology-metadata" class="md-nav__link">
+    Querying Ontology Metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#querying-an-ontology" class="md-nav__link">
+    Querying an Ontology
+  </a>
+  
+    <nav class="md-nav" aria-label="Querying an Ontology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#differences-between-internal-and-external-ontologies" class="md-nav__link">
+    Differences Between Internal and External Ontologies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-ld-representation-of-an-ontology-in-the-simple-schema" class="md-nav__link">
+    JSON-LD Representation of an Ontology in the Simple Schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-ld-representation-of-an-ontology-in-the-complex-schema" class="md-nav__link">
+    JSON-LD Representation of an Ontology in the Complex Schema
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ontology-updates" class="md-nav__link">
+    Ontology Updates
+  </a>
+  
+    <nav class="md-nav" aria-label="Ontology Updates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-new-ontology" class="md-nav__link">
+    Creating a New Ontology
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-an-ontologys-metadata" class="md-nav__link">
+    Changing an Ontology's Metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-an-ontologys-comment" class="md-nav__link">
+    Deleting an Ontology's comment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-an-ontology" class="md-nav__link">
+    Deleting an Ontology
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-class-without-cardinalities" class="md-nav__link">
+    Creating a Class Without Cardinalities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-class-with-cardinalities" class="md-nav__link">
+    Creating a Class With Cardinalities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-labels-of-a-class" class="md-nav__link">
+    Changing the Labels of a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-comments-of-a-class" class="md-nav__link">
+    Changing the Comments of a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-the-comments-of-a-class" class="md-nav__link">
+    Deleting the Comments of a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-property" class="md-nav__link">
+    Creating a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-labels-of-a-property" class="md-nav__link">
+    Changing the Labels of a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-comments-of-a-property" class="md-nav__link">
+    Changing the Comments of a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-the-comments-of-a-property" class="md-nav__link">
+    Deleting the Comments of a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-gui-element-and-gui-attributes-of-a-property" class="md-nav__link">
+    Changing the GUI Element and GUI Attributes of a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-cardinalities-to-a-class" class="md-nav__link">
+    Adding Cardinalities to a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacing-the-cardinalities-of-a-class" class="md-nav__link">
+    Replacing the Cardinalities of a Class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-a-single-cardinality-from-a-class" class="md-nav__link">
+    Delete a single cardinality from a class
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-the-gui-order-of-cardinalities" class="md-nav__link">
+    Changing the GUI Order of Cardinalities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-a-property" class="md-nav__link">
+    Deleting a Property
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-a-class" class="md-nav__link">
+    Deleting a Class
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+  <a href="https://github.com/dasch-swiss/dsp-api/blob/main/docs/03-endpoints/api-v2/ontology-information.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+<!---
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+-->
+
+<h1 id="querying-creating-and-updating-ontologies">Querying, Creating, and Updating Ontologies</h1>
+<h2 id="querying-ontology-information">Querying Ontology Information</h2>
+<p>Before reading this document, you should have a basic understanding of
+DSP-API v2 external ontology schemas (see <a href="../introduction/#api-schema">API Schema</a>).</p>
+<p>Each request returns a single RDF graph, which can be represented in
+<a href="https://json-ld.org/spec/latest/json-ld/">JSON-LD</a>,
+<a href="https://www.w3.org/TR/turtle/">Turtle</a>,
+or <a href="https://www.w3.org/TR/rdf-syntax-grammar/">RDF/XML</a>, using
+<a href="https://tools.ietf.org/html/rfc7231#section-5.3.2">HTTP content negotiation</a> (see
+<a href="../introduction/#response-formats">Response Formats</a>).</p>
+<p>The response format uses prefixes to shorten IRIs, making them more
+human-readable. A client may wish to convert these to full IRIs for
+processing. This can be done with responses in JSON-LD by using a library
+that implements the <a href="https://www.w3.org/TR/json-ld-api/">JSON-LD API</a>
+to compact the document with an empty JSON-LD <code>@context</code>.</p>
+<h3 id="querying-ontology-metadata">Querying Ontology Metadata</h3>
+<p>Requests for ontology metadata can return information about more than one
+ontology, unlike other requests for ontology information. To get metadata
+about all ontologies:</p>
+<pre><code>HTTP GET to http://host/v2/ontologies/metadata
+</code></pre>
+<p>If you submit a project IRI in the <code>X-Knora-Accept-Project</code> header, only the
+ontologies for that project will be returned.</p>
+<p>The response is in the complex API v2 schema. Sample response:</p>
+<pre><code class="language-json">{
+  &quot;@graph&quot;: [
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2017-12-19T15:23:42.166Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The anything ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/0001/anything/v2&quot;
+    },
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2022-03-23T07:14:17.445208Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The something ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/0001/something/v2&quot;
+    },
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2022-03-23T07:14:17.445208Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The images demo ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA&quot; 
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/00FF/images/v2&quot;
+    },
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2022-03-23T07:14:17.445208Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The BEOL ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ&quot;
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/0801/beol/v2&quot;
+    },
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2022-03-23T07:14:17.445208Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The Biblio ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ&quot;
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/0801/biblio/v2&quot;
+    },
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2022-03-23T07:14:17.445208Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The Newton-Project ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ&quot;
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/0801/newton/v2&quot;
+    },
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2022-03-23T07:14:17.445208Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The incunabula ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w&quot;
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/0803/incunabula/v2&quot;
+    },
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2022-03-23T07:14:17.445208Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The dokubib ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/oIjhUsZmQLuJ0VMGvJ2pfg&quot;
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/0804/dokubib/v2&quot;
+    },
+    {
+      &quot;knora-api:lastModificationDate&quot;: {
+        &quot;@value&quot;: &quot;2022-03-23T07:14:17.445208Z&quot;,
+        &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;
+      },
+      &quot;rdfs:label&quot;: &quot;The Anton Webern project ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://rdfh.ch/projects/NeWmPqGNQ5KVMAG6L8AjNA&quot;
+      },
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://0.0.0.0:3333/ontology/08AE/webern/v2&quot;
+    },
+    {
+      &quot;rdfs:label&quot;: &quot;The Knora admin ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://www.knora.org/ontology/knora-admin#SystemProject&quot;
+      },
+      &quot;knora-api:isBuiltIn&quot;: true,
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://api.knora.org/ontology/knora-admin/v2&quot;
+    },
+    {
+      &quot;rdfs:label&quot;: &quot;The knora-api ontology in the complex schema&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://www.knora.org/ontology/knora-admin#SystemProject&quot;
+      },
+      &quot;knora-api:isBuiltIn&quot;: true,
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://api.knora.org/ontology/knora-api/v2&quot;
+    },
+    {
+      &quot;rdfs:label&quot;: &quot;The salsah-gui ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://www.knora.org/ontology/knora-admin#SystemProject&quot;
+      },
+      &quot;knora-api:isBuiltIn&quot;: true,
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://api.knora.org/ontology/salsah-gui/v2&quot;
+    },
+    {
+      &quot;rdfs:label&quot;: &quot;The standoff ontology&quot;,
+      &quot;knora-api:attachedToProject&quot;: {
+        &quot;@id&quot;: &quot;http://www.knora.org/ontology/knora-admin#SystemProject&quot;
+      },
+      &quot;knora-api:isBuiltIn&quot;: true,
+      &quot;@type&quot;: &quot;owl:Ontology&quot;,
+      &quot;@id&quot;: &quot;http://api.knora.org/ontology/standoff/v2&quot;
+    }
+  ],
+  &quot;@context&quot;: {
+    &quot;knora-api&quot;: &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;xsd&quot;: &quot;http://www.w3.org/2001/XMLSchema#&quot;,
+    &quot;rdfs&quot;: &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;owl&quot;: &quot;http://www.w3.org/2002/07/owl#&quot;
+  }
+}
+</code></pre>
+<p>To get metadata about the ontologies that belong to one or more particular
+projects:</p>
+<pre><code>HTTP GET to http://host/v2/ontologies/metadata/PROJECT_IRI[/PROJECT_IRI...]
+</code></pre>
+<p>The project IRIs must be URL-encoded.</p>
+<p>Example response for the <code>anything</code> test project
+(project IRI <code>http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ</code>):</p>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;http://0.0.0.0:3333/ontology/0001/anything/v2&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:attachedToProject&quot; : {
+    &quot;@id&quot; : &quot;http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ&quot;
+  },
+  &quot;knora-api:lastModificationDate&quot;: &quot;2017-12-19T15:23:42.166Z&quot;,
+  &quot;rdfs:label&quot; : &quot;The anything ontology&quot;,
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;
+  }
+}
+</code></pre>
+<h3 id="querying-an-ontology">Querying an Ontology</h3>
+<p>An ontology can be queried either by using an API route directly or by
+simply dereferencing the ontology IRI. The API route is as follows:</p>
+<pre><code>HTTP GET to http://host/v2/ontologies/allentities/ONTOLOGY_IRI
+</code></pre>
+<p>The ontology IRI must be URL-encoded, and may be in either the complex
+or the simple schema. The response will be in the same schema. For
+example, if the server is running on <code>0.0.0.0:3333</code>, you can request
+the <code>knora-api</code> ontology in the complex schema as follows:</p>
+<pre><code>HTTP GET to http://0.0.0.0:3333/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-api%2Fv2
+</code></pre>
+<p>By default, this returns the ontology in JSON-LD; to request Turtle
+or RDF/XML, add an HTTP <code>Accept</code> header
+(see <a href="../introduction/#response-formats">Response Formats</a>).</p>
+<p>If the client dereferences a project-specific ontology IRI as a URL, the
+DSP-API server running on the hostname in the IRI will serve the
+ontology. For example, if the server is running on <code>0.0.0.0:3333</code>, the
+IRI <code>http://0.0.0.0:3333/ontology/00FF/images/simple/v2</code> can be
+dereferenced to request the <code>images</code> sample ontology in the simple
+schema.</p>
+<p>If the client dereferences a built-in Knora ontology, such as
+<code>http://api.knora.org/ontology/knora-api/simple/v2</code>, there must be a
+DSP-API server running at <code>api.knora.org</code> that can serve the ontology.
+The <a href="http://dasch.swiss/">DaSCH</a> intends to run such as server. For
+testing, you can configure your local <code>/etc/hosts</code> file to resolve
+<code>api.knora.org</code> as <code>localhost</code>.</p>
+<h4 id="differences-between-internal-and-external-ontologies">Differences Between Internal and External Ontologies</h4>
+<p>The external ontologies used by DSP-API v2 are different to the internal
+ontologies that are actually stored in the triplestore (see
+<a href="../introduction/#api-schema">API Schema</a>). In general, the external
+ontologies use simpler data structures, but they also provide additional
+information to make it easier for clients to use them. This is illustrated
+in the examples in the next sections.</p>
+<p>The internal predicates <code>knora-base:subjectClassConstraint</code> and
+<code>knora-base:objectClassConstraint</code> (see
+<a href="../../../02-dsp-ontologies/knora-base/#constraints-on-the-types-of-property-subjects-and-objects">Constraints on the Types of Property Subjects and Objects</a>)
+are represented as <code>knora-api:subjectType</code> and <code>knora-api:objectType</code> in
+external ontologies.</p>
+<h4 id="json-ld-representation-of-an-ontology-in-the-simple-schema">JSON-LD Representation of an Ontology in the Simple Schema</h4>
+<p>The simple schema is suitable for client applications that need to read
+but not update data in Knora. For example, here is the response for the
+<code>images</code> sample ontology in the simple schema,
+<code>http://0.0.0.0:3333/ontology/00FF/images/simple/v2</code> (simplified for
+clarity):</p>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;http://0.0.0.0:3333/ontology/00FF/images/simple/v2&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;rdfs:label&quot; : &quot;The images demo ontology&quot;,
+  &quot;@graph&quot; : [ {
+    &quot;@id&quot; : &quot;images:bild&quot;,
+    &quot;@type&quot; : &quot;owl:Class&quot;,
+    &quot;knora-api:resourceIcon&quot; : &quot;bild.png&quot;,
+    &quot;rdfs:comment&quot; : &quot;An image of the demo image collection&quot;,
+    &quot;rdfs:label&quot; : &quot;Image&quot;,
+    &quot;rdfs:subClassOf&quot; : [ {
+      &quot;@id&quot; : &quot;knora-api:StillImageRepresentation&quot;
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:creationDate&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasIncomingLink&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasStandoffLinkTo&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:minCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasStillImageFile&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:maxCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:lastModificationDate&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;rdfs:label&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:description&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:erfassungsdatum&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:maxCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:urheber&quot;
+      }
+    } ]
+  }, {
+    &quot;@id&quot; : &quot;images:description&quot;,
+    &quot;@type&quot; : &quot;owl:DatatypeProperty&quot;,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;xsd:string&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:bild&quot;
+    },
+    &quot;rdfs:label&quot; : &quot;Description&quot;,
+    &quot;rdfs:subPropertyOf&quot; : [ {
+      &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+    }, {
+      &quot;@id&quot; : &quot;http://purl.org/dc/terms/description&quot;
+    } ]
+  }, {
+    &quot;@id&quot; : &quot;images:erfassungsdatum&quot;,
+    &quot;@type&quot; : &quot;owl:DatatypeProperty&quot;,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;knora-api:Date&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:bild&quot;
+    },
+    &quot;rdfs:label&quot; : &quot;Date of acquisition&quot;,
+    &quot;rdfs:subPropertyOf&quot; : [ {
+      &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+    }, {
+      &quot;@id&quot; : &quot;http://purl.org/dc/terms/date&quot;
+    } ]
+  }, {
+    &quot;@id&quot; : &quot;images:firstname&quot;,
+    &quot;@type&quot; : &quot;owl:DatatypeProperty&quot;,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;xsd:string&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:person&quot;
+    },
+    &quot;rdfs:comment&quot; : &quot;First name of a person&quot;,
+    &quot;rdfs:label&quot; : &quot;First name&quot;,
+    &quot;rdfs:subPropertyOf&quot; : {
+      &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+    }
+  }, {
+    &quot;@id&quot; : &quot;images:lastname&quot;,
+    &quot;@type&quot; : &quot;owl:DatatypeProperty&quot;,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;xsd:string&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:person&quot;
+    },
+    &quot;rdfs:comment&quot; : &quot;Last name of a person&quot;,
+    &quot;rdfs:label&quot; : &quot;Name&quot;,
+    &quot;rdfs:subPropertyOf&quot; : {
+      &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+    }
+  }, {
+    &quot;@id&quot; : &quot;images:person&quot;,
+    &quot;@type&quot; : &quot;owl:Class&quot;,
+    &quot;knora-api:resourceIcon&quot; : &quot;person.png&quot;,
+    &quot;rdfs:comment&quot; : &quot;Person&quot;,
+    &quot;rdfs:label&quot; : &quot;Person&quot;,
+    &quot;rdfs:subClassOf&quot; : [ {
+      &quot;@id&quot; : &quot;knora-api:Resource&quot;
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:creationDate&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasIncomingLink&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasStandoffLinkTo&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:maxCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:lastModificationDate&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;rdfs:label&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:lastname&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:firstname&quot;
+      }
+    } ]
+  }, {
+    &quot;@id&quot; : &quot;images:urheber&quot;,
+    &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;images:person&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:bild&quot;
+    },
+    &quot;rdfs:comment&quot; : &quot;An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.&quot;,
+    &quot;rdfs:label&quot; : &quot;Creator&quot;,
+    &quot;rdfs:subPropertyOf&quot; : {
+      &quot;@id&quot; : &quot;knora-api:hasLinkTo&quot;
+    }
+  } ],
+  &quot;@context&quot; : {
+    &quot;rdf&quot; : &quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;,
+    &quot;images&quot; : &quot;http://0.0.0.0:3333/ontology/00FF/images/simple/v2#&quot;,
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/simple/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>The response format is an RDF graph. The top level object describes the ontology
+itself, providing its IRI (in the <code>@id</code> member) and its <code>rdfs:label</code>.
+The <code>@graph</code> member (see
+<a href="https://json-ld.org/spec/latest/json-ld/#named-graphs">Named Graphs</a> in the
+JSON-LD specification) contains an array of entities that belong to the
+ontology.</p>
+<p>In a class definition, cardinalities for properties of the class are
+represented as in OWL, using objects of type <code>owl:Restriction</code>. The
+supported cardinalities are the ones indicated in
+<a href="../../../02-dsp-ontologies/knora-base/#owl-cardinalities">OWL Cardinalities</a>.</p>
+<p>The class definitions include cardinalities that are directly defined on
+each class, as well as cardinalities inherited from base classes. For
+example, we can see cardinalities inherited from <code>knora-api:Resource</code>,
+such as <code>knora-api:hasStandoffLinkTo</code> and <code>http://schema.org/name</code>
+(which represents <code>rdfs:label</code>).</p>
+<p>In the simple schema, Knora value properties can be datatype properties.
+The <code>knora-base:objectType</code> of a Knora value property such as
+<code>images:description</code> is a literal datatype, in this case
+<code>xsd:string</code>. Moreover, <code>images:description</code> is a subproperty of
+the standard property <code>dcterms:description</code>, whose object can be a
+literal value. A client that understands <code>rdfs:subPropertyOf</code>, and is
+familiar with <code>dcterms:description</code>, can then work with
+<code>images:description</code> on the basis of its knowledge about
+<code>dcterms:description</code>.</p>
+<p>By default, values for <code>rdfs:label</code> and <code>rdfs:comment</code> are returned only
+in the user's preferred language, or in the system default language. To
+obtain these values in all available languages, add the URL parameter
+<code>?allLanguages=true</code>. For example, with this parameter, the definition
+of <code>images:description</code> becomes:</p>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;images:description&quot;,
+  &quot;@type&quot; : &quot;owl:DatatypeProperty&quot;,
+  &quot;knora-api:objectType&quot; : {
+    &quot;@id&quot; : &quot;xsd:string&quot;
+  },
+  &quot;knora-api:subjectType&quot; : {
+    &quot;@id&quot; : &quot;images:bild&quot;
+  },
+  &quot;rdfs:label&quot; : [ {
+    &quot;@language&quot; : &quot;en&quot;,
+    &quot;@value&quot; : &quot;Description&quot;
+  }, {
+    &quot;@language&quot; : &quot;de&quot;,
+    &quot;@value&quot; : &quot;Beschreibung&quot;
+  }, {
+    &quot;@language&quot; : &quot;fr&quot;,
+    &quot;@value&quot; : &quot;Description&quot;
+  }, {
+    &quot;@language&quot; : &quot;it&quot;,
+    &quot;@value&quot; : &quot;Descrizione&quot;
+  } ],
+  &quot;rdfs:subPropertyOf&quot; : [ {
+    &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+  }, {
+    &quot;@id&quot; : &quot;http://purl.org/dc/terms/description&quot;
+  } ]
+}
+</code></pre>
+<p>To find out more about the <code>knora-api</code> entities used in the response,
+the client can request the <code>knora-api</code> ontology in the simple schema:
+<code>http://api.knora.org/ontology/knora-api/simple/v2</code>. For example,
+<code>images:erfassungsdatum</code> has a <code>knora-api:objectType</code> of
+<code>knora-api:Date</code>, which is a subtype of <code>xsd:string</code> with a
+Knora-specific, human-readable format. In the <code>knora-api</code> simple
+ontology, there is a definition of this type:</p>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;http://api.knora.org/ontology/knora-api/simple/v2&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;rdfs:label&quot; : &quot;The knora-api ontology in the simple schema&quot;,
+  &quot;@graph&quot; : [ {
+    &quot;@id&quot; : &quot;knora-api:Date&quot;,
+    &quot;@type&quot; : &quot;rdfs:Datatype&quot;,
+    &quot;rdfs:comment&quot; : &quot;Represents a date as a period with different possible precisions.&quot;,
+    &quot;rdfs:label&quot; : &quot;Date literal&quot;,
+    &quot;rdfs:subClassOf&quot; : {
+      &quot;@type&quot; : &quot;rdfs:Datatype&quot;,
+      &quot;owl:onDatatype&quot; : {
+        &quot;@id&quot; : &quot;xsd:string&quot;
+      },
+      &quot;owl:withRestrictions&quot; : {
+        &quot;xsd:pattern&quot; : &quot;(GREGORIAN|JULIAN|ISLAMIC):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?&quot;
+      }
+    }
+  } ],
+  &quot;@context&quot; : {
+    &quot;rdf&quot; : &quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;,
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/simple/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<h4 id="json-ld-representation-of-an-ontology-in-the-complex-schema">JSON-LD Representation of an Ontology in the Complex Schema</h4>
+<p>The complex schema is suitable for client applications that need to
+update data in Knora. For example, here is the response for the <code>images</code>
+sample ontology in the complex schema, <code>http://0.0.0.0:3333/ontology/00FF/images/v2</code>
+(simplified for clarity):</p>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;http://0.0.0.0:3333/ontology/00FF/images/v2&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:attachedToProject&quot; : {
+    &quot;@id&quot; : &quot;http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA&quot;
+  },
+  &quot;rdfs:label&quot; : &quot;The images demo ontology&quot;,
+  &quot;@graph&quot; : [ {
+    &quot;@id&quot; : &quot;images:bild&quot;,
+    &quot;@type&quot; : &quot;owl:Class&quot;,
+    &quot;knora-api:canBeInstantiated&quot; : true,
+    &quot;knora-api:isResourceClass&quot; : true,
+    &quot;knora-api:resourceIcon&quot; : &quot;bild.png&quot;,
+    &quot;rdfs:comment&quot; : &quot;An image of the demo image collection&quot;,
+    &quot;rdfs:label&quot; : &quot;Image&quot;,
+    &quot;rdfs:subClassOf&quot; : [ {
+      &quot;@id&quot; : &quot;knora-api:StillImageRepresentation&quot;
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:attachedToProject&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:attachedToUser&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:creationDate&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasIncomingLink&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasPermissions&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasStandoffLinkTo&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasStandoffLinkToValue&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:minCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasStillImageFileValue&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:maxCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:lastModificationDate&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;rdfs:label&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;salsah-gui:guiOrder&quot; : 3,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:description&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;salsah-gui:guiOrder&quot; : 8,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:erfassungsdatum&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;salsah-gui:guiOrder&quot; : 12,
+      &quot;owl:maxCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:urheber&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;salsah-gui:guiOrder&quot; : 12,
+      &quot;owl:maxCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:urheberValue&quot;
+      }
+    } ]
+  }, {
+    &quot;@id&quot; : &quot;images:description&quot;,
+    &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+    &quot;knora-api:isEditable&quot; : true,
+    &quot;knora-api:isResourceProperty&quot; : true,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;knora-api:TextValue&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:bild&quot;
+    },
+    &quot;salsah-gui:guiAttribute&quot; : [ &quot;rows=10&quot;, &quot;width=95%&quot;, &quot;wrap=soft&quot; ],
+    &quot;salsah-gui:guiElement&quot; : {
+      &quot;@id&quot; : &quot;salsah-gui:Textarea&quot;
+    },
+    &quot;rdfs:label&quot; : &quot;Description&quot;,
+    &quot;rdfs:subPropertyOf&quot; : [ {
+      &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+    }, {
+      &quot;@id&quot; : &quot;http://purl.org/dc/terms/description&quot;
+    } ]
+  }, {
+    &quot;@id&quot; : &quot;images:erfassungsdatum&quot;,
+    &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+    &quot;knora-api:isEditable&quot; : true,
+    &quot;knora-api:isResourceProperty&quot; : true,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;knora-api:DateValue&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:bild&quot;
+    },
+    &quot;salsah-gui:guiElement&quot; : {
+      &quot;@id&quot; : &quot;salsah-gui:Date&quot;
+    },
+    &quot;rdfs:label&quot; : &quot;Date of acquisition&quot;,
+    &quot;rdfs:subPropertyOf&quot; : [ {
+      &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+    }, {
+      &quot;@id&quot; : &quot;http://purl.org/dc/terms/date&quot;
+    } ]
+  }, {
+    &quot;@id&quot; : &quot;images:firstname&quot;,
+    &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+    &quot;knora-api:isEditable&quot; : true,
+    &quot;knora-api:isResourceProperty&quot; : true,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;knora-api:TextValue&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:person&quot;
+    },
+    &quot;salsah-gui:guiAttribute&quot; : [ &quot;maxlength=32&quot;, &quot;size=32&quot; ],
+    &quot;salsah-gui:guiElement&quot; : {
+      &quot;@id&quot; : &quot;salsah-gui:SimpleText&quot;
+    },
+    &quot;rdfs:comment&quot; : &quot;First name of a person&quot;,
+    &quot;rdfs:label&quot; : &quot;First name&quot;,
+    &quot;rdfs:subPropertyOf&quot; : {
+      &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+    }
+  }, {
+    &quot;@id&quot; : &quot;images:lastname&quot;,
+    &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+    &quot;knora-api:isEditable&quot; : true,
+    &quot;knora-api:isResourceProperty&quot; : true,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;knora-api:TextValue&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:person&quot;
+    },
+    &quot;salsah-gui:guiAttribute&quot; : [ &quot;maxlength=32&quot;, &quot;size=32&quot; ],
+    &quot;salsah-gui:guiElement&quot; : {
+      &quot;@id&quot; : &quot;salsah-gui:SimpleText&quot;
+    },
+    &quot;rdfs:comment&quot; : &quot;Last name of a person&quot;,
+    &quot;rdfs:label&quot; : &quot;Name&quot;,
+    &quot;rdfs:subPropertyOf&quot; : {
+      &quot;@id&quot; : &quot;knora-api:hasValue&quot;
+    }
+  }, {
+    &quot;@id&quot; : &quot;images:person&quot;,
+    &quot;@type&quot; : &quot;owl:Class&quot;,
+    &quot;knora-api:canBeInstantiated&quot; : true,
+    &quot;knora-api:isResourceClass&quot; : true,
+    &quot;knora-api:resourceIcon&quot; : &quot;person.png&quot;,
+    &quot;rdfs:comment&quot; : &quot;Person&quot;,
+    &quot;rdfs:label&quot; : &quot;Person&quot;,
+    &quot;rdfs:subClassOf&quot; : [ {
+      &quot;@id&quot; : &quot;knora-api:Resource&quot;
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:attachedToProject&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:attachedToUser&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:creationDate&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasIncomingLink&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasPermissions&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasStandoffLinkTo&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:minCardinality&quot; : 0,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:hasStandoffLinkToValue&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:maxCardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;knora-api:lastModificationDate&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;knora-api:isInherited&quot; : true,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;rdfs:label&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;salsah-gui:guiOrder&quot; : 0,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:lastname&quot;
+      }
+    }, {
+      &quot;@type&quot; : &quot;owl:Restriction&quot;,
+      &quot;salsah-gui:guiOrder&quot; : 1,
+      &quot;owl:cardinality&quot; : 1,
+      &quot;owl:onProperty&quot; : {
+        &quot;@id&quot; : &quot;images:firstname&quot;
+      }
+    } ]
+  }, {
+    &quot;@id&quot; : &quot;images:urheber&quot;,
+    &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+    &quot;knora-api:isEditable&quot; : true,
+    &quot;knora-api:isLinkProperty&quot; : true,
+    &quot;knora-api:isResourceProperty&quot; : true,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;images:person&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:bild&quot;
+    },
+    &quot;salsah-gui:guiAttribute&quot; : &quot;numprops=2&quot;,
+    &quot;salsah-gui:guiElement&quot; : {
+      &quot;@id&quot; : &quot;salsah-gui:Searchbox&quot;
+    },
+    &quot;rdfs:comment&quot; : &quot;An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.&quot;,
+    &quot;rdfs:label&quot; : &quot;Creator&quot;,
+    &quot;rdfs:subPropertyOf&quot; : {
+      &quot;@id&quot; : &quot;knora-api:hasLinkTo&quot;
+    }
+  }, {
+    &quot;@id&quot; : &quot;images:urheberValue&quot;,
+    &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+    &quot;knora-api:isEditable&quot; : true,
+    &quot;knora-api:isLinkValueProperty&quot; : true,
+    &quot;knora-api:isResourceProperty&quot; : true,
+    &quot;knora-api:objectType&quot; : {
+      &quot;@id&quot; : &quot;knora-api:LinkValue&quot;
+    },
+    &quot;knora-api:subjectType&quot; : {
+      &quot;@id&quot; : &quot;images:bild&quot;
+    },
+    &quot;salsah-gui:guiAttribute&quot; : &quot;numprops=2&quot;,
+    &quot;salsah-gui:guiElement&quot; : {
+      &quot;@id&quot; : &quot;salsah-gui:Searchbox&quot;
+    },
+    &quot;rdfs:comment&quot; : &quot;An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.&quot;,
+    &quot;rdfs:label&quot; : &quot;Creator&quot;,
+    &quot;rdfs:subPropertyOf&quot; : {
+      &quot;@id&quot; : &quot;knora-api:hasLinkToValue&quot;
+    }
+  } ],
+  &quot;@context&quot; : {
+    &quot;rdf&quot; : &quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;,
+    &quot;images&quot; : &quot;http://0.0.0.0:3333/ontology/00FF/images/v2#&quot;,
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;salsah-gui&quot; : &quot;http://api.knora.org/ontology/salsah-gui/v2#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>In the complex schema, all Knora value properties are object properties,
+whose objects are IRIs, each of which uniquely identifies a value that
+contains metadata and can potentially be edited. The
+<code>knora-base:objectType</code> of a Knora value property such as
+<code>images:description</code> is a Knora value class, in this case
+<code>knora-api:TextValue</code>. Similarly, <code>images:erfassungsdatum</code> has a
+<code>knora-api:objectType</code> of <code>knora-api:DateValue</code>, which has a more
+complex structure than the <code>knora-api:Date</code> datatype shown in the
+previous section. A client can find out more about these value classes
+by requesting the <code>knora-api</code> ontology in the complex schema,
+<code>http://api.knora.org/ontology/knora-api/v2</code>.</p>
+<p>Moreover, additional information is provided in the complex schema, to
+help clients that wish to create or update resources and values. A Knora
+resource class that can be instantiated is identified with the boolean
+properties <code>knora-api:isResourceClass</code> and
+<code>knora-api:canBeInstantiated</code>, to distinguish it from built-in abstract
+classes. Knora resource properties whose values can be edited by clients
+are identified with <code>knora-api:isResourceProperty</code> and
+<code>knora-api:isEditable</code>, to distinguish them from properties whose values
+are maintained automatically by Knora. Link value
+properties are shown along with link properties, because a client that
+updates links will need the IRIs of their link values. The predicate
+<code>salsah-gui:guiOrder</code> tells a GUI client in what order to display the
+properties of a class, and the predicates <code>salsah-gui:guiElement</code> and
+<code>salsah-gui:guiAttribute</code> specify how to configure a GUI element for
+editing the value of a property. For more information on the
+<code>salsah-gui</code> ontology, see <a href="../../../02-dsp-ontologies/salsah-gui/">The SALSAH GUI Ontology</a>.</p>
+<h2 id="ontology-updates">Ontology Updates</h2>
+<p>The ontology update API must ensure that the ontologies it creates are
+valid and consistent, and that existing data is not invalidated by a
+change to an ontology. To make this easier to enforce, the ontology
+update API allows only one entity to be created or modified at a time.
+It is not possible to submit an entire ontology all at once. Each
+update request is a JSON-LD document providing only the information that is
+relevant to the update.</p>
+<p>Moreover, the API enforces the following rules:</p>
+<ul>
+<li>An entity (i.e. a class or property) cannot be referred to until it
+    has been created.</li>
+<li>An entity cannot be modified or deleted if it is used in data,
+    except for changes to its <code>rdfs:label</code> or <code>rdfs:comment</code>.</li>
+<li>An entity cannot be modified if another entity refers to it, with
+    one exception: a <code>knora-api:subjectType</code> or <code>knora-api:objectType</code>
+    that refers to a class will not prevent the class's cardinalities
+    from being modified.</li>
+</ul>
+<p>Because of these rules, some operations have to be done in a specific
+order:</p>
+<ul>
+<li>Properties have to be defined before they can be used in the
+    cardinalities of a class, but a property's <code>knora-api:subjectType</code>
+    cannot refer to a class that does not yet exist. The recommended
+    approach is to first create a class with no cardinalities, then
+    create the properties that it needs, then add cardinalities for
+    those properties to the class.</li>
+<li>To delete a class along with its properties, the client must first
+    remove the cardinalities from the class, then delete the property
+    definitions, then delete the class definition.</li>
+</ul>
+<p>When changing an existing ontology, the client must always supply the
+ontology's <code>knora-api:lastModificationDate</code>, which is returned in the
+response to each update or when <a href="#querying-an-ontology">querying the ontology</a>.
+If user A attempts to update an ontology, but
+user B has already updated it since the last time user A received the
+ontology's <code>knora-api:lastModificationDate</code>, user A's update will be
+rejected with an HTTP 409 Conflict error. This means that it is possible
+for two different users to work concurrently on the same ontology, but
+this is discouraged since it is likely to lead to confusion.</p>
+<p>An ontology can be created or updated only by a system administrator, or
+by a project administrator in the ontology's project.</p>
+<p>Ontology updates always use the complex schema.</p>
+<h3 id="creating-a-new-ontology">Creating a New Ontology</h3>
+<p>An ontology is always created within a particular project.</p>
+<pre><code>HTTP POST to http://host/v2/ontologies
+</code></pre>
+<pre><code class="language-json">{
+  &quot;knora-api:ontologyName&quot; : &quot;ONTOLOGY_NAME&quot;,
+  &quot;knora-api:attachedToProject&quot; : {
+    &quot;@id&quot; : &quot;PROJECT_IRI&quot;
+  },
+  &quot;rdfs:label&quot; : &quot;ONTOLOGY_NAME&quot;,
+  &quot;@context&quot; : {
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;
+  }
+}
+</code></pre>
+<p>The ontology name must follow the rules given in
+<a href="../knora-iris/">Knora IRIs</a>.</p>
+<p>The ontology metadata can have an optional comment given in the request 
+body as:</p>
+<pre><code>&quot;rdfs:comment&quot;: &quot;some comment&quot;,
+</code></pre>
+<p>If the ontology is to be shared by multiple projects, it must be
+created in the default shared ontologies project,
+<code>http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject</code>,
+and the request must have this additional boolean property:</p>
+<pre><code>&quot;knora-api:isShared&quot; : true
+</code></pre>
+<p>See <a href="../../../02-dsp-ontologies/introduction/#shared-ontologies">Shared Ontologies</a> for details about
+shared ontologies.</p>
+<p>A successful response will be a JSON-LD document providing only the
+ontology's metadata, which includes the ontology's IRI. When the client
+makes further requests to create entities (classes and properties) in
+the ontology, it must construct entity IRIs by concatenating the
+ontology IRI, a <code>#</code> character, and the entity name. An entity name must
+be a valid XML <a href="https://www.w3.org/TR/xml-names/#NT-NCName">NCName</a>.</p>
+<h3 id="changing-an-ontologys-metadata">Changing an Ontology's Metadata</h3>
+<p>One can modify an ontology's metadata by updating its <code>rdfs:label</code> or <code>rdfs:comment</code> 
+or both. The example below shows the request for changing the label of an ontology.</p>
+<pre><code>HTTP PUT to http://host/v2/ontologies/metadata
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;rdfs:label&quot; : &quot;NEW_ONTOLOGY_LABEL&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@context&quot; : {
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;
+  }
+}
+</code></pre>
+<p>Similarly, a user can change an ontology's existing comment or add one by specifying 
+the new comment in the request body:</p>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;rdfs:comment&quot; : &quot;NEW_ONTOLOGY_COMMENT&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@context&quot; : {
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;
+  }
+}
+</code></pre>
+<p>The request body can also contain a new label and a new comment for the ontology's metadata. 
+A successful response will be a JSON-LD document providing only the
+ontology's metadata.</p>
+<h3 id="deleting-an-ontologys-comment">Deleting an Ontology's comment</h3>
+<pre><code>HTTP DELETE to http://host/v2/ontologies/comment/ONTOLOGY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+</code></pre>
+<p>The ontology IRI and the ontology's last modification date must be
+URL-encoded.</p>
+<p>A successful response will be a JSON-LD document containing the ontology's
+updated metadata.</p>
+<h3 id="deleting-an-ontology">Deleting an Ontology</h3>
+<p>An ontology can be deleted only if it is not used in data.</p>
+<pre><code>HTTP DELETE to http://host/v2/ontologies/ONTOLOGY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+</code></pre>
+<p>The ontology IRI and the ontology's last modification date must be
+URL-encoded.</p>
+<p>A successful response will be a JSON-LD document containing a
+confirmation message.</p>
+<p>To check whether an ontology can be deleted:</p>
+<pre><code>HTTP GET to http://host/v2/ontologies/candeleteontology/ONTOLOGY_IRI
+</code></pre>
+<p>The response will look like this:</p>
+<pre><code class="language-json">{
+    &quot;knora-api:canDo&quot;: false,
+    &quot;@context&quot;: {
+        &quot;knora-api&quot;: &quot;http://api.knora.org/ontology/knora-api/v2#&quot;
+    }
+}
+</code></pre>
+<h3 id="creating-a-class-without-cardinalities">Creating a Class Without Cardinalities</h3>
+<pre><code>HTTP POST to http://host/v2/ontologies/classes
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [
+    {
+      &quot;@id&quot; : &quot;CLASS_IRI&quot;,
+      &quot;@type&quot; : &quot;owl:Class&quot;,
+      &quot;rdfs:label&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;LABEL&quot;
+      },
+      &quot;rdfs:comment&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;COMMENT&quot;
+      },
+      &quot;rdfs:subClassOf&quot; : {
+        &quot;@id&quot; : &quot;BASE_CLASS_IRI&quot;
+      }
+    }
+  ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>Values for <code>rdfs:label</code> must be submitted in at least
+one language, either as an object or as an array of objects.</p>
+<p>At least one base class must be provided, which can be
+<code>knora-api:Resource</code> or any of its subclasses.</p>
+<p>A successful response will be a JSON-LD document providing the new class
+definition (but not any of the other entities in the ontology).</p>
+<h3 id="creating-a-class-with-cardinalities">Creating a Class With Cardinalities</h3>
+<p>This can work if the new class will have cardinalities for properties
+that have no <code>knora-api:subjectType</code>, or if the new class will be a
+subclass of their <code>knora-api:subjectType</code>.</p>
+<pre><code>HTTP POST to http://host/v2/ontologies/classes
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [
+    {
+      &quot;@id&quot; : &quot;CLASS_IRI&quot;,
+      &quot;@type&quot; : &quot;owl:Class&quot;,
+      &quot;rdfs:label&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;LABEL&quot;
+      },
+      &quot;rdfs:comment&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;COMMENT&quot;
+      },
+      &quot;rdfs:subClassOf&quot; : [ {
+        &quot;@id&quot; : &quot;BASE_CLASS_IRI&quot;
+      }, {
+        &quot;@type&quot;: &quot;owl:Restriction&quot;,
+        &quot;OWL_CARDINALITY_PREDICATE&quot;: &quot;OWL_CARDINALITY_VALUE&quot;,
+        &quot;owl:onProperty&quot;: {
+          &quot;@id&quot; : &quot;PROPERTY_IRI&quot;
+        }
+      } ]
+    }
+  ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p><code>OWL_CARDINALITY_PREDICATE</code> and <code>OWL_CARDINALITY_VALUE</code> must correspond
+to the supported combinations given in
+<a href="../../../02-dsp-ontologies/knora-base/#owl-cardinalities">OWL Cardinalities</a>. (The placeholder
+<code>OWL_CARDINALITY_VALUE</code> is shown here in quotes, but it should be an
+unquoted integer.)</p>
+<p>Values for <code>rdfs:label</code> must be submitted in at least
+one language, either as an object or as an array of objects.</p>
+<p>At least one base class must be provided.</p>
+<p>When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
+<a href="../../../02-dsp-ontologies/knora-base/#links-between-resources">Links Between Resources</a>).</p>
+<p>A successful response will be a JSON-LD document providing the new class
+definition (but not any of the other entities in the ontology).</p>
+<h3 id="changing-the-labels-of-a-class">Changing the Labels of a Class</h3>
+<p>This operation is permitted even if the class is used in data.</p>
+<pre><code>HTTP PUT to http://host/v2/ontologies/classes
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [
+    {
+      &quot;@id&quot; : &quot;CLASS_IRI&quot;,
+      &quot;@type&quot; : &quot;owl:Class&quot;,
+      &quot;rdfs:label&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;LABEL&quot;
+      }
+    }
+  ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>Values for <code>rdfs:label</code> must be submitted in at least one language,
+either as an object or as an array of objects. The submitted labels will
+replace the existing ones.</p>
+<h3 id="changing-the-comments-of-a-class">Changing the Comments of a Class</h3>
+<p>This operation is permitted even if the class is used in data.</p>
+<pre><code>HTTP PUT to http://host/v2/ontologies/classes
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [
+    {
+      &quot;@id&quot; : &quot;CLASS_IRI&quot;,
+      &quot;@type&quot; : &quot;owl:Class&quot;,
+      &quot;rdfs:comment&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;COMMENT&quot;
+      }
+    }
+  ],
+  &quot;@context&quot; : {
+    &quot;rdf&quot; : &quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;,
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>Values for <code>rdfs:comment</code> must be submitted in at least one language,
+either as an object or as an array of objects. The submitted comments
+will replace the existing ones.</p>
+<h3 id="deleting-the-comments-of-a-class">Deleting the Comments of a Class</h3>
+<p>This operation is permitted even if the class is used in data.</p>
+<pre><code>HTTP DELETE to http://host/v2/ontologies/classes/comment/CLASS_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+</code></pre>
+<p>The class IRI and the ontology's last modification date must be URL-encoded.</p>
+<p>All values i.e. all languages for <code>rdfs:comment</code> are deleted.</p>
+<p>A successful response will be a JSON-LD document providing the class definition.</p>
+<h3 id="creating-a-property">Creating a Property</h3>
+<pre><code>HTTP POST to http://host/v2/ontologies/properties
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [
+    {
+      &quot;@id&quot; : &quot;PROPERTY_IRI&quot;,
+      &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+      &quot;knora-api:subjectType&quot; : {
+        &quot;@id&quot; : &quot;SUBJECT_TYPE&quot;
+      },
+      &quot;knora-api:objectType&quot; : {
+        &quot;@id&quot; : &quot;OBJECT_TYPE&quot;
+      },
+      &quot;rdfs:label&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;LABEL&quot;
+      },
+      &quot;rdfs:comment&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;COMMENT&quot;
+      },
+      &quot;rdfs:subPropertyOf&quot; : {
+        &quot;@id&quot; : &quot;BASE_PROPERTY_IRI&quot;
+      },
+      &quot;salsah-gui:guiElement&quot; : {
+        &quot;@id&quot; : &quot;GUI_ELEMENT_IRI&quot;
+      },
+      &quot;salsah-gui:guiAttribute&quot; : [ &quot;GUI_ATTRIBUTE&quot; ]
+    }
+  ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;salsah-gui&quot; : &quot;http://api.knora.org/ontology/salsah-gui/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>Values for <code>rdfs:label</code> must be submitted in at least
+one language, either as an object or as an array of objects.</p>
+<p>At least one base property must be provided, which can be
+<code>knora-api:hasValue</code>, <code>knora-api:hasLinkTo</code>, or any of their
+subproperties, with the exception of file properties (subproperties of
+<code>knora-api:hasFileValue</code>) and link value properties (subproperties of
+<code>knora-api:hasLinkToValue</code>).</p>
+<p>If the property is a link property, the corresponding link value property
+(see <a href="../../../02-dsp-ontologies/knora-base/#links-between-resources">Links Between Resources</a>)
+will automatically be created.</p>
+<p>The property definition must specify its <code>knora-api:objectType</code>. If the
+new property is a subproperty of <code>knora-api:hasValue</code>, its
+<code>knora-api:objectType</code> must be one of the built-in subclasses of
+<code>knora-api:Value</code>, which are defined in the <code>knora-api</code> ontology in the
+complex schema. If the new property is a subproperty of
+<code>knora-base:hasLinkTo</code>, its <code>knora-api:objectType</code> must be a subclass of
+<code>knora-api:Resource</code>.</p>
+<p>To improve consistency checking, it is recommended, but not required, to
+provide <code>knora-api:subjectType</code>, which must be a subclass of
+<code>knora-api:Resource</code>.</p>
+<p>The predicates <code>salsah-gui:guiElement</code> and <code>salsah-gui:guiAttribute</code> are
+optional. If provided, the object of <code>guiElement</code> must be one of the OWL
+named individuals defined in
+<a href="../../../02-dsp-ontologies/salsah-gui/#individuals">The SALSAH GUI Ontology</a>. Some GUI elements
+take required or optional attributes, which are provided as objects of
+<code>salsah-gui:guiAttribute</code>; see <a href="../../../02-dsp-ontologies/salsah-gui/">The SALSAH GUI Ontology</a>
+for details.</p>
+<p>A successful response will be a JSON-LD document providing the new
+property definition (but not any of the other entities in the ontology).</p>
+<h3 id="changing-the-labels-of-a-property">Changing the Labels of a Property</h3>
+<p>This operation is permitted even if the property is used in data.</p>
+<pre><code>HTTP PUT to http://host/v2/ontologies/properties
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [
+    {
+      &quot;@id&quot; : &quot;PROPERTY_IRI&quot;,
+      &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+      &quot;rdfs:label&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;LABEL&quot;
+      }
+    }
+  ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>Values for <code>rdfs:label</code> must be submitted in at least one language,
+either as an object or as an array of objects.</p>
+<h3 id="changing-the-comments-of-a-property">Changing the Comments of a Property</h3>
+<p>This operation is permitted even if the property is used in data.</p>
+<pre><code>HTTP PUT to http://host/v2/ontologies/properties
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [
+    {
+      &quot;@id&quot; : &quot;PROPERTY_IRI&quot;,
+      &quot;@type&quot; : &quot;owl:ObjectProperty&quot;,
+      &quot;rdfs:comment&quot; : {
+        &quot;@language&quot; : &quot;LANGUAGE_CODE&quot;,
+        &quot;@value&quot; : &quot;COMMENT&quot;
+      }
+    }
+  ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>Values for <code>rdfs:comment</code> must be submitted in at least one language,
+either as an object or as an array of objects.</p>
+<h3 id="deleting-the-comments-of-a-property">Deleting the Comments of a Property</h3>
+<p>This operation is permitted even if the property is used in data.</p>
+<pre><code>HTTP DELETE to http://host/v2/ontologies/properties/comment/PROPERTY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+</code></pre>
+<p>The property IRI and the ontology's last modification date must be URL-encoded.</p>
+<p>All values i.e. all languages for <code>rdfs:comment</code> are deleted.</p>
+<p>If the property is a link property, the <code>rdfs:comment</code> of its corresponding link value property will automatically be deleted.</p>
+<p>A successful response will be a JSON-LD document providing the property definition.</p>
+<h3 id="changing-the-gui-element-and-gui-attributes-of-a-property">Changing the GUI Element and GUI Attributes of a Property</h3>
+<p>This operation is permitted even if the property is used in data.</p>
+<pre><code>HTTP PUT to http://host/v2/ontologies/properties/guielement
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot;: &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot;: &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot;: {
+    &quot;@type&quot;: &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot;: &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot;: [
+    {
+      &quot;@id&quot;: &quot;PROPERTY_IRI&quot;,
+      &quot;@type&quot;: &quot;owl:ObjectProperty&quot;,
+      &quot;salsah-gui:guiElement&quot;: {
+        &quot;@id&quot;: &quot;salsah-gui:Textarea&quot;
+      },
+      &quot;salsah-gui:guiAttribute&quot;: [
+        &quot;cols=80&quot;,
+        &quot;rows=24&quot;
+      ]
+    }
+  ],
+  &quot;@context&quot;: {
+    &quot;rdf&quot;: &quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;,
+    &quot;knora-api&quot;: &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;salsah-gui&quot;: &quot;http://api.knora.org/ontology/salsah-gui/v2#&quot;,
+    &quot;owl&quot;: &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot;: &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot;: &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>To remove the values of <code>salsah-gui:guiElement</code> and <code>salsah-gui:guiAttribute</code> from
+the property definition, submit the request without those predicates.</p>
+<h3 id="adding-cardinalities-to-a-class">Adding Cardinalities to a Class</h3>
+<p>If the class (or any of its sub-classes) is used in data, it is not allowed to add cardinalities <code>owl:minCardinality</code> greater than 0 or <code>owl:cardinality 1</code> to the class.</p>
+<pre><code>HTTP POST to http://host/v2/ontologies/cardinalities
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [ 
+    {
+      &quot;@id&quot; : &quot;CLASS_IRI&quot;,
+      &quot;@type&quot; : &quot;owl:Class&quot;,
+      &quot;rdfs:subClassOf&quot; : {
+        &quot;@type&quot;: &quot;owl:Restriction&quot;,
+        &quot;OWL_CARDINALITY_PREDICATE&quot;: &quot;OWL_CARDINALITY_VALUE&quot;,
+        &quot;owl:onProperty&quot;: {
+          &quot;@id&quot; : &quot;PROPERTY_IRI&quot;
+        }
+      }
+    }
+  ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>At least one cardinality must be submitted.</p>
+<p><code>OWL_CARDINALITY_PREDICATE</code> and <code>OWL_CARDINALITY_VALUE</code> must correspond
+to the supported combinations given in
+<a href="../../../02-dsp-ontologies/knora-base/#owl-cardinalities">OWL Cardinalities</a>. (The placeholder
+<code>OWL_CARDINALITY_VALUE</code> is shown here in quotes, but it should be an
+unquoted integer.)</p>
+<p>When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
+<a href="../../../02-dsp-ontologies/knora-base/#links-between-resources">Links Between Resources</a>).</p>
+<p>A successful response will be a JSON-LD document providing the new class
+definition (but not any of the other entities in the ontology).</p>
+<h3 id="replacing-the-cardinalities-of-a-class">Replacing the Cardinalities of a Class</h3>
+<p>This removes all the cardinalities from the class and replaces them with
+the submitted cardinalities. If no cardinalities are submitted (i.e. the
+request contains no <code>rdfs:subClassOf</code>), the class is left with no
+cardinalities.</p>
+<p>This operation is not permitted if the class is used in data, or if it
+has a subclass.</p>
+<pre><code>HTTP PUT to http://host/v2/ontologies/cardinalities
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [ {
+    &quot;@id&quot; : &quot;CLASS_IRI&quot;,
+    &quot;@type&quot; : &quot;owl:Class&quot;,
+    &quot;rdfs:subClassOf&quot; : {
+      &quot;@type&quot;: &quot;owl:Restriction&quot;,
+      &quot;OWL_CARDINALITY_PREDICATE&quot;: &quot;OWL_CARDINALITY_VALUE&quot;,
+      &quot;owl:onProperty&quot;: {
+        &quot;@id&quot; : &quot;PROPERTY_IRI&quot;
+      }
+    }
+  } ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p><code>OWL_CARDINALITY_PREDICATE</code> and <code>OWL_CARDINALITY_VALUE</code> must correspond
+to the supported combinations given in
+<a href="../../../02-dsp-ontologies/knora-base/#owl-cardinalities">OWL Cardinalities</a>. (The placeholder
+<code>OWL_CARDINALITY_VALUE</code> is shown here in quotes, but it should be an
+unquoted integer.)</p>
+<p>When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
+<a href="../../../02-dsp-ontologies/knora-base/#links-between-resources">Links Between Resources</a>).</p>
+<p>A successful response will be a JSON-LD document providing the new class
+definition (but not any of the other entities in the ontology).</p>
+<p>To check whether a class's cardinalities can be replaced:</p>
+<pre><code>HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI
+</code></pre>
+<p>The response will look like this:</p>
+<pre><code class="language-json">{
+    &quot;knora-api:canDo&quot;: false,
+    &quot;@context&quot;: {
+        &quot;knora-api&quot;: &quot;http://api.knora.org/ontology/knora-api/v2#&quot;
+    }
+}
+</code></pre>
+<h3 id="delete-a-single-cardinality-from-a-class">Delete a single cardinality from a class</h3>
+<p>If a class is used in data, it is only allowed to delete a cardinality, if the
+property a cardinality refers to, is not used inside the data. Also, the property
+isn't allowed to be used inside the data in any subclasses of this class.</p>
+<pre><code>HTTP PATCH to http://host/v2/ontologies/cardinalities
+</code></pre>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [ {
+    &quot;@id&quot; : &quot;CLASS_IRI&quot;,
+    &quot;@type&quot; : &quot;owl:Class&quot;,
+    &quot;rdfs:subClassOf&quot; : {
+      &quot;@type&quot;: &quot;owl:Restriction&quot;,
+      &quot;OWL_CARDINALITY_PREDICATE&quot;: &quot;OWL_CARDINALITY_VALUE&quot;,
+      &quot;owl:onProperty&quot;: {
+        &quot;@id&quot; : &quot;PROPERTY_IRI&quot;
+      }
+    }
+  } ],
+  &quot;@context&quot; : {
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p><code>OWL_CARDINALITY_PREDICATE</code> and <code>OWL_CARDINALITY_VALUE</code> must correspond
+to the supported combinations given in
+<a href="../../../02-dsp-ontologies/knora-base/#owl-cardinalities">OWL Cardinalities</a>. (The placeholder
+<code>OWL_CARDINALITY_VALUE</code> is shown here in quotes, but it should be an
+unquoted integer.)</p>
+<p>When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
+<a href="../../../02-dsp-ontologies/knora-base/#links-between-resources">Links Between Resources</a>).</p>
+<p>A successful response will be a JSON-LD document providing the new class
+definition (but not any of the other entities in the ontology).</p>
+<p>To check whether a class's cardinality can be deleted:</p>
+<pre><code>HTTP POST to http://host/v2/ontologies/candeletecardinalities
+</code></pre>
+<p>The response will look like this:</p>
+<pre><code class="language-json">{
+    &quot;knora-api:canDo&quot;: false,
+    &quot;@context&quot;: {
+        &quot;knora-api&quot;: &quot;http://api.knora.org/ontology/knora-api/v2#&quot;
+    }
+}
+</code></pre>
+<h3 id="changing-the-gui-order-of-cardinalities">Changing the GUI Order of Cardinalities</h3>
+<p>To change the GUI order of one or more cardinalities in a class:</p>
+<pre><code>HTTP PUT to http://host/v2/ontologies/guiorder
+</code></pre>
+<p>This can be done even if the class is used in data.</p>
+<p>The request body includes the cardinalities whose GUI order should be changed,
+using the predicate <code>salsah-gui:guiOrder</code>, whose object is an integer:</p>
+<pre><code class="language-json">{
+  &quot;@id&quot; : &quot;ONTOLOGY_IRI&quot;,
+  &quot;@type&quot; : &quot;owl:Ontology&quot;,
+  &quot;knora-api:lastModificationDate&quot; : {
+    &quot;@type&quot; : &quot;xsd:dateTimeStamp&quot;,
+    &quot;@value&quot; : &quot;ONTOLOGY_LAST_MODIFICATION_DATE&quot;
+  },
+  &quot;@graph&quot; : [ {
+    &quot;@id&quot; : &quot;CLASS_IRI&quot;,
+    &quot;@type&quot; : &quot;owl:Class&quot;,
+    &quot;rdfs:subClassOf&quot; : {
+      &quot;@type&quot;: &quot;owl:Restriction&quot;,
+      &quot;OWL_CARDINALITY_PREDICATE&quot;: &quot;OWL_CARDINALITY_VALUE&quot;,
+      &quot;owl:onProperty&quot;: {
+        &quot;@id&quot; : &quot;PROPERTY_IRI&quot;
+      },
+      &quot;salsah-gui:guiOrder&quot;: &quot;GUI_ORDER_VALUE&quot;
+    }
+  } ],
+  &quot;@context&quot; : {
+    &quot;rdf&quot; : &quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;,
+    &quot;knora-api&quot; : &quot;http://api.knora.org/ontology/knora-api/v2#&quot;,
+    &quot;salsah-gui&quot; : &quot;http://api.knora.org/ontology/salsah-gui/v2#&quot;,
+    &quot;owl&quot; : &quot;http://www.w3.org/2002/07/owl#&quot;,
+    &quot;rdfs&quot; : &quot;http://www.w3.org/2000/01/rdf-schema#&quot;,
+    &quot;xsd&quot; : &quot;http://www.w3.org/2001/XMLSchema#&quot;
+  }
+}
+</code></pre>
+<p>Only the cardinalities whose GUI order is to be changed need to be included
+in the request. The <code>OWL_CARDINALITY_PREDICATE</code> and <code>OWL_CARDINALITY_VALUE</code>
+are ignored; only the <code>GUI_ORDER_VALUE</code> is changed.</p>
+<h3 id="deleting-a-property">Deleting a Property</h3>
+<p>A property can be deleted only if no other ontology entity refers to it,
+and if it is not used in data.</p>
+<pre><code>HTTP DELETE to http://host/v2/ontologies/properties/PROPERTY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+</code></pre>
+<p>The property IRI and the ontology's last modification date must be
+URL-encoded.</p>
+<p>If the property is a link property, the corresponding link value property
+(see <a href="../../../02-dsp-ontologies/knora-base/#links-between-resources">Links Between Resources</a>)
+will automatically be deleted.</p>
+<p>A successful response will be a JSON-LD document providing only the
+ontology's metadata.</p>
+<p>To check whether a property can be deleted:</p>
+<pre><code>HTTP GET to http://host/v2/ontologies/candeleteproperty/PROPERTY_IRI
+</code></pre>
+<p>The response will look like this:</p>
+<pre><code class="language-json">{
+    &quot;knora-api:canDo&quot;: false,
+    &quot;@context&quot;: {
+        &quot;knora-api&quot;: &quot;http://api.knora.org/ontology/knora-api/v2#&quot;
+    }
+}
+</code></pre>
+<h3 id="deleting-a-class">Deleting a Class</h3>
+<p>A class can be deleted only if no other ontology entity refers to it,
+and if it is not used in data.</p>
+<pre><code>HTTP DELETE to http://host/v2/ontologies/classes/CLASS_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+</code></pre>
+<p>The class IRI and the ontology's last modification date must be
+URL-encoded.</p>
+<p>A successful response will be a JSON-LD document providing only the
+ontology's metadata.</p>
+<p>To check whether a class can be deleted:</p>
+<pre><code>HTTP GET to http://host/v2/ontologies/candeleteclass/CLASS_IRI
+</code></pre>
+<p>The response will look like this:</p>
+<pre><code class="language-json">{
+    &quot;knora-api:canDo&quot;: false,
+    &quot;@context&quot;: {
+        &quot;knora-api&quot;: &quot;http://api.knora.org/ontology/knora-api/v2#&quot;
+    }
+}
+</code></pre>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      2022-11-24
+    
+  </small>
+</div>
+
+
+
+
+              
+            </article>
+            
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../editing-values/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Creating and Editing Values" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Creating and Editing Values
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../tei-xml/" class="md-footer__link md-footer__link--next" aria-label="Next: TEI/XML" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              TEI/XML
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2021 - 2022 <a href='https://dasch.swiss' target='_blank'>Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.sections"], "search": "../../../assets/javascripts/workers/search.ecf98df9.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.2ab50757.min.js"></script>
+      
+    
+  </body>
+</html>

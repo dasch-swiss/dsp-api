@@ -9,34 +9,8 @@ Running DSP-API locally or on a server requires [Docker](https://www.docker.com)
 can be freely downloaded. Please follow the instructions for installing
 [Docker Desktop](https://www.docker.com/products/docker-desktop).
 
-Additional software:
-
-- [Apple Xcode](https://itunes.apple.com/us/app/xcode/id497799835)
-- git
-- expect
-- sbt
-- java 11
-
-These can be easily installed on macOS using [Homebrew](https://brew.sh):
-
-```bash
-$ brew install git
-$ brew install expect
-$ brew install sbt
-```
-
-To install Adoptopenjdk Java 11 with [Homebrew](https://brew.sh):
-
-```bash
-$ brew tap AdoptOpenJDK/openjdk
-$ brew cask install AdoptOpenJDK/openjdk/adoptopenjdk11
-```
-
-To pin the version of Java, please add this environment variable to you startup script (bashrc, etc.):
-
-```
-export JAVA_HOME=`/usr/libexec/java_home -v 11`
-```
+Please visit the GitHub repository of [DSP-API](https://github.com/dasch-swiss/dsp-api) to 
+get the latest information about how to install and run DSP-API.
 
 ## Choosing a Triplestore
 
@@ -49,8 +23,6 @@ proprietary options.
 DSP-API is designed to work with any standards-compliant
 triplestore. It is primarily tested with
 [Apache Jena Fuseki](https://jena.apache.org), an open source triplestore.
-
-Other triplestores are planned.
 
 ## Running the DSP-Stack
 

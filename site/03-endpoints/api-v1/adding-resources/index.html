@@ -1,0 +1,3026 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../../assets/icons/dasch-favicon.ico">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.4.3">
+    
+    
+      
+        <title>Adding Resources - DSP-API</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.6b80c2a2.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.cbb835fc.min.css">
+        
+          
+          
+          <meta name="theme-color" content="#7e56c2">
+        
+      
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/style/theme.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="deep-purple" data-md-color-accent="deep-purple">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adding-resources" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="DSP-API" class="md-header__button md-logo" aria-label="DSP-API" data-md-component="logo">
+      
+  <img src="../../../assets/icons/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DSP-API
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Adding Resources
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dasch-swiss/dsp-api" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/dsp-api
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../01-introduction/what-is-dsp/" class="md-tabs__link">
+        Introduction
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../02-dsp-ontologies/introduction/" class="md-tabs__link">
+        DSP Ontologies
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link md-tabs__link--active">
+        The DSP Endpoints
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../04-publishing-deployment/publishing/" class="md-tabs__link">
+        Publishing and Deployment
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    
+
+  
+  
+  
+    
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../05-internals/design/adr/0001-record-architecture-decisions/" class="md-tabs__link">
+        DSP Internals
+      </a>
+    </li>
+  
+
+  
+
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../06-sipi/" class="md-tabs__link">
+        SIPI
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../07-lucene/lucene-query-parser-syntax/" class="md-tabs__link">
+        Lucene
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../../../08-faq/" class="md-tabs__link">
+      Frequently Asked Questions
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../09-release-notes/" class="md-tabs__link">
+        Release Notes
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="DSP-API" class="md-nav__button md-logo" aria-label="DSP-API" data-md-component="logo">
+      
+  <img src="../../../assets/icons/dasch-icon-white.svg" alt="logo">
+
+    </a>
+    DSP-API
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dasch-swiss/dsp-api" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    dasch-swiss/dsp-api
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          Introduction
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Introduction" data-md-level="1">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Introduction
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/what-is-dsp/" class="md-nav__link">
+        What is DSP?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/file-formats/" class="md-nav__link">
+        File Formats in DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/standoff-rdf/" class="md-nav__link">
+        Standoff/RDF Text Markup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-introduction/example-project/" class="md-nav__link">
+        An Example Project
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          DSP Ontologies
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP Ontologies" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP Ontologies
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/knora-base/" class="md-nav__link">
+        The Knora Base Ontology
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-dsp-ontologies/salsah-gui/" class="md-nav__link">
+        The SALSAH GUI Ontology
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          The DSP Endpoints
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="The DSP Endpoints" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          The DSP Endpoints
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2">
+          DSP-API V1
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V1" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V1
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../xml-to-standoff-mapping/" class="md-nav__link">
+        XML to Standoff Mapping
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Adding Resources
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Adding Resources
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#adding-resources-without-image-files" class="md-nav__link">
+    Adding Resources Without Image Files
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-resources-with-image-files" class="md-nav__link">
+    Adding Resources with Image Files
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-to-a-resource-creation" class="md-nav__link">
+    Response to a Resource Creation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#changing-a-resources-label" class="md-nav__link">
+    Changing a Resource's Label
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bulk-import" class="md-nav__link">
+    Bulk Import
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Import">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bulk-import-example" class="md-nav__link">
+    Bulk Import Example
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Import Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-get-xml-schemas" class="md-nav__link">
+    1. Get XML Schemas
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-upload-files-to-sipi" class="md-nav__link">
+    2. Upload Files to Sipi
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-generate-xml-import-document" class="md-nav__link">
+    3. Generate XML Import Document
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-validate-xml-import-document" class="md-nav__link">
+    4. Validate XML Import Document
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-submit-xml-import-document-to-knora" class="md-nav__link">
+    5. Submit XML Import Document to Knora
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-import-with-links-to-existing-resources" class="md-nav__link">
+    Bulk Import with Links to Existing Resources
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-import-with-image-files" class="md-nav__link">
+    Bulk Import with Image Files
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-values/" class="md-nav__link">
+        Reading Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-values/" class="md-nav__link">
+        Adding Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changing-values/" class="md-nav__link">
+        Changing Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../delete-resources-and-values/" class="md-nav__link">
+        Deleting Resources and Values
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3">
+          DSP-API V2
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V2" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V2
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/knora-iris/" class="md-nav__link">
+        Knora IRIs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/reading-and-searching-resources/" class="md-nav__link">
+        Reading and Searching Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/reading-user-permissions/" class="md-nav__link">
+        Reading the User's Permissions on Resources and Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/getting-lists/" class="md-nav__link">
+        Getting Lists
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/xml-to-standoff-mapping/" class="md-nav__link">
+        XML to Standoff Mapping
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/query-language/" class="md-nav__link">
+        Gravsearch - Virtual Graph Search
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/editing-resources/" class="md-nav__link">
+        Creating and Editing Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/editing-values/" class="md-nav__link">
+        Creating and Editing Values
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/ontology-information/" class="md-nav__link">
+        Querying, Creating, and Updating Ontologies
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/tei-xml/" class="md-nav__link">
+        TEI/XML
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-v2/permalinks/" class="md-nav__link">
+        Permalinks
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_4" type="checkbox" id="__nav_3_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_4">
+          Admin API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Admin API" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_4">
+          <span class="md-nav__icon md-icon"></span>
+          Admin API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/users/" class="md-nav__link">
+        Users Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/projects/" class="md-nav__link">
+        Projects Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/groups/" class="md-nav__link">
+        Groups Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/lists/" class="md-nav__link">
+        Lists Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/permissions/" class="md-nav__link">
+        Permissions Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-admin/stores/" class="md-nav__link">
+        Stores Endpoint
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_5" type="checkbox" id="__nav_3_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_5">
+          Util API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Util API" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_5">
+          <span class="md-nav__icon md-icon"></span>
+          Util API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-util/health/" class="md-nav__link">
+        Health
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-util/version/" class="md-nav__link">
+        Version
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Publishing and Deployment
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Publishing and Deployment" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Publishing and Deployment
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/publishing/" class="md-nav__link">
+        Publishing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/getting-started/" class="md-nav__link">
+        Getting Started with DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/configuration/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-publishing-deployment/updates/" class="md-nav__link">
+        Updating Repositories when Upgrading DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          DSP Internals
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP Internals" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          DSP Internals
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1" type="checkbox" id="__nav_5_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1">
+          Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Design" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_1">
+          <span class="md-nav__icon md-icon"></span>
+          Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_1" type="checkbox" id="__nav_5_1_1" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_1">
+          Architectural Decision Records (ADR)
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Architectural Decision Records (ADR)" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_1">
+          <span class="md-nav__icon md-icon"></span>
+          Architectural Decision Records (ADR)
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0001-record-architecture-decisions/" class="md-nav__link">
+        Record Architectural Decisions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0002-change-cache-service-manager-from-akka-actor-to-zlayer/" class="md-nav__link">
+        Change Cache Service Manager from Akka-Actor to ZLayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer/" class="md-nav__link">
+        Change IIIF Service Manager and Sipi implementation to zlayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer/" class="md-nav__link">
+        Change Triplestore Service Manager and Fuseki implementation to ZLayer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/adr/0005-change-respondermanager-to-a-simple-case-class/" class="md-nav__link">
+        Change ResponderManager to a simple case class
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_2" type="checkbox" id="__nav_5_1_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_2">
+          DSP-API Design Principles
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API Design Principles" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_2">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API Design Principles
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/design-overview/" class="md-nav__link">
+        Design Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/futures-with-akka/" class="md-nav__link">
+        Futures with Akka
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/http-module/" class="md-nav__link">
+        HTTP Module
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/store-module/" class="md-nav__link">
+        Store Module
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/triplestore-updates/" class="md-nav__link">
+        Triplestore Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/consistency-checking/" class="md-nav__link">
+        Consistency Checking
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/authentication/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/principles/rdf-api/" class="md-nav__link">
+        RDF Processing API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_3" type="checkbox" id="__nav_5_1_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_3">
+          DSP-API V1 Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V1 Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_3">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V1 Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v1/how-to-add-a-route/" class="md-nav__link">
+        How to Add an API v1 Route
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v1/json/" class="md-nav__link">
+        JSON in API v1
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_4" type="checkbox" id="__nav_5_1_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_4">
+          DSP-API V2 Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="DSP-API V2 Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_4">
+          <span class="md-nav__icon md-icon"></span>
+          DSP-API V2 Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/overview/" class="md-nav__link">
+        API v2 Design Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ontology-schemas/" class="md-nav__link">
+        Ontology Schemas
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/smart-iris/" class="md-nav__link">
+        Smart IRIs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/content-wrappers/" class="md-nav__link">
+        Content Wrappers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/how-to-add-a-route/" class="md-nav__link">
+        How to Add an API v2 Route
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/json-ld/" class="md-nav__link">
+        JSON-LD Parsing and Formatting
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ontology-management/" class="md-nav__link">
+        Ontology Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/sipi/" class="md-nav__link">
+        DSP-API and Sipi
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/gravsearch/" class="md-nav__link">
+        Gravsearch Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/standoff/" class="md-nav__link">
+        Standoff Markup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/ark/" class="md-nav__link">
+        Archival Resource Key (ARK)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-v2/query-design/" class="md-nav__link">
+        SPARQL Query Design
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_1_5" type="checkbox" id="__nav_5_1_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_5">
+          Admin API Design
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Admin API Design" data-md-level="3">
+        <label class="md-nav__title" for="__nav_5_1_5">
+          <span class="md-nav__icon md-icon"></span>
+          Admin API Design
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/design/api-admin/administration/" class="md-nav__link">
+        Administration
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_2" type="checkbox" id="__nav_5_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5_2">
+          Development
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Development" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_2">
+          <span class="md-nav__icon md-icon"></span>
+          Development
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/building-and-running/" class="md-nav__link">
+        Build and Running
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/vscode-config/" class="md-nav__link">
+        Setup Visual Studio Code for development of DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/testing/" class="md-nav__link">
+        Testing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/docker-cheat-sheet/" class="md-nav__link">
+        Docker Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/monitoring/" class="md-nav__link">
+        Monitoring DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/docker-compose/" class="md-nav__link">
+        Starting the DSP-Stack inside Docker Container
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/updating-repositories/" class="md-nav__link">
+        Updating Repositories
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/generating-client-test-data/" class="md-nav__link">
+        Generating Client Test Data
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-internals/development/third-party/" class="md-nav__link">
+        Third-Party Dependencies
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          SIPI
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="SIPI" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          SIPI
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/setup-sipi-for-dsp-api/" class="md-nav__link">
+        Setting Up Sipi for DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-sipi/sipi-and-dsp-api/" class="md-nav__link">
+        Interaction between Sipi and DSP-API
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7">
+          Lucene
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Lucene" data-md-level="1">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Lucene
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../07-lucene/lucene-query-parser-syntax/" class="md-nav__link">
+        Lucene Query Parser Syntax
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../08-faq/" class="md-nav__link">
+        Frequently Asked Questions
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_9">
+          Release Notes
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Release Notes" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Release Notes
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../09-release-notes/" class="md-nav__link">
+        Changelog
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#adding-resources-without-image-files" class="md-nav__link">
+    Adding Resources Without Image Files
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-resources-with-image-files" class="md-nav__link">
+    Adding Resources with Image Files
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-to-a-resource-creation" class="md-nav__link">
+    Response to a Resource Creation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#changing-a-resources-label" class="md-nav__link">
+    Changing a Resource's Label
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bulk-import" class="md-nav__link">
+    Bulk Import
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Import">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bulk-import-example" class="md-nav__link">
+    Bulk Import Example
+  </a>
+  
+    <nav class="md-nav" aria-label="Bulk Import Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-get-xml-schemas" class="md-nav__link">
+    1. Get XML Schemas
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-upload-files-to-sipi" class="md-nav__link">
+    2. Upload Files to Sipi
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-generate-xml-import-document" class="md-nav__link">
+    3. Generate XML Import Document
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-validate-xml-import-document" class="md-nav__link">
+    4. Validate XML Import Document
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-submit-xml-import-document-to-knora" class="md-nav__link">
+    5. Submit XML Import Document to Knora
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-import-with-links-to-existing-resources" class="md-nav__link">
+    Bulk Import with Links to Existing Resources
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bulk-import-with-image-files" class="md-nav__link">
+    Bulk Import with Image Files
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+  <a href="https://github.com/dasch-swiss/dsp-api/blob/main/docs/03-endpoints/api-v1/adding-resources.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+<!---
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+-->
+
+<h1 id="adding-resources">Adding Resources</h1>
+<p>To create a resource, the HTTP method <code>POST</code> has to be used.
+The request has to be sent to the Knora server using the <code>resources</code>
+path segment:</p>
+<pre><code>HTTP POST to http://host/v1/resources
+</code></pre>
+<p>Unlike in the case of GET requests, the request body consists of JSON
+describing the resource to be created.</p>
+<p>Creating resources requires authentication since only known users may
+add resources.</p>
+<h2 id="adding-resources-without-image-files">Adding Resources Without Image Files</h2>
+<p>The format of the JSON used to create a resource without an image file is
+described in the TypeScript interface
+<code>createResourceWithoutRepresentationRequest</code> in module
+<code>createResourceFormats</code>. It requires the IRI of the resource class the
+new resource belongs to, a label describing the new resource, the IRI of
+the project the new resource belongs to, and the properties to be
+assigned to the new resource.</p>
+<p>The request header's content type has to be set to <code>application/json</code>.</p>
+<h2 id="adding-resources-with-image-files">Adding Resources with Image Files</h2>
+<p>The first step is to upload an image file to Sipi, using a
+<code>multipart/form-data</code> request, where <code>sipihost</code> represents the host and
+port on which Sipi is running:</p>
+<pre><code>HTTP POST to http://sipihost/upload?token=TOKEN
+</code></pre>
+<p>The <code>TOKEN</code> is the <code>sid</code> returned by Knora in response to the
+client's login request (see <a href="../authentication/">Authentication</a>).
+The request must contain a body part providing the file as well as a parameter
+<code>filename</code>, providing the file's original filename, which both Knora and Sipi will
+store; these filenames can be descriptive and need not be unique.</p>
+<p>Sipi will then convert the uploaded image file to JPEG 2000 format and store
+it in a temporary location. If this is successful, it will return a JSON
+response that looks something like this:</p>
+<pre><code class="language-json">{
+  &quot;uploadedFiles&quot;: [{
+    &quot;originalFilename&quot;: &quot;manuscript-1234-page-1.tiff&quot;,
+    &quot;internalFilename&quot;: &quot;3UIsXH9bP0j-BV0D4sN51Xz.jp2&quot;,
+    &quot;temporaryBaseIIIFUrl&quot;: &quot;http://sipihost/tmp&quot;
+  }]
+}
+</code></pre>
+<p>This provides:</p>
+<ul>
+<li>the <code>originalFilename</code>, which we submitted when uploading the file</li>
+<li>the unique <code>internalFilename</code> that Sipi has randomly generated for the file</li>
+<li>the <code>temporaryBaseIIIFUrl</code>, which we can use to construct a IIIF URL for
+  previewing the file</li>
+</ul>
+<p>The client may now wish to get a thumbnail of the uploaded image, to allow
+the user to confirm that the correct files have been uploaded. This can be done
+by adding the filename and IIIF parameters to <code>temporaryBaseIIIFUrl</code>. For example, to get
+a JPG thumbnail image whose width and height are at most 128 pixels wide, you would request
+<code>http://sipihost/tmp/3UIsXH9bP0j-BV0D4sN51Xz.jp2/full/!128,128/0/default.jpg</code>.</p>
+<p>The request to Knora works similarly to
+<a href="#adding-resources-without-image-files">Adding Resources Without Image Files</a>,
+with the addition of <code>file</code>, whose value is the <code>internalFilename</code> that Sipi returned.
+See the TypeScript interface <code>createResourceWithRepresentationRequest</code> in
+module <code>createResourceFormats</code> for details. The request header's content type must be
+set to <code>application/json</code>.</p>
+<h2 id="response-to-a-resource-creation">Response to a Resource Creation</h2>
+<p>When a resource has been successfully created, Knora sends back a JSON
+containing the new resource's IRI (<code>res_id</code>) and its properties. The
+resource IRI identifies the resource and can be used to perform future
+DSP-API V1 operations.</p>
+<p>The JSON format of the response is described in the TypeScript interface
+<code>createResourceResponse</code> in module <code>createResourceFormats</code>.</p>
+<h2 id="changing-a-resources-label">Changing a Resource's Label</h2>
+<p>A resource's label can be changed by making a PUT request to the path
+segments <code>resources/label</code>. The resource's IRI has to be provided in the
+URL (as its last segment). The new label has to submitted as JSON in the
+HTTP request's body.</p>
+<pre><code>HTTP PUT to http://host/v1/resources/label/resourceIRI
+</code></pre>
+<p>The JSON format of the request is described in the TypeScript interface
+<code>changeResourceLabelRequest</code> in module <code>createResourceFormats</code>. The
+response is described in the TypeScript interface
+<code>changeResourceLabelResponse</code> in module <code>createResourceFormats</code>.</p>
+<h2 id="bulk-import">Bulk Import</h2>
+<p>If you have a large amount of data to import into Knora, it can be more
+convenient to use the bulk import feature than to create resources one
+by one. In a bulk import operation, you submit an XML document to Knora,
+describing multiple resources to be created. This is especially useful
+if the resources to be created have links to one another. Knora checks
+the entire request for consistency as as a whole, and performs the
+update in a single database transaction.</p>
+<p>Only system or project administrators may use the bulk import.</p>
+<p>The procedure for using this feature is as follows
+(see the <a href="#bulk-import-example">example below</a>).</p>
+<ol>
+<li>
+<p>Make an HTTP GET request to Knora to <a href="#1-get-xml-schemas">get XML schemas</a> describing
+   the XML to be provided for the import.</p>
+</li>
+<li>
+<p>If you are importing image files, <a href="#2-upload-files-to-sipi">upload files to Sipi</a>.</p>
+</li>
+<li>
+<p><a href="#3-generate-xml-import-document">Generate an XML import document</a> representing the
+   data to be imported, following the Knora import schemas that were generated in step 1.
+   You will probably want to write a script to do this. Knora is not involved in this step.
+   If you are also importing image files, this XML document needs to
+   <a href="#bulk-import-with-image-files">contain the filenames</a> that Sipi returned
+   for the files you uploaded in step 2.</p>
+</li>
+<li>
+<p><a href="#4-validate-xml-import-document">Validate your XML import document</a>, using an XML schema validator such as
+   <a href="http://xerces.apache.org">Apache Xerces</a> or <a href="http://www.saxonica.com">Saxon</a>, or an
+   XML development environment such as <a href="https://www.oxygenxml.com">Oxygen</a>. This will
+   help ensure that the data you submit to Knora is correct. Knora is not involved in this step.</p>
+</li>
+<li>
+<p><a href="#5-submit-xml-import-document-to-knora">Submit the XML import document to Knora</a>.</p>
+</li>
+</ol>
+<p>In this procedure, the person responsible for generating the XML import
+data need not be familiar with RDF or with the ontologies involved.</p>
+<p>When Knora receives an XML import, it validates it first using the
+relevant XML schemas, and then using the same internal checks that it
+performs when creating any resource.</p>
+<p>The details of the XML import format are illustrated in the following
+examples.</p>
+<h3 id="bulk-import-example">Bulk Import Example</h3>
+<p>Suppose we have a project with existing data (but no image files),
+which we want to import into Knora. We have created an
+ontology called <code>http://www.knora.org/ontology/0801/biblio</code> for the
+project, and this ontology also uses definitions from another ontology,
+called <code>http://www.knora.org/ontology/0801/beol</code>.</p>
+<h4 id="1-get-xml-schemas">1. Get XML Schemas</h4>
+<p>To get XML schemas for an import, we use the following route, specifying
+the (URL-encoded) IRI of our project's main ontology (in this case
+<code>http://www.knora.org/ontology/0801/biblio</code>):</p>
+<pre><code>HTTP GET to http://host/v1/resources/xmlimportschemas/ontologyIRI
+</code></pre>
+<p>In our example, the URL could be:</p>
+<pre><code>http://localhost:3333/v1/resources/xmlimportschemas/http%3A%2F%2Fwww.knora.org%2Fontology%2F0801%2Fbiblio
+</code></pre>
+<p>This returns a Zip archive called <code>p0801-biblio-xml-schemas.zip</code>,
+containing three files:</p>
+<ul>
+<li>
+<p><code>p0801-biblio.xsd</code>: The schema for our main ontology.</p>
+</li>
+<li>
+<p><code>p0801-beol.xsd</code>: A schema for another ontology that our main ontology depends on.</p>
+</li>
+<li>
+<p><code>knoraXmlImport.xsd</code>: The standard Knora XML import schema, used by all XML imports.</p>
+</li>
+</ul>
+<h4 id="2-upload-files-to-sipi">2. Upload Files to Sipi</h4>
+<p>See <a href="../../api-v2/editing-values/#upload-files-to-sipi">Upload Files to Sipi</a> in
+the DSP-API v2 documentation.</p>
+<h4 id="3-generate-xml-import-document">3. Generate XML Import Document</h4>
+<p>We now convert our existing data to XML, probably by writing a custom
+script. The resulting XML import document could look like this:</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;knoraXmlImport:resources xmlns=&quot;http://api.knora.org/ontology/0801/biblio/xml-import/v1#&quot;
+    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+    xsi:schemaLocation=&quot;http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd&quot;
+    xmlns:p0801-biblio=&quot;http://api.knora.org/ontology/0801/biblio/xml-import/v1#&quot;
+    xmlns:p0801-beol=&quot;http://api.knora.org/ontology/0801/beol/xml-import/v1#&quot;
+    xmlns:knoraXmlImport=&quot;http://api.knora.org/ontology/knoraXmlImport/v1#&quot;&gt;
+    &lt;p0801-beol:person id=&quot;abel&quot;&gt;
+        &lt;knoraXmlImport:label&gt;Niels Henrik Abel&lt;/knoraXmlImport:label&gt;
+        &lt;p0801-beol:hasFamilyName knoraType=&quot;richtext_value&quot;&gt;Abel&lt;/p0801-beol:hasFamilyName&gt;
+        &lt;p0801-beol:hasGivenName knoraType=&quot;richtext_value&quot;&gt;Niels Henrik&lt;/p0801-beol:hasGivenName&gt;
+        &lt;p0801-beol:personHasTitle knoraType=&quot;richtext_value&quot; lang=&quot;en&quot;&gt;Sir&lt;/p0801-beol:personHasTitle&gt;
+    &lt;/p0801-beol:person&gt;
+    &lt;p0801-beol:person id=&quot;holmes&quot;&gt;
+        &lt;knoraXmlImport:label&gt;Sherlock Holmes&lt;/knoraXmlImport:label&gt;
+        &lt;p0801-beol:hasFamilyName knoraType=&quot;richtext_value&quot;&gt;Holmes&lt;/p0801-beol:hasFamilyName&gt;
+        &lt;p0801-beol:hasGivenName knoraType=&quot;richtext_value&quot;&gt;Sherlock&lt;/p0801-beol:hasGivenName&gt;
+    &lt;/p0801-beol:person&gt;
+    &lt;p0801-biblio:Journal id=&quot;math_intelligencer&quot;&gt;
+        &lt;knoraXmlImport:label&gt;Math Intelligencer&lt;/knoraXmlImport:label&gt;
+        &lt;p0801-biblio:hasName knoraType=&quot;richtext_value&quot;&gt;Math Intelligencer&lt;/p0801-biblio:hasName&gt;
+    &lt;/p0801-biblio:Journal&gt;
+    &lt;p0801-biblio:JournalArticle id=&quot;strings_in_the_16th_and_17th_centuries&quot; creationDate=&quot;2019-01-09T15:45:54Z&quot;&gt;
+        &lt;knoraXmlImport:label&gt;Strings in the 16th and 17th Centuries&lt;/knoraXmlImport:label&gt;
+        &lt;p0801-biblio:p0801-beol__comment knoraType=&quot;richtext_value&quot; mapping_id=&quot;http://rdfh.ch/standoff/mappings/StandardMapping&quot;&gt;
+            &lt;text xmlns=&quot;&quot;&gt;The most &lt;strong&gt;interesting&lt;/strong&gt; article in &lt;a class=&quot;salsah-link&quot; href=&quot;ref:math_intelligencer&quot;&gt;Math Intelligencer&lt;/a&gt;.&lt;/text&gt;
+        &lt;/p0801-biblio:p0801-beol__comment&gt;
+        &lt;p0801-biblio:endPage knoraType=&quot;richtext_value&quot;&gt;73&lt;/p0801-biblio:endPage&gt;
+        &lt;p0801-biblio:isPartOfJournal&gt;
+            &lt;p0801-biblio:Journal knoraType=&quot;link_value&quot; target=&quot;math_intelligencer&quot; linkType=&quot;ref&quot;/&gt;
+        &lt;/p0801-biblio:isPartOfJournal&gt;
+        &lt;p0801-biblio:journalVolume knoraType=&quot;richtext_value&quot;&gt;27&lt;/p0801-biblio:journalVolume&gt;
+        &lt;p0801-biblio:publicationHasAuthor&gt;
+            &lt;p0801-beol:person knoraType=&quot;link_value&quot; linkType=&quot;ref&quot; target=&quot;abel&quot;/&gt;
+        &lt;/p0801-biblio:publicationHasAuthor&gt;
+        &lt;p0801-biblio:publicationHasAuthor&gt;
+            &lt;p0801-beol:person knoraType=&quot;link_value&quot; linkType=&quot;ref&quot; target=&quot;holmes&quot;/&gt;
+        &lt;/p0801-biblio:publicationHasAuthor&gt;
+        &lt;p0801-biblio:publicationHasDate knoraType=&quot;date_value&quot;&gt;GREGORIAN:1976&lt;/p0801-biblio:publicationHasDate&gt;
+        &lt;p0801-biblio:publicationHasTitle knoraType=&quot;richtext_value&quot; lang=&quot;en&quot;&gt;Strings in the 16th and 17th Centuries&lt;/p0801-biblio:publicationHasTitle&gt;
+        &lt;p0801-biblio:publicationHasTitle knoraType=&quot;richtext_value&quot;&gt;An alternate title&lt;/p0801-biblio:publicationHasTitle&gt;
+        &lt;p0801-biblio:startPage knoraType=&quot;richtext_value&quot;&gt;48&lt;/p0801-biblio:startPage&gt;
+    &lt;/p0801-biblio:JournalArticle&gt;
+&lt;/knoraXmlImport:resources&gt;
+</code></pre>
+<p>This illustrates several aspects of XML imports:</p>
+<ul>
+<li>
+<p>The root XML element must be <code>knoraXmlImport:resources</code>.</p>
+</li>
+<li>
+<p>There is an XML namespace corresponding each ontology used in the
+    import. These namespaces can be found in the XML schema files
+    returned by Knora.</p>
+</li>
+<li>
+<p>We have copied and pasted
+    <code>xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"</code>
+    from the main XML schema, <code>p0801-biblio.xsd</code>. This enables the Knora
+    API server to identify the main ontology we are using.</p>
+</li>
+<li>
+<p>We have used <code>xsi:schemaLocation</code> to indicate the main schema's
+    namespace and filename. If we put our XML document in the same
+    directory as the schemas, and we run an XML validator to check the
+    XML, it should load the schemas.</p>
+</li>
+<li>
+<p>The child elements of <code>knoraXmlImport:resources</code> represent resources
+    to be created. The order of these elements is unimportant.</p>
+</li>
+<li>
+<p>Each resource must have an ID, which must be an XML
+    <a href="https://www.w3.org/TR/REC-xml-names/#NT-NCName">NCName</a>, and must
+    be unique within the file. These IDs are used only during the
+    import, and will not be stored in the triplestore.</p>
+</li>
+<li>
+<p>Each resource can optionally have a <code>creationDate</code> attribute, which
+    can be an <a href="https://www.w3.org/TR/xmlschema11-2/#dateTime">xsd:dateTime</a>
+    or an <a href="https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp">xsd:dateTimeStamp</a>.
+    If <code>creationDate</code> is not supplied, the current time is used.</p>
+</li>
+<li>
+<p>The first child element of each resource must be a
+    <code>knoraXmlImport:label</code>, which will be stored as the resource's
+    <code>rdfs:label</code>.</p>
+</li>
+<li>
+<p>Optionally, the second child element of a resource can provide
+    metadata about a file to be attached to the resource (see
+    bulk-import-with-digital-representations).</p>
+</li>
+<li>
+<p>The remaining child elements of each resource represent its property
+    values. These must be sorted in alphabetical order by property name.</p>
+</li>
+<li>
+<p>If a property has mutliple values, these are represented as multiple
+    adjacent property elements.</p>
+</li>
+<li>
+<p>The type of each value must be specified using the attribute
+    <code>knoraType</code>.</p>
+</li>
+<li>
+<p>A link to another resource described in the XML import is
+    represented as a child element of a property element, with
+    attributes <code>knoraType="link_value"</code> and <code>linkType="ref"</code>, and a
+    <code>target</code> attribute containing the ID of the target resource.</p>
+</li>
+<li>
+<p>There is a specfic syntax for referring to properties from other
+    ontologies. In the example, <code>p0801-beol:comment</code> is defined in the
+    ontology <code>http://www.knora.org/ontology/0001/beol</code>. In the XML, we
+    refer to it as <code>p0801-biblio:p0801-beol__comment</code>.</p>
+</li>
+<li>
+<p>A text value can contain XML markup. If it does:</p>
+<ul>
+<li>The text value element must have the attribute <code>mapping_id</code>,
+    specifying a mapping from XML to standoff markup (see
+    XML-to-standoff-mapping).</li>
+<li>It is necessary to specify the appropriate XML namespace (in
+    this case the null namespace, <code>xmlns=""</code>) for the XML markup
+    in the text value.</li>
+<li>The XML markup in the text value will not be validated by
+    the schema.</li>
+<li>In an XML tag that is mapped to a standoff link tag, the
+    link target can refer either to the IRI of a resoruce that
+    already exists in the triplestore, or to the ID of a
+    resource described in the import. If a link points to a
+    resource described in the import, the ID of the target
+    resource must be prefixed with <code>ref:</code>. In the example above,
+    using the standard mapping, the standoff link to
+    <code>math_intelligencer</code> has the target
+    <code>ref:math_intelligencer</code>.</li>
+</ul>
+</li>
+<li>
+<p>A text value can have a <code>lang</code> attribute, whose value is an ISO 639-1
+    code specifying the language of the text.</p>
+</li>
+</ul>
+<h4 id="4-validate-xml-import-document">4. Validate XML Import Document</h4>
+<p>You can use an XML schema validator such as <a href="http://xerces.apache.org">Apache Xerces</a> or
+<a href="http://saxon.sourceforge.net/">Saxon</a>, or an XML development environment
+such as <a href="https://www.oxygenxml.com">Oxygen</a>, to check that your XML import document
+is valid according to the schemas you got from Knora.</p>
+<p>For example, using Saxon:</p>
+<pre><code>java -cp ./saxon9ee.jar com.saxonica.Validate -xsd:p0801-biblio.xsd -s:data.xml
+</code></pre>
+<h4 id="5-submit-xml-import-document-to-knora">5. Submit XML Import Document to Knora</h4>
+<p>To create these resources in Knora, make an HTTP post request with the XML import document
+as the request body. The URL must specify the (URL-encoded) IRI of the project in which
+the resources should be created:</p>
+<pre><code>HTTP POST to http://host/v1/resources/xmlimport/projectIRI
+</code></pre>
+<p>For example, using <a href="https://curl.haxx.se/">curl</a>:</p>
+<pre><code>curl -v -u root@example.com:test --data @data.xml --header &quot;Content-Type: application/xml&quot; http://localhost:3333/v1/resources/xmlimport/http%3A%2F%2Frdfh.ch%2Fprojects%2F0801
+</code></pre>
+<h3 id="bulk-import-with-links-to-existing-resources">Bulk Import with Links to Existing Resources</h3>
+<p>Having run the import in the previous example, we can import more data
+with links to the data that is now in the triplestore:</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;knoraXmlImport:resources xmlns=&quot;http://api.knora.org/ontology/0801/biblio/xml-import/v1#&quot;
+    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+    xsi:schemaLocation=&quot;http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd&quot;
+    xmlns:p0801-biblio=&quot;http://api.knora.org/ontology/0801/biblio/xml-import/v1#&quot;
+    xmlns:p0801-beol=&quot;http://api.knora.org/ontology/0801/beol/xml-import/v1#&quot;
+    xmlns:knoraXmlImport=&quot;http://api.knora.org/ontology/knoraXmlImport/v1#&quot;&gt;
+    &lt;p0801-biblio:JournalArticle id=&quot;strings_in_the_18th_century&quot;&gt;
+        &lt;knoraXmlImport:label&gt;Strings in the 18th Century&lt;/knoraXmlImport:label&gt;
+        &lt;p0801-biblio:p0801-beol__comment knoraType=&quot;richtext_value&quot; mapping_id=&quot;http://rdfh.ch/standoff/mappings/StandardMapping&quot;&gt;
+            &lt;text xmlns=&quot;&quot;&gt;The most &lt;strong&gt;boring&lt;/strong&gt; article in &lt;a class=&quot;salsah-link&quot; href=&quot;http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A&quot;&gt;Math Intelligencer&lt;/a&gt;.&lt;/text&gt;
+        &lt;/p0801-biblio:p0801-beol__comment&gt;
+        &lt;p0801-biblio:endPage knoraType=&quot;richtext_value&quot;&gt;76&lt;/p0801-biblio:endPage&gt;
+        &lt;p0801-biblio:isPartOfJournal&gt;
+            &lt;p0801-biblio:Journal knoraType=&quot;link_value&quot; linkType=&quot;iri&quot; target=&quot;http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A&quot;/&gt;
+        &lt;/p0801-biblio:isPartOfJournal&gt;
+        &lt;p0801-biblio:journalVolume knoraType=&quot;richtext_value&quot;&gt;27&lt;/p0801-biblio:journalVolume&gt;
+        &lt;p0801-biblio:publicationHasAuthor&gt;
+            &lt;p0801-beol:person knoraType=&quot;link_value&quot; linkType=&quot;iri&quot; target=&quot;http://rdfh.ch/biblio/c-xMB3qkRs232pWyjdUUvA&quot;/&gt;
+        &lt;/p0801-biblio:publicationHasAuthor&gt;
+        &lt;p0801-biblio:publicationHasDate knoraType=&quot;date_value&quot;&gt;GREGORIAN:1977&lt;/p0801-biblio:publicationHasDate&gt;
+        &lt;p0801-biblio:publicationHasTitle knoraType=&quot;richtext_value&quot;&gt;Strings in the 18th Century&lt;/p0801-biblio:publicationHasTitle&gt;
+        &lt;p0801-biblio:startPage knoraType=&quot;richtext_value&quot;&gt;52&lt;/p0801-biblio:startPage&gt;
+    &lt;/p0801-biblio:JournalArticle&gt;
+&lt;/knoraXmlImport:resources&gt;
+</code></pre>
+<p>Note that in the link elements referring to existing resources, the
+<code>linkType</code> attribute has the value <code>iri</code>, and the <code>target</code> attribute
+contains the IRI of the target resource.</p>
+<h3 id="bulk-import-with-image-files">Bulk Import with Image Files</h3>
+<p>To attach an image file to a resource, we must provide the
+element <code>knoraXmlImport:file</code> before the property elements. In this
+element, we must provide a <code>filename</code> attribute, containing the <code>internalFilename</code>
+that Sipi returned for the file in <a href="#2-upload-files-to-sipi">2. Upload Files to Sipi</a>.</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;knoraXmlImport:resources xmlns=&quot;http://api.knora.org/ontology/incunabula/xml-import/v1#&quot;
+    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+    xsi:schemaLocation=&quot;http://api.knora.org/ontology/incunabula/xml-import/v1# incunabula.xsd&quot;
+    xmlns:incunabula=&quot;http://api.knora.org/ontology/incunabula/xml-import/v1#&quot;
+    xmlns:knoraXmlImport=&quot;http://api.knora.org/ontology/knoraXmlImport/v1#&quot;&gt;
+    &lt;incunabula:book id=&quot;test_book&quot;&gt;
+        &lt;knoraXmlImport:label&gt;a book with one page&lt;/knoraXmlImport:label&gt;
+        &lt;incunabula:title knoraType=&quot;richtext_value&quot;&gt;the title of a book with one page&lt;/incunabula:title&gt;
+    &lt;/incunabula:book&gt;
+    &lt;incunabula:page id=&quot;test_page&quot;&gt;
+        &lt;knoraXmlImport:label&gt;a page with an image&lt;/knoraXmlImport:label&gt;
+        &lt;knoraXmlImport:file filename=&quot;67SEfNU1wK2-CSf5abe2eh3.jp2&quot;/&gt;
+        &lt;incunabula:origname knoraType=&quot;richtext_value&quot;&gt;Chlaus&lt;/incunabula:origname&gt;
+        &lt;incunabula:pagenum knoraType=&quot;richtext_value&quot;&gt;1a&lt;/incunabula:pagenum&gt;
+        &lt;incunabula:partOf&gt;
+            &lt;incunabula:book knoraType=&quot;link_value&quot; linkType=&quot;ref&quot; ref=&quot;test_book&quot;/&gt;
+        &lt;/incunabula:partOf&gt;
+        &lt;incunabula:seqnum knoraType=&quot;int_value&quot;&gt;1&lt;/incunabula:seqnum&gt;
+    &lt;/incunabula:page&gt;
+&lt;/knoraXmlImport:resources&gt;
+</code></pre>
+<p>During the processing of the bulk import, Knora will ask Sipi for the rest of the
+file's metadata, and store that metadata in a file value attached to the resource.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      2022-11-24
+    
+  </small>
+</div>
+
+
+
+
+              
+            </article>
+            
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../xml-to-standoff-mapping/" class="md-footer__link md-footer__link--prev" aria-label="Previous: XML to Standoff Mapping" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              XML to Standoff Mapping
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../reading-and-searching-resources/" class="md-footer__link md-footer__link--next" aria-label="Next: Reading and Searching Resources" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Reading and Searching Resources
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2021 - 2022 <a href='https://dasch.swiss' target='_blank'>Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.sections"], "search": "../../../assets/javascripts/workers/search.ecf98df9.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.2ab50757.min.js"></script>
+      
+    
+  </body>
+</html>

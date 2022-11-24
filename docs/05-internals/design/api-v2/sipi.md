@@ -27,7 +27,7 @@ The other contents of the expected tokens are described below.
 The `upload.lua` script is available at Sipi's `upload` route. It processes one
 or more file uploads submitted to Sipi. It converts uploaded images to JPEG 2000
 format, and stores them in Sipi's `tmp` directory. The usage of this script is described in
-[Upload Files to Sipi](../../../03-apis/api-v2/editing-values.md#upload-files-to-sipi).
+[Upload Files to Sipi](../../../03-endpoints/api-v2/editing-values.md#upload-files-to-sipi).
 
 Each time `upload.lua` processes a request, it also deletes old temporary files
 from `tmp` and (recursively) from any subdirectories. The maximum allowed age of
