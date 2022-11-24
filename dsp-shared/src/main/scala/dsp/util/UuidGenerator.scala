@@ -37,7 +37,7 @@ object UuidGeneratorLive {
  * Test instance of the UuidGenerator which stores the created UUIDs, so that
  * they can be queried / returned in tests
  *
- * @param listOfUuids the list of created UUIDs
+ * @param generatedUuids the list of created UUIDs
  */
 final case class UuidGeneratorMock(uuidsForGeneration: Ref[List[UUID]], generatedUuids: Ref[List[UUID]])
     extends UuidGenerator {

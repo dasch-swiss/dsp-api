@@ -50,7 +50,8 @@ object Id {
      * @return new RoleId instance
      */
     def fromUuid(uuid: UUID): Validation[Throwable, RoleId] = {
-      val iri = Iri.RoleIri.make(roleIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      val iri =
+        Iri.RoleIri.make(roleIriPrefix + uuid.toString).getOrElseWith(e => throw ValidationException(e.head.getMessage))
       Validation.succeed(new RoleId(uuid, iri) {})
     }
 
@@ -61,7 +62,8 @@ object Id {
      */
     def make(): Validation[Throwable, RoleId] = {
       val uuid = UUID.randomUUID()
-      val iri  = Iri.RoleIri.make(roleIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      val iri =
+        Iri.RoleIri.make(roleIriPrefix + uuid.toString).getOrElseWith(e => throw ValidationException(e.head.getMessage))
       Validation.succeed(new RoleId(uuid, iri) {})
     }
   }
@@ -107,7 +109,8 @@ object Id {
      * @return a new UserId instance
      */
     def make(uuid: UUID): Validation[Throwable, UserId] = {
-      val iri = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      val iri =
+        Iri.UserIri.make(userIriPrefix + uuid.toString).getOrElseWith(e => throw ValidationException(e.head.getMessage))
       Validation.succeed(new UserId(uuid, iri) {})
     }
   }
