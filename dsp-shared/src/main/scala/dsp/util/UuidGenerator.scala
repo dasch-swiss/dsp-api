@@ -34,16 +34,18 @@ object UuidGeneratorLive {
 }
 
 /**
- * Test instance of the UuidGenerator
+ * Test instance of the UuidGenerator which stores the created UUIDs, so that
+ * they can be queried / returned in tests
  *
- * @param uuid the provided UUID value
+ * @param listOfUuids the list of created UUIDs
  */
 final case class UuidGeneratorTest(listOfUuids: Ref[List[UUID]]) extends UuidGenerator {
 
   /**
-   * For test reasons, the method returns always the same UUID
+   * Creates a random UUID and stores it in a list, so that it can be queried later
+   * which is necessary in tests.
    *
-   * @return a predictable UUID ("89ac5805-6c7f-4a95-aeb2-e85e74aa216d")
+   * @return the created UUID
    */
   override def createRandomUuid: UIO[UUID] =
     for {
@@ -51,6 +53,11 @@ final case class UuidGeneratorTest(listOfUuids: Ref[List[UUID]]) extends UuidGen
       _    <- listOfUuids.update(list => uuid :: list)
     } yield uuid
 
+  /**
+   * Returns the list of created UUIDs of this instance
+   *
+   * @return the list of created UUIDs
+   */
   def getCreatedUuids: UIO[List[UUID]] =
     listOfUuids.get
 
@@ -58,6 +65,11 @@ final case class UuidGeneratorTest(listOfUuids: Ref[List[UUID]]) extends UuidGen
 object UuidGeneratorTest {
   val listOfUuids = Ref.make(List.empty[UUID])
 
+  /**
+   * Returns the list of created UUIDs
+   *
+   * @return the list of created UUIDs
+   */
   def getCreatedUuids =
     ZIO.service[UuidGeneratorTest].flatMap(_.getCreatedUuids)
 
