@@ -1,4 +1,4 @@
-# 4. Change ResponderManager to a simple case class
+# 5. Change ResponderManager to a simple case class
 
 Date: 2022-06-06
 
