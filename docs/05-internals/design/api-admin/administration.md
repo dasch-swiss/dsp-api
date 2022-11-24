@@ -215,7 +215,7 @@ values can be used:
 
     1)  **ProjectAdminOntologyAllPermission**:
 
-      - description: gives the user the permission to administer
+      - description: gives the user the permission to administrate
         the project ontologies
       - usage: used as a value for the *knora-base:hasPermissions*
         property.

@@ -116,7 +116,7 @@ It is not practical to store all data in RDF. In particular, RDF is not a good s
 images. Therefore, Knora stores such data outside the triplestore, in ordinary files. A resource can have metadata about
 a file attached to it. The technical term for such a resource in Knora is a **Representation**. For each file, there is
 a `kb:FileValue` in the triplestore containing metadata about the file (see [FileValue](#filevalue)). Knora
-uses [Sipi](https://github.com/dhlab-basel/Sipi) to store files. The [Knora APIs](../03-endpoints/index.md) provide ways to
+uses [Sipi](https://github.com/dhlab-basel/Sipi) to store files. The Knora APIs provide ways to
 create file values using Knora and Sipi.
 
 A resource that has a file value must belong to one of the subclasses of

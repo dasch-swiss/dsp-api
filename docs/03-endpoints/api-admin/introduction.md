@@ -5,7 +5,7 @@
 
 # Introduction: Using the Admin API
 
-The DSP Admin API makes it possible to administer projects, users, user groups, permissions, and hierarchical lists.
+The DSP Admin API makes it possible to administrate projects, users, user groups, permissions, and hierarchical lists.
 
 ## RESTful API
 

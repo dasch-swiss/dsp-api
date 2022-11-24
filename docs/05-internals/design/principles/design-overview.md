@@ -28,7 +28,7 @@ There are two versions of DSP-API:
 - DSP-API v2, the latest DSP-API that should be used
 - DSP-API v1, legacy API compatibile with applications that used the prototype software.
 
-There is also an Admin API for administering DSP projects.
+There is also an Admin API for administrating DSP projects.
 
 Internally, DSP-API v1 and v2 both use functionality in the admin API. DSP-API v1 uses 
 some functionality from API v2, but API v2 does not depend on API v1.
@@ -99,7 +99,7 @@ actors. However, the design of reply message passing from actors (by
 using `future2Message`), makes sure that any exceptions thrown inside
 actors, will reach the route, where they will be handled.
 
-See also [Fuures with Akka](futures-with-akka.md).
+See also [Futures with Akka](futures-with-akka.md).
 
 ## API Routing
 

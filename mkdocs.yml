@@ -15,8 +15,7 @@ nav:
                   - Introduction: 02-dsp-ontologies/introduction.md
                   - The Knora Base Ontology: 02-dsp-ontologies/knora-base.md
                   - The SALSAH GUI Ontology: 02-dsp-ontologies/salsah-gui.md
-        - DSP-API Endpoints: 
-                  - Overview: 03-endpoints/index.md
+        - DSP-API Endpoints:
                   - DSP-API V1:
                           - Introduction: 03-endpoints/api-v1/introduction.md
                           - Authentication: 03-endpoints/api-v1/authentication.md
@@ -56,44 +55,43 @@ nav:
                           - Version: 03-endpoints/api-util/version.md
         - Publishing and Deployment:
                   - Publishing: 04-publishing-deployment/publishing.md
-                  - Getting Started with DSP-API: 04-publishing-deployment/getting-started.md
                   - Configuration: 04-publishing-deployment/configuration.md
                   - Updating Repositories when Upgrading DSP-API: 04-publishing-deployment/updates.md
         - DSP Internals:
                   - Design:
-                            - Architectural Decision Records (ADR):
-                                      - 0001 Record Architectural Decisions: 05-internals/design/adr/0001-record-architecture-decisions.md
-                                      - 0002 Change Cache Service Manager from Akka-Actor to ZLayer: 05-internals/design/adr/0002-change-cache-service-manager-from-akka-actor-to-zlayer.md
-                                      - 0003 Change IIIF Service Manager and Sipi implementation to zlayer: 05-internals/design/adr/0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer.md
-                                      - 0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer: 05-internals/design/adr/0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer.md
-                                      - 0005 Change ResponderManager to a simple case class: 05-internals/design/adr/0005-change-respondermanager-to-a-simple-case-class.md
-                            - DSP-API Design Principles:
-                                      - Design Overview: 05-internals/design/principles/design-overview.md
-                                      - Futures with Akka: 05-internals/design/principles/futures-with-akka.md
-                                      - HTTP Module: 05-internals/design/principles/http-module.md
-                                      - Store Module: 05-internals/design/principles/store-module.md
-                                      - Triplestore Updates: 05-internals/design/principles/triplestore-updates.md
-                                      - Consistency Checking: 05-internals/design/principles/consistency-checking.md
-                                      - Authentication: 05-internals/design/principles/authentication.md
-                                      - RDF Processing API: 05-internals/design/principles/rdf-api.md
-                            - DSP-API V1 Design:
-                                      - How to Add an API v1 Route: 05-internals/design/api-v1/how-to-add-a-route.md
-                                      - JSON in API v1: 05-internals/design/api-v1/json.md
-                            - DSP-API V2 Design:
-                                      - API v2 Design Overview: 05-internals/design/api-v2/overview.md
-                                      - Ontology Schemas: 05-internals/design/api-v2/ontology-schemas.md
-                                      - Smart IRIs: 05-internals/design/api-v2/smart-iris.md
-                                      - Content Wrappers: 05-internals/design/api-v2/content-wrappers.md
-                                      - How to Add an API v2 Route: 05-internals/design/api-v2/how-to-add-a-route.md
-                                      - JSON-LD Parsing and Formatting: 05-internals/design/api-v2/json-ld.md
-                                      - Ontology Management: 05-internals/design/api-v2/ontology-management.md
-                                      - DSP-API and Sipi: 05-internals/design/api-v2/sipi.md
-                                      - Gravsearch Design: 05-internals/design/api-v2/gravsearch.md
-                                      - Standoff Markup: 05-internals/design/api-v2/standoff.md
-                                      - Archival Resource Key (ARK): 05-internals/design/api-v2/ark.md
-                                      - SPARQL Query Design: 05-internals/design/api-v2/query-design.md
-                            - Admin API Design:
-                                      - Administration: 05-internals/design/api-admin/administration.md
+                          - Architectural Decision Records (ADR):
+                                    - 0001 Record Architectural Decisions: 05-internals/design/adr/0001-record-architecture-decisions.md
+                                    - 0002 Change Cache Service Manager from Akka-Actor to ZLayer: 05-internals/design/adr/0002-change-cache-service-manager-from-akka-actor-to-zlayer.md
+                                    - 0003 Change IIIF Service Manager and Sipi implementation to zlayer: 05-internals/design/adr/0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer.md
+                                    - 0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer: 05-internals/design/adr/0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer.md
+                                    - 0005 Change ResponderManager to a simple case class: 05-internals/design/adr/0005-change-respondermanager-to-a-simple-case-class.md
+                          - DSP-API Design Principles:
+                                    - Design Overview: 05-internals/design/principles/design-overview.md
+                                    - Futures with Akka: 05-internals/design/principles/futures-with-akka.md
+                                    - HTTP Module: 05-internals/design/principles/http-module.md
+                                    - Store Module: 05-internals/design/principles/store-module.md
+                                    - Triplestore Updates: 05-internals/design/principles/triplestore-updates.md
+                                    - Consistency Checking: 05-internals/design/principles/consistency-checking.md
+                                    - Authentication: 05-internals/design/principles/authentication.md
+                                    - RDF Processing API: 05-internals/design/principles/rdf-api.md
+                          - DSP-API V1 Design:
+                                    - How to Add an API v1 Route: 05-internals/design/api-v1/how-to-add-a-route.md
+                                    - JSON in API v1: 05-internals/design/api-v1/json.md
+                          - DSP-API V2 Design:
+                                    - API v2 Design Overview: 05-internals/design/api-v2/overview.md
+                                    - Ontology Schemas: 05-internals/design/api-v2/ontology-schemas.md
+                                    - Smart IRIs: 05-internals/design/api-v2/smart-iris.md
+                                    - Content Wrappers: 05-internals/design/api-v2/content-wrappers.md
+                                    - How to Add an API v2 Route: 05-internals/design/api-v2/how-to-add-a-route.md
+                                    - JSON-LD Parsing and Formatting: 05-internals/design/api-v2/json-ld.md
+                                    - Ontology Management: 05-internals/design/api-v2/ontology-management.md
+                                    - DSP-API and Sipi: 05-internals/design/api-v2/sipi.md
+                                    - Gravsearch Design: 05-internals/design/api-v2/gravsearch.md
+                                    - Standoff Markup: 05-internals/design/api-v2/standoff.md
+                                    - Archival Resource Key (ARK): 05-internals/design/api-v2/ark.md
+                                    - SPARQL Query Design: 05-internals/design/api-v2/query-design.md
+                          - Admin API Design:
+                                    - Administration: 05-internals/design/api-admin/administration.md
                   - Development:
                             - Overview: 05-internals/development/overview.md
                             - Build and Running: 05-internals/development/building-and-running.md

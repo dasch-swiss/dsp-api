@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 
-# What is DSP and DSP-API (previous Knora)?
+# What is DSP and DSP-API?
 
 The DaSCH Service Platform (DSP) is 
 a content management system for the long-term preservation and reuse of
@@ -37,9 +37,9 @@ certain number of [file formats](file-formats.md).
   archival file formats and stored by [Sipi](https://github.com/dhlab-basel/Sipi),
   with metadata stored in the triplestore.
 
-DSP then makes this data available for reuse via its generic, standards-based
-application programming interfaces (APIs = DSP-API). A virtual research environment
-(VRE) can then use these APIs to search, link together, and add to data
+DSP makes this data available for reuse via its generic, standards-based
+application programming interface DSP-API. A virtual research environment
+(VRE) can use DSP-API to query, link, and add to data
 from different research projects in a unified way.
 
 ## Humanities-Focused Data Storage

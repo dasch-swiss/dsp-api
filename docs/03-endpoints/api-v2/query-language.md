@@ -87,7 +87,8 @@ schema, with one exception (see [Date Comparisons](#date-comparisons)).
 Gravsearch query results can be requested in the simple or complex schema;
 see [API Schema](introduction.md#api-schema).
 
-All examples hereafter run with the DSP stack started locally as documented in the section [Getting Started with DSP-API](../../04-publishing-deployment/getting-started.md). If you access another stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
+All examples hereafter run with the DSP stack started locally. If you access another stack, you can check 
+the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
 
 ### Using the Simple Schema
 

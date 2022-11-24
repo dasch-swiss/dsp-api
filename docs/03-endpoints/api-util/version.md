@@ -21,11 +21,13 @@ The response has the type `application/json` and contains the following informat
 
 
 ## Example request
+
 `GET /version`
 
 
 ## Example response
-```
+
+```json
 {
     "akkaHttp": "10.1.7",
     "gdbFree": "8.10.0-free",
