@@ -33,6 +33,7 @@ services:
       - ${LOCAL_HOME}/sipi/config:/sipi/config:delegated
       - ${LOCAL_HOME}/sipi/images:/sipi/images:delegated
       - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
+      - ${LOCAL_HOME}/sipi/scripts:/sipi/scripts:delegated
     networks:
       - knora-net
     environment:
