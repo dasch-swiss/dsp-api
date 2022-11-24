@@ -39,7 +39,10 @@ object UuidGeneratorLive {
  *
  * @param listOfUuids the list of created UUIDs
  */
-final case class UuidGeneratorTest(listOfUuids: Ref[List[UUID]]) extends UuidGenerator {
+final case class UuidGeneratorMock(uuidsForGeneration: Ref[List[UUID]], generatedUuids: Ref[List[UUID]])
+    extends UuidGenerator {
+
+  def setKnownUuidsToGenerate(uuids: List[UUID]) = uuidsForGeneration.set(uuids)
 
   /**
    * Creates a random UUID and stores it in a list, so that it can be queried later
@@ -49,8 +52,9 @@ final case class UuidGeneratorTest(listOfUuids: Ref[List[UUID]]) extends UuidGen
    */
   override def createRandomUuid: UIO[UUID] =
     for {
-      uuid <- ZIO.succeed(UUID.randomUUID())
-      _    <- listOfUuids.update(list => uuid :: list)
+      uuids <- uuidsForGeneration.getAndUpdate(_.tail)
+      uuid   = uuids.head
+      _     <- generatedUuids.getAndUpdate(_.appended(uuid))
     } yield uuid
 
   /**
@@ -58,12 +62,10 @@ final case class UuidGeneratorTest(listOfUuids: Ref[List[UUID]]) extends UuidGen
    *
    * @return the list of created UUIDs
    */
-  def getCreatedUuids: UIO[List[UUID]] =
-    listOfUuids.get
+  def getCreatedUuids: UIO[List[UUID]] = generatedUuids.get
 
 }
-object UuidGeneratorTest {
-  val listOfUuids = Ref.make(List.empty[UUID])
+object UuidGeneratorMock {
 
   /**
    * Returns the list of created UUIDs
@@ -71,13 +73,14 @@ object UuidGeneratorTest {
    * @return the list of created UUIDs
    */
   def getCreatedUuids =
-    ZIO.service[UuidGeneratorTest].flatMap(_.getCreatedUuids)
+    ZIO.service[UuidGeneratorMock].flatMap(_.getCreatedUuids)
 
-  val layer: ULayer[UuidGeneratorTest] =
+  val layer: ULayer[UuidGeneratorMock] =
     ZLayer {
       for {
-        listOfUuids <- Ref.make(List.empty[UUID])
-      } yield UuidGeneratorTest(listOfUuids)
+        uuidsForGenerationEmpty <- Ref.make(List.empty[UUID])
+        generatedUuidsEmpty     <- Ref.make(List.empty[UUID])
+      } yield UuidGeneratorMock(uuidsForGenerationEmpty, generatedUuidsEmpty)
     }
 
 }

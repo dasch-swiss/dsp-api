@@ -16,7 +16,7 @@ import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.user.repo.impl.UserRepoMock
 import dsp.user.sharedtestdata.SharedTestData
-import dsp.util.UuidGeneratorTest
+import dsp.util.UuidGeneratorMock
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
@@ -94,7 +94,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         retrievedUsers <- userHandler.getUsers()
       } yield assertTrue(retrievedUsers.size == 3)
     }
-  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val createUserTest = suite("createUser")(
     test("return an Error when creating a user if a username is already taken") {
@@ -185,7 +185,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         fails(equalTo(DuplicateValueException(s"Email '${email1.value}' already taken")))
       )
     }
-  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val getUserByTest = suite("getUserBy")(
     test("store a user and retrieve by ID") {
@@ -304,7 +304,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         error       <- userHandler.getUserByEmail(email).exit
       } yield assert(error)(fails(equalTo(NotFoundException(s"User with Email '${email.value}' not found"))))
     }
-  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val updateUserTest = suite("updateUser")(
     test("store a user and update the username") {
@@ -644,7 +644,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.language != language) &&
         assertTrue(retrievedUser.status == status)
     }
-  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val deleteUserTest = suite("deleteUser")(
     test("delete a user") {
@@ -693,5 +693,5 @@ object UserHandlerSpec extends ZIOSpecDefault {
         fails(equalTo(NotFoundException(s"User with ID '${userId}' not found")))
       )
     }
-  ).provide(UuidGeneratorTest.layer, UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 }

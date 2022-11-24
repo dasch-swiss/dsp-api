@@ -137,7 +137,7 @@ object CreateUserSpec extends ZIOSpecDefault {
                       }""".stripMargin)
                   )
         response    <- CreateUser.route(request, userHandler).map(_.body)
-        uuid        <- UuidGeneratorTest.getCreatedUuids.head
+        uuid        <- UuidGeneratorMock.getCreatedUuids.head
         responseStr <- response.asString
       } yield assertTrue(
         responseStr.startsWith(
@@ -148,6 +148,6 @@ object CreateUserSpec extends ZIOSpecDefault {
           )
       )
     }
-  ).provide(UuidGeneratorTest.layer, AppConfig.live, UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, AppConfig.live, UserRepoMock.layer, UserHandler.layer)
 
 }
