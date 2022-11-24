@@ -31,6 +31,7 @@ object UserSpec extends ZIOSpecDefault {
   private val validPassword                               = "pass-word"
   private val validGivenName                              = "John"
   private val validFamilyName                             = "Rambo"
+  private val validPasswordHash                           = PasswordHash.make("test", PasswordStrength(12)).fold(e => throw e.head, v => v)
 
   def spec =
     (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + systemAdminTest)
@@ -202,7 +203,7 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(result)
     },
     test("encode a PasswordHash into JSON") {
-      val passwordHash     = PasswordHash.make("test", PasswordStrength(12)).toOption.get.value
+      val passwordHash     = PasswordHash.make("test", PasswordStrength(12)).getOrElse(validPasswordHash)
       val passwordHashJson = passwordHash.toJson
       assertTrue(passwordHashJson.startsWith(""""$2a"""))
     }
