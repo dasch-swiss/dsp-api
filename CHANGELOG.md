@@ -1524,7 +1524,7 @@
 * MAJOR: Fix property names for incoming links (#1144))
 * MAJOR: Generate and resolve ARK URLs for resources (#1161). Projects
   that have resource IRIs that do not conform to the format specified in
-  <https://docs.knora.org/paradox/03-apis/api-v2/knora-iris.html#iris-for-data>
+  <https://docs.knora.org/paradox/03-endpoints/api-v2/knora-iris.html#iris-for-data>
   must update them.
 * MAJOR: Use project shortcode in IIIF URLs (#1191). If you have file value IRIs containing the substring `/reps/`, you must replace `/reps/` with `/values/`.
 
