@@ -35,8 +35,6 @@ final case class UuidGeneratorMock(uuidsForGeneration: Ref[List[UUID]], generate
   override def createRandomUuid: UIO[UUID] =
     for {
       uuids <- uuidsForGeneration.getAndUpdate(_.tail)
-      _      = println(uuidsForGeneration.get)
-      _      = println(uuids)
       uuid   = uuids.head
       _     <- generatedUuids.getAndUpdate(_.appended(uuid))
     } yield uuid
@@ -58,12 +56,14 @@ object UuidGeneratorMock {
    */
   def getCreatedUuids = ZIO.service[UuidGeneratorMock].flatMap(_.getCreatedUuids)
 
-  val layer: ULayer[UuidGeneratorMock] =
+  val layer: ULayer[UuidGeneratorMock] = {
+    val listOfRandomUuids = List.fill(20)(UUID.randomUUID())
     ZLayer {
       for {
-        uuidsForGenerationEmpty <- Ref.make(List.empty[UUID])
-        generatedUuidsEmpty     <- Ref.make(List.empty[UUID])
-      } yield UuidGeneratorMock(uuidsForGenerationEmpty, generatedUuidsEmpty)
+        uuidsForGeneration <- Ref.make(listOfRandomUuids) // initialize the list with 20 random UUIDs
+        generatedUuids     <- Ref.make(List.empty[UUID])
+      } yield UuidGeneratorMock(uuidsForGeneration, generatedUuids)
     }
+  }
 
 }
