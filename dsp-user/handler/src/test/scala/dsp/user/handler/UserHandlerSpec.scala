@@ -16,10 +16,10 @@ import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.user.repo.impl.UserRepoMock
 import dsp.user.sharedtestdata.SharedTestData
-import dsp.util.UuidGeneratorMock
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
+import dsp.util.UuidGeneratorMock
 
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].

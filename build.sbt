@@ -329,7 +329,7 @@ lazy val userInterface = project
     libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(shared, userHandler, userRepo % "test->test")
+  .dependsOn(shared % "compile->compile;test->test", userHandler, userRepo % "test->test")
 
 lazy val userHandler = project
   .in(file("dsp-user/handler"))
@@ -340,7 +340,7 @@ lazy val userHandler = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(
-    shared,
+    shared   % "compile->compile;test->test",
     userCore % "compile->compile;test->test",
     userRepo % "test->test" // userHandler tests need mock implementation of UserRepo
   )
