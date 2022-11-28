@@ -362,7 +362,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     //   _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
     // } yield DropAllRepositoryContentACK()
 
-    val datasetsPath = "localhost:3030/$/datasets"
+    val datasetsPath = "/$/datasets"
 
     val deleteRequest = new HttpDelete(datasetsPath)
 
