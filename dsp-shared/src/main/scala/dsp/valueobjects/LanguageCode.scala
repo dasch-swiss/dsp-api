@@ -5,11 +5,10 @@
 
 package dsp.valueobjects
 
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
+import zio.json.JsonCodec
 
 /**
  * LanguageCode value object.
@@ -17,11 +16,11 @@ import dsp.errors.ValidationException
 sealed abstract case class LanguageCode private (value: String)
 
 object LanguageCode { self =>
-  implicit val decoder: JsonDecoder[LanguageCode] = JsonDecoder[String].mapOrFail { case value =>
-    LanguageCode.make(value).toEitherWith(e => e.head.getMessage())
-  }
-  implicit val encoder: JsonEncoder[LanguageCode] =
-    JsonEncoder[String].contramap((languageCode: LanguageCode) => languageCode.value)
+  implicit val codec: JsonCodec[LanguageCode] =
+    JsonCodec[String].transformOrFail(
+      value => LanguageCode.make(value).toEitherWith(e => e.head.getMessage()),
+      languageCode => languageCode.value
+    )
 
   val DE: String = "de"
   val EN: String = "en"

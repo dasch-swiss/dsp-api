@@ -229,13 +229,12 @@ object User {
    */
   object PasswordStrength extends Subtype[Int] {
 
-    // the decoder defines how to decode json to an object
-    implicit val decoder: JsonDecoder[PasswordStrength] = JsonDecoder[Int].mapOrFail { case value =>
-      PasswordStrength.make(value).toEitherWith(e => e.head)
-    }
-    // the encoder defines how to encode the object into json
-    implicit val encoder: JsonEncoder[PasswordStrength] =
-      JsonEncoder[Int].contramap(passwordStrength => passwordStrength)
+    // the codec defines how to decode json to an object and vice versa
+    implicit val codec: JsonCodec[PasswordStrength] =
+      JsonCodec[Int].transformOrFail(
+        value => PasswordStrength.make(value).toEitherWith(e => e.head),
+        passwordStrength => passwordStrength
+      )
 
     // this is used for the configuration descriptor
     implicit val descriptorForPasswordStrength: Descriptor[PasswordStrength] =
