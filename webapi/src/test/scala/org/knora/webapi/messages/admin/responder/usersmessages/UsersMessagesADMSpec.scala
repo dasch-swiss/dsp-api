@@ -87,7 +87,7 @@ class UsersMessagesADMSpec extends CoreSpec {
     }
 
     "allow checking the SCrypt passwords" in {
-      val encoder = new SCryptPasswordEncoder()
+      val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
       val hp      = encoder.encode("123456")
       val up = UserADM(
         id = "something",
