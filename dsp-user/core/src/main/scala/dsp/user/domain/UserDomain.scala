@@ -5,6 +5,8 @@
 
 package dsp.user.domain
 
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
@@ -25,7 +27,7 @@ import dsp.valueobjects.User._
  * @param status      the status of the user
  * @param role        the role of the user
  */
-sealed abstract case class User private (
+final case class User private (
   id: UserId,
   givenName: GivenName,
   familyName: FamilyName,
@@ -171,6 +173,9 @@ sealed abstract case class User private (
 
 }
 object User {
+
+  implicit val codec: JsonCodec[User] = DeriveJsonCodec.gen[User]
+
   def make(
     id: UserId,
     givenName: GivenName,
@@ -182,6 +187,6 @@ object User {
     status: UserStatus
     // role: Role
   ): Validation[ValidationException, User] =
-    Validation.succeed(new User(id, givenName, familyName, username, email, password, language, status) {})
+    Validation.succeed(User(id, givenName, familyName, username, email, password, language, status))
 
 }

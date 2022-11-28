@@ -5,6 +5,8 @@
 
 package dsp.role.sharedtestdata
 
+import java.util.UUID
+
 import dsp.role.domain.Role
 import dsp.role.domain.RoleUser
 import dsp.valueobjects.Id
@@ -15,10 +17,13 @@ import dsp.valueobjects.Role._
  * Contains shared role test data.
  */
 object RoleTestData {
+  val uuid1 = UUID.randomUUID()
+  val uuid2 = UUID.randomUUID()
+
   val id1          = Id.RoleId.make()
   val name1        = LangString.make("Name", "en")
   val description1 = LangString.make("Description", "en")
-  val users1       = List(RoleUser(Id.UserId.make().fold(e => throw e.head, v => v)))
+  val users1       = List(RoleUser(Id.UserId.make(uuid1).fold(e => throw e.head, v => v)))
   val permission1  = Permission.make(Permission.View)
 
   val role1 = for {
@@ -39,7 +44,7 @@ object RoleTestData {
   val id2          = Id.RoleId.make()
   val name2        = LangString.make("Name 2", "en")
   val description2 = LangString.make("Description 2", "en")
-  val users2       = List(RoleUser(Id.UserId.make().fold(e => throw e.head, v => v)))
+  val users2       = List(RoleUser(Id.UserId.make(uuid2).fold(e => throw e.head, v => v)))
   val permission2  = Permission.make(Permission.Admin)
 
   val role2 = for {
