@@ -58,6 +58,7 @@ import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
+import org.apache.http.client.methods.HttpDelete
 
 /**
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -350,15 +351,53 @@ case class TriplestoreServiceHttpConnectorImpl(
    */
   def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] = {
 
-    val DropAllSparqlString =
-      """
-      CLEAR SILENT ALL
-      """
+    // val DropAllSparqlString =
+    //   """
+    //   CLEAR SILENT ALL
+    //   """
+
+    // for {
+    //   _      <- ZIO.logDebug("==>> Drop All Data Start")
+    //   result <- getSparqlHttpResponse(DropAllSparqlString, isUpdate = true)
+    //   _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
+    // } yield DropAllRepositoryContentACK()
+
+    val datasetsPath = "localhost:3030/$/datasets"
+
+    val deleteRequest = new HttpDelete(datasetsPath)
+
+    val entity = new StringEntity(s"dbName=${dbName}&dbType=tdb2")
+
+    val postRequest = {
+      val httpPost = new HttpPost(datasetsPath)
+      httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded")
+      httpPost.setEntity(entity)
+      httpPost
+    }
 
     for {
-      _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- getSparqlHttpResponse(DropAllSparqlString, isUpdate = true)
-      _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
+      ctx <- makeHttpContext.orDie
+      _ <-
+        doHttpRequest(
+          client = queryHttpClient,
+          request = deleteRequest,
+          context = ctx,
+          processResponse = returnResponseAsString
+        )
+      _ <-
+        doHttpRequest(
+          client = queryHttpClient,
+          request = deleteRequest,
+          context = ctx,
+          processResponse = returnResponseAsString
+        )
+      _ <-
+        doHttpRequest(
+          client = queryHttpClient,
+          request = postRequest,
+          context = ctx,
+          processResponse = returnResponseAsString
+        )
     } yield DropAllRepositoryContentACK()
   }
 
