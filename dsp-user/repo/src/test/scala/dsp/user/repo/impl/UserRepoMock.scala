@@ -124,9 +124,6 @@ final case class UserRepoMock(
 
 }
 
-/**
- * Companion object providing the layer with an initialized implementation of UserRepo
- */
 object UserRepoMock {
   val layer: ZLayer[Any, Nothing, UserRepo] =
     ZLayer {

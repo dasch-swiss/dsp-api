@@ -5,6 +5,7 @@
 
 package dsp.valueobjects
 
+import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
@@ -15,6 +16,12 @@ import dsp.errors.ValidationException
 sealed abstract case class LanguageCode private (value: String)
 
 object LanguageCode { self =>
+  implicit val codec: JsonCodec[LanguageCode] =
+    JsonCodec[String].transformOrFail(
+      value => LanguageCode.make(value).toEitherWith(e => e.head.getMessage()),
+      languageCode => languageCode.value
+    )
+
   val DE: String = "de"
   val EN: String = "en"
   val FR: String = "fr"
