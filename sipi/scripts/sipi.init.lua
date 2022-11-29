@@ -2,6 +2,7 @@
 -- * SPDX-License-Identifier: Apache-2.0
 
 require "get_knora_session"
+require "log_util"
 
 -------------------------------------------------------------------------------
 -- This function is being called from sipi before the file is served.
@@ -20,7 +21,7 @@ require "get_knora_session"
 --    filepath: server-path where the master file is located
 -------------------------------------------------------------------------------
 function pre_flight(prefix, identifier, cookie)
-    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
+    log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
 
     if config.prefix_as_path then
         filepath = config.imgroot .. '/' .. prefix .. '/' .. identifier
@@ -28,7 +29,7 @@ function pre_flight(prefix, identifier, cookie)
         filepath = config.imgroot .. '/' .. identifier
     end
 
-    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
+    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     if prefix == "thumbs" then
         -- always allow thumbnails
@@ -51,10 +52,10 @@ function pre_flight(prefix, identifier, cookie)
 
         if session == nil or session["name"] == nil or session["id"] == nil then
             -- no session could be extracted
-            server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
+            log("cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
         else
             dsp_cookie_header = { Cookie = session["name"] .. "=" .. session["id"] }
-            server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - dsp_cookie_header: " ..
+            log("pre_flight - dsp_cookie_header: " ..
                 dsp_cookie_header["Cookie"], server.loglevel.LOG_DEBUG)
         end
     end
@@ -66,7 +67,7 @@ function pre_flight(prefix, identifier, cookie)
     if webapi_hostname == nil then
         webapi_hostname = config.knora_path
     end
-    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - webapi_hostname: " .. webapi_hostname,
+    log("pre_flight - webapi_hostname: " .. webapi_hostname,
         server.loglevel.LOG_DEBUG)
 
     --
@@ -76,38 +77,38 @@ function pre_flight(prefix, identifier, cookie)
     if webapi_port == nil then
         webapi_port = config.knora_port
     end
-    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
+    log("pre_flight - webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
 
     api_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 
-    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
+    log("pre_flight - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
 
     success, result = server.http("GET", api_url, dsp_cookie_header, 5000)
 
     -- check HTTP request was successful
     if not success then
-        server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - Server.http() failed: " .. result,
+        log("pre_flight - Server.http() failed: " .. result,
             server.loglevel.LOG_ERR)
         return 'deny'
     end
 
     if result.status_code ~= 200 then
-        server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - DSP-API returned HTTP status code " ..
+        log("pre_flight - DSP-API returned HTTP status code " ..
             result.status_code, server.loglevel.LOG_ERR)
-        server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - result body: " .. result.body, server.loglevel.LOG_ERR)
+        log("result body: " .. result.body, server.loglevel.LOG_ERR)
         return 'deny'
     end
 
-    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - response body: " .. tostring(result.body),
+    log("pre_flight - response body: " .. tostring(result.body),
         server.loglevel.LOG_DEBUG)
 
     success, response_json = server.json_to_table(result.body)
     if not success then
-        server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - Server.http() failed: " .. response_json, server.loglevel.LOG_ERR)
+        log("Server.http() failed: " .. response_json, server.loglevel.LOG_ERR)
         return 'deny'
     end
 
-    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - permission code: " .. response_json.permissionCode,
+    log("pre_flight - permission code: " .. response_json.permissionCode,
         server.loglevel.LOG_DEBUG)
 
     if response_json.permissionCode == 0 then
@@ -121,20 +122,20 @@ function pre_flight(prefix, identifier, cookie)
         local restrictedViewSize
 
         if response_json.restrictedViewSettings ~= nil then
-            server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - restricted view settings - watermark: " ..
+            log("pre_flight - restricted view settings - watermark: " ..
                 tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
 
             if response_json.restrictedViewSettings.size ~= nil then
-                server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - restricted view settings - size: " ..
+                log("pre_flight - restricted view settings - size: " ..
                     tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
                 restrictedViewSize = response_json.restrictedViewSettings.size
             else
-                server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - using default restricted view size",
+                log("pre_flight - using default restricted view size",
                     server.loglevel.LOG_DEBUG)
                 restrictedViewSize = config.thumb_size
             end
         else
-            server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - using default restricted view size",
+            log("pre_flight - using default restricted view size",
                 server.loglevel.LOG_DEBUG)
             restrictedViewSize = config.thumb_size
         end
