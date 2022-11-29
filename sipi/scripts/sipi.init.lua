@@ -4,8 +4,8 @@
 require "get_knora_session"
 
 -------------------------------------------------------------------------------
--- This function is being called from sipi before the file is served
--- Knora is called to ask for the user's permissions on the file
+-- This function is being called from sipi before the file is served.
+-- DSP-API is called to ask for the user's permissions on the file
 -- Parameters:
 --    prefix: This is the prefix that is given on the IIIF url
 --    identifier: the identifier for the image
@@ -40,11 +40,11 @@ function pre_flight(prefix, identifier, cookie)
         return 'allow', filepath
     end
 
-    knora_cookie_header = nil
+    dsp_cookie_header = nil
 
     if cookie ~= '' then
 
-        -- tries to extract the Knora session name and id from the cookie:
+        -- tries to extract the DSP session name and id from the cookie:
         -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
         -- returns nil if it cannot find it
         session = get_session_id(cookie)
@@ -53,9 +53,9 @@ function pre_flight(prefix, identifier, cookie)
             -- no session could be extracted
             server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
         else
-            knora_cookie_header = { Cookie = session["name"] .. "=" .. session["id"] }
-            server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - knora_cookie_header: " ..
-                knora_cookie_header["Cookie"], server.loglevel.LOG_DEBUG)
+            dsp_cookie_header = { Cookie = session["name"] .. "=" .. session["id"] }
+            server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - dsp_cookie_header: " ..
+                dsp_cookie_header["Cookie"], server.loglevel.LOG_DEBUG)
         end
     end
 
@@ -78,11 +78,11 @@ function pre_flight(prefix, identifier, cookie)
     end
     server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
 
-    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
+    api_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 
-    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - knora_url: " .. knora_url, server.loglevel.LOG_DEBUG)
+    server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
 
-    success, result = server.http("GET", knora_url, knora_cookie_header, 5000)
+    success, result = server.http("GET", api_url, dsp_cookie_header, 5000)
 
     -- check HTTP request was successful
     if not success then
@@ -92,7 +92,7 @@ function pre_flight(prefix, identifier, cookie)
     end
 
     if result.status_code ~= 200 then
-        server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - Knora returned HTTP status code " ..
+        server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - DSP-API returned HTTP status code " ..
             result.status_code, server.loglevel.LOG_ERR)
         server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - result body: " .. result.body, server.loglevel.LOG_ERR)
         return 'deny'
