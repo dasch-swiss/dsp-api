@@ -214,7 +214,7 @@ case class UserProfileV1(
       if (hashedPassword.startsWith("$e0801$")) {
         // SCrypt
         import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-        val encoder = new SCryptPasswordEncoder()
+        val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
         encoder.matches(password, hashedPassword.toString)
       } else if (hashedPassword.startsWith("$2a$")) {
         // BCrypt
