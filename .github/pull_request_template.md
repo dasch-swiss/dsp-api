@@ -1,8 +1,12 @@
 <!-- Important! Please follow the guidelines for naming Pull Requests: https://docs.dasch.swiss/latest/developers/dsp/contribution/ -->
 
-Issue Number: DEV-
-
 ## Pull Request Checklist
+
+### Task Description/Number
+
+<!-- Please add either the Jira ticket number or, in case of unscheduled work, a short description of the task at hand -->
+
+Issue Number: DEV-
 
 ### Basic Requirements
 
@@ -35,5 +39,3 @@ What kind of change does this PR introduce?
 
 - [ ] Yes (don't forget to update the JS-LIB team about the change)
 - [ ] No
-
-### Other information
