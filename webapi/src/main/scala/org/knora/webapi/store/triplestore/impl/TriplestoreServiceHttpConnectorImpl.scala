@@ -364,7 +364,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     val datasetsPath = "/$/datasets"
 
-    val deleteRequest = new HttpDelete(datasetsPath)
+    val deleteRequest = new HttpDelete(s"$datasetsPath/$dbName")
 
     val entity = new StringEntity(s"dbName=${dbName}&dbType=tdb2")
 
