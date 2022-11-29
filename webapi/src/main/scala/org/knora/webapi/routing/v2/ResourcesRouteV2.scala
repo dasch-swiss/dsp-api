@@ -5,9 +5,22 @@
 
 package org.knora.webapi.routing.v2
 
+import akka.http.scaladsl.model.ContentTypes.`application/json`
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes.InternalServerError
+import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
+import zio.Exit
+import zio.Exit.Failure
+import zio.Exit.Success
+import zio.Runtime
+import zio.Unsafe
+import zio.ZIO
+import zio.json._
 
 import java.time.Instant
 import java.util.UUID
@@ -22,22 +35,24 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeader
+import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.ASC
+import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.Order
+import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.OrderBy
+import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.lastModificationDate
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
-class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runtime[RestResourceInfoService])
+    extends KnoraRoute(routeData)
+    with Authenticator {
 
   val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
 
@@ -63,6 +78,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       getResourceHistory() ~
       getResourceHistoryEvents() ~
       getProjectResourceAndValueHistory() ~
+      getResourcesInfo ~
       getResources() ~
       getResourcesPreview() ~
       getResourcesTei() ~
@@ -338,6 +354,52 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     }
 
+  private def getQueryParamsMap(requestContext: RequestContext): Map[String, String] =
+    requestContext.request.uri.query().toMap
+
+  private def getStringQueryParam(requestContext: RequestContext, key: String): Option[String] =
+    getQueryParamsMap(requestContext).get(key)
+
+  private def getRequiredStringQueryParam(requestContext: RequestContext, key: String): String =
+    getQueryParamsMap(requestContext).getOrElse(
+      key,
+      throw BadRequestException(s"This route requires the parameter '$key'")
+    )
+
+  private def getRequiredResourceClassFromQueryParams(ctx: RequestContext): SmartIri = {
+    val resourceClass = getRequiredStringQueryParam(ctx, "resourceClass")
+    resourceClass
+      .toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClass"))
+  }
+
+  private def unsafeRunZioAndMapJsonResponse[R, E, A](
+    zioAction: ZIO[R, E, A]
+  )(implicit r: Runtime[R], encoder: JsonEncoder[A]) =
+    unsafeRunZio(zioAction) match {
+      case Failure(cause) => log.error(cause.prettyPrint); HttpResponse(InternalServerError)
+      case Success(dto)   => HttpResponse(status = OK, entity = HttpEntity(`application/json`, dto.toJson))
+    }
+
+  private def unsafeRunZio[R, E, A](zioAction: ZIO[R, E, A])(implicit r: Runtime[R]): Exit[E, A] =
+    Unsafe.unsafe(implicit u => r.unsafe.run(zioAction))
+
+  private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
+    get { ctx =>
+      val projectIri       = getRequiredProjectFromHeader(ctx).get.internalIri
+      val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx).internalIri
+      val orderBy = getStringQueryParam(ctx, "orderBy") match {
+        case None    => lastModificationDate
+        case Some(s) => OrderBy.make(s).getOrElse(throw BadRequestException(s"Invalid value '$s', for orderBy"))
+      }
+      val order: Order = getStringQueryParam(ctx, "order") match {
+        case None    => ASC
+        case Some(s) => Order.make(s).getOrElse(throw BadRequestException(s"Invalid value '$s', for order"))
+      }
+      val action =
+        RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri, (orderBy, order))
+      ctx.complete(unsafeRunZioAndMapJsonResponse(action))
+    }
+  }
   private def getResources(): Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
     get { requestContext =>
       if (resIris.size > routeData.appConfig.v2.resourcesSequence.resultsPerPage)

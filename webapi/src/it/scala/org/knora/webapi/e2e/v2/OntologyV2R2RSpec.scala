@@ -66,7 +66,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   private val ontologiesPath =
     DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData).makeRoute)
   private val resourcesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, null).makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

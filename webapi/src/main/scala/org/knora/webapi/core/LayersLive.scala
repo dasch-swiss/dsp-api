@@ -10,7 +10,12 @@ import zio.ZLayer
 
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resourceinfo.repo.LiveResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -58,9 +63,14 @@ object LayersLive {
       HttpServerWithZIOHttp.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
+      IriConverter.layer,
       JWTService.layer,
+      LiveResourceInfoRepo.layer,
+      LiveRestResourceInfoService.layer,
       RepositoryUpdater.layer,
+      ResourceInfoRoute.layer,
       State.layer,
+      StringFormatter.liveLayer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer
     )
