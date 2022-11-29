@@ -89,7 +89,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
   // the client config used for queries to the triplestore. The timeout has to be larger than
   // config.triplestore.queryTimeoutAsDuration and config.triplestore.gravsearchTimeoutAsDuration.
-  private val requestTimeoutMillis = 14400000 // 4 hours
+  private val requestTimeoutMillis = 7200000 // 2 hours
 
   private val queryRequestConfig = RequestConfig
     .custom()
