@@ -5,12 +5,12 @@
 
 # Permissions Endpoint
 
-##Permission Operations:
+## Permission Operations
 
-**Note:** For the following operations, the requesting user must be either a `systemAdmin`or 
-a `projectAdmin`.
+**Note:** For the following operations, the requesting user must be either a `systemAdmin`or a `projectAdmin`.
 
-### Getting Permissions: 
+### Getting Permissions
+
 - `GET: /admin/permissions/<projectIri>` : return all permissions for a project.
 As a response, the IRI and the type of all `permissions` of a project are returned.
   
@@ -25,7 +25,7 @@ for the group is returned.
 permissions for a project. As a response, all `default_object_acces_permissions` of a 
 project are returned. 
 
-### Creating New Administrative Permissions:
+### Creating New Administrative Permissions
  
 - `POST: /admin/permissions/ap`: create a new administrative permission. The type of 
 permissions, the project and group to which the permission should be added must be 
@@ -45,7 +45,8 @@ included in the request body, for example:
 }
 ``` 
 
-In addition, in the body of the request, it is possible to specify a custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) for a permission through
+In addition, in the body of the request, it is possible to specify a custom IRI (of 
+[DSP IRI](../api-v2/knora-iris.md#iris-for-data) form) for a permission through
 the `@id` attribute which will then be assigned to the permission; otherwise the permission will get a unique random IRI.
 A custom permission IRI must be `http://rdfh.ch/permissions/PROJECT_SHORTCODE/` (where `PROJECT_SHORTCODE`
 is the shortcode of the project that the permission belongs to), plus a custom ID string. For example:
@@ -105,7 +106,7 @@ Therefore, it is not possible to create new administrative permissions for the P
 a project. However, the default permissions set for these groups can be modified (See [update permission](./permissions.md#updating-a-permissions-scope)).
 
 
-### Creating New Default Object Access Permissions:
+### Creating New Default Object Access Permissions
 
 - `POST: /admin/permissions/doap` : create a new default object access permission. 
 A single instance of `knora-admin:DefaultObjectAccessPermission` must
@@ -199,7 +200,7 @@ ProjectAdmin and ProjectMember groups (See [Default set of permissions for a new
 Therefore, it is not possible to create new default object access permissions for the ProjectAdmin and ProjectMember 
 groups of a project. However, the default permissions set for these groups can be modified; see below for more information.
 
-### Updating a Permission's Group:
+### Updating a Permission's Group
 
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
 access permission, identified by it IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
@@ -216,7 +217,7 @@ with the new group. Otherwise, if the default object access permission was defin
 the combination of both, the permission will be defined for the newly specified group and its previous 
 `forResourceClass` and `forProperty` values will be deleted.
 
-### Updating a Permission's Scope:
+### Updating a Permission's Scope
 
 - `PUT: /admin/permissions/<permissionIri>/hasPermissions` to change the scope of permissions assigned to an administrative
   or a default object access permission identified by it IRI, `<permissionIri>`. The request body must contain the new set 
@@ -238,9 +239,13 @@ Each permission item given in `hasPermissions`, must contain the necessary param
 permission. For example, if you wish to change the scope of an administrative permission, follow the 
 [guidelines](#creating-new-administrative-permissions) for the
 content of its `hasPermissions` property. Similarly, if you wish to change the scope of a default object access permission, 
-follow the [guidelines](#creating-new-default-object-access-permissions) given about the content of its `hasPermissions` property.
+follow the [guidelines](#creating-new-default-object-access-permissions) given about the content of its `hasPermissions` property.  
+Either the `name` or the `permissionCode` must be present; it is not necessary to provide both.
 
-### Updating a Default Object Access Permission's Resource Class:
+The previous permission set is *replaced* by the new permission set. In order to remove a permission for a group
+entirely, you can provide a new set of permissions, leaving out the permission specification for the group.
+
+### Updating a Default Object Access Permission's Resource Class
 
 - `PUT: /admin/permissions/<doap_permissionIri>/resourceClass` to change the resource class for which a default object 
 access permission, identified by it IRI `<doap_permissionIri>`, is defined. This operation is only valid for 
@@ -256,7 +261,7 @@ Note that if the default object access permission was originally defined for a g
 will be defined for the given resource class instead of the group. That means the value of the `forGroup` will 
 be deleted.
 
-### Updating a Default Object Access Permission's Property:
+### Updating a Default Object Access Permission's Property
 
 - `PUT: /admin/permissions/<doap_permissionIri>/property` to change the property for which a default object 
 access permission, identified by it IRI `<doap_permissionIri>`, is defined. This operation is only valid for 
@@ -271,7 +276,7 @@ Note that if the default object access permission was originally defined for a g
 will be defined for the given property instead of the group. That means the value of the `forGroup` will 
 be deleted.
 
-### Deleting a permission:
+### Deleting a Permission
 
 - `DELETE: /admin/permissions/<permissionIri>` to delete an administrative, or a default object access permission. The 
 IRI of the permission must be given in encoded form. 
