@@ -135,7 +135,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(
     name := "webapi",
     resolvers ++= Seq(
-      "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots"
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
     libraryDependencies ++= Dependencies.webapiLibraryDependencies
   )
