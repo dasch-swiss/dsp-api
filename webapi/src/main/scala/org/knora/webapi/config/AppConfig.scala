@@ -90,7 +90,8 @@ final case class KnoraApi(
   internalPort: Int,
   externalProtocol: String,
   externalHost: String,
-  externalPort: Int
+  externalPort: Int,
+  externalZioPort: Int
 ) {
   val internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                                       ":" + internalPort

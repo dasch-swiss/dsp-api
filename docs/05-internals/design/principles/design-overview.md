@@ -23,19 +23,15 @@ For file storage, it uses [Sipi](http://sipi.io).
 
 ## DSP-API Versions
 
-DSP-API supports different versions of its API for working with humanities data:
+There are two versions of DSP-API:
 
-- [DSP-API v2](../../../03-apis/api-v2/index.md), the actual DSP-API that should be used
-- [DSP-API v1](../../../03-apis/api-v1/index.md), legacy API compatibile with applications 
-  that used the prototype software.
+- DSP-API v2, the latest DSP-API that should be used
+- DSP-API v1, legacy API compatibile with applications that used the prototype software.
 
-There is also an [Admin API](../../../03-apis/api-admin/index.md) for
-administering DSP projects.
+There is also an Admin API for administrating DSP projects.
 
-The DSP-API code base includes some functionality that is shared by these different
-APIs, as well as separate packages for each API. Internally, Knora APIs v1 and v2 both
-use functionality in the admin API. DSP-API v1 uses some functionality from
-API v2, but API v2 does not depend on API v1.
+Internally, DSP-API v1 and v2 both use functionality in the admin API. DSP-API v1 uses 
+some functionality from API v2, but API v2 does not depend on API v1.
 
 ## Error Handling
 
@@ -103,7 +99,7 @@ actors. However, the design of reply message passing from actors (by
 using `future2Message`), makes sure that any exceptions thrown inside
 actors, will reach the route, where they will be handled.
 
-See also [Fuures with Akka](futures-with-akka.md).
+See also [Futures with Akka](futures-with-akka.md).
 
 ## API Routing
 
@@ -138,7 +134,7 @@ in the appropriate format, and handles any errors.
 
 ## Logging
 
-Logging in Knora is configurable through `logback.xml`, allowing fine
+Logging in DSP-API is configurable through `logback.xml`, allowing fine
 grain configuration of what classes / objects should be logged from which level.
 
 The Akka Actors use [Akka Logging](https://doc.akka.io/docs/akka/current/logging.html)

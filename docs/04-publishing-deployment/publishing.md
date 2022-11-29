@@ -10,19 +10,17 @@ DSP is published as a set of [Docker](https://www.docker.com) images under the
 
 The following Docker images are published:
 
-- Knora-API:
+- DSP-API:
   - https://hub.docker.com/r/daschswiss/knora-api
 - Sipi (includes DSP's specific Sipi scripts):
   - https://hub.docker.com/r/daschswiss/knora-sipi
-- Salsah 1:
-  - https://hub.docker.com/r/daschswiss/knora-salsah1
-- Salsah 2:
-  - https://hub.docker.com/r/daschswiss/knora-app-web
+- DSP-APP:
+  - https://hub.docker.com/r/daschswiss/dsp-app
 
-Knora's Docker images are published automatically through Github CI each time a
+DSP's Docker images are published automatically through Github CI each time a
 pull-request is merged into the `main` branch.
 
-Each image is tagged with a version number, where the version is derived by
+Each image is tagged with a version number, which is derived by
 using the result of `git describe`. The describe version is built from the
 `last tag + number of commits since tag + short hash`, e.g., `8.0.0-7-ga7827e9`.
 

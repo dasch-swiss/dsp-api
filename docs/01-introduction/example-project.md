@@ -316,7 +316,7 @@ least one title and at most one publication date. In the DSP-API
 version 1, the word 'occurrence' is used instead of 'cardinality'.
 
 The OWL cardinalities supported by Knora are described in
-[OWL Cardinalities](../02-knora-ontologies/knora-base.md#owl-cardinalities).
+[OWL Cardinalities](../02-dsp-ontologies/knora-base.md#owl-cardinalities).
 
 Note that `incunabula:book` specifies a cardinality of
 `owl:minCardinality 0` on the property `incunabula:hasAuthor`. At first

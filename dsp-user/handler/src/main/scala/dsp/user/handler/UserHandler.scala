@@ -13,6 +13,7 @@ import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.user.api.UserRepo
 import dsp.user.domain.User
+import dsp.util.UuidGenerator
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
@@ -75,7 +76,10 @@ final case class UserHandler(repo: UserRepo) {
       _ <- repo
              .checkIfUsernameExists(username)
              .mapError(_ => DuplicateValueException(s"Username '${username.value}' already taken"))
-             .tap(_ => ZIO.logInfo(s"Checked if username '${username.value}' is already taken"))
+             .tapBoth(
+               _ => ZIO.logInfo(s"Username '${username.value}' already taken"),
+               _ => ZIO.logInfo(s"Checked if username '${username.value}' is already taken")
+             )
     } yield ()
 
   /**
@@ -88,8 +92,41 @@ final case class UserHandler(repo: UserRepo) {
       _ <- repo
              .checkIfEmailExists(email)
              .mapError(_ => DuplicateValueException(s"Email '${email.value}' already taken"))
-             .tap(_ => ZIO.logInfo(s"Checked if email '${email.value}' is already taken"))
+             .tapBoth(
+               _ => ZIO.logInfo(s"Email '${email.value}' already taken"),
+               _ => ZIO.logInfo(s"Checked if email '${email.value}' is already taken")
+             )
     } yield ()
+
+  /**
+   * Migrates an existing user. Same as [[createUser]] but with an existing ID.
+   *
+   * @param id  the user's id
+   *  @param username  the user's username
+   *  @param email  the user's email
+   *  @param givenName  the user's givenName
+   *  @param familyName  the user's familyName
+   *  @param password  the user's password (hashed)
+   *  @param language  the user's language
+   *  @param role  the user's role
+   */
+  def migrateUser(
+    id: UserId,
+    username: Username,
+    email: Email,
+    givenName: GivenName,
+    familyName: FamilyName,
+    password: PasswordHash,
+    language: LanguageCode,
+    status: UserStatus
+  ): IO[Throwable, UserId] =
+    (for {
+      // _      <- checkIfIdExists(id)            // TODO implement this
+      _      <- checkIfUsernameTaken(username) // TODO reserve username
+      _      <- checkIfEmailTaken(email)       // TODO reserve email
+      user   <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
+      userId <- repo.storeUser(user)
+    } yield userId).tap(userId => ZIO.logInfo(s"Migrated user with ID '${userId}'"))
 
   /**
    * Creates a new user
@@ -101,6 +138,7 @@ final case class UserHandler(repo: UserRepo) {
    *  @param password  the user's password (hashed)
    *  @param language  the user's language
    *  @param role  the user's role
+   *  @return the UserId of the newly created user
    */
   def createUser(
     username: Username,
@@ -111,13 +149,15 @@ final case class UserHandler(repo: UserRepo) {
     language: LanguageCode,
     status: UserStatus
     // role: Role
-  ): IO[Throwable, UserId] =
+  ): ZIO[UuidGenerator, Throwable, UserId] =
     (for {
-      _      <- checkIfUsernameTaken(username) // TODO reserve username
-      _      <- checkIfEmailTaken(email)       // TODO reserve email
-      id     <- UserId.make().toZIO
-      user   <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
-      userId <- repo.storeUser(user)
+      uuidGenerator <- ZIO.service[UuidGenerator]
+      _             <- checkIfUsernameTaken(username) // TODO reserve username
+      _             <- checkIfEmailTaken(email)       // TODO reserve email
+      uuid          <- uuidGenerator.createRandomUuid
+      id            <- UserId.make(uuid).toZIO
+      user          <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
+      userId        <- repo.storeUser(user)
     } yield userId).tap(userId => ZIO.logInfo(s"Created user with ID '${userId}'"))
 
   /**
@@ -125,6 +165,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new username
+   *  @return the UserId of the newly created user
    */
   def updateUsername(id: UserId, newValue: Username): IO[RequestRejectedException, UserId] =
     (for {
@@ -141,6 +182,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new email
+   *  @return the UserId of the newly created user
    */
   def updateEmail(id: UserId, newValue: Email): IO[RequestRejectedException, UserId] =
     (for {
@@ -157,6 +199,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new given name
+   *  @return the UserId of the newly created user
    */
   def updateGivenName(id: UserId, newValue: GivenName): IO[RequestRejectedException, UserId] =
     (for {
@@ -171,6 +214,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new family name
+   *  @return the UserId of the newly created user
    */
   def updateFamilyName(id: UserId, newValue: FamilyName): IO[RequestRejectedException, UserId] =
     (for {
@@ -187,6 +231,7 @@ final case class UserHandler(repo: UserRepo) {
    *  @param newPassword  the new password
    *  @param currentPassword  the user's current password
    *  @param requestingUser  the requesting user
+   *  @return the UserId of the newly created user
    */
   def updatePassword(
     id: UserId,
@@ -219,6 +264,7 @@ final case class UserHandler(repo: UserRepo) {
    *
    *  @param id  the user's ID
    *  @param newValue  the new language
+   *  @return the UserId of the newly created user
    */
   def updateLanguage(id: UserId, newValue: LanguageCode): IO[RequestRejectedException, UserId] =
     (for {
@@ -232,6 +278,7 @@ final case class UserHandler(repo: UserRepo) {
    * Deletes the user which means that it is marked as deleted.
    *
    *  @param id  the user's ID
+   *  @return the UserId of the newly created user
    */
   def deleteUser(id: UserId): IO[NotFoundException, UserId] =
     (for {
@@ -242,14 +289,9 @@ final case class UserHandler(repo: UserRepo) {
 
 }
 
-/**
- * Companion object providing the layer with an initialized implementation
- */
 object UserHandler {
-  val layer: ZLayer[UserRepo, Nothing, UserHandler] =
-    ZLayer {
-      for {
-        repo <- ZIO.service[UserRepo]
-      } yield UserHandler(repo)
-    }.tap(_ => ZIO.logInfo(">>> User handler initialized <<<"))
+  val layer: ZLayer[UserRepo & UuidGenerator, Nothing, UserHandler] =
+    ZLayer
+      .fromFunction(UserHandler.apply _)
+      .tap(_ => ZIO.logInfo(">>> User handler initialized <<<"))
 }
