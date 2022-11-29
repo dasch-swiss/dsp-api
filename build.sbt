@@ -2,10 +2,8 @@ import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
-
-import sbt._
 import sbt.Keys.version
-import sbt.librarymanagement.Resolver
+import sbt._
 
 import scala.language.postfixOps
 
@@ -137,7 +135,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(
     name := "webapi",
     resolvers ++= Seq(
-      Resolver.bintrayRepo("hseeberger", "maven"),
       "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
     libraryDependencies ++= Dependencies.webapiLibraryDependencies
