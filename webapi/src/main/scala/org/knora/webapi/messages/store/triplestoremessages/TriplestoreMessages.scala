@@ -289,6 +289,16 @@ case class DropAllTRepositoryContent() extends TriplestoreRequest
 case class DropAllRepositoryContentACK()
 
 /**
+ * Message for removing all content from the repository.
+ */
+case class WipeRepositoryOut() extends TriplestoreRequest
+
+/**
+ * Sent as a response to [[WipeRepositoryOut]] if the request was processed successfully.
+ */
+case class WipeRepositoryOutACK()
+
+/**
  * Inserts data into the repository.
  *
  * @param rdfDataObjects contains a list of [[RdfDataObject]].

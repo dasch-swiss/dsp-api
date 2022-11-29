@@ -347,27 +347,25 @@ case class TriplestoreServiceHttpConnectorImpl(
     } yield ResetRepositoryContentACK()
 
   /**
-   * Drops (deletes) all data from the triplestore.
+   * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
    */
   def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] = {
+    val DropAllSparqlString = "DROP ALL"
 
-    // val DropAllSparqlString =
-    //   """
-    //   CLEAR SILENT ALL
-    //   """
+    for {
+      _      <- ZIO.logDebug("==>> Drop All Data Start")
+      result <- getSparqlHttpResponse(DropAllSparqlString, isUpdate = true)
+      _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
+    } yield DropAllRepositoryContentACK()
+  }
 
-    // for {
-    //   _      <- ZIO.logDebug("==>> Drop All Data Start")
-    //   result <- getSparqlHttpResponse(DropAllSparqlString, isUpdate = true)
-    //   _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
-    // } yield DropAllRepositoryContentACK()
-
-    val datasetsPath = "/$/datasets"
-
+  /**
+   * Wipes all triplestore data out using HTTP requests.
+   */
+  def wipeRepositoryOut(): UIO[WipeRepositoryOutACK] = {
+    val datasetsPath  = "/$/datasets"
     val deleteRequest = new HttpDelete(s"$datasetsPath/$dbName")
-
-    val entity = new StringEntity(s"dbName=${dbName}&dbType=tdb2")
-
+    val entity        = new StringEntity(s"dbName=${dbName}&dbType=tdb2")
     val postRequest = {
       val httpPost = new HttpPost(datasetsPath)
       httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -403,7 +401,7 @@ case class TriplestoreServiceHttpConnectorImpl(
           context = ctx,
           processResponse = returnResponseAsString
         )
-    } yield DropAllRepositoryContentACK()
+    } yield WipeRepositoryOutACK()
   }
 
   /**
