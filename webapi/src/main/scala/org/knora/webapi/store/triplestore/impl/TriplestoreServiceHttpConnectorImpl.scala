@@ -377,6 +377,8 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     for {
       ctx <- makeHttpContext.orDie
+      _   <- ZIO.logInfo("==>> DELETE All Data Start")
+      _   <- ZIO.logInfo("==>> First DELETE request that deletes default graph")
       _ <-
         doHttpRequest(
           client = queryHttpClient,
@@ -384,6 +386,7 @@ case class TriplestoreServiceHttpConnectorImpl(
           context = ctx,
           processResponse = returnResponseAsString
         )
+      _ <- ZIO.logInfo("==>> Second DELETE request that deletes other graphs")
       _ <-
         doHttpRequest(
           client = queryHttpClient,
@@ -391,6 +394,8 @@ case class TriplestoreServiceHttpConnectorImpl(
           context = ctx,
           processResponse = returnResponseAsString
         )
+      _ <- ZIO.logInfo("==>> DELETE All Data End")
+      _ <- ZIO.logInfo("==>> Re-initializing DB")
       _ <-
         doHttpRequest(
           client = queryHttpClient,
