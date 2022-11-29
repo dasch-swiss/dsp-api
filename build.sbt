@@ -8,7 +8,6 @@ import sbt.Keys.version
 import sbt.librarymanagement.Resolver
 
 import scala.language.postfixOps
-import scala.sys.process.Process
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
