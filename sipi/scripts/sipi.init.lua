@@ -121,7 +121,8 @@ function pre_flight(prefix, identifier, cookie)
         local restrictedViewSize
 
         if response_json.restrictedViewSettings ~= nil then
-            -- server.log("pre_flight - restricted view settings - watermark: " .. tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+            server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - restricted view settings - watermark: " ..
+                tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
 
             if response_json.restrictedViewSettings.size ~= nil then
                 server.log(os.date("!%Y-%m-%dT%H:%M:%S") .. " - pre_flight - restricted view settings - size: " ..
