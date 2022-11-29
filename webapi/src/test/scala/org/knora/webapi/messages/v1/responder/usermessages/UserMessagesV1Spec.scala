@@ -69,7 +69,7 @@ class UserMessagesV1Spec extends AnyWordSpecLike with Matchers {
 
     "allow checking SCrypt passwords" in {
       // hashedPassword =  encoder.encode(createRequest.password);
-      val encoder = new SCryptPasswordEncoder
+      val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
       val hp      = encoder.encode("123456")
       val up = UserProfileV1(
         userData = UserDataV1(
