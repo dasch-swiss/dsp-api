@@ -8,6 +8,20 @@
 For an extensive explanation on how DSP permissions are implemented, see
 [here](../../05-internals/design/api-admin/administration.md#permissions).
 
+| Route                                                   | Operations | Explanation                                                                                                                                                                               |
+| ------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/admin/permissions/{projectIri}`                       | `GET`      | [get all permissions of a project](#getting-permissions)                                                                                                                                  |
+| `/admin/permissions/ap/{projectIri}`                    | `GET`      | [get all administrative permissions of a project](#getting-permissions)                                                                                                                   |
+| `/admin/permissions/ap/{projectIri}/{groupIri}`         | `GET`      | [get all administrative permissions of a group](#getting-permissions)                                                                                                                     |
+| `/admin/permissions/doap/{projectIri}`                  | `GET`      | [get all default object access permissions of a project](#getting-permissions)                                                                                                            |
+| `/admin/permissions/ap`                                 | `POST`     | [create a new administrative permission](#creating-new-administrative-permissions)                                                                                                        |
+| `/admin/permissions/doap`                               | `POST`     | [create a new default object access permission](#creating-new-default-object-access-permissions)                                                                                          |
+| `/admin/permissions/{permissionIri}/group`              | `PUT`      | [update for which group an administrative or default object access permission is used](#updating-a-permissions-group)                                                                     |
+| `/admin/permissions/{permissionIri}/hasPermission`      | `PUT`      | [update the scope of an administrative or default object access permission](#updating-a-permissions-scope), i.e. what permissions are granted to which group when this permission applies |
+| `/admin/permissions/{doap_permissionIri}/resourceClass` | `PUT`      | [update for which resource class a default object access permission applies](#updating-a-default-object-access-permissions-resource-class)                                                |
+| `/admin/permissions/{doap_permissionIri}/property`      | `PUT`      | [update for which property a default object access permission applies](#updating-a-default-object-access-permissions-property)                                                            |
+| `/admin/permissions/{permissionIri}`                    | `DELETE`   | [delete an administrative or default object access permission](#deleting-a-permission)                                                                                                    |
+
 ## Permission Operations
 
 **Note:** For the following operations, the requesting user must be either a `systemAdmin`or a `projectAdmin`.
@@ -206,7 +220,7 @@ groups of a project. However, the default permissions set for these groups can b
 ### Updating a Permission's Group
 
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
-access permission, identified by it IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
+access permission, identified by its IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
 group as below:
 
 ```json
