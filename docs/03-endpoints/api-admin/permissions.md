@@ -5,6 +5,9 @@
 
 # Permissions Endpoint
 
+For an extensive explanation on how DSP permissions are implemented, see
+[here](../../05-internals/design/api-admin/administration.md#permissions).
+
 ## Permission Operations
 
 **Note:** For the following operations, the requesting user must be either a `systemAdmin`or a `projectAdmin`.
