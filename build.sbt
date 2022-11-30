@@ -73,6 +73,7 @@ lazy val root: Project = Project(id = "root", file("."))
 
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check")
+addCommandAlias("it", "IntegrationTest/test")
 
 lazy val customScalacOptions = Seq(
   "-feature",
@@ -128,8 +129,17 @@ run / connectInput := true
 lazy val webApiCommonSettings = Seq(
   name := "webapi"
 )
+testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
+  .configs(IntegrationTest)
+  .settings(
+    inConfig(IntegrationTest) {
+      Defaults.itSettings
+    },
+    IntegrationTest / testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
+  )
   .settings(buildSettings)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, BuildInfoPlugin)
   .settings(
@@ -137,7 +147,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     resolvers ++= Seq(
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
-    libraryDependencies ++= Dependencies.webapiLibraryDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
   .settings(
     inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)

@@ -5,8 +5,7 @@
 
 package org.knora
 
-import sbt.Keys._
-import sbt.{Def, _}
+import sbt._
 
 object Dependencies {
 
@@ -112,22 +111,33 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
 
-  val webapiLibraryDependencies = Seq(
+  val webapiTestDependencies = Seq(
+    akkaHttpTestkit,
+    akkaStreamTestkit,
+    akkaTestkit,
+    gatlingHighcharts,
+    gatlingTestFramework,
+    rdf4jClient,
+    scalaTest,
+    testcontainers,
+    xmlunitCore,
+    zioTest,
+    zioTestSbt
+  ).map(_ % Test)
+
+  val webapiIntegrationTestDependencies = Seq(zioTest, zioTestSbt).map(_ % IntegrationTest)
+
+  val webapiDependencies = Seq(
     akkaActor,
     akkaHttp,
     akkaHttpCors,
     akkaHttpSprayJson,
     akkaSlf4j,
-    akkaHttpTestkit % Test,
     akkaStream,
-    akkaStreamTestkit % Test,
-    akkaTestkit       % Test,
     commonsValidator,
     commonsLang3,
     diff,
     ehcache,
-    gatlingHighcharts    % Test,
-    gatlingTestFramework % Test,
     gwtServlet,
     icu4j,
     jacksonDatabind,
@@ -139,19 +149,15 @@ object Dependencies {
     kamonCore,
     kamonScalaFuture,
     logbackClassic,
-    rdf4jClient % Test,
     rdf4jShacl,
     saxonHE,
     scalaGraph,
     scalaLogging,
-    scalaTest % Test,
     scallop,
     slf4jApi,
     springSecurityCore,
     bouncyCastle,
-    testcontainers % Test,
     titaniumJSONLD,
-    xmlunitCore % Test,
     zio,
     zioConfig,
     zioConfigMagnolia,
@@ -162,9 +168,7 @@ object Dependencies {
     zioLoggingSlf4j,
     zioMacros,
     zioMetricsConnectors,
-    zioPrelude,
-    zioTest    % Test,
-    zioTestSbt % Test
+    zioPrelude
   )
 
   val valueObjectsLibraryDependencies = Seq(
