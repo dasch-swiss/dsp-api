@@ -6,6 +6,8 @@
 package dsp.valueobjects
 
 import org.apache.commons.validator.routines.UrlValidator
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import scala.util.Try
@@ -183,6 +185,11 @@ object Iri {
    */
   sealed abstract case class UserIri private (value: String) extends Iri
   object UserIri {
+    implicit val decoder: JsonDecoder[UserIri] = JsonDecoder[String].mapOrFail { case value =>
+      UserIri.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
+
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
