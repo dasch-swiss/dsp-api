@@ -137,8 +137,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     inConfig(Test) {
       Defaults.testSettings
     },
-    Test / testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    Test / parallelExecution  := true, // run tests in parallel
+    Test / testFrameworks    := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Test / parallelExecution := true, // run tests in parallel
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
   .settings(buildSettings)
