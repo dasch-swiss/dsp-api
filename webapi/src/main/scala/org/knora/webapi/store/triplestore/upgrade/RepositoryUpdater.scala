@@ -202,7 +202,7 @@ object RepositoryUpdater {
              )
 
         // Empty the repository.
-        _ <- ZIO.logInfo("Wiping the repository out...")
+        _ <- ZIO.logInfo("Wiping the repository...")
         _ <- triplestoreService.wipeRepositoryOut()
 
         // Upload the transformed repository.
