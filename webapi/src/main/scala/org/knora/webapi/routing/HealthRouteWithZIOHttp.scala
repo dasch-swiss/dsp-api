@@ -5,25 +5,26 @@
 
 package org.knora.webapi.routing
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives.get
-import akka.http.scaladsl.server.Directives.path
-import akka.http.scaladsl.server.Route
 import spray.json.JsObject
 import spray.json.JsString
+import zhttp.http._
 import zio._
 
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.util.LogAspect
 
 /**
  * Provides health check logic
  */
-trait HealthCheck {
+trait HealthCheckWithZIOHttp {
 
-  protected def healthCheck(state: State): UIO[HttpResponse] =
+  /**
+   * gets the application state from a state service called `State`
+   *
+   * @param state the state service
+   * @return a response with the application state
+   */
+  protected def healthCheck(state: State): UIO[Response] =
     for {
       _        <- ZIO.logDebug("get application state")
       state    <- state.getAppState
@@ -33,6 +34,12 @@ trait HealthCheck {
       _        <- ZIO.logDebug("getting application state done")
     } yield response
 
+  /**
+   * sets the application's health state to healthy or unhealthy according to the provided state
+   *
+   * @param state the application's state
+   * @return the result which is either unhealthy or healthy
+   */
   private def setHealthState(state: AppState): UIO[HealthCheckResult] =
     ZIO.succeed(
       state match {
@@ -57,28 +64,50 @@ trait HealthCheck {
       }
     )
 
-  private def createResponse(result: HealthCheckResult): UIO[HttpResponse] =
-    ZIO
-      .attempt(
-        HttpResponse(
-          status = statusCode(result.status),
-          entity = HttpEntity(
-            ContentTypes.`application/json`,
-            JsObject(
-              "name"     -> JsString("AppState"),
-              "severity" -> JsString("non fatal"),
-              "status"   -> JsString(status(result.status)),
-              "message"  -> JsString(result.message)
-            ).compactPrint
-          )
+  /**
+   * creates the HTTP response from the health check result (healthy/unhealthy)
+   *
+   * @param result the result of the health check
+   * @return an HTTP response
+   */
+  private def createResponse(result: HealthCheckResult): UIO[Response] =
+    ZIO.succeed(
+      Response
+        .json(
+          JsObject(
+            "name"     -> JsString("AppState"),
+            "severity" -> JsString("non fatal"),
+            "status"   -> JsString(status(result.status)),
+            "message"  -> JsString(result.message)
+          ).toString()
         )
-      )
-      .orDie
+        .setStatus(statusCode(result.status))
+    )
 
-  private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
+  /**
+   * returns a string representation "healthy" or "unhealthy" from a boolean
+   *
+   * @param s a boolean from which to derive the state
+   * @return either "healthy" or "unhealthy"
+   */
+  private def status(s: Boolean): String = if (s) "healthy" else "unhealthy"
 
-  private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
+  /**
+   * returns the HTTP status according to the input boolean
+   *
+   * @param s a boolean from which to derive the HTTP status
+   * @return the HTTP status (OK or ServiceUnavailable)
+   */
+  private def statusCode(s: Boolean): Status = if (s) Status.Ok else Status.ServiceUnavailable
 
+  /**
+   * The result of a health check which is either unhealthy or healthy.
+   *
+   * @param name      ???
+   * @param severity  ???
+   * @param status    the status (either false = unhealthy or true = healthy)
+   * @param message   the message
+   */
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
   private def unhealthy(message: String) =
@@ -99,39 +128,28 @@ trait HealthCheck {
 }
 
 /**
- * Provides the '/health' endpoint serving the health status.
+ * Provides the '/healthZ' endpoint serving the health status.
  */
-final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
-    extends HealthCheck
-    with Authenticator {
+final case class HealthRouteWithZIOHttp(state: State) extends HealthCheckWithZIOHttp {
 
   /**
    * Returns the route.
    */
-  def makeRoute: Route =
-    path("health") {
-      get { requestContext =>
-        val res: ZIO[State, Nothing, HttpResponse] = {
-          for {
-            _     <- ZIO.logDebug("health route start")
-            ec    <- ZIO.executor.map(_.asExecutionContext)
-            state <- ZIO.service[State]
-            requestingUser <-
-              ZIO
-                .fromFuture(_ =>
-                  getUserADM(requestContext, routeData.appConfig)(routeData.system, routeData.appActor, ec)
-                )
-                .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
-            result <- healthCheck(state)
-            _      <- ZIO.logDebug("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())
-          } yield result
-        } @@ LogAspect.logSpan("health-request") @@ LogAspect.logAnnotateCorrelationId(requestContext.request)
+  val route: HttpApp[State, Nothing] =
+    Http.collectZIO[Request] { case Method.GET -> !! / "healthZ" =>
+      for {
+        //  ec    <- ZIO.executor.map(_.asExecutionContext) // leave this for reference about how to get the execution context
+        state    <- ZIO.service[State]
+        response <- healthCheck(state)
+      } yield response
 
-        // executing our effect and returning a future to Akka Http
-        Unsafe.unsafe { implicit u =>
-          val resF = runtime.unsafe.runToFuture(res)
-          requestContext.complete(resF)
-        }
-      }
     }
+}
+
+/**
+ * Companion object providing the layer
+ */
+object HealthRouteWithZIOHttp {
+  val layer: ZLayer[State, Nothing, HealthRouteWithZIOHttp] =
+    ZLayer.fromFunction(HealthRouteWithZIOHttp.apply _)
 }

@@ -261,6 +261,18 @@ lazy val webapiJavaTestOptions = Seq(
 // DSP's new codebase
 //////////////////////////////////////
 
+// dsp-api-main project
+
+lazy val dspApiMain = project
+  .in(file("dsp-api-main"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "dspApiMain",
+    libraryDependencies ++= Dependencies.dspApiMainLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(userInterface, userHandler, userRepo)
+
 // Role projects
 
 lazy val roleInterface = project
@@ -317,7 +329,7 @@ lazy val userInterface = project
     libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(shared, userHandler)
+  .dependsOn(shared % "compile->compile;test->test", userHandler, userRepo % "test->test")
 
 lazy val userHandler = project
   .in(file("dsp-user/handler"))
@@ -328,7 +340,7 @@ lazy val userHandler = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(
-    shared,
+    shared   % "compile->compile;test->test",
     userCore % "compile->compile;test->test",
     userRepo % "test->test" // userHandler tests need mock implementation of UserRepo
   )
