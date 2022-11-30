@@ -24,7 +24,8 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
 lazy val buildSettings = Seq(
   organization := "org.knora",
-  version      := (ThisBuild / version).value
+  version      := (ThisBuild / version).value,
+  javaOptions += "-Xmx1G"
 )
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
@@ -132,13 +133,15 @@ lazy val webApiCommonSettings = Seq(
 testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
-  .configs(IntegrationTest)
   .settings(
-    inConfig(IntegrationTest) {
-      Defaults.itSettings
+    inConfig(Test) {
+      Defaults.testSettings
     },
-    IntegrationTest / testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
+    Test / testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Test / fork               := true, // run tests in a forked JVM
+    Test / testForkedParallel := true, // run tests in parallel
+    Test / parallelExecution  := true, // run tests in parallel
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
   .settings(buildSettings)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, BuildInfoPlugin)
@@ -147,10 +150,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     resolvers ++= Seq(
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
   .settings(
-    inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)
+    inConfig(IntegrationTest)(Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings),
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
   .settings(
     // add needed files to production jar
@@ -165,12 +169,12 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // use packaged jars (through packageBin) on classpaths instead of class directories for production
     Compile / exportJars := true,
     // add needed files to test jar
-    Test / packageBin / mappings ++= Seq(
+    IntegrationTest / packageBin / mappings ++= Seq(
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template", // needed for initialization of triplestore
       (rootBaseDir.value / "sipi" / "config" / "sipi.docker-config.lua")                   -> "sipi/config/sipi.docker-config.lua"
     ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for test
-    Test / exportJars := true
+    IntegrationTest / exportJars := true
   )
   .settings(
     scalacOptions ++= Seq(
@@ -186,16 +190,16 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     logLevel          := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
-    Test / fork               := true,  // run tests in a forked JVM
-    Test / testForkedParallel := false, // not run forked tests in parallel
-    Test / parallelExecution  := false, // not run non-forked tests in parallel
+    IntegrationTest / fork               := true,  // run tests in a forked JVM
+    IntegrationTest / testForkedParallel := false, // not run forked tests in parallel
+    IntegrationTest / parallelExecution  := false, // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
-    Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+    IntegrationTest / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
-    Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+    IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     // add test framework for running zio-tests
-    Test / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    IntegrationTest / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .settings(
     // prepare for publishing

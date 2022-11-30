@@ -9,7 +9,6 @@ object SomeZioSpec extends ZIOSpecDefault {
     suite("foo")(test("bar") {
       for {
         hi <- ZIO.succeed("hi")
-      } yield assertTrue(hi == "bye")
+      } yield assertTrue(hi == "hi")
     })
-
 }

@@ -113,7 +113,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
 
-  val webapiTestDependencies = Seq(
+  val webapiIntegrationTestDependencies = Seq(
     akkaHttpTestkit,
     akkaStreamTestkit,
     akkaTestkit,
@@ -125,9 +125,9 @@ object Dependencies {
     xmlunitCore,
     zioTest,
     zioTestSbt
-  ).map(_ % Test)
+  ).map(_ % IntegrationTest)
 
-  val webapiIntegrationTestDependencies = Seq(zioTest, zioTestSbt).map(_ % IntegrationTest)
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test )
 
   val webapiDependencies = Seq(
     akkaActor,

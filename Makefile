@@ -201,16 +201,16 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 	# after a certain time. at startup, data should be upgraded.
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
+.PHONY: test-all
+test-all: test integration-test
+
 .PHONY: test
-test: build test-shared test-user-slice test-role-slice test-project-slice ## runs all tests
-	sbt -v coverage "webapi/test"
-	sbt -v coverage "schemaCore/test"
-	sbt coverageAggregate
+test: ## runs all unit tests
+	sbt -v coverage coverageAggregate test
 	
 .PHONY:
-integration-test:
-	sbt -v coverage "IntegrationTest/test"
-	sbt coverageAggregate
+integration-test: build ## runs all integration tests
+	sbt -v coverage coverageAggregate "IntegrationTest/test"
 
 .PHONY: test-shared
 test-shared: ## tests the shared projects (build is not called from this target)

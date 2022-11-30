@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-      - name: Run all tests
+      - name: Run all integration tests
         run: make integration-test
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
