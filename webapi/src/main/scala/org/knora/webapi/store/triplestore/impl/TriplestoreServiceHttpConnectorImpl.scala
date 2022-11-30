@@ -401,14 +401,16 @@ case class TriplestoreServiceHttpConnectorImpl(
           processResponse = returnResponseAsString
         )
       _ <- ZIO.logInfo("==>> DELETE All Data End")
-      _ <- ZIO.logInfo("==>> Re-initializing DB #2")
-      _ <-
-        doHttpRequest(
-          client = queryHttpClient,
-          request = postRequest,
-          context = ctx,
-          processResponse = returnResponseAsString
-        )
+      // _ <- ZIO.logInfo("==>> Re-initializing DB #2")
+      // _ <-
+      //   doHttpRequest(
+      //     client = queryHttpClient,
+      //     request = postRequest,
+      //     context = ctx,
+      //     processResponse = returnResponseAsString
+      //   )
+      _ <- ZIO.logInfo("==>> Load Jena Fuseki config")
+      _ <- initJenaFusekiTriplestore()
     } yield WipeRepositoryOutACK()
   }
 
