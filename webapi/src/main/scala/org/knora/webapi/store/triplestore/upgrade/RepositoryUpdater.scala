@@ -82,9 +82,16 @@ object RepositoryUpdater {
             for {
               // No. Construct the list of updates that it needs.
               _ <-
-                ZIO.logInfo(
-                  s"Repository not up to date. Found: ${foundRepositoryVersion.getOrElse("None")}, Required: $requiredRepositoryVersion"
-                )
+                foundRepositoryVersion match {
+                  case Some(foundRepositoryVersion) =>
+                    ZIO.logWarning(
+                      s"Repository not up to date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion"
+                    )
+                  case None =>
+                    ZIO.logWarning(
+                      s"Repository not up to date. Found: None, Required: $requiredRepositoryVersion"
+                    )
+                }
               _               <- deleteTmpDirectories()
               selectedPlugins <- selectPluginsForNeededUpdates(foundRepositoryVersion)
               _ <-
