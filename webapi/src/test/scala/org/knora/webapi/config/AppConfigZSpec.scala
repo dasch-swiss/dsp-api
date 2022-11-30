@@ -1,11 +1,13 @@
 package org.knora.webapi.config
 
-import dsp.valueobjects.User
 import zio.ZIO
-import zio.test.{ZIOSpecDefault, assertTrue}
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
+
+import dsp.valueobjects.User
 
 object AppConfigZSpec extends ZIOSpecDefault {
 

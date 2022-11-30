@@ -127,7 +127,7 @@ object Dependencies {
     zioTestSbt
   ).map(_ % IntegrationTest)
 
-  val webapiTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test )
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
 
   val webapiDependencies = Seq(
     akkaActor,
