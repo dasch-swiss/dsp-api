@@ -26,7 +26,7 @@ jobs:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
 
   integration-test:
-    name: Build and test
+    name: Build and integration-test
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
