@@ -39,9 +39,11 @@ object Dependencies {
   val zioConfig            = "dev.zio" %% "zio-config"             % ZioConfigVersion
   val zioConfigMagnolia    = "dev.zio" %% "zio-config-magnolia"    % ZioConfigVersion
   val zioConfigTypesafe    = "dev.zio" %% "zio-config-typesafe"    % ZioConfigVersion
-  val zioTest              = "dev.zio" %% "zio-test"               % ZioVersion
-  val zioTestSbt           = "dev.zio" %% "zio-test-sbt"           % ZioVersion
   val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
+
+  // zio-test and friends
+  val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
+  val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -201,7 +203,8 @@ object Dependencies {
 
   val schemaCoreLibraryDependencies = Seq(
     zioPrelude,
-    zioTest % Test
+    zioTest    % Test,
+    zioTestSbt % Test
   )
 
   val schemaRepoLibraryDependencies                  = Seq()
