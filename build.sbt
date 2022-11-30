@@ -25,7 +25,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 lazy val buildSettings = Seq(
   organization := "org.knora",
   version      := (ThisBuild / version).value,
-  javaOptions += "-Xmx1G"
+  javaOptions += "-Xmx2G -XX:+UseG1GC"
 )
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
@@ -138,8 +138,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       Defaults.testSettings
     },
     Test / testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    Test / fork               := true, // run tests in a forked JVM
-    Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
