@@ -209,7 +209,7 @@ test: ## runs all unit tests
 	sbt -v coverage test coverageAggregate
 
 .PHONY: integration-test
-integration-test: build ## runs all integration tests
+integration-test: docker-build-sipi-image ## runs all integration tests
 	sbt -v coverage "IntegrationTest/test" coverageAggregate
 
 .PHONY: test-shared

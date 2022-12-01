@@ -106,7 +106,7 @@ sbt test
 Run integration tests:
 
 ```shell
-sbt it 
+make integration-test
 ```
 
 Run all tests:
