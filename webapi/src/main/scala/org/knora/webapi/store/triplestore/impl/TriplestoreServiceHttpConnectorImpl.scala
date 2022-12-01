@@ -349,11 +349,11 @@ case class TriplestoreServiceHttpConnectorImpl(
    * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
    */
   def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] = {
-    val DropAllSparqlString = "DROP ALL"
+    val sparqlQuery = "DROP ALL"
 
     for {
       _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- getSparqlHttpResponse(DropAllSparqlString, isUpdate = true)
+      result <- getSparqlHttpResponse(sparqlQuery, isUpdate = true)
       _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
     } yield DropAllRepositoryContentACK()
   }
