@@ -177,7 +177,7 @@ object User {
       // check which type of hash we have
       if (self.value.startsWith("$e0801$")) {
         // SCrypt
-        val encoder = new SCryptPasswordEncoder()
+        val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
         encoder.matches(passwordString, self.value)
       } else if (self.value.startsWith("$2a$")) {
         // BCrypt

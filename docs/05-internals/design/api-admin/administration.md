@@ -72,6 +72,8 @@ the built-in group to `knora-admin`, e.g., `knora-admin:KnownUser` where
 
 ## Permissions
 
+The permissions API endpoint is described [here](../../../03-endpoints/api-admin/permissions.md).
+
 Up until know, we have mentioned two groups of permissions. The first
 called *object access permissions*, which contains permissions that
 point from explicit **objects** (resources/values) to groups. The second
