@@ -14,7 +14,7 @@ jobs:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Run all tests
-        run: make test
+        run: sbt -v coverage test coverageAggregate
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
@@ -32,7 +32,7 @@ jobs:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Run all integration tests
-        run: make integration-test
+        run: sbt -v coverage "IntegrationTest/test" coverageAggregate
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
         with:

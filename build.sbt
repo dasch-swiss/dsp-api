@@ -25,7 +25,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 lazy val buildSettings = Seq(
   organization := "org.knora",
   version      := (ThisBuild / version).value,
-  javaOptions += "-Xmx1G"
+  javaOptions += "-Xmx2G"
 )
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
@@ -133,6 +133,7 @@ lazy val webApiCommonSettings = Seq(
 testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
+  .settings(buildSettings)
   .settings(
     inConfig(Test) {
       Defaults.testSettings
@@ -143,7 +144,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / parallelExecution  := true, // run tests in parallel
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
-  .settings(buildSettings)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, BuildInfoPlugin)
   .settings(
     name := "webapi",
@@ -187,14 +187,13 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-Wconf:src=target/.*:s",
       "-Wunused:imports"
     ),
-    logLevel          := Level.Info,
-    run / javaOptions := webapiJavaRunOptions,
+    logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,
     IntegrationTest / fork               := true,  // run tests in a forked JVM
     IntegrationTest / testForkedParallel := false, // not run forked tests in parallel
     IntegrationTest / parallelExecution  := false, // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
-    IntegrationTest / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+    IntegrationTest / javaOptions += "-Dconfig.resource=fuseki.conf",
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
@@ -249,22 +248,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     buildInfoPackage := "org.knora.webapi.http.version"
   )
   .dependsOn(shared, schemaCore)
-
-lazy val webapiJavaRunOptions = Seq(
-  "-Xms1G",
-  "-Xmx1G",
-  "-Xss6M"
-)
-
-lazy val webapiJavaTestOptions = Seq(
-  // "-showversion",
-  "-Xms1G",
-  "-Xmx1G"
-  // "-verbose:gc",
-  // "-XX:+UseG1GC",
-  // "-XX:MaxGCPauseMillis=500",
-  // "-XX:MaxMetaspaceSize=4096m"
-)
 
 //////////////////////////////////////
 // DSP's new codebase

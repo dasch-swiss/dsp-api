@@ -206,11 +206,11 @@ test-all: test integration-test
 
 .PHONY: test
 test: ## runs all unit tests
-	sbt -v test coverage coverageAggregate
+	sbt -v coverage test coverageAggregate
 
 .PHONY: integration-test
 integration-test: build ## runs all integration tests
-	sbt -v "IntegrationTest/test" coverage coverageAggregate
+	sbt -v coverage "IntegrationTest/test" coverageAggregate
 
 .PHONY: test-shared
 test-shared: ## tests the shared projects (build is not called from this target)
