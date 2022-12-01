@@ -384,14 +384,15 @@ case class TriplestoreServiceHttpConnectorImpl(
           context = ctx,
           processResponse = returnResponseAsString
         )
-      _ <- ZIO.logInfo("==>> Re-initializing DB #1")
-      _ <-
-        doHttpRequest(
-          client = queryHttpClient,
-          request = postRequest,
-          context = ctx,
-          processResponse = returnResponseAsString
-        )
+      _ <- initJenaFusekiTriplestore()
+      // _ <- ZIO.logInfo("==>> Re-initializing DB #1")
+      // _ <-
+      //   doHttpRequest(
+      //     client = queryHttpClient,
+      //     request = postRequest,
+      //     context = ctx,
+      //     processResponse = returnResponseAsString
+      //   )
       _ <- ZIO.logInfo("==>> Second DELETE request that deletes other graphs")
       _ <-
         doHttpRequest(
@@ -411,6 +412,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       //   )
       _ <- ZIO.logInfo("==>> Load Jena Fuseki config")
       _ <- initJenaFusekiTriplestore()
+      _ <- checkTriplestore()
     } yield WipeRepositoryOutACK()
   }
 
