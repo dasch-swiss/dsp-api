@@ -84,7 +84,7 @@ object RepositoryUpdater {
               _ <-
                 foundRepositoryVersion match {
                   case Some(foundRepositoryVersion) =>
-                    ZIO.logWarning(
+                    ZIO.logInfo(
                       s"Repository not up to date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion"
                     )
                   case None =>

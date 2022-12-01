@@ -359,62 +359,92 @@ case class TriplestoreServiceHttpConnectorImpl(
     } yield DropAllRepositoryContentACK()
   }
 
-  /**
-   * Wipes all triplestore data out using HTTP requests.
-   */
-  def wipeRepositoryOut(): UIO[WipeRepositoryOutACK] = {
-    val datasetsPath  = "/$/datasets"
-    val deleteRequest = new HttpDelete(s"$datasetsPath/$dbName")
-    val entity        = new StringEntity(s"dbName=${dbName}&dbType=tdb2")
-    val postRequest = {
-      val httpPost = new HttpPost(datasetsPath)
-      httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded")
-      httpPost.setEntity(entity)
-      httpPost
-    }
+  def getAllGraphs(): UIO[Seq[String]] = {
+    val getAllGraphsQuery =
+      """|
+         | SELECT DISTINCT ?graph 
+         | WHERE {
+         |  GRAPH ?graph { ?s ?p ?o }
+         | }""".stripMargin
 
     for {
-      ctx <- makeHttpContext.orDie
-      _   <- ZIO.logInfo("==>> DELETE All Data Start")
-      _   <- ZIO.logInfo("==>> First DELETE request that deletes default graph")
-      _ <-
-        doHttpRequest(
-          client = queryHttpClient,
-          request = deleteRequest,
-          context = ctx,
-          processResponse = returnResponseAsString
-        )
-      _ <- initJenaFusekiTriplestore()
-      // _ <- ZIO.logInfo("==>> Re-initializing DB #1")
-      // _ <-
-      //   doHttpRequest(
-      //     client = queryHttpClient,
-      //     request = postRequest,
-      //     context = ctx,
-      //     processResponse = returnResponseAsString
-      //   )
-      _ <- ZIO.logInfo("==>> Second DELETE request that deletes other graphs")
-      _ <-
-        doHttpRequest(
-          client = queryHttpClient,
-          request = deleteRequest,
-          context = ctx,
-          processResponse = returnResponseAsString
-        )
-      _ <- ZIO.logInfo("==>> DELETE All Data End")
-      // _ <- ZIO.logInfo("==>> Re-initializing DB #2")
-      // _ <-
-      //   doHttpRequest(
-      //     client = queryHttpClient,
-      //     request = postRequest,
-      //     context = ctx,
-      //     processResponse = returnResponseAsString
-      //   )
-      _ <- ZIO.logInfo("==>> Load Jena Fuseki config")
-      _ <- initJenaFusekiTriplestore()
-      _ <- checkTriplestore()
-    } yield WipeRepositoryOutACK()
+      res      <- sparqlHttpSelect(getAllGraphsQuery)
+      bindings <- ZIO.succeed(res.results.bindings)
+      graphs    = bindings.map(_.rowMap("graph"))
+
+    } yield graphs
   }
+
+  def dropGraph(graph: String) = s"DROP GRAPH $graph"
+
+  def wipeRepositoryOut(): UIO[WipeRepositoryOutACK] =
+    for {
+      _      <- ZIO.logInfo("==>> Drop All Data Start")
+      graphs <- getAllGraphs()
+      // _      <- ZIO.logInfo(s"ALL GRAPHS: $graphs")
+      _ <- ZIO.foreach(graphs)(graph =>
+             getSparqlHttpResponse(s"DROP GRAPH <$graph>", isUpdate = true)
+               .tap(result => ZIO.logInfo(s"==>> Dropped graph: $graph"))
+           )
+      _ <- ZIO.logInfo("==>> Drop All Data End")
+    } yield WipeRepositoryOutACK()
+
+  // /**
+  //  * Wipes all triplestore data out using HTTP requests.
+  //  */
+  // def wipeRepositoryOut(): UIO[WipeRepositoryOutACK] = {
+  //   val datasetsPath  = "/$/datasets"
+  //   val deleteRequest = new HttpDelete(s"$datasetsPath/$dbName")
+  //   val entity        = new StringEntity(s"dbName=${dbName}&dbType=tdb2")
+  //   val postRequest = {
+  //     val httpPost = new HttpPost(datasetsPath)
+  //     httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded")
+  //     httpPost.setEntity(entity)
+  //     httpPost
+  //   }
+
+  //   for {
+  //     ctx <- makeHttpContext.orDie
+  //     _   <- ZIO.logInfo("==>> DELETE All Data Start")
+  //     _   <- ZIO.logInfo("==>> First DELETE request that deletes default graph")
+  //     _ <-
+  //       doHttpRequest(
+  //         client = queryHttpClient,
+  //         request = deleteRequest,
+  //         context = ctx,
+  //         processResponse = returnResponseAsString
+  //       )
+  //     _ <- initJenaFusekiTriplestore()
+  //     // _ <- ZIO.logInfo("==>> Re-initializing DB #1")
+  //     // _ <-
+  //     //   doHttpRequest(
+  //     //     client = queryHttpClient,
+  //     //     request = postRequest,
+  //     //     context = ctx,
+  //     //     processResponse = returnResponseAsString
+  //     //   )
+  //     _ <- ZIO.logInfo("==>> Second DELETE request that deletes other graphs")
+  //     _ <-
+  //       doHttpRequest(
+  //         client = queryHttpClient,
+  //         request = deleteRequest,
+  //         context = ctx,
+  //         processResponse = returnResponseAsString
+  //       )
+  //     _ <- ZIO.logInfo("==>> DELETE All Data End")
+  //     // _ <- ZIO.logInfo("==>> Re-initializing DB #2")
+  //     // _ <-
+  //     //   doHttpRequest(
+  //     //     client = queryHttpClient,
+  //     //     request = postRequest,
+  //     //     context = ctx,
+  //     //     processResponse = returnResponseAsString
+  //     //   )
+  //     _ <- ZIO.logInfo("==>> Load Jena Fuseki config")
+  //     _ <- initJenaFusekiTriplestore()
+  //     _ <- checkTriplestore()
+  //   } yield WipeRepositoryOutACK()
+  // }
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`
