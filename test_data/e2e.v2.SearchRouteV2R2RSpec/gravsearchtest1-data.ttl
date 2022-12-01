@@ -109,19 +109,19 @@
 
 <http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> rdf:object <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> .
 
-<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :attachedToProject <http://rdfh.ch/projects/0666> .
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :attachedToProject <http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> .
 
-<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :attachedToProject <http://rdfh.ch/projects/0666> .
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :attachedToProject <http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> .
 
-<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :attachedToProject <http://rdfh.ch/projects/0666> .
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :attachedToProject <http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> .
 
-<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :attachedToProject <http://rdfh.ch/projects/0666> .
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :attachedToProject <http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> .
 
-<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :attachedToProject <http://rdfh.ch/projects/0666> .
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :attachedToProject <http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> .
 
-<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :attachedToProject <http://rdfh.ch/projects/0666> .
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :attachedToProject <http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> .
 
-<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :attachedToProject <http://rdfh.ch/projects/0666> .
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :attachedToProject <http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg> .
 
 <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :creationDate "2018-06-06T12:08:56.619Z"^^xsd:dateTime .
 

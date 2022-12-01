@@ -23,7 +23,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetR
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -557,9 +557,12 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
+          IriIdentifier
+            .fromString(imagesProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
+
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
 
         received.members.map(_.id) should contain(normalUser.id)
@@ -594,7 +597,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
 
         // check that the user was not added to the project
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(incunabulaProject.id)),
+          IriIdentifier
+            .fromString(incunabulaProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -625,7 +630,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         )
 
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(incunabulaProject.id)),
+          IriIdentifier
+            .fromString(incunabulaProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -633,13 +640,36 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         received.members.map(_.id) should contain(normalUser.id)
       }
 
-      "DELETE user from project" in {
+      "DELETE user from project and also as project admin" in {
+        // check project memberships (user should be member of images and incunabula projects)
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(
           Seq(imagesProject.id, incunabulaProject.id).sorted
         )
 
+        // add user as project admin to images project
+        appActor ! UserProjectAdminMembershipAddRequestADM(
+          normalUser.id,
+          imagesProject.id,
+          rootUser,
+          UUID.randomUUID()
+        )
+
+        expectMsgType[UserOperationResponseADM](timeout)
+
+        // verify that the user has been added as project admin to the images project
+        appActor ! UserProjectAdminMembershipsGetRequestADM(
+          normalUser.id,
+          rootUser,
+          UUID.randomUUID()
+        )
+        val projectAdminMembershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
+        projectAdminMembershipsBeforeUpdate.projects.map(_.id).sorted should equal(
+          Seq(imagesProject.id).sorted
+        )
+
+        // remove the user as member of the images project
         appActor ! UserProjectMembershipRemoveRequestADM(
           normalUser.id,
           imagesProject.id,
@@ -648,17 +678,31 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         )
         expectMsgType[UserOperationResponseADM](timeout)
 
+        // verify that the user has been removed as project member of the images project
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
         membershipsAfterUpdate.projects should equal(Seq(incunabulaProject))
 
+        // this should also have removed him as project admin from images project
+        appActor ! UserProjectAdminMembershipsGetRequestADM(
+          normalUser.id,
+          rootUser,
+          UUID.randomUUID()
+        )
+        val projectAdminMembershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
+        projectAdminMembershipsAfterUpdate.projects should equal(Seq())
+
+        // also check that the user has been removed from the project's list of users
         appActor ! ProjectMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
+          IriIdentifier
+            .fromString(imagesProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
 
         received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
+
       }
 
       "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
@@ -694,7 +738,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
     }
 
     "asked to update the user's project admin group membership" should {
-      "ADD user to project admin group" in {
+      "Not ADD user to project admin group if he is not a member of that project" in {
+        // get the current project admin memberships (should be empty)
         appActor ! UserProjectAdminMembershipsGetRequestADM(
           normalUser.id,
           rootUser,
@@ -703,7 +748,35 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
         membershipsBeforeUpdate.projects should equal(Seq())
 
+        // try to add user as project admin to images project (expected to fail because he is not a member of the project)
         appActor ! UserProjectAdminMembershipAddRequestADM(
+          normalUser.id,
+          imagesProject.id,
+          rootUser,
+          UUID.randomUUID()
+        )
+        expectMsg(
+          timeout,
+          Failure(
+            BadRequestException(
+              "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA. A user needs to be a member of the project to be added as project admin."
+            )
+          )
+        )
+      }
+
+      "ADD user to project admin group" in {
+        // get the current project admin memberships (should be empty)
+        appActor ! UserProjectAdminMembershipsGetRequestADM(
+          normalUser.id,
+          rootUser,
+          UUID.randomUUID()
+        )
+        val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
+        membershipsBeforeUpdate.projects should equal(Seq())
+
+        // add user as project member to images project
+        appActor ! UserProjectMembershipAddRequestADM(
           normalUser.id,
           imagesProject.id,
           rootUser,
@@ -711,6 +784,17 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         )
         expectMsgType[UserOperationResponseADM](timeout)
 
+        // add user as project admin to images project
+        appActor ! UserProjectAdminMembershipAddRequestADM(
+          normalUser.id,
+          imagesProject.id,
+          rootUser,
+          UUID.randomUUID()
+        )
+
+        expectMsgType[UserOperationResponseADM](timeout)
+
+        // get the updated project admin memberships (should contain images project)
         appActor ! UserProjectAdminMembershipsGetRequestADM(
           normalUser.id,
           rootUser,
@@ -719,8 +803,11 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
+        // get project admins for images project (should contain normal user)
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
+          IriIdentifier
+            .fromString(imagesProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -754,7 +841,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         membershipsAfterUpdate.projects should equal(Seq())
 
         appActor ! ProjectAdminMembersGetRequestADM(
-          ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
+          IriIdentifier
+            .fromString(imagesProject.id)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)

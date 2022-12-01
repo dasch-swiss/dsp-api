@@ -116,7 +116,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraProjectIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
+    (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -222,21 +222,24 @@ object V2UuidValidation {
    * @return TRUE for correct versions, FALSE for incorrect.
    */
   def isUuidVersion4Or5(s: String): Boolean =
-    // println("VERSION", getUUIDVersion(s), s)
-    // TODO-mpro: below condition is a quickfix, should be removed in DEV-1400
-    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
-      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
-    } else true
+    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
 
   /**
-   * Gets the last segment of IRI, decodes UUID and gets the version.
-   * @param s the string (IRI) to be checked.
+   * Decodes Base64 encoded UUID and gets its version.
+   * @param uuid the Base64 encoded UUID as [[String]] to be checked.
    * @return UUID version.
    */
-  def getUUIDVersion(s: String): Int = {
-    val encodedUUID = s.split("/").last
+  def getUUIDVersion(uuid: String): Int = {
+    val encodedUUID = getUuidFromIri(uuid)
     decodeUuid(encodedUUID).version()
   }
+
+  /**
+   * Gets the last IRI segment - Base64 encoded UUID.
+   * @param iri the IRI [[String]] to get the UUID from.
+   * @return Base64 encoded UUID as [[String]]
+   */
+  def getUuidFromIri(iri: String): String = iri.split("/").last
 
   /**
    * Calls `decodeUuidWithErr`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.

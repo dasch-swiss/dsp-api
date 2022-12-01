@@ -705,7 +705,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "return entire resource and value history events for a given project" in {
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ", "UTF-8")
       val projectHistoryRequest = Get(s"$baseApiUrl/v2/resources/projectHistoryEvents/$projectIri")
         .addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
       val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest)
@@ -955,7 +955,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |    }
           |  },
           |  "knora-api:attachedToProject" : {
-          |    "@id" : "http://rdfh.ch/projects/0001"
+          |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
           |  },
           |  "rdfs:label" : "test thing",
           |  "@context" : {
@@ -1023,7 +1023,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |    "knora-api:valueAsString" : "this is a foaf name"
           |  },
           |  "knora-api:attachedToProject" : {
-          |    "@id" : "http://rdfh.ch/projects/0001"
+          |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
           |  },
           |  "rdfs:label" : "Test foaf Person",
           |  "@context" : {
@@ -1103,7 +1103,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"""{
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
            |  },
            |  "anything:hasBoolean" : {
            |    "@type" : "knora-api:BooleanValue",
@@ -1150,7 +1150,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
          |  "@id" : "$iri",
          |  "@type" : "anything:Thing",
          |  "knora-api:attachedToProject" : {
-         |    "@id" : "http://rdfh.ch/projects/0001"
+         |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
          |  },
          |  "anything:hasBoolean" : {
          |    "@type" : "knora-api:BooleanValue",
@@ -1214,7 +1214,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  "@id" : "$aThingIri",
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
            |  },
            |  "anything:hasBoolean" : {
            |    "@type" : "knora-api:BooleanValue",
@@ -1247,7 +1247,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       s"""{
          |  "@type" : "anything:Thing",
          |  "knora-api:attachedToProject" : {
-         |    "@id" : "http://rdfh.ch/projects/0001"
+         |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
          |  },
          |  "anything:hasBoolean" : {
          |    "@id" : "$valueIRI",
@@ -1298,7 +1298,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"""{
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
            |  },
            |  "anything:hasBoolean" : {
            |    "@type" : "knora-api:BooleanValue",
@@ -1346,7 +1346,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"""{
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
            |  },
            |  "anything:hasBoolean" : {
            |    "@type" : "knora-api:BooleanValue",
@@ -1406,7 +1406,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |   "@id" : "$customResourceIRI",
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
            |  },
            |  "anything:hasBoolean" : {
            |    "@id": "$customValueIRI",
@@ -1485,7 +1485,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"""{
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
            |  },
            |  "anything:hasBoolean" : {
            |    "@type" : "knora-api:BooleanValue",
@@ -1527,7 +1527,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"""{
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
            |  },
            |  "anything:hasBoolean" : {
            |    "@type" : "knora-api:BooleanValue",
@@ -1823,7 +1823,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |    }
            |  },
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
            |  },
            |  "rdfs:label" : "test thing",
            |  "@context" : {
@@ -2001,7 +2001,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |    }
           |  },
           |  "knora-api:attachedToProject": {
-          |    "@id": "http://rdfh.ch/projects/0001"
+          |    "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
           |  },
           |  "rdfs:label": "obj_inst1",
           |  "@context": {
@@ -2053,7 +2053,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |            	}
           |            },
           |   "knora-api:attachedToProject": {
-          |                  "@id": "http://rdfh.ch/projects/0001"
+          |                  "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
           |                  },
           |   "rdfs:label": "thing_with_mutiple_standoffLinks",
           |   "@context": {
@@ -2174,7 +2174,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |    "knora-api:valueAsString" : "The new text value"
           |  },
           |  "knora-api:attachedToProject" : {
-          |    "@id" : "http://rdfh.ch/projects/0001"
+          |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
           |  },
           |  "rdfs:label" : "test resource instance",
           |  "@context" : {
@@ -2291,7 +2291,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |    }
           |  },
           |  "knora-api:attachedToProject" : {
-          |    "@id" : "http://rdfh.ch/projects/0001"
+          |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
           |  },
           |  "rdfs:label" : "second sequence",
           |  "@context" : {
@@ -2310,7 +2310,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
       val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
 
-      // get the newly created sequence reource
+      // get the newly created sequence resource
       val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
       val sequenceResponse   = singleAwaitingRequest(sequenceGetRequest)
       assert(sequenceResponse.status == StatusCodes.OK)
@@ -2360,7 +2360,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |    }
           |  },
           |  "knora-api:attachedToProject" : {
-          |    "@id" : "http://rdfh.ch/projects/0001"
+          |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
           |  },
           |  "rdfs:label" : "custom audio sequence",
           |  "@context" : {

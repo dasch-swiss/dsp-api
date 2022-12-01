@@ -32,7 +32,7 @@
             <p0801-beol:person knoraType="link_value" linkType="ref" target="Hermann"/>
         </p0801-beol:hasRecipient>
 
-        <p0801-beol:hasText knoraType="richtext_value" mapping_id="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLMapping">
+        <p0801-beol:hasText knoraType="richtext_value" mapping_id="http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ/mappings/BEOLMapping">
             <text xmlns="">
                 <p>[...] Viro Clarissimo.</p>
                 <p>Dn. Jacobo Hermanno S. S. M. C. </p>

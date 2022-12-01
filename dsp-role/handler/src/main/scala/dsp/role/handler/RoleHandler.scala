@@ -135,9 +135,6 @@ final case class RoleHandler(repo: RoleRepo) {
     } yield id).tap(_ => ZIO.logInfo(s"Deleted role with ID: $id"))
 }
 
-/**
- * Companion object providing the layer with an initialized implementation
- */
 object RoleHandler {
   val layer: ZLayer[RoleRepo, Nothing, RoleHandler] =
     ZLayer {

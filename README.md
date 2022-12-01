@@ -111,4 +111,4 @@ The DSP-API release versioning follows the [Semantic Versioning](https://semver.
 > * PATCH version when you make backwards-compatible bug fixes.
 
 Additionally, we will also increment the MAJOR version in the case when any kind of changes to existing
-data would be necessary, e.g., any changes to the [knora-base ontology](https://docs.dasch.swiss/latest/DSP-API/02-knora-ontologies/knora-base/) which are not backwards compatible.
+data would be necessary, e.g., any changes to the [knora-base ontology](https://docs.dasch.swiss/latest/DSP-API/02-dsp-ontologies/knora-base/) which are not backwards compatible.

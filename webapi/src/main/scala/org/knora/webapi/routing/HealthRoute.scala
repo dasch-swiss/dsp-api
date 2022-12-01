@@ -23,14 +23,14 @@ import org.knora.webapi.util.LogAspect
  */
 trait HealthCheck {
 
-  protected def healthCheck(state: State): ZIO[Any, Nothing, HttpResponse] =
+  protected def healthCheck(state: State): UIO[HttpResponse] =
     for {
-      _        <- ZIO.logInfo("get application state")
-      state    <- state.get
+      _        <- ZIO.logDebug("get application state")
+      state    <- state.getAppState
       result   <- setHealthState(state)
-      _        <- ZIO.logInfo("set health state")
+      _        <- ZIO.logDebug("set health state")
       response <- createResponse(result)
-      _        <- ZIO.logInfo("getting application state done")
+      _        <- ZIO.logDebug("getting application state done")
     } yield response
 
   private def setHealthState(state: AppState): UIO[HealthCheckResult] =
@@ -113,7 +113,7 @@ final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
       get { requestContext =>
         val res: ZIO[State, Nothing, HttpResponse] = {
           for {
-            _     <- ZIO.logInfo("health route start")
+            _     <- ZIO.logDebug("health route start")
             ec    <- ZIO.executor.map(_.asExecutionContext)
             state <- ZIO.service[State]
             requestingUser <-
@@ -123,7 +123,7 @@ final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
                 )
                 .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
             result <- healthCheck(state)
-            _      <- ZIO.logInfo("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())
+            _      <- ZIO.logDebug("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())
           } yield result
         } @@ LogAspect.logSpan("health-request") @@ LogAspect.logAnnotateCorrelationId(requestContext.request)
 

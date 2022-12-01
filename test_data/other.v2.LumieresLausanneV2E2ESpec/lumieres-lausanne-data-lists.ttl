@@ -22,7 +22,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Type d'études"""@fr ;
                                          rdfs:label """Type d'études"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/disseminationGroupHasType-study> ,
                                                                    <http://rdfh.ch/lists/0113/disseminationGroupHasType-proceedings> .
 																#   <http://rdfh.ch/lists/0113/disseminationGroupHasType-dissertation> ,
@@ -87,7 +87,7 @@
 #                                         knora-base:isRootNode "true"^^xsd:boolean ;
 #                                         rdfs:comment """Sélection oui/non"""@fr ;
 #                                         rdfs:label """Oui/Non"""@fr ;
-#                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+#                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
 #                                         knora-base:hasSubListNode <http://rdfh.ch/lists/0113/b7783cfa9501> ,
 #                                                                   <http://rdfh.ch/lists/0113/52ac8f339601> .
 #
@@ -119,7 +119,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste de choix des différentes contribution à une fiche Bibliographie."""@de ;
                                          rdfs:label """Liste de contributions"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/154349a29401> ,
                                                                    <http://rdfh.ch/lists/0113/b0769cdb9401> ,
                                                                    <http://rdfh.ch/lists/0113/4baaef149501> ,
@@ -195,7 +195,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Choix du type de littérature."""@fr ;
                                          rdfs:label """Type de littérature"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/eddfe26c9601> ,
                                                                    <http://rdfh.ch/lists/0113/881336a69601> .
 
@@ -227,7 +227,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste des types de documents"""@fr ;
                                          rdfs:label """Type de document"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/b671a962ae01> ,
                                                                    <http://rdfh.ch/lists/0113/51a5fc9bae01> ,
                                                                    <http://rdfh.ch/lists/0113/ecd84fd5ae01> ,
@@ -292,7 +292,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste de langues"""@fr ;
                                          rdfs:label """Langues"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/384d693b9a01> ,
                                                                    <http://rdfh.ch/lists/0113/d380bc749a01> ,
                                                                    <http://rdfh.ch/lists/0113/6eb40fae9a01> ,
@@ -368,7 +368,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste des institutions conservant le manuscrit. """@fr ;
                                          rdfs:label """Lieu de dépôt (manuscrit)"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/3f4f095a9b01> ,
                                                                    <http://rdfh.ch/lists/0113/cb7789beb101> ,
                                                                    <http://rdfh.ch/lists/0113/83baef099e01> ,
@@ -609,7 +609,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste de choix parmi différents types d'écrits."""@fr ;
                                          rdfs:label """Type d'écrit"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/2a4929fe9701> ,
                                                                    <http://rdfh.ch/lists/0113/9d1916029a01> ,
                                                                    <http://rdfh.ch/lists/0113/02e6c2c89901> ,
@@ -740,7 +740,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste des sociétés et académies."""@fr ;
                                          rdfs:label """Sociétés/académies"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/5247c386cf01> ,
                                                                    <http://rdfh.ch/lists/0113/4ffca219a601> ,
                                                                    <http://rdfh.ch/lists/0113/ea2ff652a601> ,
@@ -1399,7 +1399,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste des types de relation"""@fr ;
                                          rdfs:label """Liste des types de relation"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/ef883cef9e01> ,
                                                                    <http://rdfh.ch/lists/0113/695bc911a201> ,
                                                                    <http://rdfh.ch/lists/0113/ce2776d8a101> ,
@@ -1585,7 +1585,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste des religions"""@fr ;
                                          rdfs:label """Religion"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/1eee42439e01> ,
                                                                    <http://rdfh.ch/lists/0113/b921967c9e01> ,
                                                                    <http://rdfh.ch/lists/0113/5455e9b59e01> ,
@@ -1639,7 +1639,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Liste de nationalités (nationalités & régions d'origine)"""@fr ;
                                          rdfs:label """Nationalités"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/c36e5608c901> ,
                                                                    <http://rdfh.ch/lists/0113/5ea2a941c901> ,
                                                                    <http://rdfh.ch/lists/0113/f9d5fc7ac901> ,
@@ -1825,7 +1825,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Etat de la transcription"""@fr ;
                                          rdfs:label """Etat"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/bd734981af01> ,
                                                                    <http://rdfh.ch/lists/0113/58a79cbaaf01> .
 
@@ -1857,7 +1857,7 @@
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:comment """Etendue de la transcription"""@fr ;
                                          rdfs:label """Emprise de la transcription"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/f3daeff3af01> ,
                                                                    <http://rdfh.ch/lists/0113/8e0e432db001> .
 
@@ -1896,7 +1896,7 @@
 <http://rdfh.ch/lists/0113/b039339503> rdf:type knora-base:ListNode ;
                                          knora-base:isRootNode "true"^^xsd:boolean ;
                                          rdfs:label """mots de clé"""@fr ;
-                                         knora-base:attachedToProject <http://rdfh.ch/projects/0113> ;
+                                         knora-base:attachedToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
                                          knora-base:hasSubListNode <http://rdfh.ch/lists/0113/ec811bfb1201> ,
                                                                    <http://rdfh.ch/lists/0113/a528d55e1a01> ,
                                                                    <http://rdfh.ch/lists/0113/00fd01a01e01> ,

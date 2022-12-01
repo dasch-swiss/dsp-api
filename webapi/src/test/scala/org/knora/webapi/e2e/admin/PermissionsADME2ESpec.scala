@@ -178,7 +178,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/0001")
+        assert(projectIri == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
         val permissions = result
           .getOrElse(
             "hasPermissions",
@@ -222,7 +222,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |    "administrative_permission": {
              |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-             |        "forProject": "http://rdfh.ch/projects/0001",
+             |        "forProject": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
              |        "hasPermissions": [
              |            {
              |                "additionalInformation": null,
@@ -247,11 +247,11 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "create a new administrative permission for a new project" in {
-        val projectIri = "http://rdfh.ch/projects/3333"
+        val projectIri = "http://rdfh.ch/projects/Fti-cwr3QICVH1DjE_cvCQ"
         val projectPayload =
           s"""
              |{
-             |	"projectIri": "$projectIri",
+             |	  "id": "$projectIri",
              |    "shortname": "newprojectWithIri",
              |    "shortcode": "3333",
              |    "longname": "new project with a custom IRI",
@@ -260,7 +260,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
              |    "logo": "/fu/bar/baz.jpg",
              |    "status": true,
              |    "selfjoin": false
-             |
              |}
              |""".stripMargin
 
@@ -285,7 +284,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
         val permissionResponse: HttpResponse = singleAwaitingRequest(permissionRequest)
         assert(permissionResponse.status === StatusCodes.OK)
-
       }
 
       "create a default object access permission" in {
@@ -325,7 +323,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/0001")
+        assert(projectIri == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
         val permissions = result
           .getOrElse(
             "hasPermissions",
@@ -393,7 +391,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/00FF")
+        assert(projectIri == "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA")
         val permissions = result
           .getOrElse(
             "hasPermissions",

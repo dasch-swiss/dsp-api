@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCre
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
@@ -1582,14 +1582,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                       }
 
       // Get information about the project in which the resources will be created.
-      projectInfoResponse <- appActor
-                               .ask(
-                                 ProjectGetRequestADM(
-                                   identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                   requestingUser = requestingUser
-                                 )
-                               )
-                               .mapTo[ProjectGetResponseADM]
+      projectInfoResponse <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = IriIdentifier
+                .fromString(projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+              requestingUser = requestingUser
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       projectADM = projectInfoResponse.project
 
@@ -2457,14 +2460,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           }
 
       // Get project info
-      projectResponse <- appActor
-                           .ask(
-                             ProjectGetRequestADM(
-                               identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                               requestingUser = userProfile
-                             )
-                           )
-                           .mapTo[ProjectGetResponseADM]
+      projectResponse <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = IriIdentifier
+                .fromString(projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+              requestingUser = userProfile
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       // Ensure that the project isn't the system project or the shared ontologies project.
 

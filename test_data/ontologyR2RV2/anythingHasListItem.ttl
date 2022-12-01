@@ -9,7 +9,7 @@
 <http://0.0.0.0:3333/ontology/0001/anything/v2>
         rdf:type                        owl:Ontology ;
         rdfs:label                      "The anything ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
         knora-api:lastModificationDate  "2017-12-19T15:23:42.166Z"^^xsd:dateTimeStamp .
 
 anything:hasListItem  rdf:type        owl:ObjectProperty ;

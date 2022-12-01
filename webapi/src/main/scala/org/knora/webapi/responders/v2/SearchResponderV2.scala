@@ -990,7 +990,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    * @param targetSchema         the schema of the response.
-   *
    * @param requestingUser       the the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */

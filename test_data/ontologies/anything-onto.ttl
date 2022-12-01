@@ -15,7 +15,7 @@
 <http://www.knora.org/ontology/0001/anything>
     rdf:type                        owl:Ontology ;
     rdfs:label                      "The anything ontology" ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:lastModificationDate "2017-12-19T15:23:42.166Z"^^xsd:dateTime .
 
 

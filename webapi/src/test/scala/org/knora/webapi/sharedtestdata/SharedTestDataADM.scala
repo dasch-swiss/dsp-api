@@ -202,7 +202,8 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
+  val imagesProjectUuid  = "MTvoB0EJRrqovzRkWXqfkA"
+  val IMAGES_PROJECT_IRI = s"http://rdfh.ch/projects/$imagesProjectUuid"
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01: UserADM =
@@ -348,7 +349,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/0803"
+  val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
   def incunabulaProjectAdminUser: UserADM =
@@ -477,7 +478,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
+  val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
 
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
@@ -605,7 +606,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
 
   def beolProject: ProjectADM = ProjectADM(
     id = BEOL_PROJECT_IRI,
@@ -658,7 +659,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/0804"
+  val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/oIjhUsZmQLuJ0VMGvJ2pfg"
 
   def dokubibProject: ProjectADM = ProjectADM(
     id = DOKUBIB_PROJECT_IRI,

@@ -7,6 +7,8 @@ package dsp.role.domain
 
 import zio.test._
 
+import java.util.UUID
+
 import dsp.role.sharedtestdata.RoleTestData
 import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
@@ -86,7 +88,7 @@ object RoleDomainSpec extends ZIOSpecDefault {
       (
         for {
           role        <- RoleTestData.role1
-          newValue     = List(RoleUser(Id.UserId.make().fold(e => throw e.head, v => v)))
+          newValue     = List(RoleUser(Id.UserId.make(UUID.randomUUID()).fold(e => throw e.head, v => v)))
           updatedRole <- role.updateUsers(newValue)
         } yield assertTrue(updatedRole.name == role.name) &&
           assertTrue(updatedRole.description == role.description) &&

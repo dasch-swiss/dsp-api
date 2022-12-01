@@ -1,5 +1,19 @@
 # Changelog
 
+### [24.0.8](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.7...v24.0.8) (2022-10-18)
+
+
+### Bug Fixes
+
+* User can be project admin without being project member (DEV-1383) ([#2248](https://www.github.com/dasch-swiss/dsp-api/issues/2248)) ([c1aa8f0](https://www.github.com/dasch-swiss/dsp-api/commit/c1aa8f0bd4e8f7141d25c0134aec65a8ff0e0546))
+
+
+### Maintenance
+
+* automatically clean sipi image files (DEV-1395) ([#2237](https://www.github.com/dasch-swiss/dsp-api/issues/2237)) ([eddb34d](https://www.github.com/dasch-swiss/dsp-api/commit/eddb34d80b8fc41a1b219051159ed2eea4f2fd3e))
+* fix project name ([#2239](https://www.github.com/dasch-swiss/dsp-api/issues/2239)) ([5af65eb](https://www.github.com/dasch-swiss/dsp-api/commit/5af65eba2edecdf13bbda837cd5a529791dcefe0))
+* update dependencies ([#2247](https://www.github.com/dasch-swiss/dsp-api/issues/2247)) ([2eefcbc](https://www.github.com/dasch-swiss/dsp-api/commit/2eefcbcee1734fb46b8086e22dc63f36e5146d3c))
+
 ### [24.0.7](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.6...v24.0.7) (2022-10-07)
 
 
@@ -1510,7 +1524,7 @@
 * MAJOR: Fix property names for incoming links (#1144))
 * MAJOR: Generate and resolve ARK URLs for resources (#1161). Projects
   that have resource IRIs that do not conform to the format specified in
-  <https://docs.knora.org/paradox/03-apis/api-v2/knora-iris.html#iris-for-data>
+  <https://docs.knora.org/paradox/03-endpoints/api-v2/knora-iris.html#iris-for-data>
   must update them.
 * MAJOR: Use project shortcode in IIIF URLs (#1191). If you have file value IRIs containing the substring `/reps/`, you must replace `/reps/` with `/values/`.
 

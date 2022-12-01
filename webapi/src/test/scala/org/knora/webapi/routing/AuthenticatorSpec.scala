@@ -44,7 +44,6 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
           system,
           appActor,
-          timeout,
           executionContext
         )
         resF map { res =>
@@ -57,7 +56,6 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           UserIdentifierADM(maybeEmail = Some("wronguser@example.com")),
           system,
           appActor,
-          timeout,
           executionContext
         )
         resF map { _ =>
@@ -71,7 +69,6 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
             UserIdentifierADM(),
             system,
             appActor,
-            timeout,
             executionContext
           )
         }

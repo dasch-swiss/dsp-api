@@ -24,7 +24,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -697,7 +697,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject))
+                identifier = IriIdentifier
+                  .fromString(createRequest.forProject)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]
@@ -1634,7 +1636,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           appActor
             .ask(
               ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject))
+                identifier = IriIdentifier
+                  .fromString(createRequest.forProject)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
             .mapTo[Option[ProjectADM]]

@@ -2,6 +2,13 @@ version: '3.7'
 
 services:
 
+  app:
+    image: daschswiss/dsp-app:latest
+    ports:
+      - "4200:4200"
+    networks:
+      - knora-net
+
   db:
     image: daschswiss/apache-jena-fuseki:2.0.10 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
     ports:
@@ -26,6 +33,7 @@ services:
       - ${LOCAL_HOME}/sipi/config:/sipi/config:delegated
       - ${LOCAL_HOME}/sipi/images:/sipi/images:delegated
       - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
+      - ${LOCAL_HOME}/sipi/scripts:/sipi/scripts:delegated
     networks:
       - knora-net
     environment:

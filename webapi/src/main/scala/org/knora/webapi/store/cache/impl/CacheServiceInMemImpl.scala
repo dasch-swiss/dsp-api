@@ -8,9 +8,11 @@ package org.knora.webapi.store.cache.impl
 import zio._
 import zio.stm._
 
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
@@ -76,7 +78,7 @@ case class CacheServiceInMemImpl(
    * @param id the user's IRI.
    * @return an optional [[UserADM]].
    */
-  def getUserByIri(id: String): ZIO[Any, Nothing, Option[UserADM]] =
+  def getUserByIri(id: String): UIO[Option[UserADM]] =
     users.get(id).commit
 
   /**
@@ -85,7 +87,7 @@ case class CacheServiceInMemImpl(
    * @param usernameOrEmail of the user.
    * @return an optional [[UserADM]].
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[UserADM]] =
+  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[UserADM]] =
     (for {
       iri  <- lut.get(usernameOrEmail).some
       user <- users.get(iri).some
@@ -119,31 +121,53 @@ case class CacheServiceInMemImpl(
    * @return an optional [[ProjectADM]]
    */
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    (identifier.hasType match {
-      case ProjectIdentifierType.IRI       => getProjectByIri(identifier.toIri)
-      case ProjectIdentifierType.SHORTCODE => getProjectByShortcodeOrShortname(identifier.toShortcode)
-      case ProjectIdentifierType.SHORTNAME => getProjectByShortcodeOrShortname(identifier.toShortname)
+    (identifier match {
+      case IriIdentifier(value)       => getProjectByIri(value)
+      case ShortcodeIdentifier(value) => getProjectByShortcode(value)
+      case ShortnameIdentifier(value) => getProjectByShortname(value)
+      case UuidIdentifier(value)      => getProjectByUuid(value)
     }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
 
   /**
-   * Retrieves the project stored under the IRI.
+   * Retrieves the project by the IRI.
    *
-   * @param id the project's IRI
+   * @param iri the project's IRI
    * @return an optional [[ProjectADM]].
    */
-  def getProjectByIri(id: String) = projects.get(id).commit
+  def getProjectByIri(iri: Iri.ProjectIri) = projects.get(iri.value).commit
 
   /**
-   * Retrieves the project stored under a SHORTCODE or SHORTNAME.
+   * Retrieves the project by the SHORTNAME.
    *
-   * @param shortcodeOrShortname of the project.
+   * @param shortname of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortcodeOrShortname(shortcodeOrShortname: String): UIO[Option[ProjectADM]] =
+  def getProjectByShortname(shortname: Project.ShortName): UIO[Option[ProjectADM]] =
     (for {
-      iri     <- lut.get(shortcodeOrShortname).some
+      iri     <- lut.get(shortname.value).some
       project <- projects.get(iri).some
     } yield project).commit.unsome
+
+  /**
+   * Retrieves the project by the SHORTCODE.
+   *
+   * @param shortcode of the project.
+   * @return an optional [[ProjectADM]]
+   */
+  def getProjectByShortcode(shortcode: Project.ShortCode): UIO[Option[ProjectADM]] =
+    (for {
+      iri     <- lut.get(shortcode.value).some
+      project <- projects.get(iri).some
+    } yield project).commit.unsome
+
+  /**
+   * Retrieves the project by the UUID.
+   *
+   * @param uuid the project's UUID
+   * @return an optional [[ProjectADM]].
+   */
+  def getProjectByUuid(uuid: Iri.Base64Uuid) =
+    projects.get(UuidIdentifier.makeProjectIri(uuid.value)).commit
 
   /**
    * Store string or byte array value under key.
@@ -199,9 +223,6 @@ case class CacheServiceInMemImpl(
     ZIO.succeed(CacheServiceStatusOK)
 }
 
-/**
- * Companion object providing the layer with an initialized implementation
- */
 object CacheServiceInMemImpl {
   val layer: ZLayer[Any, Nothing, CacheService] =
     ZLayer {

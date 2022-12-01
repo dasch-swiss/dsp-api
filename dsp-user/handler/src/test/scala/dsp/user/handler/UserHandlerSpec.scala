@@ -9,11 +9,14 @@ import zio._
 import zio.test.Assertion._
 import zio.test._
 
+import java.util.UUID
+
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.user.repo.impl.UserRepoMock
 import dsp.user.sharedtestdata.SharedTestData
+import dsp.util.UuidGeneratorMock
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
@@ -91,7 +94,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         retrievedUsers <- userHandler.getUsers()
       } yield assertTrue(retrievedUsers.size == 3)
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val createUserTest = suite("createUser")(
     test("return an Error when creating a user if a username is already taken") {
@@ -182,7 +185,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         fails(equalTo(DuplicateValueException(s"Email '${email1.value}' already taken")))
       )
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val getUserByTest = suite("getUserBy")(
     test("store a user and retrieve by ID") {
@@ -219,7 +222,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test("return an Error if user not found by ID") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        newUserId   <- UserId.make().toZIO
+        uuid         = UUID.randomUUID()
+        newUserId   <- UserId.make(uuid).toZIO
         error       <- userHandler.getUserById(newUserId).exit
       } yield assert(error)(fails(equalTo(NotFoundException(s"User with ID '${newUserId}' not found"))))
     },
@@ -300,7 +304,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         error       <- userHandler.getUserByEmail(email).exit
       } yield assert(error)(fails(equalTo(NotFoundException(s"User with Email '${email.value}' not found"))))
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val updateUserTest = suite("updateUser")(
     test("store a user and update the username") {
@@ -640,7 +644,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.language != language) &&
         assertTrue(retrievedUser.status == status)
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 
   private val deleteUserTest = suite("deleteUser")(
     test("delete a user") {
@@ -670,19 +674,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         usernameNotFound <- userHandler.getUserByUsername(username1).exit
         emailNotFound    <- userHandler.getUserByEmail(email1).exit
 
-        // create new user with same values
-
-        newUserId <- userHandler.createUser(
-                       username1,
-                       email1,
-                       givenName1,
-                       familyName1,
-                       password1,
-                       language,
-                       status
-                     )
       } yield assertTrue(id == userId) &&
-        assertTrue(userId != newUserId) &&
         assert(idNotFound)(fails(equalTo(NotFoundException(s"User with ID '${userId}' not found")))) &&
         assert(usernameNotFound)(
           fails(equalTo(NotFoundException(s"User with Username '${username1.value}' not found")))
@@ -694,11 +686,12 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test("return an error if the ID of a user is not found when trying to delete the user") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        userId      <- UserId.make().toZIO
+        uuid         = UUID.randomUUID()
+        userId      <- UserId.make(uuid).toZIO
         error       <- userHandler.deleteUser(userId).exit
       } yield assert(error)(
         fails(equalTo(NotFoundException(s"User with ID '${userId}' not found")))
       )
     }
-  ).provide(UserRepoMock.layer, UserHandler.layer)
+  ).provide(UuidGeneratorMock.layer, UserRepoMock.layer, UserHandler.layer)
 }

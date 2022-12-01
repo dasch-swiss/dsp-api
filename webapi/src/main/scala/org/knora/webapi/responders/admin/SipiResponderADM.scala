@@ -10,10 +10,11 @@ import akka.pattern._
 
 import scala.concurrent.Future
 
+import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
@@ -122,7 +123,9 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                           appActor
                             .ask(
                               ProjectRestrictedViewSettingsGetADM(
-                                identifier = ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
+                                identifier = ShortcodeIdentifier
+                                  .fromString(request.projectID)
+                                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                               )
                             )
