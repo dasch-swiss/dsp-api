@@ -291,12 +291,12 @@ case class DropAllRepositoryContentACK()
 /**
  * Message for removing all content from the repository.
  */
-case class WipeRepositoryOut() extends TriplestoreRequest
+case class DropDataGraphByGraph() extends TriplestoreRequest
 
 /**
- * Sent as a response to [[WipeRepositoryOut]] if the request was processed successfully.
+ * Sent as a response to [[DropDataGraphByGraph]] if the request was processed successfully.
  */
-case class WipeRepositoryOutACK()
+case class DropDataGraphByGraphACK()
 
 /**
  * Inserts data into the repository.

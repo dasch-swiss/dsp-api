@@ -125,7 +125,7 @@ trait TriplestoreService {
   /**
    * Wipes all triplestore data out using HTTP requests.
    */
-  def wipeRepositoryOut(): UIO[WipeRepositoryOutACK]
+  def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK]
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`
