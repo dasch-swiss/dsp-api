@@ -1,18 +1,12 @@
-/*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package org.knora.webapi.store.cache.serialization
-
-import zio.test.Assertion._
-import zio.test.TestAspect.ignore
-import zio.test._
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cache.serialization.CacheSerialization
+import zio.test.Assertion.equalTo
+import zio.test.TestAspect.ignore
+import zio.test.ZIOSpecDefault
+import zio.test.assert
 
 /**
  * This spec is used to test [[CacheSerialization]].
