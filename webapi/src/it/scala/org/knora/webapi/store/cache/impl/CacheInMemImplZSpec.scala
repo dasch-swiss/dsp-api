@@ -19,7 +19,8 @@ import zio.test.Assertion._
 import zio.test._
 
 /**
- * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]]. */
+ * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].
+ */
 object CacheInMemImplZSpec extends ZIOSpecDefault {
 
   StringFormatter.initForTest()
