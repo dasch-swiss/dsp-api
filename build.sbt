@@ -24,8 +24,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
 lazy val buildSettings = Seq(
   organization := "org.knora",
-  version      := (ThisBuild / version).value,
-  javaOptions += "-Xmx2G"
+  version      := (ThisBuild / version).value
 )
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
