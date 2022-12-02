@@ -2,13 +2,10 @@ import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
-
-import sbt._
 import sbt.Keys.version
-import sbt.librarymanagement.Resolver
+import sbt._
 
 import scala.language.postfixOps
-import scala.sys.process.Process
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
@@ -76,6 +73,7 @@ lazy val root: Project = Project(id = "root", file("."))
 
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check")
+addCommandAlias("it", "IntegrationTest/test")
 
 lazy val customScalacOptions = Seq(
   "-feature",
@@ -103,8 +101,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Docker / dockerExposedPorts ++= Seq(1024),
     Docker / defaultLinuxInstallLocation := "/sipi",
     Universal / mappings ++= {
-      // copy the sipi/scripts folder
-      directory("sipi/scripts"),
+      directory("sipi/scripts")
     },
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
@@ -132,20 +129,31 @@ run / connectInput := true
 lazy val webApiCommonSettings = Seq(
   name := "webapi"
 )
+testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
+  .settings(
+    inConfig(Test) {
+      Defaults.testSettings
+    },
+    Test / testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Test / fork               := true, // run tests in a forked JVM
+    Test / testForkedParallel := true, // run tests in parallel
+    Test / parallelExecution  := true, // run tests in parallel
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
+  )
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, BuildInfoPlugin)
   .settings(
     name := "webapi",
     resolvers ++= Seq(
-      Resolver.bintrayRepo("hseeberger", "maven"),
-      "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots"
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
-    libraryDependencies ++= Dependencies.webapiLibraryDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
   .settings(
-    inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)
+    inConfig(IntegrationTest)(Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings),
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
   .settings(
     // add needed files to production jar
@@ -160,12 +168,12 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // use packaged jars (through packageBin) on classpaths instead of class directories for production
     Compile / exportJars := true,
     // add needed files to test jar
-    Test / packageBin / mappings ++= Seq(
+    IntegrationTest / packageBin / mappings ++= Seq(
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template", // needed for initialization of triplestore
       (rootBaseDir.value / "sipi" / "config" / "sipi.docker-config.lua")                   -> "sipi/config/sipi.docker-config.lua"
     ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for test
-    Test / exportJars := true
+    IntegrationTest / exportJars := true
   )
   .settings(
     scalacOptions ++= Seq(
@@ -178,19 +186,18 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-Wconf:src=target/.*:s",
       "-Wunused:imports"
     ),
-    logLevel          := Level.Info,
-    run / javaOptions := webapiJavaRunOptions,
+    logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,
-    Test / fork               := true,  // run tests in a forked JVM
-    Test / testForkedParallel := false, // not run forked tests in parallel
-    Test / parallelExecution  := false, // not run non-forked tests in parallel
+    IntegrationTest / fork               := true,  // run tests in a forked JVM
+    IntegrationTest / testForkedParallel := false, // not run forked tests in parallel
+    IntegrationTest / parallelExecution  := false, // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
-    Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+    IntegrationTest / javaOptions += "-Dconfig.resource=fuseki.conf",
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
-    Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+    IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     // add test framework for running zio-tests
-    Test / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    IntegrationTest / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .settings(
     // prepare for publishing
@@ -240,22 +247,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     buildInfoPackage := "org.knora.webapi.http.version"
   )
   .dependsOn(shared, schemaCore)
-
-lazy val webapiJavaRunOptions = Seq(
-  "-Xms1G",
-  "-Xmx1G",
-  "-Xss6M"
-)
-
-lazy val webapiJavaTestOptions = Seq(
-  // "-showversion",
-  "-Xms1G",
-  "-Xmx1G"
-  // "-verbose:gc",
-  // "-XX:+UseG1GC",
-  // "-XX:MaxGCPauseMillis=500",
-  // "-XX:MaxMetaspaceSize=4096m"
-)
 
 //////////////////////////////////////
 // DSP's new codebase

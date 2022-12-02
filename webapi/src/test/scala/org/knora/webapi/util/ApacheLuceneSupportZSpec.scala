@@ -5,9 +5,11 @@
 
 package org.knora.webapi.util
 
-import zio._
+import zio.Scope
+import zio.test.Spec
+import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
-import zio.test._
+import zio.test.assertTrue
 
 object ApacheLuceneSupportZSpec extends ZIOSpecDefault {
 

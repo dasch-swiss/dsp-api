@@ -5,8 +5,7 @@
 
 package org.knora
 
-import sbt.Keys._
-import sbt.{Def, _}
+import sbt._
 
 object Dependencies {
 
@@ -40,9 +39,11 @@ object Dependencies {
   val zioConfig            = "dev.zio" %% "zio-config"             % ZioConfigVersion
   val zioConfigMagnolia    = "dev.zio" %% "zio-config-magnolia"    % ZioConfigVersion
   val zioConfigTypesafe    = "dev.zio" %% "zio-config-typesafe"    % ZioConfigVersion
-  val zioTest              = "dev.zio" %% "zio-test"               % ZioVersion
-  val zioTestSbt           = "dev.zio" %% "zio-test-sbt"           % ZioVersion
   val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
+
+  // zio-test and friends
+  val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
+  val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -112,22 +113,33 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
 
-  val webapiLibraryDependencies = Seq(
+  val webapiIntegrationTestDependencies = Seq(
+    akkaHttpTestkit,
+    akkaStreamTestkit,
+    akkaTestkit,
+    gatlingHighcharts,
+    gatlingTestFramework,
+    rdf4jClient,
+    scalaTest,
+    testcontainers,
+    xmlunitCore,
+    zioTest,
+    zioTestSbt
+  ).map(_ % IntegrationTest)
+
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
+
+  val webapiDependencies = Seq(
     akkaActor,
     akkaHttp,
     akkaHttpCors,
     akkaHttpSprayJson,
     akkaSlf4j,
-    akkaHttpTestkit % Test,
     akkaStream,
-    akkaStreamTestkit % Test,
-    akkaTestkit       % Test,
     commonsValidator,
     commonsLang3,
     diff,
     ehcache,
-    gatlingHighcharts    % Test,
-    gatlingTestFramework % Test,
     gwtServlet,
     icu4j,
     jacksonDatabind,
@@ -139,19 +151,15 @@ object Dependencies {
     kamonCore,
     kamonScalaFuture,
     logbackClassic,
-    rdf4jClient % Test,
     rdf4jShacl,
     saxonHE,
     scalaGraph,
     scalaLogging,
-    scalaTest % Test,
     scallop,
     slf4jApi,
     springSecurityCore,
     bouncyCastle,
-    testcontainers % Test,
     titaniumJSONLD,
-    xmlunitCore % Test,
     zio,
     zioConfig,
     zioConfigMagnolia,
@@ -162,9 +170,7 @@ object Dependencies {
     zioLoggingSlf4j,
     zioMacros,
     zioMetricsConnectors,
-    zioPrelude,
-    zioTest    % Test,
-    zioTestSbt % Test
+    zioPrelude
   )
 
   val valueObjectsLibraryDependencies = Seq(
@@ -197,7 +203,8 @@ object Dependencies {
 
   val schemaCoreLibraryDependencies = Seq(
     zioPrelude,
-    zioTest % Test
+    zioTest    % Test,
+    zioTestSbt % Test
   )
 
   val schemaRepoLibraryDependencies                  = Seq()
