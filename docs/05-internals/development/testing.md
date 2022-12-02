@@ -37,7 +37,7 @@ You might need to create an integration test because:
 In this case create it in the `src/it`  source set of our projects.
 
 .NOTE
-_Currently only the `webapi` project supports it tests_
+_Currently only the `webapi` project supports integration tests_
 
 Run all integration tests from the terminal.
 
