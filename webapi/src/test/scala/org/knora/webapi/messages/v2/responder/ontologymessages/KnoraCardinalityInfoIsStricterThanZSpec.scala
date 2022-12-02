@@ -1,11 +1,12 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import dsp.schema.domain.Cardinality.MayHaveMany
 import dsp.schema.domain.Cardinality.MayHaveOne
 import dsp.schema.domain.Cardinality.MustHaveOne
 import dsp.schema.domain.Cardinality.MustHaveSome
-import zio.test.ZIOSpecDefault
-import zio.test.assertTrue
 
 /**
  * Tests the comparison forstrictness of cardinalities with [[isStricterThan()]].

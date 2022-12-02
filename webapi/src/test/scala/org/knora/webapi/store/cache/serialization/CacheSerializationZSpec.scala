@@ -1,12 +1,13 @@
 package org.knora.webapi.store.cache.serialization
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import zio.test.Assertion.equalTo
 import zio.test.TestAspect.ignore
 import zio.test.ZIOSpecDefault
 import zio.test.assert
+
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
  * This spec is used to test [[CacheSerialization]].

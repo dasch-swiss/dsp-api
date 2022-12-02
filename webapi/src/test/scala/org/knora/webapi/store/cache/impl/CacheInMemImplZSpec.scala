@@ -1,5 +1,12 @@
 package org.knora.webapi.store.cache.impl
 
+import zio.ZLayer
+import zio.test.Assertion.equalTo
+import zio.test.TestAspect
+import zio.test.ZIOSpecDefault
+import zio.test.assert
+import zio.test.assertTrue
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2UuidValidation
 import org.knora.webapi.messages.StringFormatter
@@ -12,12 +19,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.api.CacheService
-import zio.ZLayer
-import zio.test.Assertion.equalTo
-import zio.test.TestAspect
-import zio.test.ZIOSpecDefault
-import zio.test.assert
-import zio.test.assertTrue
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].
