@@ -11,7 +11,7 @@ import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.Schema
 
 /**
- * This spec is used to test [[dsp.schema.domain.CreatePropertyCommand]].
+ * This spec is used to test [[dsp.schema.domain.SchemaCommandsSpec]].
  */
 object SchemaCommandsSpec extends ZIOSpecDefault {
 
