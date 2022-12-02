@@ -139,6 +139,8 @@ object Dependencies {
     kamonCore,
     kamonScalaFuture,
     logbackClassic,
+    logbackJsonClassic,
+    logbackJackson,
     rdf4jClient % Test,
     rdf4jShacl,
     saxonHE,

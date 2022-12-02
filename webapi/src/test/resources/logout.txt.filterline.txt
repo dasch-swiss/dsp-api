@@ -1,0 +1,6 @@
+2022-11-29 13:50:38; 13:50:38.912; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 1.docx: 86 ms
+2022-11-29 13:50:40; 13:50:40.054; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 1.jpeg: 99 ms
+2022-11-29 13:50:40; 13:50:40.722; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 1.mp3: 87 ms
+2022-11-29 13:50:52; 13:50:52.268; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 1.mp4: 10508 ms
+2022-11-29 13:50:53; 13:50:53.246; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 1.txt: 151 ms
+2022-11-29 13:50:54; 13:50:54.064; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 1.zip: 164 ms

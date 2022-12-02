@@ -14,6 +14,7 @@ import scala.concurrent.Future
 
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
+import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -43,7 +44,7 @@ import org.knora.webapi.util.ActorUtil
 /**
  * Handles requests to read and write Knora values.
  */
-class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData) {
+class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
 
   /**
    * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
@@ -72,320 +73,329 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
    * @param createValueRequest the request to create the value.
    * @return a [[CreateValueResponseV2]].
    */
-  private def createValueV2(createValueRequest: CreateValueRequestV2): Future[CreateValueResponseV2] = {
-    def makeTaskFuture: Future[CreateValueResponseV2] = {
-      for {
-        // Convert the submitted value to the internal schema.
-        submittedInternalPropertyIri: SmartIri <-
-          Future(
-            createValueRequest.createValue.propertyIri.toOntologySchema(InternalSchema)
-          )
-        submittedInternalValueContent: ValueContentV2 = createValueRequest.createValue.valueContent
-                                                          .toOntologySchema(InternalSchema)
-
-        // Get ontology information about the submitted property.
-
-        propertyInfoRequestForSubmittedProperty = PropertiesGetRequestV2(
-                                                    propertyIris = Set(submittedInternalPropertyIri),
-                                                    allLanguages = false,
-                                                    requestingUser = createValueRequest.requestingUser
-                                                  )
-
-        propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          appActor
-            .ask(propertyInfoRequestForSubmittedProperty)
-            .mapTo[ReadOntologyV2]
-
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
-                                                                 submittedInternalPropertyIri
-                                                               )
-
-        // Don't accept link properties.
-        _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-              throw BadRequestException(
-                s"Invalid property <${createValueRequest.createValue.propertyIri}>. Use a link value property to submit a link."
+  private def createValueV2(createValueRequest: CreateValueRequestV2): Future[CreateValueResponseV2] =
+    tracedFuture(s"createValueV2 - ${createValueRequest.createValue.valueContent.valueType}") {
+      def makeTaskFuture: Future[CreateValueResponseV2] =
+        tracedFuture(s"createValueV2 - makeTaskFuture - ${createValueRequest.createValue.valueContent.valueType}") {
+          for {
+            // Convert the submitted value to the internal schema.
+            submittedInternalPropertyIri: SmartIri <-
+              Future(
+                createValueRequest.createValue.propertyIri.toOntologySchema(InternalSchema)
               )
-            }
+            submittedInternalValueContent: ValueContentV2 = createValueRequest.createValue.valueContent
+                                                              .toOntologySchema(InternalSchema)
 
-        // Don't accept knora-api:hasStandoffLinkToValue.
-        _ =
-          if (
-            createValueRequest.createValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue
-          ) {
-            throw BadRequestException(
-              s"Values of <${createValueRequest.createValue.propertyIri}> cannot be created directly"
-            )
-          }
+            // Get ontology information about the submitted property.
 
-        // Make an adjusted version of the submitted property: if it's a link value property, substitute the
-        // corresponding link property, whose objects we will need to query. Get ontology information about the
-        // adjusted property.
+            propertyInfoRequestForSubmittedProperty = PropertiesGetRequestV2(
+                                                        propertyIris = Set(submittedInternalPropertyIri),
+                                                        allLanguages = false,
+                                                        requestingUser = createValueRequest.requestingUser
+                                                      )
 
-        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <-
-          getAdjustedInternalPropertyInfo(
-            submittedPropertyIri = createValueRequest.createValue.propertyIri,
-            maybeSubmittedValueType = Some(createValueRequest.createValue.valueContent.valueType),
-            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
-            requestingUser = createValueRequest.requestingUser
-          )
+            propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
+              appActor
+                .ask(propertyInfoRequestForSubmittedProperty)
+                .mapTo[ReadOntologyV2]
 
-        adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
+            propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
+                                                                     submittedInternalPropertyIri
+                                                                   )
 
-        // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
-        // so we can see objects that the user doesn't have permission to see.
+            // Don't accept link properties.
+            _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
+                  throw BadRequestException(
+                    s"Invalid property <${createValueRequest.createValue.propertyIri}>. Use a link value property to submit a link."
+                  )
+                }
 
-        resourceInfo: ReadResourceV2 <-
-          getResourceWithPropertyValues(
-            resourceIri = createValueRequest.createValue.resourceIri,
-            propertyInfo = adjustedInternalPropertyInfo,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
+            // Don't accept knora-api:hasStandoffLinkToValue.
+            _ =
+              if (
+                createValueRequest.createValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue
+              ) {
+                throw BadRequestException(
+                  s"Values of <${createValueRequest.createValue.propertyIri}> cannot be created directly"
+                )
+              }
 
-        // Check that the user has permission to modify the resource.
+            // Make an adjusted version of the submitted property: if it's a link value property, substitute the
+            // corresponding link property, whose objects we will need to query. Get ontology information about the
+            // adjusted property.
 
-        _ = ResourceUtilV2.checkResourcePermission(
-              resourceInfo = resourceInfo,
-              permissionNeeded = ModifyPermission,
-              requestingUser = createValueRequest.requestingUser
-            )
-
-        // Check that the resource has the rdf:type that the client thinks it has.
-
-        _ =
-          if (
-            resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri
-              .toOntologySchema(InternalSchema)
-          ) {
-            throw BadRequestException(
-              s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>"
-            )
-          }
-
-        // Get the definition of the resource class.
-
-        classInfoRequest = ClassesGetRequestV2(
-                             classIris = Set(resourceInfo.resourceClassIri),
-                             allLanguages = false,
-                             requestingUser = createValueRequest.requestingUser
-                           )
-
-        classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
-
-        // Check that the resource class has a cardinality for the submitted property.
-
-        classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-        cardinalityInfo: KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(
-                                                  submittedInternalPropertyIri,
-                                                  throw BadRequestException(
-                                                    s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                                                        .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
-                                                  )
-                                                )
-
-        // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
-        // the correct type for the adjusted property's knora-base:objectClassConstraint.
-
-        _ <- checkPropertyObjectClassConstraint(
-               propertyInfo = adjustedInternalPropertyInfo,
-               valueContent = submittedInternalValueContent,
-               requestingUser = createValueRequest.requestingUser
-             )
-
-        // If it is a list value, check that it points to a real list node which is not a root node.
-        _ <- submittedInternalValueContent match {
-               case listValue: HierarchicalListValueContentV2 =>
-                 for {
-                   checkNode <-
-                     ResourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode, appActor)
-
-                   _ = checkNode match {
-                         // it doesn't have isRootNode property - it's a child node
-                         case Right(false) => ()
-                         // it does have isRootNode property - it's a root node
-                         case Right(true) =>
-                           throw BadRequestException(
-                             s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
-                           )
-                         // it deosn't exists or isn't valid list
-                         case Left(_) =>
-                           throw NotFoundException(
-                             s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
-                           )
-                       }
-                 } yield ()
-
-               case _ => FastFuture.successful(())
-             }
-
-        // Check that the resource class's cardinality for the submitted property allows another value to be added
-        // for that property.
-
-        currentValuesForProp: Seq[ReadValueV2] =
-          resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
-
-        _ =
-          if (
-            (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome) && currentValuesForProp.isEmpty
-          ) {
-            throw InconsistentRepositoryDataException(
-              s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property"
-            )
-          }
-
-        _ =
-          if (
-            cardinalityInfo.cardinality == MustHaveOne || (cardinalityInfo.cardinality == MayHaveOne && currentValuesForProp.nonEmpty)
-          ) {
-            throw OntologyConstraintException(
-              s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>"
-            )
-          }
-
-        // Check that the new value would not duplicate an existing value.
-
-        unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
-
-        _ = if (
-              currentValuesForProp.exists(currentVal =>
-                unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent)
+            adjustedInternalPropertyInfo: ReadPropertyInfoV2 <-
+              getAdjustedInternalPropertyInfo(
+                submittedPropertyIri = createValueRequest.createValue.propertyIri,
+                maybeSubmittedValueType = Some(createValueRequest.createValue.valueContent.valueType),
+                propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+                requestingUser = createValueRequest.requestingUser
               )
-            ) {
-              throw DuplicateValueException()
-            }
 
-        // If this is a text value, check that the resources pointed to by any standoff link tags exist
-        // and that the user has permission to see them.
+            adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
 
-        _ <- submittedInternalValueContent match {
-               case textValueContent: TextValueContentV2 =>
-                 checkResourceIris(
-                   targetResourceIris = textValueContent.standoffLinkTagTargetResourceIris,
+            // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
+            // so we can see objects that the user doesn't have permission to see.
+
+            resourceInfo: ReadResourceV2 <-
+              getResourceWithPropertyValues(
+                resourceIri = createValueRequest.createValue.resourceIri,
+                propertyInfo = adjustedInternalPropertyInfo,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
+
+            // Check that the user has permission to modify the resource.
+
+            _ = ResourceUtilV2.checkResourcePermission(
+                  resourceInfo = resourceInfo,
+                  permissionNeeded = ModifyPermission,
+                  requestingUser = createValueRequest.requestingUser
+                )
+
+            // Check that the resource has the rdf:type that the client thinks it has.
+
+            _ =
+              if (
+                resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri
+                  .toOntologySchema(InternalSchema)
+              ) {
+                throw BadRequestException(
+                  s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>"
+                )
+              }
+
+            // Get the definition of the resource class.
+
+            classInfoRequest = ClassesGetRequestV2(
+                                 classIris = Set(resourceInfo.resourceClassIri),
+                                 allLanguages = false,
+                                 requestingUser = createValueRequest.requestingUser
+                               )
+
+            classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
+
+            // Check that the resource class has a cardinality for the submitted property.
+
+            classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
+            cardinalityInfo: KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(
+                                                      submittedInternalPropertyIri,
+                                                      throw BadRequestException(
+                                                        s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                                                            .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
+                                                      )
+                                                    )
+
+            // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
+            // the correct type for the adjusted property's knora-base:objectClassConstraint.
+
+            _ <- checkPropertyObjectClassConstraint(
+                   propertyInfo = adjustedInternalPropertyInfo,
+                   valueContent = submittedInternalValueContent,
                    requestingUser = createValueRequest.requestingUser
                  )
 
-               case _ => FastFuture.successful(())
-             }
+            // If it is a list value, check that it points to a real list node which is not a root node.
+            _ <- submittedInternalValueContent match {
+                   case listValue: HierarchicalListValueContentV2 =>
+                     for {
+                       checkNode <-
+                         ResourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode, appActor)
 
-        // Get the default permissions for the new value.
-        defaultValuePermissions: String <-
-          ResourceUtilV2.getDefaultValuePermissions(
-            projectIri = resourceInfo.projectADM.id,
-            resourceClassIri = resourceInfo.resourceClassIri,
-            propertyIri = submittedInternalPropertyIri,
-            requestingUser = createValueRequest.requestingUser,
-            appActor = appActor
+                       _ = checkNode match {
+                             // it doesn't have isRootNode property - it's a child node
+                             case Right(false) => ()
+                             // it does have isRootNode property - it's a root node
+                             case Right(true) =>
+                               throw BadRequestException(
+                                 s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+                               )
+                             // it deosn't exists or isn't valid list
+                             case Left(_) =>
+                               throw NotFoundException(
+                                 s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+                               )
+                           }
+                     } yield ()
+
+                   case _ => FastFuture.successful(())
+                 }
+
+            // Check that the resource class's cardinality for the submitted property allows another value to be added
+            // for that property.
+
+            currentValuesForProp: Seq[ReadValueV2] =
+              resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+
+            _ =
+              if (
+                (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome) && currentValuesForProp.isEmpty
+              ) {
+                throw InconsistentRepositoryDataException(
+                  s"Resource class <${resourceInfo.resourceClassIri
+                      .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property"
+                )
+              }
+
+            _ =
+              if (
+                cardinalityInfo.cardinality == MustHaveOne || (cardinalityInfo.cardinality == MayHaveOne && currentValuesForProp.nonEmpty)
+              ) {
+                throw OntologyConstraintException(
+                  s"Resource class <${resourceInfo.resourceClassIri
+                      .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>"
+                )
+              }
+
+            // Check that the new value would not duplicate an existing value.
+
+            unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
+
+            _ = if (
+                  currentValuesForProp.exists(currentVal =>
+                    unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent)
+                  )
+                ) {
+                  throw DuplicateValueException()
+                }
+
+            // If this is a text value, check that the resources pointed to by any standoff link tags exist
+            // and that the user has permission to see them.
+
+            _ <- submittedInternalValueContent match {
+                   case textValueContent: TextValueContentV2 =>
+                     checkResourceIris(
+                       targetResourceIris = textValueContent.standoffLinkTagTargetResourceIris,
+                       requestingUser = createValueRequest.requestingUser
+                     )
+
+                   case _ => FastFuture.successful(())
+                 }
+
+            // Get the default permissions for the new value.
+            defaultValuePermissions: String <-
+              ResourceUtilV2.getDefaultValuePermissions(
+                projectIri = resourceInfo.projectADM.id,
+                resourceClassIri = resourceInfo.resourceClassIri,
+                propertyIri = submittedInternalPropertyIri,
+                requestingUser = createValueRequest.requestingUser,
+                appActor = appActor
+              )
+
+            // Did the user submit permissions for the new value?
+            newValuePermissionLiteral <-
+              createValueRequest.createValue.permissions match {
+                case Some(permissions: String) =>
+                  // Yes. Validate them.
+                  for {
+                    validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
+                                                    permissionLiteral = permissions,
+                                                    appActor = appActor
+                                                  )
+
+                    // Is the requesting user a system admin, or an admin of this project?
+                    _ = if (
+                          !(createValueRequest.requestingUser.permissions.isProjectAdmin(
+                            createValueRequest.requestingUser.id
+                          ) || createValueRequest.requestingUser.permissions.isSystemAdmin)
+                        ) {
+
+                          // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+
+                          val permissionComparisonResult: PermissionComparisonResult =
+                            PermissionUtilADM.comparePermissionsADM(
+                              entityCreator = createValueRequest.requestingUser.id,
+                              entityProject = resourceInfo.projectADM.id,
+                              permissionLiteralA = validatedCustomPermissions,
+                              permissionLiteralB = defaultValuePermissions,
+                              requestingUser = createValueRequest.requestingUser
+                            )
+
+                          if (permissionComparisonResult == AGreaterThanB) {
+                            throw ForbiddenException(
+                              s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
+                            )
+                          }
+                        }
+                  } yield validatedCustomPermissions
+
+                case None =>
+                  // No. Use the default permissions.
+                  FastFuture.successful(defaultValuePermissions)
+              }
+
+            dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
+
+            // Create the new value.
+
+            unverifiedValue <- createValueV2AfterChecks(
+                                 dataNamedGraph = dataNamedGraph,
+                                 projectIri = resourceInfo.projectADM.id,
+                                 resourceInfo = resourceInfo,
+                                 propertyIri = adjustedInternalPropertyIri,
+                                 value = submittedInternalValueContent,
+                                 valueIri = createValueRequest.createValue.valueIri,
+                                 valueUUID = createValueRequest.createValue.valueUUID,
+                                 valueCreationDate = createValueRequest.createValue.valueCreationDate,
+                                 valueCreator = createValueRequest.requestingUser.id,
+                                 valuePermissions = newValuePermissionLiteral,
+                                 requestingUser = createValueRequest.requestingUser
+                               )
+
+            // Check that the value was written correctly to the triplestore.
+
+            verifiedValue: VerifiedValueV2 <-
+              verifyValue(
+                resourceIri = createValueRequest.createValue.resourceIri,
+                propertyIri = submittedInternalPropertyIri,
+                unverifiedValue = unverifiedValue,
+                requestingUser = createValueRequest.requestingUser
+              )
+
+          } yield CreateValueResponseV2(
+            valueIri = verifiedValue.newValueIri,
+            valueType = verifiedValue.value.valueType,
+            valueUUID = unverifiedValue.newValueUUID,
+            valueCreationDate = unverifiedValue.creationDate,
+            projectADM = resourceInfo.projectADM
           )
+        }
 
-        // Did the user submit permissions for the new value?
-        newValuePermissionLiteral <-
-          createValueRequest.createValue.permissions match {
-            case Some(permissions: String) =>
-              // Yes. Validate them.
-              for {
-                validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
-                                                permissionLiteral = permissions,
-                                                appActor = appActor
-                                              )
+      val triplestoreUpdateFuture: Future[CreateValueResponseV2] =
+        tracedFuture(
+          s"createValueV2 - triplestoreUpdateFuture - ${createValueRequest.createValue.valueContent.valueType}"
+        ) {
+          for {
 
-                // Is the requesting user a system admin, or an admin of this project?
-                _ = if (
-                      !(createValueRequest.requestingUser.permissions.isProjectAdmin(
-                        createValueRequest.requestingUser.id
-                      ) || createValueRequest.requestingUser.permissions.isSystemAdmin)
-                    ) {
+            // Don't allow anonymous users to create values.
+            _ <- Future {
+                   if (createValueRequest.requestingUser.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to create values")
+                   } else {
+                     createValueRequest.requestingUser.id
+                   }
+                 }
 
-                      // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
+            taskResult <- IriLocker.runWithIriLock(
+                            createValueRequest.apiRequestID,
+                            createValueRequest.createValue.resourceIri,
+                            () => makeTaskFuture
+                          )
+          } yield taskResult
+        }
 
-                      val permissionComparisonResult: PermissionComparisonResult =
-                        PermissionUtilADM.comparePermissionsADM(
-                          entityCreator = createValueRequest.requestingUser.id,
-                          entityProject = resourceInfo.projectADM.id,
-                          permissionLiteralA = validatedCustomPermissions,
-                          permissionLiteralB = defaultValuePermissions,
-                          requestingUser = createValueRequest.requestingUser
-                        )
-
-                      if (permissionComparisonResult == AGreaterThanB) {
-                        throw ForbiddenException(
-                          s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
-                        )
-                      }
-                    }
-              } yield validatedCustomPermissions
-
-            case None =>
-              // No. Use the default permissions.
-              FastFuture.successful(defaultValuePermissions)
-          }
-
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
-
-        // Create the new value.
-
-        unverifiedValue <- createValueV2AfterChecks(
-                             dataNamedGraph = dataNamedGraph,
-                             projectIri = resourceInfo.projectADM.id,
-                             resourceInfo = resourceInfo,
-                             propertyIri = adjustedInternalPropertyIri,
-                             value = submittedInternalValueContent,
-                             valueIri = createValueRequest.createValue.valueIri,
-                             valueUUID = createValueRequest.createValue.valueUUID,
-                             valueCreationDate = createValueRequest.createValue.valueCreationDate,
-                             valueCreator = createValueRequest.requestingUser.id,
-                             valuePermissions = newValuePermissionLiteral,
-                             requestingUser = createValueRequest.requestingUser
-                           )
-
-        // Check that the value was written correctly to the triplestore.
-
-        verifiedValue: VerifiedValueV2 <-
-          verifyValue(
-            resourceIri = createValueRequest.createValue.resourceIri,
-            propertyIri = submittedInternalPropertyIri,
-            unverifiedValue = unverifiedValue,
-            requestingUser = createValueRequest.requestingUser
-          )
-
-      } yield CreateValueResponseV2(
-        valueIri = verifiedValue.newValueIri,
-        valueType = verifiedValue.value.valueType,
-        valueUUID = unverifiedValue.newValueUUID,
-        valueCreationDate = unverifiedValue.creationDate,
-        projectADM = resourceInfo.projectADM
-      )
+      // If we were creating a file value, have Sipi move the file to permanent storage if the update
+      // was successful, or delete the temporary file if the update failed.
+      tracedFuture(s"createValueV2 - doSipiPostUpdate - ${createValueRequest.createValue.valueContent.valueType}") {
+        ResourceUtilV2.doSipiPostUpdate(
+          updateFuture = triplestoreUpdateFuture,
+          valueContent = createValueRequest.createValue.valueContent,
+          requestingUser = createValueRequest.requestingUser,
+          appActor = appActor,
+          log = log
+        )
+      }
     }
-
-    val triplestoreUpdateFuture: Future[CreateValueResponseV2] = for {
-
-      // Don't allow anonymous users to create values.
-      _ <- Future {
-             if (createValueRequest.requestingUser.isAnonymousUser) {
-               throw ForbiddenException("Anonymous users aren't allowed to create values")
-             } else {
-               createValueRequest.requestingUser.id
-             }
-           }
-
-      // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(
-                      createValueRequest.apiRequestID,
-                      createValueRequest.createValue.resourceIri,
-                      () => makeTaskFuture
-                    )
-    } yield taskResult
-
-    // If we were creating a file value, have Sipi move the file to permanent storage if the update
-    // was successful, or delete the temporary file if the update failed.
-    ResourceUtilV2.doSipiPostUpdate(
-      updateFuture = triplestoreUpdateFuture,
-      valueContent = createValueRequest.createValue.valueContent,
-      requestingUser = createValueRequest.requestingUser,
-      appActor = appActor,
-      log = log
-    )
-  }
 
   /**
    * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that

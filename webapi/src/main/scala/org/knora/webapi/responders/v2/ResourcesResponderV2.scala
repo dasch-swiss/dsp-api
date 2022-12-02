@@ -18,6 +18,7 @@ import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
@@ -64,7 +65,9 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
-class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
+class ResourcesResponderV2(responderData: ResponderData)
+    extends ResponderWithStandoffV2(responderData)
+    with InstrumentationSupport {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -160,227 +163,291 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param createResourceRequestV2 the request to create the resource.
    * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
    */
-  private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
+  private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] =
+    tracedFuture(s"createResourceV2 - ${createResourceRequestV2.createResource.label}") {
 
-    def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
-      for {
-        // check if resourceIri already exists holding a lock on the IRI
-        result <- stringFormatter.checkIriExists(resourceIri, appActor)
+      def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] =
+        tracedFuture(s"createResourceV2 - makeTaskFuture - ${createResourceRequestV2.createResource.label}") {
+          for {
+            // check if resourceIri already exists holding a lock on the IRI
+            result <- stringFormatter.checkIriExists(resourceIri, appActor)
 
-        _ = if (result) {
-              throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
-            }
+            _ = if (result) {
+                  throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
+                }
 
-        // Convert the resource to the internal ontology schema.
-        internalCreateResource: CreateResourceV2 <-
-          Future(
-            createResourceRequestV2.createResource.toOntologySchema(InternalSchema)
-          )
+            // Convert the resource to the internal ontology schema.
+            internalCreateResource: CreateResourceV2 <-
+              tracedFuture(s"makeTaskFuture - toOntologySchema - ${createResourceRequestV2.createResource.label}") {
+                Future(
+                  createResourceRequestV2.createResource.toOntologySchema(InternalSchema)
+                )
+              }
 
-        // Check link targets and list nodes that should exist.
-        _ <- checkStandoffLinkTargets(
-               values = internalCreateResource.flatValues,
-               requestingUser = createResourceRequestV2.requestingUser
-             )
+            // Check link targets and list nodes that should exist.
+            _ <- tracedFuture(s"makeTaskFuture - checkStandoffLinkTargets") {
+                   checkStandoffLinkTargets(
+                     values = internalCreateResource.flatValues,
+                     requestingUser = createResourceRequestV2.requestingUser
+                   )
+                 }
 
-        _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
+            _ <- tracedFuture(s"makeTaskFuture - checkListNodes - ${createResourceRequestV2.createResource.label}") {
+                   checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
+                 }
 
-        // Get the class IRIs of all the link targets in the request.
-        linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
-                                                   resourceIri: IRI,
-                                                   internalCreateResources = Seq(internalCreateResource),
-                                                   requestingUser = createResourceRequestV2.requestingUser
+            // Get the class IRIs of all the link targets in the request.
+            linkTargetClasses: Map[IRI, SmartIri] <-
+              tracedFuture(s"makeTaskFuture - getLinkTargetClasses - ${createResourceRequestV2.createResource.label}") {
+                getLinkTargetClasses(
+                  resourceIri: IRI,
+                  internalCreateResources = Seq(internalCreateResource),
+                  requestingUser = createResourceRequestV2.requestingUser
+                )
+              }
+
+            // Get the definitions of the resource class and its properties, as well as of the classes of all
+            // resources that are link targets.
+            resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <-
+              tracedFuture(
+                s"makeTaskFuture - EntityInfoGetRequestV2 - resource class entity - ${createResourceRequestV2.createResource.label}"
+              ) {
+                appActor
+                  .ask(
+                    EntityInfoGetRequestV2(
+                      classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
+                      requestingUser = createResourceRequestV2.requestingUser
+                    )
+                  )
+                  .mapTo[EntityInfoGetResponseV2]
+              }
+
+            resourceClassInfo: ReadClassInfoV2 = resourceClassEntityInfoResponse.classInfoMap(
+                                                   internalCreateResource.resourceClassIri
                                                  )
 
-        // Get the definitions of the resource class and its properties, as well as of the classes of all
-        // resources that are link targets.
-        resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <-
-          appActor
-            .ask(
-              EntityInfoGetRequestV2(
-                classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
-                requestingUser = createResourceRequestV2.requestingUser
-              )
-            )
-            .mapTo[EntityInfoGetResponseV2]
-
-        resourceClassInfo: ReadClassInfoV2 = resourceClassEntityInfoResponse.classInfoMap(
-                                               internalCreateResource.resourceClassIri
-                                             )
-
-        propertyEntityInfoResponse: EntityInfoGetResponseV2 <-
-          appActor
-            .ask(
-              EntityInfoGetRequestV2(
-                propertyIris = resourceClassInfo.knoraResourceProperties,
-                requestingUser = createResourceRequestV2.requestingUser
-              )
-            )
-            .mapTo[EntityInfoGetResponseV2]
-
-        allEntityInfo = EntityInfoGetResponseV2(
-                          classInfoMap = resourceClassEntityInfoResponse.classInfoMap,
-                          propertyInfoMap = propertyEntityInfoResponse.propertyInfoMap
-                        )
-
-        // Get the default permissions of the resource class.
-
-        defaultResourcePermissionsMap <- getResourceClassDefaultPermissions(
-                                           projectIri = createResourceRequestV2.createResource.projectADM.id,
-                                           resourceClassIris = Set(internalCreateResource.resourceClassIri),
-                                           requestingUser = createResourceRequestV2.requestingUser
-                                         )
-
-        defaultResourcePermissions: String = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri)
-
-        // Get the default permissions of each property used.
-
-        defaultPropertyPermissionsMap: Map[SmartIri, Map[SmartIri, String]] <- getDefaultPropertyPermissions(
-                                                                                 projectIri =
-                                                                                   createResourceRequestV2.createResource.projectADM.id,
-                                                                                 resourceClassProperties = Map(
-                                                                                   internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet
-                                                                                 ),
-                                                                                 requestingUser =
-                                                                                   createResourceRequestV2.requestingUser
-                                                                               )
-
-        defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(
-                                                              internalCreateResource.resourceClassIri
-                                                            )
-
-        // Make a versionDate for the resource and its values.
-        creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
-
-        // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
-        // for creating the resource.
-        resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
-                                                          resourceIri = resourceIri,
-                                                          internalCreateResource = internalCreateResource,
-                                                          linkTargetClasses = linkTargetClasses,
-                                                          entityInfo = allEntityInfo,
-                                                          clientResourceIDs = Map.empty[IRI, String],
-                                                          defaultResourcePermissions = defaultResourcePermissions,
-                                                          defaultPropertyPermissions = defaultPropertyPermissions,
-                                                          creationDate = creationDate,
-                                                          requestingUser = createResourceRequestV2.requestingUser
-                                                        )
-
-        // Get the IRI of the named graph in which the resource will be created.
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
-
-        // Generate SPARQL for creating the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .createNewResources(
-                           dataNamedGraph = dataNamedGraph,
-                           resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
-                           projectIri = createResourceRequestV2.createResource.projectADM.id,
-                           creatorIri = createResourceRequestV2.requestingUser.id
-                         )
-                         .toString()
-
-        // Do the update.
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-
-        // Verify that the resource was created correctly.
-        previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
-                                                               resourceReadyToCreate = resourceReadyToCreate,
-                                                               projectIri =
-                                                                 createResourceRequestV2.createResource.projectADM.id,
-                                                               requestingUser = createResourceRequestV2.requestingUser
-                                                             )
-      } yield previewOfCreatedResource
-    }
-
-    val triplestoreUpdateFuture: Future[ReadResourcesSequenceV2] = for {
-      // Don't allow anonymous users to create resources.
-      _ <- Future {
-             if (createResourceRequestV2.requestingUser.isAnonymousUser) {
-               throw ForbiddenException("Anonymous users aren't allowed to create resources")
-             } else {
-               createResourceRequestV2.requestingUser.id
-             }
-           }
-
-      // Ensure that the project isn't the system project or the shared ontologies project.
-
-      projectIri = createResourceRequestV2.createResource.projectADM.id
-
-      _ =
-        if (
-          projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-        ) {
-          throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
-        }
-
-      // Ensure that the resource class isn't from a non-shared ontology in another project.
-
-      resourceClassOntologyIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity
-      readOntologyMetadataV2: ReadOntologyMetadataV2 <- appActor
-                                                          .ask(
-                                                            OntologyMetadataGetByIriRequestV2(
-                                                              Set(resourceClassOntologyIri),
-                                                              createResourceRequestV2.requestingUser
-                                                            )
-                                                          )
-                                                          .mapTo[ReadOntologyMetadataV2]
-      ontologyMetadata: OntologyMetadataV2 =
-        readOntologyMetadataV2.ontologies.headOption
-          .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
-      ontologyProjectIri: IRI =
-        ontologyMetadata.projectIri
-          .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
-          .toString
-
-      _ =
-        if (
-          projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
-        ) {
-          throw BadRequestException(
-            s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project"
-          )
-        }
-
-      // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
-      // create a new resource in the given project.
-
-      internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri
-                                             .toOntologySchema(InternalSchema)
-
-      _ = if (
-            !createResourceRequestV2.requestingUser.permissions.hasPermissionFor(
-              ResourceCreateOperation(internalResourceClassIri.toString),
-              projectIri,
-              None
-            )
-          ) {
-            throw ForbiddenException(
-              s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
-            )
-          }
-
-      resourceIri: IRI <-
-        checkOrCreateEntityIri(
-          createResourceRequestV2.createResource.resourceIri,
-          stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode)
-        )
-
-      // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
-      taskResult <- IriLocker.runWithIriLock(
-                      createResourceRequestV2.apiRequestID,
-                      resourceIri,
-                      () => makeTaskFuture(resourceIri)
+            propertyEntityInfoResponse: EntityInfoGetResponseV2 <-
+              tracedFuture(
+                s"makeTaskFuture - EntityInfoGetRequestV2 - property entity - ${createResourceRequestV2.createResource.label}"
+              ) {
+                appActor
+                  .ask(
+                    EntityInfoGetRequestV2(
+                      propertyIris = resourceClassInfo.knoraResourceProperties,
+                      requestingUser = createResourceRequestV2.requestingUser
                     )
-    } yield taskResult
+                  )
+                  .mapTo[EntityInfoGetResponseV2]
+              }
 
-    // If the request includes file values, tell Sipi to move the files to permanent storage if the update
-    // succeeded, or to delete the temporary files if the update failed.
-    doSipiPostUpdateForResources(
-      updateFuture = triplestoreUpdateFuture,
-      createResources = Seq(createResourceRequestV2.createResource),
-      requestingUser = createResourceRequestV2.requestingUser
-    )
-  }
+            allEntityInfo = EntityInfoGetResponseV2(
+                              classInfoMap = resourceClassEntityInfoResponse.classInfoMap,
+                              propertyInfoMap = propertyEntityInfoResponse.propertyInfoMap
+                            )
+
+            // Get the default permissions of the resource class.
+
+            defaultResourcePermissionsMap <-
+              tracedFuture(
+                s"makeTaskFuture - getResourceClassDefaultPermissions - ${createResourceRequestV2.createResource.label}"
+              ) {
+                getResourceClassDefaultPermissions(
+                  projectIri = createResourceRequestV2.createResource.projectADM.id,
+                  resourceClassIris = Set(internalCreateResource.resourceClassIri),
+                  requestingUser = createResourceRequestV2.requestingUser
+                )
+              }
+
+            defaultResourcePermissions: String = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri)
+
+            // Get the default permissions of each property used.
+
+            defaultPropertyPermissionsMap: Map[SmartIri, Map[SmartIri, String]] <-
+              tracedFuture(
+                s"makeTaskFuture - getDefaultPropertyPermissions - ${createResourceRequestV2.createResource.label}"
+              ) {
+                getDefaultPropertyPermissions(
+                  projectIri = createResourceRequestV2.createResource.projectADM.id,
+                  resourceClassProperties = Map(
+                    internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet
+                  ),
+                  requestingUser = createResourceRequestV2.requestingUser
+                )
+              }
+
+            defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(
+                                                                  internalCreateResource.resourceClassIri
+                                                                )
+
+            // Make a versionDate for the resource and its values.
+            creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
+
+            // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
+            // for creating the resource.
+            resourceReadyToCreate: ResourceReadyToCreate <-
+              tracedFuture(
+                s"makeTaskFuture - generateResourceReadyToCreate - ${createResourceRequestV2.createResource.label}"
+              ) {
+                generateResourceReadyToCreate(
+                  resourceIri = resourceIri,
+                  internalCreateResource = internalCreateResource,
+                  linkTargetClasses = linkTargetClasses,
+                  entityInfo = allEntityInfo,
+                  clientResourceIDs = Map.empty[IRI, String],
+                  defaultResourcePermissions = defaultResourcePermissions,
+                  defaultPropertyPermissions = defaultPropertyPermissions,
+                  creationDate = creationDate,
+                  requestingUser = createResourceRequestV2.requestingUser
+                )
+              }
+
+            // Get the IRI of the named graph in which the resource will be created.
+            dataNamedGraph: IRI =
+              stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
+
+            // Generate SPARQL for creating the resource.
+            sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                             .createNewResources(
+                               dataNamedGraph = dataNamedGraph,
+                               resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
+                               projectIri = createResourceRequestV2.createResource.projectADM.id,
+                               creatorIri = createResourceRequestV2.requestingUser.id
+                             )
+                             .toString()
+
+            // Do the update.
+            _ <-
+              tracedFuture(
+                s"makeTaskFuture - SparqlUpdateRequest - createNewResources - ${createResourceRequestV2.createResource.label}"
+              )(
+                appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+              )
+
+            // Verify that the resource was created correctly.
+            previewOfCreatedResource: ReadResourcesSequenceV2 <-
+              tracedFuture(s"makeTaskFuture - verifyResource - ${createResourceRequestV2.createResource.label}") {
+                verifyResource(
+                  resourceReadyToCreate = resourceReadyToCreate,
+                  projectIri = createResourceRequestV2.createResource.projectADM.id,
+                  requestingUser = createResourceRequestV2.requestingUser
+                )
+              }
+          } yield previewOfCreatedResource
+        }
+
+      val triplestoreUpdateFuture: Future[ReadResourcesSequenceV2] =
+        tracedFuture(s"createResourceV2 - triplestoreUpdateFuture - ${createResourceRequestV2.createResource.label}") {
+          for {
+            // Don't allow anonymous users to create resources.
+            _ <- Future {
+                   if (createResourceRequestV2.requestingUser.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                   } else {
+                     createResourceRequestV2.requestingUser.id
+                   }
+                 }
+
+            // Ensure that the project isn't the system project or the shared ontologies project.
+
+            projectIri = createResourceRequestV2.createResource.projectADM.id
+
+            _ =
+              if (
+                projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+              ) {
+                throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
+              }
+
+            // Ensure that the resource class isn't from a non-shared ontology in another project.
+
+            resourceClassOntologyIri: SmartIri =
+              createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity
+            readOntologyMetadataV2: ReadOntologyMetadataV2 <-
+              tracedFuture(
+                s"triplestoreUpdateFuture - ReadOntologyMetadataV2 - ${createResourceRequestV2.createResource.label}"
+              ) {
+                appActor
+                  .ask(
+                    OntologyMetadataGetByIriRequestV2(
+                      Set(resourceClassOntologyIri),
+                      createResourceRequestV2.requestingUser
+                    )
+                  )
+                  .mapTo[ReadOntologyMetadataV2]
+              }
+            ontologyMetadata: OntologyMetadataV2 =
+              readOntologyMetadataV2.ontologies.headOption
+                .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+            ontologyProjectIri: IRI =
+              ontologyMetadata.projectIri
+                .getOrElse(
+                  throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project")
+                )
+                .toString
+
+            _ =
+              if (
+                projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
+              ) {
+                throw BadRequestException(
+                  s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project"
+                )
+              }
+
+            // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
+            // create a new resource in the given project.
+
+            internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri
+                                                   .toOntologySchema(InternalSchema)
+
+            _ = if (
+                  !createResourceRequestV2.requestingUser.permissions.hasPermissionFor(
+                    ResourceCreateOperation(internalResourceClassIri.toString),
+                    projectIri,
+                    None
+                  )
+                ) {
+                  throw ForbiddenException(
+                    s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
+                  )
+                }
+
+            resourceIri: IRI <-
+              tracedFuture(
+                s"triplestoreUpdateFuture - checkOrCreateEntityIri - ${createResourceRequestV2.createResource.label}"
+              ) {
+                checkOrCreateEntityIri(
+                  createResourceRequestV2.createResource.resourceIri,
+                  stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode)
+                )
+              }
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
+            taskResult <-
+              tracedFuture(
+                s"triplestoreUpdateFuture - runWithIriLock - ${createResourceRequestV2.createResource.label}"
+              ) {
+                IriLocker.runWithIriLock(
+                  createResourceRequestV2.apiRequestID,
+                  resourceIri,
+                  () => makeTaskFuture(resourceIri)
+                )
+              }
+          } yield taskResult
+        }
+
+      // If the request includes file values, tell Sipi to move the files to permanent storage if the update
+      // succeeded, or to delete the temporary files if the update failed.
+      tracedFuture(
+        s"createResourceV2 - doSipiPostUpdateForResources - ${createResourceRequestV2.createResource.label}"
+      ) {
+        doSipiPostUpdateForResources(
+          updateFuture = triplestoreUpdateFuture,
+          createResources = Seq(createResourceRequestV2.createResource),
+          requestingUser = createResourceRequestV2.requestingUser
+        )
+      }
+    }
 
   /**
    * Updates a resources metadata.

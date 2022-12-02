@@ -49,7 +49,7 @@ trait InstrumentationSupport {
     val start = System.currentTimeMillis()
     Kamon.span(name) {
       future.andThen { case Success(_) =>
-        metricsLogger.debug(s"$name: {} ms", System.currentTimeMillis() - start)
+        metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
       }
     }
   }

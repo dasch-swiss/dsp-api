@@ -62,6 +62,8 @@
     <!-- metrics logging (info level turns them on, error level turns them off -->
     <logger name="M-Main$" level="INFO"/>
     <logger name="M-UsersResponderADM" level="INFO"/>
+    <logger name="M-ResourcesResponderV2" level="INFO"/>
+    <logger name="M-ValuesResponderV2" level="INFO"/>
     <logger name="M-HttpTriplestoreConnector" level="INFO"/>
     <logger name="M-CacheServiceManager" level="INFO"/>
     <logger name="M-CacheSerialization" level="INFO"/>

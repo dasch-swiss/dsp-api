@@ -1,0 +1,503 @@
+date;time;log
+2022-11-29 13:50:31; 13:50:31.498; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 2 ms
+2022-11-29 13:50:31; 13:50:31.506; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 7 ms
+2022-11-29 13:50:31; 13:50:31.512; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 1 ms
+2022-11-29 13:50:31; 13:50:31.536; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 24 ms
+2022-11-29 13:50:31; 13:50:31.537; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:31; 13:50:31.548; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 10 ms
+2022-11-29 13:50:31; 13:50:31.549; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:50:31; 13:50:31.550; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:50:31; 13:50:31.555; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 5 ms
+2022-11-29 13:50:31; 13:50:31.557; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:50:31; 13:50:31.578; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 21 ms
+2022-11-29 13:50:31; 13:50:31.610; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 31 ms
+2022-11-29 13:50:31; 13:50:31.642; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 31 ms
+2022-11-29 13:50:31; 13:50:31.642; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 135 ms
+2022-11-29 13:50:31; 13:50:31.642; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 136 ms
+2022-11-29 13:50:31; 13:50:31.642; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 147 ms
+2022-11-29 13:50:31; 13:50:31.677; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 181 ms
+2022-11-29 13:50:31; 13:50:31.677; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 0.1.docx: 182 ms
+2022-11-29 13:50:32; 13:50:32.104; [webapi-knora-actor-dispatcher-11] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:50:32; 13:50:32.104; [webapi-knora-actor-dispatcher-11] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:50:32; 13:50:32.104; [webapi-knora-actor-dispatcher-11] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:50:32; 13:50:32.147; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:32; 13:50:32.153; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 6 ms
+2022-11-29 13:50:32; 13:50:32.161; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:32; 13:50:32.169; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 8 ms
+2022-11-29 13:50:32; 13:50:32.169; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:32; 13:50:32.185; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 16 ms
+2022-11-29 13:50:32; 13:50:32.186; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 0 ms
+2022-11-29 13:50:32; 13:50:32.187; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:50:32; 13:50:32.188; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:50:32; 13:50:32.188; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:50:32; 13:50:32.199; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 11 ms
+2022-11-29 13:50:32; 13:50:32.229; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 29 ms
+2022-11-29 13:50:32; 13:50:32.242; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 13 ms
+2022-11-29 13:50:32; 13:50:32.242; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 89 ms
+2022-11-29 13:50:32; 13:50:32.242; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 89 ms
+2022-11-29 13:50:32; 13:50:32.242; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 95 ms
+2022-11-29 13:50:32; 13:50:32.264; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 117 ms
+2022-11-29 13:50:32; 13:50:32.264; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 0.1.jpeg: 118 ms
+2022-11-29 13:50:32; 13:50:32.464; [webapi-knora-actor-dispatcher-11] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:50:32; 13:50:32.464; [webapi-knora-actor-dispatcher-11] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 0 ms
+2022-11-29 13:50:32; 13:50:32.464; [webapi-knora-actor-dispatcher-11] INFO  M-UsersResponderADM - admin-user-get-single-user: 0 ms
+2022-11-29 13:50:32; 13:50:32.487; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 1 ms
+2022-11-29 13:50:32; 13:50:32.491; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 4 ms
+2022-11-29 13:50:32; 13:50:32.497; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:32; 13:50:32.502; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 5 ms
+2022-11-29 13:50:32; 13:50:32.503; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:32; 13:50:32.511; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 8 ms
+2022-11-29 13:50:32; 13:50:32.511; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 0 ms
+2022-11-29 13:50:32; 13:50:32.512; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:50:32; 13:50:32.513; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:50:32; 13:50:32.514; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:50:32; 13:50:32.520; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 6 ms
+2022-11-29 13:50:32; 13:50:32.548; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 28 ms
+2022-11-29 13:50:32; 13:50:32.558; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 10 ms
+2022-11-29 13:50:32; 13:50:32.558; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 67 ms
+2022-11-29 13:50:32; 13:50:32.558; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 67 ms
+2022-11-29 13:50:32; 13:50:32.558; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 72 ms
+2022-11-29 13:50:32; 13:50:32.579; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 93 ms
+2022-11-29 13:50:32; 13:50:32.579; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - createResourceV2 0.1.mp3: 93 ms
+2022-11-29 13:50:33; 13:50:33.474; [webapi-knora-actor-dispatcher-10] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:50:33; 13:50:33.474; [webapi-knora-actor-dispatcher-10] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:50:33; 13:50:33.474; [webapi-knora-actor-dispatcher-10] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:50:33; 13:50:33.524; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:33; 13:50:33.531; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 6 ms
+2022-11-29 13:50:33; 13:50:33.536; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 1 ms
+2022-11-29 13:50:33; 13:50:33.542; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 6 ms
+2022-11-29 13:50:33; 13:50:33.543; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:33; 13:50:33.558; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 15 ms
+2022-11-29 13:50:33; 13:50:33.559; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:50:33; 13:50:33.559; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:50:33; 13:50:33.560; [webapi-knora-actor-dispatcher-10] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 0 ms
+2022-11-29 13:50:33; 13:50:33.561; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:50:33; 13:50:33.578; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 17 ms
+2022-11-29 13:50:33; 13:50:33.617; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 39 ms
+2022-11-29 13:50:33; 13:50:33.629; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 12 ms
+2022-11-29 13:50:33; 13:50:33.629; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 98 ms
+2022-11-29 13:50:33; 13:50:33.629; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 98 ms
+2022-11-29 13:50:33; 13:50:33.629; [webapi-knora-actor-dispatcher-11] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 105 ms
+2022-11-29 13:50:37; 13:50:37.559; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 4035 ms
+2022-11-29 13:50:37; 13:50:37.559; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 0.1.mp4: 4035 ms
+2022-11-29 13:50:37; 13:50:37.787; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:50:37; 13:50:37.787; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 0 ms
+2022-11-29 13:50:37; 13:50:37.787; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-single-user: 0 ms
+2022-11-29 13:50:37; 13:50:37.843; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:37; 13:50:37.849; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 6 ms
+2022-11-29 13:50:37; 13:50:37.852; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:37; 13:50:37.857; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 4 ms
+2022-11-29 13:50:37; 13:50:37.857; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:37; 13:50:37.864; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 7 ms
+2022-11-29 13:50:37; 13:50:37.865; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:50:37; 13:50:37.866; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:50:37; 13:50:37.866; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 0 ms
+2022-11-29 13:50:37; 13:50:37.867; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:50:37; 13:50:37.873; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 6 ms
+2022-11-29 13:50:37; 13:50:37.901; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 28 ms
+2022-11-29 13:50:37; 13:50:37.910; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 9 ms
+2022-11-29 13:50:37; 13:50:37.910; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 61 ms
+2022-11-29 13:50:37; 13:50:37.910; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 61 ms
+2022-11-29 13:50:37; 13:50:37.910; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 67 ms
+2022-11-29 13:50:37; 13:50:37.934; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 91 ms
+2022-11-29 13:50:37; 13:50:37.934; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 0.1.txt: 91 ms
+2022-11-29 13:50:38; 13:50:38.132; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:50:38; 13:50:38.132; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 0 ms
+2022-11-29 13:50:38; 13:50:38.132; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:50:38; 13:50:38.155; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 1 ms
+2022-11-29 13:50:38; 13:50:38.161; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 6 ms
+2022-11-29 13:50:38; 13:50:38.164; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:38; 13:50:38.172; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 8 ms
+2022-11-29 13:50:38; 13:50:38.172; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:38; 13:50:38.182; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 10 ms
+2022-11-29 13:50:38; 13:50:38.183; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:50:38; 13:50:38.184; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:50:38; 13:50:38.185; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:50:38; 13:50:38.186; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:50:38; 13:50:38.195; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 9 ms
+2022-11-29 13:50:38; 13:50:38.218; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 23 ms
+2022-11-29 13:50:38; 13:50:38.229; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 11 ms
+2022-11-29 13:50:38; 13:50:38.229; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 68 ms
+2022-11-29 13:50:38; 13:50:38.229; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 68 ms
+2022-11-29 13:50:38; 13:50:38.229; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 75 ms
+2022-11-29 13:50:38; 13:50:38.253; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 99 ms
+2022-11-29 13:50:38; 13:50:38.253; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 0.1.zip: 99 ms
+2022-11-29 13:50:38; 13:50:38.803; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:50:38; 13:50:38.803; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:50:38; 13:50:38.803; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:50:38; 13:50:38.827; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 1 ms
+2022-11-29 13:50:38; 13:50:38.831; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 4 ms
+2022-11-29 13:50:38; 13:50:38.836; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:38; 13:50:38.841; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 5 ms
+2022-11-29 13:50:38; 13:50:38.841; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:38; 13:50:38.847; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 6 ms
+2022-11-29 13:50:38; 13:50:38.848; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 0 ms
+2022-11-29 13:50:38; 13:50:38.849; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:50:38; 13:50:38.849; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 0 ms
+2022-11-29 13:50:38; 13:50:38.850; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:50:38; 13:50:38.855; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 5 ms
+2022-11-29 13:50:38; 13:50:38.881; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 26 ms
+2022-11-29 13:50:38; 13:50:38.890; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 9 ms
+2022-11-29 13:50:38; 13:50:38.890; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 59 ms
+2022-11-29 13:50:38; 13:50:38.890; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 59 ms
+2022-11-29 13:50:38; 13:50:38.891; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 65 ms
+2022-11-29 13:50:38; 13:50:38.911; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 85 ms
+2022-11-29 13:50:38; 13:50:38.912; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - createResourceV2 1.docx: 86 ms
+2022-11-29 13:50:39; 13:50:39.922; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:50:39; 13:50:39.922; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 0 ms
+2022-11-29 13:50:39; 13:50:39.922; [webapi-knora-actor-dispatcher-12] INFO  M-UsersResponderADM - admin-user-get-single-user: 0 ms
+2022-11-29 13:50:39; 13:50:39.955; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:39; 13:50:39.962; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 7 ms
+2022-11-29 13:50:39; 13:50:39.965; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:39; 13:50:39.972; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 7 ms
+2022-11-29 13:50:39; 13:50:39.972; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:39; 13:50:39.981; [webapi-knora-actor-dispatcher-12] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 9 ms
+2022-11-29 13:50:39; 13:50:39.982; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 0 ms
+2022-11-29 13:50:39; 13:50:39.984; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 2 ms
+2022-11-29 13:50:39; 13:50:39.985; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:50:39; 13:50:39.985; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:50:39; 13:50:39.995; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 10 ms
+2022-11-29 13:50:40; 13:50:40.022; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 27 ms
+2022-11-29 13:50:40; 13:50:40.033; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 11 ms
+2022-11-29 13:50:40; 13:50:40.033; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 71 ms
+2022-11-29 13:50:40; 13:50:40.033; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 71 ms
+2022-11-29 13:50:40; 13:50:40.033; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 78 ms
+2022-11-29 13:50:40; 13:50:40.054; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 99 ms
+2022-11-29 13:50:40; 13:50:40.054; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 1.jpeg: 99 ms
+2022-11-29 13:50:40; 13:50:40.611; [webapi-knora-actor-dispatcher-13] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:50:40; 13:50:40.611; [webapi-knora-actor-dispatcher-13] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:50:40; 13:50:40.611; [webapi-knora-actor-dispatcher-13] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:50:40; 13:50:40.635; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:40; 13:50:40.639; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 3 ms
+2022-11-29 13:50:40; 13:50:40.645; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:40; 13:50:40.650; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 5 ms
+2022-11-29 13:50:40; 13:50:40.650; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:40; 13:50:40.657; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 7 ms
+2022-11-29 13:50:40; 13:50:40.658; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:50:40; 13:50:40.658; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:50:40; 13:50:40.659; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:50:40; 13:50:40.659; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:50:40; 13:50:40.664; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 5 ms
+2022-11-29 13:50:40; 13:50:40.692; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 28 ms
+2022-11-29 13:50:40; 13:50:40.701; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 9 ms
+2022-11-29 13:50:40; 13:50:40.701; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 61 ms
+2022-11-29 13:50:40; 13:50:40.701; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 62 ms
+2022-11-29 13:50:40; 13:50:40.701; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 66 ms
+2022-11-29 13:50:40; 13:50:40.722; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 87 ms
+2022-11-29 13:50:40; 13:50:40.722; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 1.mp3: 87 ms
+2022-11-29 13:50:41; 13:50:41.725; [webapi-knora-actor-dispatcher-13] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:50:41; 13:50:41.725; [webapi-knora-actor-dispatcher-13] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 0 ms
+2022-11-29 13:50:41; 13:50:41.725; [webapi-knora-actor-dispatcher-13] INFO  M-UsersResponderADM - admin-user-get-single-user: 0 ms
+2022-11-29 13:50:41; 13:50:41.760; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:41; 13:50:41.766; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 6 ms
+2022-11-29 13:50:41; 13:50:41.772; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:41; 13:50:41.778; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 6 ms
+2022-11-29 13:50:41; 13:50:41.778; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:41; 13:50:41.790; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 12 ms
+2022-11-29 13:50:41; 13:50:41.791; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:50:41; 13:50:41.791; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:50:41; 13:50:41.792; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:50:41; 13:50:41.793; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:50:41; 13:50:41.814; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 21 ms
+2022-11-29 13:50:41; 13:50:41.839; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 25 ms
+2022-11-29 13:50:41; 13:50:41.851; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 12 ms
+2022-11-29 13:50:41; 13:50:41.851; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 84 ms
+2022-11-29 13:50:41; 13:50:41.851; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 84 ms
+2022-11-29 13:50:41; 13:50:41.851; [webapi-knora-actor-dispatcher-13] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 91 ms
+2022-11-29 13:50:52; 13:50:52.267; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 10507 ms
+2022-11-29 13:50:52; 13:50:52.268; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 1.mp4: 10508 ms
+2022-11-29 13:50:52; 13:50:52.992; [webapi-knora-actor-dispatcher-14] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:50:52; 13:50:52.992; [webapi-knora-actor-dispatcher-14] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 0 ms
+2022-11-29 13:50:52; 13:50:52.992; [webapi-knora-actor-dispatcher-14] INFO  M-UsersResponderADM - admin-user-get-single-user: 0 ms
+2022-11-29 13:50:53; 13:50:53.096; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:53; 13:50:53.121; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 25 ms
+2022-11-29 13:50:53; 13:50:53.130; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:53; 13:50:53.145; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 15 ms
+2022-11-29 13:50:53; 13:50:53.145; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:53; 13:50:53.154; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 9 ms
+2022-11-29 13:50:53; 13:50:53.155; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:50:53; 13:50:53.155; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:50:53; 13:50:53.157; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 2 ms
+2022-11-29 13:50:53; 13:50:53.157; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:50:53; 13:50:53.166; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 9 ms
+2022-11-29 13:50:53; 13:50:53.204; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 38 ms
+2022-11-29 13:50:53; 13:50:53.221; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 17 ms
+2022-11-29 13:50:53; 13:50:53.222; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 101 ms
+2022-11-29 13:50:53; 13:50:53.222; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 101 ms
+2022-11-29 13:50:53; 13:50:53.222; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 127 ms
+2022-11-29 13:50:53; 13:50:53.246; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 151 ms
+2022-11-29 13:50:53; 13:50:53.246; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 1.txt: 151 ms
+2022-11-29 13:50:53; 13:50:53.865; [webapi-knora-actor-dispatcher-14] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:50:53; 13:50:53.865; [webapi-knora-actor-dispatcher-14] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 0 ms
+2022-11-29 13:50:53; 13:50:53.866; [webapi-knora-actor-dispatcher-14] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:50:53; 13:50:53.900; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:53; 13:50:53.910; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 10 ms
+2022-11-29 13:50:53; 13:50:53.919; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:53; 13:50:53.931; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 12 ms
+2022-11-29 13:50:53; 13:50:53.931; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:53; 13:50:53.954; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 23 ms
+2022-11-29 13:50:53; 13:50:53.955; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 0 ms
+2022-11-29 13:50:53; 13:50:53.956; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:50:53; 13:50:53.957; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:50:53; 13:50:53.957; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:50:53; 13:50:53.980; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 23 ms
+2022-11-29 13:50:54; 13:50:54.014; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 34 ms
+2022-11-29 13:50:54; 13:50:54.028; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 14 ms
+2022-11-29 13:50:54; 13:50:54.028; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 118 ms
+2022-11-29 13:50:54; 13:50:54.028; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 118 ms
+2022-11-29 13:50:54; 13:50:54.028; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 128 ms
+2022-11-29 13:50:54; 13:50:54.064; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 164 ms
+2022-11-29 13:50:54; 13:50:54.064; [webapi-knora-actor-dispatcher-14] INFO  M-ResourcesResponderV2 - createResourceV2 1.zip: 164 ms
+2022-11-29 13:50:58; 13:50:58.304; [webapi-knora-actor-dispatcher-16] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:50:58; 13:50:58.304; [webapi-knora-actor-dispatcher-16] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:50:58; 13:50:58.304; [webapi-knora-actor-dispatcher-16] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:50:58; 13:50:58.339; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:50:58; 13:50:58.345; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 5 ms
+2022-11-29 13:50:58; 13:50:58.351; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:50:58; 13:50:58.357; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 6 ms
+2022-11-29 13:50:58; 13:50:58.357; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:50:58; 13:50:58.364; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 7 ms
+2022-11-29 13:50:58; 13:50:58.365; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:50:58; 13:50:58.365; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:50:58; 13:50:58.366; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:50:58; 13:50:58.366; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:50:58; 13:50:58.371; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 4 ms
+2022-11-29 13:50:58; 13:50:58.404; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 33 ms
+2022-11-29 13:50:58; 13:50:58.415; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 11 ms
+2022-11-29 13:50:58; 13:50:58.415; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 70 ms
+2022-11-29 13:50:58; 13:50:58.415; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 70 ms
+2022-11-29 13:50:58; 13:50:58.415; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 76 ms
+2022-11-29 13:50:58; 13:50:58.439; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 100 ms
+2022-11-29 13:50:58; 13:50:58.439; [webapi-knora-actor-dispatcher-16] INFO  M-ResourcesResponderV2 - createResourceV2 10.docx: 100 ms
+2022-11-29 13:51:07; 13:51:07.527; [webapi-knora-actor-dispatcher-18] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:51:07; 13:51:07.528; [webapi-knora-actor-dispatcher-18] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:51:07; 13:51:07.528; [webapi-knora-actor-dispatcher-18] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:51:07; 13:51:07.571; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:51:07; 13:51:07.578; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 6 ms
+2022-11-29 13:51:07; 13:51:07.584; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:51:07; 13:51:07.589; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 5 ms
+2022-11-29 13:51:07; 13:51:07.589; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:51:07; 13:51:07.599; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 10 ms
+2022-11-29 13:51:07; 13:51:07.600; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:51:07; 13:51:07.600; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:51:07; 13:51:07.601; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:51:07; 13:51:07.602; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:51:07; 13:51:07.611; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 9 ms
+2022-11-29 13:51:07; 13:51:07.645; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 34 ms
+2022-11-29 13:51:07; 13:51:07.655; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 9 ms
+2022-11-29 13:51:07; 13:51:07.655; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 77 ms
+2022-11-29 13:51:07; 13:51:07.655; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 77 ms
+2022-11-29 13:51:07; 13:51:07.655; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 84 ms
+2022-11-29 13:51:07; 13:51:07.683; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 112 ms
+2022-11-29 13:51:07; 13:51:07.683; [webapi-knora-actor-dispatcher-18] INFO  M-ResourcesResponderV2 - createResourceV2 10.jpeg: 112 ms
+2022-11-29 13:51:11; 13:51:11.738; [webapi-knora-actor-dispatcher-19] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:51:11; 13:51:11.738; [webapi-knora-actor-dispatcher-19] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:51:11; 13:51:11.738; [webapi-knora-actor-dispatcher-19] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:51:11; 13:51:11.777; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:51:11; 13:51:11.783; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 6 ms
+2022-11-29 13:51:11; 13:51:11.789; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:51:11; 13:51:11.798; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 9 ms
+2022-11-29 13:51:11; 13:51:11.798; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:51:11; 13:51:11.806; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 8 ms
+2022-11-29 13:51:11; 13:51:11.806; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 0 ms
+2022-11-29 13:51:11; 13:51:11.807; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:51:11; 13:51:11.808; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:51:11; 13:51:11.808; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:51:11; 13:51:11.816; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 8 ms
+2022-11-29 13:51:11; 13:51:11.844; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 28 ms
+2022-11-29 13:51:11; 13:51:11.855; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 11 ms
+2022-11-29 13:51:11; 13:51:11.855; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 72 ms
+2022-11-29 13:51:11; 13:51:11.855; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 72 ms
+2022-11-29 13:51:11; 13:51:11.855; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 78 ms
+2022-11-29 13:51:11; 13:51:11.882; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 105 ms
+2022-11-29 13:51:11; 13:51:11.882; [webapi-knora-actor-dispatcher-19] INFO  M-ResourcesResponderV2 - createResourceV2 10.mp3: 105 ms
+2022-11-29 13:51:16; 13:51:16.640; [webapi-knora-actor-dispatcher-20] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:51:16; 13:51:16.640; [webapi-knora-actor-dispatcher-20] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:51:16; 13:51:16.640; [webapi-knora-actor-dispatcher-20] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:51:16; 13:51:16.679; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 2 ms
+2022-11-29 13:51:16; 13:51:16.687; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 8 ms
+2022-11-29 13:51:16; 13:51:16.692; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:51:16; 13:51:16.699; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 7 ms
+2022-11-29 13:51:16; 13:51:16.699; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:51:16; 13:51:16.710; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 11 ms
+2022-11-29 13:51:16; 13:51:16.711; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:51:16; 13:51:16.713; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:51:16; 13:51:16.714; [webapi-knora-actor-dispatcher-20] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:51:16; 13:51:16.715; [webapi-knora-actor-dispatcher-21] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:51:16; 13:51:16.726; [webapi-knora-actor-dispatcher-21] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 11 ms
+2022-11-29 13:51:16; 13:51:16.754; [webapi-knora-actor-dispatcher-21] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 28 ms
+2022-11-29 13:51:16; 13:51:16.765; [webapi-knora-actor-dispatcher-21] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 11 ms
+2022-11-29 13:51:16; 13:51:16.765; [webapi-knora-actor-dispatcher-21] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 78 ms
+2022-11-29 13:51:16; 13:51:16.765; [webapi-knora-actor-dispatcher-21] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 78 ms
+2022-11-29 13:51:16; 13:51:16.765; [webapi-knora-actor-dispatcher-21] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 88 ms
+2022-11-29 13:51:27; 13:51:27.755; [webapi-knora-actor-dispatcher-22] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 11078 ms
+2022-11-29 13:51:27; 13:51:27.755; [webapi-knora-actor-dispatcher-22] INFO  M-ResourcesResponderV2 - createResourceV2 10.mp4: 11078 ms
+2022-11-29 13:51:31; 13:51:31.820; [webapi-knora-actor-dispatcher-23] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:51:31; 13:51:31.820; [webapi-knora-actor-dispatcher-23] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:51:31; 13:51:31.820; [webapi-knora-actor-dispatcher-23] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:51:31; 13:51:31.925; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:51:31; 13:51:31.930; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 5 ms
+2022-11-29 13:51:31; 13:51:31.935; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 1 ms
+2022-11-29 13:51:31; 13:51:31.941; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 6 ms
+2022-11-29 13:51:31; 13:51:31.942; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:51:31; 13:51:31.948; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 6 ms
+2022-11-29 13:51:31; 13:51:31.948; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 0 ms
+2022-11-29 13:51:31; 13:51:31.949; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:51:31; 13:51:31.949; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 0 ms
+2022-11-29 13:51:31; 13:51:31.950; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:51:31; 13:51:31.957; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 6 ms
+2022-11-29 13:51:31; 13:51:31.984; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 27 ms
+2022-11-29 13:51:31; 13:51:31.995; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 11 ms
+2022-11-29 13:51:31; 13:51:31.995; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 65 ms
+2022-11-29 13:51:31; 13:51:31.995; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 65 ms
+2022-11-29 13:51:31; 13:51:31.995; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 70 ms
+2022-11-29 13:51:32; 13:51:32.015; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 90 ms
+2022-11-29 13:51:32; 13:51:32.015; [webapi-knora-actor-dispatcher-23] INFO  M-ResourcesResponderV2 - createResourceV2 10.txt: 90 ms
+2022-11-29 13:51:36; 13:51:36.222; [webapi-knora-actor-dispatcher-24] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 0 ms
+2022-11-29 13:51:36; 13:51:36.222; [webapi-knora-actor-dispatcher-24] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 0 ms
+2022-11-29 13:51:36; 13:51:36.222; [webapi-knora-actor-dispatcher-24] INFO  M-UsersResponderADM - admin-user-get-single-user: 0 ms
+2022-11-29 13:51:36; 13:51:36.263; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:51:36; 13:51:36.270; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 7 ms
+2022-11-29 13:51:36; 13:51:36.275; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:51:36; 13:51:36.282; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 6 ms
+2022-11-29 13:51:36; 13:51:36.282; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:51:36; 13:51:36.296; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 14 ms
+2022-11-29 13:51:36; 13:51:36.297; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:51:36; 13:51:36.298; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:51:36; 13:51:36.298; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 0 ms
+2022-11-29 13:51:36; 13:51:36.299; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:51:36; 13:51:36.310; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 11 ms
+2022-11-29 13:51:36; 13:51:36.337; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 27 ms
+2022-11-29 13:51:36; 13:51:36.348; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 11 ms
+2022-11-29 13:51:36; 13:51:36.348; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 78 ms
+2022-11-29 13:51:36; 13:51:36.348; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 78 ms
+2022-11-29 13:51:36; 13:51:36.348; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 85 ms
+2022-11-29 13:51:36; 13:51:36.369; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 106 ms
+2022-11-29 13:51:36; 13:51:36.370; [webapi-knora-actor-dispatcher-24] INFO  M-ResourcesResponderV2 - createResourceV2 10.zip: 107 ms
+2022-11-29 13:52:15; 13:52:15.778; [webapi-knora-actor-dispatcher-25] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 2 ms
+2022-11-29 13:52:15; 13:52:15.778; [webapi-knora-actor-dispatcher-25] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 2 ms
+2022-11-29 13:52:15; 13:52:15.778; [webapi-knora-actor-dispatcher-25] INFO  M-UsersResponderADM - admin-user-get-single-user: 2 ms
+2022-11-29 13:52:15; 13:52:15.822; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 1 ms
+2022-11-29 13:52:15; 13:52:15.831; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 9 ms
+2022-11-29 13:52:15; 13:52:15.835; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:52:15; 13:52:15.844; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 9 ms
+2022-11-29 13:52:15; 13:52:15.844; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:52:15; 13:52:15.851; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 7 ms
+2022-11-29 13:52:15; 13:52:15.852; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:52:15; 13:52:15.853; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:52:15; 13:52:15.854; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:52:15; 13:52:15.854; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:52:15; 13:52:15.864; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 9 ms
+2022-11-29 13:52:15; 13:52:15.899; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 35 ms
+2022-11-29 13:52:15; 13:52:15.909; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 10 ms
+2022-11-29 13:52:15; 13:52:15.909; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 78 ms
+2022-11-29 13:52:15; 13:52:15.909; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 78 ms
+2022-11-29 13:52:15; 13:52:15.909; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 88 ms
+2022-11-29 13:52:15; 13:52:15.933; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 112 ms
+2022-11-29 13:52:15; 13:52:15.933; [webapi-knora-actor-dispatcher-25] INFO  M-ResourcesResponderV2 - createResourceV2 100.docx: 112 ms
+2022-11-29 13:53:27; 13:53:27.481; [webapi-knora-actor-dispatcher-26] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 2 ms
+2022-11-29 13:53:27; 13:53:27.482; [webapi-knora-actor-dispatcher-26] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 3 ms
+2022-11-29 13:53:27; 13:53:27.483; [webapi-knora-actor-dispatcher-26] INFO  M-UsersResponderADM - admin-user-get-single-user: 4 ms
+2022-11-29 13:53:27; 13:53:27.556; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 1 ms
+2022-11-29 13:53:27; 13:53:27.593; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 36 ms
+2022-11-29 13:53:27; 13:53:27.604; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 1 ms
+2022-11-29 13:53:27; 13:53:27.652; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 48 ms
+2022-11-29 13:53:27; 13:53:27.652; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:53:27; 13:53:27.705; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 53 ms
+2022-11-29 13:53:27; 13:53:27.706; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:53:27; 13:53:27.707; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:53:27; 13:53:27.709; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 2 ms
+2022-11-29 13:53:27; 13:53:27.709; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:53:27; 13:53:27.720; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 11 ms
+2022-11-29 13:53:27; 13:53:27.766; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 46 ms
+2022-11-29 13:53:27; 13:53:27.784; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 17 ms
+2022-11-29 13:53:27; 13:53:27.784; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 191 ms
+2022-11-29 13:53:27; 13:53:27.784; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 191 ms
+2022-11-29 13:53:27; 13:53:27.784; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 229 ms
+2022-11-29 13:53:27; 13:53:27.807; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 252 ms
+2022-11-29 13:53:27; 13:53:27.807; [webapi-knora-actor-dispatcher-26] INFO  M-ResourcesResponderV2 - createResourceV2 100.jpeg: 252 ms
+2022-11-29 13:54:06; 13:54:06.897; [webapi-knora-actor-dispatcher-27] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:54:06; 13:54:06.897; [webapi-knora-actor-dispatcher-27] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:54:06; 13:54:06.897; [webapi-knora-actor-dispatcher-27] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:54:06; 13:54:06.944; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:54:06; 13:54:06.954; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 10 ms
+2022-11-29 13:54:06; 13:54:06.961; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:54:06; 13:54:06.971; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 10 ms
+2022-11-29 13:54:06; 13:54:06.971; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:54:06; 13:54:06.980; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 9 ms
+2022-11-29 13:54:06; 13:54:06.981; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:54:06; 13:54:06.981; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:54:06; 13:54:06.982; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:54:06; 13:54:06.982; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:54:06; 13:54:06.992; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 10 ms
+2022-11-29 13:54:07; 13:54:07.018; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 26 ms
+2022-11-29 13:54:07; 13:54:07.031; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 13 ms
+2022-11-29 13:54:07; 13:54:07.031; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 77 ms
+2022-11-29 13:54:07; 13:54:07.031; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 77 ms
+2022-11-29 13:54:07; 13:54:07.031; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 87 ms
+2022-11-29 13:54:07; 13:54:07.051; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 107 ms
+2022-11-29 13:54:07; 13:54:07.051; [webapi-knora-actor-dispatcher-28] INFO  M-ResourcesResponderV2 - createResourceV2 100.mp3: 107 ms
+2022-11-29 13:54:45; 13:54:45.497; [webapi-knora-actor-dispatcher-29] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:54:45; 13:54:45.498; [webapi-knora-actor-dispatcher-29] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 2 ms
+2022-11-29 13:54:45; 13:54:45.498; [webapi-knora-actor-dispatcher-29] INFO  M-UsersResponderADM - admin-user-get-single-user: 2 ms
+2022-11-29 13:54:45; 13:54:45.545; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 0 ms
+2022-11-29 13:54:45; 13:54:45.560; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 15 ms
+2022-11-29 13:54:45; 13:54:45.573; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:54:45; 13:54:45.585; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 12 ms
+2022-11-29 13:54:45; 13:54:45.585; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:54:45; 13:54:45.611; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 26 ms
+2022-11-29 13:54:45; 13:54:45.612; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:54:45; 13:54:45.612; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 0 ms
+2022-11-29 13:54:45; 13:54:45.613; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:54:45; 13:54:45.614; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 0 ms
+2022-11-29 13:54:45; 13:54:45.619; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 5 ms
+2022-11-29 13:54:45; 13:54:45.656; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 36 ms
+2022-11-29 13:54:45; 13:54:45.668; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 12 ms
+2022-11-29 13:54:45; 13:54:45.668; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 107 ms
+2022-11-29 13:54:45; 13:54:45.668; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 108 ms
+2022-11-29 13:54:45; 13:54:45.668; [webapi-knora-actor-dispatcher-29] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 123 ms
+2022-11-29 13:55:26; 13:55:26.232; [webapi-knora-actor-dispatcher-30] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 40687 ms
+2022-11-29 13:55:26; 13:55:26.233; [webapi-knora-actor-dispatcher-30] INFO  M-ResourcesResponderV2 - createResourceV2 100.mp4: 40688 ms
+2022-11-29 13:56:05; 13:56:05.885; [webapi-knora-actor-dispatcher-31] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:56:05; 13:56:05.886; [webapi-knora-actor-dispatcher-31] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 2 ms
+2022-11-29 13:56:05; 13:56:05.886; [webapi-knora-actor-dispatcher-31] INFO  M-UsersResponderADM - admin-user-get-single-user: 2 ms
+2022-11-29 13:56:06; 13:56:06.006; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 1 ms
+2022-11-29 13:56:06; 13:56:06.029; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 23 ms
+2022-11-29 13:56:06; 13:56:06.038; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:56:06; 13:56:06.061; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 23 ms
+2022-11-29 13:56:06; 13:56:06.061; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:56:06; 13:56:06.073; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 12 ms
+2022-11-29 13:56:06; 13:56:06.074; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 1 ms
+2022-11-29 13:56:06; 13:56:06.075; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:56:06; 13:56:06.076; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:56:06; 13:56:06.077; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:56:06; 13:56:06.089; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 12 ms
+2022-11-29 13:56:06; 13:56:06.142; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 53 ms
+2022-11-29 13:56:06; 13:56:06.161; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 19 ms
+2022-11-29 13:56:06; 13:56:06.161; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 132 ms
+2022-11-29 13:56:06; 13:56:06.161; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 132 ms
+2022-11-29 13:56:06; 13:56:06.161; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 156 ms
+2022-11-29 13:56:06; 13:56:06.183; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 178 ms
+2022-11-29 13:56:06; 13:56:06.184; [webapi-knora-actor-dispatcher-31] INFO  M-ResourcesResponderV2 - createResourceV2 100.txt: 179 ms
+2022-11-29 13:56:46; 13:56:46.315; [webapi-knora-actor-dispatcher-32] INFO  M-UsersResponderADM - admin-user-get-user-from-cache: 1 ms
+2022-11-29 13:56:46; 13:56:46.315; [webapi-knora-actor-dispatcher-32] INFO  M-UsersResponderADM - admin-user-get-user-from-cache-or-triplestore: 1 ms
+2022-11-29 13:56:46; 13:56:46.315; [webapi-knora-actor-dispatcher-32] INFO  M-UsersResponderADM - admin-user-get-single-user: 1 ms
+2022-11-29 13:56:46; 13:56:46.360; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - ReadOntologyMetadataV2: 1 ms
+2022-11-29 13:56:46; 13:56:46.386; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - checkOrCreateEntityIri: 26 ms
+2022-11-29 13:56:46; 13:56:46.427; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - toOntologySchema: 0 ms
+2022-11-29 13:56:46; 13:56:46.439; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkStandoffLinkTargets: 12 ms
+2022-11-29 13:56:46; 13:56:46.439; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - checkListNodes: 0 ms
+2022-11-29 13:56:46; 13:56:46.453; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - getLinkTargetClasses: 14 ms
+2022-11-29 13:56:46; 13:56:46.454; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - resource class entity: 0 ms
+2022-11-29 13:56:46; 13:56:46.455; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - EntityInfoGetRequestV2 - property entity: 1 ms
+2022-11-29 13:56:46; 13:56:46.456; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - getResourceClassDefaultPermissions: 1 ms
+2022-11-29 13:56:46; 13:56:46.457; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - getDefaultPropertyPermissions: 1 ms
+2022-11-29 13:56:46; 13:56:46.477; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - generateResourceReadyToCreate: 20 ms
+2022-11-29 13:56:46; 13:56:46.513; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - SparqlUpdateRequest - createNewResources: 36 ms
+2022-11-29 13:56:46; 13:56:46.525; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - makeTaskFuture - verifyResource: 12 ms
+2022-11-29 13:56:46; 13:56:46.525; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - createResourceV2 - makeTaskFuture: 138 ms
+2022-11-29 13:56:46; 13:56:46.526; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - triplestoreUpdateFuture - runWithIriLock: 139 ms
+2022-11-29 13:56:46; 13:56:46.526; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - createResourceV2 - triplestoreUpdateFuture: 167 ms
+2022-11-29 13:56:46; 13:56:46.548; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - createResourceV2 - doSipiPostUpdateForResources: 189 ms
+2022-11-29 13:56:46; 13:56:46.548; [webapi-knora-actor-dispatcher-32] INFO  M-ResourcesResponderV2 - createResourceV2 100.zip: 189 ms
+;

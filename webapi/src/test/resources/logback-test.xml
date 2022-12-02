@@ -4,11 +4,22 @@
 <configuration>
     <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
     <import class="ch.qos.logback.core.ConsoleAppender"/>
+    <import class="ch.qos.logback.core.FileAppender"/>
 
     <appender name="STDOUT" class="ConsoleAppender">
         <encoder class="PatternLayoutEncoder">
-        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
+    </appender>
+
+    <appender name="json" class="FileAppender">
+        <file>test-out.log</file>
+        <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+            <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+                <prettyPrint>true</prettyPrint>
+            </jsonFormatter>
+            <timestampFormat>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampFormat>
+        </layout>
     </appender>
 
     <root level="ERROR">
@@ -38,7 +49,7 @@
     <!-- http -->
     <logger name="org.knora.webapi.http.CORSSupport" level="DEBUG"/>
 
-    
+
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
     <logger name="org.knora.webapi.core" level="INFO"/>
@@ -130,12 +141,16 @@
     <logger name="org.knora.webapi.e2e.admin.StoreADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
 
-   <logger name="org.knora.webapi.testcontainers" level="INFO"/> 
+    <logger name="org.knora.webapi.testcontainers" level="INFO"/>
 
     <!-- metrics logging (info level turns them on, error level turns them off -->
     <logger name="M-Main$" level="ERROR"/>
     <logger name="M-Authenticator" level="ERROR"/>
     <logger name="M-UsersResponderADM" level="ERROR"/>
+    <!-- <logger name="M-ResourcesResponderV2" level="INFO"/> -->
+    <logger name="M-ResourcesResponderV2" level="INFO">
+        <appender-ref ref="json" />
+    </logger>
     <logger name="M-HttpTriplestoreConnector" level="ERROR"/>
     <logger name="M-CacheServiceManager" level="ERROR"/>
     <logger name="M-CacheSerialization" level="ERROR"/>
