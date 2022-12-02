@@ -346,20 +346,55 @@ case class TriplestoreServiceHttpConnectorImpl(
     } yield ResetRepositoryContentACK()
 
   /**
-   * Drops (deletes) all data from the triplestore.
+   * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
    */
   def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] = {
-
-    val DropAllSparqlString =
-      """
-      DROP ALL
-      """
+    val sparqlQuery = "DROP ALL"
 
     for {
       _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- getSparqlHttpResponse(DropAllSparqlString, isUpdate = true)
+      result <- getSparqlHttpResponse(sparqlQuery, isUpdate = true)
       _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
     } yield DropAllRepositoryContentACK()
+  }
+
+  /**
+   * Gets all graphs stored in the triplestore.
+   *
+   * @return All graphs stored in the triplestore as a [[Seq[String]]
+   */
+  def getAllGraphs(): UIO[Seq[String]] = {
+    val sparqlQuery =
+      """|
+         | SELECT DISTINCT ?graph 
+         | WHERE {
+         |  GRAPH ?graph { ?s ?p ?o }
+         | }""".stripMargin
+
+    for {
+      res      <- sparqlHttpSelect(sparqlQuery)
+      bindings <- ZIO.succeed(res.results.bindings)
+      graphs    = bindings.map(_.rowMap("graph"))
+    } yield graphs
+  }
+
+  /**
+   * Drops all triplestore data graph by graph using "DROP GRAPH" SPARQL query.
+   * This method is useful in cases with large amount of data (over 10 million statements),
+   * where the method [[dropAllTriplestoreContent()]] could create timeout issues.
+   */
+  def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK] = {
+    val sparqlQuery = (graph: String) => s"DROP GRAPH <$graph>"
+
+    for {
+      _      <- ZIO.logInfo("==>> Drop All Data Start")
+      graphs <- getAllGraphs()
+      _ <- ZIO.foreach(graphs)(graph =>
+             getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true)
+               .tap(result => ZIO.logDebug(s"==>> Dropped graph: $graph"))
+           )
+      _ <- ZIO.logInfo("==>> Drop All Data End")
+    } yield DropDataGraphByGraphACK()
   }
 
   /**
