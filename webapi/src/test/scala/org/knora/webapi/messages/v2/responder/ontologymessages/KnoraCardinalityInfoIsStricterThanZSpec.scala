@@ -1,13 +1,11 @@
-/*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import zio.test._
-
-import dsp.schema.domain.Cardinality._
+import dsp.schema.domain.Cardinality.MayHaveMany
+import dsp.schema.domain.Cardinality.MayHaveOne
+import dsp.schema.domain.Cardinality.MustHaveOne
+import dsp.schema.domain.Cardinality.MustHaveSome
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 /**
  * Tests the comparison forstrictness of cardinalities with [[isStricterThan()]].
