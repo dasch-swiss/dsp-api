@@ -1,25 +1,25 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.store.cache.impl
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2UuidValidation
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.UuidIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.api.CacheService
 import zio.ZLayer
-import zio.test.Assertion.equalTo
-import zio.test.TestAspect
-import zio.test.ZIOSpecDefault
+import zio.test.Assertion._
+import zio.test._
 
 /**
- * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].
- */
+ * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]]. */
 object CacheInMemImplZSpec extends ZIOSpecDefault {
 
   StringFormatter.initForTest()
