@@ -31,7 +31,7 @@ You might need to create an integration test because:
 
 * The test needs to talk to a database
 * It requires network
-* it is slow and cannot run in parallel with other tests
+* It is slow and cannot run in parallel with other tests
 * You have to do special things to the environment in order to run it
 
 In this case create it in the `src/it`  source set of our projects.
