@@ -24,6 +24,13 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
+      - name:  WebApi Unit Test Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: WebApi Unit Test Results
+          path: ./webapi/target/test-reports/TEST-*.xml
+          reporter: java-junit
 
   integration-test:
     name: Build and integration-test
