@@ -24,7 +24,14 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
 lazy val buildSettings = Seq(
   organization := "org.knora",
-  version      := (ThisBuild / version).value
+  version      := (ThisBuild / version).value,
+  headerLicense := Some(
+    HeaderLicense.Custom(
+      """|Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+         |SPDX-License-Identifier: Apache-2.0
+         |""".stripMargin
+    )
+  )
 )
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
