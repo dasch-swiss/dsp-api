@@ -168,7 +168,7 @@ stack-without-api: stack-up ## starts the dsp-stack without dsp-api: fuseki and 
 	@docker compose -f docker-compose.yml stop api
 
 .PHONY: stack-without-app
-stack-without-api: stack-up ## starts the dsp-stack without dsp-app - this is the previous state of "make stack-up" command.
+stack-without-app: stack-up ## starts the dsp-stack without dsp-app - this is the previous state of "make stack-up" command.
 	@docker compose -f docker-compose.yml stop app
 
 .PHONY: stack-without-api-and-sipi
