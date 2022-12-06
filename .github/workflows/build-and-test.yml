@@ -15,6 +15,13 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Run all tests
         run: sbt -v coverage test coverageAggregate
+      - name:  WebApi Unit Test Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: WebApi Unit Test Results
+          path: ./webapi/target/test-reports/TEST-*.xml
+          reporter: java-junit
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
