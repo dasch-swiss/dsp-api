@@ -86,7 +86,7 @@ env-file: ## write the env file used by dsp-stack.
 #################################
 
 .PHONY: stack-up
-stack-up: docker-build env-file ## starts the dsp-stack: fuseki, sipi, api.
+stack-up: docker-build env-file ## starts the dsp-stack: fuseki, sipi, api and app.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	@docker compose -f docker-compose.yml up -d
