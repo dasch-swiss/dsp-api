@@ -52,6 +52,9 @@ object KnoraCardinalityInfoIsStricterThanZSpec extends ZIOSpecDefault {
     },
     test("cardinality of '1-n' is stricter than cardinality of '0-n'") {
       assertTrue(mustHaveSome.isStricterThan(mayHaveMany))
+    },
+    test ("should fail"){
+      assertTrue(false);
     }
   )
 
