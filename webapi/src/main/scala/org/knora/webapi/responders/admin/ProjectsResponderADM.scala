@@ -59,7 +59,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
    */
   def receive(msg: ProjectsResponderRequestADM) = msg match {
-    case ProjectsGetADM(requestingUser)        => projectsGetADM(requestingUser)
+    // case ProjectsGetADM(requestingUser)        => projectsGetADM(requestingUser)
     case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
     case ProjectGetADM(identifier)             => getSingleProjectADM(identifier)
     case ProjectGetRequestADM(identifier, requestingUser) =>

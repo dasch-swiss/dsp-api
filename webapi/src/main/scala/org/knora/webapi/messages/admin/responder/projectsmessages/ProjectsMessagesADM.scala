@@ -179,7 +179,7 @@ case class ProjectsGetRequestADM(requestingUser: UserADM) extends ProjectsRespon
  *
  * @param requestingUser       the user making the request.
  */
-case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
+// case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
