@@ -247,17 +247,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     requestingUser: UserADM
   ): Future[ProjectGetResponseADM] =
     for {
-      maybeProject: Option[ProjectADM] <- getSingleProjectADM(
-                                            identifier = identifier
-                                          )
-
-      project = maybeProject match {
-                  case Some(p) => p
-                  case None    => throw NotFoundException(s"Project '${getId(identifier)}' not found")
-                }
-    } yield ProjectGetResponseADM(
-      project = project
-    )
+      maybeProject <- getSingleProjectADM(identifier = identifier)
+      project =
+        maybeProject match {
+          case Some(p) => p.asExternalRepresentation
+          case None    => throw NotFoundException(s"Project '${getId(identifier)}' not found")
+        }
+    } yield ProjectGetResponseADM(project = project)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
