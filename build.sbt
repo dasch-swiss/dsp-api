@@ -199,7 +199,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     IntegrationTest / testForkedParallel := false, // not run forked tests in parallel
     IntegrationTest / parallelExecution  := false, // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
-    IntegrationTest / javaOptions += "-Dconfig.resource=fuseki.conf",
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
