@@ -50,7 +50,7 @@ _The integration tests currently depend on a locally published Sipi container, t
 
 ## Debugging
 
-You can debug unit test directly in your IDE. 
+You can debug unit tests directly in your IDE. 
 
 For debugging the integration test locally with `sbt` or you IDE you need to have a fresh SIPI container build:
 
