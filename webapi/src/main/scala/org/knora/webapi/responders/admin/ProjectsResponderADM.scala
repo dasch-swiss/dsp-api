@@ -176,33 +176,23 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       }
 
   /**
-   * Gets all the projects and returns them as a [[ProjectsResponseV1]].
+   * Gets all the projects and returns them as a [[ProjectADM]].
    *
    * @param requestingUser       the user that is making the request.
-   * @return all the projects as a [[ProjectsResponseV1]].
+   * @return all the projects as a [[ProjectADM]].
    * @throws NotFoundException if no projects are found.
    */
   private def projectsGetRequestADM(
     requestingUser: UserADM
   ): Future[ProjectsGetResponseADM] =
-    // log.debug("projectsGetRequestADM")
-
-    // ToDo: What permissions should be required, if any?
     for {
-      projects <- projectsGetADM(
-                    requestingUser = requestingUser
-                  )
-
-      result =
-        if (projects.nonEmpty) {
-          ProjectsGetResponseADM(
-            projects = projects
-          )
-        } else {
-          throw NotFoundException(s"No projects found")
+      projects <- projectsGetADM(requestingUser = requestingUser)
+      projectsExternal =
+        projects match {
+          case Nil => throw NotFoundException(s"No projects found")
+          case _   => projects.map(_.asExternalRepresentation)
         }
-
-    } yield result
+    } yield ProjectsGetResponseADM(projects = projectsExternal)
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
