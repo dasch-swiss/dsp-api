@@ -157,7 +157,8 @@ for file_index, file_params in pairs(server.uploads) do
         "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. tmp_storage_filename
 
     -- Copy original file also to tmp
-    log("upload.lua: Copy original file also to tmp " ..  file_index .. " " .. tmp_storage_original_path, server.loglevel.LOG_DEBUG)
+    log("upload.lua: Copy original file also to tmp " .. file_index .. " " .. tmp_storage_original_path,
+        server.loglevel.LOG_DEBUG)
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_original_path)
     if not success then
         send_error(500,
@@ -222,7 +223,8 @@ for file_index, file_params in pairs(server.uploads) do
 
     else
         -- It's neither an image nor a video file. Move it to its temporary storage location.
-        log("upload.lua: START other specific stuff " ..  file_index .. " " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+        log("upload.lua: START other specific stuff " .. file_index .. " " .. tmp_storage_file_path,
+            server.loglevel.LOG_DEBUG)
         local start_time_processing_other = os.time()
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
