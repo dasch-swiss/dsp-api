@@ -32,16 +32,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
    * Returns the route.
    */
   override def makeRoute: Route = Route {
-    path("admin" / "store") {
-      get { requestContext =>
-        /**
-         * Maybe return some statistics about the store, e.g., what triplestore, number of triples in
-         * each named graph and in total, etc.
-         */
-        // TODO: Implement some simple return
-        requestContext.complete("Hello World")
-      }
-    } ~ path("admin" / "store" / "ResetTriplestoreContent") {
+    path("admin" / "store" / "ResetTriplestoreContent") {
       post {
         /* ResetTriplestoreContent */
         entity(as[Seq[RdfDataObject]]) { apiRequest =>
