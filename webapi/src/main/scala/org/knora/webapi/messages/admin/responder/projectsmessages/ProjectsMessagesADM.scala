@@ -23,6 +23,7 @@ import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
@@ -458,6 +459,12 @@ case class ProjectADM(
       status = status,
       selfjoin = selfjoin
     )
+  }
+
+  def asExternalRepresentation: ProjectADM = {
+    val sf    = StringFormatter.getGeneralInstance
+    val ontos = this.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
+    copy(ontologies = ontos)
   }
 
   override def equals(that: Any): Boolean =
