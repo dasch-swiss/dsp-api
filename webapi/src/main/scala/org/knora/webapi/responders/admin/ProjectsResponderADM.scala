@@ -39,11 +39,11 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 
 /**
  * Returns information about Knora projects.
@@ -60,7 +60,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
    */
   def receive(msg: ProjectsResponderRequestADM) = msg match {
-    // case ProjectsGetADM(requestingUser)        => projectsGetADM(requestingUser)
     case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
     case ProjectGetADM(identifier)             => getSingleProjectADM(identifier)
     case ProjectGetRequestADM(identifier, requestingUser) =>
@@ -156,8 +155,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                  )
       ontologyMetadataResponse <- appActor.ask(request).mapTo[ReadOntologyMetadataV2]
       ontologies                = ontologyMetadataResponse.ontologies.toList
-      projectOntologyIriPairs   = ontologies.map(getIriPair(_))
-      projectToOntologyMap      = projectOntologyIriPairs.groupMap(_._1)(_._2)
+      iriPairs                  = ontologies.map(getIriPair(_))
+      projectToOntologyMap      = iriPairs.groupMap { case (project, _) => project } { case (_, onto) => onto }
     } yield projectToOntologyMap
   }
 
