@@ -5,14 +5,14 @@
 
 # Projects Endpoint
 
-| Scope    | Route                                   | Operations | Explanation                           |
-| -------- | --------------------------------------- | ---------- | ------------------------------------- |
-| projects | `/admin/projects`                       | `GET`      | [get all projects](#get-all-projects) |
-| projects | `/admin/projects`                       | `POST`     | [create a project]()                  |
-| projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project]()              |
-| projects | `/admin/projects/shortname/{shortname}` | `GET`      | [get a single project]()              |
-| projects | `/admin/projects/shortcode/{shortcode}` | `GET`      | [get a single project]()              |
-| projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project]()              |
+| Scope    | Route                                   | Operations | Explanation                               |
+| -------- | --------------------------------------- | ---------- | ----------------------------------------- |
+| projects | `/admin/projects`                       | `GET`      | [get all projects](#get-all-projects)     |
+| projects | `/admin/projects`                       | `POST`     | [create a project](#create-a-new-project) |
+| projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project]()                  |
+| projects | `/admin/projects/shortname/{shortname}` | `GET`      | [get a single project]()                  |
+| projects | `/admin/projects/shortcode/{shortcode}` | `GET`      | [get a single project]()                  |
+| projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project]()                  |
 
 
 ## Project Operations
@@ -21,7 +21,7 @@
 
 Permissions: No permissions required
 
-Request definition: `GET: /admin/projects`
+Request definition: `GET /admin/projects`
 
 Description: Returns a list of all projects.
 
@@ -65,12 +65,115 @@ Example response:
 }
 ```
 
+### Create a New Project:
+
+Permissions: SystemAdmin
+
+Request definition: `POST /admin/projects`
+
+Description: Create a new project.
+
+Required payload:
+
+- `shortcode` (unique, 4-digits)
+- `shortname` (unique, it should be in the form of a [xsd:NCNAME](https://www.w3.org/TR/xmlschema11-2/#NCName) and it 
+  should be URL safe)
+- `description` (collection of descriptions as strings with language tag)
+- `keywords` (collection of keywords)
+- `status` (true, if project is active. false, if project is inactive)
+- `selfjoin`
+
+Optional payload:
+
+- `id` (unique, custom DSP IRI, e.g. used for migrating a project from one server to another)
+- `longname`
+- `logo`
+
+
+Example request:
+
+```bash
+curl --request POST \
+  --url http://localhost:3333/admin/projects \
+  --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "shortname": "newproject",
+    "shortcode": "3333",
+    "longname": "project longname",
+    "description": [
+        {
+            "value": "project description",
+            "language": "en"
+        }
+    ],
+    "keywords": [
+        "test project"
+    ],
+    "logo": "/fu/bar/baz.jpg",
+    "status": true,
+    "selfjoin": false
+}'
+```
+
+Example response:
+
+```jsonc
+{
+    "project": {
+        "description": [
+            {
+                "value": "project description",
+                "language": "en"
+            }
+        ],
+        "id": "http://rdfh.ch/projects/SvsqNHGeT_ao7Z-Ani5VNg",
+        "keywords": [
+            "test project"
+        ],
+        "logo": "/fu/bar/baz.jpg",
+        "longname": "project longname",
+        "ontologies": [],
+        "selfjoin": false,
+        "shortcode": "3333",
+        "shortname": "newproject",
+        "status": true
+    }
+}
+```
+
+Errors:
+
+- `400 Bad Request` if the project already exists or any of the provided properties is invalid.
+- `401 Unauthorized` if authorization failed.
+    
+
+#### Default set of permissions for a new project:
+When a new project is created, following default permissions are added to its admins and members:
+
+- ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
+within the new project. This administrative permission is retrievable through its IRI:
+`http://rdfh.ch/permissions/[projectShortcode]/defaultApForAdmin`
+
+- ProjectAdmin group also gets a default object access permission to change rights (which includes delete, modify, view, 
+and restricted view permissions) of any entity that belongs to the project. This default object access permission is retrievable 
+through its IRI: 
+`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForAdmin`
+
+- ProjectMember group receives an administrative permission to create resources within the new project. This 
+administrative permission is retrievable through its IRI:
+`http://rdfh.ch/permissions/[projectShortcode]/defaultApForMember`
+
+- ProjectMember group also gets a default object access permission to modify (which includes view and restricted view 
+permissions) of any entity that belongs to the project. This default object access permission is retrievable through its IRI: 
+`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
+
+
+
 ---
 
 
 **Project Operations:**  
-
-- `POST: /admin/projects` : create a new project  
 
 - `GET: /admin/projects/[iri | shortname | shortcode | uuid]/<identifier>` : returns a single project identified either through iri, shortname, shortcode or UUID
 
@@ -100,78 +203,6 @@ Example response:
 
 ## Project Operations
 
-### Create a new project:
-
-  - Required permission: SystemAdmin
-  - Required information: 
-    - shortcode (unique, 4-digits)
-    - shortname (unique; it should be in the form of a 
-  [xsd:NCNAME](https://www.w3.org/TR/xmlschema11-2/#NCName) and it should be URL safe.)
-    - description (collection of descriptions as strings with language tag.)
-    - keywords (collection of keywords)
-    - status (true, if project is active. false, if project is inactive)
-    - selfjoin 
-  - Optional information: longname, logo
-  - Returns information about the newly created project
-  - Remark: There are two distinct use cases / payload combination:
-  
-    (1) change ontology and data graph: ontologygraph, datagraph,
-    
-    (2) basic project information: shortcode, shortname, longname, description,
-    keywords, logo, institution, status, selfjoin
-    
-  - POST: `/admin/projects/`
-  - BODY:
-  
-```json
-    {
-      "shortname": "newproject",
-      "shortcode": "3333",
-      "longname": "project longname",
-      "description": [{"value": "project description", "language": "en"}],
-      "keywords": ["test project"],
-      "logo": "/fu/bar/baz.jpg",
-      "status": true,
-      "selfjoin": false
-    }
-```
-
-Additionally, each project can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) 
-specified by the `id` in the request body as below:
-    
-```json
-    {
-        "id": "http://rdfh.ch/projects/9TaSVMUuiRhQsuWHDPr8rw",
-        "shortname": "newprojectWithIri",
-        "shortcode": "3333",
-        "longname": "new project with a custom IRI",
-        "description": [{"value": "a project created with a custom IRI", "language": "en"}],
-        "keywords": ["projectWithIRI"],
-        "logo": "/fu/bar/baz.jpg",
-        "status": true,
-        "selfjoin": false
-    }   
-```
-
-#### Default set of permissions for a new project:
-When a new project is created, following default permissions are added to its admins and members:
-
-- ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
-within the new project. This administrative permission is retrievable through its IRI:
-`http://rdfh.ch/permissions/[projectShortcode]/defaultApForAdmin`
-
-- ProjectAdmin group also gets a default object access permission to change rights (which includes delete, modify, view, 
-and restricted view permissions) of any entity that belongs to the project. This default object access permission is retrievable 
-through its IRI: 
-`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForAdmin`
-
-- ProjectMember group receives an administrative permission to create resources within the new project. This 
-administrative permission is retrievable through its IRI:
-`http://rdfh.ch/permissions/[projectShortcode]/defaultApForMember`
-
-- ProjectMember group also gets a default object access permission to modify (which includes view and restricted view 
-permissions) of any entity that belongs to the project. This default object access permission is retrievable through its IRI: 
-`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
 
 ### Update project information:
 
