@@ -51,8 +51,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val received = expectMsgType[ProjectsGetResponseADM](timeout)
 
-        assert(received.projects.contains(SharedTestDataADM.imagesProject))
-        assert(received.projects.contains(SharedTestDataADM.incunabulaProject))
+        assert(received.projects.contains(SharedTestDataADM.imagesProject.asExternalRepresentation))
+        assert(received.projects.contains(SharedTestDataADM.incunabulaProject.asExternalRepresentation))
       }
 
       "return information about a project identified by IRI" in {
@@ -62,7 +62,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
-        expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
+        expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject.asExternalRepresentation))
 
       }
 
@@ -73,7 +73,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = SharedTestDataADM.rootUser
         )
-        expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
+        expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject.asExternalRepresentation))
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
