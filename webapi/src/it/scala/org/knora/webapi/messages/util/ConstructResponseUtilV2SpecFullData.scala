@@ -123,7 +123,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
                     userPermission = ChangeRightsPermission,
                     values = Map(),
-                    projectADM = SharedTestDataADM.anythingProject,
+                    projectADM = SharedTestDataADM.anythingProject.asExternalRepresentation,
                     lastModificationDate = None,
                     deletionInfo = None
                   )
@@ -347,7 +347,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     creationDate = Instant.parse("2016-03-02T15:05:10Z"),
                     userPermission = ChangeRightsPermission,
                     values = Map(),
-                    projectADM = SharedTestDataADM.anythingProject,
+                    projectADM = SharedTestDataADM.anythingProject.asExternalRepresentation,
                     lastModificationDate = None,
                     deletionInfo = None
                   )
@@ -428,7 +428,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         )
                       )
                     ),
-                    projectADM = SharedTestDataADM.incunabulaProject,
+                    projectADM = SharedTestDataADM.incunabulaProject.asExternalRepresentation,
                     lastModificationDate = None,
                     deletionInfo = None
                   )
@@ -521,7 +521,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         )
                       )
                     ),
-                    projectADM = SharedTestDataADM.incunabulaProject,
+                    projectADM = SharedTestDataADM.incunabulaProject.asExternalRepresentation,
                     lastModificationDate = None,
                     deletionInfo = None
                   )
@@ -661,7 +661,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         )
                       )
                     ),
-                    projectADM = SharedTestDataADM.incunabulaProject,
+                    projectADM = SharedTestDataADM.incunabulaProject.asExternalRepresentation,
                     lastModificationDate = None,
                     deletionInfo = None
                   )
@@ -776,7 +776,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         )
                       )
                     ),
-                    projectADM = SharedTestDataADM.incunabulaProject,
+                    projectADM = SharedTestDataADM.incunabulaProject.asExternalRepresentation,
                     lastModificationDate = None,
                     deletionInfo = None
                   )
