@@ -5,11 +5,70 @@
 
 # Projects Endpoint
 
-## Endpoint Overview
+| Scope    | Route                                   | Operations | Explanation                           |
+| -------- | --------------------------------------- | ---------- | ------------------------------------- |
+| projects | `/admin/projects`                       | `GET`      | [get all projects](#get-all-projects) |
+| projects | `/admin/projects`                       | `POST`     | [create a project]()                  |
+| projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project]()              |
+| projects | `/admin/projects/shortname/{shortname}` | `GET`      | [get a single project]()              |
+| projects | `/admin/projects/shortcode/{shortcode}` | `GET`      | [get a single project]()              |
+| projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project]()              |
+
+
+## Project Operations
+
+### Get All Projects
+
+Permissions: No permissions required
+
+Request definition: `GET: /admin/projects`
+
+Description: Returns a list of all projects.
+
+Example request:
+
+```bash
+curl --request GET --url http://localhost:3333/admin/projects
+```
+
+Example response:
+
+```jsonc
+{
+  "projects": [
+    {
+      "description": [
+        {
+          "value": "A demo project of a collection of images",
+          "language": "en"
+        }
+      ],
+      "id": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
+      "keywords": [
+        "collection",
+        "images"
+      ],
+      "logo": null,
+      "longname": "Image Collection Demo",
+      "ontologies": [
+        "http://0.0.0.0:3333/ontology/00FF/images/v2"
+      ],
+      "selfjoin": false,
+      "shortcode": "00FF",
+      "shortname": "images",
+      "status": true
+    },
+    {
+      // ...
+    }
+  ]
+}
+```
+
+---
+
 
 **Project Operations:**  
-
-- `GET: /admin/projects` : return all projects  
 
 - `POST: /admin/projects` : create a new project  
 
