@@ -93,7 +93,7 @@ stack-up: docker-build env-file ## starts the dsp-stack: fuseki, sipi, api and a
 	$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-up-fast
-stack-up-fast: docker-build-knora-api-image env-file ## starts the dsp-stack by skipping rebuilding most of the images (only api image is rebuilt).
+stack-up-fast: docker-build-dsp-api-image env-file ## starts the dsp-stack by skipping rebuilding most of the images (only api image is rebuilt).
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-up-ci
