@@ -105,44 +105,31 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     requestingUser: UserADM
   ): Future[Seq[ProjectADM]] =
     for {
-      sparqlQueryString <- Future(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                               .getProjects(
-                                 maybeIri = None,
-                                 maybeShortname = None,
-                                 maybeShortcode = None
-                               )
-                               .toString()
-                           )
-      // _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
-
-      projectsResponse <- appActor
-                            .ask(
-                              SparqlExtendedConstructRequest(
-                                sparql = sparqlQueryString
-                              )
-                            )
-                            .mapTo[SparqlExtendedConstructResponse]
-      // _ = log.debug(s"projectsGetADM - projectsResponse: $projectsResponse")
-
-      statements: List[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = projectsResponse.statements.toList
-      // _ = log.debug(s"projectsGetADM - statements: $statements")
-
-      projectIris = statements.map { case (projectIri: SubjectV2, _) =>
-                      projectIri.toString
-                    }.toSet
+      sparqlQueryString <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getProjects(
+              maybeIri = None,
+              maybeShortname = None,
+              maybeShortcode = None
+            )
+            .toString()
+        )
+      request           = SparqlExtendedConstructRequest(sparql = sparqlQueryString)
+      projectsResponse <- appActor.ask(request).mapTo[SparqlExtendedConstructResponse]
+      projectIris       = projectsResponse.statements.keySet.map(_.toString)
 
       ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris, requestingUser)
-
-      projects: Seq[ProjectADM] = statements.map {
-                                    case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                                      val projectOntologies =
-                                        ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
-                                      statements2ProjectADM(
-                                        statements = (projectIriSubject, propsMap),
-                                        ontologies = projectOntologies
-                                      )
-                                  }
+      projects =
+        projectsResponse.statements.toList.map {
+          case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+            val projectOntologies =
+              ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
+            statements2ProjectADM(
+              statements = (projectIriSubject, propsMap),
+              ontologies = projectOntologies
+            )
+        }
 
     } yield projects.sorted
 
@@ -1231,7 +1218,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     } yield maybeProjectADM
 
   /**
-   * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
+   * Helper method that turns SPARQL result rows into a [[ProjectADM]].
    *
    * @param statements results from the SPARQL query representing information about the project.
    * @param ontologies the ontologies in the project.
