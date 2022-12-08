@@ -43,6 +43,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetad
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 
 /**
  * Returns information about Knora projects.
@@ -140,27 +141,25 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @param requestingUser the requesting user.
    * @return a map of project IRIs to sequences of ontology IRIs.
    */
-  private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] =
+  private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] = {
+    def getIriPair(ontology: OntologyMetadataV2) =
+      ontology.projectIri.fold(
+        throw InconsistentRepositoryDataException(s"Ontology ${ontology.ontologyIri} has no project")
+      )(project => (project.toString, ontology.ontologyIri.toString))
+
     for {
-      ontologyMetadataResponse: ReadOntologyMetadataV2 <- appActor
-                                                            .ask(
-                                                              OntologyMetadataGetByProjectRequestV2(
-                                                                projectIris = projectIris.map(_.toSmartIri),
-                                                                requestingUser = requestingUser
-                                                              )
-                                                            )
-                                                            .mapTo[ReadOntologyMetadataV2]
-    } yield ontologyMetadataResponse.ontologies.map { ontology =>
-      val ontologyIri: IRI = ontology.ontologyIri.toString
-      val projectIri: IRI = ontology.projectIri
-        .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $ontologyIri has no project"))
-        .toString
-      projectIri -> ontologyIri
-    }
-      .groupBy(_._1)
-      .map { case (projectIri, projectIriAndOntologies: Set[(IRI, IRI)]) =>
-        projectIri -> projectIriAndOntologies.map(_._2).toSeq
-      }
+      request <- Future.successful(
+                   OntologyMetadataGetByProjectRequestV2(
+                     projectIris = projectIris.map(_.toSmartIri),
+                     requestingUser = requestingUser
+                   )
+                 )
+      ontologyMetadataResponse <- appActor.ask(request).mapTo[ReadOntologyMetadataV2]
+      ontologies                = ontologyMetadataResponse.ontologies.toList
+      projectOntologyIriPairs   = ontologies.map(getIriPair(_))
+      projectToOntologyMap      = projectOntologyIriPairs.groupMap(_._1)(_._2)
+    } yield projectToOntologyMap
+  }
 
   /**
    * Gets all the projects and returns them as a [[ProjectADM]].
