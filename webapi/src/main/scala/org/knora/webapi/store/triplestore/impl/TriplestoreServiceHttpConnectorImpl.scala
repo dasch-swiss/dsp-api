@@ -454,7 +454,7 @@ case class TriplestoreServiceHttpConnectorImpl(
                 // to the parent folder where the files can be found
                 val inputFile = Paths.get("..", elem.path)
                 if (!Files.exists(inputFile)) {
-                  throw BadRequestException(s"File ${inputFile} does not exist")
+                  throw BadRequestException(s"File ${inputFile.toAbsolutePath} does not exist")
                 }
                 val fileEntity =
                   new FileEntity(inputFile.toFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))

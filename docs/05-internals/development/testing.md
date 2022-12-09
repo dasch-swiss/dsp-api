@@ -37,7 +37,7 @@ You might need to create an integration test because:
 In this case create it in the `src/it`  source set of our projects.
 
 .NOTE
-_Currently only the `webapi` project supports integration tests_
+_Currently only the `webapi` project supports integration tests._
 
 Run all integration tests from the terminal.
 
@@ -46,5 +46,14 @@ make integration-test
 ```
 
 .NOTE
-_The integration tests currently depend on a locally published Sipi container. That is why we need to start
-the `make` command and not `sbt it`._
+_The integration tests currently depend on a locally published Sipi container, the make target helps you with that._
+
+## Debugging
+
+You can debug unit tests directly in your IDE. 
+
+For debugging the integration tests locally with `sbt` or your IDE you need to have a fresh SIPI container build:
+
+```shell
+make docker-build-sipi-image
+```
