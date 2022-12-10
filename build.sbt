@@ -232,7 +232,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     dockerUpdateLatest        := true,
     dockerBaseImage           := "eclipse-temurin:17-jre-focal",
     Docker / maintainer       := "support@dasch.swiss",
-    Docker / dockerExposedPorts ++= Seq(3333),
+    Docker / dockerExposedPorts ++= Seq(3333, 3339),
     Docker / defaultLinuxInstallLocation := "/opt/docker",
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {

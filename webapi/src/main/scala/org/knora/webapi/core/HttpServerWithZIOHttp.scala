@@ -10,7 +10,6 @@ import zio.ZLayer
 import zio._
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core._
 import org.knora.webapi.routing.ApiRoutesWithZIOHttp
 
 object HttpServerWithZIOHttp {

@@ -24,7 +24,10 @@ object AppConfigZSpec extends ZIOSpecDefault {
         assertTrue(appConfig.printExtendedConfig == false) &&
         assertTrue(appConfig.jwtLongevityAsDuration == FiniteDuration(30L, TimeUnit.DAYS)) &&
         assertTrue(appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS)) &&
-        assertTrue(appConfig.bcryptPasswordStrength == User.PasswordStrength(12))
+        assertTrue(appConfig.bcryptPasswordStrength == User.PasswordStrength(12)) &&
+        assertTrue(
+          appConfig.prometheusServerConfig.interval == java.time.Duration.ofSeconds(5)
+        )
       }
     }.provideLayer(AppConfig.live)
   )

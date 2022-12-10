@@ -28,9 +28,9 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-
 import dsp.errors.FileWriteException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
@@ -95,7 +95,7 @@ abstract class E2ESpec
   /**
    * Create router and config by unsafe running them.
    */
-  val (router, config) =
+  val (router: AppRouter, config: AppConfig) =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
@@ -120,9 +120,10 @@ abstract class E2ESpec
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          (for {
+          for {
+            _ <- AppServer.testWithoutSipi
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ()).provideSomeLayer(AppServer.testWithoutSipi)
+          } yield ()
         )
         .getOrThrow()
     }

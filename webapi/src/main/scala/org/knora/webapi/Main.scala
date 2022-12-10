@@ -9,6 +9,7 @@ import zio._
 import zio.logging.backend.SLF4J
 
 import org.knora.webapi.core._
+import org.knora.webapi.instrumentation.metrics.PrometheusServer
 
 object Main extends ZIOApp {
 
@@ -30,6 +31,10 @@ object Main extends ZIOApp {
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ LayersLive.dspLayersLive
 
   /* Here we start our Application */
-  override def run = AppServer.live.launch
-
+  override def run = for {
+    f1 <- PrometheusServer.make.forkDaemon
+    f2 <- (AppServer.live *> ZIO.never).forkDaemon
+    _  <- f1.join
+    _  <- f2.join
+  } yield ()
 }
