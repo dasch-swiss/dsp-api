@@ -5,14 +5,15 @@
 
 # Projects Endpoint
 
-| Scope    | Route                                   | Operations | Explanation                                |
-| -------- | --------------------------------------- | ---------- | ------------------------------------------ |
-| projects | `/admin/projects`                       | `GET`      | [get all projects](#get-all-projects)      |
-| projects | `/admin/projects`                       | `POST`     | [create a project](#create-a-new-project)  |
-| projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project](#get-project-by-id) |
-| projects | `/admin/projects/shortname/{shortname}` | `GET`      | [get a single project](#get-project-by-id) |
-| projects | `/admin/projects/shortcode/{shortcode}` | `GET`      | [get a single project](#get-project-by-id) |
-| projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project](#get-project-by-id) |
+| Scope    | Route                                   | Operations | Explanation                                             |
+| -------- | --------------------------------------- | ---------- | ------------------------------------------------------- |
+| projects | `/admin/projects`                       | `GET`      | [get all projects](#get-all-projects)                   |
+| projects | `/admin/projects`                       | `POST`     | [create a project](#create-a-new-project)               |
+| projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project](#get-project-by-id)              |
+| projects | `/admin/projects/shortname/{shortname}` | `GET`      | [get a single project](#get-project-by-id)              |
+| projects | `/admin/projects/shortcode/{shortcode}` | `GET`      | [get a single project](#get-project-by-id)              |
+| projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project](#get-project-by-id)              |
+| projects | `/admin/projects/iri/{iri}/AllData`     | `GET`      | [get all data of a project](#get-all-data-of-a-project) |
 
 
 ## Project Operations
@@ -65,7 +66,7 @@ Example response:
 }
 ```
 
-### Create a New Project:
+### Create a New Project
 
 Permissions: SystemAdmin
 
@@ -246,6 +247,94 @@ NB:
 - UUID must be [Base64 encoded with stripped padding](../api-v2/knora-iris.md).
 
 
+### Get all Data of a Project
+
+Permissions: ProjectAdmin or SystemAdmin
+
+Request definition: `POST /admin/projects/iri/{iri}/AllData`
+
+Description: Gets all data of a project as a TriG file.
+
+Example request:
+
+```bash
+curl --request GET \
+  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FMTvoB0EJRrqovzRkWXqfkA/AllData \
+  --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
+
+Example response:
+
+```trig
+@prefix images: <http://www.knora.org/ontology/00FF/images#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.knora.org/ontology/00FF/images> {
+    <http://www.knora.org/ontology/00FF/images>
+            rdf:type                      owl:Ontology ;
+            rdfs:label                    "The images demo ontology" ;
+            knora-base:attachedToProject  <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+            knora-base:lastModificationDate  "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
+    images:lastname  rdf:type        owl:ObjectProperty ;
+            rdfs:comment             "Nachname einer Person"@de ;
+            rdfs:comment             "Last name of a person"@en ;
+            rdfs:label               "Name"@de ;
+            rdfs:subPropertyOf       knora-base:hasValue ;
+            knora-base:objectClassConstraint  knora-base:TextValue ;
+            knora-base:subjectClassConstraint  images:person ;
+            salsah-gui:guiAttribute  "size=32" ;
+            salsah-gui:guiAttribute  "maxlength=32" ;
+            salsah-gui:guiElement    salsah-gui:SimpleText .
+    # ...
+}
+
+<http://www.knora.org/data/00FF/images> {
+    <http://rdfh.ch/00FF/0cb8286054d5>
+            rdf:type                      images:bild ;
+            rdfs:label                    "1 Alpinismus" ;
+            images:bearbeiter             <http://rdfh.ch/00FF/0cb8286054d5/values/0b80b43aee0f04> ;
+            images:bildnr                 <http://rdfh.ch/00FF/0cb8286054d5/values/6dde74fdeb0f04> ;
+            images:copyright              <http://rdfh.ch/00FF/df1260ad43d5> ;
+            images:copyrightValue         <http://rdfh.ch/00FF/0cb8286054d5/values/7d9e429c-4ef4-4708-bef1-e89c842f5f55> ;
+            images:description            <http://rdfh.ch/00FF/0cb8286054d5/values/3caf141ced0f04> ;
+            images:erfassungsdatum        <http://rdfh.ch/00FF/0cb8286054d5/values/3008c836ec0f04> ;
+            images:hatBildformat          <http://rdfh.ch/00FF/47b2992554d5> ;
+            images:hatBildformatValue     <http://rdfh.ch/00FF/0cb8286054d5/values/c3dcf335-51a3-4436-b107-a6ad2830d5bd> ;
+            images:jahr_exakt             <http://rdfh.ch/00FF/0cb8286054d5/values/48566101ee0f04> ;
+            images:jahreszeit             <http://rdfh.ch/00FF/0cb8286054d5/values/f3311b70ec0f04> ;
+            images:jahrzehnt              <http://rdfh.ch/00FF/0cb8286054d5/values/852c0ec8ed0f04> ;
+            images:mutationsdatum         <http://rdfh.ch/00FF/0cb8286054d5/values/b65b6ea9ec0f04> ;
+            images:signatur               <http://rdfh.ch/00FF/0cb8286054d5/values/aab421c4eb0f04> ;
+            images:titel                  <http://rdfh.ch/00FF/0cb8286054d5/values/cea90774ee0f04> ;
+            images:urheber                <http://rdfh.ch/00FF/df1260ad43d5> ;
+            images:urheberValue           <http://rdfh.ch/00FF/0cb8286054d5/values/e346ff38-6b03-4a27-a11b-b0818a2e5ee3> ;
+            knora-base:attachedToProject  <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+            knora-base:attachedToUser     <http://rdfh.ch/users/c266a56709> ;
+            knora-base:creationDate       "2016-03-02T15:05:57Z"^^xsd:dateTime ;
+            knora-base:hasPermissions     "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
+            knora-base:hasStillImageFileValue  <http://rdfh.ch/00FF/0cb8286054d5/values/c66133bf942f01> ;
+            knora-base:isDeleted          false .
+    # ...
+}
+
+<http://www.knora.org/data/admin> {
+  # ...
+}
+
+<http://www.knora.org/data/permissions> {
+  # ...
+}
+```
+
+
 ---
 
 
@@ -254,8 +343,6 @@ NB:
 - `PUT: /admin/projects/iri/<identifier>` : update a project identified by iri  
 
 - `DELETE: /admin/projects/iri/<identifier>` : update project status to false  
-
-- `GET: /admin/projects/iri/<identifier>/AllData` : returns a TriG file containing the project's data  
 
 **Project Member Operations:**  
 
