@@ -1,4 +1,4 @@
-package org.knora.webapi.instrumentation.metrics
+package org.knora.webapi.instrumentation.prometheus
 
 import zhttp.html._
 import zhttp.http._

@@ -9,7 +9,7 @@ import zio._
 import zio.logging.backend.SLF4J
 
 import org.knora.webapi.core._
-import org.knora.webapi.instrumentation.metrics.PrometheusServer
+import org.knora.webapi.instrumentation.prometheus.PrometheusServer
 
 object Main extends ZIOApp {
 
