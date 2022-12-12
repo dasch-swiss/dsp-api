@@ -5,16 +5,21 @@
 
 package org.knora.webapi.core
 
-import zhttp.service.Server
-import zio.ZLayer
-import zio._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
+import zhttp.http._
+import zhttp.service.Server
+import zio.{ZLayer, _}
 
+object HelloZio {
+  def apply(): HttpApp[State, Nothing] =
+    Http.collectZIO[Request] { case Method.GET -> !! / "hellozio" =>
+      ZIO.succeed(Response.json("""{"hello":"zio"}"""))
+    }
+}
 object HttpServerWithZIOHttp {
 
-  val routes = HealthRouteWithZIOHttp()
+  val routes = HealthRouteWithZIOHttp() ++ HelloZio()
 
   val layer: ZLayer[AppConfig & State, Nothing, Unit] =
     ZLayer {
