@@ -9,17 +9,25 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import zhttp.http._
 import zhttp.service.Server
+import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
 
+case class HelloZio(hello: String)
+
 object HelloZio {
+  implicit val encoder = DeriveJsonEncoder.gen[HelloZio]
+}
+
+object HelloZioApp {
   def apply(): HttpApp[State, Nothing] =
     Http.collectZIO[Request] { case Method.GET -> !! / "hellozio" =>
-      ZIO.succeed(Response.json("""{"hello":"zio"}"""))
+      ZIO.succeed(Response.json(HelloZio("world").toJson))
     }
 }
+
 object HttpServerWithZIOHttp {
 
-  val routes = HealthRouteWithZIOHttp() ++ HelloZio()
+  val routes = HealthRouteWithZIOHttp() ++ HelloZioApp()
 
   val layer: ZLayer[AppConfig & State, Nothing, Unit] =
     ZLayer {
@@ -30,5 +38,4 @@ object HttpServerWithZIOHttp {
         _         <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
       } yield ()
     }
-
 }
