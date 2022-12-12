@@ -5,14 +5,14 @@
 
 # Projects Endpoint
 
-| Scope    | Route                                   | Operations | Explanation                               |
-| -------- | --------------------------------------- | ---------- | ----------------------------------------- |
-| projects | `/admin/projects`                       | `GET`      | [get all projects](#get-all-projects)     |
-| projects | `/admin/projects`                       | `POST`     | [create a project](#create-a-new-project) |
-| projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project]()                  |
-| projects | `/admin/projects/shortname/{shortname}` | `GET`      | [get a single project]()                  |
-| projects | `/admin/projects/shortcode/{shortcode}` | `GET`      | [get a single project]()                  |
-| projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project]()                  |
+| Scope    | Route                                   | Operations | Explanation                                |
+| -------- | --------------------------------------- | ---------- | ------------------------------------------ |
+| projects | `/admin/projects`                       | `GET`      | [get all projects](#get-all-projects)      |
+| projects | `/admin/projects`                       | `POST`     | [create a project](#create-a-new-project)  |
+| projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project](#get-project-by-id) |
+| projects | `/admin/projects/shortname/{shortname}` | `GET`      | [get a single project](#get-project-by-id) |
+| projects | `/admin/projects/shortcode/{shortcode}` | `GET`      | [get a single project](#get-project-by-id) |
+| projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project](#get-project-by-id) |
 
 
 ## Project Operations
@@ -169,13 +169,87 @@ permissions) of any entity that belongs to the project. This default object acce
 `http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
 
 
+### Get Project by ID
+
+The ID can be shortcode, shortname, IRI or UUID.
+
+Permissions: No permissions required
+
+Request definition:
+
+- `GET /admin/projects/shortcode/{shortcode}`
+- `GET /admin/projects/shortname/{shortname}`
+- `GET /admin/projects/iri/{iri}`
+- `GET /admin/projects/uuid/{uuid}`
+
+Description: Returns a single project identified by shortcode, shortname, IRI or UUID.
+
+Example request:
+
+```bash
+curl --request GET --url http://localhost:3333/admin/projects/shortcode/0001
+```
+
+```bash
+curl --request GET --url http://localhost:3333/admin/projects/shortname/anything
+```
+
+```bash
+curl --request GET --url http://localhost:3333/admin/projects/uuid/Lw3FC39BSzCwvmdOaTyLqQ
+```
+
+```bash
+curl --request GET --url \
+    http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ
+```
+
+Example response:
+
+```jsonc
+{
+	"project": {
+		"description": [
+			{
+				"value": "Anything Project"
+			}
+		],
+		"id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+		"keywords": [
+			"arbitrary test data",
+			"things"
+		],
+		"logo": null,
+		"longname": "Anything Project",
+		"ontologies": [
+			"http://0.0.0.0:3333/ontology/0001/something/v2",
+			"http://0.0.0.0:3333/ontology/0001/sequences/v2",
+			"http://0.0.0.0:3333/ontology/0001/freetest/v2",
+			"http://0.0.0.0:3333/ontology/0001/minimal/v2",
+			"http://0.0.0.0:3333/ontology/0001/anything/v2"
+		],
+		"selfjoin": false,
+		"shortcode": "0001",
+		"shortname": "anything",
+		"status": true
+	}
+}
+```
+
+Errors:
+
+- `400 Bad Request` if the provided ID is not valid.
+- `404 Not Found` if no project with the provided ID is found.
+
+NB:
+
+- IRI must be URL-encoded.
+- UUID must be [Base64 encoded with stripped padding](../api-v2/knora-iris.md).
+
 
 ---
 
 
 **Project Operations:**  
-
-- `GET: /admin/projects/[iri | shortname | shortcode | uuid]/<identifier>` : returns a single project identified either through iri, shortname, shortcode or UUID
 
 - `PUT: /admin/projects/iri/<identifier>` : update a project identified by iri  
 
