@@ -5,14 +5,9 @@
 
 package org.knora.webapi.core
 
-import zio.ULayer
-import zio.ZLayer
-
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.routing.ApiRoutesWithZIOHttp
-import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -23,6 +18,7 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import zio.{ULayer, ZLayer}
 
 object LayersLive {
 
@@ -52,8 +48,6 @@ object LayersLive {
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
       ApiRoutes.layer,
-      ApiRoutesWithZIOHttp.layer,   // this is the new layer that composes all new routes
-      HealthRouteWithZIOHttp.layer, // this is the new health route
       AppConfig.live,
       AppRouter.layer,
       CacheServiceManager.layer,

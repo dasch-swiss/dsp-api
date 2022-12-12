@@ -5,64 +5,49 @@
 
 package org.knora.webapi.routing
 
-import spray.json.JsObject
-import spray.json.JsString
+import org.knora.webapi.core.State
+import org.knora.webapi.core.domain.AppState
+import spray.json.{JsObject, JsString}
 import zhttp.http._
 import zio._
 
-import org.knora.webapi.core.State
-import org.knora.webapi.core.domain.AppState
-
 /**
- * Provides health check logic
+ * Provides the '/healthZ' endpoint serving the health status.
  */
-trait HealthCheckWithZIOHttp {
+object HealthRouteWithZIOHttp {
+
+  def apply(): HttpApp[State, Nothing] =
+    Http.collectZIO[Request] { case Method.GET -> !! / "healthZ" =>
+      State.getAppState.map(toHealthCheckResult).flatMap(createResponse)
+    }
 
   /**
-   * gets the application state from a state service called `State`
-   *
-   * @param state the state service
-   * @return a response with the application state
-   */
-  protected def healthCheck(state: State): UIO[Response] =
-    for {
-      _        <- ZIO.logDebug("get application state")
-      state    <- state.getAppState
-      result   <- setHealthState(state)
-      _        <- ZIO.logDebug("set health state")
-      response <- createResponse(result)
-      _        <- ZIO.logDebug("getting application state done")
-    } yield response
-
-  /**
-   * sets the application's health state to healthy or unhealthy according to the provided state
+   * Transforms the [[AppState]] into a [[HealthCheckResult]]
    *
    * @param state the application's state
-   * @return the result which is either unhealthy or healthy
+   * @return the result which is either unhealthy or healthy, containing a human readable explanation in case of unhealthy
    */
-  private def setHealthState(state: AppState): UIO[HealthCheckResult] =
-    ZIO.succeed(
-      state match {
-        case AppState.Stopped                => unhealthy("Stopped. Please retry later.")
-        case AppState.StartingUp             => unhealthy("Starting up. Please retry later.")
-        case AppState.WaitingForTriplestore  => unhealthy("Waiting for triplestore. Please retry later.")
-        case AppState.TriplestoreReady       => unhealthy("Triplestore ready. Please retry later.")
-        case AppState.UpdatingRepository     => unhealthy("Updating repository. Please retry later.")
-        case AppState.RepositoryUpToDate     => unhealthy("Repository up to date. Please retry later.")
-        case AppState.CreatingCaches         => unhealthy("Creating caches. Please retry later.")
-        case AppState.CachesReady            => unhealthy("Caches ready. Please retry later.")
-        case AppState.UpdatingSearchIndex    => unhealthy("Updating search index. Please retry later.")
-        case AppState.SearchIndexReady       => unhealthy("Search index ready. Please retry later.")
-        case AppState.LoadingOntologies      => unhealthy("Loading ontologies. Please retry later.")
-        case AppState.OntologiesReady        => unhealthy("Ontologies ready. Please retry later.")
-        case AppState.WaitingForIIIFService  => unhealthy("Waiting for IIIF service. Please retry later.")
-        case AppState.IIIFServiceReady       => unhealthy("IIIF service ready. Please retry later.")
-        case AppState.WaitingForCacheService => unhealthy("Waiting for cache service. Please retry later.")
-        case AppState.CacheServiceReady      => unhealthy("Cache service ready. Please retry later.")
-        case AppState.MaintenanceMode        => unhealthy("Application is in maintenance mode. Please retry later.")
-        case AppState.Running                => healthy
-      }
-    )
+  private def toHealthCheckResult(state: AppState): HealthCheckResult =
+    state match {
+      case AppState.Stopped                => unhealthy("Stopped. Please retry later.")
+      case AppState.StartingUp             => unhealthy("Starting up. Please retry later.")
+      case AppState.WaitingForTriplestore  => unhealthy("Waiting for triplestore. Please retry later.")
+      case AppState.TriplestoreReady       => unhealthy("Triplestore ready. Please retry later.")
+      case AppState.UpdatingRepository     => unhealthy("Updating repository. Please retry later.")
+      case AppState.RepositoryUpToDate     => unhealthy("Repository up to date. Please retry later.")
+      case AppState.CreatingCaches         => unhealthy("Creating caches. Please retry later.")
+      case AppState.CachesReady            => unhealthy("Caches ready. Please retry later.")
+      case AppState.UpdatingSearchIndex    => unhealthy("Updating search index. Please retry later.")
+      case AppState.SearchIndexReady       => unhealthy("Search index ready. Please retry later.")
+      case AppState.LoadingOntologies      => unhealthy("Loading ontologies. Please retry later.")
+      case AppState.OntologiesReady        => unhealthy("Ontologies ready. Please retry later.")
+      case AppState.WaitingForIIIFService  => unhealthy("Waiting for IIIF service. Please retry later.")
+      case AppState.IIIFServiceReady       => unhealthy("IIIF service ready. Please retry later.")
+      case AppState.WaitingForCacheService => unhealthy("Waiting for cache service. Please retry later.")
+      case AppState.CacheServiceReady      => unhealthy("Cache service ready. Please retry later.")
+      case AppState.MaintenanceMode        => unhealthy("Application is in maintenance mode. Please retry later.")
+      case AppState.Running                => healthy
+    }
 
   /**
    * creates the HTTP response from the health check result (healthy/unhealthy)
@@ -103,10 +88,10 @@ trait HealthCheckWithZIOHttp {
   /**
    * The result of a health check which is either unhealthy or healthy.
    *
-   * @param name      ???
-   * @param severity  ???
-   * @param status    the status (either false = unhealthy or true = healthy)
-   * @param message   the message
+   * @param name     ???
+   * @param severity ???
+   * @param status   the status (either false = unhealthy or true = healthy)
+   * @param message  the message
    */
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
@@ -125,31 +110,4 @@ trait HealthCheckWithZIOHttp {
       status = true,
       message = "Application is healthy"
     )
-}
-
-/**
- * Provides the '/healthZ' endpoint serving the health status.
- */
-final case class HealthRouteWithZIOHttp(state: State) extends HealthCheckWithZIOHttp {
-
-  /**
-   * Returns the route.
-   */
-  val route: HttpApp[State, Nothing] =
-    Http.collectZIO[Request] { case Method.GET -> !! / "healthZ" =>
-      for {
-        //  ec    <- ZIO.executor.map(_.asExecutionContext) // leave this for reference about how to get the execution context
-        state    <- ZIO.service[State]
-        response <- healthCheck(state)
-      } yield response
-
-    }
-}
-
-/**
- * Companion object providing the layer
- */
-object HealthRouteWithZIOHttp {
-  val layer: ZLayer[State, Nothing, HealthRouteWithZIOHttp] =
-    ZLayer.fromFunction(HealthRouteWithZIOHttp.apply _)
 }
