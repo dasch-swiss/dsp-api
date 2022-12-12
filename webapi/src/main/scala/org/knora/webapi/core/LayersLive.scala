@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.core
 
 import zio.ULayer
@@ -6,8 +11,6 @@ import zio.ZLayer
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.routing.ApiRoutesWithZIOHttp
-import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -47,8 +50,6 @@ object LayersLive {
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
       ApiRoutes.layer,
-      ApiRoutesWithZIOHttp.layer,   // this is the new layer that composes all new routes
-      HealthRouteWithZIOHttp.layer, // this is the new health route
       AppConfig.live,
       AppRouter.layer,
       CacheServiceManager.layer,

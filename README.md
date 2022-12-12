@@ -94,10 +94,25 @@ make stack-down
 
 ### Run the automated tests
 
+Automated tests are split into different source sets into slow running integration tests (i.e. tests which do IO or are
+using [Testcontainers](https://www.testcontainers.org/)) and fast running unit tests.
+
+Run unit tests:
+
+```shell
+sbt test
+```
+
+Run integration tests:
+
+```shell
+make integration-test
+```
+
 Run all tests:
 
 ```shell
-make test
+make test-all
 ```
 
 ## Release Versioning Convention

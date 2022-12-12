@@ -56,4 +56,4 @@ be sent as a part of the HTTP header or as parts of the URL (see
 
 ## Admin API Endpoints
 
-TODO
+An overview over all admin API endpoints can be found [here](overview.md).

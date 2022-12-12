@@ -5,17 +5,17 @@
 
 # Admin Endpoint
 
-For the management of *users*, *projects*, and *groups*, the DSP-API
-following a resource centric approach, provides three endpoints
-corresponding to the three classes of objects that they have an effect
-on, namely:
+For the management of *users*, *projects*, *groups*, *lists*, and *permissions*, the DSP-API following a resource
+centric approach, provides the following endpoints corresponding to the respective classes of objects that they have an
+effect on, namely:
 
-  - Users Endpoint: `http://server:port/admin/users` - `knora-base:User`
-  - Projects Endpoint: `http://server:port/admin/projects` -
-    `knora-base:knoraProject`
-  - Groups Endpoint: `http://server:port/admin/groups` -
-    `knora-base:UserGroup`
+  - [Users endpoint](lists.md): `http://server:port/admin/users` - `knora-base:User`
+  - [Projects endpoint](projects.md): `http://server:port/admin/projects` - `knora-base:knoraProject`
+  - [Groups endpoint](groups.md): `http://server:port/admin/groups` - `knora-base:UserGroup`
+  - [Lists endpoint](lists.md): `http://server:port/admin/lists` - `knora-base:ListNode`
+  - [Permissions endpoint](permissions.md): `http://server:port/admin/permissions` - `knora-admin:Permission`
 
-All information regarding users, projects and groups is stored in the
-`http://www.knora.org/admin` named graph.
+All information regarding users, projects, groups, lists and permissions is stored in the `http://www.knora.org/admin`
+named graph.
 
+Additionally there is the [stores endpoint](stores.md) which allows manipulation of the triplestore content.

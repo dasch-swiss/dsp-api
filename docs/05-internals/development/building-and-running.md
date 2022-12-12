@@ -114,7 +114,7 @@ The docker plugin also allows for a number of other useful features, like inspec
 To run all test targets, use the following in the command line:
 
 ```
-$ make test
+$ make test-all
 ```
 
 To run a single test from the command line, for example `SearchV1R2RSpec`, 

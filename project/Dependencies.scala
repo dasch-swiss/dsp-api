@@ -5,8 +5,7 @@
 
 package org.knora
 
-import sbt.Keys._
-import sbt.{Def, _}
+import sbt._
 
 object Dependencies {
 
@@ -26,7 +25,7 @@ object Dependencies {
   val ZioConfigVersion            = "3.0.2"
   val ZioSchemaVersion            = "0.2.0"
   val ZioLoggingVersion           = "2.1.5"
-  val ZioMetricsConnectorsVersion = "2.0.3"
+  val ZioMetricsConnectorsVersion = "2.0.4"
   val ZioPreludeVersion           = "1.0.0-RC16"
 
   // ZIO - all Scala 3 compatible
@@ -40,9 +39,11 @@ object Dependencies {
   val zioConfig            = "dev.zio" %% "zio-config"             % ZioConfigVersion
   val zioConfigMagnolia    = "dev.zio" %% "zio-config-magnolia"    % ZioConfigVersion
   val zioConfigTypesafe    = "dev.zio" %% "zio-config-typesafe"    % ZioConfigVersion
-  val zioTest              = "dev.zio" %% "zio-test"               % ZioVersion
-  val zioTestSbt           = "dev.zio" %% "zio-test-sbt"           % ZioVersion
   val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
+
+  // zio-test and friends
+  val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
+  val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -76,7 +77,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "5.8.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.0.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.72"
 
   // caching
@@ -92,8 +93,8 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "72.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.1"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.1"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.2"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.2"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "11.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.5" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
@@ -112,22 +113,33 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
 
-  val webapiLibraryDependencies = Seq(
+  val webapiIntegrationTestDependencies = Seq(
+    akkaHttpTestkit,
+    akkaStreamTestkit,
+    akkaTestkit,
+    gatlingHighcharts,
+    gatlingTestFramework,
+    rdf4jClient,
+    scalaTest,
+    testcontainers,
+    xmlunitCore,
+    zioTest,
+    zioTestSbt
+  ).map(_ % IntegrationTest)
+
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
+
+  val webapiDependencies = Seq(
     akkaActor,
     akkaHttp,
     akkaHttpCors,
     akkaHttpSprayJson,
     akkaSlf4j,
-    akkaHttpTestkit % Test,
     akkaStream,
-    akkaStreamTestkit % Test,
-    akkaTestkit       % Test,
     commonsValidator,
     commonsLang3,
     diff,
     ehcache,
-    gatlingHighcharts    % Test,
-    gatlingTestFramework % Test,
     gwtServlet,
     icu4j,
     jacksonDatabind,
@@ -139,19 +151,15 @@ object Dependencies {
     kamonCore,
     kamonScalaFuture,
     logbackClassic,
-    rdf4jClient % Test,
     rdf4jShacl,
     saxonHE,
     scalaGraph,
     scalaLogging,
-    scalaTest % Test,
     scallop,
     slf4jApi,
     springSecurityCore,
     bouncyCastle,
-    testcontainers % Test,
     titaniumJSONLD,
-    xmlunitCore % Test,
     zio,
     zioConfig,
     zioConfigMagnolia,
@@ -162,9 +170,7 @@ object Dependencies {
     zioLoggingSlf4j,
     zioMacros,
     zioMetricsConnectors,
-    zioPrelude,
-    zioTest    % Test,
-    zioTestSbt % Test
+    zioPrelude
   )
 
   val valueObjectsLibraryDependencies = Seq(
@@ -197,7 +203,8 @@ object Dependencies {
 
   val schemaCoreLibraryDependencies = Seq(
     zioPrelude,
-    zioTest % Test
+    zioTest    % Test,
+    zioTestSbt % Test
   )
 
   val schemaRepoLibraryDependencies                  = Seq()

@@ -289,6 +289,16 @@ case class DropAllTRepositoryContent() extends TriplestoreRequest
 case class DropAllRepositoryContentACK()
 
 /**
+ * Message for removing all content from the repository.
+ */
+case class DropDataGraphByGraph() extends TriplestoreRequest
+
+/**
+ * Sent as a response to [[DropDataGraphByGraph]] if the request was processed successfully.
+ */
+case class DropDataGraphByGraphACK()
+
+/**
  * Inserts data into the repository.
  *
  * @param rdfDataObjects contains a list of [[RdfDataObject]].

@@ -5,14 +5,12 @@
 
 package org.knora.webapi.store.cache.serialization
 
-import zio.test.Assertion._
-import zio.test.TestAspect.ignore
-import zio.test._
-
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cache.serialization.CacheSerialization
+import zio.test.Assertion._
+import zio.test.TestAspect.ignore
+import zio.test._
 
 /**
  * This spec is used to test [[CacheSerialization]].
