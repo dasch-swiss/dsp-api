@@ -1,47 +1,67 @@
-/*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package org.knora.webapi.routing.admin
 
+import akka.actor.ActorRef
+import akka.pattern.ask
+import akka.util.Timeout
 import zhttp.http._
-import zio.URLayer
+import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
-import java.net.URLDecoder
-
-import dsp.errors.BadRequestException
 import dsp.errors.InternalServerException
-import dsp.errors.KnoraException
 import dsp.errors.RequestRejectedException
+
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppRouter
 import org.knora.webapi.http.handler.ExceptionHandlerZ
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.responders.admin.ProjectsService
+import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
-final case class ProjectsRouteZ(projectsService: ProjectsService, appConfig: AppConfig) {
+trait ProjectService {
+  def getProjectByIri(iri: IRI, user: UserADM): Task[ProjectGetResponseADM]
+}
 
-  def getProjectByIri(iri: String): ZIO[Any, KnoraException, Response] =
+case class ProjectServiceLive(router: AppRouter, appConfig: AppConfig) extends ProjectService {
+  implicit val sender: ActorRef = router.ref
+  implicit val timeout: Timeout = appConfig.defaultTimeoutAsDuration
+  override def getProjectByIri(
+    iri: IRI,
+    user: UserADM
+  ): Task[ProjectGetResponseADM] =
     for {
-      user <- ZIO.succeed(KnoraSystemInstances.Users.SystemUser)
-      iriDecoded <-
-        ZIO
-          .attempt(URLDecoder.decode(iri, "utf-8"))
-          .orElseFail(BadRequestException(s"Failed to decode IRI $iri"))
-      iriValue <- ProjectIdentifierADM.IriIdentifier.fromString(iriDecoded).toZIO
-      response <- projectsService.getSingleProjectADMRequest(iriValue, user).orDie
+      iriValue <- ProjectIdentifierADM.IriIdentifier.fromString(iri).toZIO
+      message   = ProjectGetRequestADM(identifier = iriValue, requestingUser = user)
+      response <- ZIO.fromFuture(_ => router.ref.ask(message)).map(_.asInstanceOf[ProjectGetResponseADM]).orDie
+    } yield response
+}
+object ProjectService {
+  val live = ZLayer.fromFunction(ProjectServiceLive.apply _)
+}
+
+final case class ProjectsRouteZ(
+  appConfig: AppConfig,
+  authenticatorService: AuthenticatorService,
+  projectService: ProjectService
+) {
+
+  def getProjectByIri(iri: String, request: Request): Task[Response] =
+    for {
+      user       <- authenticatorService.getUser(request)
+      iriDecoded <- RouteUtilZ.decodeUrl(iri)
+      response   <- projectService.getProjectByIri(iriDecoded, user)
     } yield Response.json(response.toJsValue.toString())
 
   val route: HttpApp[Any, Nothing] =
     (Http
       .collectZIO[Request] {
-        // TODO : Add user authentication, make tests run with the new route
+        // TODO : tests
+
         // Returns a single project identified through the IRI.
-        case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
-          getProjectByIri(iri)
+        case request @ Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
+          getProjectByIri(iri, request)
       })
       .catchAll {
         case RequestRejectedException(e) =>
@@ -52,5 +72,6 @@ final case class ProjectsRouteZ(projectsService: ProjectsService, appConfig: App
 }
 
 object ProjectsRouteZ {
-  val layer: URLayer[ProjectsService with AppConfig, ProjectsRouteZ] = ZLayer.fromFunction(ProjectsRouteZ.apply _)
+  val layer: ZLayer[AppConfig with AuthenticatorService with ProjectService, Nothing, ProjectsRouteZ] =
+    ZLayer.fromFunction(ProjectsRouteZ(_, _, _))
 }

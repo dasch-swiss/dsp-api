@@ -11,9 +11,8 @@ import dsp.errors._
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 /**
- * Migrated from [[org.knora.webapi.http.status.ApiStatusCodes]]
- *
  * The possible values for the HTTP status code that is returned as part of each Knora API v2 response.
+ * migrated from [[org.knora.webapi.http.status.ApiStatusCodes]]
  */
 object ApiStatusCodesZ {
 

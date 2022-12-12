@@ -10,7 +10,6 @@ import zio._
 import zio.config._
 import zio.config.magnolia._
 import zio.config.typesafe._
-
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -19,8 +18,8 @@ import scala.concurrent.duration
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors.FileWriteException
+
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.util.cache.CacheUtil
 
