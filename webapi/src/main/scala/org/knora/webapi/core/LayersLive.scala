@@ -1,5 +1,11 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.core
 
+import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.auth.JWTService
@@ -40,7 +46,7 @@ object LayersLive {
   /**
    * All effect layers needed to provide the `Environment`
    */
-  val dspLayersLive =
+  val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
       ApiRoutes.layer,
@@ -49,6 +55,7 @@ object LayersLive {
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       HttpServer.layer,
+      HttpServerWithZIOHttp.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       JWTService.layer,

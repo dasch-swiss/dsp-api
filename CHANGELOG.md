@@ -1,5 +1,64 @@
 # Changelog
 
+## [25.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.8...v25.0.0) (2022-12-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* partOf and sequenceOf properties are not marked as isEditable (#2268)
+* change all project IRIs to contain UUID instead of shortcode (DEV-1400) (#2255)
+
+### Bug Fixes
+
+* Allow warn logging for requests/responses which are failures ([#2273](https://www.github.com/dasch-swiss/dsp-api/issues/2273)) ([92531ce](https://www.github.com/dasch-swiss/dsp-api/commit/92531ceb0c38f0c6117bc08633bb66a89dbcabc7))
+* Ask timeouts with GetUserADM (DEV-1443) ([#2267](https://www.github.com/dasch-swiss/dsp-api/issues/2267)) ([3f77b6e](https://www.github.com/dasch-swiss/dsp-api/commit/3f77b6e5708e94f7531c5df09164cbfce20b9fc1))
+* Deprecation warnings for SCryptPasswordEncoder ([#2308](https://www.github.com/dasch-swiss/dsp-api/issues/2308)) ([86dc389](https://www.github.com/dasch-swiss/dsp-api/commit/86dc389fb2a45d99e82c601f27bcd813dcf8be12))
+* Don't log hashes (DEV-1442) ([#2265](https://www.github.com/dasch-swiss/dsp-api/issues/2265)) ([adaf4b0](https://www.github.com/dasch-swiss/dsp-api/commit/adaf4b0ca982464e38672b2cc3aaac04c802b49f))
+* Exclude characters with special meaning in Lucene Query Parser syntax from searchbylabel search (DEV-1446) ([#2269](https://www.github.com/dasch-swiss/dsp-api/issues/2269)) ([b359916](https://www.github.com/dasch-swiss/dsp-api/commit/b3599163f3e74375da657e14e47387d598f8485e))
+* fix RepositoryUpdater that is not timing out during repository upgrade (DEV-1534) ([#2313](https://www.github.com/dasch-swiss/dsp-api/issues/2313)) ([213a5f0](https://www.github.com/dasch-swiss/dsp-api/commit/213a5f0fd6cd48ffba8128e33b6a964059ed3309))
+* Increase timeout when emptying repository (DEV-1506) ([#2289](https://www.github.com/dasch-swiss/dsp-api/issues/2289)) ([39771ed](https://www.github.com/dasch-swiss/dsp-api/commit/39771ed743cd485679a05e5679a25352a8891aea))
+* key frame extraction (DEV-1513) ([#2300](https://www.github.com/dasch-swiss/dsp-api/issues/2300)) ([729f071](https://www.github.com/dasch-swiss/dsp-api/commit/729f0718ff6ac831e91279b77046e4f6b9438b65))
+* partOf and sequenceOf properties are not marked as isEditable ([#2268](https://www.github.com/dasch-swiss/dsp-api/issues/2268)) ([68f19c3](https://www.github.com/dasch-swiss/dsp-api/commit/68f19c3e570c470563d831ab7f8483e1f392de6f))
+
+
+### Enhancements
+
+* **projectsADM:** add possibility to get project and members by UUID (DEV-1408) ([#2272](https://www.github.com/dasch-swiss/dsp-api/issues/2272)) ([4b66682](https://www.github.com/dasch-swiss/dsp-api/commit/4b666829ff81a447cd1c1fae304bb5ca518fbab9))
+
+
+### Documentation
+
+* improve permissions documentation ([#2314](https://www.github.com/dasch-swiss/dsp-api/issues/2314)) ([f4004b2](https://www.github.com/dasch-swiss/dsp-api/commit/f4004b2525821285ac798b251a0a11ba42cc5daf))
+* publish architectural decision records ([#2301](https://www.github.com/dasch-swiss/dsp-api/issues/2301)) ([be6bcd0](https://www.github.com/dasch-swiss/dsp-api/commit/be6bcd0b1b6b8d321e2105f25431a43d5814d5c6))
+* Remove warning which considers v2 as not production ready ([#2282](https://www.github.com/dasch-swiss/dsp-api/issues/2282)) ([0246522](https://www.github.com/dasch-swiss/dsp-api/commit/024652259ada84f49c4615f91aa3f585da14d254))
+
+
+### Maintenance
+
+* add GH workflow to publish manually from branches ([#2316](https://www.github.com/dasch-swiss/dsp-api/issues/2316)) ([6f5020e](https://www.github.com/dasch-swiss/dsp-api/commit/6f5020ea54cd0df9a96d132043992f612ffb09cd))
+* change all project IRIs to contain UUID instead of shortcode (DEV-1400) ([#2255](https://www.github.com/dasch-swiss/dsp-api/issues/2255)) ([f2b2584](https://www.github.com/dasch-swiss/dsp-api/commit/f2b2584489748bf8a9d56044744c7821582bdce8))
+* Decrease timeout for emptying repository (DEV-1518) ([#2310](https://www.github.com/dasch-swiss/dsp-api/issues/2310)) ([a83000b](https://www.github.com/dasch-swiss/dsp-api/commit/a83000ba0b234b294c80931c5930fe15b26c9fdc))
+* Introduce ZIO HTTP (DEV-1425) ([#2256](https://www.github.com/dasch-swiss/dsp-api/issues/2256)) ([7ae6d24](https://www.github.com/dasch-swiss/dsp-api/commit/7ae6d24604cda006b85aceda689ed45089025f5a))
+* make possible to run Publish GH Action manually (DEV-1519) ([#2297](https://www.github.com/dasch-swiss/dsp-api/issues/2297)) ([bfe578a](https://www.github.com/dasch-swiss/dsp-api/commit/bfe578a37f7609cfac0b2c38e318c98641eebb49))
+* **SIPI:** add timestamp to some SIPI Lua logs ([#2311](https://www.github.com/dasch-swiss/dsp-api/issues/2311)) ([8f3f19f](https://www.github.com/dasch-swiss/dsp-api/commit/8f3f19f235a3787afa43b010afedac86bd320958))
+* slight improvements to PR template ([#2312](https://www.github.com/dasch-swiss/dsp-api/issues/2312)) ([ca3a8d0](https://www.github.com/dasch-swiss/dsp-api/commit/ca3a8d0def066e8b3b949080bd8d4e163948c73f))
+* update dependencies ([#2264](https://www.github.com/dasch-swiss/dsp-api/issues/2264)) ([41d5315](https://www.github.com/dasch-swiss/dsp-api/commit/41d53150e3fee7d91d6c67fda3511e02644e38e3))
+* update dependencies ([#2281](https://www.github.com/dasch-swiss/dsp-api/issues/2281)) ([725bc0f](https://www.github.com/dasch-swiss/dsp-api/commit/725bc0f750ec9503ea7902d54a549d848983c358))
+
+### [24.0.8](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.7...v24.0.8) (2022-10-18)
+
+
+### Bug Fixes
+
+* User can be project admin without being project member (DEV-1383) ([#2248](https://www.github.com/dasch-swiss/dsp-api/issues/2248)) ([c1aa8f0](https://www.github.com/dasch-swiss/dsp-api/commit/c1aa8f0bd4e8f7141d25c0134aec65a8ff0e0546))
+
+
+### Maintenance
+
+* automatically clean sipi image files (DEV-1395) ([#2237](https://www.github.com/dasch-swiss/dsp-api/issues/2237)) ([eddb34d](https://www.github.com/dasch-swiss/dsp-api/commit/eddb34d80b8fc41a1b219051159ed2eea4f2fd3e))
+* fix project name ([#2239](https://www.github.com/dasch-swiss/dsp-api/issues/2239)) ([5af65eb](https://www.github.com/dasch-swiss/dsp-api/commit/5af65eba2edecdf13bbda837cd5a529791dcefe0))
+* update dependencies ([#2247](https://www.github.com/dasch-swiss/dsp-api/issues/2247)) ([2eefcbc](https://www.github.com/dasch-swiss/dsp-api/commit/2eefcbcee1734fb46b8086e22dc63f36e5146d3c))
+
 ### [24.0.7](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.6...v24.0.7) (2022-10-07)
 
 
@@ -1510,7 +1569,7 @@
 * MAJOR: Fix property names for incoming links (#1144))
 * MAJOR: Generate and resolve ARK URLs for resources (#1161). Projects
   that have resource IRIs that do not conform to the format specified in
-  <https://docs.knora.org/paradox/03-apis/api-v2/knora-iris.html#iris-for-data>
+  <https://docs.knora.org/paradox/03-endpoints/api-v2/knora-iris.html#iris-for-data>
   must update them.
 * MAJOR: Use project shortcode in IIIF URLs (#1191). If you have file value IRIs containing the substring `/reps/`, you must replace `/reps/` with `/values/`.
 

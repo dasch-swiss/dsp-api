@@ -25,7 +25,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePay
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -938,13 +938,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-      maybeProject <- appActor
-                        .ask(
-                          ProjectGetADM(
-                            identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value))
-                          )
-                        )
-                        .mapTo[Option[ProjectADM]]
+      maybeProject <-
+        appActor
+          .ask(
+            ProjectGetADM(
+              identifier = IriIdentifier
+                .fromString(projectIri.value)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
+          )
+          .mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project
@@ -2264,15 +2267,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   protected def getDataNamedGraph(projectIri: IRI): Future[IRI] =
     for {
       /* Get the project information */
-      maybeProject <- appActor
-                        .ask(
-                          ProjectGetADM(
-                            ProjectIdentifierADM(
-                              maybeIri = Some(projectIri)
-                            )
-                          )
-                        )
-                        .mapTo[Option[ProjectADM]]
+      maybeProject <-
+        appActor
+          .ask(
+            ProjectGetADM(
+              IriIdentifier
+                .fromString(projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
+          )
+          .mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project

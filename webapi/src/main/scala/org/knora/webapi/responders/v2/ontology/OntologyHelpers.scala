@@ -1899,6 +1899,8 @@ object OntologyHelpers {
     val subPropertyOf: SmartIri = internalPropertyDef.subPropertyOf match {
       case subProps if subProps.contains(OntologyConstants.KnoraBase.IsPartOf.toSmartIri) =>
         OntologyConstants.KnoraBase.IsPartOfValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsSequenceOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsSequenceOfValue.toSmartIri
       case subProps if subProps.contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri) =>
         OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri
       case subProps

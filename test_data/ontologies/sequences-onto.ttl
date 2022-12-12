@@ -14,7 +14,7 @@
 <http://www.knora.org/ontology/0001/sequences>
     rdf:type                        owl:Ontology ;
     rdfs:label                      "The sequences ontology" ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
     knora-base:lastModificationDate "2022-07-13T16:21:34Z"^^xsd:dateTime .
 
 :Video

@@ -13,7 +13,7 @@ import org.knora.webapi.core.domain.AppState
 @accessible
 trait State {
   def set(v: AppState): UIO[Unit]
-  def get: UIO[AppState]
+  val getAppState: UIO[AppState]
 }
 
 object State {
@@ -30,7 +30,7 @@ object State {
     override def set(v: AppState): UIO[Unit] =
       state.set(v) *> ZIO.logInfo(s"AppState set to ${v.toString()}")
 
-    override val get: UIO[AppState] =
+    override val getAppState: UIO[AppState] =
       state.get
 
   }

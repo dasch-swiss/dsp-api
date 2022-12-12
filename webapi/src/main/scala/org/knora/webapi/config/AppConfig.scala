@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.config
 
 import com.typesafe.config.ConfigFactory
@@ -90,7 +95,8 @@ final case class KnoraApi(
   internalPort: Int,
   externalProtocol: String,
   externalHost: String,
-  externalPort: Int
+  externalPort: Int,
+  externalZioPort: Int
 ) {
   val internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                                       ":" + internalPort

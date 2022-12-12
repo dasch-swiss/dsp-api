@@ -1,4 +1,3 @@
-
 {
     "@graph": [
         {
@@ -12,7 +11,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0666"
+                "@id": "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
             },
             "knora-api:userHasPermission": "V",
             "knora-api:creationDate": {
@@ -44,7 +43,7 @@
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:attachedToProject": {
-                        "@id": "http://rdfh.ch/projects/0666"
+                        "@id": "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
                     },
                     "knora-api:userHasPermission": "V",
                     "knora-api:creationDate": {
@@ -109,7 +108,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0666"
+                "@id": "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
             },
             "knora-api:userHasPermission": "V",
             "knora-api:creationDate": {
@@ -142,7 +141,7 @@
                             "@type": "xsd:anyURI"
                         },
                         "knora-api:attachedToProject": {
-                            "@id": "http://rdfh.ch/projects/0666"
+                            "@id": "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
                         },
                         "knora-api:userHasPermission": "V",
                         "knora-api:creationDate": {
@@ -214,7 +213,7 @@
                             "@type": "xsd:anyURI"
                         },
                         "knora-api:attachedToProject": {
-                            "@id": "http://rdfh.ch/projects/0666"
+                            "@id": "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
                         },
                         "knora-api:userHasPermission": "V",
                         "knora-api:creationDate": {
@@ -280,7 +279,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0666"
+                "@id": "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
             },
             "knora-api:userHasPermission": "V",
             "knora-api:creationDate": {

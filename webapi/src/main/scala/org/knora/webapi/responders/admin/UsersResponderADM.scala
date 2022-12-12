@@ -27,7 +27,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionD
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserChangeRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
@@ -694,7 +694,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return
@@ -779,7 +778,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return
@@ -826,7 +824,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                      )
         currentProjectMembershipIris = currentProjectMemberships.map(_.id)
 
-        // check if user is not already a member and if he is then remove the project from to list
+        // check if user is a member and if he is then remove the project from to list
         updatedProjectMembershipIris =
           if (currentProjectMembershipIris.contains(projectIri)) {
             currentProjectMembershipIris diff Seq(projectIri)
@@ -836,10 +834,29 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             )
           }
 
+        // get users current project admin membership list
+        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
+                                            userIri = userIri,
+                                            requestingUser = KnoraSystemInstances.Users.SystemUser,
+                                            apiRequestID = apiRequestID
+                                          )
+
+        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+
+        // in case the user has an admin membership for that project, remove it as well
+        maybeUpdatedProjectAdminMembershipIris = if (currentProjectAdminMembershipIris.contains(projectIri)) {
+                                                   Some(
+                                                     currentProjectAdminMembershipIris.filterNot(p => p == projectIri)
+                                                   )
+                                                 } else None
+
         // create the update request by using the SystemUser
         result <- updateUserADM(
                     userIri = userIri,
-                    userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
+                    userUpdatePayload = UserChangeRequestADM(
+                      projects = Some(updatedProjectMembershipIris),
+                      projectsAdmin = maybeUpdatedProjectAdminMembershipIris
+                    ),
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -859,7 +876,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Returns the user's project admin group memberships as a sequence of [[IRI]]
    *
    * @param userIri              the user's IRI.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserProjectMembershipsGetResponseV1]].
@@ -892,16 +908,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                 case None           => Seq.empty[IRI]
                               }
 
-      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-                                                               appActor
-                                                                 .ask(
-                                                                   ProjectGetADM(
-                                                                     identifier =
-                                                                       ProjectIdentifierADM(maybeIri = Some(projectIri))
-                                                                   )
-                                                                 )
-                                                                 .mapTo[Option[ProjectADM]]
-                                                             }
+      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] =
+        projectIris.map { projectIri =>
+          appActor
+            .ask(
+              ProjectGetADM(
+                identifier = IriIdentifier
+                  .fromString(projectIri)
+                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+              )
+            )
+            .mapTo[Option[ProjectADM]]
+        }
       maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
       projects: Seq[ProjectADM]               = maybeProjects.flatten
 
@@ -912,7 +930,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * is a member of the project admin group.
    *
    * @param userIri              the user's IRI.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserProjectMembershipsGetResponseV1]].
@@ -942,10 +959,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return
+   * @return a [[UserOperationResponseADM]].
    */
   private def userProjectAdminMembershipAddRequestADM(
     userIri: IRI,
@@ -983,6 +999,22 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
+        currentProjectMemberships <- userProjectMembershipsGetADM(
+                                       userIri = userIri,
+                                       requestingUser = KnoraSystemInstances.Users.SystemUser
+                                     )
+
+        currentProjectMembershipIris = currentProjectMemberships.map(_.id)
+
+        // check if user is already project member and if not throw exception
+
+        _ = if (!currentProjectMembershipIris.contains(projectIri)) {
+              throw BadRequestException(
+                s"User $userIri is not a member of project $projectIri. A user needs to be a member of the project to be added as project admin."
+              )
+            }
+
+        // get users current project admin membership list
         currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
                                             userIri = userIri,
                                             requestingUser = KnoraSystemInstances.Users.SystemUser,
@@ -991,7 +1023,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
 
-        // check if user is already member and if not then append to list
+        // check if user is already project admin and if not then append to list
         updatedProjectAdminMembershipIris =
           if (!currentProjectAdminMembershipIris.contains(projectIri)) {
             currentProjectAdminMembershipIris :+ projectIri
@@ -1026,10 +1058,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return
+   * @return a [[UserOperationResponseADM]]
    */
   private def userProjectAdminMembershipRemoveRequestADM(
     userIri: IRI,
@@ -1109,7 +1140,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Returns the user's group memberships as a sequence of [[GroupADM]]
    *
    * @param userIri              the IRI of the user.
-   *
    * @param requestingUser       the requesting user.
    * @return a sequence of [[GroupADM]].
    */
@@ -1162,7 +1192,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param groupIri             the group IRI.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
@@ -1255,6 +1284,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
   }
 
+  /**
+   * Removes a user from a group.
+   *
+   * @param userIri              the user's IRI.
+   * @param groupIri             the group IRI.
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   */
   private def userGroupMembershipRemoveRequestADM(
     userIri: IRI,
     groupIri: IRI,
@@ -1343,10 +1381,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param userUpdatePayload    the updated information.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
+   * @return a [[UserOperationResponseADM]].
    * @throws BadRequestException         if necessary parameters are not supplied.
    * @throws UpdateNotPerformedException if the update was not performed.
    */
@@ -1558,10 +1595,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param password             the new password.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
+   * @return a [[UserOperationResponseADM]].
    * @throws BadRequestException         if necessary parameters are not supplied.
    * @throws UpdateNotPerformedException if the update was not performed.
    */
@@ -1636,9 +1672,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
    *
    * @param userCreatePayloadADM    a [[UserCreatePayloadADM]] object containing information about the new user to be created.
-   *
-   * @param requestingUser       a [[UserADM]] object containing information about the requesting user.
-   * @return a future containing the [[UserOperationResponseADM]].
+   * @param requestingUser          a [[UserADM]] object containing information about the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
    */
   private def createNewUserADM(
     userCreatePayloadADM: UserCreatePayloadADM,
@@ -1761,6 +1797,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   /**
    * Tries to retrieve a [[UserADM]] either from triplestore or cache if caching is enabled.
    * If user is not found in cache but in triplestore, then user is written to cache.
+   *
+   * @param identifier The identifier of the user (can be IRI, e-mail or username)
+   * @return a [[Option[UserADM]]]
    */
   private def getUserFromCacheOrTriplestore(
     identifier: UserIdentifierADM
@@ -1797,6 +1836,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
   /**
    * Tries to retrieve a [[UserADM]] from the triplestore.
+   *
+   * @param identifier The identifier of the user (can be IRI, e-mail or username)
+   * @return a [[Option[UserADM]]]
    */
   private def getUserFromTriplestore(
     identifier: UserIdentifierADM
@@ -1836,8 +1878,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Helper method used to create a [[UserADM]] from the [[SparqlExtendedConstructResponse]] containing user data.
    *
    * @param statements           result from the SPARQL query containing user data.
-   *
-   * @return a [[UserADM]] containing the user's data.
+   * @return a [[Option[UserADM]]]
    */
   private def statements2UserADM(
     statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]])
@@ -1906,15 +1947,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         // _ = log.debug("statements2UserADM - groups: {}", MessageUtil.toSource(groups))
 
-        maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-                                                                 appActor
-                                                                   .ask(
-                                                                     ProjectGetADM(
-                                                                       ProjectIdentifierADM(maybeIri = Some(projectIri))
-                                                                     )
-                                                                   )
-                                                                   .mapTo[Option[ProjectADM]]
-                                                               }
+        maybeProjectFutures: Seq[Future[Option[ProjectADM]]] =
+          projectIris.map { projectIri =>
+            appActor
+              .ask(
+                ProjectGetADM(
+                  identifier = IriIdentifier
+                    .fromString(projectIri)
+                    .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+                )
+              )
+              .mapTo[Option[ProjectADM]]
+          }
         maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
         projects: Seq[ProjectADM]               = maybeProjects.flatten
 
@@ -2114,6 +2158,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
   /**
    * Tries to retrieve a [[UserADM]] from the cache.
+   *
+   * @param identifier the user's identifier (could be IRI, e-mail or username)
+   * @return a [[Option[UserADM]]]
    */
   private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] =
     tracedFuture("admin-user-get-user-from-cache") {
@@ -2132,7 +2179,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Writes the user profile to cache.
    *
    * @param user a [[UserADM]].
-   * @return true if writing was successful.
+   * @return Unit
    * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
    */
   private def writeUserADMToCache(user: UserADM): Future[Unit] = for {
@@ -2142,6 +2189,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
   /**
    * Removes the user from cache.
+   *
+   * @param maybeUser the optional user which is removed from the cache
+   * @return a [[Unit]]
    */
   private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Future[Unit] =
     if (cacheServiceSettings.cacheServiceEnabled) {

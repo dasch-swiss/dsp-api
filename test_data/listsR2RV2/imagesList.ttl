@@ -4,7 +4,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://rdfh.ch/lists/00FF/73d0ec0302> a knora-api:ListNode;
-  knora-api:attachedToProject <http://rdfh.ch/projects/00FF>;
+  knora-api:attachedToProject <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>;
   knora-api:hasSubListNode <http://rdfh.ch/lists/00FF/4834ce6dca>, <http://rdfh.ch/lists/00FF/4ca9e7d3b5>,
     <http://rdfh.ch/lists/00FF/691eee1cbe>, <http://rdfh.ch/lists/00FF/71a1543cce>, <http://rdfh.ch/lists/00FF/738fc745a7>,
     <http://rdfh.ch/lists/00FF/7d99d4c1c9>, <http://rdfh.ch/lists/00FF/8693f465c6>, <http://rdfh.ch/lists/00FF/8d9fa100ea>,

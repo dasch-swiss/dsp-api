@@ -26,7 +26,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util._
@@ -702,7 +702,9 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         appActor
           .ask(
             ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+              identifier = IriIdentifier
+                .fromString(projectIri.toString)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
               requestingUser = requestingUser
             )
           )

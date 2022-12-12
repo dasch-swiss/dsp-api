@@ -43,13 +43,13 @@ trait InstrumentationSupport {
     /**
      * NOTE: The elapsed time of the span is saved somewhere by kamon, but
      * I have no idea how to get to it and this is why I'm calculating
-     * it in the metricsLogger.info line. This is a quick and dirty hack to
+     * it in the metricsLogger.debug line. This is a quick and dirty hack to
      * have at least something.
      */
     val start = System.currentTimeMillis()
     Kamon.span(name) {
       future.andThen { case Success(_) =>
-        metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
+        metricsLogger.debug(s"$name: {} ms", System.currentTimeMillis() - start)
       }
     }
   }

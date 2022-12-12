@@ -6,6 +6,8 @@
 package dsp.valueobjects
 
 import org.apache.commons.validator.routines.UrlValidator
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import scala.util.Try
@@ -108,11 +110,9 @@ object Iri {
       if (value.isEmpty) {
         Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
       } else {
-        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
-
         if (!V2IriValidation.isKnoraProjectIriStr(value)) {
           Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (!V2IriValidation.isKnoraBuiltInProjectIriStr(value) && !V2UuidValidation.isUuidVersion4Or5(value)) {
           Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val eitherValue = Try(
@@ -132,6 +132,24 @@ object Iri {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
       }
+  }
+
+  /**
+   * Base64Uuid value object.
+   * This is base64 encoded UUID version without paddings.
+   *
+   * @param value to validate.
+   */
+  sealed abstract case class Base64Uuid private (value: String)
+  object Base64Uuid {
+    def make(value: String): Validation[ValidationException, Base64Uuid] =
+      if (value.isEmpty) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidMissing))
+      } else if (!V2UuidValidation.hasUuidLength(value)) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(value)))
+      } else if (!V2UuidValidation.isUuidVersion4Or5(value)) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      } else Validation.succeed(new Base64Uuid(value) {})
   }
 
   /**
@@ -167,6 +185,11 @@ object Iri {
    */
   sealed abstract case class UserIri private (value: String) extends Iri
   object UserIri {
+    implicit val decoder: JsonDecoder[UserIri] = JsonDecoder[String].mapOrFail { case value =>
+      UserIri.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
+
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
@@ -223,6 +246,8 @@ object IriErrorMessages {
   val RoleIriInvalid     = (iri: String) => s"Role IRI: $iri is invalid."
   val UserIriMissing     = "User IRI cannot be empty."
   val UserIriInvalid     = (iri: String) => s"User IRI: $iri is invalid."
+  val UuidMissing        = "UUID cannot be empty"
+  val UuidInvalid        = (uuid: String) => s"'$uuid' is not a UUID"
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
   val PropertyIriMissing = "Property IRI cannot be empty."
 }

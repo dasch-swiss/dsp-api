@@ -7,7 +7,7 @@
             },
             "rdfs:label": "The anything ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
+                "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/anything/v2"
@@ -19,7 +19,7 @@
             },
             "rdfs:label": "The free test ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
+                "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2"
@@ -31,7 +31,7 @@
             },
             "rdfs:label": "A minimal ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
+                "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/minimal/v2"
@@ -43,7 +43,7 @@
             },
             "rdfs:label": "The something ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
+                "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0001/something/v2"
@@ -55,7 +55,7 @@
             },
             "rdfs:label": "The images demo ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/00FF"
+                "@id": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/00FF/images/v2"
@@ -67,7 +67,7 @@
             },
             "rdfs:label": "The BEOL ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+                "@id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0801/beol/v2"
@@ -79,7 +79,7 @@
             },
             "rdfs:label": "The Biblio ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+                "@id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2"
@@ -91,7 +91,7 @@
             },
             "rdfs:label": "The incunabula ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
+                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0803/incunabula/v2"
@@ -103,7 +103,7 @@
             },
             "rdfs:label": "The dokubib ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0804"
+                "@id": "http://rdfh.ch/projects/oIjhUsZmQLuJ0VMGvJ2pfg"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0804/dokubib/v2"
@@ -115,7 +115,7 @@
             },
             "rdfs:label": "The Anton Webern project ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0806"
+                "@id": "http://rdfh.ch/projects/UzTunPytT2W52aHcsiBsKw"
             },
             "@type": "owl:Ontology",
             "@id": "http://0.0.0.0:3333/ontology/0806/webern/v2"

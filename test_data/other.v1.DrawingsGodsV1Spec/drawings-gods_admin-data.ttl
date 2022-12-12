@@ -8,7 +8,7 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix drawings-gods: <http://www.knora.org/ontology/0105/drawings-gods#> .
 
-<http://rdfh.ch/projects/0105> a knora-admin:knoraProject ;
+<http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> a knora-admin:knoraProject ;
         knora-admin:projectBasepath "/data/SALSAH/drawings-gods"^^xsd:string ;
         knora-admin:projectLongname "Dessins de Dieux"^^xsd:string ;
         knora-admin:projectShortname "drawings-gods"^^xsd:string ;
@@ -21,28 +21,28 @@
 <http://rdfh.ch/groups/0105/drawings-gods-meta-annotators> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Meta-annotators"^^xsd:string ;
                                                knora-admin:groupDescriptions "A group of users allowed to annotate data. Does not upload images nor files. Does not access to personal data."@en ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0105/drawings-gods-add-drawings> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Drawings contributors"^^xsd:string ;
                                                knora-admin:groupDescriptions "A group of users allowed to upload images, files and annotate data. Does not access to personal data."@en ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0105/drawings-gods-snf-team> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "SNF team"^^xsd:string ;
                                                knora-admin:groupDescriptions "A core group of members from the SNF project. Access to any data, including sensitive."@en ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0105/drawings-gods-admin> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Administrators"^^xsd:string ;
                                                knora-admin:groupDescriptions "A custom admin group created to apply permission precedence rules. Replaces the built-in knora-admin:ProjectAdmin group, not used for this project."@en ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0105> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -55,7 +55,7 @@
         knora-admin:email "ddd1@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-admin:isInProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
         knora-admin:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-snf-team> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -67,7 +67,7 @@
         knora-admin:email "ddd2@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-admin:isInProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
         knora-admin:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-admin> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -80,7 +80,7 @@
         knora-admin:email "metaannotator@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-admin:isInProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
         knora-admin:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-meta-annotators> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -92,7 +92,7 @@
         knora-admin:email "adddrawings@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-admin:isInProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
         knora-admin:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-add-drawings> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 #
@@ -104,7 +104,7 @@
 #        knora-admin:email "projectmember@unil.ch"^^xsd:string ;
 #        knora-admin:preferredLanguage "fr"^^xsd:string ;
 #        knora-admin:status "true"^^xsd:boolean ;
-#        knora-admin:isInProject <http://rdfh.ch/projects/0105> ;
+#        knora-admin:isInProject <http://rdfh.ch/projects/YoKaSYdXR02Fweunjh3VJw> ;
 #        knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 

@@ -13,7 +13,7 @@ It is responsible for:
 - Returning requested ontology entities from the cache. Requests for ontology
   information never access the triplestore.
 - Creating and updating ontologies in response to API requests.
-- Ensuring that all user-created ontologies are consistent and conform to [knora-base](../../../02-knora-ontologies/knora-base.md).
+- Ensuring that all user-created ontologies are consistent and conform to [knora-base](../../../02-dsp-ontologies/knora-base.md).
 
 When Knora starts, the ontology responder receives a `LoadOntologiesRequestV2`
 message. It then:
@@ -23,7 +23,7 @@ message. It then:
    to facilitate validity checks.
 2. Checks user-created ontologies for consistency and conformance to `knora-base`,
    according to the rules described in
-   [Summary of Restrictions on User-Created Ontologies](../../../02-knora-ontologies/knora-base.md#summary-of-restrictions-on-user-created-ontologies).
+   [Summary of Restrictions on User-Created Ontologies](../../../02-dsp-ontologies/knora-base.md#summary-of-restrictions-on-user-created-ontologies).
 3. Caches all the loaded ontologies using `CacheUtil`.
 
 The ontology responder assumes that nothing except itself modifies ontologies
@@ -34,7 +34,7 @@ By design, the ontology responder can update only one ontology entity per reques
 to simplify the necessary validity checks. This requires the client to
 construct an ontology by submitting a sequence of requests in a certain order,
 as explained in
-[Ontology Updates](../../../03-apis/api-v2/ontology-information.md#ontology-updates).
+[Ontology Updates](../../../03-endpoints/api-v2/ontology-information.md#ontology-updates).
 
 The ontology responder mainly works with ontologies in the internal schema.
 However, it knows that some entities in built-in ontologies have hard-coded
