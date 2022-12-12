@@ -5,11 +5,13 @@
 
 package org.knora.webapi.routing
 
-import org.knora.webapi.core.State
-import org.knora.webapi.core.domain.AppState
-import spray.json.{JsObject, JsString}
+import spray.json.JsObject
+import spray.json.JsString
 import zhttp.http._
 import zio._
+
+import org.knora.webapi.core.State
+import org.knora.webapi.core.domain.AppState
 
 /**
  * Provides the '/healthZ' endpoint serving the health status.

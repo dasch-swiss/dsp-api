@@ -5,6 +5,9 @@
 
 package org.knora.webapi.core
 
+import zio.ULayer
+import zio.ZLayer
+
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.ApiRoutes
@@ -18,7 +21,6 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import zio.{ULayer, ZLayer}
 
 object LayersLive {
 
