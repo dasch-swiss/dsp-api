@@ -1,4 +1,4 @@
-package org.knora.webapi.instrumentation.index
+package org.knora.webapi.routing
 
 import zhttp.html._
 import zhttp.http._
@@ -13,9 +13,9 @@ object IndexApp {
 
   private val indexPage =
     """<html>
-      |<title>Simple Server</title>
+      |<title>DSP-API public routes</title>
       |<body>
-      |<p><a href="/metrics">Prometheus Metrics</a></p>
+      |<p>nothing yet</p>
       |</body
       |</html>""".stripMargin
 

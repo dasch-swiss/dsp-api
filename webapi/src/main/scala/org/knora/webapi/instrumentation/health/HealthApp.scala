@@ -3,23 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.instrumentation.health
 
+import org.knora.webapi.core.State
+import org.knora.webapi.core.domain.AppState
 import spray.json.JsObject
 import spray.json.JsString
 import zhttp.http._
 import zio._
 
-import org.knora.webapi.core.State
-import org.knora.webapi.core.domain.AppState
-
 /**
- * Provides the '/healthZ' endpoint serving the health status.
+ * Provides the '/health' endpoint serving the health status.
  */
-object HealthRouteWithZIOHttp {
+object HealthApp {
 
   def apply(): HttpApp[State, Nothing] =
-    Http.collectZIO[Request] { case Method.GET -> !! / "healthZ" =>
+    Http.collectZIO[Request] { case Method.GET -> !! / "health" =>
       State.getAppState.map(toHealthCheckResult).flatMap(createResponse)
     }
 

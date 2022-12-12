@@ -5,18 +5,15 @@
 
 package org.knora.webapi.core
 
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.routing.IndexApp
 import zhttp.service.Server
 import zio.ZLayer
 import zio._
 
-import org.knora.webapi.config.AppConfig
-
-import org.knora.webapi.routing.HealthRouteWithZIOHttp
-
-
 object HttpServerWithZIOHttp {
 
-  val routes = HealthRouteWithZIOHttp()
+  val routes = IndexApp()
 
   val layer: ZLayer[AppConfig & State, Nothing, Unit] =
     ZLayer {

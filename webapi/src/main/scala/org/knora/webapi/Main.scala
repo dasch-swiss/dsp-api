@@ -5,11 +5,9 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.core._
 import zio._
 import zio.logging.backend.SLF4J
-
-import org.knora.webapi.core._
-import org.knora.webapi.instrumentation.prometheus.PrometheusServer
 
 object Main extends ZIOApp {
 
@@ -32,9 +30,9 @@ object Main extends ZIOApp {
 
   /* Here we start our Application */
   override def run = for {
-    f1 <- PrometheusServer.make.forkDaemon
-    f2 <- (AppServer.live *> ZIO.never).forkDaemon
-    _  <- f1.join
-    _  <- f2.join
+    f <- ZIO.never.forkDaemon
+    _ <- InstrumentationHttpServer.make
+    _ <- AppServer.live
+    _ <- f.join
   } yield ()
 }
