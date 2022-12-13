@@ -65,7 +65,7 @@ final case class HelloZioApp(appRouter: AppRouter) {
                       identifier = iriValue,
                       requestingUser = user
                     )
-
+          something <- ZIO.fromFuture(_ => appRouter.receive)
         } yield Response.json(HelloZio(iri).toJson)
 
     }
@@ -78,15 +78,15 @@ object HttpServerWithZIOHttp {
 
   val routes = HealthRouteWithZIOHttp()
 
-  val layer: ZLayer[AppConfig & HelloZioApp, Nothing, Unit] =
+  val layer: ZLayer[AppConfig & State & HelloZioApp, Nothing, Unit] =
     ZLayer {
       for {
         appConfig   <- ZIO.service[AppConfig]
         helloZioApp <- ZIO.service[HelloZioApp]
-        routes =
-          port = appConfig.knoraApi.externalZioPort
-        _ <- Server.start(port, routes ++ helloZioApp.route).forkDaemon
-        _ <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
+        r            = routes ++ helloZioApp.route()
+        port         = appConfig.knoraApi.externalZioPort
+        _           <- Server.start(port, r).forkDaemon
+        _           <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
       } yield ()
     }
 }
