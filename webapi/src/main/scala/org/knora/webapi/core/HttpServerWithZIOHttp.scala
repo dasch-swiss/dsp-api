@@ -19,6 +19,8 @@ import zhttp.http._
 import zhttp.service.Server
 import zio.json.DeriveJsonEncoder
 import zio.{ZLayer, _}
+import java.net.URLDecoder
+// import java.net.URLDecoder
 // import dsp.config.AppConfig
 
 case class HelloZio(hello: String)
@@ -65,7 +67,8 @@ final case class HelloZioApp(router: AppRouter, appConfig: AppConfig) {
       // GET admin/projects/iri/{iri}
       case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
         for {
-          user <- ZIO.succeed(KnoraSystemInstances.Users.SystemUser)
+          user       <- ZIO.succeed(KnoraSystemInstances.Users.SystemUser)
+          iriDecoded <- ZIO.attempt(URLDecoder.decode(iri, "utf-8")).orDie
           iriValue <- ProjectIdentifierADM.IriIdentifier
                         .fromString(iri)
                         .toZIO
