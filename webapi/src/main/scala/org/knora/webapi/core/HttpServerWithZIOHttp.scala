@@ -4,8 +4,9 @@
  */
 
 package org.knora.webapi.core
-
+import akka.pattern.ask
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.actors.RoutingActor
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
@@ -13,8 +14,6 @@ import zhttp.http._
 import zhttp.service.Server
 import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
-import org.knora.webapi.core.actors.RoutingActor
-import akka.pattern.ask
 
 case class HelloZio(hello: String)
 
@@ -22,7 +21,7 @@ object HelloZio {
   implicit val encoder = DeriveJsonEncoder.gen[HelloZio]
 }
 
-final case class HelloZioApp(routingActor: RoutingActor) {
+final case class HelloZioApp(router: AppRouter) {
 
   /**
    * Returns a single project identified through the IRI.
@@ -67,7 +66,8 @@ final case class HelloZioApp(routingActor: RoutingActor) {
                       identifier = iriValue,
                       requestingUser = user
                     )
-          something <- ZIO.fromFuture(_ => routingActor.ref.ask)
+          foo =  routingActor.ask(message)
+//          something <- ZIO.fromFuture(_ => routingActor.ask(message))
         } yield Response.json(HelloZio(iri).toJson)
 
     }
