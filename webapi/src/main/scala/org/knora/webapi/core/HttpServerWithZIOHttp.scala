@@ -15,6 +15,8 @@ import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
 import akka.util.Timeout
 import akka.actor.ActorRef
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 // import dsp.config.AppConfig
 
 case class HelloZio(hello: String)
@@ -70,8 +72,8 @@ final case class HelloZioApp(router: AppRouter, appConfig: AppConfig) {
                       identifier = iriValue,
                       requestingUser = user
                     )
-          something <- ZIO.fromFuture(_ => router.ref.ask(message)).orDie
-        } yield Response.json(HelloZio(iri).toJson)
+          response <- ZIO.fromFuture(_ => router.ref.ask(message)).map(_.asInstanceOf[ProjectsGetResponseADM]).orDie
+        } yield Response.json(response.toJsValue.toString())
 
     }
 }
