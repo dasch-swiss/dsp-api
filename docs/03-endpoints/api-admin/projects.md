@@ -5,17 +5,31 @@
 
 # Projects Endpoint
 
-| Scope    | Route                                   | Operations | Explanation                                             |
-| -------- | --------------------------------------- | ---------- | ------------------------------------------------------- |
-| projects | `/admin/projects`                       | `GET`      | [get all projects](#get-all-projects)                   |
-| projects | `/admin/projects`                       | `POST`     | [create a project](#create-a-new-project)               |
-| projects | `/admin/projects/shortname/{shortname}` | `GET`      | [get a single project](#get-project-by-id)              |
-| projects | `/admin/projects/shortcode/{shortcode}` | `GET`      | [get a single project](#get-project-by-id)              |
-| projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project](#get-project-by-id)              |
-| projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project](#get-project-by-id)              |
-| projects | `/admin/projects/iri/{iri}`             | `PUT`      | [update a project](#update-project-information)         |
-| projects | `/admin/projects/iri/{iri}`             | `DELETE`   | [delete a project]()                                    |
-| projects | `/admin/projects/iri/{iri}/AllData`     | `GET`      | [get all data of a project](#get-all-data-of-a-project) |
+| Scope           | Route                                                          | Operations | Explanation                                                            |
+| --------------- | -------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------- |
+| projects        | `/admin/projects`                                              | `GET`      | [get all projects](#get-all-projects)                                  |
+| projects        | `/admin/projects`                                              | `POST`     | [create a project](#create-a-new-project)                              |
+| projects        | `/admin/projects/shortname/{shortname}`                        | `GET`      | [get a single project](#get-project-by-id)                             |
+| projects        | `/admin/projects/shortcode/{shortcode}`                        | `GET`      | [get a single project](#get-project-by-id)                             |
+| projects        | `/admin/projects/uuid/{uuid}`                                  | `GET`      | [get a single project](#get-project-by-id)                             |
+| projects        | `/admin/projects/iri/{iri}`                                    | `GET`      | [get a single project](#get-project-by-id)                             |
+| projects        | `/admin/projects/iri/{iri}`                                    | `PUT`      | [update a project](#update-project-information)                        |
+| projects        | `/admin/projects/iri/{iri}`                                    | `DELETE`   | [delete a project](#delete-a-project)                                  |
+| projects        | `/admin/projects/iri/{iri}/AllData`                            | `GET`      | [get all data of a project](#get-all-data-of-a-project)                |
+| project members | `/admin/projects/shortname/{shortname}/members`                | `GET`      | [get all project members](#get-project-members-by-id)                  |
+| project members | `/admin/projects/shortcode/{shortcode}/members`                | `GET`      | [get all project members](#get-project-members-by-id)                  |
+| project members | `/admin/projects/uuid/{uuid}/members`                          | `GET`      | [get all project members](#get-project-members-by-id)                  |
+| project members | `/admin/projects/iri/{iri}/members`                            | `GET`      | [get all project members](#get-project-members-by-id)                  |
+| project members | `/admin/projects/shortname/{shortname}/admin-members`          | `GET`      | [get all project admins](#get-project-admins-by-id)                    |
+| project members | `/admin/projects/shortcode/{shortcode}/admin-members`          | `GET`      | [get all project admins](#get-project-admins-by-id)                    |
+| project members | `/admin/projects/uuid/{uuid}/admin-members`                    | `GET`      | [get all project admins](#get-project-admins-by-id)                    |
+| project members | `/admin/projects/iri/{iri}/admin-members`                      | `GET`      | [get all project admins](#get-project-admins-by-id)                    |
+| others          | `/admin/projects/Keywords`                                     | `GET`      | [get all project keywords](#get-all-keywords)                          |
+| others          | `/admin/projects/iri/{iri}/Keywords`                           | `GET`      | [get project keywords of a single project](#get-keywords-of-a-project) |
+| others          | `/admin/projects/shortname/{shortname}/RestrictedViewSettings` | `GET`      | [...](#restricted-view-settings)                                       |
+| others          | `/admin/projects/shortcode/{shortcode}/RestrictedViewSettings` | `GET`      | [...](#restricted-view-settings)                                       |
+| others          | `/admin/projects/uuid/{uuid}/RestrictedViewSettings`           | `GET`      | [...](#restricted-view-settings)                                       |
+| others          | `/admin/projects/iri/{iri}/RestrictedViewSettings`             | `GET`      | [...](#restricted-view-settings)                                       |
 
 
 ## Project Operations
@@ -377,7 +391,7 @@ Permissions: ProjectAdmin / SystemAdmin
 
 Request definition: `POST /admin/projects/iri/{iri}/AllData`
 
-Description: Gets all data of a project as a TriG file.
+Description: Gets all data of a project as a TriG file (ontologies, resource data, admin data, and permissions).
 
 Example request:
 
@@ -446,13 +460,128 @@ Example response:
 }
 ```
 
+---
+
+<!-- TODO: not reworked from here on, only placeholders -->
+
+## Project Member Operations
+
+### Get Project Members by ID
+
+Permissions:
+
+Request definition: `GET /admin/projects/iri/...`
+
+Description: 
+
+Example request:
+
+```bash
+
+```
+
+Example response:
+
+```jsonc
+
+```
+
+Errors:
+
+### Get Project Admins by ID
+
+Permissions:
+
+Request definition: `GET /admin/projects/iri/...`
+
+Description: 
+
+Example request:
+
+```bash
+
+```
+
+Example response:
+
+```jsonc
+
+```
+
+Errors:
+
+## Other Project Operations
+
+### Get all Keywords
+
+Permissions:
+
+Request definition: `GET /admin/projects/iri/...`
+
+Description: 
+
+Example request:
+
+```bash
+
+```
+
+Example response:
+
+```jsonc
+
+```
+
+Errors:
+
+### Get Keywords of a Project
+
+Permissions:
+
+Request definition: `GET /admin/projects/iri/...`
+
+Description: 
+
+Example request:
+
+```bash
+
+```
+
+Example response:
+
+```jsonc
+
+```
+
+Errors:
+
+### Restricted View Settings
+
+Permissions:
+
+Request definition: `GET /admin/projects/iri/...`
+
+Description: 
+
+Example request:
+
+```bash
+
+```
+
+Example response:
+
+```jsonc
+
+```
+
+Errors:
 
 ---
 
+<!-- TODO: Old stuff -->
 
-**Project Operations:**  
-
-- `DELETE: /admin/projects/iri/<identifier>` : update project status to false  
 
 **Project Member Operations:**  
 
@@ -471,27 +600,6 @@ Example response:
 **Project Restricted View Settings Operations:**  
 
 - `GET: /admin/projects/iri/<identifier>/RestrictedViewSettings` : returns the project's restricted view settings  
-
-## Project Operations
-
-### Delete project (update project status):
-
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Remark: The same as updating a project and changing `status` to
-    `false`. To un-delete, set `status` to `true`.
-  - DELETE: `/admin/projects/iri/<projectIri>`
-  - BODY: empty
-
-### Dump project data:
-
-Returns a [TriG](https://www.w3.org/TR/trig/) file containing the project's
-ontologies, resource data, admin data, and permissions.
-
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Required information: project IRI
-  - `GET: /admin/projects/iri/<identifier>/AllData`
-
-## Project Member Operations
 
 ### Get project members:
 
