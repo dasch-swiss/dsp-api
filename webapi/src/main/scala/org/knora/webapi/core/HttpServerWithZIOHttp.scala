@@ -10,8 +10,8 @@ import akka.util.Timeout
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.{
   ProjectGetRequestADM,
-  ProjectIdentifierADM,
-  ProjectsGetResponseADM
+  ProjectGetResponseADM,
+  ProjectIdentifierADM
 }
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
@@ -19,6 +19,7 @@ import zhttp.http._
 import zhttp.service.Server
 import zio.json.DeriveJsonEncoder
 import zio.{ZLayer, _}
+
 import java.net.URLDecoder
 // import java.net.URLDecoder
 // import dsp.config.AppConfig
@@ -77,7 +78,7 @@ final case class HelloZioApp(router: AppRouter, appConfig: AppConfig) {
                       identifier = iriValue,
                       requestingUser = user
                     )
-          response <- ZIO.fromFuture(_ => router.ref.ask(message)).map(_.asInstanceOf[ProjectsGetResponseADM]).orDie
+          response <- ZIO.fromFuture(_ => router.ref.ask(message)).map(_.asInstanceOf[ProjectGetResponseADM]).orDie
         } yield Response.json(response.toJsValue.toString())
 
     }
