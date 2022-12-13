@@ -6,7 +6,6 @@
 package org.knora.webapi.core
 import akka.pattern.ask
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.actors.RoutingActor
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
@@ -66,8 +65,7 @@ final case class HelloZioApp(router: AppRouter) {
                       identifier = iriValue,
                       requestingUser = user
                     )
-          foo =  routingActor.ask(message)
-//          something <- ZIO.fromFuture(_ => routingActor.ask(message))
+          something <- ZIO.fromFuture(_ => router.ref.ask(message))
         } yield Response.json(HelloZio(iri).toJson)
 
     }
