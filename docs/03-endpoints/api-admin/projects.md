@@ -14,6 +14,7 @@
 | projects | `/admin/projects/uuid/{uuid}`           | `GET`      | [get a single project](#get-project-by-id)              |
 | projects | `/admin/projects/iri/{iri}`             | `GET`      | [get a single project](#get-project-by-id)              |
 | projects | `/admin/projects/iri/{iri}`             | `PUT`      | [update a project](#update-project-information)         |
+| projects | `/admin/projects/iri/{iri}`             | `DELETE`   | [delete a project]()                                    |
 | projects | `/admin/projects/iri/{iri}/AllData`     | `GET`      | [get all data of a project](#get-all-data-of-a-project) |
 
 
@@ -317,6 +318,59 @@ Errors:
 - `404 Not Found` if no project with the provided IRI is found.
 
 
+### Delete a Project
+
+Permissions: SystemAdmin / ProjectAdmin
+
+Request definition: `DELETE /admin/projects/iri/{iri}`
+
+Description: Mark a project as deleted (by setting the `status` flag to `false`).
+
+```bash
+curl --request DELETE \
+  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ \
+  --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
+  --header 'Content-Type: application/json'
+```
+
+Example response:
+
+```jsonc
+{
+  "project": {
+    "description": [
+      {
+        "value": "Anything Project"
+      }
+    ],
+    "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+    "keywords": [
+      "arbitrary test data",
+      "things"
+    ],
+    "logo": null,
+    "longname": "other longname",
+    "ontologies": [
+      "http://www.knora.org/ontology/0001/something",
+      "http://www.knora.org/ontology/0001/sequences",
+      "http://www.knora.org/ontology/0001/freetest",
+      "http://www.knora.org/ontology/0001/minimal",
+      "http://www.knora.org/ontology/0001/anything"
+    ],
+    "selfjoin": false,
+    "shortcode": "0001",
+    "shortname": "anything",
+    "status": false
+  }
+}
+```
+
+Errors:
+
+- `400 Bad Request` if the provided IRI is not valid.
+- `404 Not Found` if no project with the provided IRI is found.
+
+
 ### Get all Data of a Project
 
 Permissions: ProjectAdmin / SystemAdmin
@@ -467,23 +521,4 @@ Operates on the following properties:
   - Required information: `identifier`. The `identifier` can be the project's IRI, shortname or shortcode.
   - GET: `/admin/projects/[iri | shortname | shortcode]/<identifier>/RestrictedViewSettings`
 
-## Example Data
-
-The following is an example for project information stored in the `admin` named graph:
-
-```
-<http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>
-    rdf:type knora-admin:knoraProject ;
-    knora-admin:projectShortname "images"^^xsd:string ;
-    knora-admin:projectShortcode "00FF"^^xsd:string ;
-    knora-admin:projectLongname "Image Collection Demo"^^xsd:string ;
-    knora-admin:projectDescription "A demo project of a collection of images"@en ;
-    knora-admin:projectKeyword "images"^^xsd:string,
-                              "collection"^^xsd:string ;
-    knora-admin:projectRestrictedViewSize "!512,512"^^xsd:string ;
-    knora-admin:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
-    knora-admin:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
-    knora-admin:status "true"^^xsd:boolean ;
-    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
-```
 
