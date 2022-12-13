@@ -1,7 +1,9 @@
 package org.knora.webapi.instrumentation.index
 
-import zhttp.html._
-import zhttp.http._
+import zio.http.html.Html
+import zio.http.model.Method
+import zio.http.{Http, HttpApp, Request, Response}
+import zio.http._
 
 /**
  * Provides the '/' endpoint serving a small index page.

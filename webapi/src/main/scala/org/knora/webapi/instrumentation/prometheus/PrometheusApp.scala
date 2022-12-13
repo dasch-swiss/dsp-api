@@ -1,7 +1,9 @@
 package org.knora.webapi.instrumentation.prometheus
 
-import zhttp.http._
+import zio.http.{Http, HttpApp, Request, Response}
+import zio.http._
 import zio.ZIO
+import zio.http.model.Method
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 
 /**

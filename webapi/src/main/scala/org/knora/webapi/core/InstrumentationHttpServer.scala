@@ -1,40 +1,41 @@
 package org.knora.webapi.core
 
-import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.{AppConfig, PrometheusServerConfig}
 import org.knora.webapi.instrumentation.health.HealthApp
 import org.knora.webapi.instrumentation.index.IndexApp
 import org.knora.webapi.instrumentation.prometheus.PrometheusApp
-import zhttp.service.EventLoopGroup
-import zhttp.service.Server
-import zhttp.service.server.ServerChannelFactory
-import zio.Fiber
-import zio.Runtime
-import zio.ZIO
-import zio.ZLayer
-import zio.metrics.connectors.MetricsConfig
-import zio.metrics.connectors.prometheus
+import zio.http.ServerConfig.LeakDetectionLevel
+import zio.{Fiber, Runtime, ZIO, ZLayer}
+import zio.http.{Http, HttpApp, Request, Response, Server, ServerConfig}
+import zio.metrics.connectors.prometheus.PrometheusPublisher
+import zio.metrics.connectors.{MetricsConfig, prometheus}
 import zio.metrics.jvm.DefaultJvmMetrics
 
 object InstrumentationHttpServer {
 
-  private val nThreads = 5
+  val nThreads = 5
 
-  private val routes =
+  private def config(c: AppConfig) = ServerConfig.default
+    .port(c.prometheusServerConfig.port)
+    .leakDetection(LeakDetectionLevel.PARANOID)
+    .maxThreads(nThreads)
+
+  private def configLayer(c: AppConfig) = ServerConfig.live(config(c))
+
+  private val routes: HttpApp[State with PrometheusPublisher, Nothing] =
     IndexApp() ++ PrometheusApp() ++ HealthApp()
 
   private def runInstrumentationHttpServer(config: AppConfig) =
-    ZIO.logInfo("Starting instrumentation http server") *>
-      Server.start(config.prometheusServerConfig.port, routes).forkDaemon
+    Server.install[State with PrometheusPublisher](routes).flatMap { port =>
+      ZIO.logInfo(s"Starting instrumentation http server on port: $port")
+    }
 
   val make: ZIO[AppConfig, Throwable, Fiber.Runtime[Throwable, Nothing]] =
     ZIO
       .service[AppConfig]
       .flatMap(config =>
         runInstrumentationHttpServer(config)
-          .provide(
-            ServerChannelFactory.auto,
-            EventLoopGroup.auto(nThreads),
-
+          .provideSome[State](
             // Metrics config
             ZLayer.succeed(MetricsConfig(config.prometheusServerConfig.interval)),
 

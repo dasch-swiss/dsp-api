@@ -9,8 +9,10 @@ import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 import spray.json.JsObject
 import spray.json.JsString
-import zhttp.http._
+import zio.http.{Http, HttpApp, Request, Response}
+import zio.http._
 import zio._
+import zio.http.model.Method
 
 /**
  * Provides the '/health' endpoint serving the health status.
