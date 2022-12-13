@@ -13,6 +13,8 @@ import zhttp.http._
 import zhttp.service.Server
 import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
+import org.knora.webapi.core.actors.RoutingActor
+import akka.pattern.ask
 
 case class HelloZio(hello: String)
 
@@ -20,7 +22,7 @@ object HelloZio {
   implicit val encoder = DeriveJsonEncoder.gen[HelloZio]
 }
 
-final case class HelloZioApp(appRouter: AppRouter) {
+final case class HelloZioApp(routingActor: RoutingActor) {
 
   /**
    * Returns a single project identified through the IRI.
@@ -65,7 +67,7 @@ final case class HelloZioApp(appRouter: AppRouter) {
                       identifier = iriValue,
                       requestingUser = user
                     )
-          something <- ZIO.fromFuture(_ => appRouter.receive)
+          something <- ZIO.fromFuture(_ => routingActor.ref.ask)
         } yield Response.json(HelloZio(iri).toJson)
 
     }
