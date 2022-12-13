@@ -21,7 +21,7 @@ object HelloZio {
 object HelloZioApp {
   def apply(): HttpApp[State, Nothing] =
     Http.collectZIO[Request] { case Method.GET -> !! / "hellozio" =>
-      ZIO.succeed(Response.json(HelloZio("world").toJson))
+      ZIO.succeed(Response.json(HelloZio("team").toJson))
     }
 }
 
