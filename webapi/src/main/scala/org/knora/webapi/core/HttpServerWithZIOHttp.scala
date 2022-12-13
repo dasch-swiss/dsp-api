@@ -4,19 +4,21 @@
  */
 
 package org.knora.webapi.core
+import akka.actor.ActorRef
 import akka.pattern.ask
+import akka.util.Timeout
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectIdentifierADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{
+  ProjectGetRequestADM,
+  ProjectIdentifierADM,
+  ProjectsGetResponseADM
+}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import zhttp.http._
 import zhttp.service.Server
-import zio.json.{DeriveJsonEncoder, EncoderOps}
+import zio.json.DeriveJsonEncoder
 import zio.{ZLayer, _}
-import akka.util.Timeout
-import akka.actor.ActorRef
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 // import dsp.config.AppConfig
 
 case class HelloZio(hello: String)
@@ -78,14 +80,16 @@ final case class HelloZioApp(router: AppRouter, appConfig: AppConfig) {
     }
 }
 object HelloZioApp {
-  val layer = ZLayer.fromFunction(HelloZioApp(_))
+  val layer: ZLayer[AppRouter with AppConfig, Nothing, HelloZioApp] = ZLayer.fromFunction { (router, config) =>
+    HelloZioApp(router, config)
+  }
 }
 
 object HttpServerWithZIOHttp {
 
   val routes = HealthRouteWithZIOHttp()
 
-  val layer: ZLayer[AppConfig & State & HelloZioApp, Nothing, Unit] =
+  val layer: ZLayer[AppRouter & AppConfig & State & HelloZioApp, Nothing, Unit] =
     ZLayer {
       for {
         appConfig   <- ZIO.service[AppConfig]
