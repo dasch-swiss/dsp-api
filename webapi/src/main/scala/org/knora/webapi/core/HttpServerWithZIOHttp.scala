@@ -78,14 +78,15 @@ object HttpServerWithZIOHttp {
 
   val routes = HealthRouteWithZIOHttp()
 
-  val layer: ZLayer[AppConfig & State, Nothing, Unit] =
+  val layer: ZLayer[AppConfig & HelloZioApp, Nothing, Unit] =
     ZLayer {
       for {
-        appConfig <- ZIO.service[AppConfig]
-
-        port       = appConfig.knoraApi.externalZioPort
-        _         <- Server.start(port, routes).forkDaemon
-        _         <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
+        appConfig   <- ZIO.service[AppConfig]
+        helloZioApp <- ZIO.service[HelloZioApp]
+        routes =
+          port = appConfig.knoraApi.externalZioPort
+        _ <- Server.start(port, routes ++ helloZioApp.route).forkDaemon
+        _ <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
       } yield ()
     }
 }

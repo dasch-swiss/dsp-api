@@ -62,6 +62,7 @@ object LayersLive {
       RepositoryUpdater.layer,
       State.layer,
       TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer
+      TriplestoreServiceHttpConnectorImpl.layer,
+      HelloZioApp.layer
     )
 }
