@@ -21,7 +21,7 @@ object HttpServerWithZIOHttp {
       for {
         appConfig     <- ZIO.service[AppConfig]
         projectsRoute <- ZIO.service[ProjectsRouteZ]
-        r              = routes ++ projectsRoute.route()
+        r              = routes ++ projectsRoute.route
         port           = appConfig.knoraApi.externalZioPort
         _             <- Server.start(port, r).forkDaemon
         _             <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
