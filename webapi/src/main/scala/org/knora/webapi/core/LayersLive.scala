@@ -11,6 +11,7 @@ import zio.ZLayer
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -63,6 +64,6 @@ object LayersLive {
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      HelloZioApp.layer
+      ProjectsRouteZ.layer
     )
 }
