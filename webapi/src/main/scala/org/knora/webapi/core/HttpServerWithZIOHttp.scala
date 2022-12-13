@@ -53,7 +53,12 @@ object HelloZioApp {
 
       // GET admin/projects/iri/{iri}
       case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
-        ZIO.succeed(Response.json(HelloZio("team!:D").toJson))
+        for {
+          iriValue <- IriIdentifier
+                        .fromString(value)
+                        .toZIO
+        } yield ()
+      // ZIO.succeed(Response.json(HelloZio("team!:D").toJson))
     }
 }
 
