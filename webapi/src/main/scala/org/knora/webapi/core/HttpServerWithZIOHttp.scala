@@ -54,6 +54,7 @@ object HelloZioApp {
       // GET admin/projects/iri/{iri}
       case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
         for {
+          user <- ZIO.succeed(SystemUser)
           iriValue <- IriIdentifier
                         .fromString(value)
                         .toZIO
