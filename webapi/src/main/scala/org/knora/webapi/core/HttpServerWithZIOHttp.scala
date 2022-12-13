@@ -10,15 +10,16 @@ import zio.ZLayer
 import zio._
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core._
-import org.knora.webapi.routing.ApiRoutesWithZIOHttp
+import org.knora.webapi.routing.HealthRouteWithZIOHttp
 
 object HttpServerWithZIOHttp {
-  val layer: ZLayer[AppConfig & State & ApiRoutesWithZIOHttp, Nothing, Unit] =
+
+  val routes = HealthRouteWithZIOHttp()
+
+  val layer: ZLayer[AppConfig & State, Nothing, Unit] =
     ZLayer {
       for {
         appConfig <- ZIO.service[AppConfig]
-        routes    <- ZIO.service[ApiRoutesWithZIOHttp].map(_.routes)
         port       = appConfig.knoraApi.externalZioPort
         _         <- Server.start(port, routes).forkDaemon
         _         <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
