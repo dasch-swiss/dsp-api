@@ -11,6 +11,8 @@ import zhttp.http._
 import zhttp.service.Server
 import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 
 case class HelloZio(hello: String)
 
@@ -54,11 +56,12 @@ object HelloZioApp {
       // GET admin/projects/iri/{iri}
       case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
         for {
-          user <- ZIO.succeed(SystemUser)
-          iriValue <- IriIdentifier
-                        .fromString(value)
+          user <- ZIO.succeed(KnoraSystemInstances.Users.SystemUser)
+          iriValue <- ProjectIdentifierADM.IriIdentifier
+                        .fromString(iri)
                         .toZIO
-        } yield ()
+                        .orDie
+        } yield Response.json(HelloZio(iri).toJson)
       // ZIO.succeed(Response.json(HelloZio("team!:D").toJson))
     }
 }
