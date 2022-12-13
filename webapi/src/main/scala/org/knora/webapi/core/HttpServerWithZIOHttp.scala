@@ -4,11 +4,13 @@
  */
 
 package org.knora.webapi.core
+import zhttp.service.Server
+import zio.ZLayer
+import zio._
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import org.knora.webapi.routing.admin.ProjectsRouteZ
-import zhttp.service.Server
-import zio.{ZLayer, _}
 
 object HttpServerWithZIOHttp {
 
