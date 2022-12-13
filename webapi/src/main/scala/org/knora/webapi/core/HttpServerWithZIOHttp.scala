@@ -19,9 +19,41 @@ object HelloZio {
 }
 
 object HelloZioApp {
+
+  /**
+   * Returns a single project identified through the IRI.
+   * //
+   */
+//  private def getProjectByIri(): Route =
+//    path(projectsBasePath / "iri" / Segment) { value =>
+//      get { requestContext =>
+//        val requestMessage: Future[ProjectGetRequestADM] = for {
+//          requestingUser <- getUserADM(
+//            requestContext = requestContext,
+//            routeData.appConfig
+//          )
+//
+//        } yield ProjectGetRequestADM(
+//          identifier = IriIdentifier
+//            .fromString(value)
+//            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+//          requestingUser = requestingUser
+//        )
+//
+//        RouteUtilADM.runJsonRoute(
+//          requestMessageF = requestMessage,
+//          requestContext = requestContext,
+//          appActor = appActor,
+//          log = log
+//        )
+//      }
+//    }
   def apply(): HttpApp[State, Nothing] =
-    Http.collectZIO[Request] { case Method.GET -> !! / "hellozio" =>
-      ZIO.succeed(Response.json(HelloZio("team!:D").toJson))
+    Http.collectZIO[Request] {
+
+      // GET admin/projects/iri/{iri}
+      case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
+        ZIO.succeed(Response.json(HelloZio("team!:D").toJson))
     }
 }
 
