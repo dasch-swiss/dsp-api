@@ -6,14 +6,13 @@
 package org.knora.webapi.core
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectIdentifierADM}
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import zhttp.http._
 import zhttp.service.Server
 import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 
 case class HelloZio(hello: String)
 
@@ -21,7 +20,7 @@ object HelloZio {
   implicit val encoder = DeriveJsonEncoder.gen[HelloZio]
 }
 
-object HelloZioApp {
+final case class HelloZioApp(appRouter: AppRouter) {
 
   /**
    * Returns a single project identified through the IRI.
@@ -51,7 +50,7 @@ object HelloZioApp {
 //        )
 //      }
 //    }
-  def apply(): HttpApp[State, Nothing] =
+  def route(): HttpApp[Any, Nothing] =
     Http.collectZIO[Request] {
 
       // GET admin/projects/iri/{iri}
@@ -71,15 +70,19 @@ object HelloZioApp {
 
     }
 }
+object HelloZioApp {
+  val layer = ZLayer.fromFunction(HelloZioApp(_))
+}
 
 object HttpServerWithZIOHttp {
 
-  val routes = HealthRouteWithZIOHttp() ++ HelloZioApp()
+  val routes = HealthRouteWithZIOHttp()
 
   val layer: ZLayer[AppConfig & State, Nothing, Unit] =
     ZLayer {
       for {
         appConfig <- ZIO.service[AppConfig]
+
         port       = appConfig.knoraApi.externalZioPort
         _         <- Server.start(port, routes).forkDaemon
         _         <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
