@@ -13,6 +13,7 @@ import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 
 case class HelloZio(hello: String)
 
@@ -61,8 +62,13 @@ object HelloZioApp {
                         .fromString(iri)
                         .toZIO
                         .orDie
+          message = ProjectGetRequestADM(
+                      identifier = iriValue,
+                      requestingUser = user
+                    )
+
         } yield Response.json(HelloZio(iri).toJson)
-      // ZIO.succeed(Response.json(HelloZio("team!:D").toJson))
+
     }
 }
 
