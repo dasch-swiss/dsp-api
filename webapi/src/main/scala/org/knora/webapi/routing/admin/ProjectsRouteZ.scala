@@ -3,18 +3,18 @@ package org.knora.webapi.routing.admin
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import zhttp.http._
-import zio.ZIO
-import zio.ZLayer
-
-import java.net.URLDecoder
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.{
+  ProjectGetRequestADM,
+  ProjectGetResponseADM,
+  ProjectIdentifierADM
+}
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import zhttp.http._
+import zio.{ZIO, ZLayer}
+
+import java.net.URLDecoder
 
 final case class ProjectsRouteZ(router: AppRouter, appConfig: AppConfig) {
   implicit val sender: ActorRef = router.ref
@@ -23,6 +23,7 @@ final case class ProjectsRouteZ(router: AppRouter, appConfig: AppConfig) {
   def route(): HttpApp[Any, Nothing] =
     Http.collectZIO[Request] {
 
+      // TODO : Add user authentication and error handling
       // Returns a single project identified through the IRI.
       case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
         for {
