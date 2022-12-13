@@ -13,6 +13,7 @@ import zhttp.http._
 import zhttp.service.Server
 import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
+import akka.util.Timeout
 
 case class HelloZio(hello: String)
 
@@ -21,6 +22,7 @@ object HelloZio {
 }
 
 final case class HelloZioApp(router: AppRouter) {
+  implicit val timeout = Timeout(10.second)
 
   /**
    * Returns a single project identified through the IRI.
