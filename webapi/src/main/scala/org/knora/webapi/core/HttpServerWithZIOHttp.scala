@@ -70,7 +70,7 @@ final case class HelloZioApp(router: AppRouter, appConfig: AppConfig) {
           user       <- ZIO.succeed(KnoraSystemInstances.Users.SystemUser)
           iriDecoded <- ZIO.attempt(URLDecoder.decode(iri, "utf-8")).orDie
           iriValue <- ProjectIdentifierADM.IriIdentifier
-                        .fromString(iri)
+                        .fromString(iriDecoded)
                         .toZIO
                         .orDie
           message = ProjectGetRequestADM(
