@@ -14,7 +14,8 @@ import zhttp.service.Server
 import zio.json.{DeriveJsonEncoder, EncoderOps}
 import zio.{ZLayer, _}
 import akka.util.Timeout
-import dsp.config.AppConfig
+import akka.actor.ActorRef
+// import dsp.config.AppConfig
 
 case class HelloZio(hello: String)
 
@@ -23,6 +24,8 @@ object HelloZio {
 }
 
 final case class HelloZioApp(router: AppRouter, appConfig: AppConfig) {
+  implicit val sender: ActorRef = router.ref
+  implicit val timeout: Timeout = appConfig.defaultTimeoutAsDuration
 
   /**
    * Returns a single project identified through the IRI.
@@ -67,7 +70,7 @@ final case class HelloZioApp(router: AppRouter, appConfig: AppConfig) {
                       identifier = iriValue,
                       requestingUser = user
                     )
-          something <- ZIO.fromFuture(_ => router.ref.ask(message))
+          something <- ZIO.fromFuture(_ => router.ref.ask(message)).orDie
         } yield Response.json(HelloZio(iri).toJson)
 
     }
