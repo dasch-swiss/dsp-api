@@ -40,6 +40,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
 
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
+  private val knownUser =
+    OntologyConstants.KnoraApi.ApiOntologyStart + OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel + "/v2#KnownUser"
+  private val unknownUser =
+    OntologyConstants.KnoraApi.ApiOntologyStart + OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel + "/v2#UnknownUser"
+  private val projectAdmin =
+    OntologyConstants.KnoraApi.ApiOntologyStart + OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel + "/v2#ProjectAdmin"
+  private val creator =
+    OntologyConstants.KnoraApi.ApiOntologyStart + OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel + "/v2#Creator"
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -261,7 +269,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
             name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
             additionalInformation = None,
             permissionCode = None
-          )
+          ).asExternalRepresentation
         )
         appActor ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
@@ -277,7 +285,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
           expectMsgType[AdministrativePermissionCreateResponseADM]
         assert(received.administrativePermission.iri == customIri)
         assert(received.administrativePermission.forProject == SharedTestDataADM.ANYTHING_PROJECT_IRI)
-        assert(received.administrativePermission.forGroup == OntologyConstants.KnoraAdmin.KnownUser)
+        assert(
+          received.administrativePermission.forGroup == knownUser
+        )
         assert(received.administrativePermission.hasPermissions.equals(expectedHasPermissions))
       }
     }
@@ -428,6 +438,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
         )
 
         val key = perm001_d3.p.cacheKey
+        println("key", key)
         val maybePermission =
           CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsMessagesUtilADM.PermissionsCacheName, key)
         maybePermission should be(Some(perm001_d3.p))
@@ -472,10 +483,10 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
         assert(received.defaultObjectAccessPermission.iri == customIri)
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.ANYTHING_PROJECT_IRI)
-        assert(received.defaultObjectAccessPermission.forGroup.contains(OntologyConstants.KnoraAdmin.UnknownUser))
+        assert(received.defaultObjectAccessPermission.forGroup.contains(unknownUser))
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
+            .contains(PermissionADM.restrictedViewPermission(unknownUser))
         )
       }
 
@@ -498,7 +509,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
         )
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
+            .contains(PermissionADM.modifyPermission(knownUser))
         )
 
       }
@@ -521,7 +532,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
         )
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
+            .contains(PermissionADM.changeRightsPermission(creator))
         )
       }
 
@@ -540,8 +551,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
             DuplicateValueException(
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
                 "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
+                s"This permission currently has the scope 'CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser'. " +
                 s"Use its IRI ${perm003_d1.iri} to modify it, if necessary."
             )
           )
@@ -566,8 +576,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
             DuplicateValueException(
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
                 "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
+                s"This permission currently has the scope 'CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser'. " +
                 s"Use its IRI ${perm003_d2.iri} to modify it, if necessary."
             )
           )
@@ -591,8 +600,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
             DuplicateValueException(
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
                 "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
+                s"This permission currently has the scope 'V knora-admin:KnownUser|RV knora-admin:UnknownUser'. " +
                 s"Use its IRI ${perm003_d4.iri} to modify it, if necessary."
             )
           )
@@ -619,8 +627,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
                 s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
                 "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
+                s"This permission currently has the scope 'M knora-admin:ProjectMember'. " +
                 s"Use its IRI ${perm003_d5.iri} to modify it, if necessary."
             )
           )
@@ -647,10 +654,10 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.IMAGES_PROJECT_IRI)
-        assert(received.defaultObjectAccessPermission.forGroup == Some(OntologyConstants.KnoraAdmin.UnknownUser))
+        assert(received.defaultObjectAccessPermission.forGroup == Some(unknownUser))
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
+            .contains(PermissionADM.restrictedViewPermission(unknownUser))
         )
       }
 
@@ -665,7 +672,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
         val expectedPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
-            additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
+            additionalInformation = Some(projectAdmin),
             permissionCode = Some(7)
           )
         )
@@ -681,7 +688,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.IMAGES_PROJECT_IRI)
-        assert(received.defaultObjectAccessPermission.forGroup == Some(OntologyConstants.KnoraAdmin.ProjectAdmin))
+        assert(received.defaultObjectAccessPermission.forGroup == Some(projectAdmin))
         assert(received.defaultObjectAccessPermission.hasPermissions.equals(expectedPermissions))
       }
     }
@@ -1057,12 +1064,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
+        val hasPermissionsExpected = Set(
+          PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator).asExternalRepresentation,
+          PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember).asExternalRepresentation
+        )
         val received: DefaultObjectAccessPermissionGetResponseADM =
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         doap.hasPermissions.size should be(2)
-        assert(doap.hasPermissions.equals(hasPermissions))
+        assert(doap.hasPermissions.equals(hasPermissionsExpected))
       }
 
       "add missing name of the permission, if permissionCode of permission was given in hasPermissions of a default object access permission" in {
@@ -1078,7 +1089,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
         val expectedHasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraBase.ChangeRightsPermission,
-            additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
+            additionalInformation = Some(creator),
             permissionCode = Some(8)
           )
         )
@@ -1111,7 +1122,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
         val expectedHasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
-            additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
+            additionalInformation = Some(projectAdmin),
             permissionCode = Some(7)
           )
         )

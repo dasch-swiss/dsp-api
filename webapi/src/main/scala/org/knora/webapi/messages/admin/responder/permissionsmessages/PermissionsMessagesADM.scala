@@ -1000,6 +1000,14 @@ case class PermissionsDataADM(
 case class PermissionInfoADM(iri: IRI, permissionType: IRI) extends Jsonable with PermissionsADMJsonProtocol {
 
   def toJsValue: JsValue = permissionInfoADMFormat.write(this)
+
+  def asExternalRepresentation: PermissionInfoADM = {
+    val sf                     = StringFormatter.getGeneralInstance
+    val iriExternal            = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
+    val permissionTypeExternal = sf.toSmartIri(this.permissionType).toOntologySchema(ApiV2Complex).toString
+    copy(iri = iriExternal, permissionType = permissionTypeExternal)
+  }
+
 }
 
 abstract class PermissionItemADM extends Jsonable with PermissionsADMJsonProtocol
@@ -1019,6 +1027,12 @@ case class ObjectAccessPermissionADM(
 ) extends PermissionItemADM {
 
   def toJsValue: JsValue = objectAccessPermissionADMFormat.write(this)
+
+  def asExternalRepresentation = {
+    val sf                     = StringFormatter.getGeneralInstance
+    val hasPermissionsExternal = this.hasPermissions.map(_.asExternalRepresentation)
+    copy(hasPermissions = hasPermissionsExternal)
+  }
 }
 
 /**
@@ -1033,6 +1047,14 @@ case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI,
     extends PermissionItemADM {
 
   def toJsValue: JsValue = administrativePermissionADMFormat.write(this)
+
+  def asExternalRepresentation: AdministrativePermissionADM = {
+    val sf                 = StringFormatter.getGeneralInstance
+    val iriExternal        = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
+    val forProjectExternal = sf.toSmartIri(this.forProject).toOntologySchema(ApiV2Complex).toString
+    val forGroupExternal   = sf.toSmartIri(this.forGroup).toOntologySchema(ApiV2Complex).toString
+    copy(iri = iriExternal, forProject = forProjectExternal, forGroup = forGroupExternal)
+  }
 }
 
 /**
@@ -1066,6 +1088,25 @@ case class DefaultObjectAccessPermissionADM(
     )
 
   def toJsValue: JsValue = defaultObjectAccessPermissionADMFormat.write(this)
+
+  def asExternalRepresentation: DefaultObjectAccessPermissionADM = {
+    val sf                 = StringFormatter.getGeneralInstance
+    val iriExternal        = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
+    val forProjectExternal = sf.toSmartIri(this.forProject).toOntologySchema(ApiV2Complex).toString
+    val forGroupExternal =
+      this.forGroup match {
+        case Some(group) => Some(sf.toSmartIri(group).toOntologySchema(ApiV2Complex).toString)
+        case None        => None
+      }
+    val hasPermissionsExternal = this.hasPermissions.map(_.asExternalRepresentation)
+
+    copy(
+      iri = iriExternal,
+      forProject = forProjectExternal,
+      forGroup = forGroupExternal,
+      hasPermissions = hasPermissionsExternal
+    )
+  }
 }
 
 /**
@@ -1081,6 +1122,17 @@ case class PermissionADM(name: String, additionalInformation: Option[IRI] = None
   def toJsValue: JsValue = permissionADMFormat.write(this)
 
   override def toString: String = name
+
+  def asExternalRepresentation: PermissionADM = {
+    val sf = StringFormatter.getGeneralInstance
+    val additionalInformationExternal =
+      this.additionalInformation match {
+        case Some(additionalInfo) => Some(sf.toSmartIri(additionalInfo).toOntologySchema(ApiV2Complex).toString)
+        case None                 => None
+      }
+    copy(additionalInformation = additionalInformationExternal)
+  }
+
 }
 
 /**
