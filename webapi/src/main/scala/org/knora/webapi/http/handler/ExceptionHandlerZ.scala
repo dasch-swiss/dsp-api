@@ -13,6 +13,9 @@ import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.status.ApiStatusCodesZ
 
+/**
+ * Migrated from [[org.knora.webapi.http.handler.KnoraExceptionHandler]]
+ */
 object ExceptionHandlerZ {
   private val GENERIC_INTERNAL_SERVER_ERROR_MESSAGE =
     "The request could not be completed because of an internal server error."

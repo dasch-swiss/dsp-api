@@ -12,7 +12,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.HealthRouteWithZIOHttp
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 
-object HttpServerWithZIOHttp {
+object HttpServerZ {
 
   val routes = HealthRouteWithZIOHttp()
 

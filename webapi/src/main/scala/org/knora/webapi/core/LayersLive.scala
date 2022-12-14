@@ -56,7 +56,7 @@ object LayersLive {
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       HttpServer.layer,
-      HttpServerWithZIOHttp.layer, // this is the new ZIO HTTP server layer
+      HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       JWTService.layer,
