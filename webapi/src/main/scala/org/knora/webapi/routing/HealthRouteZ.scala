@@ -16,7 +16,7 @@ import org.knora.webapi.core.domain.AppState
 /**
  * Provides the '/healthZ' endpoint serving the health status.
  */
-object HealthRouteWithZIOHttp {
+object HealthRouteZ {
 
   def apply(): HttpApp[State, Nothing] =
     Http.collectZIO[Request] { case Method.GET -> !! / "healthZ" =>

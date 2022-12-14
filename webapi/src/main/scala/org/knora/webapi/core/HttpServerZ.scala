@@ -9,12 +9,12 @@ import zio.ZLayer
 import zio._
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.routing.HealthRouteWithZIOHttp
+import org.knora.webapi.routing.HealthRouteZ
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 
 object HttpServerZ {
 
-  val routes = HealthRouteWithZIOHttp()
+  val routes = HealthRouteZ()
 
   val layer: ZLayer[AppRouter & AppConfig & State & ProjectsRouteZ, Nothing, Unit] =
     ZLayer {
