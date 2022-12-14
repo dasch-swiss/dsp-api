@@ -12,6 +12,7 @@ import zio.config._
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Duration
 import scala.concurrent.duration
 import scala.util.Failure
 import scala.util.Success
@@ -55,7 +56,8 @@ final case class AppConfig(
   triplestore: Triplestore,
   shacl: Shacl,
   cacheService: CacheService,
-  clientTestDataService: ClientTestDataService
+  clientTestDataService: ClientTestDataService,
+  instrumentationServerConfig: InstrumentationServerConfig
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -235,6 +237,11 @@ final case class Redis(
 
 final case class ClientTestDataService(
   collectClientTestData: Boolean
+)
+
+final case class InstrumentationServerConfig(
+  port: Int,
+  interval: Duration
 )
 
 /**

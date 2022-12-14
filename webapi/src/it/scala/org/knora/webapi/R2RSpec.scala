@@ -20,8 +20,8 @@ import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.Future
-
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -78,7 +78,7 @@ abstract class R2RSpec
   /**
    * Create router and config by unsafe running them.
    */
-  private val (router, config) =
+  private val (router: AppRouter, config: AppConfig) =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
@@ -101,9 +101,10 @@ abstract class R2RSpec
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          (for {
+          for {
+            _ <- AppServer.testWithoutSipi
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ()).provideSomeLayer(AppServer.testWithoutSipi)
+          } yield ()
         )
         .getOrThrow()
     }
