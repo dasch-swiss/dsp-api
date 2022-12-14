@@ -26,8 +26,8 @@ object InstrumentationHttpServer {
     for {
       config <- ZIO.service[AppConfig]
       r      <- routes
-      _      <- Server.start(config.prometheusServerConfig.port, r).forkDaemon
-      _      <- ZIO.logInfo(s"Starting instrumentation http server on port: ${config.prometheusServerConfig.port}")
+      _      <- Server.start(config.instrumentationServerConfig.port, r).forkDaemon
+      _      <- ZIO.logInfo(s"Starting instrumentation http server on port: ${config.instrumentationServerConfig.port}")
     } yield ()
 
   val make: ZIO[AppConfig with State, Throwable, Unit] =
@@ -42,7 +42,7 @@ object InstrumentationHttpServer {
             PrometheusApp.layer,
 
             // Metrics config
-            ZLayer.succeed(MetricsConfig(config.prometheusServerConfig.interval)),
+            ZLayer.succeed(MetricsConfig(config.instrumentationServerConfig.interval)),
 
             // The prometheus reporting layer
             prometheus.publisherLayer,

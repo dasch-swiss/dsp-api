@@ -57,7 +57,7 @@ final case class AppConfig(
   shacl: Shacl,
   cacheService: CacheService,
   clientTestDataService: ClientTestDataService,
-  prometheusServerConfig: PrometheusServerConfig
+  instrumentationServerConfig: InstrumentationServerConfig
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -239,7 +239,7 @@ final case class ClientTestDataService(
   collectClientTestData: Boolean
 )
 
-final case class PrometheusServerConfig(
+final case class InstrumentationServerConfig(
   port: Int,
   interval: Duration
 )
