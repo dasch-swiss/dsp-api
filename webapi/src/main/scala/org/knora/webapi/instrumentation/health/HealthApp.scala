@@ -5,21 +5,20 @@
 
 package org.knora.webapi.instrumentation.health
 
-import org.knora.webapi.core.State
-import org.knora.webapi.core.domain.AppState
 import spray.json.JsObject
 import spray.json.JsString
-import zio.http.{Http, HttpApp, Request, Response}
-import zio.http._
+import zhttp.http._
 import zio._
-import zio.http.model.Method
+
+import org.knora.webapi.core.State
+import org.knora.webapi.core.domain.AppState
 
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-object HealthApp {
+final case class HealthApp() {
 
-  def apply(): HttpApp[State, Nothing] =
+  val route: HttpApp[State, Nothing] =
     Http.collectZIO[Request] { case Method.GET -> !! / "health" =>
       State.getAppState.map(toHealthCheckResult).flatMap(createResponse)
     }
@@ -113,4 +112,8 @@ object HealthApp {
       status = true,
       message = "Application is healthy"
     )
+}
+object HealthApp {
+  val layer =
+    ZLayer.succeed(HealthApp())
 }

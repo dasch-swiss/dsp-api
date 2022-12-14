@@ -5,11 +5,12 @@
 
 package org.knora.webapi.core
 
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.routing.IndexApp
 import zhttp.service.Server
 import zio.ZLayer
 import zio._
+
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.routing.IndexApp
 
 object HttpServerWithZIOHttp {
 

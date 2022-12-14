@@ -1,16 +1,16 @@
 package org.knora.webapi.instrumentation.index
 
-import zio.http.html.Html
-import zio.http.model.Method
-import zio.http.{Http, HttpApp, Request, Response}
-import zio.http._
+import zhttp.html.Html
+import zhttp.http._
+import zio.ULayer
+import zio.ZLayer
 
 /**
  * Provides the '/' endpoint serving a small index page.
  */
-object IndexApp {
+final case class IndexApp() {
 
-  def apply(): HttpApp[Any, Nothing] =
+  val route: HttpApp[Any, Nothing] =
     Http.collect[Request] { case Method.GET -> !! => Response.html(Html.fromString(indexPage)) }
 
   private val indexPage =
@@ -20,5 +20,8 @@ object IndexApp {
       |<p><a href="/metrics">Prometheus Metrics</a></p>
       |</body
       |</html>""".stripMargin
-
+}
+object IndexApp {
+  val layer: ULayer[IndexApp] =
+    ZLayer.succeed(IndexApp())
 }

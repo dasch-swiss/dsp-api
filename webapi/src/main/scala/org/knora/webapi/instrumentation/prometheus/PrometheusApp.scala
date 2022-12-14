@@ -1,19 +1,22 @@
 package org.knora.webapi.instrumentation.prometheus
 
-import zio.http.{Http, HttpApp, Request, Response}
-import zio.http._
+import zhttp.http._
 import zio.ZIO
-import zio.http.model.Method
+import zio.ZLayer
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 
 /**
  * Provides the '/metrics' endpoint serving the metrics in prometheus format.
  */
-object PrometheusApp {
+final case class PrometheusApp() {
 
-  def apply(): HttpApp[PrometheusPublisher, Nothing] =
+  val route: HttpApp[PrometheusPublisher, Nothing] =
     Http
       .collectZIO[Request] { case Method.GET -> !! / "metrics" =>
         ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
       }
+}
+object PrometheusApp {
+  val layer =
+    ZLayer.succeed(PrometheusApp())
 }

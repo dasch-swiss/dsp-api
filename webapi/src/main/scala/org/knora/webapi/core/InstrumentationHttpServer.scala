@@ -1,41 +1,46 @@
 package org.knora.webapi.core
 
-import org.knora.webapi.config.{AppConfig, PrometheusServerConfig}
+import zhttp.service.Server
+import zio.Runtime
+import zio.ZIO
+import zio.ZLayer
+import zio.metrics.connectors.MetricsConfig
+import zio.metrics.connectors.prometheus
+import zio.metrics.jvm.DefaultJvmMetrics
+
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.instrumentation.health.HealthApp
 import org.knora.webapi.instrumentation.index.IndexApp
 import org.knora.webapi.instrumentation.prometheus.PrometheusApp
-import zio.http.ServerConfig.LeakDetectionLevel
-import zio.{Fiber, Runtime, ZIO, ZLayer}
-import zio.http.{Http, HttpApp, Request, Response, Server, ServerConfig}
-import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{MetricsConfig, prometheus}
-import zio.metrics.jvm.DefaultJvmMetrics
 
 object InstrumentationHttpServer {
 
-  val nThreads = 5
+  private val routes =
+    for {
+      index      <- ZIO.service[IndexApp].map(_.route)
+      health     <- ZIO.service[HealthApp].map(_.route)
+      prometheus <- ZIO.service[PrometheusApp].map(_.route)
+    } yield index ++ health ++ prometheus
 
-  private def config(c: AppConfig) = ServerConfig.default
-    .port(c.prometheusServerConfig.port)
-    .leakDetection(LeakDetectionLevel.PARANOID)
-    .maxThreads(nThreads)
+  private val run =
+    for {
+      config <- ZIO.service[AppConfig]
+      r      <- routes
+      _      <- Server.start(config.prometheusServerConfig.port, r).forkDaemon
+      _      <- ZIO.logInfo(s"Starting instrumentation http server on port: ${config.prometheusServerConfig.port}")
+    } yield ()
 
-  private def configLayer(c: AppConfig) = ServerConfig.live(config(c))
-
-  private val routes: HttpApp[State with PrometheusPublisher, Nothing] =
-    IndexApp() ++ PrometheusApp() ++ HealthApp()
-
-  private def runInstrumentationHttpServer(config: AppConfig) =
-    Server.install[State with PrometheusPublisher](routes).flatMap { port =>
-      ZIO.logInfo(s"Starting instrumentation http server on port: $port")
-    }
-
-  val make: ZIO[AppConfig, Throwable, Fiber.Runtime[Throwable, Nothing]] =
+  val make: ZIO[AppConfig with State, Throwable, Unit] =
     ZIO
       .service[AppConfig]
       .flatMap(config =>
-        runInstrumentationHttpServer(config)
-          .provideSome[State](
+        run
+          .provideSome[AppConfig with State](
+            // HttpApp implementation layers
+            IndexApp.layer,
+            HealthApp.layer,
+            PrometheusApp.layer,
+
             // Metrics config
             ZLayer.succeed(MetricsConfig(config.prometheusServerConfig.interval)),
 

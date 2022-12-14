@@ -5,9 +5,10 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.core._
 import zio._
 import zio.logging.backend.SLF4J
+
+import org.knora.webapi.core._
 
 object Main extends ZIOApp {
 
