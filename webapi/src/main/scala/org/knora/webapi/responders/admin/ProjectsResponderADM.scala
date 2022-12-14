@@ -57,7 +57,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
 
   /**
-   * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
+   * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   def receive(msg: ProjectsResponderRequestADM) = msg match {
     case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
@@ -360,7 +360,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                )
                                .toString()
                            )
-      // _ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
       projectAdminMembersResponse <- appActor
                                        .ask(
@@ -369,7 +368,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                          )
                                        )
                                        .mapTo[SparqlExtendedConstructResponse]
-      // _ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
       statements = projectAdminMembersResponse.statements.toList
 
@@ -733,8 +731,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[ProjectOperationResponseADM] = {
-
-    // log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
 
     /**
      * The actual change project task run with an IRI lock.
