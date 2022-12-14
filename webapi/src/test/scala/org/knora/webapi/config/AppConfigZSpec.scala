@@ -26,7 +26,7 @@ object AppConfigZSpec extends ZIOSpecDefault {
         assertTrue(appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS)) &&
         assertTrue(appConfig.bcryptPasswordStrength == User.PasswordStrength(12)) &&
         assertTrue(
-          appConfig.prometheusServerConfig.interval == java.time.Duration.ofSeconds(5)
+          appConfig.instrumentationServerConfig.interval == java.time.Duration.ofSeconds(5)
         )
       }
     }.provideLayer(AppConfig.live)
