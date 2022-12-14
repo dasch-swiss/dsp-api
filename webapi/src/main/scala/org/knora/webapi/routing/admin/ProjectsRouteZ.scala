@@ -42,7 +42,7 @@ final case class ProjectsRouteZ(router: AppRouter, appConfig: AppConfig) {
   val route: HttpApp[Any, Nothing] =
     (Http
       .collectZIO[Request] {
-        // TODO : Add user authentication and error handling
+        // TODO : Add user authentication, make tests run with the new route
         // Returns a single project identified through the IRI.
         case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
           getProjectByIri(iri)
