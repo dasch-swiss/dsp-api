@@ -31,8 +31,8 @@ object LayersTest {
 
   val common =
     ZLayer.makeSome[
-      ActorSystem with IIIFService with TriplestoreService with AppConfig,
-      AppRouter with ApiRoutes with State with HttpServer with IIIFServiceManager with TestClientService with RepositoryUpdater with TriplestoreServiceManager with CacheService with CacheServiceManager
+      ActorSystem with IIIFService with AppConfig,
+      AppRouter with ApiRoutes with State with HttpServer with IIIFServiceManager with TestClientService with RepositoryUpdater with TriplestoreServiceManager with CacheService with CacheServiceManager with TriplestoreService
     ](
       ApiRoutes.layer,
       AppRouter.layer,
@@ -43,7 +43,8 @@ object LayersTest {
       RepositoryUpdater.layer,
       TriplestoreServiceManager.layer,
       CacheServiceInMemImpl.layer,
-      CacheServiceManager.layer
+      CacheServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer
     )
 
   /**
@@ -56,8 +57,6 @@ object LayersTest {
       common,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       JWTService.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      // testcontainers
       SipiTestContainer.layer,
       FusekiTestContainer.layer
     )
@@ -72,8 +71,6 @@ object LayersTest {
       common,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       JWTService.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      // testcontainers
       FusekiTestContainer.layer
     )
 
@@ -87,8 +84,6 @@ object LayersTest {
       common,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       JWTService.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      // testcontainers
       FusekiTestContainer.layer
     )
 
@@ -102,8 +97,6 @@ object LayersTest {
       common,
       IIIFServiceMockImpl.layer,
       JWTService.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      // testcontainers
       FusekiTestContainer.layer
     )
 
@@ -117,8 +110,6 @@ object LayersTest {
       common,
       IIIFServiceMockImpl.layer,
       JWTService.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      // testcontainers
       FusekiTestContainer.layer
     )
 }
