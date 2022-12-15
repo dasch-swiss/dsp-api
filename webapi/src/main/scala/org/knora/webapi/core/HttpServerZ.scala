@@ -13,7 +13,7 @@ import zio.{ZLayer, _}
 
 object HttpServerZ {
 
-  private val apiRoutes: ZIO[ResourceInfoRoute with ProjectsRouteZ, Nothing, HttpApp[Any, Nothing]] = for {
+  private val apiRoutes: URIO[ResourceInfoRoute with ProjectsRouteZ, HttpApp[Any, Nothing]] = for {
     projectsRoute <- ZIO.service[ProjectsRouteZ].map(_.route)
     riRoute       <- ZIO.service[ResourceInfoRoute].map(_.route)
   } yield projectsRoute ++ riRoute
