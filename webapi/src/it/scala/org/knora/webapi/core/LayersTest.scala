@@ -52,13 +52,13 @@ object LayersTest {
    */
   val defaultLayersTestWithSipi =
     ZLayer.make[DefaultTestEnvironmentWithSipi](
+      common,
       ActorSystem.layer,
       AppConfigForTestContainers.testcontainers,
-      common,
-      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      FusekiTestContainer.layer,
+      IIIFServiceSipiImpl.layer,
       JWTService.layer,
-      SipiTestContainer.layer,
-      FusekiTestContainer.layer
+      SipiTestContainer.layer
     )
 
   /**
@@ -66,12 +66,12 @@ object LayersTest {
    */
   val defaultLayersTestWithoutSipi =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
+      common,
       ActorSystem.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      common,
-      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      JWTService.layer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      IIIFServiceSipiImpl.layer,
+      JWTService.layer
     )
 
   /**
@@ -79,12 +79,12 @@ object LayersTest {
    */
   def defaultLayersTestWithoutSipi(system: akka.actor.ActorSystem) =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
+      common,
       ActorSystemTest.layer(system),
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      common,
-      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      JWTService.layer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      IIIFServiceSipiImpl.layer,
+      JWTService.layer
     )
 
   /**
@@ -92,12 +92,12 @@ object LayersTest {
    */
   val defaultLayersTestWithMockedSipi =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
+      common,
       ActorSystem.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      common,
+      FusekiTestContainer.layer,
       IIIFServiceMockImpl.layer,
-      JWTService.layer,
-      FusekiTestContainer.layer
+      JWTService.layer
     )
 
   /**
@@ -105,11 +105,11 @@ object LayersTest {
    */
   def defaultLayersTestWithMockedSipi(system: akka.actor.ActorSystem) =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
+      common,
       ActorSystemTest.layer(system),
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      common,
+      FusekiTestContainer.layer,
       IIIFServiceMockImpl.layer,
-      JWTService.layer,
-      FusekiTestContainer.layer
+      JWTService.layer
     )
 }
