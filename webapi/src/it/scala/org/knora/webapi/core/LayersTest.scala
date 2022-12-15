@@ -1,7 +1,6 @@
 package org.knora.webapi.core
 
 import zio.ZLayer
-
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.routing.ApiRoutes
