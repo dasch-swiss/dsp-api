@@ -6,23 +6,18 @@
 package org.knora.webapi.config
 
 import com.typesafe.config.ConfigFactory
+import dsp.errors.FileWriteException
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
+import org.knora.webapi.util.cache.CacheUtil
 import zio._
 import zio.config._
 import zio.config.magnolia._
 import zio.config.typesafe._
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 import java.time.Duration
 import scala.concurrent.duration
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-import dsp.errors.FileWriteException
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.util.cache.CacheUtil
+import scala.util.{Failure, Success, Try}
 
 /**
  * Represents the configuration as defined in application.conf.

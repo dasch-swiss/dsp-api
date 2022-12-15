@@ -5,22 +5,18 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
+import org.knora.webapi.IRI
+import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.{ASC, Order, OrderBy, lastModificationDate}
 import zhttp.http.HttpError.BadRequest
 import zhttp.http._
 import zio.ZLayer
 import zio.json.EncoderOps
 import zio.prelude.Validation
 
-import org.knora.webapi.IRI
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.ASC
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.Order
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.OrderBy
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.lastModificationDate
-
 final case class ResourceInfoRoute(restService: RestResourceInfoService) {
 
-  val route: Http[Any, Nothing, Request, Response] =
+  val route: HttpApp[Any, Nothing] =
     Http.collectZIO[Request] { case req @ Method.GET -> !! / "v2" / "resources" / "info" =>
       (for {
         p      <- getParameters(req)

@@ -5,15 +5,12 @@
 
 package org.knora.webapi.core
 
-import zio.ULayer
-import zio.ZLayer
-
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService
-import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
+import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.resourceinfo.api.{LiveRestResourceInfoService, ResourceInfoRoute}
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.repo.LiveResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
@@ -26,6 +23,7 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import zio.{ULayer, ZLayer}
 
 object LayersLive {
 
@@ -60,7 +58,7 @@ object LayersLive {
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       HttpServer.layer,
-      HttpServerWithZIOHttp.layer, // this is the new ZIO HTTP server layer
+      HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
@@ -72,6 +70,7 @@ object LayersLive {
       State.layer,
       StringFormatter.liveLayer,
       TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer
+      TriplestoreServiceHttpConnectorImpl.layer,
+      ProjectsRouteZ.layer
     )
 }
