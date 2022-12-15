@@ -36,15 +36,15 @@ object LayersTest {
     ](
       ApiRoutes.layer,
       AppRouter.layer,
-      HttpServer.layer,
-      IIIFServiceManager.layer,
-      State.layer,
-      TestClientService.layer,
-      RepositoryUpdater.layer,
-      TriplestoreServiceManager.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer
+      HttpServer.layer,
+      IIIFServiceManager.layer,
+      RepositoryUpdater.layer,
+      State.layer,
+      TestClientService.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      TriplestoreServiceManager.layer
     )
 
   /**
