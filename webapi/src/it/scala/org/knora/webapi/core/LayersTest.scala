@@ -29,11 +29,21 @@ object LayersTest {
   type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
-  val common =
-    ZLayer.makeSome[
-      ActorSystem with IIIFService with AppConfig,
-      AppRouter with ApiRoutes with State with HttpServer with IIIFServiceManager with TestClientService with RepositoryUpdater with TriplestoreServiceManager with CacheService with CacheServiceManager with TriplestoreService
-    ](
+  type CommonR0 = ActorSystem with IIIFService with AppConfig
+  type CommonR = ApiRoutes
+    with AppRouter
+    with CacheService
+    with CacheServiceManager
+    with HttpServer
+    with IIIFServiceManager
+    with RepositoryUpdater
+    with State
+    with TestClientService
+    with TriplestoreService
+    with TriplestoreServiceManager
+
+  private val commonLayersForAllIntegrationTests =
+    ZLayer.makeSome[CommonR0, CommonR](
       ApiRoutes.layer,
       AppRouter.layer,
       CacheServiceInMemImpl.layer,
@@ -52,7 +62,7 @@ object LayersTest {
    */
   val defaultLayersTestWithSipi =
     ZLayer.make[DefaultTestEnvironmentWithSipi](
-      common,
+      commonLayersForAllIntegrationTests,
       ActorSystem.layer,
       AppConfigForTestContainers.testcontainers,
       FusekiTestContainer.layer,
@@ -66,7 +76,7 @@ object LayersTest {
    */
   val defaultLayersTestWithoutSipi =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
-      common,
+      commonLayersForAllIntegrationTests,
       ActorSystem.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
@@ -79,7 +89,7 @@ object LayersTest {
    */
   def defaultLayersTestWithoutSipi(system: akka.actor.ActorSystem) =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
-      common,
+      commonLayersForAllIntegrationTests,
       ActorSystemTest.layer(system),
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
@@ -92,7 +102,7 @@ object LayersTest {
    */
   val defaultLayersTestWithMockedSipi =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
-      common,
+      commonLayersForAllIntegrationTests,
       ActorSystem.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
@@ -105,7 +115,7 @@ object LayersTest {
    */
   def defaultLayersTestWithMockedSipi(system: akka.actor.ActorSystem) =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
-      common,
+      commonLayersForAllIntegrationTests,
       ActorSystemTest.layer(system),
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
