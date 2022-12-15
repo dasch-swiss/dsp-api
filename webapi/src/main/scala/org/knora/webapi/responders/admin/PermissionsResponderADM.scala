@@ -206,7 +206,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     requestingUser: UserADM
   ): Future[PermissionsDataADM] = {
     // find out which project each group belongs to
-    // _ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
 
     val groupFutures: Seq[Future[(IRI, IRI)]] = if (groupIris.nonEmpty) {
       groupIris.map { groupIri =>
@@ -235,7 +234,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
     for {
       groups: Seq[(IRI, IRI)] <- groupsFuture
-      // _ = log.debug(s"permissionsProfileGetV1 - groups: {}", MessageUtil.toSource(groups))
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
       projectMembers: Seq[(IRI, IRI)] =
@@ -247,7 +245,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           Seq.empty[(IRI, IRI)]
         }
-      // _ = log.debug(s"permissionsProfileGetV1 - projectMembers: {}", MessageUtil.toSource(projectMembers))
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
       projectAdmins: Seq[(IRI, IRI)] =
@@ -259,7 +256,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           Seq.empty[(IRI, IRI)]
         }
-      // _ = log.debug("permissionsProfileGetV1 - projectAdmins: {}", MessageUtil.toSource(projectAdmins))
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
       systemAdmin: Seq[(IRI, IRI)] =
@@ -268,14 +264,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           Seq.empty[(IRI, IRI)]
         }
-      // _ = log.debug(s"permissionsProfileGetV1 - systemAdmin: {}", MessageUtil.toSource(systemAdmin))
 
       /* combine explicit groups with materialized implicit groups */
       /* here we don't add the KnownUser group, as this would inflate the whole thing. */
-      /* we instead inject the relevant information in defaultObjectAccessPermissionsStringForEntityGetV1 */
       allGroups        = groups ++ projectMembers ++ projectAdmins ++ systemAdmin
       groupsPerProject = allGroups.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
-      // _ = log.debug(s"permissionsProfileGetV1 - groupsPerProject: {}", MessageUtil.toSource(groupsPerProject))
 
       /* retrieve the administrative permissions for each group per project the user is member of */
       administrativePermissionsPerProjectFuture: Future[Map[IRI, Set[PermissionADM]]] =
@@ -291,7 +284,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                  groupsPerProject = groupsPerProject,
                  administrativePermissionsPerProject = administrativePermissionsPerProject
                )
-      // _ = log.debug(s"permissionsDataGetV1 - resulting permissionData: {}", result)
 
     } yield result
   }
@@ -328,7 +320,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
               }
             }
-        // _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectAdminGroup: $administrativePermissionsOnProjectAdminGroup")
 
         /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
         administrativePermissionsOnCustomGroups: Set[PermissionADM] <- {
@@ -348,7 +339,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 permissionsListBuffer += (("CustomGroups", administrativePermissionsOnCustomGroups))
               }
             }
-        // _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnCustomGroups: $administrativePermissionsOnCustomGroups")
 
         /* Get administrative permissions for the knora-base:ProjectMember group */
         administrativePermissionsOnProjectMemberGroup: Set[PermissionADM] <-
@@ -363,7 +353,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 }
               }
             }
-        // _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectMemberGroup: $administrativePermissionsOnProjectMemberGroup")
 
         /* Get administrative permissions for the knora-base:KnownUser group */
         administrativePermissionsOnKnownUserGroup: Set[PermissionADM] <- administrativePermissionForGroupsGetADM(
@@ -377,13 +366,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 }
               }
             }
-        // _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
 
         projectAdministrativePermissions: (IRI, Set[PermissionADM]) = permissionsListBuffer.length match {
                                                                         case 1 =>
-                                                                          log.debug(
-                                                                            s"userAdministrativePermissionsGetV1 - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, administrativePermissions: ${permissionsListBuffer.head._2}"
-                                                                          )
                                                                           (projectIri, permissionsListBuffer.head._2)
 
                                                                         case 0 => (projectIri, Set.empty[PermissionADM])
@@ -408,7 +393,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
     val result: Future[Map[IRI, Set[PermissionADM]]] = Future.sequence(permissionsPerProject).map(_.toMap)
 
-    log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
     result
   }
 
@@ -420,7 +404,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
    * **********************************************************************
    */
   /**
-   * Convenience method returning a set with combined administrative permission. Used in userAdministrativePermissionsGetV1.
+   * Convenience method returning a set with combined administrative permission.
    *
    * @param projectIri the IRI of the project.
    * @param groups     the list of groups for which administrative permissions are retrieved and combined.
@@ -451,7 +435,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     val result: Future[Set[PermissionADM]] = for {
       allPermissions: Seq[Seq[PermissionADM]] <- allPermissionsFuture
 
-      // remove instances with empty PermissionV1 sets
+      // remove instances with empty PermissionADM sets
       cleanedAllPermissions: Seq[Seq[PermissionADM]] = allPermissions.filter(_.nonEmpty)
 
       /* Combine permission sequences */
@@ -490,7 +474,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       // _ = log.debug(s"administrativePermissionsForProjectGetRequestADM - query: $sparqlQueryString")
 
       permissionsQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      // _ = log.debug(s"getProjectAdministrativePermissionsV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
 
       /* extract response rows */
       permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
@@ -806,8 +789,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   private def objectAccessPermissionsForResourceGetADM(
     resourceIri: IRI,
     requestingUser: UserADM
-  ): Future[Option[ObjectAccessPermissionADM]] = {
-    log.debug(s"objectAccessPermissionsForResourceGetV1 - resourceIRI: $resourceIri")
+  ): Future[Option[ObjectAccessPermissionADM]] =
     for {
       projectIri <- getProjectOfEntity(resourceIri)
       // Check user's permission for the operation
@@ -826,10 +808,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                )
                                .toString()
                            )
-      // _ = log.debug(s"objectAccessPermissionsForResourceGetV1 - query: $sparqlQueryString")
 
       permissionQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      // _ = log.debug(s"objectAccessPermissionsForResourceGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -850,9 +830,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           None
         }
-      _ = log.debug(s"objectAccessPermissionsForResourceGetV1 - permission: $permission")
     } yield permission
-  }
 
   /**
    * Gets all permissions attached to the value.
@@ -864,8 +842,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   private def objectAccessPermissionsForValueGetADM(
     valueIri: IRI,
     requestingUser: UserADM
-  ): Future[Option[ObjectAccessPermissionADM]] = {
-    log.debug(s"objectAccessPermissionsForValueGetV1 - valueIRI: $valueIri")
+  ): Future[Option[ObjectAccessPermissionADM]] =
     for {
       projectIri <- getProjectOfEntity(valueIri)
       // Check user's permission for the operation
@@ -884,10 +861,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                )
                                .toString()
                            )
-      // _ = log.debug(s"objectAccessPermissionsForValueGetV1 - query: $sparqlQueryString")
 
       permissionQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      // _ = log.debug(s"objectAccessPermissionsForValueGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -908,9 +883,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           None
         }
-      _ = log.debug(s"objectAccessPermissionsForValueGetV1 - permission: $permission")
     } yield permission
-  }
 
   ///////////////////////////////////////////////////////////////////////////
   // DEFAULT OBJECT ACCESS PERMISSIONS
@@ -937,10 +910,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                )
                                .toString()
                            )
-      // _ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - query: $sparqlQueryString")
 
       permissionsQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      // _ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
 
       /* extract response rows */
       permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
@@ -951,7 +922,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
             (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
           }
-      // _ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - permissionsWithProperties: $permissionsWithProperties")
 
       permissions: Seq[DefaultObjectAccessPermissionADM] =
         permissionsWithProperties.map { case (permissionIri: IRI, propsMap: Map[String, String]) =>
@@ -1184,7 +1154,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /* Get default object access permissions for each group and combine them */
     val gpf: Seq[Future[Seq[PermissionADM]]] = for {
       groupIri <- groups
-      // _ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
       groupPermissions: Future[Seq[PermissionADM]] = defaultObjectAccessPermissionGetADM(
                                                        projectIri = projectIri,
@@ -1205,7 +1174,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     val result: Future[Set[PermissionADM]] = for {
       allPermissions: Seq[Seq[PermissionADM]] <- allPermissionsFuture
 
-      // remove instances with empty PermissionV1 sets
+      // remove instances with empty PermissionADM sets
       cleanedAllPermissions: Seq[Seq[PermissionADM]] = allPermissions.filter(_.nonEmpty)
 
       /* Combine permission sequences */
@@ -1334,8 +1303,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           OntologyConstants.KnoraAdmin.KnownUser :: userGroups.toList
         }
 
-      // _ = log.debug("defaultObjectAccessPermissionsStringForEntityGetV1 - extendedUserGroups: {}", extendedUserGroups)
-
       /* List buffer holding default object access permissions tagged with the precedence level:
          0. ProjectAdmin > 1. ProjectEntity > 2. SystemEntity > 3. CustomGroups > 4. ProjectMember > 5. KnownUser
          Permissions are added following the precedence level from the highest to the lowest. As soon as one set
@@ -1357,7 +1324,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
               )
             ) {
               permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
-              // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
             }
           }
 
@@ -1383,7 +1349,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 defaultPermissionsOnProjectResourceClassProperty
               )
             )
-            // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClassProperty: {}", defaultPermissionsOnProjectResourceClassProperty)
           }
 
       /* system resource class / property combination */
@@ -1401,7 +1366,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       }
       _ = if (defaultPermissionsOnSystemResourceClassProperty.nonEmpty) {
             permissionsListBuffer += (("SystemResourceClassProperty", defaultPermissionsOnSystemResourceClassProperty))
-            // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
           }
 
       ///////////////////////
@@ -1420,7 +1384,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       }
       _ = if (defaultPermissionsOnProjectResourceClass.nonEmpty) {
             permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
-            // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
           }
 
       /* Get the default object access permissions defined on the resource class inside the SystemProject */
@@ -1437,7 +1400,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       }
       _ = if (defaultPermissionsOnSystemResourceClass.nonEmpty) {
             permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
-            // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
           }
 
       ///////////////////////
@@ -1456,7 +1418,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       }
       _ = if (defaultPermissionsOnProjectProperty.nonEmpty) {
             permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
-            // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
           }
 
       /* system property */
@@ -1473,7 +1434,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       }
       _ = if (defaultPermissionsOnSystemProperty.nonEmpty) {
             permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
-            // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
           }
 
       ///////////////////////
@@ -1500,7 +1460,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       }
       _ = if (defaultPermissionsOnCustomGroups.nonEmpty) {
             permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
-            // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
           }
 
       ///////////////////////
@@ -1522,7 +1481,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ) {
               permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
             }
-            // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
           }
 
       ///////////////////////
@@ -1539,7 +1497,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
             if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
               permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
-              // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
             }
           }
 
@@ -1553,7 +1510,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)
           )
           permissionsListBuffer += (("Fallback", defaultFallbackPermission))
-          // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultFallbackPermission: $defaultFallbackPermission")
         } else {
           FastFuture.successful(Set.empty[PermissionADM])
         }
