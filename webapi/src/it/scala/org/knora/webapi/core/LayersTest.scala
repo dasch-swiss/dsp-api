@@ -7,6 +7,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.api.IIIFService
@@ -30,8 +31,8 @@ object LayersTest {
 
   val common =
     ZLayer.makeSome[
-      ActorSystem with CacheServiceManager with IIIFService with TriplestoreService with AppConfig,
-      AppRouter with ApiRoutes with State with HttpServer with IIIFServiceManager with TestClientService with RepositoryUpdater with TriplestoreServiceManager
+      ActorSystem with IIIFService with TriplestoreService with AppConfig,
+      AppRouter with ApiRoutes with State with HttpServer with IIIFServiceManager with TestClientService with RepositoryUpdater with TriplestoreServiceManager with CacheService with CacheServiceManager
     ](
       ApiRoutes.layer,
       AppRouter.layer,
@@ -40,7 +41,9 @@ object LayersTest {
       State.layer,
       TestClientService.layer,
       RepositoryUpdater.layer,
-      TriplestoreServiceManager.layer
+      TriplestoreServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      CacheServiceManager.layer
     )
 
   /**
@@ -51,8 +54,6 @@ object LayersTest {
       ActorSystem.layer,
       AppConfigForTestContainers.testcontainers,
       common,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       JWTService.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
@@ -69,8 +70,6 @@ object LayersTest {
       ActorSystem.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       common,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       JWTService.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
@@ -86,8 +85,6 @@ object LayersTest {
       ActorSystemTest.layer(system),
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       common,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       JWTService.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
@@ -103,8 +100,6 @@ object LayersTest {
       ActorSystem.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       common,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
       IIIFServiceMockImpl.layer,
       JWTService.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
@@ -120,8 +115,6 @@ object LayersTest {
       ActorSystemTest.layer(system),
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       common,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
       IIIFServiceMockImpl.layer,
       JWTService.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
