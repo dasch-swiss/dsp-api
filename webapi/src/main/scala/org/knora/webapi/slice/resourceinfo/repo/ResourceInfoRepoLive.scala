@@ -7,8 +7,6 @@ package org.knora.webapi.slice.resourceinfo.repo
 
 import zio.UIO
 import zio.ZIO
-import zio.ZLayer
-
 import java.time.Instant
 
 import org.knora.webapi.messages.twirl.queries.sparql.v2.txt.resourcesByCreationDate
@@ -42,9 +40,4 @@ final case class ResourceInfoRepoLive(ts: TriplestoreService) extends ResourceIn
       rowMap("isDeleted").toBoolean
     )
   }
-}
-
-object ResourceInfoRepoLive {
-  val layer: ZLayer[TriplestoreService, Nothing, ResourceInfoRepoLive] =
-    ZLayer.fromZIO(ZIO.service[TriplestoreService].map(ResourceInfoRepoLive(_)))
 }

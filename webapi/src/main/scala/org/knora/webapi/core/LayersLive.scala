@@ -13,10 +13,10 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.ProjectsRouteZ
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoLive
+import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -66,11 +66,11 @@ object LayersLive {
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       JWTService.layer,
-      LiveRestResourceInfoService.layer,
       ProjectsRouteZ.layer,
       RepositoryUpdater.layer,
-      ResourceInfoRepoLive.layer,
+      ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
+      RestResourceInfoService.layer,
       State.layer,
       StringFormatter.live,
       TriplestoreServiceHttpConnectorImpl.layer,

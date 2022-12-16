@@ -4,19 +4,22 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoLive
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.{IIIFServiceMockImpl, IIIFServiceSipiImpl}
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.{FusekiTestContainer, SipiTestContainer}
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import zio.ZLayer
+
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
 object LayersTest {
 
@@ -35,35 +38,23 @@ object LayersTest {
       ApiRoutes.layer,
       AppConfigForTestContainers.testcontainers,
       AppRouter.layer,
-      CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
+      CacheServiceManager.layer,
+      FusekiTestContainer.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      IriConverter.layer,
       JWTService.layer,
       RepositoryUpdater.layer,
-      State.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      LiveRestResourceInfoService.layer,
-    )
-  TestClientService.layer
-    // Test services
-    ,FusekiTestContainer.layer
-    ,SipiTestContainer.layer
-    // testcontainers
-    ,StringFormatter.test
-    ,IriConverter.layer
-    ,ResourceInfoRepoLive
-      /** EndMarker */
-      .layer.layer,
-      IriConverter.layer,
-      StringFormatter.test,
-      // testcontainers
+      ResourceInfoRepo.layer,
+      RestResourceInfoService.layer,
       SipiTestContainer.layer,
-      FusekiTestContainer.layer,
-      // Test services
-      TestClientService.layer
+      State.layer,
+      StringFormatter.test,
+      TestClientService.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      TriplestoreServiceManager.layer
     )
 
   /**
@@ -75,24 +66,22 @@ object LayersTest {
       ApiRoutes.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       AppRouter.layer,
-      CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
+      CacheServiceManager.layer,
+      FusekiTestContainer.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-    JWTService.layer,
-      RepositoryUpdater.layer,
-      State.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      LiveRestResourceInfoService.layer,
-      ResourceInfoRepoLive.layer,
       IriConverter.layer,
-      StringFormatter.test,
-      // testcontainers
-      FusekiTestContainer.layer,
-      // Test services
-      TestClientService.layer
+      JWTService.layer,
+      RepositoryUpdater.layer,
+      ResourceInfoRepo.layer,
+      RestResourceInfoService.layer,
+      State.layer,
+      StringFormatter.live,
+      TestClientService.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      TriplestoreServiceManager.layer
     )
 
   /**
@@ -104,24 +93,22 @@ object LayersTest {
       ApiRoutes.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       AppRouter.layer,
-      CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
+      CacheServiceManager.layer,
+      FusekiTestContainer.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
-      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      IIIFServiceSipiImpl.layer,
+      IriConverter.layer,
       JWTService.layer,
       RepositoryUpdater.layer,
+      ResourceInfoRepo.layer,
+      RestResourceInfoService.layer,
       State.layer,
-      TriplestoreServiceManager.layer,
+      StringFormatter.live,
+      TestClientService.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      LiveRestResourceInfoService.layer,
-      ResourceInfoRepoLive.layer,
-      IriConverter.layer,
-      StringFormatter.test,
-      // testcontainers
-      FusekiTestContainer.layer,
-      // Test services
-      TestClientService.layer
+      TriplestoreServiceManager.layer
     )
 
   /**
@@ -138,18 +125,16 @@ object LayersTest {
       HttpServer.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-    JWTService.layer,
+      JWTService.layer,
       RepositoryUpdater.layer,
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      LiveRestResourceInfoService.layer,
-      ResourceInfoRepoLive.layer,
+      RestResourceInfoService.layer,
+      ResourceInfoRepo.layer,
       IriConverter.layer,
-      StringFormatter.test,
-      // testcontainers
+      StringFormatter.live,
       FusekiTestContainer.layer,
-      // Test services
       TestClientService.layer
     )
 
@@ -172,13 +157,11 @@ object LayersTest {
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      LiveRestResourceInfoService.layer,
-      ResourceInfoRepoLive.layer,
+      RestResourceInfoService.layer,
+      ResourceInfoRepo.layer,
       IriConverter.layer,
-      StringFormatter.test,
-      // testcontainers
+      StringFormatter.live,
       FusekiTestContainer.layer,
-      // Test services
       TestClientService.layer
     )
 }

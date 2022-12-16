@@ -13,10 +13,10 @@ import zio.prelude.Validation
 
 import org.knora.webapi.IRI
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.ASC
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.Order
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.OrderBy
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.lastModificationDate
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
 
 final case class ResourceInfoRoute(restService: RestResourceInfoService) {
 
@@ -82,5 +82,5 @@ final case class ResourceInfoRoute(restService: RestResourceInfoService) {
 }
 
 object ResourceInfoRoute {
-  val layer = ZLayer.fromFunction(ResourceInfoRoute(_))
+  val layer: ZLayer[RestResourceInfoService, Nothing, ResourceInfoRoute] = ZLayer.fromFunction(ResourceInfoRoute(_))
 }

@@ -7,16 +7,14 @@ package org.knora.webapi.slice.resourceinfo.api
 
 import zhttp.http.HttpError
 import zio.IO
-import zio.ZLayer
-
 import java.time.Instant
 
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService._
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive._
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
-final case class LiveRestResourceInfoService(repo: ResourceInfoRepo, iriConverter: IriConverter)
+final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverter: IriConverter)
     extends RestResourceInfoService {
 
   private def lastModificationDateSort(order: Order)(one: ResourceInfoDto, two: ResourceInfoDto) =
@@ -55,7 +53,7 @@ final case class LiveRestResourceInfoService(repo: ResourceInfoRepo, iriConverte
     } yield ListResponseDto(sorted)
 }
 
-object LiveRestResourceInfoService {
+object RestResourceInfoServiceLive {
 
   sealed trait OrderBy
 
@@ -84,5 +82,4 @@ object LiveRestResourceInfoService {
       case _      => None
     }
   }
-  val layer = ZLayer.fromFunction(new LiveRestResourceInfoService(_, _))
 }

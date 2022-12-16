@@ -9,20 +9,20 @@ import zhttp.http.HttpError
 import zio._
 
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.orderingKey
-import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.projectIriKey
-import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.resourceClassKey
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.orderingKey
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.projectIriKey
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.resourceClassKey
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 
-case class SpyLiveRestResourceInfoService(
+case class RestResourceInfoServiceSpy(
   lastInvocation: Ref[Map[String, Any]],
-  realService: LiveRestResourceInfoService
+  realService: RestResourceInfoServiceLive
 ) extends RestResourceInfoService {
   override def findByProjectAndResourceClass(
     projectIri: IRI,
     resourceClass: IRI,
-    ordering: (LiveRestResourceInfoService.OrderBy, LiveRestResourceInfoService.Order)
+    ordering: (RestResourceInfoServiceLive.OrderBy, RestResourceInfoServiceLive.Order)
   ): IO[HttpError, ListResponseDto] = for {
     _ <-
       lastInvocation.set(Map(projectIriKey -> projectIri, resourceClassKey -> resourceClass, orderingKey -> ordering))
@@ -30,19 +30,19 @@ case class SpyLiveRestResourceInfoService(
   } yield result
 }
 
-object SpyLiveRestResourceInfoService {
+object RestResourceInfoServiceSpy {
   val projectIriKey    = "projectIri"
   val resourceClassKey = "resourceClass"
   val orderingKey      = "ordering"
-  def lastInvocation: ZIO[SpyLiveRestResourceInfoService, Nothing, Map[String, Any]] =
-    ZIO.service[SpyLiveRestResourceInfoService].flatMap(_.lastInvocation.get)
+  def lastInvocation: ZIO[RestResourceInfoServiceSpy, Nothing, Map[String, Any]] =
+    ZIO.service[RestResourceInfoServiceSpy].flatMap(_.lastInvocation.get)
 
-  val layer: ZLayer[IriConverter with ResourceInfoRepoFake, Nothing, SpyLiveRestResourceInfoService] = ZLayer.fromZIO {
+  val layer: ZLayer[IriConverter with ResourceInfoRepoFake, Nothing, RestResourceInfoServiceSpy] = ZLayer.fromZIO {
     for {
       ref          <- Ref.make(Map.empty[String, Any])
       repo         <- ZIO.service[ResourceInfoRepoFake]
       iriConverter <- ZIO.service[IriConverter]
-      realService  <- ZIO.succeed(LiveRestResourceInfoService(repo, iriConverter))
-    } yield SpyLiveRestResourceInfoService(ref, realService)
+      realService  <- ZIO.succeed(RestResourceInfoServiceLive(repo, iriConverter))
+    } yield RestResourceInfoServiceSpy(ref, realService)
   }
 }

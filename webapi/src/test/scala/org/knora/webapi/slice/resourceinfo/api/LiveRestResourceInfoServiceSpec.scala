@@ -9,16 +9,15 @@ import zhttp.http.HttpError.BadRequest
 import zio.test.Assertion.equalTo
 import zio.test.Assertion.fails
 import zio.test._
-
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS
 import java.util.UUID.randomUUID
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.ASC
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.DESC
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.creationDate
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.lastModificationDate
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.DESC
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.creationDate
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
@@ -91,9 +90,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         val given2 =
           ResourceInfo("http://resourceIri/" + randomUUID, now.minus(20, DAYS), Some(now.minus(8, DAYS)), now)
         for {
-          _ <- ResourceInfoRepoFake
-              /** EndMarker */
-              .addAll(List(given1, given2), knownProjectIRI, knownResourceClass).addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
+          _ <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <-
             RestResourceInfoService.findByProjectAndResourceClass(
               knownProjectIRI.value,
@@ -129,7 +126,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
     ).provide(
       IriConverter.layer,
       StringFormatter.test,
-      LiveRestResourceInfoService.layer,
+      RestResourceInfoService.layer,
       ResourceInfoRepoFake.layer
     )
 }

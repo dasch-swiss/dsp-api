@@ -8,10 +8,13 @@ package org.knora.webapi.slice.resourceinfo.api
 import zhttp.http.HttpError
 import zio.IO
 import zio.macros.accessible
+import zio.ZLayer
 
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.Order
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.OrderBy
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
 @accessible
 trait RestResourceInfoService {
@@ -33,4 +36,9 @@ trait RestResourceInfoService {
     resourceClass: IRI,
     ordering: (OrderBy, Order)
   ): IO[HttpError, ListResponseDto]
+}
+
+object RestResourceInfoService {
+  val layer: ZLayer[ResourceInfoRepo with IriConverter, Nothing, RestResourceInfoService] =
+    ZLayer.fromFunction(RestResourceInfoServiceLive(_, _))
 }

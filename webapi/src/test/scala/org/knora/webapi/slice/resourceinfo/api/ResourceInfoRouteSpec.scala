@@ -9,17 +9,16 @@ import zhttp.http._
 import zio.ZIO
 import zio.test.ZIOSpecDefault
 import zio.test._
-
 import java.util.UUID.randomUUID
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.ASC
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.DESC
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.creationDate
-import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.lastModificationDate
-import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.orderingKey
-import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.projectIriKey
-import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.resourceClassKey
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.DESC
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.creationDate
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.orderingKey
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.projectIriKey
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.resourceClassKey
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 
@@ -71,7 +70,7 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
         for {
           expectedResourceClassIri <- IriConverter.asInternalIri(testResourceClass).map(_.value)
           expectedProjectIri       <- IriConverter.asInternalIri(testProjectIri).map(_.value)
-          lastInvocation           <- sendRequest(request) *> SpyLiveRestResourceInfoService.lastInvocation
+          lastInvocation           <- sendRequest(request) *> RestResourceInfoServiceSpy.lastInvocation
         } yield assertTrue(
           lastInvocation ==
             Map(
@@ -94,7 +93,7 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
           expectedProjectIri       <- IriConverter.asInternalIri(testProjectIri).map(_.value)
           expectedResourceClassIri <- IriConverter.asInternalIri(testResourceClass).map(_.value)
           _                        <- sendRequest(request)
-          lastInvocation           <- SpyLiveRestResourceInfoService.lastInvocation
+          lastInvocation           <- RestResourceInfoServiceSpy.lastInvocation
         } yield assertTrue(
           lastInvocation ==
             Map(
@@ -105,15 +104,10 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
         )
       }
     ).provide(
-      ResourceInfoRoute.layer,
-      SpyLiveRestResourceInfoService.layer,
-      )
-    StringFormatter.test
-      ,IriConverter.layer
-      ,ResourceInfoRepoFake
-        /** EndMarker */
-        .layer.layer,
       IriConverter.layer,
+      ResourceInfoRepoFake.layer,
+      ResourceInfoRoute.layer,
+      RestResourceInfoServiceSpy.layer,
       StringFormatter.test
     )
 }
