@@ -8,7 +8,8 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import com.typesafe.scalalogging.Logger
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-
+import scala.util.Failure
+import scala.util.Success
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.FileInputStream
@@ -46,7 +47,10 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
    * @return an [[RdfModel]].
    */
   def stringToModel(s: String): RdfModel =
-    Using(new ByteArrayInputStream(s.getBytes))(rdfFormatUtil.inputStreamToRdfModel(_, TriG)).get
+    Using(new ByteArrayInputStream(s.getBytes))(rdfFormatUtil.inputStreamToRdfModel(_, TriG)) match {
+      case Success(value) => value
+      case Failure(e)     => throw new IllegalArgumentException("Invalid model", e)
+    }
 
   /**
    * Wraps expected SPARQL SELECT results in a [[SparqlSelectResultBody]].
