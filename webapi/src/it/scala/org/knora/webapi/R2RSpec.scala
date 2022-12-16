@@ -50,7 +50,7 @@ abstract class R2RSpec
    * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers = core.LayersTest.defaultLayersTestWithoutSipi(system)
+  lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainer(Some(system))
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created

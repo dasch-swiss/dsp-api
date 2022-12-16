@@ -402,7 +402,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
+  override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainer()
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

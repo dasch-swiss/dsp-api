@@ -1,5 +1,6 @@
 package org.knora.webapi.core
 
+import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.auth.JWTService
@@ -57,53 +58,17 @@ object LayersTest {
       TriplestoreServiceManager.layer
     )
 
-  /**
-   * All live layers with both Fuseki and Sipi testcontainers
-   */
-  val defaultLayersTestWithSipi =
-    ZLayer.make[DefaultTestEnvironmentWithSipi](
-      commonLayersForAllIntegrationTests,
-      ActorSystem.layer,
+  private val fusekiAndSipiTestcontainers =
+    ZLayer.make[FusekiTestContainer with SipiTestContainer with AppConfig with JWTService with IIIFService](
       AppConfigForTestContainers.testcontainers,
       FusekiTestContainer.layer,
-      IIIFServiceSipiImpl.layer,
-      JWTService.layer,
-      SipiTestContainer.layer
-    )
-
-  /**
-   * All live layers - with ActorSystem - but without Sipi testcontainer
-   */
-  val defaultLayersTestWithoutSipi =
-    ZLayer.make[DefaultTestEnvironmentWithoutSipi](
-      commonLayersForAllIntegrationTests,
-      ActorSystem.layer,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      FusekiTestContainer.layer,
+      SipiTestContainer.layer,
       IIIFServiceSipiImpl.layer,
       JWTService.layer
     )
 
-  /**
-   * All live layers - with ActorSystemTest - but without Sipi testcontainer
-   */
-  def defaultLayersTestWithoutSipi(system: akka.actor.ActorSystem) =
-    ZLayer.make[DefaultTestEnvironmentWithoutSipi](
-      commonLayersForAllIntegrationTests,
-      ActorSystemTest.layer(system),
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      FusekiTestContainer.layer,
-      IIIFServiceSipiImpl.layer,
-      JWTService.layer
-    )
-
-  /**
-   * All live layers - with ActorSystemTest - but with the mocked IIIF layer
-   */
-  val defaultLayersTestWithMockedSipi =
-    ZLayer.make[DefaultTestEnvironmentWithoutSipi](
-      commonLayersForAllIntegrationTests,
-      ActorSystem.layer,
+  private val fusekiTestcontainers =
+    ZLayer.make[FusekiTestContainer with AppConfig with JWTService with IIIFService](
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
       IIIFServiceMockImpl.layer,
@@ -111,15 +76,28 @@ object LayersTest {
     )
 
   /**
-   * All live layers - with ActorSystemTest - but with the mocked IIIF layer
+   * Provides a layer for integration tests which depend on Fuseki as Testcontainers.
+   * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl.l]]
+   * @param system An optional [[akka.actor.ActorSystem]] for use with Akka's [[akka.testkit.TestKit]]
+   * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
    */
-  def defaultLayersTestWithMockedSipi(system: akka.actor.ActorSystem) =
+  def integrationTestsWithFusekiTestcontainers(
+    system: Option[akka.actor.ActorSystem] = None
+  ): ULayer[DefaultTestEnvironmentWithoutSipi] =
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
       commonLayersForAllIntegrationTests,
-      ActorSystemTest.layer(system),
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      FusekiTestContainer.layer,
-      IIIFServiceMockImpl.layer,
-      JWTService.layer
+      fusekiTestcontainers,
+      system.map(ActorSystemTest.layer).getOrElse(ActorSystem.layer)
+    )
+
+  /**
+   * Provides a layer for integration tests which depend on Fuseki and Sipi as Testcontainers.
+   * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithSipi]]
+   */
+  val integrationTestsWithSipiAndFusekiTestcontainers: ULayer[DefaultTestEnvironmentWithSipi] =
+    ZLayer.make[DefaultTestEnvironmentWithSipi](
+      commonLayersForAllIntegrationTests,
+      fusekiAndSipiTestcontainers,
+      ActorSystem.layer
     )
 }

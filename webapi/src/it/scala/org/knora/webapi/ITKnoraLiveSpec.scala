@@ -59,7 +59,7 @@ abstract class ITKnoraLiveSpec
    * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers = core.LayersTest.defaultLayersTestWithSipi
+  lazy val effectLayers = core.LayersTest.integrationTestsWithSipiAndFusekiTestcontainers
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
