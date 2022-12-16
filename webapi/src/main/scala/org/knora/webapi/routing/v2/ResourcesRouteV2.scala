@@ -21,11 +21,12 @@ import zio.Runtime
 import zio.Unsafe
 import zio.ZIO
 import zio.json._
+
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-import dsp.errors.BadRequestException
 
+import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
