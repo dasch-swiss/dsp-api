@@ -20,7 +20,7 @@ object IndexApp {
 
   private val indexPage =
     s"""<html>
-       |<title>DSP-API public routes</title>
+       |<title>dsp-api</title>
        |<body>
        |<p>version: ${BuildInfo.version}</p>
        |</body
