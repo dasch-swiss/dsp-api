@@ -15,6 +15,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
+import org.knora.webapi.core.State
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.routing.admin._
@@ -31,7 +32,8 @@ object ApiRoutes {
   /**
    * All routes composed together.
    */
-  val layer: ZLayer[ActorSystem & AppRouter & core.State & AppConfig with RestResourceInfoService, Nothing, ApiRoutes] =
+  val layer
+    : ZLayer[State with RestResourceInfoService with AppConfig with AppRouter with ActorSystem, Nothing, ApiRoutes] =
     ZLayer {
       for {
         sys       <- ZIO.service[ActorSystem]
