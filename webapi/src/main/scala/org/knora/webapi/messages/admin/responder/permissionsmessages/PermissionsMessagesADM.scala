@@ -1063,11 +1063,17 @@ case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI,
   def toJsValue: JsValue = administrativePermissionADMFormat.write(this)
 
   def asExternalRepresentation: AdministrativePermissionADM = {
-    val sf                 = StringFormatter.getGeneralInstance
-    val iriExternal        = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
-    val forProjectExternal = sf.toSmartIri(this.forProject).toOntologySchema(ApiV2Complex).toString
-    val forGroupExternal   = sf.toSmartIri(this.forGroup).toOntologySchema(ApiV2Complex).toString
-    copy(iri = iriExternal, forProject = forProjectExternal, forGroup = forGroupExternal)
+    val sf                     = StringFormatter.getGeneralInstance
+    val iriExternal            = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
+    val forProjectExternal     = sf.toSmartIri(this.forProject).toOntologySchema(ApiV2Complex).toString
+    val forGroupExternal       = sf.toSmartIri(this.forGroup).toOntologySchema(ApiV2Complex).toString
+    val hasPermissionsExternal = this.hasPermissions.map(_.asExternalRepresentation)
+    copy(
+      iri = iriExternal,
+      forProject = forProjectExternal,
+      forGroup = forGroupExternal,
+      hasPermissions = hasPermissionsExternal
+    )
   }
 }
 

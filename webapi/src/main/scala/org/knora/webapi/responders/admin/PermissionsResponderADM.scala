@@ -1870,23 +1870,23 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[PermissionGetResponseADM] = {
-
+    val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
     /*Verify that hasPermissions is updated successfully*/
     def verifyUpdateOfHasPermissions(expectedPermissions: Set[PermissionADM]): Future[PermissionItemADM] =
       for {
-        updatedPermission <- permissionGetADM(permissionIri, requestingUser)
+        updatedPermission <- permissionGetADM(permissionIriInternal, requestingUser)
 
         /*Verify that update was successful*/
         _ = updatedPermission match {
               case ap: AdministrativePermissionADM =>
                 if (!ap.hasPermissions.equals(expectedPermissions))
                   throw UpdateNotPerformedException(
-                    s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug."
+                    s"The hasPermissions set of permission $permissionIriInternal was not updated. Please report this as a bug."
                   )
               case doap: DefaultObjectAccessPermissionADM =>
                 if (!doap.hasPermissions.equals(expectedPermissions)) {
                   throw UpdateNotPerformedException(
-                    s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug."
+                    s"The hasPermissions set of permission $permissionIriInternal was not updated. Please report this as a bug."
                   )
                 }
               case _ => None
@@ -1900,10 +1900,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       permissionIri: IRI,
       changeHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
       requestingUser: UserADM
-    ): Future[PermissionGetResponseADM] =
+    ): Future[PermissionGetResponseADM] = {
+      val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
       for {
         // get permission
-        permission <- permissionGetADM(permissionIri, requestingUser)
+        permission <- permissionGetADM(permissionIriInternal, requestingUser)
         response <- permission match {
                       // Is permission an administrative permission?
                       case ap: AdministrativePermissionADM =>
@@ -1944,6 +1945,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                         )
                     }
       } yield response
+    }
 
     for {
       // run list info update with an local IRI lock
@@ -1972,11 +1974,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[PermissionGetResponseADM] = {
-
+    val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
     /*Verify that resource class of doap is updated successfully*/
     def verifyUpdateOfResourceClass: Future[PermissionItemADM] =
       for {
-        updatedPermission <- permissionGetADM(permissionIri, requestingUser)
+        updatedPermission <- permissionGetADM(permissionIriInternal, requestingUser)
 
         /*Verify that update was successful*/
         _ = updatedPermission match {
@@ -1988,12 +1990,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
                 if (doap.forGroup.isDefined)
                   throw UpdateNotPerformedException(
-                    s"The $permissionIri is not correctly updated. Please report this as a bug."
+                    s"The $permissionIriInternal is not correctly updated. Please report this as a bug."
                   )
 
               case _ =>
                 throw UpdateNotPerformedException(
-                  s"Incorrect permission type returned for $permissionIri. Please report this as a bug."
+                  s"Incorrect permission type returned for $permissionIriInternal. Please report this as a bug."
                 )
             }
       } yield updatedPermission
@@ -2062,11 +2064,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[PermissionGetResponseADM] = {
-
+    val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
     /*Verify that property of doap is updated successfully*/
     def verifyUpdateOfProperty: Future[PermissionItemADM] =
       for {
-        updatedPermission <- permissionGetADM(permissionIri, requestingUser)
+        updatedPermission <- permissionGetADM(permissionIriInternal, requestingUser)
 
         /*Verify that update was successful*/
         _ = updatedPermission match {
@@ -2078,12 +2080,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
                 if (doap.forGroup.isDefined)
                   throw UpdateNotPerformedException(
-                    s"The $permissionIri is not correctly updated. Please report this as a bug."
+                    s"The $permissionIriInternal is not correctly updated. Please report this as a bug."
                   )
 
               case _ =>
                 throw UpdateNotPerformedException(
-                  s"Incorrect permission type returned for $permissionIri. Please report this as a bug."
+                  s"Incorrect permission type returned for $permissionIriInternal. Please report this as a bug."
                 )
             }
       } yield updatedPermission
@@ -2150,20 +2152,20 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[PermissionDeleteResponseADM] = {
-
+    val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
     def permissionDeleteTask(): Future[PermissionDeleteResponseADM] =
       for {
         // check that there is a permission with a given IRI
-        _ <- permissionGetADM(permissionIri, requestingUser)
+        _ <- permissionGetADM(permissionIriInternal, requestingUser)
         // Is permission in use?
         _ <- isPermissionUsed(
-               permissionIri = permissionIri,
+               permissionIri = permissionIriInternal,
                errorFun = throw UpdateNotPerformedException(
                  s"Permission $permissionIri cannot be deleted, because it is in use."
                )
              )
 
-        _          <- deletePermission(permissionIri)
+        _          <- deletePermission(permissionIriInternal)
         sf          = StringFormatter.getGeneralInstance
         iriExternal = sf.toSmartIri(permissionIri).toOntologySchema(ApiV2Complex).toString
 

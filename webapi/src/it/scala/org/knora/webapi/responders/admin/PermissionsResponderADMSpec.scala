@@ -7,7 +7,6 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import org.scalatest.PrivateMethodTester
 
 import java.util.UUID
 import scala.collection.Map
