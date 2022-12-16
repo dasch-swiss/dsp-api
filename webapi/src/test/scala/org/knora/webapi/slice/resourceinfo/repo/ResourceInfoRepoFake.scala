@@ -6,8 +6,10 @@
 package org.knora.webapi.slice.resourceinfo.repo
 
 import zio.Ref
+import zio.Task
 import zio.UIO
 import zio.ULayer
+import zio.URIO
 import zio.ZIO
 import zio.ZLayer
 
@@ -22,7 +24,7 @@ final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(InternalIri, Interna
   override def findByProjectAndResourceClass(
     projectIri: InternalIri,
     resourceClass: InternalIri
-  ): UIO[List[ResourceInfo]] =
+  ): Task[List[ResourceInfo]] =
     entitiesRef.get.map(_.getOrElse((projectIri, resourceClass), List.empty))
 
   def add(entity: ResourceInfo, projectIRI: InternalIri, resourceClass: InternalIri): UIO[Unit] = {
@@ -45,26 +47,24 @@ object ResourceInfoRepoFake {
   def findByProjectAndResourceClass(
     projectIri: InternalIri,
     resourceClass: InternalIri
-  ): ZIO[ResourceInfoRepo, Throwable, List[ResourceInfo]] = {
-    ZIO.debug(s"query for $projectIri, $resourceClass")
-    ResourceInfoRepo.findByProjectAndResourceClass(projectIri, resourceClass)
-  }
+  ): ZIO[ResourceInfoRepoFake, Throwable, List[ResourceInfo]] =
+    ZIO.service[ResourceInfoRepoFake].flatMap(_.findByProjectAndResourceClass(projectIri, resourceClass))
 
   def addAll(
     items: List[ResourceInfo],
     projectIri: InternalIri,
     resourceClass: InternalIri
-  ): ZIO[ResourceInfoRepoFake, Nothing, Unit] =
+  ): URIO[ResourceInfoRepoFake, Unit] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.addAll(items, projectIri, resourceClass))
 
   def add(
     entity: ResourceInfo,
     projectIri: InternalIri,
     resourceClass: InternalIri
-  ): ZIO[ResourceInfoRepoFake, Nothing, Unit] =
+  ): URIO[ResourceInfoRepoFake, Unit] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.add(entity, projectIri, resourceClass))
 
-  def removeAll(): ZIO[ResourceInfoRepoFake, Nothing, Unit] =
+  def removeAll(): URIO[ResourceInfoRepoFake, Unit] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.removeAll())
 
   val layer: ULayer[ResourceInfoRepoFake] =
