@@ -21,7 +21,7 @@ import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.or
 import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.projectIriKey
 import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.resourceClassKey
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.repo.TestResourceInfoRepo
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 
 object ResourceInfoRouteSpec extends ZIOSpecDefault {
 
@@ -107,7 +107,12 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
     ).provide(
       ResourceInfoRoute.layer,
       SpyLiveRestResourceInfoService.layer,
-      TestResourceInfoRepo.layer,
+      )
+    StringFormatter.test
+      ,IriConverter.layer
+      ,ResourceInfoRepoFake
+        /** EndMarker */
+        .layer.layer,
       IriConverter.layer,
       StringFormatter.test
     )

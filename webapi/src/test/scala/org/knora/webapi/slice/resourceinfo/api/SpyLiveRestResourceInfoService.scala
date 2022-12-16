@@ -13,7 +13,7 @@ import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.or
 import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.projectIriKey
 import org.knora.webapi.slice.resourceinfo.api.SpyLiveRestResourceInfoService.resourceClassKey
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.repo.TestResourceInfoRepo
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 
 case class SpyLiveRestResourceInfoService(
   lastInvocation: Ref[Map[String, Any]],
@@ -37,10 +37,10 @@ object SpyLiveRestResourceInfoService {
   def lastInvocation: ZIO[SpyLiveRestResourceInfoService, Nothing, Map[String, Any]] =
     ZIO.service[SpyLiveRestResourceInfoService].flatMap(_.lastInvocation.get)
 
-  val layer: ZLayer[IriConverter with TestResourceInfoRepo, Nothing, SpyLiveRestResourceInfoService] = ZLayer.fromZIO {
+  val layer: ZLayer[IriConverter with ResourceInfoRepoFake, Nothing, SpyLiveRestResourceInfoService] = ZLayer.fromZIO {
     for {
       ref          <- Ref.make(Map.empty[String, Any])
-      repo         <- ZIO.service[TestResourceInfoRepo]
+      repo         <- ZIO.service[ResourceInfoRepoFake]
       iriConverter <- ZIO.service[IriConverter]
       realService  <- ZIO.succeed(LiveRestResourceInfoService(repo, iriConverter))
     } yield SpyLiveRestResourceInfoService(ref, realService)

@@ -58,33 +58,22 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.live,
       AppRouter.layer,
-      CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
+      CacheServiceManager.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       JWTService.layer,
-    )
-  ProjectsRouteZ.layer
-    ,TriplestoreServiceHttpConnectorImpl.layer
-    ,TriplestoreServiceManager.layer
-    ,StringFormatter.live
-    ,State.layer
-    ,ResourceInfoRoute.layer
-    ,RepositoryUpdater.layer
-    ,LiveRestResourceInfoService.layer
-    ,ResourceInfoRepoLive
-      /** EndMarker */
-      .layer.layer,
       LiveRestResourceInfoService.layer,
+      ProjectsRouteZ.layer,
       RepositoryUpdater.layer,
+      ResourceInfoRepoLive.layer,
       ResourceInfoRoute.layer,
       State.layer,
       StringFormatter.live,
-      TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      ProjectsRouteZ.layer
+      TriplestoreServiceManager.layer
     )
 }

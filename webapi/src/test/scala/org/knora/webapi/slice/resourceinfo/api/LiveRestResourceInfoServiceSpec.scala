@@ -21,9 +21,9 @@ import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.creat
 import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService.lastModificationDate
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
-import org.knora.webapi.slice.resourceinfo.repo.TestResourceInfoRepo
-import org.knora.webapi.slice.resourceinfo.repo.TestResourceInfoRepo.knownProjectIRI
-import org.knora.webapi.slice.resourceinfo.repo.TestResourceInfoRepo.knownResourceClass
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownProjectIRI
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownResourceClass
 
 object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
   override def spec =
@@ -91,7 +91,9 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         val given2 =
           ResourceInfo("http://resourceIri/" + randomUUID, now.minus(20, DAYS), Some(now.minus(8, DAYS)), now)
         for {
-          _ <- TestResourceInfoRepo.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
+          _ <- ResourceInfoRepoFake
+              /** EndMarker */
+              .addAll(List(given1, given2), knownProjectIRI, knownResourceClass).addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <-
             RestResourceInfoService.findByProjectAndResourceClass(
               knownProjectIRI.value,
@@ -113,7 +115,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         val given2 =
           ResourceInfo("http://resourceIri/" + randomUUID, now.minus(20, DAYS), Some(now.minus(8, DAYS)), now)
         for {
-          _ <- TestResourceInfoRepo.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
+          _ <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <- RestResourceInfoService.findByProjectAndResourceClass(
                       knownProjectIRI.value,
                       knownResourceClass.value,
@@ -128,6 +130,6 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
       IriConverter.layer,
       StringFormatter.test,
       LiveRestResourceInfoService.layer,
-      TestResourceInfoRepo.layer
+      ResourceInfoRepoFake.layer
     )
 }

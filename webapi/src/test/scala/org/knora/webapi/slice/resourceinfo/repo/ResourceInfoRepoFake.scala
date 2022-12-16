@@ -16,7 +16,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
-final case class TestResourceInfoRepo(entitiesRef: Ref[Map[(InternalIri, InternalIri), List[ResourceInfo]]])
+final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(InternalIri, InternalIri), List[ResourceInfo]]])
     extends ResourceInfoRepo {
 
   override def findByProjectAndResourceClass(
@@ -37,7 +37,7 @@ final case class TestResourceInfoRepo(entitiesRef: Ref[Map[(InternalIri, Interna
     entitiesRef.set(Map.empty[(InternalIri, InternalIri), List[ResourceInfo]])
 }
 
-object TestResourceInfoRepo {
+object ResourceInfoRepoFake {
 
   val knownProjectIRI    = domain.InternalIri("http://some-project-iri")
   val knownResourceClass = domain.InternalIri("http://some-resource-class")
@@ -54,19 +54,19 @@ object TestResourceInfoRepo {
     items: List[ResourceInfo],
     projectIri: InternalIri,
     resourceClass: InternalIri
-  ): ZIO[TestResourceInfoRepo, Nothing, Unit] =
-    ZIO.service[TestResourceInfoRepo].flatMap(_.addAll(items, projectIri, resourceClass))
+  ): ZIO[ResourceInfoRepoFake, Nothing, Unit] =
+    ZIO.service[ResourceInfoRepoFake].flatMap(_.addAll(items, projectIri, resourceClass))
 
   def add(
     entity: ResourceInfo,
     projectIri: InternalIri,
     resourceClass: InternalIri
-  ): ZIO[TestResourceInfoRepo, Nothing, Unit] =
-    ZIO.service[TestResourceInfoRepo].flatMap(_.add(entity, projectIri, resourceClass))
+  ): ZIO[ResourceInfoRepoFake, Nothing, Unit] =
+    ZIO.service[ResourceInfoRepoFake].flatMap(_.add(entity, projectIri, resourceClass))
 
-  def removeAll(): ZIO[TestResourceInfoRepo, Nothing, Unit] =
-    ZIO.service[TestResourceInfoRepo].flatMap(_.removeAll())
+  def removeAll(): ZIO[ResourceInfoRepoFake, Nothing, Unit] =
+    ZIO.service[ResourceInfoRepoFake].flatMap(_.removeAll())
 
-  val layer: ULayer[TestResourceInfoRepo] =
-    ZLayer.fromZIO(Ref.make(Map.empty[(InternalIri, InternalIri), List[ResourceInfo]]).map(TestResourceInfoRepo(_)))
+  val layer: ULayer[ResourceInfoRepoFake] =
+    ZLayer.fromZIO(Ref.make(Map.empty[(InternalIri, InternalIri), List[ResourceInfo]]).map(ResourceInfoRepoFake(_)))
 }
