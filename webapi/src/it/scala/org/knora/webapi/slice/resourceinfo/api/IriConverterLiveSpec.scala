@@ -5,7 +5,7 @@ import org.knora.webapi.slice.resourceinfo.domain
 import org.knora.webapi.slice.resourceinfo.domain.{InternalIri, IriConverter}
 import zio.test._
 
-object IriConverterLiveSpec$ extends ZIOSpecDefault {
+object IriConverterLiveSpec extends ZIOSpecDefault {
 
   def spec = suite("IriConverterLive")(
     test("should not convert the projectIri") {
