@@ -18,7 +18,7 @@ trait IriConverter {
   def asInternalIri(iri: IRI): Task[InternalIri]
 }
 
-final case class LiveIriConverter(stringFormatter: StringFormatter) extends IriConverter {
+final case class IriConverterLive(stringFormatter: StringFormatter) extends IriConverter {
   def asInternalIri(iri: IRI): Task[InternalIri] =
     ZIO.attempt {
       stringFormatter.toSmartIri(iri).internalIri
@@ -26,5 +26,5 @@ final case class LiveIriConverter(stringFormatter: StringFormatter) extends IriC
 }
 
 object IriConverter {
-  val layer = ZLayer.fromFunction(LiveIriConverter(_))
+  val layer: ZLayer[StringFormatter, Nothing, IriConverterLive] = ZLayer.fromFunction(IriConverterLive(_))
 }
