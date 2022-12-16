@@ -12,16 +12,13 @@ import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
 import scala.util.Try
 import scala.util.control.Exception.catching
-
 import dsp.errors.BadRequestException
 import dsp.errors.UnexpectedMessageException
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -206,12 +203,12 @@ object RouteUtilV2 {
    *
    * @param ctx the akka-http [[RequestContext]].
    * @return the [[Try]] contains the specified project IRI, or if invalid a BadRequestException
+   * @throws [[BadRequestException]] if project was not provided in the header
    */
-  def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): Try[SmartIri] =
-    getProject(ctx) match {
-      case None        => Failure(BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
-      case Some(value) => Success(value)
-    }
+  def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
+    getProject(ctx).getOrElse(
+      throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
+    )
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.

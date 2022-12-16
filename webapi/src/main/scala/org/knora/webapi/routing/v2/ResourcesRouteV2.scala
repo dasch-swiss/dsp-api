@@ -21,12 +21,11 @@ import zio.Runtime
 import zio.Unsafe
 import zio.ZIO
 import zio.json._
-
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
@@ -385,7 +384,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
 
   private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
     get { ctx =>
-      val projectIri       = getRequiredProjectFromHeader(ctx).get.internalIri
+      val projectIri       = getRequiredProjectFromHeader(ctx).internalIri
       val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx).internalIri
       val orderBy = getStringQueryParam(ctx, "orderBy") match {
         case None    => lastModificationDate
