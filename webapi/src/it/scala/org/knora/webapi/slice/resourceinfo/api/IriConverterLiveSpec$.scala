@@ -18,5 +18,5 @@ object IriConverterLiveSpec$ extends ZIOSpecDefault {
         internal <- IriConverter.asInternalIri("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
       } yield assertTrue(internal == InternalIri("http://www.knora.org/ontology/0001/anything#Thing"))
     }
-  ).provide(IriConverter.layer, StringFormatter.testLayer)
+  ).provide(IriConverter.layer, StringFormatter.test)
 }

@@ -48,7 +48,7 @@ object LayersTest {
       LiveRestResourceInfoService.layer,
       LiveResourceInfoRepo.layer,
       IriConverter.layer,
-      StringFormatter.testLayer,
+      StringFormatter.test,
       // testcontainers
       SipiTestContainer.layer,
       FusekiTestContainer.layer,
@@ -78,7 +78,7 @@ object LayersTest {
       LiveRestResourceInfoService.layer,
       LiveResourceInfoRepo.layer,
       IriConverter.layer,
-      StringFormatter.testLayer,
+      StringFormatter.test,
       // testcontainers
       FusekiTestContainer.layer,
       // Test services
@@ -107,7 +107,7 @@ object LayersTest {
       LiveRestResourceInfoService.layer,
       LiveResourceInfoRepo.layer,
       IriConverter.layer,
-      StringFormatter.testLayer,
+      StringFormatter.test,
       // testcontainers
       FusekiTestContainer.layer,
       // Test services
@@ -136,7 +136,7 @@ object LayersTest {
       LiveRestResourceInfoService.layer,
       LiveResourceInfoRepo.layer,
       IriConverter.layer,
-      StringFormatter.testLayer,
+      StringFormatter.test,
       // testcontainers
       FusekiTestContainer.layer,
       // Test services
@@ -165,7 +165,7 @@ object LayersTest {
       LiveRestResourceInfoService.layer,
       LiveResourceInfoRepo.layer,
       IriConverter.layer,
-      StringFormatter.testLayer,
+      StringFormatter.test,
       // testcontainers
       FusekiTestContainer.layer,
       // Test services

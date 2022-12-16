@@ -126,7 +126,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
       }
     ).provide(
       IriConverter.layer,
-      StringFormatter.testLayer,
+      StringFormatter.test,
       LiveRestResourceInfoService.layer,
       TestResourceInfoRepo.layer
     )

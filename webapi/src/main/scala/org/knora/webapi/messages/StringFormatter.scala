@@ -14,7 +14,6 @@ import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import spray.json._
 import zio.ZLayer
-
 import java.nio.ByteBuffer
 import java.time._
 import java.time.format.DateTimeFormatter
@@ -29,10 +28,10 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import scala.util.matching.Regex
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -313,12 +312,12 @@ object StringFormatter {
       })
     )
 
-  val liveLayer: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
+  val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
     StringFormatter.getGeneralInstance
   }
 
-  val testLayer: ZLayer[Any, Nothing, StringFormatter] = ZLayer.fromFunction { () =>
+  val test: ZLayer[Any, Nothing, StringFormatter] = ZLayer.fromFunction { () =>
     StringFormatter.initForTest()
     StringFormatter.getGeneralInstance
   }

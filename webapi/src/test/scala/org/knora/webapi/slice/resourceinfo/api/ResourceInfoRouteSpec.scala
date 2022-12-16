@@ -109,6 +109,6 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
       SpyLiveRestResourceInfoService.layer,
       TestResourceInfoRepo.layer,
       IriConverter.layer,
-      StringFormatter.testLayer
+      StringFormatter.test
     )
 }

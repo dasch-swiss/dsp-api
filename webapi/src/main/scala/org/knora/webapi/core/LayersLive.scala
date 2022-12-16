@@ -71,7 +71,7 @@ object LayersLive {
       RepositoryUpdater.layer,
       ResourceInfoRoute.layer,
       State.layer,
-      StringFormatter.liveLayer,
+      StringFormatter.live,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       ProjectsRouteZ.layer
