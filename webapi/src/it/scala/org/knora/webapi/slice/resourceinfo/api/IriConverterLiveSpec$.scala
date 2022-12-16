@@ -7,7 +7,7 @@ import zio.test._
 
 object IriConverterLiveSpec$ extends ZIOSpecDefault {
 
-  def spec = suite("IriConverter")(
+  def spec = suite("IriConverterLive")(
     test("should not convert the projectIri") {
       for {
         internal <- IriConverter.asInternalIri("http://project-iri")
