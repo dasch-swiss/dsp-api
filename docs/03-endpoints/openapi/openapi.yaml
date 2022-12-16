@@ -1,0 +1,103 @@
+openapi: 3.1.0
+info:
+  description: "Draft"
+  version: 0.0.1
+  title: dsp-api V2
+  contact:
+    url: https://www.dasch.swiss/
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+externalDocs:
+  description: Find out more about DaSCH's Platform API
+  url: https://docs.dasch.swiss/
+servers:
+  - url: https://admin.dasch.swiss
+tags:
+  - name: v2/resources/info
+    description: Dsp-api Resources
+    externalDocs:
+      description: Find out more
+      url: https://docs.dasch.swiss/2022.11.01/DSP-API/03-apis/api-v2/reading-and-searching-resources/
+paths:
+  /v2/resources/info:
+    get:
+      tags:
+        - v2/resources/info
+      summary: List infos for particular resources
+      description: "List overview of meta information of all resource of a particular resource class in a  specific project"
+      operationId: list-resource-infos
+      parameters:
+        - name: order
+          in: query
+          description: Order ascending or descending, default is ascending
+          required: false
+          schema:
+             $ref: "#/components/schemas/ResourceInfoOrder"
+        - name: orderBy
+          in: query
+          description: Order by property, default is lastModification date
+          required: false
+          schema:
+             $ref: "#/components/schemas/ResourceInfoOrderBy"
+        - name: resourceClass
+          in: query
+          description: The IRI of resource class to query, must be urlencoded
+          required: true
+          schema:
+            type: string
+        - name: x-knora-accept-project
+          in: header
+          description: The IRI of the project to query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                 $ref: "#/components/schemas/ResourceInfoList"
+        "400":
+          description: Missing or faulty request parameters
+components:
+  schemas:
+    ResourceInfoOrder:
+      type: string
+      oneOf:
+      - title: ASC
+        description: Ascending Order
+      - title: DESC
+        description: Ascending Order
+    ResourceInfoOrderBy:
+      type: string
+      oneOf:
+      - title: lastModificationDate
+        description: Order by the lastModificationDate property
+      - title: creationDate
+        description: Order by the creationDate property
+    ResourceInfoList:
+      type: object
+      properties:
+        resources:
+           type: array
+           items:
+             schema:
+               $ref: "#/components/schemas/ResourceInfo"
+        count:
+          type: integer
+    ResourceInfo:
+      type: object
+      properties:
+        resourceIri:
+          type: string
+        creationDate:
+          type: string
+        lastModificationDate:
+          type: string
+        deleteDate:
+          required: false
+          type: string
+        isDeleted:
+           type: boolean
