@@ -73,6 +73,22 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
+      )
+    )
+
+  val perm001_d3_external: doap =
+    doap(
+      iri = "http://rdfh.ch/permissions/0000/001-d3",
+      p = DefaultObjectAccessPermissionADM(
+        iri = "http://rdfh.ch/permissions/0000/001-d3",
+        forProject = OntologyConstants.KnoraAdmin.SystemProject,
+        forProperty = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
+        hasPermissions = Set(
+          PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.Creator),
+          PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+          PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
+          PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
+        )
       ).asExternalRepresentation
     )
 

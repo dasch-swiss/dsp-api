@@ -18,6 +18,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
@@ -36,7 +37,6 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.messages.StringFormatter
 
 /**
  * Provides information about permissions to other responders.
@@ -825,7 +825,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             PermissionType.OAP
           )
           Some(
-            ObjectAccessPermissionADM(forResource = Some(resourceIri), forValue = None, hasPermissions = hasPermissions)
+            ObjectAccessPermissionADM(
+              forResource = Some(resourceIri),
+              forValue = None,
+              hasPermissions = hasPermissions
+            ).asExternalRepresentation
           )
         } else {
           None
@@ -878,7 +882,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             PermissionType.OAP
           )
           Some(
-            ObjectAccessPermissionADM(forResource = None, forValue = Some(valueIri), hasPermissions = hasPermissions)
+            ObjectAccessPermissionADM(
+              forResource = None,
+              forValue = Some(valueIri),
+              hasPermissions = hasPermissions
+            ).asExternalRepresentation
           )
         } else {
           None
@@ -1115,8 +1123,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     resourceClassIri: Option[IRI],
     propertyIri: Option[IRI],
     requestingUser: UserADM
-  ): Future[DefaultObjectAccessPermissionGetResponseADM] =
-    defaultObjectAccessPermissionGetADM(projectIri, groupIri, resourceClassIri, propertyIri)
+  ): Future[DefaultObjectAccessPermissionGetResponseADM] = {
+    val projectIriInternal = projectIri.toSmartIri.toOntologySchema(InternalSchema).toString
+    defaultObjectAccessPermissionGetADM(projectIriInternal, groupIri, resourceClassIri, propertyIri)
       .mapTo[Option[DefaultObjectAccessPermissionADM]]
       .flatMap {
         case Some(doap) => Future(DefaultObjectAccessPermissionGetResponseADM(doap.asExternalRepresentation))
@@ -1129,15 +1138,16 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
               case Some(systemDoap) => DefaultObjectAccessPermissionGetResponseADM(systemDoap.asExternalRepresentation)
               case None =>
                 throw NotFoundException(
-                  s"No Default Object Access Permission found for project: $projectIri, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination"
+                  s"No Default Object Access Permission found for project: $projectIriInternal, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination"
                 )
             }
           } else {
             throw NotFoundException(
-              s"No Default Object Access Permission found for project: $projectIri, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination"
+              s"No Default Object Access Permission found for project: $projectIriInternal, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination"
             )
           }
       }
+  }
 
   /**
    * Convenience method returning a set with combined max default object access permissions.
