@@ -252,7 +252,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Future[ProjectMembersGetResponseADM] =
-    // log.debug("projectMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
     for {
 
       /* Get project and verify permissions. */
@@ -282,7 +281,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                )
                                .toString()
                            )
-      // _ = log.debug(s"projectMembersGetRequestADM - query: $sparqlQueryString")
 
       projectMembersResponse <- appActor
                                   .ask(
@@ -293,8 +291,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                   .mapTo[SparqlExtendedConstructResponse]
 
       statements = projectMembersResponse.statements.toList
-
-      // _ = log.debug(s"projectMembersGetRequestADM - statements: {}", MessageUtil.toSource(statements))
 
       // get project member IRI from results rows
       userIris: Seq[IRI] =
@@ -318,10 +314,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
+      usersExternal: Seq[UserADM]       = users.map(_.asExternalRepresentation)
 
-      // _ = log.debug(s"projectMembersGetRequestADM - users: {}", users)
-
-    } yield ProjectMembersGetResponseADM(members = users)
+    } yield ProjectMembersGetResponseADM(members = usersExternal)
 
   /**
    * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
@@ -335,7 +330,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Future[ProjectAdminMembersGetResponseADM] =
-    // log.debug("projectAdminMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
     for {
       /* Get project and verify permissions. */
       project <- getSingleProjectADM(
@@ -393,10 +387,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                                        }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
+      usersExternal: Seq[UserADM]       = users.map(_.asExternalRepresentation)
 
-      // _ = log.debug(s"projectMembersGetRequestADM - users: $users")
-
-    } yield ProjectAdminMembersGetResponseADM(members = users)
+    } yield ProjectAdminMembersGetResponseADM(members = usersExternal)
 
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.

@@ -454,9 +454,10 @@ case class ProjectADM(
   }
 
   def asExternalRepresentation: ProjectADM = {
-    val sf    = StringFormatter.getGeneralInstance
-    val ontos = this.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
-    copy(ontologies = ontos)
+    val sf                 = StringFormatter.getGeneralInstance
+    val idExternal         = sf.toSmartIri(this.id).toOntologySchema(ApiV2Complex).toString
+    val ontologiesExternal = this.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
+    copy(id = id, ontologies = ontologiesExternal)
   }
 
   override def equals(that: Any): Boolean =

@@ -896,6 +896,20 @@ case class PermissionsDataADM(
       case _ => throw BadRequestException(s"The requested userProfileType: $permissionProfileType is invalid.")
     }
 
+  def asExternalRepresentation: PermissionsDataADM = {
+    val sf = StringFormatter.getGeneralInstance
+    val groupsPerProjectExternal = groupsPerProject.transform { (_, seqOfGroupIris) =>
+      (seqOfGroupIris.map(groupIri => sf.toSmartIri(groupIri).toOntologySchema(ApiV2Complex).toString))
+    }
+    val administrativePermissionsPerProjectExternal = administrativePermissionsPerProject.transform {
+      (_, setOfPermissions) => (setOfPermissions.map(_.asExternalRepresentation))
+    }
+    copy(
+      groupsPerProject = groupsPerProjectExternal,
+      administrativePermissionsPerProject = administrativePermissionsPerProjectExternal
+    )
+  }
+
   /* Is the user a member of the SystemAdmin group */
   def isSystemAdmin: Boolean =
     groupsPerProject

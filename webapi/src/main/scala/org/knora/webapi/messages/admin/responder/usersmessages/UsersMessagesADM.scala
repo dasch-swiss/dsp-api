@@ -470,6 +470,19 @@ final case class UserADM(
   def compare(that: UserADM): Int = this.id.compareTo(that.id)
 
   /**
+   * Returns the user into a user representation that contains only external IRIs.
+   * This applies for the groups, projects and permissions that a UserADM object points to.
+   *
+   * @return the user representation with external IRIs
+   */
+  def asExternalRepresentation: UserADM = {
+    val groupsExternal      = this.groups.map { g: GroupADM => g.asExternalRepresentation }
+    val projectsExternal    = this.projects.map { p: ProjectADM => p.asExternalRepresentation }
+    val permissionsExternal = this.permissions.asExternalRepresentation
+    this.copy(groups = groupsExternal, projects = projectsExternal, permissions = permissionsExternal)
+  }
+
+  /**
    * Check password (in clear text) using SCrypt. The password supplied in clear text is hashed and
    * compared against the stored hash.
    *

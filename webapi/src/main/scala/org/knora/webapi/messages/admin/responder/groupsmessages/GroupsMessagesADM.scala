@@ -22,6 +22,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.ApiV2Complex
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -257,6 +259,13 @@ case class GroupADM(
    * Allows to sort collections of GroupADM. Sorting is done by the id.
    */
   def compare(that: GroupADM): Int = this.id.compareTo(that.id)
+
+  def asExternalRepresentation: GroupADM = {
+    val sf              = StringFormatter.getGeneralInstance
+    val idExternal      = sf.toSmartIri(this.id).toOntologySchema(ApiV2Complex).toString
+    val projectExternal = project.asExternalRepresentation
+    copy(id = idExternal, project = projectExternal)
+  }
 
   def asGroupShortADM: GroupShortADM =
     GroupShortADM(
