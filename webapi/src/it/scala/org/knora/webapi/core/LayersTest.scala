@@ -6,7 +6,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.resourceinfo.api.LiveRestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.repo.LiveResourceInfoRepo
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoLive
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -46,7 +46,17 @@ object LayersTest {
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       LiveRestResourceInfoService.layer,
-      LiveResourceInfoRepo.layer,
+    )
+  TestClientService.layer
+    // Test services
+    ,FusekiTestContainer.layer
+    ,SipiTestContainer.layer
+    // testcontainers
+    ,StringFormatter.test
+    ,IriConverter.layer
+    ,ResourceInfoRepoLive
+      /** EndMarker */
+      .layer.layer,
       IriConverter.layer,
       StringFormatter.test,
       // testcontainers
@@ -70,13 +80,13 @@ object LayersTest {
       HttpServer.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      JWTService.layer,
+    JWTService.layer,
       RepositoryUpdater.layer,
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       LiveRestResourceInfoService.layer,
-      LiveResourceInfoRepo.layer,
+      ResourceInfoRepoLive.layer,
       IriConverter.layer,
       StringFormatter.test,
       // testcontainers
@@ -105,7 +115,7 @@ object LayersTest {
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       LiveRestResourceInfoService.layer,
-      LiveResourceInfoRepo.layer,
+      ResourceInfoRepoLive.layer,
       IriConverter.layer,
       StringFormatter.test,
       // testcontainers
@@ -128,13 +138,13 @@ object LayersTest {
       HttpServer.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      JWTService.layer,
+    JWTService.layer,
       RepositoryUpdater.layer,
       State.layer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       LiveRestResourceInfoService.layer,
-      LiveResourceInfoRepo.layer,
+      ResourceInfoRepoLive.layer,
       IriConverter.layer,
       StringFormatter.test,
       // testcontainers
@@ -163,7 +173,7 @@ object LayersTest {
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       LiveRestResourceInfoService.layer,
-      LiveResourceInfoRepo.layer,
+      ResourceInfoRepoLive.layer,
       IriConverter.layer,
       StringFormatter.test,
       // testcontainers

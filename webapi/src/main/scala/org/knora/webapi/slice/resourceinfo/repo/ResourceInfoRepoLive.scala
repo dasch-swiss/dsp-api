@@ -19,7 +19,7 @@ import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-final case class LiveResourceInfoRepo(ts: TriplestoreService) extends ResourceInfoRepo {
+final case class ResourceInfoRepoLive(ts: TriplestoreService) extends ResourceInfoRepo {
 
   override def findByProjectAndResourceClass(
     projectIri: InternalIri,
@@ -44,7 +44,7 @@ final case class LiveResourceInfoRepo(ts: TriplestoreService) extends ResourceIn
   }
 }
 
-object LiveResourceInfoRepo {
-  val layer: ZLayer[TriplestoreService, Nothing, LiveResourceInfoRepo] =
-    ZLayer.fromZIO(ZIO.service[TriplestoreService].map(LiveResourceInfoRepo(_)))
+object ResourceInfoRepoLive {
+  val layer: ZLayer[TriplestoreService, Nothing, ResourceInfoRepoLive] =
+    ZLayer.fromZIO(ZIO.service[TriplestoreService].map(ResourceInfoRepoLive(_)))
 }
