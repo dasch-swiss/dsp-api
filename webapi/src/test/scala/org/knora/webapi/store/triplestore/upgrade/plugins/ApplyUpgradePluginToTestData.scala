@@ -24,6 +24,11 @@ import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
+/**
+ * This class may be run if you wish to apply your upgrade plugin on our test data.
+ * For this you must first provide an instance of your plugin as `val upgradePlugin`
+ * and also specify the absolut path to the "test_data" folder in `val testDataPath`.
+ */
 object ApplyUpgradePluginToTestData extends ZIOAppDefault {
 
   val upgradePlugin = new NoopPlugin()
