@@ -360,16 +360,9 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
     getQueryParamsMap(requestContext).get(key)
 
   private def getRequiredStringQueryParam(requestContext: RequestContext, key: String): String =
-    getQueryParamsMap(requestContext).getOrElse(
-      key,
+    getStringQueryParam(requestContext, key).getOrElse(
       throw BadRequestException(s"This route requires the parameter '$key'")
     )
-
-  private def getRequiredResourceClassFromQueryParams(ctx: RequestContext): SmartIri = {
-    val resourceClass = getRequiredStringQueryParam(ctx, "resourceClass")
-    resourceClass
-      .toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClass"))
-  }
 
   private def unsafeRunZioAndMapJsonResponse[R, E, A](
     zioAction: ZIO[R, E, A]
@@ -384,8 +377,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
 
   private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
     get { ctx =>
-      val projectIri       = getRequiredProjectFromHeader(ctx).internalIri
-      val resourceClassIri = getRequiredResourceClassFromQueryParams(ctx).internalIri
+      val projectIri       = getRequiredProjectFromHeader(ctx).toIri
+      val resourceClassIri = getRequiredStringQueryParam(ctx, "resourceClass")
       val orderBy = getStringQueryParam(ctx, "orderBy") match {
         case None    => lastModificationDate
         case Some(s) => OrderBy.make(s).getOrElse(throw BadRequestException(s"Invalid value '$s', for orderBy"))
@@ -394,8 +387,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
         case None    => ASC
         case Some(s) => Order.make(s).getOrElse(throw BadRequestException(s"Invalid value '$s', for order"))
       }
-      val action =
-        RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri, (orderBy, order))
+      val action = RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri, (orderBy, order))
       ctx.complete(unsafeRunZioAndMapJsonResponse(action))
     }
   }
