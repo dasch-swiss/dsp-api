@@ -41,11 +41,11 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeader
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
