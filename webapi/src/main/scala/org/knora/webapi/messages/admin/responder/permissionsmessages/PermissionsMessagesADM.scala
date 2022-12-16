@@ -1165,6 +1165,13 @@ object PermissionADM {
       permissionCode = None
     )
 
+  val ProjectResourceCreateAllPermissionExternal: PermissionADM =
+    PermissionADM(
+      name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
+      additionalInformation = None,
+      permissionCode = None
+    ).asExternalRepresentation
+
   def projectResourceCreateRestrictedPermission(restriction: IRI): PermissionADM =
     PermissionADM(
       name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
@@ -1178,6 +1185,13 @@ object PermissionADM {
       additionalInformation = None,
       permissionCode = None
     )
+
+  val ProjectAdminAllPermissionExternal: PermissionADM =
+    PermissionADM(
+      name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
+      additionalInformation = None,
+      permissionCode = None
+    ).asExternalRepresentation
 
   val ProjectAdminGroupAllPermission: PermissionADM =
     PermissionADM(
