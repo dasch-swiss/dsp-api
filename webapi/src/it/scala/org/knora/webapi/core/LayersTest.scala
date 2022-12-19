@@ -6,8 +6,10 @@ import zio.ZLayer
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
@@ -39,11 +41,13 @@ object LayersTest {
     with CacheServiceManager
     with HttpServer
     with IIIFServiceManager
+    with IriConverter
     with RepositoryUpdater
-    with State
-    with TestClientService
     with ResourceInfoRepo
     with RestResourceInfoService
+    with State
+    with StringFormatter
+    with TestClientService
     with TriplestoreService
     with TriplestoreServiceManager
 
@@ -55,10 +59,12 @@ object LayersTest {
       CacheServiceManager.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
+      IriConverter.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       RestResourceInfoService.layer,
       State.layer,
+      StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       TriplestoreServiceManager.layer
