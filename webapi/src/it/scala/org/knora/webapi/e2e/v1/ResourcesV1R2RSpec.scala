@@ -58,7 +58,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
   private val resourcesPathV1 =
     DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV1(routeData).makeRoute)
   private val resourcesPathV2 =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, null).makeRoute)
   private val valuesPathV1 =
     DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
 

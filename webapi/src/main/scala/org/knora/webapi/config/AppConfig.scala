@@ -8,6 +8,8 @@ package org.knora.webapi.config
 import com.typesafe.config.ConfigFactory
 import zio._
 import zio.config._
+import zio.config.magnolia._
+import zio.config.typesafe._
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -19,12 +21,8 @@ import scala.util.Success
 import scala.util.Try
 
 import dsp.errors.FileWriteException
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.util.cache.CacheUtil
-
-import typesafe._
-import magnolia._
 
 /**
  * Represents the configuration as defined in application.conf.
@@ -272,7 +270,6 @@ object AppConfig {
       for {
         c <- configFromSource.orDie
         _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
-        _ <- ZIO.attempt(StringFormatter.init(c)).orDie   // needs early init before first usage
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Live Initialized <<<"))
 
@@ -283,8 +280,7 @@ object AppConfig {
     ZLayer {
       for {
         c <- configFromSource.orDie
-        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie     // needs early init before first usage
-        _ <- ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
+        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Test Initialized <<<"))
 

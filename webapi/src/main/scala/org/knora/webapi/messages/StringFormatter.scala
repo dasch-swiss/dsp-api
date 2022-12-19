@@ -13,6 +13,7 @@ import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import spray.json._
+import zio.ZLayer
 
 import java.nio.ByteBuffer
 import java.time._
@@ -311,6 +312,16 @@ object StringFormatter {
         creationFun()
       })
     )
+
+  val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
+    StringFormatter.init(appConfig)
+    StringFormatter.getGeneralInstance
+  }
+
+  val test: ZLayer[Any, Nothing, StringFormatter] = ZLayer.fromFunction { () =>
+    StringFormatter.initForTest()
+    StringFormatter.getGeneralInstance
+  }
 }
 
 /**
@@ -344,6 +355,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    * Returns this IRI as a string in angle brackets.
    */
   def toSparql: String
+
+  def toIri: IRI = toString
 
   /**
    * Returns `true` if this is a Knora data or definition IRI.
@@ -484,6 +497,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    * @param targetSchema the target schema.
    */
   override def toOntologySchema(targetSchema: OntologySchema): SmartIri
+
+  def internalIri: IRI = toOntologySchema(InternalSchema).toIri
 
   /**
    * Constructs a short prefix label for the ontology that the IRI belongs to.
