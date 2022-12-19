@@ -7,6 +7,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -52,6 +54,8 @@ object LayersTest {
       HttpServer.layer,
       IIIFServiceManager.layer,
       RepositoryUpdater.layer,
+      RestResourceInfoService.layer,
+      ResourceInfoRepo.layer,
       State.layer,
       TestClientService.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
