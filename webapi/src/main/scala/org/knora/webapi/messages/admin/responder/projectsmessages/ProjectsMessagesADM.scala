@@ -16,6 +16,7 @@ import zio.prelude.Validation
 import java.nio.file.Path
 import java.util.UUID
 
+import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
@@ -25,6 +26,7 @@ import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
+import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
@@ -306,6 +308,13 @@ case class ProjectChangeRequestADM(
  */
 case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ProjectsGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(projects = this.projects.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -315,6 +324,13 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraRespon
  */
 case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ProjectGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(project = this.project.asExternalRepresentation)
+  }
 }
 
 /**
@@ -325,6 +341,13 @@ case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM w
 case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ProjectMembersGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(members = this.members.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -337,6 +360,13 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
     with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ProjectAdminMembersGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(members = this.members.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -346,6 +376,8 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
  */
 case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ProjectsKeywordsGetResponseADM = this
 }
 
 /**
@@ -355,6 +387,8 @@ case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRe
  */
 case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ProjectKeywordsGetResponseADM = this
 }
 
 /**
@@ -366,6 +400,8 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
     extends KnoraResponseADM
     with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ProjectRestrictedViewSettingsGetResponseADM = this
 }
 
 /**
@@ -375,6 +411,13 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
  */
 case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ProjectOperationResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(project = this.project.asExternalRepresentation)
+  }
 }
 
 /**

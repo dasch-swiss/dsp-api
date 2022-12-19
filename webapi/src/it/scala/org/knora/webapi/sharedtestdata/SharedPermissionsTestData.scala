@@ -42,7 +42,7 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm001_d2: doap =
@@ -57,7 +57,7 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm001_d3: doap =
@@ -89,7 +89,7 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   /**
@@ -109,7 +109,7 @@ object SharedPermissionsTestData {
         hasPermissions = Set(
           PermissionADM.ProjectResourceCreateAllPermission
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm002_a2: ap =
@@ -123,7 +123,7 @@ object SharedPermissionsTestData {
           PermissionADM.ProjectResourceCreateAllPermission,
           PermissionADM.ProjectAdminAllPermission
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm002_a3: ap =
@@ -137,7 +137,7 @@ object SharedPermissionsTestData {
           PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bild"),
           PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat")
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm0003_a4: doap = doap(
@@ -147,7 +147,7 @@ object SharedPermissionsTestData {
       forProject = IMAGES_PROJECT_IRI,
       forGroup = Some("http://rdfh.ch/groups/00FF/images-reviewer"),
       hasPermissions = Set(PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.Creator))
-    ).asExternalRepresentation
+    )
   )
 
   val perm002_d1: doap =
@@ -162,7 +162,7 @@ object SharedPermissionsTestData {
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm002_d2: doap =
@@ -177,7 +177,7 @@ object SharedPermissionsTestData {
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   /**
@@ -195,7 +195,7 @@ object SharedPermissionsTestData {
         forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
         hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-      ).asExternalRepresentation
+      )
     )
 
   val perm003_a2: ap =
@@ -209,7 +209,7 @@ object SharedPermissionsTestData {
           PermissionADM.ProjectResourceCreateAllPermission,
           PermissionADM.ProjectAdminAllPermission
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm003_o1: oap =
@@ -223,7 +223,7 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm003_o2: oap =
@@ -237,7 +237,7 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
           PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm003_d1: doap =
@@ -253,7 +253,7 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm003_d2: doap =
@@ -269,7 +269,7 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm003_d3: doap =
@@ -284,7 +284,7 @@ object SharedPermissionsTestData {
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm003_d4: doap =
@@ -298,7 +298,7 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm003_d5: doap =
@@ -312,7 +312,7 @@ object SharedPermissionsTestData {
         hasPermissions = Set(
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
         )
-      ).asExternalRepresentation
+      )
     )
 
   /**
@@ -330,7 +330,7 @@ object SharedPermissionsTestData {
         forProject = SharedTestDataV1.ANYTHING_PROJECT_IRI,
         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
         hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-      ).asExternalRepresentation
+      )
     )
 
   val perm005_a2: ap =
@@ -344,7 +344,7 @@ object SharedPermissionsTestData {
           PermissionADM.ProjectResourceCreateAllPermission,
           PermissionADM.ProjectAdminAllPermission
         )
-      ).asExternalRepresentation
+      )
     )
 
   val perm005_d1: doap =
@@ -360,6 +360,6 @@ object SharedPermissionsTestData {
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
           PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
-      ).asExternalRepresentation
+      )
     )
 }

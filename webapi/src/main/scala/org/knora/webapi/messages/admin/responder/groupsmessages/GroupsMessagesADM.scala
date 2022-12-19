@@ -13,10 +13,12 @@ import spray.json.RootJsonFormat
 
 import java.util.UUID
 
+import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
+import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
@@ -204,6 +206,13 @@ case class GroupPermissionUpdateRequestADM(requestingUser: UserADM, apiRequestID
  */
 case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupsGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): GroupsGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(groups = this.groups.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -213,6 +222,13 @@ case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM 
  */
 case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): GroupGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(group = this.group.asExternalRepresentation)
+  }
 }
 
 /**
@@ -222,6 +238,13 @@ case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with Gr
  */
 case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupMembersResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): GroupMembersGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(members = this.members.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -231,6 +254,13 @@ case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraRespon
  */
 case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupOperationResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): GroupOperationResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(group = this.group.asExternalRepresentation)
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

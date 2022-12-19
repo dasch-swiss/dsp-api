@@ -39,14 +39,11 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
-  private val knownUser =
-    OntologyConstants.KnoraApi.ApiOntologyStart + OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel + "/v2#KnownUser"
-  private val unknownUser =
-    OntologyConstants.KnoraApi.ApiOntologyStart + OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel + "/v2#UnknownUser"
-  private val projectAdmin =
-    OntologyConstants.KnoraApi.ApiOntologyStart + OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel + "/v2#ProjectAdmin"
-  private val creator =
-    OntologyConstants.KnoraApi.ApiOntologyStart + OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel + "/v2#Creator"
+  private val knownUser     = OntologyConstants.KnoraAdmin.KnownUser
+  private val unknownUser   = OntologyConstants.KnoraAdmin.UnknownUser
+  private val projectAdmin  = OntologyConstants.KnoraAdmin.ProjectAdmin
+  private val projectMember = OntologyConstants.KnoraAdmin.ProjectMember
+  private val creator       = OntologyConstants.KnoraAdmin.Creator
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -268,7 +265,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
             additionalInformation = None,
             permissionCode = None
-          ).asExternalRepresentation
+          )
         )
         appActor ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
@@ -284,9 +281,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[AdministrativePermissionCreateResponseADM]
         assert(received.administrativePermission.iri == customIri)
         assert(received.administrativePermission.forProject == SharedTestDataADM.ANYTHING_PROJECT_IRI)
-        assert(
-          received.administrativePermission.forGroup == knownUser
-        )
+        assert(received.administrativePermission.forGroup == knownUser)
         assert(received.administrativePermission.hasPermissions.equals(expectedHasPermissions))
       }
     }
@@ -715,31 +710,31 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               PermissionInfoADM(
                 perm003_a1.iri,
                 OntologyConstants.KnoraAdmin.AdministrativePermission
-              ).asExternalRepresentation,
+              ),
               PermissionInfoADM(
                 perm003_a2.iri,
                 OntologyConstants.KnoraAdmin.AdministrativePermission
-              ).asExternalRepresentation,
+              ),
               PermissionInfoADM(
                 perm003_d1.iri,
                 OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission
-              ).asExternalRepresentation,
+              ),
               PermissionInfoADM(
                 perm003_d2.iri,
                 OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission
-              ).asExternalRepresentation,
+              ),
               PermissionInfoADM(
                 perm003_d3.iri,
                 OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission
-              ).asExternalRepresentation,
+              ),
               PermissionInfoADM(
                 perm003_d4.iri,
                 OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission
-              ).asExternalRepresentation,
+              ),
               PermissionInfoADM(
                 perm003_d5.iri,
                 OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission
-              ).asExternalRepresentation
+              )
             )
           )
         )
@@ -966,13 +961,11 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update group of a default object access permission, resource class must be deleted" in {
-        val permissionIri       = "http://rdfh.ch/permissions/0803/003-d2"
-        val newGroupIri         = "http://www.knora.org/ontology/knora-admin#ProjectMember"
-        val newGroupIriExternal = "http://api.knora.org/ontology/knora-admin/v2#ProjectMember"
+        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            forGroup = newGroupIri
+            forGroup = projectMember
           ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -981,18 +974,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forGroup.get == newGroupIriExternal)
+        assert(doap.forGroup.get == projectMember)
         assert(doap.forResourceClass.isEmpty)
       }
 
       "update group of a default object access permission, property must be deleted" in {
-        val permissionIri       = "http://rdfh.ch/permissions/0000/001-d3"
-        val newGroupIri         = "http://www.knora.org/ontology/knora-admin#ProjectMember"
-        val newGroupIriExternal = "http://api.knora.org/ontology/knora-admin/v2#ProjectMember"
+        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            forGroup = newGroupIri
+            forGroup = projectMember
           ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -1001,7 +992,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forGroup.get == newGroupIriExternal)
+        assert(doap.forGroup.get == projectMember)
         assert(doap.forProperty.isEmpty)
       }
     }
@@ -1088,8 +1079,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID()
         )
         val hasPermissionsExpected = Set(
-          PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator).asExternalRepresentation,
-          PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember).asExternalRepresentation
+          PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+          PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
         )
         val received: DefaultObjectAccessPermissionGetResponseADM =
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]

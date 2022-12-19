@@ -10,6 +10,7 @@ import spray.json._
 
 import java.util.UUID
 
+import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
@@ -336,6 +337,14 @@ case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Bool
     extends KnoraResponseADM
     with ListADMJsonProtocol {
   def toJsValue: JsValue = ListNodeCommentsDeleteResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ListNodeCommentsDeleteResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    val sf = StringFormatter.getGeneralInstance
+    copy(nodeIri = sf.toSmartIri(this.nodeIri).toOntologySchema(ApiV2Complex).toString)
+  }
 }
 
 /**
@@ -349,6 +358,14 @@ case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
     with ListADMJsonProtocol {
 
   def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): CanDeleteListResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    val sf = StringFormatter.getGeneralInstance
+    copy(listIri = sf.toSmartIri(this.listIri).toOntologySchema(ApiV2Complex).toString)
+  }
 }
 
 /**
@@ -358,6 +375,13 @@ case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
  */
 case class ListsGetResponseADM(lists: Seq[ListNodeInfoADM]) extends KnoraResponseADM with ListADMJsonProtocol {
   def toJsValue: JsValue = listsGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ListsGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(lists = this.lists.map(_.asExternalRepresentation))
+  }
 }
 
 abstract class ListItemGetResponseADM(listItem: ListItemADM) extends KnoraResponseADM with ListADMJsonProtocol
@@ -370,6 +394,13 @@ abstract class ListItemGetResponseADM(listItem: ListItemADM) extends KnoraRespon
 case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM(list) {
 
   def toJsValue: JsValue = listGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ListGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(list = this.list.asExternalRepresentation)
+  }
 }
 
 /**
@@ -380,6 +411,13 @@ case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM(list
 case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM(node) {
 
   def toJsValue: JsValue = listNodeGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ListNodeGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(node = this.node.asExternalRepresentation)
+  }
 }
 
 /**
@@ -397,6 +435,13 @@ abstract class NodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraRe
 case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends NodeInfoGetResponseADM(listinfo) {
 
   def toJsValue: JsValue = listInfoGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): RootNodeInfoGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(listinfo = this.listinfo.asExternalRepresentation)
+  }
 }
 
 /**
@@ -407,6 +452,9 @@ case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends Nod
 case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends NodeInfoGetResponseADM(nodeinfo) {
 
   def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
+
+  override def format(targetSchema: OntologySchema): ChildNodeInfoGetResponseADM = this
+
 }
 
 /**
@@ -417,6 +465,13 @@ case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends N
 case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
 
   def toJsValue: JsValue = nodePathGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): NodePathGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    this
+  }
 }
 
 abstract class ListItemDeleteResponseADM extends KnoraResponseADM with ListADMJsonProtocol
@@ -429,6 +484,13 @@ abstract class ListItemDeleteResponseADM extends KnoraResponseADM with ListADMJs
 case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDeleteResponseADM {
 
   def toJsValue: JsValue = listDeleteResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema) = {
+    val sf          = StringFormatter.getGeneralInstance
+    val iriExternal = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
+    copy(iri = iriExternal)
+  }
+
 }
 
 /**
@@ -440,6 +502,13 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
 case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteResponseADM {
 
   def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): ChildNodeDeleteResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(node = this.node.asExternalRepresentation)
+  }
 }
 
 /**
@@ -450,14 +519,29 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
 case class NodePositionChangeResponseADM(node: ListNodeADM) extends KnoraResponseADM with ListADMJsonProtocol {
 
   def toJsValue: JsValue = changeNodePositionApiResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): NodePositionChangeResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(node = this.node.asExternalRepresentation)
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
-abstract class ListItemADM(info: ListNodeInfoADM, children: Seq[ListChildNodeADM])
+abstract class ListItemADM(info: ListNodeInfoADM, children: Seq[ListChildNodeADM]) {
+  def asExternalRepresentation: ListItemADM
+}
 
 case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM])
     extends ListItemADM(listinfo, children) {
+
+  def asExternalRepresentation: ListADM = {
+    val listinfoExternal = this.listinfo.asExternalRepresentation
+    val childrenExternal = this.children.map(_.asExternalRepresentation)
+    copy(listinfo = listinfoExternal, children = childrenExternal)
+  }
 
   /**
    * Sorts the whole hierarchy.
@@ -473,6 +557,12 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
 
 case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeADM])
     extends ListItemADM(nodeinfo, children) {
+
+  def asExternalRepresentation: NodeADM = {
+    val nodeinfoExternal = this.nodeinfo.asExternalRepresentation
+    val childrenExternal = this.children.map(_.asExternalRepresentation)
+    copy(nodeinfo = nodeinfoExternal, children = childrenExternal)
+  }
 
   /**
    * Sorts the whole hierarchy.
@@ -500,6 +590,7 @@ abstract class ListNodeInfoADM(
   labels: StringLiteralSequenceV2,
   comments: StringLiteralSequenceV2
 ) {
+  def asExternalRepresentation: ListNodeInfoADM
 
   /**
    * Sorts the whole hierarchy.
@@ -541,6 +632,12 @@ case class ListRootNodeInfoADM(
   labels: StringLiteralSequenceV2,
   comments: StringLiteralSequenceV2
 ) extends ListNodeInfoADM(id, name, labels, comments) {
+
+  def asExternalRepresentation: ListRootNodeInfoADM = {
+    val sf                 = StringFormatter.getGeneralInstance
+    val projectIriExternal = sf.toSmartIri(this.projectIri).toOntologySchema(ApiV2Complex).toString
+    copy(projectIri = projectIriExternal)
+  }
 
   /**
    * Sorts the whole hierarchy.
@@ -604,6 +701,8 @@ case class ListChildNodeInfoADM(
   position: Int,
   hasRootNode: IRI
 ) extends ListNodeInfoADM(id, name, labels, comments) {
+
+  def asExternalRepresentation: ListChildNodeInfoADM = this
 
   /**
    * Sorts the whole hierarchy.
@@ -676,6 +775,8 @@ abstract class ListNodeADM(
   children: Seq[ListChildNodeADM]
 ) {
 
+  def asExternalRepresentation: ListNodeADM
+
   /**
    * Sorts the whole hierarchy.
    *
@@ -730,6 +831,8 @@ case class ListRootNodeADM(
   comments: StringLiteralSequenceV2,
   children: Seq[ListChildNodeADM]
 ) extends ListNodeADM(id, name, labels, comments, children) {
+
+  def asExternalRepresentation: ListRootNodeADM = this
 
   /**
    * Sorts the whole hierarchy.
@@ -810,6 +913,8 @@ case class ListChildNodeADM(
       comments = comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
       children
     ) {
+
+  def asExternalRepresentation: ListChildNodeADM = this
 
   /**
    * Sorts the whole hierarchy.

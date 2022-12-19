@@ -175,7 +175,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       projectsExternal =
         projects match {
           case Nil => throw NotFoundException(s"No projects found")
-          case _   => projects.map(_.asExternalRepresentation)
+          case _   => projects
         }
     } yield ProjectsGetResponseADM(projects = projectsExternal)
 
@@ -235,7 +235,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       maybeProject <- getSingleProjectADM(identifier = identifier)
       project =
         maybeProject match {
-          case Some(p) => p.asExternalRepresentation
+          case Some(p) => p
           case None    => throw NotFoundException(s"Project '${getId(identifier)}' not found")
         }
     } yield ProjectGetResponseADM(project = project)
@@ -314,9 +314,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
-      usersExternal: Seq[UserADM]       = users.map(_.asExternalRepresentation)
 
-    } yield ProjectMembersGetResponseADM(members = usersExternal)
+    } yield ProjectMembersGetResponseADM(members = users)
 
   /**
    * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
@@ -387,9 +386,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                                        }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
-      usersExternal: Seq[UserADM]       = users.map(_.asExternalRepresentation)
 
-    } yield ProjectAdminMembersGetResponseADM(members = usersExternal)
+    } yield ProjectAdminMembersGetResponseADM(members = users)
 
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.

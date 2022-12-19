@@ -10,6 +10,7 @@ import spray.json._
 
 import java.util.UUID
 
+import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.valueobjects.LanguageCode
@@ -381,6 +382,13 @@ case class UserGroupMembershipRemoveRequestADM(
  */
 case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): UsersGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(users = this.users.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -390,6 +398,13 @@ case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
  */
 case class UserResponseADM(user: UserADM) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProfileResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): UserResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(user = this.user.asExternalRepresentation)
+  }
 }
 
 /**
@@ -399,6 +414,13 @@ case class UserResponseADM(user: UserADM) extends KnoraResponseADM {
  */
 case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectMembershipsGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): UserProjectMembershipsGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(projects = this.projects.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -408,6 +430,13 @@ case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) exten
  */
 case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectAdminMembershipsGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): UserProjectAdminMembershipsGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(projects = this.projects.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -417,6 +446,13 @@ case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) 
  */
 case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userGroupMembershipsGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): UserGroupMembershipsGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(groups = this.groups.map(_.asExternalRepresentation))
+  }
 }
 
 /**
@@ -426,6 +462,13 @@ case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends Kno
  */
 case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): UserOperationResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(user = this.user.asExternalRepresentation)
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

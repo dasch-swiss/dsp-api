@@ -21,6 +21,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
+import dsp.errors.AssertionException
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -762,6 +763,13 @@ case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInf
     extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = permissionsForProjectGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): PermissionsForProjectGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(allPermissions = this.allPermissions.map(_.asExternalRepresentation))
+  }
 }
 
 // All administrative Permissions for project
@@ -775,6 +783,13 @@ case class AdministrativePermissionsForProjectGetResponseADM(
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): AdministrativePermissionsForProjectGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(administrativePermissions = this.administrativePermissions.map(_.asExternalRepresentation))
+  }
 }
 
 // All Default Object Access Permissions for project
@@ -788,6 +803,13 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): DefaultObjectAccessPermissionsForProjectGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(defaultObjectAccessPermissions = this.defaultObjectAccessPermissions.map(_.asExternalRepresentation))
+  }
 }
 
 abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
@@ -802,6 +824,13 @@ abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
 case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM)
     extends PermissionGetResponseADM(defaultObjectAccessPermission) {
   def toJsValue: JsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): DefaultObjectAccessPermissionGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(defaultObjectAccessPermission = this.defaultObjectAccessPermission.asExternalRepresentation)
+  }
 }
 
 /**
@@ -812,6 +841,13 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
 case class AdministrativePermissionGetResponseADM(administrativePermission: AdministrativePermissionADM)
     extends PermissionGetResponseADM(administrativePermission) {
   def toJsValue: JsValue = administrativePermissionGetResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): AdministrativePermissionGetResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(administrativePermission = this.administrativePermission.asExternalRepresentation)
+  }
 }
 
 /**
@@ -823,6 +859,13 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
     extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): AdministrativePermissionCreateResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(administrativePermission = this.administrativePermission.asExternalRepresentation)
+  }
 }
 
 /**
@@ -835,6 +878,13 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): DefaultObjectAccessPermissionCreateResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    copy(defaultObjectAccessPermission = this.defaultObjectAccessPermission.asExternalRepresentation)
+  }
 }
 
 /**
@@ -855,6 +905,14 @@ case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
     with PermissionsADMJsonProtocol {
 
   def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)
+
+  def format(targetSchema: OntologySchema): PermissionDeleteResponseADM = {
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Response can only be returned in the complex schema")
+    }
+    val sf = StringFormatter.getGeneralInstance
+    copy(permissionIri = sf.toSmartIri(this.permissionIri).toOntologySchema(ApiV2Complex).toString)
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1171,13 +1229,6 @@ object PermissionADM {
       permissionCode = None
     )
 
-  val ProjectResourceCreateAllPermissionExternal: PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
-      additionalInformation = None,
-      permissionCode = None
-    ).asExternalRepresentation
-
   def projectResourceCreateRestrictedPermission(restriction: IRI): PermissionADM =
     PermissionADM(
       name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
@@ -1191,13 +1242,6 @@ object PermissionADM {
       additionalInformation = None,
       permissionCode = None
     )
-
-  val ProjectAdminAllPermissionExternal: PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
-      additionalInformation = None,
-      permissionCode = None
-    ).asExternalRepresentation
 
   val ProjectAdminGroupAllPermission: PermissionADM =
     PermissionADM(
