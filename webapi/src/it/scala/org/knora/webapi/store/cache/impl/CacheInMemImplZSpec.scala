@@ -106,17 +106,6 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
               .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
           )
       } yield assert(retrievedProject)(equalTo(Some(project)))
-    ),
-    test("successfully store a project and retrieve by UUID")(
-      for {
-        _ <- CacheService.putProjectADM(project)
-        retrievedProject <-
-          CacheService.getProjectADM(
-            UuidIdentifier
-              .fromString(V2UuidValidation.getUuidFromIri(project.id))
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-          )
-      } yield assert(retrievedProject)(equalTo(Some(project)))
     )
   )
 
