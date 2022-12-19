@@ -6,7 +6,6 @@
 package org.knora.webapi.store.cache.impl
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.V2UuidValidation
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
