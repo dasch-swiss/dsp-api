@@ -1,5 +1,27 @@
 # Changelog
 
+### [25.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v25.0.0...v25.0.1) (2022-12-19)
+
+
+### Documentation
+
+* update admin documentation ([#2328](https://www.github.com/dasch-swiss/dsp-api/issues/2328)) ([cedb603](https://www.github.com/dasch-swiss/dsp-api/commit/cedb603f57ceb31acf4ca88052b12c9641e7c954))
+
+
+### Maintenance
+
+* Add dorny/test-reporter for webapi test results DEV-1544 ([#2322](https://www.github.com/dasch-swiss/dsp-api/issues/2322)) ([5c76338](https://www.github.com/dasch-swiss/dsp-api/commit/5c76338f8b3799c6c3c9dc10807fabd10d4f8c6e))
+* add metrics endpoint (DEV-1555) ([#2331](https://www.github.com/dasch-swiss/dsp-api/issues/2331)) ([b06f5b4](https://www.github.com/dasch-swiss/dsp-api/commit/b06f5b4631c5c748d87adb94655dd4cc3db11e22))
+* Add sbt-header plugin to webapi project and add missing headers ([#2317](https://www.github.com/dasch-swiss/dsp-api/issues/2317)) ([afec4a7](https://www.github.com/dasch-swiss/dsp-api/commit/afec4a74f14355599f00058c01fcd4a86a53258d))
+* add stack-without-app target ([#2324](https://www.github.com/dasch-swiss/dsp-api/issues/2324)) ([5ec3223](https://www.github.com/dasch-swiss/dsp-api/commit/5ec32236505daab1ed22941854ae00ee6f8c0065))
+* Add test report generation for integration tests (DEV-1544) ([#2325](https://www.github.com/dasch-swiss/dsp-api/issues/2325)) ([a61f227](https://www.github.com/dasch-swiss/dsp-api/commit/a61f227ad86a38db3122430edfe8377864ae5eef))
+* make it possible to debug integration tests with sbt or IDE ([#2327](https://www.github.com/dasch-swiss/dsp-api/issues/2327)) ([3a222bb](https://www.github.com/dasch-swiss/dsp-api/commit/3a222bb265e2fc064bef1b6404c2bff4a9097c8b))
+* refactor project route for ZIO HTTP ([#2338](https://www.github.com/dasch-swiss/dsp-api/issues/2338)) ([e5be1db](https://www.github.com/dasch-swiss/dsp-api/commit/e5be1db9ad85647872b6d93b47a298ee85997a1f))
+* remove unused route GET /admin/stores ([#2329](https://www.github.com/dasch-swiss/dsp-api/issues/2329)) ([1e11655](https://www.github.com/dasch-swiss/dsp-api/commit/1e116559df4013dec346f681e7d6acf1ccd63dc2))
+* simplify health route setup ([#2337](https://www.github.com/dasch-swiss/dsp-api/issues/2337)) ([26e9596](https://www.github.com/dasch-swiss/dsp-api/commit/26e95960e37bd34c1c56152d5c1fc08672c11dcf))
+* Simplify layer setup for integration-tests and reduce to two layers ([#2339](https://www.github.com/dasch-swiss/dsp-api/issues/2339)) ([94836e8](https://www.github.com/dasch-swiss/dsp-api/commit/94836e88b90193a0cdde8fc96a174ead3398be12))
+* Split long running integration tests and fast unit tests (DEV-1537) ([#2315](https://www.github.com/dasch-swiss/dsp-api/issues/2315)) ([5b4d601](https://www.github.com/dasch-swiss/dsp-api/commit/5b4d60146a98008132f28da1ea63c40023b239d2))
+
 ## [25.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.8...v25.0.0) (2022-12-02)
 
 
