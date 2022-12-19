@@ -42,6 +42,8 @@ object LayersTest {
     with RepositoryUpdater
     with State
     with TestClientService
+    with ResourceInfoRepo
+    with RestResourceInfoService
     with TriplestoreService
     with TriplestoreServiceManager
 
