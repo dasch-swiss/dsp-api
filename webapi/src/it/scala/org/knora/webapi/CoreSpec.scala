@@ -9,21 +9,22 @@ import akka.actor
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKitBase
 import com.typesafe.scalalogging.Logger
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.util.LogAspect
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
 import zio.logging.backend.SLF4J
-
 import scala.concurrent.ExecutionContext
+
+import org.knora.webapi.responders.ActorDeps
 
 abstract class CoreSpec
     extends AnyWordSpec
@@ -87,9 +88,8 @@ abstract class CoreSpec
   val appActor                                         = router.ref
 
   // needed by some tests
-  val appConfig            = config
-  val cacheServiceSettings = new CacheServiceSettings(appConfig)
-  val responderData        = ResponderData(system, appActor, appConfig, cacheServiceSettings)
+  val appConfig     = config
+  val responderData = ResponderData(ActorDeps(system, appActor, appConfig.defaultTimeoutAsDuration), appConfig)
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */

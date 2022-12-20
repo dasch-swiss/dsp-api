@@ -1,9 +1,12 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.routing.admin
 
-import akka.actor.ActorRef
-import akka.pattern.ask
-import akka.util.Timeout
 import zhttp.http._
+import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
@@ -14,16 +17,12 @@ import dsp.errors.InternalServerException
 import dsp.errors.KnoraException
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
 import org.knora.webapi.http.handler.ExceptionHandlerZ
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.responders.admin.ProjectsService
 
-final case class ProjectsRouteZ(router: AppRouter, appConfig: AppConfig) {
-  implicit val sender: ActorRef = router.ref
-  implicit val timeout: Timeout = appConfig.defaultTimeoutAsDuration
+final case class ProjectsRouteZ(projectsService: ProjectsService, appConfig: AppConfig) {
 
   def getProjectByIri(iri: String): ZIO[Any, KnoraException, Response] =
     for {
@@ -32,11 +31,8 @@ final case class ProjectsRouteZ(router: AppRouter, appConfig: AppConfig) {
         ZIO
           .attempt(URLDecoder.decode(iri, "utf-8"))
           .orElseFail(BadRequestException(s"Failed to decode IRI $iri"))
-      iriValue <- ProjectIdentifierADM.IriIdentifier
-                    .fromString(iriDecoded)
-                    .toZIO
-      message   = ProjectGetRequestADM(identifier = iriValue, requestingUser = user)
-      response <- ZIO.fromFuture(_ => router.ref.ask(message)).map(_.asInstanceOf[ProjectGetResponseADM]).orDie
+      iriValue <- ProjectIdentifierADM.IriIdentifier.fromString(iriDecoded).toZIO
+      response <- projectsService.getSingleProjectADMRequest(iriValue, user).orDie
     } yield Response.json(response.toJsValue.toString())
 
   val route: HttpApp[Any, Nothing] =
@@ -56,7 +52,5 @@ final case class ProjectsRouteZ(router: AppRouter, appConfig: AppConfig) {
 }
 
 object ProjectsRouteZ {
-  val layer: ZLayer[AppRouter with AppConfig, Nothing, ProjectsRouteZ] = ZLayer.fromFunction { (router, config) =>
-    ProjectsRouteZ(router, config)
-  }
+  val layer: URLayer[ProjectsService with AppConfig, ProjectsRouteZ] = ZLayer.fromFunction(ProjectsRouteZ.apply _)
 }

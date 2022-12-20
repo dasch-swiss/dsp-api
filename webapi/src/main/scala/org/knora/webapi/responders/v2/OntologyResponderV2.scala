@@ -34,7 +34,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
@@ -60,7 +59,7 @@ import org.knora.webapi.util._
  *
  * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
  */
-class OntologyResponderV2(responderData: ResponderData) extends Responder(responderData) {
+class OntologyResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
@@ -1312,7 +1311,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         _ <- hasCardinality match {
                // If there is, check that the class isn't used in data.
                case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
-                 throwIfClassIsUsedInData(
+                 iriService.throwIfClassIsUsedInData(
                    classIri = internalClassIri,
                    errorFun = throw BadRequestException(
                      s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data"
@@ -1507,7 +1506,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       userCanUpdateOntology <-
         OntologyHelpers.canUserUpdateOntology(internalOntologyIri, canChangeCardinalitiesRequest.requestingUser)
 
-      classIsUsed <- isEntityUsed(
+      classIsUsed <- iriService.isEntityUsed(
                        entityIri = internalClassIri,
                        ignoreKnoraConstraints =
                          true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
@@ -1563,13 +1562,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Check that the class isn't used in data, and that it has no subclasses.
         // TODO: If class is used in data, check additionally if the property(ies) being removed is(are) truly used and if not, then allow.
 
-        _ <- throwIfEntityIsUsed(
+        _ <- iriService.throwIfEntityIsUsed(
                entityIri = internalClassIri,
+               ignoreKnoraConstraints = true,
                errorFun = throw BadRequestException(
                  s"The cardinalities of class ${changeCardinalitiesRequest.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"
-               ),
-               ignoreKnoraConstraints =
-                 true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+               )
              )
 
         // Make an updated class definition.
@@ -1827,7 +1825,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       userCanUpdateOntology <-
         OntologyHelpers.canUserUpdateOntology(internalOntologyIri, canDeleteClassRequest.requestingUser)
-      classIsUsed <- isEntityUsed(entityIri = internalClassIri)
+      classIsUsed <- iriService.isEntityUsed(entityIri = internalClassIri)
     } yield CanDoResponseV2(userCanUpdateOntology && !classIsUsed)
   }
 
@@ -1859,7 +1857,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class isn't used in data or ontologies.
 
-        _ <- throwIfEntityIsUsed(
+        _ <- iriService.throwIfEntityIsUsed(
                entityIri = internalClassIri,
                errorFun = throw BadRequestException(
                  s"Class ${deleteClassRequest.classIri} cannot be deleted, because it is used in data or ontologies"
@@ -1965,7 +1963,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       userCanUpdateOntology <-
         OntologyHelpers.canUserUpdateOntology(internalOntologyIri, canDeletePropertyRequest.requestingUser)
-      propertyIsUsed <- isEntityUsed(internalPropertyIri)
+      propertyIsUsed <- iriService.isEntityUsed(internalPropertyIri)
     } yield CanDoResponseV2(userCanUpdateOntology && !propertyIsUsed)
   }
 
@@ -2011,7 +2009,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the property isn't used in data or ontologies.
 
-        _ <- throwIfEntityIsUsed(
+        _ <- iriService.throwIfEntityIsUsed(
                entityIri = internalPropertyIri,
                errorFun = throw BadRequestException(
                  s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because it is used in data or ontologies"
@@ -2020,7 +2018,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         _ <- maybeInternalLinkValuePropertyIri match {
                case Some(internalLinkValuePropertyIri) =>
-                 throwIfEntityIsUsed(
+                 iriService.throwIfEntityIsUsed(
                    entityIri = internalLinkValuePropertyIri,
                    errorFun = throw BadRequestException(
                      s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri

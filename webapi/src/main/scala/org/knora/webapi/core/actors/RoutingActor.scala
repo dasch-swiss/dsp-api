@@ -6,7 +6,6 @@
 package org.knora.webapi.core.actors
 
 import akka.actor.Actor
-import akka.actor.ActorSystem
 import com.typesafe.scalalogging.Logger
 
 import scala.concurrent.ExecutionContext
@@ -39,6 +38,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponde
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
+import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
@@ -67,7 +67,7 @@ import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.util.ActorUtil
 
-class RoutingActor(
+final case class RoutingActor(
   cacheServiceManager: CacheServiceManager,
   iiifServiceManager: IIIFServiceManager,
   triplestoreManager: TriplestoreServiceManager,
@@ -75,51 +75,39 @@ class RoutingActor(
   runtime: zio.Runtime[Any]
 ) extends Actor {
 
-  implicit val system: ActorSystem = context.system
-  val log: Logger                  = Logger(this.getClass)
-
-  /**
-   * The Cache Service's configuration.
-   */
-  implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(appConfig)
-
-  /**
-   * Provides the default global execution context
-   */
-  implicit val executionContext: ExecutionContext = context.dispatcher
-
-  /**
-   * Data used in responders.
-   */
-  val responderData: ResponderData = ResponderData(system, self, appConfig, cacheServiceSettings)
+  private val log: Logger                                 = Logger(this.getClass)
+  private val actorDeps: ActorDeps                        = ActorDeps(context.system, self, appConfig.defaultTimeoutAsDuration)
+  private val cacheServiceSettings: CacheServiceSettings  = new CacheServiceSettings(appConfig)
+  private val responderData: ResponderData                = ResponderData(actorDeps, appConfig)
+  private implicit val executionContext: ExecutionContext = actorDeps.executionContext
 
   // V1 responders
-  val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
-  val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
-  val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
-  val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
-  val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
-  val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData)
-  val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
-  val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
-  val projectsResponderV1: ProjectsResponderV1   = new ProjectsResponderV1(responderData)
+  private val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
+  private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
+  private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
+  private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
+  private val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
+  private val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData)
+  private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
+  private val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
+  private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps)
 
   // V2 responders
-  val ontologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(responderData)
-  val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData)
-  val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
-  val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)
-  val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData)
-  val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
+  private val ontologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(responderData)
+  private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData)
+  private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
+  private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)
+  private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData)
+  private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
 
   // Admin responders
-  val groupsResponderADM: GroupsResponderADM           = new GroupsResponderADM(responderData)
-  val listsResponderADM: ListsResponderADM             = new ListsResponderADM(responderData)
-  val permissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
-  val projectsResponderADM: ProjectsResponderADM       = new ProjectsResponderADM(responderData)
-  val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData)
-  val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData)
-  val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
+  private val groupsResponderADM: GroupsResponderADM           = new GroupsResponderADM(responderData)
+  private val listsResponderADM: ListsResponderADM             = new ListsResponderADM(responderData)
+  private val permissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
+  private val projectsResponderADM: ProjectsResponderADM       = ProjectsResponderADM(actorDeps, cacheServiceSettings)
+  private val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData)
+  private val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData)
+  private val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
 
   def receive: Receive = {
 
@@ -183,5 +171,4 @@ class RoutingActor(
         s"RoutingActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
       )
   }
-
 }

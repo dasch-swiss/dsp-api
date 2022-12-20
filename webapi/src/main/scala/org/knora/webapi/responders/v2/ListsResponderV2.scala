@@ -18,12 +18,11 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.listsmessages._
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 /**
  * Responds to requests relating to lists and nodes.
  */
-class ListsResponderV2(responderData: ResponderData) extends Responder(responderData) {
+class ListsResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.

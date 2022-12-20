@@ -20,7 +20,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
@@ -28,13 +27,13 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphsGetReq
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphsResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 /**
  * Returns information about Knora projects.
  */
-class ProjectsResponderV1(responderData: ResponderData) extends Responder(responderData) {
+final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(actorDeps) {
 
   // Global lock IRI used for project creation and update
 
