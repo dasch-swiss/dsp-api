@@ -1259,29 +1259,21 @@ class StringFormatterSpec extends CoreSpec {
       uuid should be(base4DecodedUuid)
     }
 
-    "return TRUE if IRI contains UUID version 4 or 5, otherwise return FALSE" in {
-      val iri3 = "http://rdfh.ch/0000/rKAU0FNjPUKWqOT8MEW_UQ"
-      val iri4 = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
-      val iri5 = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
+    "return TRUE for IRIs BEOL project IRI and other which contain UUID version 4 or 5, otherwise return FALSE" in {
+      val iri3    = "http://rdfh.ch/0000/rKAU0FNjPUKWqOT8MEW_UQ"
+      val iri4    = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+      val iri5    = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
+      val beolIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
       val testIRIFromVersion3UUID = stringFormatter.isUuidVersion4Or5(iri3)
       val testIRIFromVersion4UUID = stringFormatter.isUuidVersion4Or5(iri4)
       val testIRIFromVersion5UUID = stringFormatter.isUuidVersion4Or5(iri5)
-
-      val iri = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
-
-      println(
-        777,
-        stringFormatter.makeRandomBase64EncodedUuid,
-        stringFormatter.makeRandomBase64EncodedUuid,
-        stringFormatter.getUUIDVersion(iri),
-        stringFormatter.hasUuidLength(iri.split("/").last),
-        stringFormatter.isUuidVersion4Or5(iri)
-      )
+      val testBeolIri             = stringFormatter.isUuidVersion4Or5(beolIri)
 
       testIRIFromVersion3UUID should be(false)
       testIRIFromVersion4UUID should be(true)
       testIRIFromVersion5UUID should be(true)
+      testBeolIri should be(true)
     }
   }
 }

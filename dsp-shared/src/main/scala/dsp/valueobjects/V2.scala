@@ -218,14 +218,20 @@ object V2UuidValidation {
 
   /**
    * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * With an exception of BEOL project IRI `http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF`.
+   *
    * @param s the string (IRI) to be checked.
    * @return TRUE for correct versions, FALSE for incorrect.
    */
   def isUuidVersion4Or5(s: String): Boolean =
-    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
+      println(77777, s)
+      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+    } else true
 
   /**
    * Decodes Base64 encoded UUID and gets its version.
+   *
    * @param uuid the Base64 encoded UUID as [[String]] to be checked.
    * @return UUID version.
    */
@@ -236,6 +242,7 @@ object V2UuidValidation {
 
   /**
    * Gets the last IRI segment - Base64 encoded UUID.
+   *
    * @param iri the IRI [[String]] to get the UUID from.
    * @return Base64 encoded UUID as [[String]]
    */
