@@ -339,7 +339,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # BEOL                            #
 ###################################
 
-<http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>
+<http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ>
     a                              knora-admin:knoraProject ;
     knora-admin:projectShortname   "beol"^^xsd:string ;
     knora-admin:projectShortcode   "0801"^^xsd:string ;
@@ -357,7 +357,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                "t.schweizer@unibas.ch"^^xsd:string ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE>
@@ -369,9 +369,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                 "beol@example.com"^^xsd:string ;
     knora-admin:preferredLanguage     "de"^^xsd:string ;
     knora-admin:status                "true"^^xsd:boolean ;
-    knora-admin:isInProject           <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
     knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
-    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> .
 
 
 ###################################

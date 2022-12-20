@@ -606,7 +606,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
 
   def beolProject: ProjectADM = ProjectADM(
     id = BEOL_PROJECT_IRI,
