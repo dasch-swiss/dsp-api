@@ -5,13 +5,11 @@
 
 package org.knora.webapi.messages.admin.responder
 
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.traits.Jsonable
 
 /**
  * A trait for Knora Admin response messages. Any response message can be converted into JSON.
  */
 trait KnoraResponseADM extends Jsonable {
-  def format(targetSchema: OntologySchema = ApiV2Complex): KnoraResponseADM
+  def format: KnoraResponseADM
 }

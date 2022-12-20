@@ -215,20 +215,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val receivedApAdmin: AdministrativePermissionsForProjectGetResponseADM =
           expectMsgType[AdministrativePermissionsForProjectGetResponseADM]
 
-        val receivedProjectId = stringFormatter
-          .toSmartIri(received.project.id)
-          .toOntologySchema(ApiV2Complex)
-          .toString
-
         val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter { ap: AdministrativePermissionADM =>
-          ap.forProject == receivedProjectId && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
-          ap.hasPermissions
-            .equals(
-              Set(
-                PermissionADM.ProjectAdminAllPermission,
-                PermissionADM.ProjectResourceCreateAllPermission
-              )
-            )
+          ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
+          ap.hasPermissions.equals(
+            Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
+          )
         }
 
         hasAPForProjectAdmin.size shouldBe 1
@@ -236,10 +227,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         // Check Administrative Permission of ProjectMember
         val hasAPForProjectMember = receivedApAdmin.administrativePermissions.filter {
           ap: AdministrativePermissionADM =>
-            ap.forProject == receivedProjectId && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectMember &&
-            ap.hasPermissions.equals(
-              Set(PermissionADM.ProjectResourceCreateAllPermission).map(_.asExternalRepresentation)
-            )
+            ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectMember &&
+            ap.hasPermissions.equals(Set(PermissionADM.ProjectResourceCreateAllPermission))
         }
         hasAPForProjectMember.size shouldBe 1
 
@@ -255,7 +244,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         // Check Default Object Access permission of ProjectAdmin
         val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {
           doap: DefaultObjectAccessPermissionADM =>
-            doap.forProject == receivedProjectId && doap.forGroup.contains(
+            doap.forProject == received.project.id && doap.forGroup.contains(
               OntologyConstants.KnoraAdmin.ProjectAdmin
             ) &&
             doap.hasPermissions.equals(
@@ -270,7 +259,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         // Check Default Object Access permission of ProjectMember
         val hasDOAPForProjectMember = receivedDoaps.defaultObjectAccessPermissions.filter {
           doap: DefaultObjectAccessPermissionADM =>
-            doap.forProject == receivedProjectId && doap.forGroup.contains(
+            doap.forProject == received.project.id && doap.forGroup.contains(
               OntologyConstants.KnoraAdmin.ProjectMember
             ) &&
             doap.hasPermissions.equals(

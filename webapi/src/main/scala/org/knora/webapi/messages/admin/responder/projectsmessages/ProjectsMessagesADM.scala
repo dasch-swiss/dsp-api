@@ -309,12 +309,8 @@ case class ProjectChangeRequestADM(
 case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ProjectsGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: ProjectsGetResponseADM =
     copy(projects = this.projects.map(_.asExternalRepresentation))
-  }
 }
 
 /**
@@ -325,12 +321,8 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraRespon
 case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ProjectGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: ProjectGetResponseADM =
     copy(project = this.project.asExternalRepresentation)
-  }
 }
 
 /**
@@ -342,12 +334,8 @@ case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResp
 
   def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ProjectMembersGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: ProjectMembersGetResponseADM =
     copy(members = this.members.map(_.asExternalRepresentation))
-  }
 }
 
 /**
@@ -361,12 +349,8 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
 
   def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ProjectAdminMembersGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: ProjectAdminMembersGetResponseADM =
     copy(members = this.members.map(_.asExternalRepresentation))
-  }
 }
 
 /**
@@ -377,7 +361,7 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
 case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ProjectsKeywordsGetResponseADM = this
+  def format: ProjectsKeywordsGetResponseADM = this
 }
 
 /**
@@ -388,7 +372,7 @@ case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRe
 case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ProjectKeywordsGetResponseADM = this
+  def format: ProjectKeywordsGetResponseADM = this
 }
 
 /**
@@ -401,7 +385,7 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
     with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ProjectRestrictedViewSettingsGetResponseADM = this
+  def format: ProjectRestrictedViewSettingsGetResponseADM = this
 }
 
 /**
@@ -412,12 +396,8 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
 case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ProjectOperationResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: ProjectOperationResponseADM =
     copy(project = this.project.asExternalRepresentation)
-  }
 }
 
 /**

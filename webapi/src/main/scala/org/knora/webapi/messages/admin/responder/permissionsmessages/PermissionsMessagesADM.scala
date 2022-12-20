@@ -764,12 +764,8 @@ case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInf
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = permissionsForProjectGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): PermissionsForProjectGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: PermissionsForProjectGetResponseADM =
     copy(allPermissions = this.allPermissions.map(_.asExternalRepresentation))
-  }
 }
 
 // All administrative Permissions for project
@@ -784,12 +780,8 @@ case class AdministrativePermissionsForProjectGetResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): AdministrativePermissionsForProjectGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: AdministrativePermissionsForProjectGetResponseADM =
     copy(administrativePermissions = this.administrativePermissions.map(_.asExternalRepresentation))
-  }
 }
 
 // All Default Object Access Permissions for project
@@ -804,12 +796,8 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): DefaultObjectAccessPermissionsForProjectGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: DefaultObjectAccessPermissionsForProjectGetResponseADM =
     copy(defaultObjectAccessPermissions = this.defaultObjectAccessPermissions.map(_.asExternalRepresentation))
-  }
 }
 
 abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
@@ -825,12 +813,8 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
     extends PermissionGetResponseADM(defaultObjectAccessPermission) {
   def toJsValue: JsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): DefaultObjectAccessPermissionGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: DefaultObjectAccessPermissionGetResponseADM =
     copy(defaultObjectAccessPermission = this.defaultObjectAccessPermission.asExternalRepresentation)
-  }
 }
 
 /**
@@ -842,12 +826,8 @@ case class AdministrativePermissionGetResponseADM(administrativePermission: Admi
     extends PermissionGetResponseADM(administrativePermission) {
   def toJsValue: JsValue = administrativePermissionGetResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): AdministrativePermissionGetResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: AdministrativePermissionGetResponseADM =
     copy(administrativePermission = this.administrativePermission.asExternalRepresentation)
-  }
 }
 
 /**
@@ -860,12 +840,8 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
     with PermissionsADMJsonProtocol {
   def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): AdministrativePermissionCreateResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: AdministrativePermissionCreateResponseADM =
     copy(administrativePermission = this.administrativePermission.asExternalRepresentation)
-  }
 }
 
 /**
@@ -879,12 +855,8 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): DefaultObjectAccessPermissionCreateResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: DefaultObjectAccessPermissionCreateResponseADM =
     copy(defaultObjectAccessPermission = this.defaultObjectAccessPermission.asExternalRepresentation)
-  }
 }
 
 /**
@@ -906,10 +878,8 @@ case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
 
   def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): PermissionDeleteResponseADM = {
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Response can only be returned in the complex schema")
-    }
+  def format: PermissionDeleteResponseADM = {
+
     val sf = StringFormatter.getGeneralInstance
     copy(permissionIri = sf.toSmartIri(this.permissionIri).toOntologySchema(ApiV2Complex).toString)
   }

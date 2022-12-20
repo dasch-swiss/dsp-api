@@ -412,7 +412,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         expectMsg(
           DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm001_d3_external.p
+            defaultObjectAccessPermission = perm001_d3.p
           )
         )
       }
@@ -427,7 +427,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         expectMsg(
           DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm001_d3_external.p
+            defaultObjectAccessPermission = perm001_d3.p
           )
         )
 
@@ -544,7 +544,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             DuplicateValueException(
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
                 "combination already exists. " +
-                s"This permission currently has the scope 'CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser'. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                    .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${perm003_d1.iri} to modify it, if necessary."
             )
           )
@@ -569,7 +570,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             DuplicateValueException(
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
                 "combination already exists. " +
-                s"This permission currently has the scope 'CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser'. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                    .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${perm003_d2.iri} to modify it, if necessary."
             )
           )
@@ -593,7 +595,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             DuplicateValueException(
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
                 "combination already exists. " +
-                s"This permission currently has the scope 'V knora-admin:KnownUser|RV knora-admin:UnknownUser'. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                    .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${perm003_d4.iri} to modify it, if necessary."
             )
           )
@@ -620,7 +623,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
                 s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
                 "combination already exists. " +
-                s"This permission currently has the scope 'M knora-admin:ProjectMember'. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                    .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${perm003_d5.iri} to modify it, if necessary."
             )
           )
@@ -1066,8 +1070,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "update hasPermissions of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
         val hasPermissions = Set(
-          PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-          PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+          PermissionADM.changeRightsPermission(creator),
+          PermissionADM.modifyPermission(projectMember)
         )
 
         appActor ! PermissionChangeHasPermissionsRequestADM(
@@ -1078,16 +1082,12 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
-        val hasPermissionsExpected = Set(
-          PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-          PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-        )
         val received: DefaultObjectAccessPermissionGetResponseADM =
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         doap.hasPermissions.size should be(2)
-        assert(doap.hasPermissions.equals(hasPermissionsExpected))
+        assert(doap.hasPermissions.equals(hasPermissions))
       }
 
       "add missing name of the permission, if permissionCode of permission was given in hasPermissions of a default object access permission" in {

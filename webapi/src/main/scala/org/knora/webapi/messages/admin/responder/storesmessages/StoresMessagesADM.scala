@@ -35,7 +35,7 @@ case class ResetTriplestoreContentRequestADM(
 case class ResetTriplestoreContentResponseADM(message: String) extends KnoraResponseADM with StoresADMJsonProtocol {
   def toJsValue = resetTriplestoreContentResponseADMFormat.write(this)
 
-  def format(targetSchema: OntologySchema): ResetTriplestoreContentResponseADM = this
+  def format: ResetTriplestoreContentResponseADM = this
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

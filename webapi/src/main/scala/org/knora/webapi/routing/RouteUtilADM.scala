@@ -63,7 +63,7 @@ object RouteUtilADM {
                            )
                        }
 
-      jsonResponse = knoraResponse.format(targetSchema).toJsValue.asJsObject
+      jsonResponse = knoraResponse.format.toJsValue.asJsObject
     } yield HttpResponse(
       status = StatusCodes.OK,
       entity = HttpEntity(
