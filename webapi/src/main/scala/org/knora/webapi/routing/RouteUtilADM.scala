@@ -17,8 +17,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors.UnexpectedMessageException
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 
@@ -43,7 +41,6 @@ object RouteUtilADM {
     requestMessageF: Future[KnoraRequestADM],
     requestContext: RequestContext,
     appActor: ActorRef,
-    targetSchema: OntologySchema = ApiV2Complex,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 

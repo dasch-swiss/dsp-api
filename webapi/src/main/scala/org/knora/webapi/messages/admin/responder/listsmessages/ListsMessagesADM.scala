@@ -338,7 +338,6 @@ case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Bool
   def toJsValue: JsValue = ListNodeCommentsDeleteResponseADMFormat.write(this)
 
   def format: ListNodeCommentsDeleteResponseADM = {
-
     val sf = StringFormatter.getGeneralInstance
     copy(nodeIri = sf.toSmartIri(this.nodeIri).toOntologySchema(ApiV2Complex).toString)
   }
@@ -357,7 +356,6 @@ case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
   def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 
   def format: CanDeleteListResponseADM = {
-
     val sf = StringFormatter.getGeneralInstance
     copy(listIri = sf.toSmartIri(this.listIri).toOntologySchema(ApiV2Complex).toString)
   }
@@ -432,7 +430,7 @@ case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends N
 
   def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
 
-  override def format: ChildNodeInfoGetResponseADM = this
+  def format: ChildNodeInfoGetResponseADM = this
 
 }
 

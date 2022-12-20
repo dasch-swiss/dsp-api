@@ -172,12 +172,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   ): Future[ProjectsGetResponseADM] =
     for {
       projects <- projectsGetADM(requestingUser = requestingUser)
-      projectsExternal =
-        projects match {
-          case Nil => throw NotFoundException(s"No projects found")
-          case _   => projects
-        }
-    } yield ProjectsGetResponseADM(projects = projectsExternal)
+      result = if (projects.nonEmpty) { ProjectsGetResponseADM(projects = projects) }
+               else { throw NotFoundException(s"No projects found") }
+    } yield result
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].

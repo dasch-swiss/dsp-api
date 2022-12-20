@@ -878,7 +878,6 @@ case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
   def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)
 
   def format: PermissionDeleteResponseADM = {
-
     val sf = StringFormatter.getGeneralInstance
     copy(permissionIri = sf.toSmartIri(this.permissionIri).toOntologySchema(ApiV2Complex).toString)
   }
