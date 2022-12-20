@@ -11,7 +11,6 @@ import spray.json.JsValue
 import spray.json.NullOptions
 import spray.json.RootJsonFormat
 
-import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM

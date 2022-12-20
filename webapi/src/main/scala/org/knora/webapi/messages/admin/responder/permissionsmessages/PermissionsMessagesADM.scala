@@ -21,7 +21,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
-import dsp.errors.AssertionException
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

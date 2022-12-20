@@ -10,7 +10,6 @@ import spray.json._
 
 import java.util.UUID
 
-import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2

@@ -8,7 +8,6 @@ package org.knora.webapi.messages.admin.responder.storesmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
-import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject

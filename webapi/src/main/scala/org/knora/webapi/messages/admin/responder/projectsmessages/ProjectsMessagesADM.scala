@@ -16,7 +16,6 @@ import zio.prelude.Validation
 import java.nio.file.Path
 import java.util.UUID
 
-import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
@@ -26,7 +25,6 @@ import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
-import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
