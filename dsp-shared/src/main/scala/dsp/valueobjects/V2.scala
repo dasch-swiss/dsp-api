@@ -217,15 +217,14 @@ object V2UuidValidation {
     s.length == CanonicalUuidLength || s.length == Base64UuidLength
 
   /**
-   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * Checks if UUID used to create IRI has supported version (4 and 5 are allowed).
    * With an exception of BEOL project IRI `http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF`.
    *
    * @param s the string (IRI) to be checked.
-   * @return TRUE for correct versions, FALSE for incorrect.
+   * @return TRUE for supported versions, FALSE for not supported.
    */
-  def isUuidVersion4Or5(s: String): Boolean =
+  def isUuidSupported(s: String): Boolean =
     if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
-      println(77777, s)
       getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
     } else true
 

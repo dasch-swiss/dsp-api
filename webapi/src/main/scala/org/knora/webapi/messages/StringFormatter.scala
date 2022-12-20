@@ -2786,13 +2786,13 @@ class StringFormatter private (
   }
 
   /**
-   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * Checks if UUID used to create IRI has supported version (4 and 5 are allowed).
    * With an exception of BEOL project IRI `http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF`.
    *
    * @param s the string (IRI) to be checked.
-   * @return TRUE for correct versions, FALSE for incorrect.
+   * @return TRUE for supported versions, FALSE for not supported.
    */
-  def isUuidVersion4Or5(s: String): Boolean =
+  def isUuidSupported(s: String): Boolean =
     if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
       getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
     } else true
@@ -2812,7 +2812,7 @@ class StringFormatter private (
    * @param iri to be validated
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
-    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidVersion4Or5(iri.toString)) {
+    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidSupported(iri.toString)) {
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     }
 
@@ -2822,7 +2822,7 @@ class StringFormatter private (
    * @param iri to be validated.
    */
   def validatePermissionIRI(iri: IRI): Unit =
-    if (isKnoraPermissionIriStr(iri) && !isUuidVersion4Or5(iri)) {
+    if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) {
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     } else {
       validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
