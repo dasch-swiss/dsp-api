@@ -880,16 +880,10 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
   private def checkPermissionsOnResource(resourceIri: IRI): Unit = {
 
     val expected = Set(
-      PermissionADM
-        .changeRightsPermission("http://www.knora.org/ontology/knora-admin#Creator")
-        .asExternalRepresentation,
-      PermissionADM
-        .modifyPermission("http://www.knora.org/ontology/knora-admin#ProjectMember")
-        .asExternalRepresentation,
-      PermissionADM.viewPermission("http://www.knora.org/ontology/knora-admin#KnownUser").asExternalRepresentation,
-      PermissionADM
-        .restrictedViewPermission("http://www.knora.org/ontology/knora-admin#UnknownUser")
-        .asExternalRepresentation
+      PermissionADM.changeRightsPermission("http://www.knora.org/ontology/knora-admin#Creator"),
+      PermissionADM.modifyPermission("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+      PermissionADM.viewPermission("http://www.knora.org/ontology/knora-admin#KnownUser"),
+      PermissionADM.restrictedViewPermission("http://www.knora.org/ontology/knora-admin#UnknownUser")
     )
 
     appActor ! ObjectAccessPermissionsForResourceGetADM(
