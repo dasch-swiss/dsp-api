@@ -202,8 +202,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val imagesProjectUuid  = "00FF"
-  val IMAGES_PROJECT_IRI = s"http://rdfh.ch/projects/$imagesProjectUuid"
+  val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01: UserADM =

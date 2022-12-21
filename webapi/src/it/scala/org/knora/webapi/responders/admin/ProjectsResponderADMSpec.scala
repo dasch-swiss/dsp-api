@@ -41,7 +41,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   private val rootUser = SharedTestDataADM.rootUser
 
-  private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/cXxbOh4xRce3uLUyXHujfg"
+  private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/notexisting"
 
   "The ProjectsResponderADM" when {
     "used to query for project information" should {

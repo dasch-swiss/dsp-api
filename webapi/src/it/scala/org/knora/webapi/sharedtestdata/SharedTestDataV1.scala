@@ -422,7 +422,7 @@ object SharedTestDataV1 {
   /**
    * *********************************
    */
-  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/0801"
 
   def beolProjectInfo = ProjectInfoV1(
     id = BEOL_PROJECT_IRI,

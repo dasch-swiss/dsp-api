@@ -10,7 +10,7 @@
 
 # --- Project ---
 
-<http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> a knora-admin:knoraProject ;
+<http://rdfh.ch/projects/0113> a knora-admin:knoraProject ;
         knora-admin:projectLongname "Lumières.Lausanne"^^xsd:string ;
         knora-admin:projectShortname "lumieres-lausanne"^^xsd:string ;
         knora-admin:projectShortcode "0113"^^xsd:string ;
@@ -26,42 +26,42 @@
 <http://rdfh.ch/groups/0113/lumieres-lausanne-user> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Utilisateur"^^xsd:string ;
                                                knora-admin:groupDescriptions """Statut permanent. Attribué à toute personne désireuse de s'enregistrer. N'est membre d'aucun autre groupe (étudiant, chercheur). Par rapport au visiteur anonyme sans login, accès supplémentaire à la gestion des collections, aux transcriptions/documents joints/projets slmt si autorisation."""@fr ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-student> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Etudiant"^^xsd:string ;
                                                knora-admin:groupDescriptions """Statut temporaire. Uniquement les étudiants UNIL liés à un séminaire donné dans le cadre du projet Lumières.Lausanne. Ont reçu les consignes ainsi qu'une initiation (obligatoire). A la fin du séminaire, leur statut est changé en statut "Utilisateur", sauf demande particulière."""@fr ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-researcher> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Chercheur"^^xsd:string ;
                                                knora-admin:groupDescriptions "Statut permanent. Doctorants, professeurs, autres chercheurs qui ont reçu préalablement l'autorisation d'un directeur. Ont reçu les consignes (obligatoire), et si possible une initiation."@fr ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Doctorant"^^xsd:string ;
                                                knora-admin:groupDescriptions "Statut temporaire. Doctorants et étudiants-assistants directement liés au Projet Lumières.Lausanne. Ont reçu les consignes ainsi qu'une initiation (obligatoire). Une fois leur mandat terminé, passent en statut Chercheur."@fr ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-director> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Directeur"^^xsd:string ;
                                                knora-admin:groupDescriptions "Béla Kapossy, Béatrice Lovis."@fr ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Administrateur"^^xsd:string ;
                                                knora-admin:groupDescriptions "Béatrice Lovis."@fr ;
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ;
+                                               knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -78,7 +78,7 @@
 #         knora-admin:email "lumieres@unil.ch"^^xsd:string ;
 #         knora-admin:preferredLanguage "fr"^^xsd:string ;
 #         knora-admin:status "true"^^xsd:boolean ;
-#         knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+#         knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
 #         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/lumieres-lausanne-user_test> a knora-admin:User ;
@@ -89,7 +89,7 @@
         knora-admin:email "user_test@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
         knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-user> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -101,7 +101,7 @@
         knora-admin:email "etu_test@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
         knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-student> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -113,7 +113,7 @@
         knora-admin:email "etu_test2@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
         knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-student> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -125,7 +125,7 @@
         knora-admin:email "cherch_test@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
         knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-researcher> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -137,7 +137,7 @@
         knora-admin:email "doct_test@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
 		knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -149,7 +149,7 @@
         knora-admin:email "dir_test@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
         knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-director> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -161,7 +161,7 @@
         knora-admin:email "admin_test@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
         knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> ;
         knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
 
@@ -174,7 +174,7 @@
         knora-admin:email "Beatrice.Lovis@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
         knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -186,6 +186,6 @@
         knora-admin:email "gilles.faucherand@unil.ch"^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q> ; 
+        knora-admin:isInProject <http://rdfh.ch/projects/0113> ; 
         knora-admin:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
