@@ -68,7 +68,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
   private val anythingUser       = SharedTestDataADM.anythingUser1
   private val anythingUserEmail  = anythingUser.email
-  private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
+  private val anythingProjectIri = SharedTestDataADM.anythingProjectIri
 
   private val incunabulaUser      = SharedTestDataADM.incunabulaMemberUser
   private val incunabulaUserEmail = incunabulaUser.email

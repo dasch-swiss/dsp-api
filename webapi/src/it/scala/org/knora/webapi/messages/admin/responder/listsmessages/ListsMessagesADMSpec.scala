@@ -126,7 +126,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(exampleListIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(SharedTestDataADM.imagesProjectIri).fold(e => throw e.head, v => v),
             position = Some(Position.make(-3).fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New child node", language = Some("en"))))

@@ -146,7 +146,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val createAdministrativePermissionRequest: String =
           s"""{
              |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
              |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
              |}""".stripMargin
 
@@ -203,7 +203,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |    "id": "$customAPIri",
              |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
              |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
              |}""".stripMargin
 
@@ -290,7 +290,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val createDefaultObjectAccessPermissionRequest: String =
           s"""{
              |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
              |    "forProperty":null,
              |    "forResourceClass":null,
              |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
@@ -351,7 +351,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
              |    "id": "$customDOAPIri",
              |    "forGroup":null,
-             |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "forProject":"${SharedTestDataADM.imagesProjectIri}",
              |    "forProperty":null,
              |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
              |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]

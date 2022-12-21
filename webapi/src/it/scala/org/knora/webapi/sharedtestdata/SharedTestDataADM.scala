@@ -31,7 +31,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val SYSTEM_PROJECT_IRI: IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
+  val systemProjectIri: IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
 
   val testPass: String = java.net.URLEncoder.encode("test", "utf-8")
 
@@ -52,7 +52,7 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          SYSTEM_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
+          systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
         ),
         administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]]
       )
@@ -75,7 +75,7 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          SYSTEM_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
+          systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
         )
       )
     )
@@ -136,22 +136,22 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> List(
+          incunabulaProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
             OntologyConstants.KnoraAdmin.ProjectAdmin
           ),
-          IMAGES_PROJECT_IRI -> List(
+          imagesProjectIri -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
             OntologyConstants.KnoraAdmin.ProjectMember,
             OntologyConstants.KnoraAdmin.ProjectAdmin
           )
         ),
         administrativePermissionsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> Set(
+          incunabulaProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
             PermissionADM.ProjectResourceCreateAllPermission
           ),
-          IMAGES_PROJECT_IRI -> Set(
+          imagesProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
             PermissionADM.ProjectResourceCreateAllPermission
           )
@@ -178,9 +178,6 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  val DefaultSharedOntologiesProjectIri: IRI =
-    OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject // built-in project
-
   /* represents the full project info of the default shared ontologies project */
   def defaultSharedOntologiesProject: ProjectADM = ProjectADM(
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
@@ -202,7 +199,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
+  val imagesProjectIri = "http://rdfh.ch/projects/00FF"
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01: UserADM =
@@ -221,13 +218,13 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          IMAGES_PROJECT_IRI -> List(
+          imagesProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
             OntologyConstants.KnoraAdmin.ProjectAdmin
           )
         ),
         administrativePermissionsPerProject = Map(
-          IMAGES_PROJECT_IRI -> Set(
+          imagesProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
             PermissionADM.ProjectResourceCreateAllPermission
           )
@@ -252,10 +249,10 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+          imagesProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
         ),
         administrativePermissionsPerProject = Map(
-          IMAGES_PROJECT_IRI -> Set(
+          imagesProjectIri -> Set(
             PermissionADM.ProjectResourceCreateAllPermission
           )
         )
@@ -279,13 +276,13 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          IMAGES_PROJECT_IRI -> List(
+          imagesProjectIri -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
             OntologyConstants.KnoraAdmin.ProjectMember
           )
         ),
         administrativePermissionsPerProject = Map(
-          IMAGES_PROJECT_IRI -> Set(
+          imagesProjectIri -> Set(
             PermissionADM.projectResourceCreateRestrictedPermission(
               s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild"
             ),
@@ -299,7 +296,7 @@ object SharedTestDataADM {
 
   /* represents the full project info of the images project */
   def imagesProject: ProjectADM = ProjectADM(
-    id = IMAGES_PROJECT_IRI,
+    id = imagesProjectIri,
     shortname = "images",
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
@@ -348,7 +345,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/0803"
+  val incunabulaProjectIri = "http://rdfh.ch/projects/0803"
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
   def incunabulaProjectAdminUser: UserADM =
@@ -367,13 +364,13 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> List(
+          incunabulaProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
             OntologyConstants.KnoraAdmin.ProjectAdmin
           )
         ),
         administrativePermissionsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> Set(
+          incunabulaProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
             PermissionADM.ProjectResourceCreateAllPermission
           )
@@ -398,10 +395,10 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+          incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
         ),
         administrativePermissionsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> Set(
+          incunabulaProjectIri -> Set(
             PermissionADM.ProjectResourceCreateAllPermission
           )
         )
@@ -425,10 +422,10 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+          incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
         ),
         administrativePermissionsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> Set(
+          incunabulaProjectIri -> Set(
             PermissionADM.ProjectResourceCreateAllPermission
           )
         )
@@ -437,7 +434,7 @@ object SharedTestDataADM {
 
   /* represents the ProjectInfoV1 of the incunabula project */
   def incunabulaProject: ProjectADM = ProjectADM(
-    id = INCUNABULA_PROJECT_IRI,
+    id = incunabulaProjectIri,
     shortname = "incunabula",
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
@@ -477,7 +474,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
+  val anythingProjectIri = "http://rdfh.ch/projects/0001"
 
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
@@ -506,13 +503,13 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          ANYTHING_PROJECT_IRI -> List(
+          anythingProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
             OntologyConstants.KnoraAdmin.ProjectAdmin
           )
         ),
         administrativePermissionsPerProject = Map(
-          ANYTHING_PROJECT_IRI -> Set(
+          anythingProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
             PermissionADM.ProjectResourceCreateAllPermission
           )
@@ -536,13 +533,13 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          ANYTHING_PROJECT_IRI -> List(
+          anythingProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
             "http://rdfh.ch/groups/0001/thing-searcher"
           )
         ),
         administrativePermissionsPerProject = Map(
-          ANYTHING_PROJECT_IRI -> Set(
+          anythingProjectIri -> Set(
             PermissionADM.ProjectResourceCreateAllPermission
           )
         )
@@ -565,10 +562,10 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+          anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
         ),
         administrativePermissionsPerProject = Map(
-          ANYTHING_PROJECT_IRI -> Set(
+          anythingProjectIri -> Set(
             PermissionADM.ProjectResourceCreateAllPermission
           )
         )
@@ -576,7 +573,7 @@ object SharedTestDataADM {
     )
 
   def anythingProject: ProjectADM = ProjectADM(
-    id = ANYTHING_PROJECT_IRI,
+    id = anythingProjectIri,
     shortname = "anything",
     shortcode = "0001",
     longname = Some("Anything Project"),
@@ -605,10 +602,10 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+  val beolProjectIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
   def beolProject: ProjectADM = ProjectADM(
-    id = BEOL_PROJECT_IRI,
+    id = beolProjectIri,
     shortname = "beol",
     shortcode = "0801",
     longname = Some("Bernoulli-Euler Online"),
@@ -641,10 +638,10 @@ object SharedTestDataADM {
     sessionId = None,
     permissions = PermissionsDataADM(
       groupsPerProject = Map(
-        BEOL_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin)
+        beolProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin)
       ),
       administrativePermissionsPerProject = Map(
-        BEOL_PROJECT_IRI -> Set(
+        beolProjectIri -> Set(
           PermissionADM.ProjectAdminAllPermission
         )
       )
@@ -658,10 +655,10 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/0804"
+  val dokubibProjectIri = "http://rdfh.ch/projects/0804"
 
   def dokubibProject: ProjectADM = ProjectADM(
-    id = DOKUBIB_PROJECT_IRI,
+    id = dokubibProjectIri,
     shortname = "dokubib",
     shortcode = "0804",
     longname = Some("Dokubib"),

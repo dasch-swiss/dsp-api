@@ -35,7 +35,7 @@ import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataV1.ANYTHING_PROJECT_IRI
+import org.knora.webapi.sharedtestdata.SharedTestDataV1.anythingProjectIri
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
@@ -58,9 +58,9 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   private val pathToFreetestXMLTextValue = "../test_data/test_route/texts/freetestXMLTextValue.xml"
   private val freetestXSLTFile           = "freetestCustomMappingTransformation.xsl"
   private val pathToFreetestXSLTFile     = s"../test_data/test_route/texts/$freetestXSLTFile"
-  private val freetestCustomMappingIRI   = s"$ANYTHING_PROJECT_IRI/mappings/FreetestCustomMapping"
+  private val freetestCustomMappingIRI   = s"$anythingProjectIri/mappings/FreetestCustomMapping"
   private val freetestCustomMappingWithTranformationIRI =
-    s"$ANYTHING_PROJECT_IRI/mappings/FreetestCustomMappingWithTransformation"
+    s"$anythingProjectIri/mappings/FreetestCustomMappingWithTransformation"
   private val freetestOntologyIRI  = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
   private val freetestTextValueIRI = new MutableTestIri
   private val freetestXSLTIRI      = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
@@ -182,7 +182,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
            |{
            |    "knora-api:mappingHasName": "LetterMapping",
            |    "knora-api:attachedToProject": {
-           |      "@id": "$ANYTHING_PROJECT_IRI"
+           |      "@id": "$anythingProjectIri"
            |    },
            |    "rdfs:label": "letter mapping",
            |    "@context": {

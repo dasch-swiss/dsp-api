@@ -9,8 +9,8 @@ import spray.json._
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.sharedtestdata.SharedTestDataV1.ANYTHING_PROJECT_IRI
-import org.knora.webapi.sharedtestdata.SharedTestDataV1.INCUNABULA_PROJECT_IRI
+import org.knora.webapi.sharedtestdata.SharedTestDataV1.anythingProjectIri
+import org.knora.webapi.sharedtestdata.SharedTestDataV1.incunabulaProjectIri
 
 class StandoffModelsSpec extends CoreSpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -24,13 +24,13 @@ class StandoffModelsSpec extends CoreSpec {
         val mapping     = DefineStandoffMapping.make(mappingName)
 
         mapping.mappingName should equal(mappingName)
-        mapping.projectIRI should equal(ANYTHING_PROJECT_IRI)
+        mapping.projectIRI should equal(anythingProjectIri)
         mapping.label should equal("custom mapping")
       }
 
       "create a valid representation of the mapping with custom values" in {
         val mappingName = "customMapping"
-        val projectIRI  = INCUNABULA_PROJECT_IRI
+        val projectIRI  = incunabulaProjectIri
         val customLabel = "this is a custom mapping with a custom label"
         val mapping = DefineStandoffMapping.make(
           mappingName = mappingName,
@@ -69,7 +69,7 @@ class StandoffModelsSpec extends CoreSpec {
       }
       "create a valid serialization of a standoff mapping request with custom values" in {
         val mappingName = "customMapping"
-        val projectIRI  = INCUNABULA_PROJECT_IRI
+        val projectIRI  = incunabulaProjectIri
         val customLabel = "this is a custom mapping with a custom label"
         val mapping = DefineStandoffMapping.make(
           mappingName = mappingName,

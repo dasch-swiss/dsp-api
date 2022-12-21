@@ -176,9 +176,9 @@ class OntologyV2R2RSpec extends R2RSpec {
   }
 
   // URL-encoded IRIs for use as URL segments in HTTP GET tests.
-  private val anythingProjectSegment   = URLEncoder.encode(SharedTestDataADM.ANYTHING_PROJECT_IRI, "UTF-8")
-  private val incunabulaProjectSegment = URLEncoder.encode(SharedTestDataADM.INCUNABULA_PROJECT_IRI, "UTF-8")
-  private val beolProjectSegment       = URLEncoder.encode(SharedTestDataADM.BEOL_PROJECT_IRI, "UTF-8")
+  private val anythingProjectSegment   = URLEncoder.encode(SharedTestDataADM.anythingProjectIri, "UTF-8")
+  private val incunabulaProjectSegment = URLEncoder.encode(SharedTestDataADM.incunabulaProjectIri, "UTF-8")
+  private val beolProjectSegment       = URLEncoder.encode(SharedTestDataADM.beolProjectIri, "UTF-8")
   private val knoraApiSimpleOntologySegment =
     URLEncoder.encode(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri, "UTF-8")
   private val knoraApiWithValueObjectsOntologySegment =
@@ -475,7 +475,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         s"""{
            |    "knora-api:ontologyName": "foo",
            |    "knora-api:attachedToProject": {
-           |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
+           |      "@id": "${SharedTestDataADM.anythingProjectIri}"
            |    },
            |    "rdfs:label": "$label",
            |    "@context": {
@@ -518,7 +518,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         s"""{
            |    "knora-api:ontologyName": "bar",
            |    "knora-api:attachedToProject": {
-           |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
+           |      "@id": "${SharedTestDataADM.anythingProjectIri}"
            |    },
            |    "rdfs:label": "$label",
            |    "rdfs:comment": "$comment",
@@ -564,7 +564,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         s"""{
            |    "knora-api:ontologyName": "test",
            |    "knora-api:attachedToProject": {
-           |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
+           |      "@id": "${SharedTestDataADM.anythingProjectIri}"
            |    },
            |    "rdfs:label": "$label",
            |    "rdfs:comment": "$comment",

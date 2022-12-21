@@ -1265,7 +1265,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = INCUNABULA_BOOK_RESOURCE_CLASS,
         label = "Test-Book",
-        projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
+        projectIri = SharedTestDataADM.incunabulaProjectIri,
         values = valuesToBeCreated,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
@@ -1336,7 +1336,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = INCUNABULA_PAGE_RESOURCE_CLASS,
         label = "Test-Page",
-        projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
+        projectIri = SharedTestDataADM.incunabulaProjectIri,
         values = valuesToBeCreated,
         file = Some(fileValue),
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,

@@ -455,7 +455,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
             "return all named graphs after adding a new ontology" in {
                 actorUnderTest ! ProjectOntologyAddADM(
-                    projectIri = IMAGES_PROJECT_IRI,
+                    projectIri = imagesProjectIri,
                     ontologyIri = "http://wwww.knora.org/ontology/00FF/blabla1",
 
                     requestingUser = KnoraSystemInstances.Users.SystemUser,

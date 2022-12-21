@@ -349,7 +349,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
            |{
            |    "restype_id": "$IMAGES_ONTOLOGY_IRI#person",
            |    "label": "Testperson",
-           |    "project_id": "$IMAGES_PROJECT_IRI",
+           |    "project_id": "$imagesProjectIri",
            |    "properties": {
            |        "$IMAGES_ONTOLOGY_IRI#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
            |        "$IMAGES_ONTOLOGY_IRI#firstname": [{"richtext_value":{"utf8str":"Name"}}]

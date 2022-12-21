@@ -99,7 +99,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     val paramsCreateLetterMappingFromXML: String =
       s"""
          |{
-         |  "project_id": "$ANYTHING_PROJECT_IRI",
+         |  "project_id": "$anythingProjectIri",
          |  "label": "mapping for letters",
          |  "mappingName": "LetterMapping"
          |}
@@ -116,7 +116,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     val paramsCreateHTMLMappingFromXML: String =
       s"""
          |{
-         |  "project_id": "$ANYTHING_PROJECT_IRI",
+         |  "project_id": "$anythingProjectIri",
          |  "label": "mapping for HTML",
          |  "mappingName": "HTMLMapping"
          |}
@@ -672,7 +672,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         // check if mappingIri is correct
         val mappingIri = ResponseUtils.getStringMemberFromResponse(response, "mappingIri")
 
-        assert(mappingIri == ANYTHING_PROJECT_IRI + "/mappings/LetterMapping", "Iri of the new mapping is not correct")
+        assert(mappingIri == anythingProjectIri + "/mappings/LetterMapping", "Iri of the new mapping is not correct")
 
       }
 
@@ -690,7 +690,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                           "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                           "richtext_value": {
                                 "xml": ${JsString(xmlFileToSend)},
-                                "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
+                                "mapping_id": "$anythingProjectIri/mappings/LetterMapping"
                           }
                         }
                         """
@@ -751,7 +751,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                       "project_id": "http://rdfh.ch/projects/0001",
                       "richtext_value": {
                             "xml": ${JsString(xmlStrToSend)},
-                            "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
+                            "mapping_id": "$anythingProjectIri/mappings/LetterMapping"
                       }
                     }
                 """
@@ -810,12 +810,12 @@ class StandoffV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                 {
-                  "project_id": "$ANYTHING_PROJECT_IRI",
+                  "project_id": "$anythingProjectIri",
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xmlStrToSend)},
-                        "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
+                        "mapping_id": "$anythingProjectIri/mappings/LetterMapping"
                   }
                 }
                 """
@@ -894,7 +894,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         // check if mappingIri is correct
         val mappingIri = ResponseUtils.getStringMemberFromResponse(response, "mappingIri")
 
-        assert(mappingIri == ANYTHING_PROJECT_IRI + "/mappings/HTMLMapping", "Iri of the new mapping is not correct")
+        assert(mappingIri == anythingProjectIri + "/mappings/HTMLMapping", "Iri of the new mapping is not correct")
 
       }
 
@@ -1039,7 +1039,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xmlStrToSend)},
-                        "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
+                        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
                   }
                 }
                 """
@@ -1106,7 +1106,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
-                        "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
+                        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
                   }
                 }
                 """
@@ -1145,7 +1145,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
-                        "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
+                        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
                   }
                 }
                 """
@@ -1181,7 +1181,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
-                        "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
+                        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
                   }
                 }
                 """
@@ -1217,7 +1217,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
-                        "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
+                        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
                   }
                 }
                 """
@@ -1256,7 +1256,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
-                        "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
+                        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
                   }
                 }
                 """
@@ -1292,7 +1292,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xml)},
-                        "mapping_id": "$ANYTHING_PROJECT_IRI/invalidPathForMappings/HTMLMapping"
+                        "mapping_id": "$anythingProjectIri/invalidPathForMappings/HTMLMapping"
                   }
                 }
                 """
@@ -1307,7 +1307,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         // the error message should inform the user that the provided mapping Iri is invalid
         assert(
           responseAs[String].contains(
-            s"mapping $ANYTHING_PROJECT_IRI/invalidPathForMappings/HTMLMapping does not exist"
+            s"mapping $anythingProjectIri/invalidPathForMappings/HTMLMapping does not exist"
           )
         )
 
@@ -1353,7 +1353,7 @@ class StandoffV1R2RSpec extends R2RSpec {
       val params =
         s"""
            |{
-           |  "project_id": "$ANYTHING_PROJECT_IRI",
+           |  "project_id": "$anythingProjectIri",
            |  "label": "mapping for elements separating words",
            |  "mappingName": "MappingSeparatingWords"
            |}
@@ -1400,7 +1400,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                       "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                       "richtext_value": {
                             "xml": ${JsString(xmlToSend)},
-                            "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/MappingSeparatingWords"
+                            "mapping_id": "$anythingProjectIri/mappings/MappingSeparatingWords"
                       }
                     }""".stripMargin
 
