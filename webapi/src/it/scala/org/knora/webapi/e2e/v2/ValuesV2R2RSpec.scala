@@ -48,7 +48,7 @@ class ValuesV2R2RSpec extends R2RSpec {
 
   /* we need to run our app with the mocked sipi implementation */
   override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi(system)
+  override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers(Some(system))
 
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 

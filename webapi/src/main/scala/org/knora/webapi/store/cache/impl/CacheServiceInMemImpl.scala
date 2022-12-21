@@ -125,7 +125,6 @@ case class CacheServiceInMemImpl(
       case IriIdentifier(value)       => getProjectByIri(value)
       case ShortcodeIdentifier(value) => getProjectByShortcode(value)
       case ShortnameIdentifier(value) => getProjectByShortname(value)
-      case UuidIdentifier(value)      => getProjectByUuid(value)
     }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
 
   /**
@@ -159,15 +158,6 @@ case class CacheServiceInMemImpl(
       iri     <- lut.get(shortcode.value).some
       project <- projects.get(iri).some
     } yield project).commit.unsome
-
-  /**
-   * Retrieves the project by the UUID.
-   *
-   * @param uuid the project's UUID
-   * @return an optional [[ProjectADM]].
-   */
-  def getProjectByUuid(uuid: Iri.Base64Uuid) =
-    projects.get(UuidIdentifier.makeProjectIri(uuid.value)).commit
 
   /**
    * Store string or byte array value under key.

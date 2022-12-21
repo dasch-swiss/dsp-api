@@ -7,13 +7,12 @@ package org.knora.webapi.responders.v1
 
 import akka.testkit.ImplicitSender
 import spray.json.JsValue
-
 import java.util.UUID
 import scala.concurrent.duration._
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.errors.OntologyConstraintException
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -656,7 +655,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
+  override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 60.seconds

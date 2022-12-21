@@ -43,7 +43,7 @@ abstract class CoreSpec
    * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers = core.LayersTest.defaultLayersTestWithoutSipi
+  lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created

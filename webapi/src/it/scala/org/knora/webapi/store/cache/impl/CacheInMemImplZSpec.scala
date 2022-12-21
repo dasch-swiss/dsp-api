@@ -6,7 +6,6 @@
 package org.knora.webapi.store.cache.impl
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.V2UuidValidation
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -103,17 +102,6 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
           CacheService.getProjectADM(
             ShortnameIdentifier
               .fromString(project.shortname)
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-          )
-      } yield assert(retrievedProject)(equalTo(Some(project)))
-    ),
-    test("successfully store a project and retrieve by UUID")(
-      for {
-        _ <- CacheService.putProjectADM(project)
-        retrievedProject <-
-          CacheService.getProjectADM(
-            UuidIdentifier
-              .fromString(V2UuidValidation.getUuidFromIri(project.id))
               .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
           )
       } yield assert(retrievedProject)(equalTo(Some(project)))
