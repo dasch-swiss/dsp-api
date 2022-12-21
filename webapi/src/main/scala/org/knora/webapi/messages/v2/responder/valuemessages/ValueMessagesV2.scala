@@ -494,7 +494,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
 
         if (
           stringFormatter.hasUuidLength(valueIri.toString.split("/").last)
-          && !stringFormatter.isUuidVersion4Or5(valueIri.toString)
+          && !stringFormatter.isUuidSupported(valueIri.toString)
         ) {
           throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
         }
