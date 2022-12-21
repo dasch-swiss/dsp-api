@@ -11,24 +11,20 @@
 | projects        | `/admin/projects`                                              | `POST`     | [create a project](#create-a-new-project)                              |
 | projects        | `/admin/projects/shortname/{shortname}`                        | `GET`      | [get a single project](#get-project-by-id)                             |
 | projects        | `/admin/projects/shortcode/{shortcode}`                        | `GET`      | [get a single project](#get-project-by-id)                             |
-| projects        | `/admin/projects/uuid/{uuid}`                                  | `GET`      | [get a single project](#get-project-by-id)                             |
 | projects        | `/admin/projects/iri/{iri}`                                    | `GET`      | [get a single project](#get-project-by-id)                             |
 | projects        | `/admin/projects/iri/{iri}`                                    | `PUT`      | [update a project](#update-project-information)                        |
 | projects        | `/admin/projects/iri/{iri}`                                    | `DELETE`   | [delete a project](#delete-a-project)                                  |
 | projects        | `/admin/projects/iri/{iri}/AllData`                            | `GET`      | [get all data of a project](#get-all-data-of-a-project)                |
 | project members | `/admin/projects/shortname/{shortname}/members`                | `GET`      | [get all project members](#get-project-members-by-id)                  |
 | project members | `/admin/projects/shortcode/{shortcode}/members`                | `GET`      | [get all project members](#get-project-members-by-id)                  |
-| project members | `/admin/projects/uuid/{uuid}/members`                          | `GET`      | [get all project members](#get-project-members-by-id)                  |
 | project members | `/admin/projects/iri/{iri}/members`                            | `GET`      | [get all project members](#get-project-members-by-id)                  |
 | project members | `/admin/projects/shortname/{shortname}/admin-members`          | `GET`      | [get all project admins](#get-project-admins-by-id)                    |
 | project members | `/admin/projects/shortcode/{shortcode}/admin-members`          | `GET`      | [get all project admins](#get-project-admins-by-id)                    |
-| project members | `/admin/projects/uuid/{uuid}/admin-members`                    | `GET`      | [get all project admins](#get-project-admins-by-id)                    |
 | project members | `/admin/projects/iri/{iri}/admin-members`                      | `GET`      | [get all project admins](#get-project-admins-by-id)                    |
 | others          | `/admin/projects/Keywords`                                     | `GET`      | [get all project keywords](#get-all-keywords)                          |
 | others          | `/admin/projects/iri/{iri}/Keywords`                           | `GET`      | [get project keywords of a single project](#get-keywords-of-a-project) |
 | others          | `/admin/projects/shortname/{shortname}/RestrictedViewSettings` | `GET`      | [...](#restricted-view-settings)                                       |
 | others          | `/admin/projects/shortcode/{shortcode}/RestrictedViewSettings` | `GET`      | [...](#restricted-view-settings)                                       |
-| others          | `/admin/projects/uuid/{uuid}/RestrictedViewSettings`           | `GET`      | [...](#restricted-view-settings)                                       |
 | others          | `/admin/projects/iri/{iri}/RestrictedViewSettings`             | `GET`      | [...](#restricted-view-settings)                                       |
 
 
@@ -60,7 +56,7 @@ Example response:
           "language": "en"
         }
       ],
-      "id": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
+      "id": "http://rdfh.ch/projects/00FF",
       "keywords": [
         "collection",
         "images"
@@ -188,7 +184,7 @@ permissions) of any entity that belongs to the project. This default object acce
 
 ### Get Project by ID
 
-The ID can be shortcode, shortname, IRI or UUID.
+The ID can be shortcode, shortname or IRI.
 
 Permissions: No permissions required
 
@@ -197,9 +193,8 @@ Request definition:
 - `GET /admin/projects/shortcode/{shortcode}`
 - `GET /admin/projects/shortname/{shortname}`
 - `GET /admin/projects/iri/{iri}`
-- `GET /admin/projects/uuid/{uuid}`
 
-Description: Returns a single project identified by shortcode, shortname, IRI or UUID.
+Description: Returns a single project identified by shortcode, shortname or IRI.
 
 Example request:
 
@@ -209,10 +204,6 @@ curl --request GET --url http://localhost:3333/admin/projects/shortcode/0001
 
 ```bash
 curl --request GET --url http://localhost:3333/admin/projects/shortname/anything
-```
-
-```bash
-curl --request GET --url http://localhost:3333/admin/projects/uuid/Lw3FC39BSzCwvmdOaTyLqQ
 ```
 
 ```bash
@@ -260,7 +251,6 @@ Errors:
 NB:
 
 - IRI must be URL-encoded.
-- UUID must be [Base64 encoded with stripped padding](../api-v2/knora-iris.md).
 
 
 ### Update Project Information
@@ -397,7 +387,7 @@ Example request:
 
 ```bash
 curl --request GET \
-  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FMTvoB0EJRrqovzRkWXqfkA/AllData \
+  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF/AllData \
   --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
@@ -419,7 +409,7 @@ Example response:
     <http://www.knora.org/ontology/00FF/images>
             rdf:type                      owl:Ontology ;
             rdfs:label                    "The images demo ontology" ;
-            knora-base:attachedToProject  <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+            knora-base:attachedToProject  <http://rdfh.ch/projects/00FF> ;
             knora-base:lastModificationDate  "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
     images:lastname  rdf:type        owl:ObjectProperty ;
             rdfs:comment             "Nachname einer Person"@de ;
@@ -442,7 +432,7 @@ Example response:
             images:titel                  <http://rdfh.ch/00FF/0cb8286054d5/values/cea90774ee0f04> ;
             images:urheber                <http://rdfh.ch/00FF/df1260ad43d5> ;
             images:urheberValue           <http://rdfh.ch/00FF/0cb8286054d5/values/e346ff38-6b03-4a27-a11b-b0818a2e5ee3> ;
-            knora-base:attachedToProject  <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+            knora-base:attachedToProject  <http://rdfh.ch/projects/00FF> ;
             knora-base:attachedToUser     <http://rdfh.ch/users/c266a56709> ;
             knora-base:creationDate       "2016-03-02T15:05:57Z"^^xsd:dateTime ;
             knora-base:hasPermissions     "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
@@ -585,7 +575,7 @@ Errors:
 
 **Project Member Operations:**  
 
-- `GET: /admin/projects/[iri | shortname | shortcode | uuid]/<identifier>/members` : returns all members part of a project identified through iri, shortname, shortcode or UUID
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode
 
 **Project Admin Member Operations:**  
 
