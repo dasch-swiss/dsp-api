@@ -36,7 +36,7 @@
     webern:hasGivenName          <http://rdfh.ch/0806/testperson1/values/20526fec-6106-4b9d-a41b-faccbe028340> ;
     webern:hasIAFIdentifier      <http://rdfh.ch/0806/testperson1/values/50e58896-fd0f-49c7-9786-f9cdd4c9ce56> ;
     webern:hasRelation           <http://rdfh.ch/0806/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/UzTunPytT2W52aHcsiBsKw> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0806> ;
     knora-base:attachedToUser    <http://rdfh.ch/users/webernProjectMember> ;
     knora-base:creationDate      "2017-12-01T17:00:00Z"^^xsd:dateTime ;
     knora-base:hasPermissions    "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;

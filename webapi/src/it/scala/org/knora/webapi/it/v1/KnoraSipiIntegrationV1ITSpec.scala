@@ -237,7 +237,7 @@ class KnoraSipiIntegrationV1ITSpec
            |    },
            |    "file": "${uploadedFile.internalFilename}",
            |    "label": "test page",
-           |    "project_id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+           |    "project_id": "http://rdfh.ch/projects/0803"
            |}
                 """.stripMargin
 
@@ -296,7 +296,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#Thing"),
           "label"      -> JsString("Wild thing"),
-          "project_id" -> JsString("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(
             Map(
               "http://www.knora.org/ontology/0001/anything#hasText" -> JsArray(
@@ -366,7 +366,7 @@ class KnoraSipiIntegrationV1ITSpec
            |    </p0803-incunabula:page>
            |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
       // Send the JSON in a POST request to the Knora API server.
       val knoraPostRequest: HttpRequest = Post(
@@ -422,7 +422,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
           "label"      -> JsString("XSLT"),
-          "project_id" -> JsString("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
           "file"       -> JsString(uploadedFile.internalFilename)
         )
@@ -450,7 +450,7 @@ class KnoraSipiIntegrationV1ITSpec
       val paramsCreateLetterMappingFromXML =
         s"""
            |{
-           |  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+           |  "project_id": "http://rdfh.ch/projects/0001",
            |  "label": "mapping for letters with XSLT",
            |  "mappingName": "LetterMappingXSLT"
            |}
@@ -483,7 +483,7 @@ class KnoraSipiIntegrationV1ITSpec
       val paramsForMapping =
         s"""
            |{
-           |  "project_id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ",
+           |  "project_id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
            |  "label": "mapping for BEOL letter",
            |  "mappingName": "BEOLMapping"
            |}
@@ -514,7 +514,7 @@ class KnoraSipiIntegrationV1ITSpec
 
       val bulkRequest = Post(
         baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder
-          .encode("http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ", "UTF-8"),
+          .encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8"),
         HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
@@ -543,7 +543,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
           "label"      -> JsString("XSLT"),
-          "project_id" -> JsString("http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
           "file"       -> JsString(uploadedBodyXsltFile.internalFilename)
         )
@@ -571,7 +571,7 @@ class KnoraSipiIntegrationV1ITSpec
       val paramsCreateLetterMappingFromXML =
         s"""
            |{
-           |  "project_id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ",
+           |  "project_id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
            |  "label": "mapping for BEOL to TEI",
            |  "mappingName": "BEOLToTEI"
            |}
@@ -613,7 +613,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#TextRepresentation"),
           "label"      -> JsString("BEOL Gravsearch template"),
-          "project_id" -> JsString("http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
           "file"       -> JsString(uploadedGravsearchTemplateFile.internalFilename)
         )
@@ -648,7 +648,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
           "label"      -> JsString("BEOL header XSLT"),
-          "project_id" -> JsString("http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
           "file"       -> JsString(uploadedHeaderXsltFile.internalFilename)
         )
@@ -672,7 +672,7 @@ class KnoraSipiIntegrationV1ITSpec
         baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
           "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
           "&mappingIri=" + URLEncoder.encode(
-            "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ/mappings/BEOLToTEI",
+            "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI",
             "UTF-8"
           ) +
           "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
@@ -741,7 +741,7 @@ class KnoraSipiIntegrationV1ITSpec
         baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
           "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
           "&mappingIri=" + URLEncoder.encode(
-            "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ/mappings/BEOLToTEI",
+            "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI",
             "UTF-8"
           ) +
           "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
@@ -774,7 +774,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
           "label"      -> JsString("PDF file"),
-          "project_id" -> JsString("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
           "file"       -> JsString(uploadedPdfFile.internalFilename)
         )
@@ -872,7 +872,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#ArchiveRepresentation"),
           "label"      -> JsString("Zip file"),
-          "project_id" -> JsString("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
           "file"       -> JsString(uploadedZipFile.internalFilename)
         )
@@ -967,7 +967,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#AudioRepresentation"),
           "label"      -> JsString("Wav file"),
-          "project_id" -> JsString("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
           "file"       -> JsString(uploadedWavFile.internalFilename)
         )
@@ -1062,7 +1062,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#MovingImageRepresentation"),
           "label"      -> JsString("Wav file"),
-          "project_id" -> JsString("http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
           "file"       -> JsString(uploadedVideoFile.internalFilename)
         )

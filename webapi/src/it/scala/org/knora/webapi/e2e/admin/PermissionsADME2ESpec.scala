@@ -178,7 +178,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
+        assert(projectIri == "http://rdfh.ch/projects/0001")
         val permissions = result
           .getOrElse(
             "hasPermissions",
@@ -222,7 +222,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |    "administrative_permission": {
              |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-             |        "forProject": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+             |        "forProject": "http://rdfh.ch/projects/0001",
              |        "hasPermissions": [
              |            {
              |                "additionalInformation": null,
@@ -323,7 +323,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
+        assert(projectIri == "http://rdfh.ch/projects/0001")
         val permissions = result
           .getOrElse(
             "hasPermissions",
@@ -391,7 +391,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA")
+        assert(projectIri == "http://rdfh.ch/projects/00FF")
         val permissions = result
           .getOrElse(
             "hasPermissions",

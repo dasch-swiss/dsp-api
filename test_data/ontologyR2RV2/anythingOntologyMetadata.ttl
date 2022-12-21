@@ -6,23 +6,23 @@
 <http://0.0.0.0:3333/ontology/0001/anything/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The anything ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2017-12-19T15:23:42.166Z"^^xsd:dateTimeStamp .
 
 <http://0.0.0.0:3333/ontology/0001/minimal/v2>
         a                               owl:Ontology ;
         rdfs:label                      "A minimal ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2019-09-10T08:57:46.633162Z"^^xsd:dateTimeStamp .
 
 <http://0.0.0.0:3333/ontology/0001/something/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The something ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://0.0.0.0:3333/ontology/0001/freetest/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The free test ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .

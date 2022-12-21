@@ -13,7 +13,7 @@
 <http://rdfh.ch/0001/audio-01>
     a                            s:Audio ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:creationDate      "2022-07-13T16:21:34Z"^^xsd:dateTime ;
     rdfs:label                   "an audio instance" ;
@@ -36,7 +36,7 @@
 <http://rdfh.ch/0001/video-01>
     a                            s:Video ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:creationDate      "2022-07-13T16:21:34Z"^^xsd:dateTime ;
     rdfs:label                   "a video instance" ;
@@ -59,7 +59,7 @@
 <http://rdfh.ch/0001/video-sequence-01>
     a                            s:VideoSequence ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:creationDate      "2022-07-13T16:21:34Z"^^xsd:dateTime ;
     rdfs:label                   "a video sequence instance" ;

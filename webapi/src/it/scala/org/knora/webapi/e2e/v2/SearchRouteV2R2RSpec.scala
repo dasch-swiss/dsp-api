@@ -9021,7 +9021,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
            |{
-           |  "project_id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+           |  "project_id": "http://rdfh.ch/projects/0001",
            |  "res_id": "http://rdfh.ch/0001/a-thing",
            |  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
            |  "richtext_value": {
@@ -9154,7 +9154,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    }
            |  },
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+           |    "@id" : "http://rdfh.ch/projects/0001"
            |  },
            |  "rdfs:label" : "test thing",
            |  "@context" : {
@@ -9225,7 +9225,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         """{
           |  "@type" : "anything:BlueThing",
           |  "knora-api:attachedToProject" : {
-          |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+          |    "@id" : "http://rdfh.ch/projects/0001"
           |  },
           |  "rdfs:label" : "blue thing with incoming links",
           |  "@context" : {
@@ -9253,7 +9253,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         s"""{
            |  "@type" : "anything:BlueThing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+           |    "@id" : "http://rdfh.ch/projects/0001"
            |  },
            |    "anything:hasBlueThingValue" : {
            |    "@type" : "knora-api:LinkValue",
@@ -9287,7 +9287,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         s"""{
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+           |    "@id" : "http://rdfh.ch/projects/0001"
            |  },
            |    "anything:hasOtherThingValue" : {
            |    "@type" : "knora-api:LinkValue",
@@ -9577,7 +9577,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    }
            |  },
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+           |    "@id" : "http://rdfh.ch/projects/0001"
            |  },
            |  "rdfs:label" : "thing with timestamp in markup",
            |  "@context" : {

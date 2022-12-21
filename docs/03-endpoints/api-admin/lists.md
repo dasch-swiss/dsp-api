@@ -99,7 +99,7 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
 ```json
   {
     "id": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-    "projectIri": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+    "projectIri": "http://rdfh.ch/projects/0001",
     "name": "a new list",
     "labels": [{ "value": "New list with IRI", "language": "en"}],
     "comments": [{ "value": "New comment", "language": "en"}]
@@ -122,7 +122,7 @@ The response will contain the basic information of the list, `listinfo` and an e
                 }
             ],
             "name": "a new list",
-            "projectIri": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+            "projectIri": "http://rdfh.ch/projects/0001"
         }
     }
 }
@@ -142,7 +142,7 @@ The response will contain the basic information of the list, `listinfo` and an e
 ```json
      {   
          "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-         "projectIri": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+         "projectIri": "http://rdfh.ch/projects/0001",
          "name": "a child",
          "labels": [{ "value": "New List Node", "language": "en"}]
     }
@@ -153,7 +153,7 @@ Additionally, each child node can have an optional custom IRI (of [Knora IRI](..
 ```json
 {    "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
      "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-     "projectIri": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+     "projectIri": "http://rdfh.ch/projects/0001",
      "name": "a child",
      "labels": [{ "value": "New List Node", "language": "en"}]
 }
@@ -183,7 +183,7 @@ number of existing children.
 
 ```json
 {   "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-    "projectIri": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+    "projectIri": "http://rdfh.ch/projects/0001",
     "name": "Inserted new child",
     "position": 0,
     "labels": [{ "value": "New List Node", "language": "en"}]
@@ -206,7 +206,7 @@ list and the IRI of the project it belongs to.
  
 ```json
  {   "listIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-      "projectIri": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+      "projectIri": "http://rdfh.ch/projects/0001",
       "name": "new name for the list",
       "labels": [{ "value": "a new label for the list", "language": "en"}],
       "comments": [{ "value": "a new comment for the list", "language": "en"}]
@@ -232,7 +232,7 @@ The response will contain the basic information of the list, `listinfo` (or `nod
             }
         ],
         "name": "new name for the list",
-        "projectIri": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+        "projectIri": "http://rdfh.ch/projects/0001"
     }
 }
 ```

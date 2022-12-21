@@ -187,7 +187,7 @@ Operates on the following properties:
 The following is an example for project information stored in the `admin` named graph:
 
 ```
-<http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>
+<http://rdfh.ch/projects/00FF>
     rdf:type knora-admin:knoraProject ;
     knora-admin:projectShortname "images"^^xsd:string ;
     knora-admin:projectShortcode "00FF"^^xsd:string ;

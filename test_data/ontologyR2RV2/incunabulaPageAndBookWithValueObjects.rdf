@@ -7,7 +7,7 @@
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0803/incunabula/v2">
-    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"/>
+    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0803"/>
     <rdfs:label>The incunabula ontology</rdfs:label>
     <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
     >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>

@@ -73,7 +73,7 @@
 ##########################################################
 
 
-<http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>
+<http://rdfh.ch/projects/00FF>
     rdf:type                                   knora-admin:knoraProject ;
     knora-admin:projectShortname               "images"^^xsd:string ;
     knora-admin:projectShortcode               "00FF"^^xsd:string ;
@@ -98,9 +98,9 @@
     knora-admin:password              "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
     knora-admin:preferredLanguage     "de"^^xsd:string ;
     knora-admin:status                "true"^^xsd:boolean ;
-    knora-admin:isInProject           <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/00FF> ;
     knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
-    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> .
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
 
 
 ## Project Member
@@ -113,7 +113,7 @@
     knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/00FF> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
@@ -127,7 +127,7 @@
     knora-admin:password             "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/00FF> ;
     knora-admin:isInGroup            <http://rdfh.ch/groups/00FF/images-reviewer> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -136,7 +136,7 @@
     rdf:type                       knora-admin:UserGroup ;
     knora-admin:groupName          "Image reviewer"^^xsd:string ;
     knora-admin:groupDescriptions  "A group for image reviewers."@en ;
-    knora-admin:belongsToProject   <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+    knora-admin:belongsToProject   <http://rdfh.ch/projects/00FF> ;
     knora-admin:status             "true"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -153,9 +153,9 @@
 ##########################################################
 
 ### ###########################################
-### <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>
+### <http://rdfh.ch/projects/0803>
 
-<http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>
+<http://rdfh.ch/projects/0803>
     rdf:type                                   knora-admin:knoraProject ;
     knora-admin:projectShortname               "incunabula"^^xsd:string ;
     knora-admin:projectShortcode               "0803"^^xsd:string ;
@@ -200,9 +200,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                 "user.test@example.com"^^xsd:string ;
     knora-admin:preferredLanguage     "de"^^xsd:string ;
     knora-admin:status                "true"^^xsd:boolean ;
-    knora-admin:isInProject           <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w> ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/0803> ;
     knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
-    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w> .
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0803> .
 
 
 ## Project Creator and Member
@@ -216,7 +216,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:phone                "123456"^^xsd:string ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0803> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
@@ -231,7 +231,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:phone                "123456"^^xsd:string ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0803> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
@@ -249,13 +249,13 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:phone                 "123456"^^xsd:string ;
     knora-admin:preferredLanguage     "de"^^xsd:string ;
     knora-admin:status                "true"^^xsd:boolean ;
-    knora-admin:isInProject           <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>,
-                                      <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>,
-                                      <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/0803>,
+                                      <http://rdfh.ch/projects/00FF>,
+                                      <http://rdfh.ch/projects/0001> ;
     knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
-    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w>,
-                                      <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>,
-                                      <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0803>,
+                                      <http://rdfh.ch/projects/00FF>,
+                                      <http://rdfh.ch/projects/0001> ;
     knora-admin:isInGroup             <http://rdfh.ch/groups/00FF/images-reviewer> .
 
 
@@ -263,7 +263,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # ANYTHING PROJECT                #
 ###################################
 
-<http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ>
+<http://rdfh.ch/projects/0001>
     a                              knora-admin:knoraProject ;
     knora-admin:projectShortname   "anything"^^xsd:string ;
     knora-admin:projectShortcode   "0001"^^xsd:string ;
@@ -283,7 +283,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                "anything.user01@example.org"^^xsd:string ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0001> ;
     knora-admin:isInGroup            <http://rdfh.ch/groups/0001/thing-searcher> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -296,9 +296,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                 "anything.admin@example.org"^^xsd:string ;
     knora-admin:preferredLanguage     "de"^^xsd:string ;
     knora-admin:status                "true"^^xsd:boolean ;
-    knora-admin:isInProject           <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/0001> ;
     knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
-    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> .
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0001> .
 
 <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>
     a                                knora-admin:User ;
@@ -309,14 +309,14 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                "anything.user02@example.org" ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0001> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0001/thing-searcher>
     rdf:type                       knora-admin:UserGroup ;
     knora-admin:groupName          "Thing searcher"^^xsd:string ;
     knora-admin:groupDescriptions  "A group for thing searchers."@en ;
-    knora-admin:belongsToProject   <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-admin:belongsToProject   <http://rdfh.ch/projects/0001> ;
     knora-admin:status             "true"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled "true"^^xsd:boolean .
 
@@ -325,7 +325,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # DOKUBIB                         #
 ###################################
 
-<http://rdfh.ch/projects/oIjhUsZmQLuJ0VMGvJ2pfg>
+<http://rdfh.ch/projects/0804>
     a                              knora-admin:knoraProject ;
     knora-admin:projectShortname   "dokubib"^^xsd:string ;
     knora-admin:projectShortcode   "0804"^^xsd:string ;
@@ -339,7 +339,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # BEOL                            #
 ###################################
 
-<http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ>
+<http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>
     a                              knora-admin:knoraProject ;
     knora-admin:projectShortname   "beol"^^xsd:string ;
     knora-admin:projectShortcode   "0801"^^xsd:string ;
@@ -357,7 +357,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                "t.schweizer@unibas.ch"^^xsd:string ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE>
@@ -369,16 +369,16 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                 "beol@example.com"^^xsd:string ;
     knora-admin:preferredLanguage     "de"^^xsd:string ;
     knora-admin:status                "true"^^xsd:boolean ;
-    knora-admin:isInProject           <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
     knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
-    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> .
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
 
 
 ###################################
 # WEBERN                          #
 ###################################
 
-<http://rdfh.ch/projects/UzTunPytT2W52aHcsiBsKw>
+<http://rdfh.ch/projects/0806>
     a                              knora-admin:knoraProject ;
     knora-admin:projectShortname   "webern"^^xsd:string ;
     knora-admin:projectShortcode   "0806"^^xsd:string ;
@@ -397,7 +397,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                "webern-nutzer@example.ch"^^xsd:string ;
     knora-admin:preferredLanguage    "de"^^xsd:string ;
     knora-admin:status               "true"^^xsd:boolean ;
-    knora-admin:isInProject          <http://rdfh.ch/projects/UzTunPytT2W52aHcsiBsKw> ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0806> ;
     knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 ## Project Admin
@@ -410,7 +410,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:email                 "webern-admin@example.ch"^^xsd:string ;
     knora-admin:preferredLanguage     "de"^^xsd:string ;
     knora-admin:status                "true"^^xsd:boolean ;
-    knora-admin:isInProject           <http://rdfh.ch/projects/UzTunPytT2W52aHcsiBsKw> ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/0806> ;
     knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
-    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/UzTunPytT2W52aHcsiBsKw> .
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0806> .
 

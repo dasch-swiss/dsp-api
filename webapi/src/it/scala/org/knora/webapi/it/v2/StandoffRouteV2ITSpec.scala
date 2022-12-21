@@ -104,7 +104,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     val jsonLDEntity = Map(
       "@type" -> "freetest:FreeTest".toJson,
       "knora-api:attachedToProject" -> Map(
-        "@id" -> "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ".toJson
+        "@id" -> "http://rdfh.ch/projects/0001".toJson
       ).toJson,
       "rdfs:label" -> "obj_inst1".toJson,
       "freetest:hasText" -> Map(

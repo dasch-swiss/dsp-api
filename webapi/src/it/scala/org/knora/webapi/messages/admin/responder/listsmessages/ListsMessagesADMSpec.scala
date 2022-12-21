@@ -32,7 +32,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
 
       val listInfo = ListRootNodeInfoADM(
         id = "http://rdfh.ch/lists/73d0ec0302",
-        projectIri = "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
+        projectIri = "http://rdfh.ch/projects/00FF",
         labels = StringLiteralSequenceV2(
           Vector(
             StringLiteralV2("Title", Some("en")),
