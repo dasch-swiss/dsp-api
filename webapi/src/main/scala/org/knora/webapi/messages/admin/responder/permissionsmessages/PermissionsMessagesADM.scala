@@ -763,8 +763,7 @@ case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInf
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = permissionsForProjectGetResponseADMFormat.write(this)
 
-  def format: PermissionsForProjectGetResponseADM =
-    copy(allPermissions = this.allPermissions.map(_.asExternalRepresentation))
+  def format: PermissionsForProjectGetResponseADM = this
 }
 
 // All administrative Permissions for project
@@ -779,8 +778,7 @@ case class AdministrativePermissionsForProjectGetResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
 
-  def format: AdministrativePermissionsForProjectGetResponseADM =
-    copy(administrativePermissions = this.administrativePermissions.map(_.asExternalRepresentation))
+  def format: AdministrativePermissionsForProjectGetResponseADM = this
 }
 
 // All Default Object Access Permissions for project
@@ -795,8 +793,7 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
 
-  def format: DefaultObjectAccessPermissionsForProjectGetResponseADM =
-    copy(defaultObjectAccessPermissions = this.defaultObjectAccessPermissions.map(_.asExternalRepresentation))
+  def format: DefaultObjectAccessPermissionsForProjectGetResponseADM = this
 }
 
 abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
@@ -812,8 +809,7 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
     extends PermissionGetResponseADM(defaultObjectAccessPermission) {
   def toJsValue: JsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
 
-  def format: DefaultObjectAccessPermissionGetResponseADM =
-    copy(defaultObjectAccessPermission = this.defaultObjectAccessPermission.asExternalRepresentation)
+  def format: DefaultObjectAccessPermissionGetResponseADM = this
 }
 
 /**
@@ -825,8 +821,7 @@ case class AdministrativePermissionGetResponseADM(administrativePermission: Admi
     extends PermissionGetResponseADM(administrativePermission) {
   def toJsValue: JsValue = administrativePermissionGetResponseADMFormat.write(this)
 
-  def format: AdministrativePermissionGetResponseADM =
-    copy(administrativePermission = this.administrativePermission.asExternalRepresentation)
+  def format: AdministrativePermissionGetResponseADM = this
 }
 
 /**
@@ -839,8 +834,7 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
     with PermissionsADMJsonProtocol {
   def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
 
-  def format: AdministrativePermissionCreateResponseADM =
-    copy(administrativePermission = this.administrativePermission.asExternalRepresentation)
+  def format: AdministrativePermissionCreateResponseADM = this
 }
 
 /**
@@ -854,8 +848,7 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
 
-  def format: DefaultObjectAccessPermissionCreateResponseADM =
-    copy(defaultObjectAccessPermission = this.defaultObjectAccessPermission.asExternalRepresentation)
+  def format: DefaultObjectAccessPermissionCreateResponseADM = this
 }
 
 /**
@@ -877,10 +870,7 @@ case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
 
   def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)
 
-  def format: PermissionDeleteResponseADM = {
-    val sf = StringFormatter.getGeneralInstance
-    copy(permissionIri = sf.toSmartIri(this.permissionIri).toOntologySchema(ApiV2Complex).toString)
-  }
+  def format: PermissionDeleteResponseADM = this
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -921,20 +911,6 @@ case class PermissionsDataADM(
 
       case _ => throw BadRequestException(s"The requested userProfileType: $permissionProfileType is invalid.")
     }
-
-  def asExternalRepresentation: PermissionsDataADM = {
-    val sf = StringFormatter.getGeneralInstance
-    val groupsPerProjectExternal = groupsPerProject.transform { (_, seqOfGroupIris) =>
-      (seqOfGroupIris.map(groupIri => sf.toSmartIri(groupIri).toOntologySchema(ApiV2Complex).toString))
-    }
-    val administrativePermissionsPerProjectExternal = administrativePermissionsPerProject.transform {
-      (_, setOfPermissions) => (setOfPermissions.map(_.asExternalRepresentation))
-    }
-    copy(
-      groupsPerProject = groupsPerProjectExternal,
-      administrativePermissionsPerProject = administrativePermissionsPerProjectExternal
-    )
-  }
 
   /* Is the user a member of the SystemAdmin group */
   def isSystemAdmin: Boolean =
@@ -1040,14 +1016,6 @@ case class PermissionsDataADM(
 case class PermissionInfoADM(iri: IRI, permissionType: IRI) extends Jsonable with PermissionsADMJsonProtocol {
 
   def toJsValue: JsValue = permissionInfoADMFormat.write(this)
-
-  def asExternalRepresentation: PermissionInfoADM = {
-    val sf                     = StringFormatter.getGeneralInstance
-    val iriExternal            = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
-    val permissionTypeExternal = sf.toSmartIri(this.permissionType).toOntologySchema(ApiV2Complex).toString
-    copy(iri = iriExternal, permissionType = permissionTypeExternal)
-  }
-
 }
 
 abstract class PermissionItemADM extends Jsonable with PermissionsADMJsonProtocol
@@ -1067,12 +1035,6 @@ case class ObjectAccessPermissionADM(
 ) extends PermissionItemADM {
 
   def toJsValue: JsValue = objectAccessPermissionADMFormat.write(this)
-
-  def asExternalRepresentation = {
-    val sf                     = StringFormatter.getGeneralInstance
-    val hasPermissionsExternal = this.hasPermissions.map(_.asExternalRepresentation)
-    copy(hasPermissions = hasPermissionsExternal)
-  }
 }
 
 /**
@@ -1087,20 +1049,6 @@ case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI,
     extends PermissionItemADM {
 
   def toJsValue: JsValue = administrativePermissionADMFormat.write(this)
-
-  def asExternalRepresentation: AdministrativePermissionADM = {
-    val sf                     = StringFormatter.getGeneralInstance
-    val iriExternal            = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
-    val forProjectExternal     = sf.toSmartIri(this.forProject).toOntologySchema(ApiV2Complex).toString
-    val forGroupExternal       = sf.toSmartIri(this.forGroup).toOntologySchema(ApiV2Complex).toString
-    val hasPermissionsExternal = this.hasPermissions.map(_.asExternalRepresentation)
-    copy(
-      iri = iriExternal,
-      forProject = forProjectExternal,
-      forGroup = forGroupExternal,
-      hasPermissions = hasPermissionsExternal
-    )
-  }
 }
 
 /**
@@ -1134,25 +1082,6 @@ case class DefaultObjectAccessPermissionADM(
     )
 
   def toJsValue: JsValue = defaultObjectAccessPermissionADMFormat.write(this)
-
-  def asExternalRepresentation: DefaultObjectAccessPermissionADM = {
-    val sf                 = StringFormatter.getGeneralInstance
-    val iriExternal        = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
-    val forProjectExternal = sf.toSmartIri(this.forProject).toOntologySchema(ApiV2Complex).toString
-    val forGroupExternal =
-      this.forGroup match {
-        case Some(group) => Some(sf.toSmartIri(group).toOntologySchema(ApiV2Complex).toString)
-        case None        => None
-      }
-    val hasPermissionsExternal = this.hasPermissions.map(_.asExternalRepresentation)
-
-    copy(
-      iri = iriExternal,
-      forProject = forProjectExternal,
-      forGroup = forGroupExternal,
-      hasPermissions = hasPermissionsExternal
-    )
-  }
 }
 
 /**
@@ -1168,16 +1097,6 @@ case class PermissionADM(name: String, additionalInformation: Option[IRI] = None
   def toJsValue: JsValue = permissionADMFormat.write(this)
 
   override def toString: String = name
-
-  def asExternalRepresentation: PermissionADM = {
-    val sf = StringFormatter.getGeneralInstance
-    val additionalInformationExternal =
-      this.additionalInformation match {
-        case Some(additionalInfo) => Some(sf.toSmartIri(additionalInfo).toOntologySchema(ApiV2Complex).toString)
-        case None                 => None
-      }
-    copy(additionalInformation = additionalInformationExternal)
-  }
 
 }
 

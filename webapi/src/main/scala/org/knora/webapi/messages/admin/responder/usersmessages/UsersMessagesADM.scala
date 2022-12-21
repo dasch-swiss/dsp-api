@@ -382,8 +382,7 @@ case class UserGroupMembershipRemoveRequestADM(
 case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
 
-  def format: UsersGetResponseADM =
-    copy(users = this.users.map(_.asExternalRepresentation))
+  def format: UsersGetResponseADM = copy(users = this.users.map(_.asExternalRepresentation))
 }
 
 /**
@@ -394,8 +393,7 @@ case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
 case class UserResponseADM(user: UserADM) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProfileResponseADMFormat.write(this)
 
-  def format: UserResponseADM =
-    copy(user = this.user.asExternalRepresentation)
+  def format: UserResponseADM = copy(user = this.user.asExternalRepresentation)
 }
 
 /**
@@ -406,8 +404,7 @@ case class UserResponseADM(user: UserADM) extends KnoraResponseADM {
 case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectMembershipsGetResponseADMFormat.write(this)
 
-  def format: UserProjectMembershipsGetResponseADM =
-    copy(projects = this.projects.map(_.asExternalRepresentation))
+  def format: UserProjectMembershipsGetResponseADM = copy(projects = this.projects.map(_.asExternalRepresentation))
 }
 
 /**
@@ -418,8 +415,7 @@ case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) exten
 case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectAdminMembershipsGetResponseADMFormat.write(this)
 
-  def format: UserProjectAdminMembershipsGetResponseADM =
-    copy(projects = this.projects.map(_.asExternalRepresentation))
+  def format: UserProjectAdminMembershipsGetResponseADM = copy(projects = this.projects.map(_.asExternalRepresentation))
 }
 
 /**
@@ -430,8 +426,7 @@ case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) 
 case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userGroupMembershipsGetResponseADMFormat.write(this)
 
-  def format: UserGroupMembershipsGetResponseADM =
-    copy(groups = this.groups.map(_.asExternalRepresentation))
+  def format: UserGroupMembershipsGetResponseADM = copy(groups = this.groups.map(_.asExternalRepresentation))
 }
 
 /**
@@ -442,8 +437,7 @@ case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends Kno
 case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
 
-  def format: UserOperationResponseADM =
-    copy(user = this.user.asExternalRepresentation)
+  def format: UserOperationResponseADM = copy(user = this.user.asExternalRepresentation)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -494,10 +488,9 @@ final case class UserADM(
    * @return the user representation with external IRIs
    */
   def asExternalRepresentation: UserADM = {
-    val groupsExternal      = this.groups.map { g: GroupADM => g.asExternalRepresentation }
-    val projectsExternal    = this.projects.map { p: ProjectADM => p.asExternalRepresentation }
-    val permissionsExternal = this.permissions.asExternalRepresentation
-    this.copy(groups = groupsExternal, projects = projectsExternal, permissions = permissionsExternal)
+    val groupsExternal   = this.groups.map { g: GroupADM => g.asExternalRepresentation }
+    val projectsExternal = this.projects.map { p: ProjectADM => p.asExternalRepresentation }
+    this.copy(groups = groupsExternal, projects = projectsExternal)
   }
 
   /**

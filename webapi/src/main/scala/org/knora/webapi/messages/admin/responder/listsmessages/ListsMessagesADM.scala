@@ -337,10 +337,7 @@ case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Bool
     with ListADMJsonProtocol {
   def toJsValue: JsValue = ListNodeCommentsDeleteResponseADMFormat.write(this)
 
-  def format: ListNodeCommentsDeleteResponseADM = {
-    val sf = StringFormatter.getGeneralInstance
-    copy(nodeIri = sf.toSmartIri(this.nodeIri).toOntologySchema(ApiV2Complex).toString)
-  }
+  def format: ListNodeCommentsDeleteResponseADM = this
 }
 
 /**
@@ -355,10 +352,7 @@ case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
 
   def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 
-  def format: CanDeleteListResponseADM = {
-    val sf = StringFormatter.getGeneralInstance
-    copy(listIri = sf.toSmartIri(this.listIri).toOntologySchema(ApiV2Complex).toString)
-  }
+  def format: CanDeleteListResponseADM = this
 }
 
 /**
@@ -369,8 +363,7 @@ case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
 case class ListsGetResponseADM(lists: Seq[ListNodeInfoADM]) extends KnoraResponseADM with ListADMJsonProtocol {
   def toJsValue: JsValue = listsGetResponseADMFormat.write(this)
 
-  def format: ListsGetResponseADM =
-    copy(lists = this.lists.map(_.asExternalRepresentation))
+  def format: ListsGetResponseADM = this
 }
 
 abstract class ListItemGetResponseADM(listItem: ListItemADM) extends KnoraResponseADM with ListADMJsonProtocol
@@ -384,8 +377,7 @@ case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM(list
 
   def toJsValue: JsValue = listGetResponseADMFormat.write(this)
 
-  def format: ListGetResponseADM =
-    copy(list = this.list.asExternalRepresentation)
+  def format: ListGetResponseADM = this
 }
 
 /**
@@ -397,8 +389,7 @@ case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM(
 
   def toJsValue: JsValue = listNodeGetResponseADMFormat.write(this)
 
-  def format: ListNodeGetResponseADM =
-    copy(node = this.node.asExternalRepresentation)
+  def format: ListNodeGetResponseADM = this
 }
 
 /**
@@ -417,8 +408,7 @@ case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends Nod
 
   def toJsValue: JsValue = listInfoGetResponseADMFormat.write(this)
 
-  def format: RootNodeInfoGetResponseADM =
-    copy(listinfo = this.listinfo.asExternalRepresentation)
+  def format: RootNodeInfoGetResponseADM = this
 }
 
 /**
@@ -443,8 +433,7 @@ case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends Kno
 
   def toJsValue: JsValue = nodePathGetResponseADMFormat.write(this)
 
-  def format: NodePathGetResponseADM =
-    this
+  def format: NodePathGetResponseADM = this
 }
 
 abstract class ListItemDeleteResponseADM extends KnoraResponseADM with ListADMJsonProtocol
@@ -458,11 +447,7 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
 
   def toJsValue: JsValue = listDeleteResponseADMFormat.write(this)
 
-  def format: ListDeleteResponseADM = {
-    val sf          = StringFormatter.getGeneralInstance
-    val iriExternal = sf.toSmartIri(this.iri).toOntologySchema(ApiV2Complex).toString
-    copy(iri = iriExternal)
-  }
+  def format: ListDeleteResponseADM = this
 
 }
 
@@ -476,8 +461,7 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
 
   def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
 
-  def format: ChildNodeDeleteResponseADM =
-    copy(node = this.node.asExternalRepresentation)
+  def format: ChildNodeDeleteResponseADM = this
 }
 
 /**
@@ -489,24 +473,15 @@ case class NodePositionChangeResponseADM(node: ListNodeADM) extends KnoraRespons
 
   def toJsValue: JsValue = changeNodePositionApiResponseADMFormat.write(this)
 
-  def format: NodePositionChangeResponseADM =
-    copy(node = this.node.asExternalRepresentation)
+  def format: NodePositionChangeResponseADM = this
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
-abstract class ListItemADM(info: ListNodeInfoADM, children: Seq[ListChildNodeADM]) {
-  def asExternalRepresentation: ListItemADM
-}
+abstract class ListItemADM(info: ListNodeInfoADM, children: Seq[ListChildNodeADM])
 
 case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM])
     extends ListItemADM(listinfo, children) {
-
-  def asExternalRepresentation: ListADM = {
-    val listinfoExternal = this.listinfo.asExternalRepresentation
-    val childrenExternal = this.children.map(_.asExternalRepresentation)
-    copy(listinfo = listinfoExternal, children = childrenExternal)
-  }
 
   /**
    * Sorts the whole hierarchy.
@@ -522,12 +497,6 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
 
 case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeADM])
     extends ListItemADM(nodeinfo, children) {
-
-  def asExternalRepresentation: NodeADM = {
-    val nodeinfoExternal = this.nodeinfo.asExternalRepresentation
-    val childrenExternal = this.children.map(_.asExternalRepresentation)
-    copy(nodeinfo = nodeinfoExternal, children = childrenExternal)
-  }
 
   /**
    * Sorts the whole hierarchy.
@@ -555,7 +524,6 @@ abstract class ListNodeInfoADM(
   labels: StringLiteralSequenceV2,
   comments: StringLiteralSequenceV2
 ) {
-  def asExternalRepresentation: ListNodeInfoADM
 
   /**
    * Sorts the whole hierarchy.
@@ -597,12 +565,6 @@ case class ListRootNodeInfoADM(
   labels: StringLiteralSequenceV2,
   comments: StringLiteralSequenceV2
 ) extends ListNodeInfoADM(id, name, labels, comments) {
-
-  def asExternalRepresentation: ListRootNodeInfoADM = {
-    val sf                 = StringFormatter.getGeneralInstance
-    val projectIriExternal = sf.toSmartIri(this.projectIri).toOntologySchema(ApiV2Complex).toString
-    copy(projectIri = projectIriExternal)
-  }
 
   /**
    * Sorts the whole hierarchy.
@@ -666,8 +628,6 @@ case class ListChildNodeInfoADM(
   position: Int,
   hasRootNode: IRI
 ) extends ListNodeInfoADM(id, name, labels, comments) {
-
-  def asExternalRepresentation: ListChildNodeInfoADM = this
 
   /**
    * Sorts the whole hierarchy.
@@ -740,8 +700,6 @@ abstract class ListNodeADM(
   children: Seq[ListChildNodeADM]
 ) {
 
-  def asExternalRepresentation: ListNodeADM
-
   /**
    * Sorts the whole hierarchy.
    *
@@ -796,8 +754,6 @@ case class ListRootNodeADM(
   comments: StringLiteralSequenceV2,
   children: Seq[ListChildNodeADM]
 ) extends ListNodeADM(id, name, labels, comments, children) {
-
-  def asExternalRepresentation: ListRootNodeADM = this
 
   /**
    * Sorts the whole hierarchy.
@@ -878,8 +834,6 @@ case class ListChildNodeADM(
       comments = comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
       children
     ) {
-
-  def asExternalRepresentation: ListChildNodeADM = this
 
   /**
    * Sorts the whole hierarchy.

@@ -331,7 +331,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           )
           .toString()
 
-        assert(permissions.contains("http://api.knora.org/ontology/knora-admin/v2#ProjectMember"))
+        assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -399,7 +399,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           )
           .toString()
 
-        assert(permissions.contains("http://api.knora.org/ontology/knora-admin/v2#ProjectMember"))
+        assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -582,7 +582,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           permissions.head.asJsObject
             .fields("additionalInformation")
             .toString
-            .contains("http://api.knora.org/ontology/knora-admin/v2#ProjectMember")
+            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember")
         )
         clientTestDataCollector.addFile(
           TestDataFileContent(

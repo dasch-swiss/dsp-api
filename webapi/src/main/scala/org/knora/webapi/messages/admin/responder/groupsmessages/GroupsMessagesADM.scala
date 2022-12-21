@@ -205,8 +205,7 @@ case class GroupPermissionUpdateRequestADM(requestingUser: UserADM, apiRequestID
 case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupsGetResponseADMFormat.write(this)
 
-  def format: GroupsGetResponseADM =
-    copy(groups = this.groups.map(_.asExternalRepresentation))
+  def format: GroupsGetResponseADM = copy(groups = this.groups.map(_.asExternalRepresentation))
 }
 
 /**
@@ -217,8 +216,7 @@ case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM 
 case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupResponseADMFormat.write(this)
 
-  def format: GroupGetResponseADM =
-    copy(group = this.group.asExternalRepresentation)
+  def format: GroupGetResponseADM = copy(group = this.group.asExternalRepresentation)
 }
 
 /**
@@ -229,8 +227,7 @@ case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with Gr
 case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupMembersResponseADMFormat.write(this)
 
-  def format: GroupMembersGetResponseADM =
-    copy(members = this.members.map(_.asExternalRepresentation))
+  def format: GroupMembersGetResponseADM = copy(members = this.members.map(_.asExternalRepresentation))
 }
 
 /**
@@ -274,9 +271,8 @@ case class GroupADM(
 
   def asExternalRepresentation: GroupADM = {
     val sf              = StringFormatter.getGeneralInstance
-    val idExternal      = sf.toSmartIri(this.id).toOntologySchema(ApiV2Complex).toString
     val projectExternal = project.asExternalRepresentation
-    copy(id = idExternal, project = projectExternal)
+    copy(project = projectExternal)
   }
 
   def asGroupShortADM: GroupShortADM =

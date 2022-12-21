@@ -974,7 +974,7 @@ class UsersADME2ESpec
         val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
         result.permissions.groupsPerProject
           .get("http://www.knora.org/ontology/knora-admin#SystemProject")
-          .head should equal(List("http://api.knora.org/ontology/knora-admin/v2#SystemAdmin"))
+          .head should equal(List("http://www.knora.org/ontology/knora-admin#SystemAdmin"))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(

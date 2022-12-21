@@ -306,8 +306,7 @@ case class ProjectChangeRequestADM(
 case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsResponseADMFormat.write(this)
 
-  def format: ProjectsGetResponseADM =
-    copy(projects = this.projects.map(_.asExternalRepresentation))
+  def format: ProjectsGetResponseADM = copy(projects = this.projects.map(_.asExternalRepresentation))
 }
 
 /**
@@ -318,8 +317,7 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraRespon
 case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectResponseADMFormat.write(this)
 
-  def format: ProjectGetResponseADM =
-    copy(project = this.project.asExternalRepresentation)
+  def format: ProjectGetResponseADM = copy(project = this.project.asExternalRepresentation)
 }
 
 /**
@@ -331,8 +329,7 @@ case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResp
 
   def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
 
-  def format: ProjectMembersGetResponseADM =
-    copy(members = this.members.map(_.asExternalRepresentation))
+  def format: ProjectMembersGetResponseADM = copy(members = this.members.map(_.asExternalRepresentation))
 }
 
 /**
@@ -346,8 +343,7 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
 
   def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
 
-  def format: ProjectAdminMembersGetResponseADM =
-    copy(members = this.members.map(_.asExternalRepresentation))
+  def format: ProjectAdminMembersGetResponseADM = copy(members = this.members.map(_.asExternalRepresentation))
 }
 
 /**
@@ -393,8 +389,7 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
 case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 
-  def format: ProjectOperationResponseADM =
-    copy(project = this.project.asExternalRepresentation)
+  def format: ProjectOperationResponseADM = copy(project = this.project.asExternalRepresentation)
 }
 
 /**
@@ -475,9 +470,8 @@ case class ProjectADM(
 
   def asExternalRepresentation: ProjectADM = {
     val sf                 = StringFormatter.getGeneralInstance
-    val idExternal         = sf.toSmartIri(this.id).toOntologySchema(ApiV2Complex).toString
     val ontologiesExternal = this.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
-    copy(id = id, ontologies = ontologiesExternal)
+    copy(ontologies = ontologiesExternal)
   }
 
   override def equals(that: Any): Boolean =
