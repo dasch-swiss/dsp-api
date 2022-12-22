@@ -300,11 +300,11 @@ Example response:
     "logo": null,
     "longname": "other longname",
     "ontologies": [
-      "http://www.knora.org/ontology/0001/something",
-      "http://www.knora.org/ontology/0001/sequences",
-      "http://www.knora.org/ontology/0001/freetest",
-      "http://www.knora.org/ontology/0001/minimal",
-      "http://www.knora.org/ontology/0001/anything"
+      "http://api.knora.org/ontology/0001/something/v2",
+      "http://api.knora.org/ontology/0001/sequences/v2",
+      "http://api.knora.org/ontology/0001/freetest/v2",
+      "http://api.knora.org/ontology/0001/minimal/v2",
+      "http://api.knora.org/ontology/0001/anything/v2"
     ],
     "selfjoin": false,
     "shortcode": "0001",
@@ -355,11 +355,11 @@ Example response:
     "logo": null,
     "longname": "other longname",
     "ontologies": [
-      "http://www.knora.org/ontology/0001/something",
-      "http://www.knora.org/ontology/0001/sequences",
-      "http://www.knora.org/ontology/0001/freetest",
-      "http://www.knora.org/ontology/0001/minimal",
-      "http://www.knora.org/ontology/0001/anything"
+      "http://api.knora.org/ontology/0001/something/v2",
+      "http://api.knora.org/ontology/0001/sequences/v2",
+      "http://api.knora.org/ontology/0001/freetest/v2",
+      "http://api.knora.org/ontology/0001/minimal/v2",
+      "http://api.knora.org/ontology/0001/anything/v2"
     ],
     "selfjoin": false,
     "shortcode": "0001",
@@ -458,47 +458,212 @@ Example response:
 
 ### Get Project Members by ID
 
-Permissions:
+Permissions: SystemAdmin / ProjectAdmin
 
-Request definition: `GET /admin/projects/iri/...`
+Request definition: 
 
-Description: 
+- `GET /admin/projects/shortcode/{shortcode}/members`
+- `GET /admin/projects/shortname/{shortname}/members`
+- `GET /admin/projects/iri/{iri}/members`
+
+Description: returns all members part of a project identified through iri, shortname or shortcode
 
 Example request:
 
 ```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/shortcode/0001/members' \
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
 
+```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/shortname/anything/members' \
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
+
+```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ/members'
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
 Example response:
 
 ```jsonc
-
+{
+    "members": [
+        {
+            "email": "anything.user01@example.org",
+            "familyName": "UserFamilyName",
+            "givenName": "UserGivenName",
+            "groups": [],
+            "id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+            "lang": "de",
+            "password": null,
+            "permissions": {
+                "administrativePermissionsPerProject": {
+                    "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
+                        {
+                            "additionalInformation": null,
+                            "name": "ProjectResourceCreateAllPermission",
+                            "permissionCode": null
+                        }
+                    ]
+                },
+                "groupsPerProject": {
+                    "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
+                        "http://www.knora.org/ontology/knora-admin#ProjectMember"
+                    ]
+                }
+            },
+            "projects": [
+                {
+                    "description": [
+                        {
+                            "value": "Anything Project"
+                        }
+                    ],
+                    "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+                    "keywords": [
+                        "arbitrary test data",
+                        "things"
+                    ],
+                    "logo": null,
+                    "longname": "Anything Project",
+                    "ontologies": [
+                        "http://0.0.0.0:3333/ontology/0001/something/v2",
+                        "http://0.0.0.0:3333/ontology/0001/anything/v2"
+                    ],
+                    "selfjoin": false,
+                    "shortcode": "0001",
+                    "shortname": "anything",
+                    "status": true
+                }
+            ],
+            "sessionId": null,
+            "status": true,
+            "token": null,
+            "username": "anything.user01"
+        }
+    ]
+}
 ```
 
 Errors:
+
+- `400 Bad Request` if the provided ID is not valid.
+- `404 Not Found` if no project with the provided ID is found.
+
+NB:
+
+- IRI must be URL-encoded.
 
 ### Get Project Admins by ID
 
-Permissions:
+Permissions: SystemAdmin / ProjectAdmin
 
-Request definition: `GET /admin/projects/iri/...`
+Request definition: 
+- `GET /admin/projects/shortcode/{shortcode}/admin-members`
+- `GET /admin/projects/shortname/{shortname}/admin-members`
+- `GET /admin/projects/iri/{iri}/admin-members`
 
-Description: 
+Description: returns all admin members part of a project identified through iri, shortname or shortcode
 
 Example request:
 
 ```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/shortcode/0001/admin-members' \
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
 
+```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/shortname/anything/admin-members' \
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
+
+```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ/admin-members'
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
 Example response:
 
 ```jsonc
+{
+    "members": [
+        {
+            "email": "anything.admin@example.org",
+            "familyName": "Admin",
+            "givenName": "Anything",
+            "groups": [],
+            "id": "http://rdfh.ch/users/AnythingAdminUser",
+            "lang": "de",
+            "password": null,
+            "permissions": {
+                "administrativePermissionsPerProject": {
+                    "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
+                        {
+                            "additionalInformation": null,
+                            "name": "ProjectResourceCreateAllPermission",
+                            "permissionCode": null
+                        },
+                        {
+                            "additionalInformation": null,
+                            "name": "ProjectAdminAllPermission",
+                            "permissionCode": null
+                        }
+                    ]
+                },
+                "groupsPerProject": {
+                    "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
+                        "http://www.knora.org/ontology/knora-admin#ProjectMember",
+                        "http://www.knora.org/ontology/knora-admin#ProjectAdmin"
+                    ]
+                }
+            },
+            "projects": [
+                {
+                    "description": [
+                        {
+                            "value": "Anything Project"
+                        }
+                    ],
+                    "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+                    "keywords": [
+                        "arbitrary test data",
+                        "things"
+                    ],
+                    "logo": null,
+                    "longname": "Anything Project",
+                    "ontologies": [
+                        "http://0.0.0.0:3333/ontology/0001/something/v2",
+                        "http://0.0.0.0:3333/ontology/0001/sequences/v2",
+                        "http://0.0.0.0:3333/ontology/0001/freetest/v2",
+                        "http://0.0.0.0:3333/ontology/0001/minimal/v2",
+                        "http://0.0.0.0:3333/ontology/0001/anything/v2"
+                    ],
+                    "selfjoin": false,
+                    "shortcode": "0001",
+                    "shortname": "anything",
+                    "status": true
+                }
+            ],
+            "sessionId": null,
+            "status": true,
+            "token": null,
+            "username": "anything.admin"
+        }
+    ]
+}
 
 ```
 
 Errors:
+
+- `400 Bad Request` if the provided ID is not valid.
+- `404 Not Found` if no project with the provided ID is found.
+
+NB:
+
+- IRI must be URL-encoded.
 
 ## Other Project Operations
 
@@ -506,117 +671,153 @@ Errors:
 
 Permissions:
 
-Request definition: `GET /admin/projects/iri/...`
+Request definition: `GET /admin/projects/Keywords`
 
-Description: 
+Description: returns keywords of all projects as a list
 
 Example request:
 
 ```bash
-
+curl --request GET 'http://0.0.0.0:3333/admin/projects/Keywords'
 ```
 
 Example response:
 
 ```jsonc
-
+{
+    "keywords": [
+        "Annotation",
+        "Arabe",
+        "Arabic",
+        "Arabisch",
+        "Audio",
+        "Basel",
+        "Basler Frühdrucke",
+        "Bilder",
+        "Bilderfolgen",
+        "Contectualisation of images",
+        "Cyrillic",
+        "Cyrillique",
+        "Data and Service Center for the Humanities (DaSCH)",
+        "Grec",
+        "Greek",
+        "Griechisch",
+        "Hebrew",
+        "Hebräisch",
+        "Hieroglyphen",
+        "Hébreu",
+        "Inkunabel",
+        "Japanese",
+        "Japanisch",
+        "Japonais",
+        "Keilschrift",
+        "Kunsthistorisches Seminar Universität Basel",
+        "Kyrillisch",
+        "Late Middle Ages",
+        "Letterpress Printing",
+        "Markup",
+        "Narrenschiff",
+        "Objekte",
+        "Sebastian Brant",
+        "Sonderzeichen",
+        "Texteigenschaften",
+        "Textquellen",
+        "Wiegendrucke",
+        "XML",
+        "arbitrary test data",
+        "asdf",
+        "audio",
+        "caractères spéciaux",
+        "collection",
+        "cuneiform",
+        "cunéiforme",
+        "early print",
+        "hieroglyphs",
+        "hiéroglyphes",
+        "images",
+        "incunabula",
+        "objects",
+        "objets",
+        "propriétés de texte",
+        "ship of fools",
+        "sources",
+        "special characters",
+        "textual properties",
+        "textual sources",
+        "things"
+    ]
+}
 ```
 
-Errors:
 
 ### Get Keywords of a Project
 
 Permissions:
 
-Request definition: `GET /admin/projects/iri/...`
+Request definition:
+- `GET /admin/projects/iri/{iri}/Keywords`
 
-Description: 
+Description: returns the keywords of a single project
 
 Example request:
 
 ```bash
-
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ/Keywords'
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
 Example response:
 
 ```jsonc
+{
+    "keywords": [
+        "arbitrary test data",
+        "things"
+    ]
+}
 
 ```
-
-Errors:
 
 ### Restricted View Settings
 
-Permissions:
+Permissions: ProjectAdmin
 
-Request definition: `GET /admin/projects/iri/...`
+Request definition:
+- `GET /admin/projects/shortcode/{shortcode}/RestrictedViewSettings`
+- `GET /admin/projects/shortname/{shortname}/RestrictedViewSettings`
+- `GET /admin/projects/iri/{iri}/RestrictedViewSettings`
 
-Description: 
+Description: returns the project's restricted view settings
 
 Example request:
 
 ```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/shortcode/0001/RestrictedViewSettings' \
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
 
+```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/shortname/anything/RestrictedViewSettings' \
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
+
+```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ/RestrictedViewSettings'
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
 Example response:
 
 ```jsonc
-
+{
+    "settings": {
+        "size": "!512,512",
+        "watermark": "path_to_image"
+    }
+}
 ```
 
-Errors:
-
----
-
-<!-- TODO: Old stuff -->
-
-
-**Project Member Operations:**  
-
-- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode
-
-**Project Admin Member Operations:**  
-
-- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/admin-members` : returns all admin members part of a project identified through iri, shortname or shortcode  
-
-**Project Keyword Operations:**  
-
-- `GET: /admin/projects/Keywords` : returns all unique keywords for all projects as a list  
-
-- `GET: /admin/projects/iri/<identifier>/Keywords` : returns all keywords for a single project  
-
-**Project Restricted View Settings Operations:**  
-
-- `GET: /admin/projects/iri/<identifier>/RestrictedViewSettings` : returns the project's restricted view settings  
-
-### Get project members:
-
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Required information: project identifier
-  - GET: `/admin/projects/[iri | shortname | shortcode]/<identifier>/members`
-
-
-## Project Admin Member Operations
-
-### Get project members:
-
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Required information: project identifier
-  - GET: `/admin/projects/[iri | shortname | shortcode]/<identifier>/admin-members`
-
-
-### Restricted View Settings Operations
-
 Operates on the following properties:
- - `knora-admin:projectRestrictedViewSize` - takes the IIIF size value
- - `knora-admin:projectRestrictedViewWatermark` - takes the path to the watermark image. **Currently not used.**
-
-#### Get the restricted view settings:
-
-  - Required permission: ProjectAdmin
-  - Required information: `identifier`. The `identifier` can be the project's IRI, shortname or shortcode.
-  - GET: `/admin/projects/[iri | shortname | shortcode]/<identifier>/RestrictedViewSettings`
-
+ - `knora-admin:projectRestrictedViewSize`: the IIIF size value
+ - `knora-admin:projectRestrictedViewWatermark`: the path to the watermark image. **Currently not used!**
 
