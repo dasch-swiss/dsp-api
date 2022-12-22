@@ -85,7 +85,7 @@ class SipiV1R2RSpec extends R2RSpec {
         )
       ),
       label = "test",
-      project_id = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+      project_id = "http://rdfh.ch/projects/0803"
     )
 
     val pathToFile = "test_data/test_route/images/Chlaus.jpg"

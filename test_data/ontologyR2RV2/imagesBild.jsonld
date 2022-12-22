@@ -301,7 +301,7 @@
         }
     ],
     "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA"
+        "@id": "http://rdfh.ch/projects/00FF"
     },
     "@type": "owl:Ontology",
     "@id": "http://0.0.0.0:3333/ontology/00FF/images/v2",

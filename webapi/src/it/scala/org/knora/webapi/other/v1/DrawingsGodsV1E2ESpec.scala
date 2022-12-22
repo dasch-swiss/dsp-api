@@ -78,7 +78,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
            |{
            |    "restype_id": "http://www.knora.org/ontology/0106/parole-religieuse#Thing",
            |    "label": "A thing",
-           |    "project_id": "http://rdfh.ch/projects/Qb2nkulcSKGRWZSblJMGtw",
+           |    "project_id": "http://rdfh.ch/projects/0106",
            |    "properties": {}
            |}
                 """.stripMargin

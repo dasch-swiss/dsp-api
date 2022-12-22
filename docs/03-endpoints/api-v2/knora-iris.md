@@ -16,6 +16,8 @@ Knora project regardless of where it is hosted. The IRIs of ontologies that
 are built into Knora do not contain shortcodes; these ontologies implicitly
 belong to the Knora system project.
 
+A user-created ontology IRI must always include its project shortcode.
+
 Project ID `0000` is reserved for shared ontologies
 (see [Shared Ontologies](../../02-dsp-ontologies/introduction.md#shared-ontologies)).
 
@@ -209,7 +211,7 @@ follows:
     `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME`
   - XML-to-standoff mapping element:
     `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME/elements/MAPPING_ELEMENT_UUID`
-  - Project: `http://rdfh.ch/projects/PROJECT_UUID`
+  - Project: `http://rdfh.ch/projects/PROJECT_SHORTCODE` (or `http://rdfh.ch/projects/PROJECT_UUID`)
   - Group: `http://rdfh.ch/groups/PROJECT_SHORTCODE/GROUP_UUID`
   - Permission:
     `http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID`

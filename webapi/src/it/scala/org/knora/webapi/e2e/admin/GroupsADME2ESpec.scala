@@ -91,7 +91,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol with SessionJs
           s"""{   "id": "$customGroupIri",
              |    "name": "NewGroupWithCustomIri",
              |    "descriptions": [{"value": "A new group with a custom Iri", "language": "en"}],
-             |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "project": "${SharedTestDataADM.imagesProjectIri}",
              |    "status": true,
              |    "selfjoin": false
              |}""".stripMargin
@@ -136,7 +136,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol with SessionJs
           s"""{             "id": "$customGroupIri",
              |    "name": "NewGroupWithDuplicateCustomIri",
              |    "descriptions": [{"value": "A new group with a duplicate custom Iri", "language": "en"}],
-             |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "project": "${SharedTestDataADM.imagesProjectIri}",
              |    "status": true,
              |    "selfjoin": false
              |}""".stripMargin
@@ -162,7 +162,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol with SessionJs
           s"""{
              |    "name": "NewGroup",
              |    "descriptions": [{"value": "NewGroupDescription", "language": "en"}],
-             |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "project": "${SharedTestDataADM.imagesProjectIri}",
              |    "status": true,
              |    "selfjoin": false
              |}""".stripMargin

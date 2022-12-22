@@ -12,7 +12,7 @@
 
                        rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                       knora-admin:forProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+                       knora-admin:forProject <http://rdfh.ch/projects/0001> ;
 
                        knora-admin:forResourceClass <http://www.knora.org/ontology/0001/anything#Thing> ;
 

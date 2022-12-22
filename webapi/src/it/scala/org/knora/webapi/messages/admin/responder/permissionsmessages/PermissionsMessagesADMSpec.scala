@@ -40,7 +40,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'ForbiddenException' if the user requesting AdministrativePermissionsForProjectGetRequestADM is not system or project Admin" in {
       val caught = intercept[ForbiddenException](
         AdministrativePermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
         )
@@ -51,7 +51,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetRequestADM is not system or project Admin" in {
       val caught = intercept[ForbiddenException](
         AdministrativePermissionForProjectGroupGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
           requestingUser = SharedTestDataADM.imagesUser02
         )
@@ -86,7 +86,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetADM is not system or project Admin" in {
       val caught = intercept[ForbiddenException](
         AdministrativePermissionForProjectGroupGetADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
           requestingUser = SharedTestDataADM.imagesUser02
         )
@@ -117,7 +117,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = groupIri,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
@@ -134,7 +134,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             id = Some(permissionIri),
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
@@ -151,7 +151,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             id = Some(permissionIRIWithUUIDVersion3),
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
@@ -174,7 +174,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
@@ -192,7 +192,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set.empty[PermissionADM]
           ).prepareHasPermissions,
@@ -207,7 +207,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[ForbiddenException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
@@ -261,7 +261,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = Some(SharedTestDataADM.customResourceIRI),
           requestingUser = SharedTestDataADM.imagesUser01
         )
@@ -273,7 +273,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied property IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           propertyIri = Some(SharedTestDataADM.customValueIRI),
           requestingUser = SharedTestDataADM.imagesUser01
         )
@@ -285,7 +285,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if both group and resource class are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           resourceClassIri = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
           requestingUser = SharedTestDataADM.imagesUser01
@@ -297,7 +297,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if both group and property are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           propertyIri = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost),
           requestingUser = SharedTestDataADM.imagesUser01
@@ -309,7 +309,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if no group, resourceClassIri or propertyIri are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
@@ -321,7 +321,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'ForbiddenException' if requesting user of DefaultObjectAccessPermissionGetRequestADM is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           requestingUser = SharedTestDataADM.imagesUser02
         )
@@ -346,7 +346,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsForProjectGetRequestADM is not System or project Admin" in {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
         )
@@ -369,7 +369,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionsStringForResourceClassGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedTestDataADM.customResourceIRI,
           targetUser = SharedTestDataADM.imagesReviewerUser,
           requestingUser = SharedTestDataADM.imagesUser01
@@ -382,7 +382,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForResourceClassGetADM is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           targetUser = SharedTestDataADM.imagesReviewerUser,
           requestingUser = SharedTestDataADM.imagesUser02
@@ -407,7 +407,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the target user of DefaultObjectAccessPermissionsStringForResourceClassGetADM is an Anonymous user" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           targetUser = SharedTestDataADM.anonymousUser,
           requestingUser = SharedTestDataADM.imagesUser01
@@ -433,7 +433,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsStringForPropertyGetADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedTestDataADM.customResourceIRI,
           propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
           targetUser = SharedTestDataADM.imagesReviewerUser,
@@ -447,7 +447,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied property IRI for DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsStringForPropertyGetADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           propertyIri = SharedTestDataADM.customValueIRI,
           targetUser = SharedTestDataADM.imagesReviewerUser,
@@ -461,7 +461,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionsStringForPropertyGetADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
           targetUser = SharedTestDataADM.imagesReviewerUser,
@@ -474,7 +474,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the target user of DefaultObjectAccessPermissionsStringForPropertyGetADM is an Anonymous user" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsStringForPropertyGetADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
           targetUser = SharedTestDataADM.anonymousUser,
@@ -507,7 +507,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(groupIri),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
@@ -524,7 +524,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(permissionIri),
-            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
@@ -541,7 +541,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(permissionIRIWithUUIDVersion3),
-            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
@@ -556,7 +556,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set.empty[PermissionADM]
           ).prepareHasPermissions,
@@ -579,7 +579,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
@@ -606,7 +606,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
@@ -634,7 +634,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
@@ -657,7 +657,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
@@ -683,7 +683,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
@@ -701,7 +701,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
           ).prepareHasPermissions,
@@ -716,7 +716,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = ANYTHING_PROJECT_IRI,
+            forProject = anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
@@ -732,7 +732,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = ANYTHING_PROJECT_IRI,
+            forProject = anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
@@ -748,7 +748,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = ANYTHING_PROJECT_IRI,
+            forProject = anythingProjectIri,
             forProperty = Some(SharedTestDataADM.customValueIRI),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
@@ -763,7 +763,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = ANYTHING_PROJECT_IRI,
+            forProject = anythingProjectIri,
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
@@ -778,7 +778,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = ANYTHING_PROJECT_IRI,
+            forProject = anythingProjectIri,
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -807,7 +807,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'ForbiddenException' if the user requesting PermissionsForProjectGetRequestADM is not system or project Admin" in {
       val caught = intercept[ForbiddenException](
         PermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          projectIri = SharedTestDataADM.imagesProjectIri,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
         )
@@ -819,7 +819,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
   "querying the user's 'PermissionsDataADM' with 'hasPermissionFor'" should {
     "return true if the user is allowed to create a resource (root user)" in {
 
-      val projectIri       = INCUNABULA_PROJECT_IRI
+      val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.rootUser.permissions.hasPermissionFor(
@@ -833,7 +833,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return true if the user is allowed to create a resource (project admin user)" in {
 
-      val projectIri       = INCUNABULA_PROJECT_IRI
+      val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.incunabulaProjectAdminUser.permissions
@@ -844,7 +844,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return true if the user is allowed to create a resource (project member user)" in {
 
-      val projectIri       = INCUNABULA_PROJECT_IRI
+      val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.incunabulaMemberUser.permissions
@@ -854,7 +854,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     }
 
     "return false if the user is not allowed to create a resource" in {
-      val projectIri       = INCUNABULA_PROJECT_IRI
+      val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.normalUser.permissions.hasPermissionFor(
@@ -867,7 +867,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     }
 
     "return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri                = IMAGES_PROJECT_IRI
+      val projectIri                = imagesProjectIri
       val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
       val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
 
@@ -881,7 +881,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     }
 
     "return false if the user is not allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri                 = IMAGES_PROJECT_IRI
+      val projectIri                 = imagesProjectIri
       val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
       val result = SharedTestDataADM.imagesReviewerUser.permissions
@@ -893,14 +893,14 @@ class PermissionsMessagesADMSpec extends CoreSpec {
   "querying the user's 'PermissionsProfileV1' with 'hasProjectAdminAllPermissionFor'" should {
 
     "return true if the user has the 'ProjectAdminAllPermission' (incunabula project admin user)" in {
-      val projectIri = INCUNABULA_PROJECT_IRI
+      val projectIri = incunabulaProjectIri
       val result     = SharedTestDataADM.incunabulaProjectAdminUser.permissions.hasProjectAdminAllPermissionFor(projectIri)
 
       result should be(true)
     }
 
     "return false if the user has the 'ProjectAdminAllPermission' (incunabula member user)" in {
-      val projectIri = INCUNABULA_PROJECT_IRI
+      val projectIri = incunabulaProjectIri
       val result     = SharedTestDataADM.incunabulaMemberUser.permissions.hasProjectAdminAllPermissionFor(projectIri)
 
       result should be(false)

@@ -54,7 +54,7 @@ For example:
     "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W.20160302T150521Z"
   },
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+    "@id" : "http://rdfh.ch/projects/0803"
   },
   "knora-api:attachedToUser" : {
     "@id" : "http://rdfh.ch/users/91e19f1e01"

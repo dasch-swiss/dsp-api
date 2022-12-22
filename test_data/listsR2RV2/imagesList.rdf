@@ -6,7 +6,7 @@
 	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
 <knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/73d0ec0302">
-	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA"/>
+	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/00FF"/>
 	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a8f4cd99a6"/>
 	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/738fc745a7"/>
 	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4ca9e7d3b5"/>

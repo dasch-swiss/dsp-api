@@ -2636,7 +2636,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "not return resources of a project which does not exist" in {
 
       appActor ! ProjectResourcesWithHistoryGetRequestV2(
-        projectIri = "http://rdfh.ch/projects/YVTg6MPdQkWjz_n74zyV6w",
+        projectIri = "http://rdfh.ch/projects/1111",
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2646,7 +2646,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "return seq of full history events for each resource of a project" in {
       appActor ! ProjectResourcesWithHistoryGetRequestV2(
-        projectIri = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+        projectIri = "http://rdfh.ch/projects/0001",
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
