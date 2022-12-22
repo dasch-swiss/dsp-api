@@ -146,7 +146,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val createAdministrativePermissionRequest: String =
           s"""{
              |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
              |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
              |}""".stripMargin
 
@@ -178,7 +178,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
+        assert(projectIri == "http://rdfh.ch/projects/0001")
         val permissions = result
           .getOrElse(
             "hasPermissions",
@@ -203,7 +203,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |    "id": "$customAPIri",
              |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
              |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
              |}""".stripMargin
 
@@ -222,7 +222,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |    "administrative_permission": {
              |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-             |        "forProject": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+             |        "forProject": "http://rdfh.ch/projects/0001",
              |        "hasPermissions": [
              |            {
              |                "additionalInformation": null,
@@ -290,7 +290,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val createDefaultObjectAccessPermissionRequest: String =
           s"""{
              |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
              |    "forProperty":null,
              |    "forResourceClass":null,
              |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
@@ -323,7 +323,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
+        assert(projectIri == "http://rdfh.ch/projects/0001")
         val permissions = result
           .getOrElse(
             "hasPermissions",
@@ -351,7 +351,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
              |    "id": "$customDOAPIri",
              |    "forGroup":null,
-             |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "forProject":"${SharedTestDataADM.imagesProjectIri}",
              |    "forProperty":null,
              |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
              |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
@@ -391,7 +391,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA")
+        assert(projectIri == "http://rdfh.ch/projects/00FF")
         val permissions = result
           .getOrElse(
             "hasPermissions",

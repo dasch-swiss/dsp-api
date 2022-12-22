@@ -41,7 +41,7 @@
         {"value": "NewGroupDescription", "language": "en"},
         {"value": "NeueGruppenBeschreibung", "language": "de"}
       ],
-      "project": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
+      "project": "http://rdfh.ch/projects/00FF",
       "status": true,
       "selfjoin": false
     }
@@ -55,7 +55,7 @@ specified by the `id` in the request body as below:
       "id": "http://rdfh.ch/groups/00FF/a95UWs71KUklnFOe1rcw1w",  
       "name": "GroupWithCustomIRI",
       "descriptions": [{"value": "A new group with a custom IRI", "language": "en"}],
-      "project": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA",
+      "project": "http://rdfh.ch/projects/00FF",
       "status": true,
       "selfjoin": false
     }

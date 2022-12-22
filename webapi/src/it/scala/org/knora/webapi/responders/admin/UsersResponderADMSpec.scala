@@ -759,7 +759,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
           timeout,
           Failure(
             BadRequestException(
-              "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA. A user needs to be a member of the project to be added as project admin."
+              "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/00FF. A user needs to be a member of the project to be added as project admin."
             )
           )
         )
