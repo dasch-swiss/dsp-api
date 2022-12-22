@@ -450,10 +450,6 @@ Example response:
 }
 ```
 
----
-
-<!-- TODO: not reworked from here on, only placeholders -->
-
 ## Project Member Operations
 
 ### Get Project Members by ID
