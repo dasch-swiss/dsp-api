@@ -140,7 +140,7 @@ Example response:
                 "language": "en"
             }
         ],
-        "id": "http://rdfh.ch/projects/SvsqNHGeT_ao7Z-Ani5VNg",
+        "id": "http://rdfh.ch/projects/3333",
         "keywords": [
             "test project"
         ],
@@ -208,7 +208,7 @@ curl --request GET --url http://localhost:3333/admin/projects/shortname/anything
 
 ```bash
 curl --request GET --url \
-    http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ
+    http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001
 ```
 
 Example response:
@@ -221,7 +221,7 @@ Example response:
         "value": "Anything Project"
       }
     ],
-    "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+    "id": "http://rdfh.ch/projects/0001",
     "keywords": [
       "arbitrary test data",
       "things"
@@ -274,7 +274,7 @@ Example request:
 
 ```bash
 curl --request PUT \
-  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ \
+  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001 \
   --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -292,7 +292,7 @@ Example response:
         "value": "Anything Project"
       }
     ],
-    "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+    "id": "http://rdfh.ch/projects/0001",
     "keywords": [
       "arbitrary test data",
       "things"
@@ -332,7 +332,7 @@ Description: Mark a project as deleted (by setting the `status` flag to `false`)
 
 ```bash
 curl --request DELETE \
-  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ \
+  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001 \
   --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
   --header 'Content-Type: application/json'
 ```
@@ -347,7 +347,7 @@ Example response:
         "value": "Anything Project"
       }
     ],
-    "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+    "id": "http://rdfh.ch/projects/0001",
     "keywords": [
       "arbitrary test data",
       "things"
@@ -477,7 +477,7 @@ curl --request GET 'http://0.0.0.0:3333/admin/projects/shortname/anything/member
 ```
 
 ```bash
-curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ/members'
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/members'
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
@@ -496,7 +496,7 @@ Example response:
             "password": null,
             "permissions": {
                 "administrativePermissionsPerProject": {
-                    "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
+                    "http://rdfh.ch/projects/0001": [
                         {
                             "additionalInformation": null,
                             "name": "ProjectResourceCreateAllPermission",
@@ -505,7 +505,7 @@ Example response:
                     ]
                 },
                 "groupsPerProject": {
-                    "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
+                    "http://rdfh.ch/projects/0001": [
                         "http://www.knora.org/ontology/knora-admin#ProjectMember"
                     ]
                 }
@@ -517,7 +517,7 @@ Example response:
                             "value": "Anything Project"
                         }
                     ],
-                    "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+                    "id": "http://rdfh.ch/projects/0001",
                     "keywords": [
                         "arbitrary test data",
                         "things"
@@ -576,7 +576,7 @@ curl --request GET 'http://0.0.0.0:3333/admin/projects/shortname/anything/admin-
 ```
 
 ```bash
-curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ/admin-members'
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/admin-members'
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
@@ -595,7 +595,7 @@ Example response:
             "password": null,
             "permissions": {
                 "administrativePermissionsPerProject": {
-                    "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
+                    "http://rdfh.ch/projects/0001": [
                         {
                             "additionalInformation": null,
                             "name": "ProjectResourceCreateAllPermission",
@@ -609,7 +609,7 @@ Example response:
                     ]
                 },
                 "groupsPerProject": {
-                    "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ": [
+                    "http://rdfh.ch/projects/0001": [
                         "http://www.knora.org/ontology/knora-admin#ProjectMember",
                         "http://www.knora.org/ontology/knora-admin#ProjectAdmin"
                     ]
@@ -622,7 +622,7 @@ Example response:
                             "value": "Anything Project"
                         }
                     ],
-                    "id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+                    "id": "http://rdfh.ch/projects/0001",
                     "keywords": [
                         "arbitrary test data",
                         "things"
@@ -758,7 +758,7 @@ Description: returns the keywords of a single project
 Example request:
 
 ```bash
-curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ/Keywords'
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/Keywords'
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
@@ -798,7 +798,7 @@ curl --request GET 'http://0.0.0.0:3333/admin/projects/shortname/anything/Restri
 ```
 
 ```bash
-curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ/RestrictedViewSettings'
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/RestrictedViewSettings'
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
 ```
 
