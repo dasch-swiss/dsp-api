@@ -19,12 +19,11 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class ListsResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.

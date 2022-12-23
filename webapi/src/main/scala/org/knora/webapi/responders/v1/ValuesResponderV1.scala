@@ -47,14 +47,13 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.util._
 
 /**
  * Updates Knora values.
  */
-class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
   // Converts SPARQL query results to ApiValueV1 objects.
   val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
 
