@@ -14,7 +14,7 @@
  * @param ignoreRdfSubjectAndObject if true, rdf:subject and rdf:object will be ignored. This is necessary when checking
  * for references to a resource that is to be erased.
  *@
-@(entityIri: SmartIri,
+@(entityIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri,
   ignoreKnoraConstraints: Boolean = false,
   ignoreRdfSubjectAndObject: Boolean = false)
 
@@ -27,7 +27,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT DISTINCT ?isUsed
 
 WHERE {
-    BIND(IRI("@entityIri") AS ?entity)
+    BIND(IRI("@{entityIri.value}") AS ?entity)
     BIND(true AS ?isUsed)
 
     ?s ?p ?entity .

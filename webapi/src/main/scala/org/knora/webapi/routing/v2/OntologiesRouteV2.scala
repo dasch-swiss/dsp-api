@@ -36,11 +36,16 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.RouteUtilV2.completeZioApiV2ComplexResponse
+import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
  */
-class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runtime[RestCardinalityService])
+    extends KnoraRoute(routeData)
+    with Authenticator {
 
   val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
 
@@ -60,7 +65,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       updateClass() ~
       deleteClassComment() ~
       addCardinalities() ~
-      canReplaceCardinalities() ~
+      canReplaceCardinalities ~
       replaceCardinalities() ~
       canDeleteCardinalitiesFromClass() ~
       deleteCardinalitiesFromClass() ~
@@ -430,35 +435,22 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def canReplaceCardinalities(): Route =
-    path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIriStr: IRI =>
+  private def canReplaceCardinalities: Route =
+    // GET basePath/{iriEncode} or
+    // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
+    path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
       get { requestContext =>
-        val classIri = classIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(classIri)
-
-        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
-        }
-
-        val requestMessageFuture: Future[CanChangeCardinalitiesRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-        } yield CanChangeCardinalitiesRequestV2(
-          classIri = classIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        val appConfig = routeData.appConfig
+        val responseZio = getUserADMZio(requestContext, appConfig)
+          .flatMap(user =>
+            RestCardinalityService.canUpdateCardinality(
+              classIri,
+              user,
+              propertyIri = getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey),
+              newCardinality = getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey)
+            )
+          )
+        completeZioApiV2ComplexResponse(responseZio, requestContext, appConfig)
       }
     }
 

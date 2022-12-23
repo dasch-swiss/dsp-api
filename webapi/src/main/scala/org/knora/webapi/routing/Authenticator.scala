@@ -23,6 +23,8 @@ import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
 import pdi.jwt.JwtSprayJson
 import spray.json._
+import zio.Task
+import zio.ZIO
 
 import java.util.Base64
 import java.util.UUID
@@ -412,6 +414,12 @@ trait Authenticator extends InstrumentationSupport {
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // GET USER PROFILE / AUTHENTICATION ENTRY POINT
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  def getUserADMZio(requestContext: RequestContext, appConfig: AppConfig)(implicit
+    system: ActorSystem,
+    appActor: ActorRef,
+    executionContext: ExecutionContext
+  ): Task[UserADM] = ZIO.fromFuture(_ => getUserADM(requestContext, appConfig))
 
   /**
    * Returns a User that match the credentials found in the [[RequestContext]].

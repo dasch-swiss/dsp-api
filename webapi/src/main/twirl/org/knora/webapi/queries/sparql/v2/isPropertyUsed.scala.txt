@@ -3,21 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  *@
 
-@import org.knora.webapi.IRI
-
 @*
- * Checks whether a property is used (i.e., is the property of any statements).
+ * This query is asking whether there are any instances of a class or subclass that have a specific property.
+ * I.e. checks whether a property is used, for example is the property of any statements.
  *
- * @param propertyIri the IRI of the property.
- * @param ignoreKnoraConstraints if true, knora-base:subjectClassConstraint and knora-base:objectClassConstraint will be ignored.
- * This is necessary when modifying the cardinalities of a class.
- * @param ignoreRdfSubjectAndObject if true, rdf:subject and rdf:object will be ignored. This is necessary when checking
- * for references to a resource that is to be erased.
+ * @param propertyIri the IRI of the property
+ * @param classIri the IRI of class to check
  *@
-@(internalPropertyIri: IRI,
-  internalClassIri: IRI,
-  ignoreKnoraConstraints: Boolean = false,
-  ignoreRdfSubjectAndObject: Boolean = false)
+
+@(
+  propertyIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri,
+  classIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri
+)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -26,21 +23,20 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 ASK
-
 WHERE {
-    BIND(IRI("@internalPropertyIri") AS ?property)
-    BIND(IRI("@internalClassIri") AS ?classIri)
+  BIND(IRI("@{propertyIri.value}") AS ?property)
+  BIND(IRI("@{classIri.value}") AS ?classIri)
 
-    {
-        # select all items of type classIri with property ?property.
-        ?s ?property ?o .
-        ?s rdf:type ?classIri .
-    }
-
-    UNION {
-            # select all items belonging to a subclass of classIri and with property ?property.
-            ?s ?property ?o .
-            ?s rdf:type ?class .
-            ?class rdfs:subClassOf* ?classIri .
-          }
+  {
+    # select all items of type classIri with property ?property.
+    ?s ?property ?o;
+       rdf:type ?classIri .
+  }
+  UNION
+  {
+    # select all items belonging to a subclass of classIri and with property ?property.
+    ?s ?property ?o ;
+       rdf:type ?class .
+    ?class rdfs:subClassOf* ?classIri .
+  }
 }
