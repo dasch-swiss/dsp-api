@@ -9,17 +9,15 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-
 import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
@@ -447,21 +445,16 @@ object CardinalityHandler {
     appActor: ActorRef,
     internalClassIri: SmartIri,
     internalPropertyIri: SmartIri
-  )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] =
-    for {
-      request <- Future(
-                   org.knora.webapi.queries.sparql.v2.txt
-                     .isPropertyUsed(
-                       internalPropertyIri = internalPropertyIri.toString,
-                       internalClassIri = internalClassIri.toString,
-                       ignoreKnoraConstraints = true,
-                       ignoreRdfSubjectAndObject = true
-                     )
-                     .toString()
-                 )
-      response: SparqlAskResponse <-
-        appActor.ask(SparqlAskRequest(request)).mapTo[SparqlAskResponse]
-    } yield response.result
+  )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] = {
+    val query = org.knora.webapi.queries.sparql.v2.txt.isPropertyUsed(
+      internalPropertyIri = internalPropertyIri.toString,
+      internalClassIri = internalClassIri.toString,
+      ignoreKnoraConstraints = true,
+      ignoreRdfSubjectAndObject = true
+    )
+    val request = SparqlAskRequest(query.toString())
+    appActor.ask(request).mapTo[SparqlAskResponse].map(_.result)
+  }
 
   /**
    * Checks if the class is defined inside the ontology found in the cache.
@@ -539,26 +532,5 @@ object CardinalityHandler {
           s"Submitted cardinality for property $propertyIri is not defined for class $internalClassIri."
         )
     }
-
   }
-
-  /**
-   * Checks if the class is a subclass of `knora-base:Resource`.
-   *
-   * @param submittedClassInfoContentV2 the class to check
-   * @return `true` if the class is a subclass of `knora-base:Resource`, otherwise throws an exception.
-   */
-  def isKnoraResourceClass(
-    submittedClassInfoContentV2: ClassInfoContentV2
-  )(implicit ec: ExecutionContext, stringFormatter: StringFormatter): Future[Boolean] =
-    if (submittedClassInfoContentV2.subClassOf.contains(KnoraBase.Resource.toSmartIri)) {
-      FastFuture.successful(true)
-    } else {
-      FastFuture.failed(
-        throw BadRequestException(
-          s"Class ${submittedClassInfoContentV2.classIri} is not a subclass of ${KnoraBase.Resource.toSmartIri}. $submittedClassInfoContentV2"
-        )
-      )
-    }
-
 }
