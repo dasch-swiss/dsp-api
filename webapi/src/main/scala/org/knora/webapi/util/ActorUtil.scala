@@ -11,19 +11,16 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import zio.Cause._
 import zio._
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors.ExceptionUtil
 import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
-import org.knora.webapi.config.AppConfig
 
 object ActorUtil {
 
@@ -41,7 +38,6 @@ object ActorUtil {
   def zio2Message[A](
     sender: ActorRef,
     zioTask: zio.Task[A],
-    appConfig: AppConfig,
     log: Logger,
     runtime: Runtime[Any]
   ): Unit =
