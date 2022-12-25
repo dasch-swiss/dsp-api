@@ -2106,7 +2106,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         s"""{
            |    "knora-api:mappingHasName": "HTMLMapping",
            |    "knora-api:attachedToProject": {
-           |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
+           |      "@id": "${SharedTestDataADM.anythingProjectIri}"
            |    },
            |    "rdfs:label": "HTML mapping",
            |    "@context": {
@@ -2149,7 +2149,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
         textValueAsXml = textValueAsXml,
-        mappingIri = s"${SharedTestDataADM.ANYTHING_PROJECT_IRI}/mappings/HTMLMapping"
+        mappingIri = s"${SharedTestDataADM.anythingProjectIri}/mappings/HTMLMapping"
       )
 
       val request = Post(

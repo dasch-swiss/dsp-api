@@ -37,13 +37,12 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.ActorUtil
 
 /**
  * Handles requests to read and write Knora values.
  */
-class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData) {
+class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
@@ -481,7 +480,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       newValueUUID: UUID <- Future.successful(makeNewValueUUID(maybeValueIri, maybeValueUUID))
 
       // Make an IRI for the new value.
-      newValueIri: IRI <- checkOrCreateEntityIri(
+      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                             maybeValueIri,
                             stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
                           )
@@ -709,7 +708,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                               makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
                             )
 
-      newValueIri: IRI <- checkOrCreateEntityIri(
+      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                             valueToCreate.customValueIri,
                             stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
                           )
@@ -1066,7 +1065,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Do the update.
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
-        newValueIri: IRI <- checkOrCreateEntityIri(
+        newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                               updateValuePermissionsV2.newValueVersionIri,
                               stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
                             )
@@ -1388,7 +1387,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     requestingUser: UserADM
   ): Future[UnverifiedValueV2] =
     for {
-      newValueIri: IRI <- checkOrCreateEntityIri(
+      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                             newValueVersionIri,
                             stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
                           )
@@ -2444,7 +2443,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
     for {
       // Make an IRI for the new LinkValue.
-      newLinkValueIri: IRI <- checkOrCreateEntityIri(
+      newLinkValueIri: IRI <- iriService.checkOrCreateEntityIri(
                                 customNewLinkValueIri,
                                 stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
                               )
@@ -2600,7 +2599,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         for {
           // If no custom IRI was provided, generate an IRI for the new LinkValue.
-          newLinkValueIri: IRI <- checkOrCreateEntityIri(
+          newLinkValueIri: IRI <- iriService.checkOrCreateEntityIri(
                                     customNewLinkValueIri,
                                     stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
                                   )

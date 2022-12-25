@@ -65,7 +65,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all lists belonging to the images project" in {
         appActor ! ListsGetRequestADM(
-          projectIri = Some(IMAGES_PROJECT_IRI),
+          projectIri = Some(imagesProjectIri),
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -78,7 +78,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all lists belonging to the anything project" in {
         appActor ! ListsGetRequestADM(
-          projectIri = Some(ANYTHING_PROJECT_IRI),
+          projectIri = Some(anythingProjectIri),
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -152,7 +152,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
       "create a list" in {
         appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("neuelistename").fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de"))))
@@ -168,7 +168,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
 
         val listInfo = received.list.listinfo
-        listInfo.projectIri should be(IMAGES_PROJECT_IRI)
+        listInfo.projectIri should be(imagesProjectIri)
 
         listInfo.name should be(Some("neuelistename"))
 
@@ -192,7 +192,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
         appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
@@ -208,7 +208,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
 
         val listInfo = received.list.listinfo
-        listInfo.projectIri should be(IMAGES_PROJECT_IRI)
+        listInfo.projectIri should be(imagesProjectIri)
 
         listInfo.name should be(Some(stringFormatter.fromSparqlEncodedString(nameWithSpecialCharacter)))
 
@@ -232,7 +232,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
             listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("updated name").fold(e => throw e.head, v => v)),
             labels = Some(
               Labels
@@ -263,7 +263,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
         val listInfo = received.listinfo
-        listInfo.projectIri should be(IMAGES_PROJECT_IRI)
+        listInfo.projectIri should be(imagesProjectIri)
         listInfo.name should be(Some("updated name"))
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(2)
@@ -286,7 +286,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
-        val projectIRI = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v)
+        val projectIRI = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v)
         appActor ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
@@ -310,7 +310,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
@@ -363,7 +363,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
             position = Some(Position.make(0).fold(e => throw e.head, v => v)),
             labels = Labels
@@ -417,7 +417,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(secondChildIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
@@ -471,7 +471,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
             position = givenPosition,
             labels = Labels

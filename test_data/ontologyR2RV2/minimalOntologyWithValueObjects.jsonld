@@ -28,7 +28,7 @@
         }
     ],
     "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+        "@id": "http://rdfh.ch/projects/0001"
     },
     "@type": "owl:Ontology",
     "@id": "http://0.0.0.0:3333/ontology/0001/minimal/v2",

@@ -104,7 +104,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         receivedListInfo.name should be(Some("updated root node name"))
 
@@ -147,7 +147,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
         labels.size should be(1)
@@ -192,7 +192,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
         comments.size should be(1)
@@ -600,7 +600,7 @@ class UpdateListItemsRouteADME2ESpec
         val updateListInfo: String =
           s"""{
              |    "listIri": "${newListIri}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
              |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
              |}""".stripMargin
@@ -627,7 +627,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
         labels.size should be(2)
@@ -651,7 +651,7 @@ class UpdateListItemsRouteADME2ESpec
         val updateListName =
           s"""{
              |    "listIri": "${newListIri}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "name": "a totally new name"
              |}""".stripMargin
         clientTestDataCollector.addFile(
@@ -676,7 +676,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         receivedListInfo.name should be(Some("a totally new name"))
 
@@ -696,7 +696,7 @@ class UpdateListItemsRouteADME2ESpec
         val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
           s"""{
              |    "listIri": "http://rdfh.ch/lists/0001/treeList",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |  "labels": [
              |    {"language": "en", "value": "Test List"},
              |    {"language": "se", "value": "Test List"}
@@ -732,7 +732,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
         labels.size should be(2)
@@ -757,7 +757,7 @@ class UpdateListItemsRouteADME2ESpec
           s"""
              |{
              |    "listIri": "${newListIri}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
              |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
              |}
@@ -781,7 +781,7 @@ class UpdateListItemsRouteADME2ESpec
           s"""
              |{
              |    "listIri": "",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
              |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
              |}
@@ -817,7 +817,7 @@ class UpdateListItemsRouteADME2ESpec
           s"""
              |{
              |    "listIri": "${newListIri}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [],
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}

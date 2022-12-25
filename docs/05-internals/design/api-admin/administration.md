@@ -246,7 +246,7 @@ permission object with the compact form literal would be: :
 ```
 <http://rdfh.ch/permissions/001
         rdf:type knora-admin:AdministrativePermission ;
-        knora-admin:forProject <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>;
+        knora-admin:forProject <http://rdfh.ch/projects/00FF>;
         knora-admin:forGroup knora-admin:ProjectMember ;
         knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 ```
@@ -313,7 +313,7 @@ Example default object access permission instance:
 ```
 <http://rdfh.ch/permissions/002
         rdf:type knora-admin:DefaultObjectAccessPermission ;
-        knora-admin:forProject <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>;
+        knora-admin:forProject <http://rdfh.ch/projects/00FF>;
         knora-admin:forGroup knora-admin:ProjectMember ;
         knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser"^^xsd:string .
 ```
@@ -531,7 +531,7 @@ either *knora-admin:forGroup*, *knora-admin:forResourceClass*, or
 
 ```
 <http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:AdministrativePermission ;
-     knora-admin:forProject <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+     knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
      knora-admin:forGroup knora-admin:ProjectAdmin ;
      knora-base:hasPermissions "ProjectResourceCreateAllPermission|
                                 ProjectAdminAllPermission"^^xsd:string .
@@ -541,7 +541,7 @@ either *knora-admin:forGroup*, *knora-admin:forResourceClass*, or
 
 ```
 <http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:AdministrativePermission ;
-     knora-admin:forProject <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+     knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
      knora-admin:forGroup knora-admin:ProjectMember ;
      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 ```
@@ -567,7 +567,7 @@ either *knora-admin:forGroup*, *knora-admin:forResourceClass*, or
 
 ```
 <http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:DefaultObjectAccessPermission ;
-     knora-admin:forProject <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+     knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
      knora-admin:forGroup knora-admin:ProjectMember ;
      knora-base:hasPermissions "CR knora-admin:Creator|
                                  M <http://rdfh.ch/groups/[shortcode]/[UUID]>|

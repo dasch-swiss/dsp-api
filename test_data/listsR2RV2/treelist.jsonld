@@ -2,7 +2,7 @@
   "@id": "http://rdfh.ch/lists/0001/treeList",
   "@type": "knora-api:ListNode",
   "knora-api:attachedToProject": {
-    "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+    "@id": "http://rdfh.ch/projects/0001"
   },
   "knora-api:hasSubListNode": [
     {

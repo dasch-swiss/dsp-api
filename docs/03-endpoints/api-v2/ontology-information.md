@@ -48,7 +48,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The anything ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+        "@id": "http://rdfh.ch/projects/0001"
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/0001/anything/v2"
@@ -60,7 +60,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The something ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+        "@id": "http://rdfh.ch/projects/0001"
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/0001/something/v2"
@@ -72,7 +72,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The images demo ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA" 
+        "@id": "http://rdfh.ch/projects/00FF" 
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/00FF/images/v2"
@@ -84,7 +84,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The BEOL ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
+        "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/0801/beol/v2"
@@ -96,7 +96,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The Biblio ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
+        "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2"
@@ -108,7 +108,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The Newton-Project ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ"
+        "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/0801/newton/v2"
@@ -120,7 +120,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The incunabula ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+        "@id": "http://rdfh.ch/projects/0803"
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/0803/incunabula/v2"
@@ -132,7 +132,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The dokubib ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/oIjhUsZmQLuJ0VMGvJ2pfg"
+        "@id": "http://rdfh.ch/projects/0804"
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/0804/dokubib/v2"
@@ -144,7 +144,7 @@ The response is in the complex API v2 schema. Sample response:
       },
       "rdfs:label": "The Anton Webern project ontology",
       "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/NeWmPqGNQ5KVMAG6L8AjNA"
+        "@id": "http://rdfh.ch/projects/08AE"
       },
       "@type": "owl:Ontology",
       "@id": "http://0.0.0.0:3333/ontology/08AE/webern/v2"
@@ -205,14 +205,14 @@ HTTP GET to http://host/v2/ontologies/metadata/PROJECT_IRI[/PROJECT_IRI...]
 The project IRIs must be URL-encoded.
 
 Example response for the `anything` test project
-(project IRI `http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ`):
+(project IRI `http://rdfh.ch/projects/0001`):
 
 ```json
 {
   "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+    "@id" : "http://rdfh.ch/projects/0001"
   },
   "knora-api:lastModificationDate": "2017-12-19T15:23:42.166Z",
   "rdfs:label" : "The anything ontology",
@@ -601,7 +601,7 @@ sample ontology in the complex schema, `http://0.0.0.0:3333/ontology/00FF/images
   "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA"
+    "@id" : "http://rdfh.ch/projects/00FF"
   },
   "rdfs:label" : "The images demo ontology",
   "@graph" : [ {

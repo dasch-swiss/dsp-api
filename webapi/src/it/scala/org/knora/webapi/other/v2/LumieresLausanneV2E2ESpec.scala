@@ -52,7 +52,7 @@ class LumieresLausanneV2E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
            |    "@type": "onto:User",
            |    "rdfs:label": "Test",
            |    "knora-api:attachedToProject": {
-           |        "@id": "http://rdfh.ch/projects/bFURQB6zR1ugDFQL7EZy9Q"
+           |        "@id": "http://rdfh.ch/projects/0113"
            |    },
            |    "onto:isKnoraUser": {
            |        "@type": "knora-api:UriValue",

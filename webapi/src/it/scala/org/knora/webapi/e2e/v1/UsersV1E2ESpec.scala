@@ -133,9 +133,9 @@ class UsersV1E2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJs
 
         val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
         projects should contain allElementsOf Seq(
-          SharedTestDataV1.IMAGES_PROJECT_IRI,
-          SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-          SharedTestDataV1.ANYTHING_PROJECT_IRI
+          SharedTestDataV1.imagesProjectIri,
+          SharedTestDataV1.incunabulaProjectIri,
+          SharedTestDataV1.anythingProjectIri
         )
 
         // testing getUserProjectMemberships method, which should return the same result
@@ -155,9 +155,9 @@ class UsersV1E2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJs
 
         val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
         projects should contain allElementsOf Seq(
-          SharedTestDataV1.IMAGES_PROJECT_IRI,
-          SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-          SharedTestDataV1.ANYTHING_PROJECT_IRI
+          SharedTestDataV1.imagesProjectIri,
+          SharedTestDataV1.incunabulaProjectIri,
+          SharedTestDataV1.anythingProjectIri
         )
 
         // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result

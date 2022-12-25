@@ -311,7 +311,7 @@ Sipi. Here is an example of a request to create a resource of class `anything:Th
     "knora-api:fileValueHasFilename": "3UIsXH9bP0j-BV0D4sN51Xz.jp2"
   },
   "knora-api:attachedToProject": {
-    "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+    "@id": "http://rdfh.ch/projects/0001"
   },
   "rdfs:label": "test thing",
   "@context": {

@@ -199,6 +199,18 @@ object RouteUtilV2 {
     }
 
   /**
+   * Gets the project IRI specified in a Knora-specific HTTP header.
+   *
+   * @param ctx the akka-http [[RequestContext]].
+   * @return the [[Try]] contains the specified project IRI, or if invalid a BadRequestException
+   * @throws [[BadRequestException]] if project was not provided in the header
+   */
+  def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
+    getProject(ctx).getOrElse(
+      throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
+    )
+
+  /**
    * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
    *
    * @param requestMessage       a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.

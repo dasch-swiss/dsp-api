@@ -59,16 +59,6 @@ case class SetAllowReloadOverHTTPState(value: Boolean) extends ApplicationReques
 case class GetAllowReloadOverHTTPState() extends ApplicationRequest
 
 /**
- * Setter message for storing the rometheusReporter flag.
- */
-case class SetPrometheusReporterState(value: Boolean) extends ApplicationRequest
-
-/**
- * Getter message for retrieving the rometheusReporter flag value.
- */
-case class GetPrometheusReporterState() extends ApplicationRequest
-
-/**
  * Setter message for storing the ZipkinReporter flag.
  */
 case class SetZipkinReporterState(value: Boolean) extends ApplicationRequest

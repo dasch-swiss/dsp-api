@@ -30,6 +30,10 @@ object Main extends ZIOApp {
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ LayersLive.dspLayersLive
 
   /* Here we start our Application */
-  override def run = AppServer.live.launch
-
+  override def run = for {
+    f <- ZIO.never.forkDaemon
+    _ <- InstrumentationHttpServer.make
+    _ <- AppServer.live
+    _ <- f.join
+  } yield ()
 }

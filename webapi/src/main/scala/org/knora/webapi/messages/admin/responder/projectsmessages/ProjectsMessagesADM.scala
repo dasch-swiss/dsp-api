@@ -20,7 +20,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
@@ -511,7 +510,7 @@ case class ProjectADM(
 }
 
 /**
- * Represents the project's identifier, which can be an IRI, shortcode, shortname or UUID.
+ * Represents the project's identifier, which can be an IRI, shortcode or shortname.
  */
 sealed trait ProjectIdentifierADM { self =>
   def asIriIdentifierOption: Option[String] =
@@ -530,12 +529,6 @@ sealed trait ProjectIdentifierADM { self =>
     self match {
       case ShortnameIdentifier(value) => Some(value.value)
       case _                          => None
-    }
-
-  def asUuidIdentifierOption: Option[String] =
-    self match {
-      case UuidIdentifier(value) => Some(UuidIdentifier.makeProjectIri(value.value))
-      case _                     => None
     }
 }
 
@@ -581,24 +574,9 @@ object ProjectIdentifierADM {
   }
 
   /**
-   * Represents [[UuidIdentifier]] identifier.
-   *
-   * @param value that constructs the identifier in the type of [[Base64Uuid]] value object.
-   */
-  final case class UuidIdentifier(value: Base64Uuid) extends ProjectIdentifierADM
-  object UuidIdentifier {
-    def fromString(value: String): Validation[ValidationException, UuidIdentifier] =
-      Base64Uuid.make(value).map {
-        UuidIdentifier(_)
-      }
-
-    def makeProjectIri(uuid: String) = s"http://rdfh.ch/projects/${uuid}"
-  }
-
-  /**
    * Gets desired Project identifier value.
    *
-   * @param identifier either IRI, Shortname, Shortcode or UUID of the project.
+   * @param identifier either IRI, Shortname or Shortcode of the project.
    * @return identifier's value as [[String]]
    */
   def getId(identifier: ProjectIdentifierADM): String =
@@ -606,7 +584,6 @@ object ProjectIdentifierADM {
       case IriIdentifier(value)       => value.value
       case ShortnameIdentifier(value) => value.value
       case ShortcodeIdentifier(value) => value.value
-      case UuidIdentifier(value)      => UuidIdentifier.makeProjectIri(value.value)
     }
 }
 

@@ -31,12 +31,12 @@ sealed abstract case class UploadFileRequest private (
    *
    * @param className    the class name of the resource. Optional.
    * @param ontologyName the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
-   * @param uuid         the uuid of the project to which the resource should be added. Defaults to `"Lw3FC39BSzCwvmdOaTyLqQ"`
+   * @param uuid         the uuid of the project to which the resource should be added. Defaults to `"0001"`
    * @param ontologyIRI  IRI of the ontology, to which the prefix should resolve. Optional.
    * @return JSON-LD serialization of the request.
    */
   def toJsonLd(
-    shortcode: String = "Lw3FC39BSzCwvmdOaTyLqQ",
+    shortcode: String = "0001",
     ontologyName: String = "knora-api",
     className: Option[String] = None,
     ontologyIRI: Option[String] = None

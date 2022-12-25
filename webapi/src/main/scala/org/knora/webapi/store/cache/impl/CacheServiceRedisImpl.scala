@@ -118,7 +118,6 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
       case IriIdentifier(value)       => getProjectByIri(value)
       case ShortcodeIdentifier(value) => getProjectByShortcode(value)
       case ShortnameIdentifier(value) => getProjectByShortname(value)
-      case UuidIdentifier(value)      => getProjectByUuid(value)
     }
 
   /**
@@ -167,22 +166,6 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
       project <-
         validIri match {
           case Some(value) => getProjectByIri(value)
-          case None        => ZIO.succeed(None)
-        }
-    } yield project)
-
-  /**
-   * Retrieves the project by its UUID.
-   *
-   * @param id the project's UUID
-   * @return an optional [[ProjectADM]].
-   */
-  def getProjectByUuid(uuid: Iri.Base64Uuid): Task[Option[ProjectADM]] =
-    (for {
-      bytes <- getBytesValue(UuidIdentifier.makeProjectIri(uuid.value))
-      project <-
-        bytes match {
-          case Some(value) => CacheSerialization.deserialize[ProjectADM](value)
           case None        => ZIO.succeed(None)
         }
     } yield project)
