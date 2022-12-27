@@ -9,14 +9,12 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResp
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.responders.ActorToZioBridge
 
-final case class ProjectsService(bridge: ActorToZioBridge) {
+final case class RestProjectsService(bridge: ActorToZioBridge) {
 
   /**
    * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].
-   * Checks permissions whether the [[UserADM]] requesting the project may see the result.
    *
    * @param projectIri           an [[IRI]] identifying the project
-   * @param requestingUser       the user making the request
    * @return
    *     '''success''': information about the project as a [[ProjectGetResponseADM]]
    *
@@ -39,12 +37,10 @@ final case class ProjectsService(bridge: ActorToZioBridge) {
    *
    *     '''error''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
    */
-  def getSingleProjectADMRequest(
-    identifier: ProjectIdentifierADM
-  ): Task[ProjectGetResponseADM] =
+  def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
     bridge.askAppActor(ProjectGetRequestADM(identifier))
 }
 
-object ProjectsService {
-  val layer: URLayer[ActorToZioBridge, ProjectsService] = ZLayer.fromFunction(ProjectsService.apply _)
+object RestProjectsService {
+  val layer: URLayer[ActorToZioBridge, RestProjectsService] = ZLayer.fromFunction(RestProjectsService.apply _)
 }

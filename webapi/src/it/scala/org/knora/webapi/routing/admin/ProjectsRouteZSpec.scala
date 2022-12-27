@@ -13,9 +13,9 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequ
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.ActorToZioBridgeMock
+import org.knora.webapi.responders.admin.RestProjectsService
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
@@ -47,7 +47,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
   // Expectations and layers for ActorToZioBridge mock
   private val commonLayers =
-    ZLayer.makeSome[ActorToZioBridge, ProjectsRouteZ](AppConfig.test, ProjectsRouteZ.layer, ProjectsService.layer)
+    ZLayer.makeSome[ActorToZioBridge, ProjectsRouteZ](AppConfig.test, ProjectsRouteZ.layer, RestProjectsService.layer)
+
   private val expectMessageToProjectResponderADM =
     ActorToZioBridgeMock.AskAppActor
       .of[ProjectGetResponseADM]

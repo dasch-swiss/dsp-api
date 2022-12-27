@@ -2,17 +2,17 @@ package org.knora.webapi.routing.admin
 
 import zhttp.http._
 import zio.ZLayer
-
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
-import org.knora.webapi.responders.admin.ProjectsService
+import org.knora.webapi.responders.admin.RestProjectsService
 import org.knora.webapi.routing.RouteUtilZ
 
 final case class ProjectsRouteZ(
   appConfig: AppConfig,
-  projectService: ProjectsService
+  projectsService: RestProjectsService
 ) {
 
   val route: HttpApp[Any, Nothing] =
@@ -23,7 +23,7 @@ final case class ProjectsRouteZ(
           RouteUtilZ
             .decodeUrl(iri)
             .flatMap(
-              projectService
+              projectsService
                 .getSingleProjectADMRequest(_)
                 .map(project => Response.json(project.toJsValue.toString()))
             )
@@ -37,6 +37,6 @@ final case class ProjectsRouteZ(
 }
 
 object ProjectsRouteZ {
-  val layer: ZLayer[AppConfig with ProjectsService, Nothing, ProjectsRouteZ] =
+  val layer: ZLayer[AppConfig with RestProjectsService, Nothing, ProjectsRouteZ] =
     ZLayer.fromFunction(ProjectsRouteZ.apply _)
 }
