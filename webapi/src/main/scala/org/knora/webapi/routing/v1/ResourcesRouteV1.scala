@@ -314,12 +314,9 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             projectResponse: ProjectGetResponseADM <-
               appActor
                 .ask(
-                  ProjectGetRequestADM(
-                    identifier = IriIdentifier
+                  ProjectGetRequestADM(identifier = IriIdentifier
                       .fromString(projectIri)
-                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-                    requestingUser = userADM
-                  )
+                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
                 )
                 .mapTo[ProjectGetResponseADM]
           } yield projectResponse.project.shortcode
@@ -449,12 +446,9 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             projectResponse: ProjectGetResponseADM <-
               appActor
                 .ask(
-                  ProjectGetRequestADM(
-                    identifier = IriIdentifier
+                  ProjectGetRequestADM(identifier = IriIdentifier
                       .fromString(projectId)
-                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-                    requestingUser = userProfile
-                  )
+                      .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
                 )
                 .mapTo[ProjectGetResponseADM]
           } yield projectResponse.project.shortcode

@@ -1,7 +1,6 @@
 package org.knora.webapi.routing.admin
 
 import zhttp.http._
-import zio.Task
 import zio.ZLayer
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
@@ -13,22 +12,21 @@ import org.knora.webapi.responders.admin.ProjectsService
 
 final case class ProjectsRouteZ(
   appConfig: AppConfig,
-  authenticatorService: AuthenticatorService,
   projectService: ProjectsService
 ) {
-
-  def getProjectByIri(iri: String, request: Request): Task[Response] =
-    for {
-      user       <- authenticatorService.getUser(request)
-      iriDecoded <- RouteUtilZ.decodeUrl(iri)
-      response   <- projectService.getSingleProjectADMRequest(iriDecoded, user)
-    } yield Response.json(response.toJsValue.toString())
 
   val route: HttpApp[Any, Nothing] =
     Http
       .collectZIO[Request] {
         // Returns a single project identified by an urlencoded IRI
-        case request @ Method.GET -> !! / "admin" / "projects" / "iri" / iri => getProjectByIri(iri, request)
+        case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
+          RouteUtilZ
+            .decodeUrl(iri)
+            .flatMap(
+              projectService
+                .getSingleProjectADMRequest(_)
+                .map(project => Response.json(project.toJsValue.toString()))
+            )
       }
       .catchAll {
         case RequestRejectedException(e) =>
@@ -39,6 +37,6 @@ final case class ProjectsRouteZ(
 }
 
 object ProjectsRouteZ {
-  val layer: ZLayer[AppConfig with AuthenticatorService with ProjectsService, Nothing, ProjectsRouteZ] =
-    ZLayer.fromFunction(ProjectsRouteZ(_, _, _))
+  val layer: ZLayer[AppConfig with ProjectsService, Nothing, ProjectsRouteZ] =
+    ZLayer.fromFunction(ProjectsRouteZ.apply _)
 }

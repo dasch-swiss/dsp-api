@@ -13,21 +13,21 @@ import akka.http.scaladsl.model.headers.`Content-Disposition`
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.IOResult
 import akka.stream.scaladsl.FileIO
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import zio.prelude.Validation
-
 import java.nio.file.Files
 import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Try
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -188,21 +188,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def getProjectByIri(): Route =
     path(projectsBasePath / "iri" / Segment) { value =>
       get { requestContext =>
-        val requestMessage: Future[ProjectGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-
-        } yield ProjectGetRequestADM(
-          identifier = IriIdentifier
-            .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = requestingUser
+        val requestMessage = ProjectGetRequestADM(
+          IriIdentifier.fromString(value).getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
-
         RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
+          requestMessageF = FastFuture.successful(requestMessage),
           requestContext = requestContext,
           appActor = appActor,
           log = log
@@ -222,11 +212,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-        } yield ProjectGetRequestADM(
-          identifier = ShortnameIdentifier
+        } yield ProjectGetRequestADM(identifier =
+          ShortnameIdentifier
             .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = requestingUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
 
         RouteUtilADM.runJsonRoute(
@@ -250,11 +239,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
 
-        } yield ProjectGetRequestADM(
-          identifier = ShortcodeIdentifier
+        } yield ProjectGetRequestADM(identifier =
+          ShortcodeIdentifier
             .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = requestingUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
 
         RouteUtilADM.runJsonRoute(

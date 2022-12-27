@@ -1584,12 +1584,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       projectInfoResponse <-
         appActor
           .ask(
-            ProjectGetRequestADM(
-              identifier = IriIdentifier
+            ProjectGetRequestADM(identifier = IriIdentifier
                 .fromString(projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-              requestingUser = requestingUser
-            )
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
           )
           .mapTo[ProjectGetResponseADM]
 
@@ -2462,12 +2459,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       projectResponse <-
         appActor
           .ask(
-            ProjectGetRequestADM(
-              identifier = IriIdentifier
+            ProjectGetRequestADM(identifier = IriIdentifier
                 .fromString(projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-              requestingUser = userProfile
-            )
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
           )
           .mapTo[ProjectGetResponseADM]
 

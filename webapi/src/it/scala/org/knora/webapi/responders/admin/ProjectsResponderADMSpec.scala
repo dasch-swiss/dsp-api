@@ -56,54 +56,45 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return information about a project identified by IRI" in {
-        appActor ! ProjectGetRequestADM(
-          identifier = IriIdentifier
+        appActor ! ProjectGetRequestADM(identifier =
+          IriIdentifier
             .fromString(SharedTestDataADM.incunabulaProject.id)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
 
       }
 
       "return information about a project identified by shortname" in {
-        appActor ! ProjectGetRequestADM(
-          identifier = ShortnameIdentifier
-            .fromString(SharedTestDataADM.incunabulaProject.shortname)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
-        )
+          appActor ! ProjectGetRequestADM(identifier =
+            ShortnameIdentifier
+              .fromString(SharedTestDataADM.incunabulaProject.shortname)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
-        appActor ! ProjectGetRequestADM(
-          identifier = IriIdentifier
+        appActor ! ProjectGetRequestADM(identifier =
+          IriIdentifier
             .fromString(notExistingProjectButValidProjectIri)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
-        )
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
         expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found")))
 
       }
 
       "return 'NotFoundException' when the project shortname is unknown " in {
-        appActor ! ProjectGetRequestADM(
-          identifier = ShortnameIdentifier
+        appActor ! ProjectGetRequestADM(identifier =
+          ShortnameIdentifier
             .fromString("wrongshortname")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
-        )
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
       }
 
       "return 'NotFoundException' when the project shortcode is unknown " in {
-        appActor ! ProjectGetRequestADM(
-          identifier = ShortcodeIdentifier
+        appActor ! ProjectGetRequestADM(identifier =
+          ShortcodeIdentifier
             .fromString("9999")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
-        )
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
         expectMsg(Failure(NotFoundException(s"Project '9999' not found")))
       }
     }

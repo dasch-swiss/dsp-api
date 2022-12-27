@@ -12,16 +12,15 @@ import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 import zio.prelude.Validation
-
 import java.nio.file.Path
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
@@ -30,8 +29,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-
-import ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -187,10 +185,7 @@ case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequ
  * @param identifier           the IRI, email, or username of the project.
  * @param requestingUser       the user making the request.
  */
-case class ProjectGetRequestADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
-) extends ProjectsResponderRequestADM
+case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
@@ -198,9 +193,7 @@ case class ProjectGetRequestADM(
  *
  * @param identifier           the IRI, email, or username of the project.
  */
-case class ProjectGetADM(
-  identifier: ProjectIdentifierADM
-) extends ProjectsResponderRequestADM
+case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
 /**
  * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.

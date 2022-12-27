@@ -2675,12 +2675,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       projectInfoResponse: ProjectGetResponseADM <-
         appActor
           .ask(
-            ProjectGetRequestADM(
-              identifier = IriIdentifier
+            ProjectGetRequestADM(identifier = IriIdentifier
                 .fromString(projectResourceHistoryEventsGetRequest.projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-              requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
-            )
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
           )
           .mapTo[ProjectGetResponseADM]
 
