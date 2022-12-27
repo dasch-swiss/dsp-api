@@ -5,7 +5,6 @@ import akka.actor.ActorSystem
 import zhttp.http._
 import zio.Task
 import zio.ZIO
-
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.config.AppConfig
@@ -17,6 +16,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.admin.AuthenticatorServiceLive.extractCredentialsFromHeader
 
 case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, stringFormatter: StringFormatter)
     extends AuthenticatorService {
@@ -25,19 +25,33 @@ case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, 
   private implicit val appActor: ActorRef   = actorDeps.appActor
   private implicit val ec: ExecutionContext = actorDeps.executionContext
 
+  private val authCookieName = Authenticator.calculateCookieName(appConfig)
   override def getUser(request: Request): Task[UserADM] =
     ZIO
-      .succeed(extractCredentials(request))
+      .succeed(extractCredentialsFromHeader(request, authCookieName))
       .flatMap(credentials => ZIO.fromFuture(_ => Authenticator.getUserADMThroughCredentialsV2(credentials, appConfig)))
+}
 
-  private def extractCredentials(request: Request): Option[KnoraCredentialsV2] = {
-    val basicAuth = request.basicAuthorizationCredentials.map(c =>
-      KnoraPasswordCredentialsV2(UserIdentifierADM(Some(c.uname)), c.upassword)
+object AuthenticatorServiceLive {
+
+  // visible for testing
+  def extractCredentialsFromHeader(request: Request, cookieName: String)(implicit
+    sf: StringFormatter
+  ): Option[KnoraCredentialsV2] =
+    extractBasicAuthEmail(request)
+      .orElse(
+        extractBearerToken(request)
+          .orElse(extractSessionCookie(request, cookieName))
+      )
+
+  private def extractBasicAuthEmail(request: Request)(implicit sf: StringFormatter) =
+    request.basicAuthorizationCredentials.map(c =>
+      KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(c.uname)), c.upassword)
     )
-    lazy val bearerToken   = request.bearerToken.map(KnoraJWTTokenCredentialsV2)
-    lazy val sessionCookie = request.cookieValue(authCookieName).map(c => KnoraSessionCredentialsV2(c.toString))
-    basicAuth.orElse(bearerToken.orElse(sessionCookie))
-  }
 
-  private val authCookieName = Authenticator.calculateCookieName(appConfig)
+  private def extractBearerToken(request: Request): Option[KnoraJWTTokenCredentialsV2] =
+    request.bearerToken.map(KnoraJWTTokenCredentialsV2)
+
+  private def extractSessionCookie(request: Request, cookieName: String) =
+    request.cookieValue(cookieName).map(c => KnoraSessionCredentialsV2(c.toString))
 }
