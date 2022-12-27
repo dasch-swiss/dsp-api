@@ -1,16 +1,16 @@
 package org.knora.webapi.responders.admin
-import dsp.errors.ValidationException
 import zio.Scope
 import zio.ZIO
 import zio.mock._
 import zio.test.Assertion
+import zio.test.SmartAssertionOps
 import zio.test.Spec
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
-import dsp.valueobjects.Project.ShortCode
-import zio.test.SmartAssertionOps
 
+import dsp.errors.ValidationException
+import dsp.valueobjects.Project.ShortCode
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
