@@ -2,13 +2,13 @@ package org.knora.webapi.routing.admin
 
 import zhttp.http._
 import zio.ZLayer
+
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
-import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.responders.admin.ProjectsService
+import org.knora.webapi.routing.RouteUtilZ
 
 final case class ProjectsRouteZ(
   appConfig: AppConfig,

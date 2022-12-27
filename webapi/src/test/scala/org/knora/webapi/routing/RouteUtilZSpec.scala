@@ -1,9 +1,10 @@
 package org.knora.webapi.routing
 
-import zio.test.ZIOSpecDefault
-import zio.test.assertTrue
 import zio.test.Assertion._
+import zio.test.ZIOSpecDefault
 import zio.test._
+import zio.test.assertTrue
+
 import dsp.errors.BadRequestException
 
 object RouteUtilZSpec extends ZIOSpecDefault {

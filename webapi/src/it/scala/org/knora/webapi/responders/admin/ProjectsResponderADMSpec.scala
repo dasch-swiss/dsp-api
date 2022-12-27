@@ -66,10 +66,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return information about a project identified by shortname" in {
-          appActor ! ProjectGetRequestADM(identifier =
-            ShortnameIdentifier
-              .fromString(SharedTestDataADM.incunabulaProject.shortname)
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
+        appActor ! ProjectGetRequestADM(identifier =
+          ShortnameIdentifier
+            .fromString(SharedTestDataADM.incunabulaProject.shortname)
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
       }
 
@@ -77,7 +78,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectGetRequestADM(identifier =
           IriIdentifier
             .fromString(notExistingProjectButValidProjectIri)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        )
         expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found")))
 
       }
@@ -86,7 +88,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectGetRequestADM(identifier =
           ShortnameIdentifier
             .fromString("wrongshortname")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
       }
 
@@ -94,7 +97,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectGetRequestADM(identifier =
           ShortcodeIdentifier
             .fromString("9999")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found")))
       }
     }

@@ -7,8 +7,8 @@ import zio.test.Spec
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
-import dsp.valueobjects.Project.ShortCode
 
+import dsp.valueobjects.Project.ShortCode
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM

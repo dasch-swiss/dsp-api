@@ -3,11 +3,11 @@ import zio.Task
 import zio.URLayer
 import zio.ZLayer
 
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.responders.ActorToZioBridge
-import org.knora.webapi.IRI
 
 final case class ProjectsService(bridge: ActorToZioBridge) {
 

@@ -606,9 +606,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       projectInfo: ProjectGetResponseADM <-
         appActor
           .ask(
-            ProjectGetRequestADM(identifier = IriIdentifier
+            ProjectGetRequestADM(identifier =
+              IriIdentifier
                 .fromString(projectIri.toString)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
           )
           .mapTo[ProjectGetResponseADM]
 

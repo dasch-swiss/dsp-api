@@ -1570,9 +1570,11 @@ object ConstructResponseUtilV2 {
       projectResponse: ProjectGetResponseADM <-
         appActor
           .ask(
-            ProjectGetRequestADM(identifier = IriIdentifier
+            ProjectGetRequestADM(identifier =
+              IriIdentifier
                 .fromString(resourceAttachedToProject)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)))
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
           )
           .mapTo[ProjectGetResponseADM]
 

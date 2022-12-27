@@ -20,14 +20,15 @@ import akka.stream.scaladsl.FileIO
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import zio.prelude.Validation
+
 import java.nio.file.Files
 import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Try
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
-
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._

@@ -15,12 +15,12 @@ import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.admin.AuthenticatorService
+import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
-import org.knora.webapi.routing.admin.AuthenticatorService
-import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
