@@ -22,11 +22,8 @@ final case class ProjectsRouteZ(
         case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
           RouteUtilZ
             .decodeUrl(iri)
-            .flatMap(
-              projectsService
-                .getSingleProjectADMRequest(_)
-                .map(project => Response.json(project.toJsValue.toString()))
-            )
+            .flatMap(projectsService.getSingleProjectADMRequest(_).map(_.toJsValue.toString()))
+            .map(Response.json(_))
       }
       .catchAll {
         case RequestRejectedException(e) =>
