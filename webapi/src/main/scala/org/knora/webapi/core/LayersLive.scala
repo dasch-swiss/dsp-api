@@ -20,7 +20,6 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.routing.admin.AuthenticatorService
-import org.knora.webapi.routing.admin.ProjectService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
@@ -75,7 +74,6 @@ object LayersLive {
       IriConverter.layer,
       JWTService.layer,
       ProjectsRouteZ.layer,
-      ProjectService.live,
       ProjectsService.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
