@@ -5,6 +5,7 @@ import akka.actor.ActorSystem
 import zhttp.http._
 import zio.Task
 import zio.ZIO
+
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.config.AppConfig
@@ -16,7 +17,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.admin.AuthenticatorServiceLive.extractCredentialsFromHeader
+import org.knora.webapi.routing.admin.AuthenticatorServiceLive.extractCredentialsFromRequest
 
 case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, stringFormatter: StringFormatter)
     extends AuthenticatorService {
@@ -28,14 +29,47 @@ case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, 
   private val authCookieName = Authenticator.calculateCookieName(appConfig)
   override def getUser(request: Request): Task[UserADM] =
     ZIO
-      .succeed(extractCredentialsFromHeader(request, authCookieName))
+      .succeed(extractCredentialsFromRequest(request, authCookieName))
       .flatMap(credentials => ZIO.fromFuture(_ => Authenticator.getUserADMThroughCredentialsV2(credentials, appConfig)))
 }
 
 object AuthenticatorServiceLive {
 
   // visible for testing
-  def extractCredentialsFromHeader(request: Request, cookieName: String)(implicit
+  def extractCredentialsFromRequest(request: Request, cookieName: String)(implicit
+    sf: StringFormatter
+  ): Option[KnoraCredentialsV2] =
+    extractCredentialsFromParameters(request).orElse(extractCredentialsFromHeader(request, cookieName))
+
+  private def extractCredentialsFromParameters(request: Request)(implicit
+    sf: StringFormatter
+  ): Option[KnoraCredentialsV2] =
+    extractUserPasswordFromParameters(request).orElse(extractTokenFromParameters(request))
+
+  private def getFirstValueFromParamKey(key: String, request: Request): Option[String] = {
+    val url    = request.url
+    val params = url.queryParams
+    params.get(key).map(_.head)
+  }
+
+  private def extractUserPasswordFromParameters(
+    request: Request
+  )(implicit sf: StringFormatter): Option[KnoraPasswordCredentialsV2] = {
+    val maybeIri      = getFirstValueFromParamKey("iri", request)
+    val maybeEmail    = getFirstValueFromParamKey("email", request)
+    val maybeUsername = getFirstValueFromParamKey("username", request)
+    val maybePassword = getFirstValueFromParamKey("password", request)
+    for {
+      _         <- List(maybeIri, maybeEmail, maybeUsername).flatten.headOption // given at least one of iri, email or username
+      password  <- maybePassword
+      identifier = UserIdentifierADM(maybeIri, maybeEmail, maybeUsername)
+    } yield KnoraPasswordCredentialsV2(identifier, password)
+  }
+
+  private def extractTokenFromParameters(request: Request): Option[KnoraJWTTokenCredentialsV2] =
+    getFirstValueFromParamKey("token", request).map(KnoraJWTTokenCredentialsV2)
+
+  private def extractCredentialsFromHeader(request: Request, cookieName: String)(implicit
     sf: StringFormatter
   ): Option[KnoraCredentialsV2] =
     extractBasicAuthEmail(request)
@@ -44,7 +78,9 @@ object AuthenticatorServiceLive {
           .orElse(extractSessionCookie(request, cookieName))
       )
 
-  private def extractBasicAuthEmail(request: Request)(implicit sf: StringFormatter) =
+  private def extractBasicAuthEmail(
+    request: Request
+  )(implicit sf: StringFormatter): Option[KnoraPasswordCredentialsV2] =
     request.basicAuthorizationCredentials.map(c =>
       KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(c.uname)), c.upassword)
     )
