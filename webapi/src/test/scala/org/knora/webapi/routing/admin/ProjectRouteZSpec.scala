@@ -57,7 +57,7 @@ object ProjectRouteZSpec extends ZIOSpecDefault {
       .toLayer
   private val expectNoInteractionWithProjectsResponderADM = ActorToZioBridgeMock.empty
 
-  val spec =
+  val spec: Spec[Any, Serializable] =
     suite("ProjectsRouteZSpec")(
       test("given valid project iri should respond with success") {
         val urlWithValidIri = URL.empty.setPath(basePath / validIriEncoded)
