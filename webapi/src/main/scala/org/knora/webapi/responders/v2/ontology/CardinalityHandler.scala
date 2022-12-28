@@ -14,7 +14,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-import play.twirl.api.TxtFormat
 
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
@@ -27,6 +26,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.queries.sparql
 
 /**
  * Contains methods used for dealing with cardinalities on a class
@@ -447,13 +447,7 @@ object CardinalityHandler {
     internalClassIri: SmartIri,
     internalPropertyIri: SmartIri
   )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] = {
-    val query: TxtFormat.Appendable = org.knora.webapi.queries.sparql.v2.txt.isPropertyUsed(
-      internalPropertyIri = internalPropertyIri.toString,
-      internalClassIri = internalClassIri.toString,
-      ignoreKnoraConstraints = true,
-      ignoreRdfSubjectAndObject = true
-    )
-    val request = new SparqlAskRequest(query)
+    val request = new SparqlAskRequest(sparql.v2.txt.isPropertyUsed(internalPropertyIri, internalClassIri))
     appActor.ask(request).mapTo[SparqlAskResponse].map(_.result)
   }
 

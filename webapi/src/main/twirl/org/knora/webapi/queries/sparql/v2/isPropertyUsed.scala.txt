@@ -9,15 +9,9 @@
  * Checks whether a property is used (i.e., is the property of any statements).
  *
  * @param propertyIri the IRI of the property.
- * @param ignoreKnoraConstraints if true, knora-base:subjectClassConstraint and knora-base:objectClassConstraint will be ignored.
- * This is necessary when modifying the cardinalities of a class.
- * @param ignoreRdfSubjectAndObject if true, rdf:subject and rdf:object will be ignored. This is necessary when checking
- * for references to a resource that is to be erased.
+ * @param classIri the IRI of class to check.
  *@
-@(internalPropertyIri: IRI,
-  internalClassIri: IRI,
-  ignoreKnoraConstraints: Boolean = false,
-  ignoreRdfSubjectAndObject: Boolean = false)
+@(propertyIri: org.knora.webapi.messages.SmartIri, classIri: org.knora.webapi.messages.SmartIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -28,8 +22,8 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 ASK
 
 WHERE {
-    BIND(IRI("@internalPropertyIri") AS ?property)
-    BIND(IRI("@internalClassIri") AS ?classIri)
+    BIND(IRI("@{propertyIri.toString}") AS ?property)
+    BIND(IRI("@{classIri.toString}") AS ?classIri)
 
     {
         # select all items of type classIri with property ?property.
