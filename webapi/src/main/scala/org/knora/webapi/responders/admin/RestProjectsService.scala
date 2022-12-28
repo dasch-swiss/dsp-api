@@ -29,13 +29,12 @@ final case class RestProjectsService(bridge: ActorToZioBridge) {
 
   /**
    * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].
-   * Checks permissions whether the [[UserADM]] requesting the project may see the result.
    *
    * @param identifier           a [[ProjectIdentifierADM]] instance
    * @return
    *     '''success''': information about the project as a [[ProjectGetResponseADM]]
    *
-   *     '''error''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
    */
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
     bridge.askAppActor(ProjectGetRequestADM(identifier))
