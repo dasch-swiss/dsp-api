@@ -17,18 +17,18 @@ import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.ActorToZioBridgeMock
 import org.knora.webapi.responders.admin.RestProjectsService
 
-object ProjectsRouteZSpec extends ZIOSpecDefault {
+object ProjectRouteZSpec extends ZIOSpecDefault {
 
-  private val systemUnderTest = ZIO.service[ProjectsRouteZ].map(_.route)
+  private val systemUnderTest: URIO[ProjectsRouteZ, HttpApp[Any, Nothing]] = ZIO.service[ProjectsRouteZ].map(_.route)
 
   // Test data
-  private val projectIri =
+  private val projectIri: ProjectIdentifierADM.IriIdentifier =
     ProjectIdentifierADM.IriIdentifier
       .fromString("http://rdfh.ch/projects/0001")
       .getOrElse(throw new IllegalArgumentException())
 
-  private val basePath                                     = !! / "admin" / "projects" / "iri"
-  private val validIri                                     = URLEncoder.encode(projectIri.value.value, "utf-8")
+  private val basePath: Path                               = !! / "admin" / "projects" / "iri"
+  private val validIri: String                             = URLEncoder.encode(projectIri.value.value, "utf-8")
   private val expectedRequestSuccess: ProjectGetRequestADM = ProjectGetRequestADM(projectIri)
   private val expectedResponseSuccess: ProjectGetResponseADM = ProjectGetResponseADM(
     ProjectADM(
@@ -46,10 +46,10 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   )
 
   // Expectations and layers for ActorToZioBridge mock
-  private val commonLayers =
+  private val commonLayers: URLayer[ActorToZioBridge, ProjectsRouteZ] =
     ZLayer.makeSome[ActorToZioBridge, ProjectsRouteZ](AppConfig.test, ProjectsRouteZ.layer, RestProjectsService.layer)
 
-  private val expectMessageToProjectResponderADM =
+  private val expectMessageToProjectResponderADM: ULayer[ActorToZioBridge] =
     ActorToZioBridgeMock.AskAppActor
       .of[ProjectGetResponseADM]
       .apply(Assertion.equalTo(expectedRequestSuccess), Expectation.value(expectedResponseSuccess))
