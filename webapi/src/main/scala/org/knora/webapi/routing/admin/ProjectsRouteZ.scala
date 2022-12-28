@@ -19,9 +19,9 @@ final case class ProjectsRouteZ(
     Http
       .collectZIO[Request] {
         // Returns a single project identified by an urlencoded IRI
-        case Method.GET -> !! / "admin" / "projects" / "iri" / iri =>
+        case Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded =>
           RouteUtilZ
-            .decodeUrl(iri)
+            .urlDecode(iriUrlEncoded, "Failed to url decode IRI parameter.")
             .flatMap(projectsService.getSingleProjectADMRequest(_).map(_.toJsValue.toString()))
             .map(Response.json(_))
       }

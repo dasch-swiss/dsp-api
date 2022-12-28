@@ -9,17 +9,26 @@ import dsp.errors.BadRequestException
 
 object RouteUtilZSpec extends ZIOSpecDefault {
   val spec = suite("routeUtilZSpec")(
-    test("given a valid encoding should return the decoded value") {
-      for {
-        actual <- RouteUtilZ.decodeUrl("http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ")
-      } yield assertTrue(actual == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
-    },
-    test("given an empty value should return BadRequestException") {
-      for {
-        error <- RouteUtilZ.decodeUrl("%-5").exit
-      } yield assert(error)(
-        fails(equalTo(BadRequestException("Failed to decode IRI %-5")))
-      )
-    }
+    suite("function `urlDecode` should")(
+      test("given a valid encoding should return the decoded value") {
+        for {
+          actual <- RouteUtilZ.urlDecode("http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ")
+        } yield assertTrue(actual == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
+      },
+      test("given an empty value should return BadRequestException") {
+        for {
+          error <- RouteUtilZ.urlDecode("%-5", "Failed to url decode IRI.").exit
+        } yield assert(error)(
+          fails(equalTo(BadRequestException("Failed to url decode IRI.")))
+        )
+      },
+      test("given an empty value should return BadRequestException with default error message") {
+        for {
+          error <- RouteUtilZ.urlDecode("%-5").exit
+        } yield assert(error)(
+          fails(equalTo(BadRequestException("Not an url encoded utf-8 String '%-5'")))
+        )
+      }
+    )
   )
 }
