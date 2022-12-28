@@ -9,13 +9,13 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
 import spray.json._
 import zio._
-
 import java.nio.file.Path
 import java.time.Instant
 import scala.collection.mutable
-
 import dsp.errors._
 import dsp.valueobjects.V2
+import play.twirl.api.TxtFormat
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -254,7 +254,9 @@ case class SparqlUpdateResponse()
  *
  * @param sparql the SPARQL string.
  */
-case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
+case class SparqlAskRequest(sparql: String) extends TriplestoreRequest {
+  def this(txt: TxtFormat.Appendable) = this(txt.toString())
+}
 
 /**
  * Represents a response to a SPARQL ASK query, containing the result.

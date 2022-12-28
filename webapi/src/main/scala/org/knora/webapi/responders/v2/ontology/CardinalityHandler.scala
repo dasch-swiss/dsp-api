@@ -9,13 +9,13 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-
 import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import play.twirl.api.TxtFormat
+
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -447,13 +447,13 @@ object CardinalityHandler {
     internalClassIri: SmartIri,
     internalPropertyIri: SmartIri
   )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] = {
-    val query = org.knora.webapi.queries.sparql.v2.txt.isPropertyUsed(
+    val query: TxtFormat.Appendable = org.knora.webapi.queries.sparql.v2.txt.isPropertyUsed(
       internalPropertyIri = internalPropertyIri.toString,
       internalClassIri = internalClassIri.toString,
       ignoreKnoraConstraints = true,
       ignoreRdfSubjectAndObject = true
     )
-    val request = SparqlAskRequest(query.toString())
+    val request = new SparqlAskRequest(query)
     appActor.ask(request).mapTo[SparqlAskResponse].map(_.result)
   }
 
