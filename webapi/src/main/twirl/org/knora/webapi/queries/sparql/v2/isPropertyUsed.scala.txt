@@ -11,7 +11,7 @@
  * @param propertyIri the IRI of the property.
  * @param classIri the IRI of class to check.
  *@
-@(propertyIri: org.knora.webapi.messages.SmartIri, classIri: org.knora.webapi.messages.SmartIri)
+@(propertyIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri, classIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -22,8 +22,8 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 ASK
 
 WHERE {
-    BIND(IRI("@{propertyIri.toString}") AS ?property)
-    BIND(IRI("@{classIri.toString}") AS ?classIri)
+    BIND(IRI("@{propertyIri.value}") AS ?property)
+    BIND(IRI("@{classIri.value}") AS ?classIri)
 
     {
         # select all items of type classIri with property ?property.

@@ -44,6 +44,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
 
@@ -357,6 +358,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   def toSparql: String
 
   def toIri: IRI = toString
+
+  def toInternalIri: InternalIri = InternalIri(toOntologySchema(InternalSchema).toIri)
 
   /**
    * Returns `true` if this is a Knora data or definition IRI.

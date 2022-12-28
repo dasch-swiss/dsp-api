@@ -9,12 +9,13 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
+
 import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -26,7 +27,8 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.queries.sparql
+import org.knora.webapi.queries.sparql.v2
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /**
  * Contains methods used for dealing with cardinalities on a class
@@ -121,8 +123,8 @@ object CardinalityHandler {
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(
                                    appActor,
-                                   internalClassIri,
-                                   submittedPropertyToDelete
+                                   internalClassIri.toInternalIri,
+                                   submittedPropertyToDelete.toInternalIri
                                  )
 
       // Make an update class definition in which the cardinality to delete is removed
@@ -278,8 +280,8 @@ object CardinalityHandler {
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(
                                    appActor,
-                                   internalClassIri,
-                                   submittedPropertyToDelete
+                                   internalClassIri.toInternalIri,
+                                   submittedPropertyToDelete.toInternalIri
                                  )
       _ = if (propertyIsUsed) {
             throw BadRequestException("Property is used in data. The cardinality cannot be deleted.")
@@ -437,19 +439,18 @@ object CardinalityHandler {
    * it is used, and `false` if it is not used.
    *
    * @param appActor Reference to the [[org.knora.webapi.core.actors.RoutingActor]]
-   * @param internalClassIri the IRI of the class that is being checked for usage.
-   * @param internalPropertyIri the IRI of the entity that is being checked for usage.
+   * @param classIri the IRI of the class that is being checked for usage.
+   * @param propertyIri the IRI of the entity that is being checked for usage.
    *
    * @param ec the execution context onto with the future will run.
    * @param timeout the timeout for the future.
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  def isPropertyUsedInResources(
-    appActor: ActorRef,
-    internalClassIri: SmartIri,
-    internalPropertyIri: SmartIri
-  )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] = {
-    val request = new SparqlAskRequest(sparql.v2.txt.isPropertyUsed(internalPropertyIri, internalClassIri))
+  def isPropertyUsedInResources(appActor: ActorRef, classIri: InternalIri, propertyIri: InternalIri)(implicit
+    ec: ExecutionContext,
+    timeout: Timeout
+  ): Future[Boolean] = {
+    val request = new SparqlAskRequest(v2.txt.isPropertyUsed(propertyIri, classIri))
     appActor.ask(request).mapTo[SparqlAskResponse].map(_.result)
   }
 
