@@ -42,7 +42,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ProjectsADMJsonProtocol {
 
-  val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
+  private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
 
   /**
    * Returns the route.
@@ -207,17 +207,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def getProjectByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment) { value =>
       get { requestContext =>
-        val requestMessage: Future[ProjectGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-
-        } yield ProjectGetRequestADM(identifier =
-          ShortnameIdentifier
-            .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-        )
+        val requestMessage = Future {
+          ProjectGetRequestADM(identifier =
+            ShortnameIdentifier
+              .fromString(value)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
+        }
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -234,17 +230,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def getProjectByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment) { value =>
       get { requestContext =>
-        val requestMessage: Future[ProjectGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-
-        } yield ProjectGetRequestADM(identifier =
-          ShortcodeIdentifier
-            .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-        )
+        val requestMessage: Future[ProjectGetRequestADM] = Future {
+          ProjectGetRequestADM(identifier =
+            ShortcodeIdentifier
+              .fromString(value)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
+        }
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -602,7 +594,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                          requestingUser = requestingUser
                        )
 
-      responseMessage <- (appActor.ask(requestMessage)).mapTo[ProjectDataGetResponseADM]
+      responseMessage <- appActor.ask(requestMessage).mapTo[ProjectDataGetResponseADM]
 
       // Stream the output file back to the client, then delete the file.
 
