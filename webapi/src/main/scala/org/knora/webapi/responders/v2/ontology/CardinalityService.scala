@@ -4,15 +4,16 @@ import akka.util.Timeout
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 
 trait CardinalityService {
