@@ -36,7 +36,7 @@ object CardinalityHandler {
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
    *
-   * @param storeManager the store manager actor.
+   * @param appActor Reference to the [[org.knora.webapi.core.actors.RoutingActor]]
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
@@ -156,7 +156,7 @@ object CardinalityHandler {
 
       allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
 
-      (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
+      (newInternalClassDefWithLinkValueProps, _) =
         OntologyHelpers
           .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
             internalClassDef = newClassDefinitionWithRemovedCardinality,
@@ -192,7 +192,7 @@ object CardinalityHandler {
    * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
    * of the class and any subclasses.
    *
-   * @param storeManager the store manager actor.
+   * @param appActor Reference to the [[org.knora.webapi.core.actors.RoutingActor]]
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
@@ -436,7 +436,7 @@ object CardinalityHandler {
    * Check if a property entity is used in resource instances. Returns `true` if
    * it is used, and `false` if it is not used.
    *
-   * @param storeManager store manager actor ref.
+   * @param appActor Reference to the [[org.knora.webapi.core.actors.RoutingActor]]
    * @param internalPropertyIri the IRI of the entity that is being checked for usage.
    * @param ec the execution context onto with the future will run.
    * @param timeout the timeout for the future.
@@ -499,7 +499,7 @@ object CardinalityHandler {
     cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
-  )(implicit ec: ExecutionContext): Future[Boolean] = {
+  ): Future[Boolean] = {
     val currentOntologyState: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
 
     val readClassInfo: ReadClassInfoV2 = currentOntologyState.classes
