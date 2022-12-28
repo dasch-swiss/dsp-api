@@ -29,7 +29,7 @@ object ProjectRouteZSpec extends ZIOSpecDefault {
       .getOrElse(throw new IllegalArgumentException())
 
   private val basePath: Path                               = !! / "admin" / "projects" / "iri"
-  private val validIri: String                             = URLEncoder.encode(projectIri.value.value, "utf-8")
+  private val validIriEncoded: String                      = URLEncoder.encode(projectIri.value.value, "utf-8")
   private val expectedRequestSuccess: ProjectGetRequestADM = ProjectGetRequestADM(projectIri)
   private val expectedResponseSuccess: ProjectGetResponseADM = ProjectGetResponseADM(
     ProjectADM(
@@ -60,7 +60,7 @@ object ProjectRouteZSpec extends ZIOSpecDefault {
   val spec =
     suite("ProjectsRouteZSpec")(
       test("given valid project iri should respond with success") {
-        val urlWithValidIri = URL.empty.setPath(basePath / validIri)
+        val urlWithValidIri = URL.empty.setPath(basePath / validIriEncoded)
         for {
           route  <- systemUnderTest
           actual <- route.apply(Request(url = urlWithValidIri)).flatMap(_.body.asString)
