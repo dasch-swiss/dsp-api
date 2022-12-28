@@ -437,7 +437,9 @@ object CardinalityHandler {
    * it is used, and `false` if it is not used.
    *
    * @param appActor Reference to the [[org.knora.webapi.core.actors.RoutingActor]]
+   * @param internalClassIri the IRI of the class that is being checked for usage.
    * @param internalPropertyIri the IRI of the entity that is being checked for usage.
+   *
    * @param ec the execution context onto with the future will run.
    * @param timeout the timeout for the future.
    * @return a [[Boolean]] denoting if the property entity is used.
