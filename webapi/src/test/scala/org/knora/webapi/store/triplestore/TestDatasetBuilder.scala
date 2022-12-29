@@ -15,8 +15,10 @@ object TestDatasetBuilder {
     try {
       val model = dataset.getDefaultModel
       model.read(new StringReader(turtle), null, "TTL")
-      dataset.commit()
+    } catch {
+      case e: Exception => println(e)
     } finally {
+      dataset.commit()
       dataset.end()
     }
     dataset

@@ -22,7 +22,7 @@ final case class IriConverterLive(stringFormatter: StringFormatter) extends IriC
   def asInternalIri(iri: IRI): Task[InternalIri] =
     ZIO.attempt {
       stringFormatter.toSmartIri(iri).internalIri
-    }.map(InternalIri)
+    }.map(InternalIri(_))
 }
 
 object IriConverter {
