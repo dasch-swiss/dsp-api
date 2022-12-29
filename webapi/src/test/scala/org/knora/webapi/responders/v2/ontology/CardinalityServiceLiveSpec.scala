@@ -5,16 +5,16 @@
 
 package org.knora.webapi.responders.v2.ontology
 import org.apache.jena.query.Dataset
-import zio.test.ZIOSpecDefault
-import zio.test._
 import zio.Ref
 import zio.ZLayer
+import zio.test.ZIOSpecDefault
+import zio.test._
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDepsTest
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 

@@ -1,17 +1,18 @@
 package org.knora.webapi.store.triplestore
 
-import zio.ZLayer
-import java.io.StringReader
-import zio.Ref
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.DatasetFactory
 import org.apache.jena.query.ReadWrite
 import org.apache.jena.rdf.model.Model
+import zio.Ref
 import zio.Scope
 import zio.Task
 import zio.TaskLayer
 import zio.URIO
 import zio.ZIO
+import zio.ZLayer
+
+import java.io.StringReader
 
 object TestDatasetBuilder {
 
