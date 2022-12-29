@@ -55,41 +55,44 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     TriplestoreServiceFake.layer
   )
 
-  override def spec = suite("CardinalityServiceLive")(
-    suite("isPropertyUsedInResources should")(
-      test("given a property is in use by the class => return true") {
-        val classIri    = classThing
-        val propertyIri = InternalIri.Property.KnoraBase.isDeleted
-        for {
-          result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
-        } yield assertTrue(result)
-      },
-      test("given a property is not used by the class but in a different class => return false") {
-        val classIri    = classBook
-        val propertyIri = InternalIri.Property.KnoraBase.isDeleted
-        for {
-          result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
-        } yield assertTrue(!result)
-      },
-      test("given a property is never used => return false") {
-        val classIri    = classThing
-        val propertyIri = InternalIri.Property.KnoraBase.isMainResource
-        for {
-          result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
-        } yield assertTrue(!result)
-      },
-      test("given a property is in use in a subclass => return true") {
-        val classIri    = classTextBook
-        val propertyIri = InternalIri.Property.KnoraBase.isEditable
-        for {
-          result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
-        } yield assertTrue(result)
-      }
-    ).provide(commonLayers, datasetLayerFromTurtle(testDataForIsPropertyUsedInResources)),
-    suite("canDeleteCardinalitiesFromClass")(test("incomplete") {
-      for {
-        result <- CardinalityService.canWidenCardinality()
-      } yield assertTrue(result)
-    }).provide(commonLayers, datasetLayerFromTurtle(""))
-  )
+  override def spec: Spec[Any, Throwable] =
+    suite("CardinalityServiceLive")(
+      suite("isPropertyUsedInResources should")(
+        test("given a property is in use by the class => return true") {
+          val classIri    = classThing
+          val propertyIri = InternalIri.Property.KnoraBase.isDeleted
+          for {
+            result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
+          } yield assertTrue(result)
+        },
+        test("given a property is not used by the class but in a different class => return false") {
+          val classIri    = classBook
+          val propertyIri = InternalIri.Property.KnoraBase.isDeleted
+          for {
+            result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
+          } yield assertTrue(!result)
+        },
+        test("given a property is never used => return false") {
+          val classIri    = classThing
+          val propertyIri = InternalIri.Property.KnoraBase.isMainResource
+          for {
+            result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
+          } yield assertTrue(!result)
+        },
+        test("given a property is in use in a subclass => return true") {
+          val classIri    = classTextBook
+          val propertyIri = InternalIri.Property.KnoraBase.isEditable
+          for {
+            result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
+          } yield assertTrue(result)
+        }
+      ).provide(commonLayers, datasetLayerFromTurtle(testDataForIsPropertyUsedInResources)),
+      suite("canDeleteCardinalitiesFromClass")(
+        test("incomplete") {
+          for {
+            result <- CardinalityService.canWidenCardinality()
+          } yield assertTrue(result)
+        }
+      ).provide(commonLayers, datasetLayerFromTurtle(""))
+    )
 }
