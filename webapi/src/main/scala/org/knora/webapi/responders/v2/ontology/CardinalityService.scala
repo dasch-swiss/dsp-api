@@ -14,7 +14,10 @@ import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.queries.sparql._
 import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 trait CardinalityService {
 
@@ -48,10 +51,24 @@ trait CardinalityService {
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
   ): Task[ReadOntologyV2]
+
+  /**
+   * Check if a property entity is used in resource instances. Returns `true` if
+   * it is used, and `false` if it is not used.
+   *
+   * @param classIri the IRI of the class that is being checked for usage.
+   * @param propertyIri the IRI of the entity that is being checked for usage.
+   *
+   * @return a [[Boolean]] denoting if the property entity is used.
+   */
+  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean]
 }
 
-final case class CardinalityServiceLive(private val actorDeps: ActorDeps, private val stringFormatter: StringFormatter)
-    extends CardinalityService {
+final case class CardinalityServiceLive(
+  private val actorDeps: ActorDeps,
+  private val stringFormatter: StringFormatter,
+  private val tripleStore: TriplestoreService
+) extends CardinalityService {
   private implicit val ec: ExecutionContext = actorDeps.executionContext
   private implicit val timeout: Timeout     = actorDeps.timeout
   private implicit val sf: StringFormatter  = stringFormatter
@@ -96,6 +113,11 @@ final case class CardinalityServiceLive(private val actorDeps: ActorDeps, privat
       internalOntologyIri
     )
   )
+
+  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] = {
+    val query = v2.txt.isPropertyUsed(propertyIri, classIri)
+    tripleStore.sparqlHttpAsk(query.toString).map(_.result)
+  }
 }
 
 object CardinalityService {
