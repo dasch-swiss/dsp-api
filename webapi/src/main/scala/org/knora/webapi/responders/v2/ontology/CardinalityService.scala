@@ -28,6 +28,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 trait CardinalityService {
 
   /**
+   * Check if a specific cardinality may be widened.
+   *
+   * @return a [[Boolean]] indicating whether a class's cardinalities can be widen.
+   */
+  def canWidenCardinality(): Task[Boolean]
+
+  /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
    *
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
@@ -124,6 +131,8 @@ final case class CardinalityServiceLive(
     val query = v2.txt.isPropertyUsed(propertyIri, classIri)
     tripleStore.sparqlHttpAsk(query.toString).map(_.result)
   }
+
+  override def canWidenCardinality(): Task[Boolean] = ZIO.succeed(true)
 }
 
 object CardinalityService {
