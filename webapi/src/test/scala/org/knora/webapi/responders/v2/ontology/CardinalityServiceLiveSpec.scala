@@ -86,7 +86,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(result)
       }
     ).provide(commonLayers, datasetLayerFromTurtle(testDataForIsPropertyUsedInResources)),
-    suite("canDeleteCardinalitiesFromClass")(test("shoudl") {
+    suite("canDeleteCardinalitiesFromClass")(test("incomplete") {
       for {
         result <- CardinalityService.canWidenCardinality()
       } yield assertTrue(result)
