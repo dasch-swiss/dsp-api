@@ -1,10 +1,15 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.responders.v2.ontology
 import akka.actor.ActorRef
 import akka.util.Timeout
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
+import zio.macros.accessible
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -19,6 +24,7 @@ import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
+@accessible
 trait CardinalityService {
 
   /**

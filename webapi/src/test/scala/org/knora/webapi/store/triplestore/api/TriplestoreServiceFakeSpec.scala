@@ -4,33 +4,22 @@
  */
 
 package org.knora.webapi.store.triplestore.api
-import org.apache.jena.query.Dataset
-import org.apache.jena.query.DatasetFactory
-import org.apache.jena.query.ReadWrite
-import zio._
 import zio.test._
 
-import java.io.StringReader
-
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.asLayer
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.dataSetFromTurtle
+
 object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
 
-  private val testDataSet = dataSetFromTurtle("""
-                                                |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-                                                |@prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
-                                                |
-                                                |<http://rdfh.ch/0001/knownThing> a anything:Thing .
-                                                |
-                                                |""".stripMargin)
-
-  private def dataSetFromTurtle(turtle: String) = {
-    val ds = DatasetFactory.createTxnMem()
-    ds.begin(ReadWrite.WRITE)
-    val model = ds.getDefaultModel
-    model.read(new StringReader(turtle), null, "TTL")
-    ds.commit()
-    ds
-  }
+  private val testDataSet =
+    dataSetFromTurtle("""
+                        |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                        |@prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
+                        |
+                        |<http://rdfh.ch/0001/knownThing> a anything:Thing .
+                        |
+                        |""".stripMargin)
 
   val spec = suite("TriplestoreServiceFake")(
     suite("sparqlHttpAsk")(
@@ -108,5 +97,5 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
         )
       }
     )
-  ).provide(TriplestoreServiceFake.layer, ZLayer.fromZIO(Ref.make[Dataset](testDataSet)))
+  ).provide(TriplestoreServiceFake.layer, asLayer(testDataSet))
 }
