@@ -7,19 +7,18 @@ package org.knora.webapi.store.triplestore.api
 import zio.test._
 
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.asLayer
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.dataSetFromTurtle
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 
 object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
 
   private val testDataSet =
-    dataSetFromTurtle("""
-                        |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-                        |@prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
-                        |
-                        |<http://rdfh.ch/0001/knownThing> a anything:Thing .
-                        |
-                        |""".stripMargin)
+    """
+      |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+      |@prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
+      |
+      |<http://rdfh.ch/0001/knownThing> a anything:Thing .
+      |
+      |""".stripMargin
 
   val spec = suite("TriplestoreServiceFake")(
     suite("sparqlHttpAsk")(
@@ -97,5 +96,5 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
         )
       }
     )
-  ).provide(TriplestoreServiceFake.layer, asLayer(testDataSet))
+  ).provide(TriplestoreServiceFake.layer, datasetLayerFromTurtle(testDataSet))
 }
