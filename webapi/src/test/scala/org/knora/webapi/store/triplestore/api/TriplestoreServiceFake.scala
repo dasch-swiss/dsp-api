@@ -14,7 +14,6 @@ import zio.Scope
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
-
 import java.nio.file.Path
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
@@ -57,27 +56,16 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset]) extends Triple
     ZIO.scoped(execSelect(sparql).map(toSparqlSelectResult)).orDie
   }
 
-  override def sparqlHttpAsk(query: String): UIO[SparqlAskResponse] =
-    ZIO.scoped {
-      getQueryExecution(query).map(_.execAsk())
-    }.map(SparqlAskResponse).orDie
-
   private def execSelect(query: String): ZIO[Any with Scope, Throwable, ResultSet] = {
-    def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execSelect).debug("exec query")
+    def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execSelect)
     def closeResultSet(rs: ResultSet)       = ZIO.succeed(rs.close())
-    for {
-      qExec <- getQueryExecution(query)
-      rs    <- ZIO.acquireRelease(executeQuery(qExec))(closeResultSet).debug
-    } yield rs
+    getQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeResultSet))
   }
 
   private def getQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
-    def acquire(ds: Dataset, q: String) = ZIO.attempt(QueryExecutionFactory.create(q, ds))
-    def release(qExec: QueryExecution)  = ZIO.succeed(qExec.close())
-    for {
-      ds    <- datasetRef.get.debug("got Dataset")
-      qExec <- ZIO.acquireRelease(acquire(ds, query))(release).debug("got qExec")
-    } yield qExec
+    def acquire(query: String, ds: Dataset) = ZIO.attempt(QueryExecutionFactory.create(query, ds))
+    def release(qExec: QueryExecution)      = ZIO.succeed(qExec.close())
+    datasetRef.get.flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
   }
 
   private def toSparqlSelectResult(resultSet: ResultSet): SparqlSelectResult = {
@@ -102,6 +90,9 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset]) extends Triple
     }.toMap
     VariableResultsRow(keyValueMap)
   }
+
+  override def sparqlHttpAsk(query: String): UIO[SparqlAskResponse] =
+    ZIO.scoped(getQueryExecution(query).map(_.execAsk())).map(SparqlAskResponse).orDie
 
   override def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): UIO[SparqlConstructResponse] = ???
 
