@@ -20,33 +20,37 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 
   // test data
-  private val ontologyAnything  = InternalIri("http://www.knora.org/ontology/0001/anything#")
-  private val ontologyBooks     = InternalIri("http://www.knora.org/ontology/0001/books#")
+  private val ontologyAnything = InternalIri("http://www.knora.org/ontology/0001/anything#")
+  private val ontologyBooks    = InternalIri("http://www.knora.org/ontology/0001/books#")
 
   private val classThing    = InternalIri(s"${ontologyAnything.value}Thing")
   private val classBook     = InternalIri(s"${ontologyBooks.value}Book")
   private val classTextBook = InternalIri(s"${ontologyBooks.value}Textbook")
 
-  private val testDataForIsPropertyUsedInResources =
-    s"""
-       |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-       |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#>
-       |
-       |<http://rdfh.ch/0001/aThing>
-       |  a <${classThing.value}> ;
-       |  <${KnoraBase.isDeleted.value}> false .
-       |
-       |<http://rdfh.ch/0001/aBook> a <${classBook.value}> .
-       |
-       |<${classTextBook.value}> rdfs:subClassOf <${classBook.value}> .
-       |
-       |<http://rdfh.ch/0001/anotherBook>
-       |  a <${classTextBook.value}> ;
-       |  <${KnoraBase.isEditable.value}> true .
-       |
-       |""".stripMargin
+  private object IsPropertyUsedInResources {
+    val testData: String =
+      s"""
+         |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+         |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+         |
+         |<http://aThing>
+         |  a <${classThing.value}> ;
+         |  <${KnoraBase.isDeleted.value}> false .
+         |
+         |<http://aBook> a <${classBook.value}> .
+         |
+         |<${classTextBook.value}> rdfs:subClassOf <${classBook.value}> .
+         |
+         |<http://aTextBook>
+         |  a <${classTextBook.value}> ;
+         |  <${KnoraBase.isEditable.value}> true .
+         |""".stripMargin
+  }
 
-  // layers
+  private object CanDeleteCardinalitiesFromClass {
+    val testData: String = ""
+  }
+
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService](
     CardinalityService.layer,
     StringFormatter.test,
@@ -85,13 +89,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
           } yield assertTrue(result)
         }
-      ).provide(commonLayers, datasetLayerFromTurtle(testDataForIsPropertyUsedInResources)),
+      ).provide(commonLayers, datasetLayerFromTurtle(IsPropertyUsedInResources.testData)),
       suite("canDeleteCardinalitiesFromClass")(
         test("incomplete") {
           for {
             result <- CardinalityService.canWidenCardinality()
           } yield assertTrue(result)
         }
-      ).provide(commonLayers, datasetLayerFromTurtle(""))
+      ).provide(commonLayers, datasetLayerFromTurtle(CanDeleteCardinalitiesFromClass.testData))
     )
 }
