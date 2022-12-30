@@ -6,14 +6,15 @@
 package org.knora.webapi.responders.v2.ontology
 import akka.actor.ActorRef
 import akka.util.Timeout
-import dsp.schema.domain.Cardinality
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
+import dsp.schema.domain.Cardinality
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2

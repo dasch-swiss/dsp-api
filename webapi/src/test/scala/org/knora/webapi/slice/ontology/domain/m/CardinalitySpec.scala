@@ -1,11 +1,16 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.ontology.domain.m
 
-import zio.test._
 import zio.Random
 import zio.Scope
+import zio.test._
 
-import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 
 object CardinalitySpec extends ZIOSpecDefault {
   val cardinalityGen: Gen[Any, Cardinality] = {

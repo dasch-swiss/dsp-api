@@ -4,13 +4,13 @@
  */
 
 package org.knora.webapi.responders.v2.ontology
-import dsp.schema.domain.Cardinality.MayHaveMany
 import org.apache.jena.query.Dataset
 import zio.Ref
 import zio.ZLayer
 import zio.test.ZIOSpecDefault
 import zio.test._
 
+import dsp.schema.domain.Cardinality.MayHaveMany
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDepsTest
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
