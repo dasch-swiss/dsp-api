@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.responders.v2.ontology
+import dsp.schema.domain.Cardinality.MayHaveMany
 import org.apache.jena.query.Dataset
 import zio.Ref
 import zio.ZLayer
@@ -93,7 +94,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       suite("canDeleteCardinalitiesFromClass")(
         test("incomplete") {
           for {
-            result <- CardinalityService.canWidenCardinality()
+            result <- CardinalityService.canWidenCardinality(MayHaveMany)
           } yield assertTrue(result)
         }
       ).provide(commonLayers, datasetLayerFromTurtle(CanDeleteCardinalitiesFromClass.testData))
