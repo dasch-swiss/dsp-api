@@ -3,16 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.v2.ontology
+package org.knora.webapi.slice.ontology.domain
+
 import org.apache.jena.query.Dataset
 import zio.Ref
 import zio.ZLayer
 import zio.test.ZIOSpecDefault
 import zio.test._
 
-import dsp.schema.domain.Cardinality.MayHaveMany
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDepsTest
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri.Property.KnoraBase
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
@@ -94,7 +96,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       suite("canDeleteCardinalitiesFromClass")(
         test("incomplete") {
           for {
-            result <- CardinalityService.canWidenCardinality(MayHaveMany)
+            result <- CardinalityService.canWidenCardinality(Cardinality.ExactlyOne)
           } yield assertTrue(result)
         }
       ).provide(commonLayers, datasetLayerFromTurtle(CanDeleteCardinalitiesFromClass.testData))

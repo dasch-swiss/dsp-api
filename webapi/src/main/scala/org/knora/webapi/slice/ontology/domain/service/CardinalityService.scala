@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.v2.ontology
+package org.knora.webapi.slice.ontology.domain.service
 import akka.actor.ActorRef
 import akka.util.Timeout
 import zio.Task
@@ -14,7 +14,6 @@ import zio.macros.accessible
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import dsp.schema.domain.Cardinality
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
@@ -23,6 +22,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinaliti
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.queries.sparql._
 import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
