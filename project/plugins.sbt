@@ -8,7 +8,7 @@ resolvers ++= Seq(
 addSbtPlugin("com.github.sbt"    % "sbt-git"             % "2.0.1")
 addSbtPlugin("com.github.sbt"    % "sbt-native-packager" % "1.9.9")
 addSbtPlugin("io.kamon"          % "sbt-aspectj-runner"  % "1.1.2")
-addSbtPlugin("com.typesafe.sbt"  % "sbt-twirl"           % "1.5.1")
+addSbtPlugin("com.typesafe.play" % "sbt-twirl"           % "1.5.2")
 addSbtPlugin("com.eed3si9n"      % "sbt-assembly"        % "2.0.0")
 addSbtPlugin("com.lightbend.sbt" % "sbt-javaagent"       % "0.1.6")
 addSbtPlugin("io.gatling"        % "gatling-sbt"         % "4.2.6")
