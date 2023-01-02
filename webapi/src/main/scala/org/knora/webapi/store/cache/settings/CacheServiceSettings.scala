@@ -11,7 +11,5 @@ import org.knora.webapi.config.AppConfig
  * Holds the Cache Service specific settings.
  */
 class CacheServiceSettings(appConfig: AppConfig) {
-  val cacheServiceEnabled: Boolean  = appConfig.cacheService.enabled
-  val cacheServiceRedisHost: String = appConfig.cacheService.redis.host
-  val cacheServiceRedisPort: Int    = appConfig.cacheService.redis.port
+  val cacheServiceEnabled: Boolean = appConfig.cacheService.enabled
 }
