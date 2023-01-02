@@ -10,10 +10,12 @@ import zio.Ref
 import zio.ZLayer
 import zio.test.ZIOSpecDefault
 import zio.test._
+import zio.Random
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDepsTest
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.allCardinalities
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri.Property.KnoraBase
@@ -29,6 +31,12 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
   private val classThing    = InternalIri(s"${ontologyAnything.value}Thing")
   private val classBook     = InternalIri(s"${ontologyBooks.value}Book")
   private val classTextBook = InternalIri(s"${ontologyBooks.value}Textbook")
+
+  val cardinalitiesGen: Gen[Any, Cardinality] = Gen.fromZIO(
+    for {
+      i <- Random.nextIntBetween(0, allCardinalities.length)
+    } yield allCardinalities(i)
+  )
 
   private object IsPropertyUsedInResources {
     val testData: String =
@@ -48,10 +56,6 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
          |  a <${classTextBook.value}> ;
          |  <${KnoraBase.isEditable.value}> true .
          |""".stripMargin
-  }
-
-  private object CanDeleteCardinalitiesFromClass {
-    val testData: String = ""
   }
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService](
@@ -93,12 +97,46 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           } yield assertTrue(result)
         }
       ).provide(commonLayers, datasetLayerFromTurtle(IsPropertyUsedInResources.testData)),
-      suite("canDeleteCardinalitiesFromClass")(
+      suite("canWidenCardinality")(
         test("incomplete") {
-          for {
-            result <- CardinalityService.canWidenCardinality(Cardinality.ExactlyOne)
-          } yield assertTrue(result)
+          check(cardinalitiesGen) { c =>
+            val classIri: InternalIri    = InternalIri("http://aResource/WithUnboundedCardinalityValue")
+            val propertyIri: InternalIri = InternalIri("http://example.com/ontology#hasMayHaveSomeValue")
+            for {
+              result <- CardinalityService.canWidenCardinality(classIri, propertyIri, c)
+            } yield assertTrue(!result)
+          }
         }
-      ).provide(commonLayers, datasetLayerFromTurtle(CanDeleteCardinalitiesFromClass.testData))
+      ).provide(commonLayers, datasetLayerFromTurtle(CanWidenCardinality.testData))
     )
+  object CanWidenCardinality {
+    val testData: String =
+      s"""
+         |@prefix owl:         <http://www.w3.org/2002/07/owl#> .
+         |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+         |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+         |@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+         |
+         |<http://aResource/WithUnboundedCardinalityValue>
+         |    rdf:type        owl:Class ;
+         |    rdfs:subClassOf <${InternalIri.Class.KnoraBase.Resource.value}> ;
+         |    rdfs:subClassOf [ rdf:type            owl:Restriction ;
+         |                      owl:onProperty      <http://example/ontology#hasMayHaveSomeValue> ;
+         |                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ] .
+         |
+         | <http://aSubResource/WithUnboundedCardinalityValue>
+         |    rdf:type        owl:Class ;
+         |    rdfs:subClassOf <http://aResource/WithUnboundedCardinalityValue> ;
+         |    rdfs:subClassOf [ rdf:type            owl:Restriction ;
+         |                      owl:onProperty      <http://example/ontology#hasMayHaveSomeValue> ;
+         |                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ] .
+         |
+         |<http://aSubSubResource/WithUnboundedCardinalityValue>
+         |    rdf:type        owl:Class ;
+         |    rdfs:subClassOf <http://aSubResource/WithUnboundedCardinalityValue> ;
+         |    rdfs:subClassOf [ rdf:type            owl:Restriction ;
+         |                      owl:onProperty      <http://example/ontology#hasMayHaveSomeValue> ;
+         |                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ] .
+         |""".stripMargin
+  }
 }

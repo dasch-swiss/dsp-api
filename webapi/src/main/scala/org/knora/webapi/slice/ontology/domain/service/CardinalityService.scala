@@ -10,7 +10,6 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -33,10 +32,12 @@ trait CardinalityService {
   /**
    * Check if a specific cardinality may be widened.
    *
+   * @param classIri
+   * @param propertyIri
    * @param newCardinality the desired cardinality
    * @return a [[Boolean]] indicating whether a class's cardinalities can be widen.
    */
-  def canWidenCardinality(newCardinality: Cardinality): Task[Boolean]
+  def canWidenCardinality(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality): Task[Boolean]
 
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
@@ -136,7 +137,11 @@ final case class CardinalityServiceLive(
     tripleStore.sparqlHttpAsk(query.toString).map(_.result)
   }
 
-  override def canWidenCardinality(newCardinality: Cardinality): Task[Boolean] = ZIO.succeed(true)
+  override def canWidenCardinality(
+    classIri: InternalIri,
+    propertyIri: InternalIri,
+    newCardinality: Cardinality
+  ): Task[Boolean] = ZIO.succeed(false)
 }
 
 object CardinalityService {

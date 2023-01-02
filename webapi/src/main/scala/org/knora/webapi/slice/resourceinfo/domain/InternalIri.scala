@@ -20,4 +20,9 @@ object InternalIri {
       val isMainResource: InternalIri = InternalIri(Ontology.knoraBase + "isMainResource")
     }
   }
+  object Class {
+    object KnoraBase {
+      val Resource: InternalIri = InternalIri(Ontology.knoraBase + "Resource")
+    }
+  }
 }

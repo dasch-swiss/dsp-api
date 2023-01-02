@@ -45,4 +45,6 @@ object Cardinality {
     val min: Int         = 0
     val max: Option[Int] = Some(1)
   }
+
+  val allCardinalities: Array[Cardinality] = Array(AtLeastOne, ExactlyOne, Unbounded, ZeroOrOne)
 }
