@@ -14,7 +14,6 @@ import scala.concurrent.Future
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search.WhereClause
-import org.knora.webapi.settings.KnoraDispatchers
 
 /**
  * An trait whose implementations can get type information from a parsed Gravsearch query in different ways.
@@ -29,10 +28,9 @@ abstract class GravsearchTypeInspector(
   responderData: ResponderData
 ) {
 
-  protected val system: ActorSystem = responderData.system
-  protected implicit val executionContext: ExecutionContext =
-    system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-  protected implicit val timeout: Timeout = responderData.appConfig.defaultTimeoutAsDuration
+  protected val system: ActorSystem                         = responderData.system
+  protected implicit val executionContext: ExecutionContext = responderData.executionContext
+  protected implicit val timeout: Timeout                   = responderData.timeout
 
   /**
    * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found

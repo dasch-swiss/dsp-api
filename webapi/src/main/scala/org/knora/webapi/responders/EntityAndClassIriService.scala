@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders
 import akka.actor.ActorRef
-import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
@@ -17,24 +16,28 @@ import scala.concurrent.Future
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.IRI
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.settings.KnoraDispatchers
 
+/**
+ * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
+ *
+ * It was extracted from the base class of all responders in order to be able to break up the inheritance hierarchy
+ * in the future - once we are porting more responders to the zio world.
+ *
+ * It is by no means complete, has already too many responsibilities and
+ * will be subject to further refactoring once we extract more services.
+ */
 final case class EntityAndClassIriService(
-  actorSystem: ActorSystem,
-  appActor: ActorRef,
-  appConfig: AppConfig,
+  actorDeps: ActorDeps,
   stringFormatter: StringFormatter
 ) extends LazyLogging {
+  private implicit val ec: ExecutionContext = actorDeps.executionContext
+  private implicit val timeout: Timeout     = actorDeps.timeout
 
-  private implicit val system: ActorSystem = actorSystem
-  private implicit val executionContext: ExecutionContext =
-    system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-  private implicit val timeout: Timeout = appConfig.defaultTimeoutAsDuration
+  private val appActor: ActorRef = actorDeps.appActor
 
   /**
    * Checks whether an entity is used in the triplestore.
@@ -69,9 +72,9 @@ final case class EntityAndClassIriService(
    */
   def throwIfEntityIsUsed(
     entityIri: SmartIri,
-    errorFun: => Nothing,
     ignoreKnoraConstraints: Boolean = false,
-    ignoreRdfSubjectAndObject: Boolean = false
+    ignoreRdfSubjectAndObject: Boolean = false,
+    errorFun: => Nothing
   ): Future[Unit] =
     for {
       entityIsUsed: Boolean <- isEntityUsed(entityIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
@@ -94,7 +97,7 @@ final case class EntityAndClassIriService(
     } yield ()
 
   /**
-   * Checks whether an instance of a class (or any ob its sub-classes) exists
+   * Checks whether an instance of a class (or any of its sub-classes) exists.
    *
    * @param classIri  the IRI of the class.
    * @return `true` if the class is used.
@@ -105,11 +108,11 @@ final case class EntityAndClassIriService(
   }
 
   /**
-   * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
+   * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
    * If no custom IRI was given, creates a random unused IRI.
    *
    * @param entityIri    the optional custom IRI of the entity.
-   * @param iriFormatter the stringFormatter method that must be used to create a random Iri.
+   * @param iriFormatter the stringFormatter method that must be used to create a random IRI.
    * @return IRI of the entity.
    */
   def checkOrCreateEntityIri(entityIri: Option[SmartIri], iriFormatter: => IRI): Future[IRI] =
@@ -136,5 +139,6 @@ final case class EntityAndClassIriService(
 }
 
 object EntityAndClassIriService {
-  val layer = ZLayer.fromFunction(EntityAndClassIriService.apply _)
+  val layer: ZLayer[ActorDeps with StringFormatter, Nothing, EntityAndClassIriService] =
+    ZLayer.fromFunction(EntityAndClassIriService.apply _)
 }
