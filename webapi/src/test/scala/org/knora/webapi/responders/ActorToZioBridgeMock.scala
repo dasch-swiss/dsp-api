@@ -8,8 +8,6 @@ import zio.mock
 import zio.mock.Mock
 import zio.mock.Proxy
 
-import scala.reflect.ClassTag
-
 import org.knora.webapi.messages.ResponderRequest
 
 /**
@@ -26,8 +24,7 @@ object ActorToZioBridgeMock extends Mock[ActorToZioBridge] {
       for {
         proxy <- ZIO.service[Proxy]
       } yield new ActorToZioBridge {
-        override def askAppActor[R: Tag](message: ResponderRequest)(implicit tag: ClassTag[R]): Task[R] =
-          proxy(AskAppActor.of[R], message)
+        override def askAppActor[R: Tag](message: ResponderRequest): Task[R] = proxy(AskAppActor.of[R], message)
       }
     }
 }
