@@ -19,14 +19,14 @@ object Dependencies {
   val AkkaHttpVersion  = "10.2.10"
   val JenaVersion      = "4.6.1"
 
-  val ZioConfigVersion            = "3.0.2"
+  val ZioConfigVersion            = "3.0.6"
   val ZioHttpVersion              = "2.0.0-RC11"
   val ZioJsonVersion              = "0.3.0"
-  val ZioLoggingVersion           = "2.1.5"
+  val ZioLoggingVersion           = "2.1.7"
   val ZioMetricsConnectorsVersion = "2.0.4"
   val ZioPreludeVersion           = "1.0.0-RC16"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.4"
+  val ZioVersion                  = "2.0.5"
 
   // ZIO - all Scala 3 compatible
   val zio                  = "dev.zio" %% "zio"                    % ZioVersion
