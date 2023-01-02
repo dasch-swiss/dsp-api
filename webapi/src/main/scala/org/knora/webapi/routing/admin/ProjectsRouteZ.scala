@@ -17,13 +17,8 @@ final case class ProjectsRouteZ(
 
   val route: HttpApp[Any, Nothing] =
     Http
-      .collectZIO[Request] {
-        // Returns a single project identified by an urlencoded IRI
-        case Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded =>
-          RouteUtilZ
-            .urlDecode(iriUrlEncoded, "Failed to url decode IRI parameter.")
-            .flatMap(projectsService.getSingleProjectADMRequest(_).map(_.toJsValue.toString()))
-            .map(Response.json(_))
+      .collectZIO[Request] { case Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded =>
+        getProjectByIriEncoded(iriUrlEncoded)
       }
       .catchAll {
         case RequestRejectedException(e) =>
@@ -31,6 +26,12 @@ final case class ProjectsRouteZ(
         case InternalServerException(e) =>
           ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
       }
+
+  private def getProjectByIriEncoded(iriUrlEncoded: String) =
+    RouteUtilZ
+      .urlDecode(iriUrlEncoded, "Failed to url decode IRI parameter.")
+      .flatMap(projectsService.getSingleProjectADMRequest(_).map(_.toJsValue.toString()))
+      .map(Response.json(_))
 }
 
 object ProjectsRouteZ {
