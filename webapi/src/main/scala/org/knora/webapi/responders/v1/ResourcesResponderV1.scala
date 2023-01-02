@@ -50,7 +50,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetad
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
@@ -58,7 +57,7 @@ import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
  */
-class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   // Converts SPARQL query results to ApiValueV1 objects.
   private val valueUtilV1 = new ValueUtilV1(responderData.appConfig)

@@ -641,7 +641,7 @@ For example, the following response contains the list of events describing the v
                     "@type": "xsd:dateTimeStamp"
                 },
                 "knora-api:attachedToProject": {
-                    "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+                    "@id": "http://rdfh.ch/projects/0001"
                 }
             },
             "knora-api:versionDate": {

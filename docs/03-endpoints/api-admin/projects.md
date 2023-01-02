@@ -13,7 +13,7 @@
 
 - `POST: /admin/projects` : create a new project  
 
-- `GET: /admin/projects/[iri | shortname | shortcode | uuid]/<identifier>` : returns a single project identified either through iri, shortname, shortcode or UUID
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>` : returns a single project identified either through iri, shortname or shortcode
 
 - `PUT: /admin/projects/iri/<identifier>` : update a project identified by iri  
 
@@ -23,7 +23,7 @@
 
 **Project Member Operations:**  
 
-- `GET: /admin/projects/[iri | shortname | shortcode | uuid]/<identifier>/members` : returns all members part of a project identified through iri, shortname, shortcode or UUID
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode
 
 **Project Admin Member Operations:**  
 
@@ -187,7 +187,7 @@ Operates on the following properties:
 The following is an example for project information stored in the `admin` named graph:
 
 ```
-<http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA>
+<http://rdfh.ch/projects/00FF>
     rdf:type knora-admin:knoraProject ;
     knora-admin:projectShortname "images"^^xsd:string ;
     knora-admin:projectShortcode "00FF"^^xsd:string ;

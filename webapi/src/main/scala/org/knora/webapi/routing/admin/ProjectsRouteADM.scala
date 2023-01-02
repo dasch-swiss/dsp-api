@@ -52,13 +52,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
       getKeywords() ~
       getProjectKeywords() ~
       getProjectByIri() ~
-      getProjectByUuid() ~
       getProjectByShortname() ~
       getProjectByShortcode() ~
       changeProject() ~
       deleteProject() ~
       getProjectMembersByIri() ~
-      getProjectMembersByUuid() ~
       getProjectMembersByShortname() ~
       getProjectMembersByShortcode() ~
       getProjectAdminMembersByIri() ~
@@ -213,34 +211,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Returns a single project identified through the Base64 encoded UUID.
-   */
-  private def getProjectByUuid(): Route =
-    path(projectsBasePath / "uuid" / Segment) { value =>
-      get { requestContext =>
-        val requestMessage: Future[ProjectGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-
-        } yield ProjectGetRequestADM(
-          identifier = UuidIdentifier
-            .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
-      }
-    }
-
-  /**
    * Returns a single project identified through the shortname.
    */
   private def getProjectByShortname(): Route =
@@ -374,34 +344,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
 
         } yield ProjectMembersGetRequestADM(
           identifier = IriIdentifier
-            .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
-      }
-    }
-
-  /**
-   * Returns all members of a project identified through the Base64 encoded UUID.
-   */
-  private def getProjectMembersByUuid(): Route =
-    path(projectsBasePath / "uuid" / Segment / "members") { value =>
-      get { requestContext =>
-        val requestMessage: Future[ProjectMembersGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-
-        } yield ProjectMembersGetRequestADM(
-          identifier = UuidIdentifier
             .fromString(value)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           requestingUser = requestingUser

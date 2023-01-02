@@ -48,7 +48,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
   /* we need to run our app with the mocked sipi implementation */
   override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi(system)
+  override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers(Some(system))
 
   object RequestParams {
 
@@ -85,7 +85,7 @@ class SipiV1R2RSpec extends R2RSpec {
         )
       ),
       label = "test",
-      project_id = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+      project_id = "http://rdfh.ch/projects/0803"
     )
 
     val pathToFile = "test_data/test_route/images/Chlaus.jpg"

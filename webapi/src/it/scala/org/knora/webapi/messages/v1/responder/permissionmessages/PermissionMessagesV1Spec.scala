@@ -17,7 +17,7 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
 
     "return true if the user is allowed to create a resource (root user)" in {
 
-      val projectIri       = INCUNABULA_PROJECT_IRI
+      val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataV1.rootUser.permissionData.hasPermissionFor(
@@ -31,7 +31,7 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
 
     "return true if the user is allowed to create a resource (project admin user)" in {
 
-      val projectIri       = INCUNABULA_PROJECT_IRI
+      val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataV1.incunabulaProjectAdminUser.permissionData
@@ -42,7 +42,7 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
 
     "return true if the user is allowed to create a resource (project member user)" in {
 
-      val projectIri       = INCUNABULA_PROJECT_IRI
+      val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataV1.incunabulaMemberUser.permissionData
@@ -52,7 +52,7 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
     }
 
     "return false if the user is not allowed to create a resource" in {
-      val projectIri       = INCUNABULA_PROJECT_IRI
+      val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataV1.normalUser.permissionData
@@ -62,7 +62,7 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
     }
 
     "return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri                = IMAGES_PROJECT_IRI
+      val projectIri                = imagesProjectIri
       val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
       val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
 
@@ -76,7 +76,7 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
     }
 
     "return false if the user is not allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri                 = IMAGES_PROJECT_IRI
+      val projectIri                 = imagesProjectIri
       val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
       val result = SharedTestDataV1.imagesReviewerUser.permissionData
@@ -88,7 +88,7 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
   "querying the user's 'PermissionsProfileV1' with 'hasProjectAdminAllPermissionFor'" should {
 
     "return true if the user has the 'ProjectAdminAllPermission' (incunabula project admin user)" in {
-      val projectIri = INCUNABULA_PROJECT_IRI
+      val projectIri = incunabulaProjectIri
       val result =
         SharedTestDataV1.incunabulaProjectAdminUser.permissionData.hasProjectAdminAllPermissionFor(projectIri)
 
@@ -96,7 +96,7 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
     }
 
     "return false if the user has the 'ProjectAdminAllPermission' (incunabula member user)" in {
-      val projectIri = INCUNABULA_PROJECT_IRI
+      val projectIri = incunabulaProjectIri
       val result     = SharedTestDataV1.incunabulaMemberUser.permissionData.hasProjectAdminAllPermissionFor(projectIri)
 
       result should be(false)

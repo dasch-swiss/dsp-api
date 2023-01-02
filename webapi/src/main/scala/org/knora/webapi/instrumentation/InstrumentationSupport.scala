@@ -54,14 +54,6 @@ trait InstrumentationSupport {
     }
   }
 
-  //    def counter(name: String) = Kamon.metrics.counter(name)
-  //    def minMaxCounter(name: String) = Kamon.metrics.minMaxCounter(name)
-  //    def time[A](name: String)(thunk: => A) = Latency.measure(Kamon.metrics.histogram(name))(thunk)
-  //    def traceFuture[A](name:String)(future: => Future[A]):Future[A] =
-  //        Tracer.withContext(Kamon.tracer.newContext(name)) {
-  //            future.andThen { case completed ⇒ Tracer.currentContext.finish() }(SameThreadExecutionContext)
-  //        }
-
   /**
    * Based on the current class name, create a logger with the name in the
    * form 'M-ClassName', e.g., 'M-RedisManager'.

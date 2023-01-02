@@ -19,31 +19,32 @@ object Dependencies {
   val AkkaHttpVersion  = "10.2.10"
   val JenaVersion      = "4.6.1"
 
-  val ZioVersion                  = "2.0.4"
+  val ZioConfigVersion            = "3.0.2"
   val ZioHttpVersion              = "2.0.0-RC11"
   val ZioJsonVersion              = "0.3.0"
-  val ZioConfigVersion            = "3.0.2"
-  val ZioSchemaVersion            = "0.2.0"
   val ZioLoggingVersion           = "2.1.5"
   val ZioMetricsConnectorsVersion = "2.0.4"
   val ZioPreludeVersion           = "1.0.0-RC16"
+  val ZioSchemaVersion            = "0.2.0"
+  val ZioVersion                  = "2.0.4"
 
   // ZIO - all Scala 3 compatible
   val zio                  = "dev.zio" %% "zio"                    % ZioVersion
-  val zioMacros            = "dev.zio" %% "zio-macros"             % ZioVersion
-  val zioHttp              = "io.d11"  %% "zhttp"                  % ZioHttpVersion
-  val zioJson              = "dev.zio" %% "zio-json"               % ZioJsonVersion
-  val zioPrelude           = "dev.zio" %% "zio-prelude"            % ZioPreludeVersion
-  val zioLogging           = "dev.zio" %% "zio-logging"            % ZioLoggingVersion
-  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j"      % ZioLoggingVersion
   val zioConfig            = "dev.zio" %% "zio-config"             % ZioConfigVersion
   val zioConfigMagnolia    = "dev.zio" %% "zio-config-magnolia"    % ZioConfigVersion
   val zioConfigTypesafe    = "dev.zio" %% "zio-config-typesafe"    % ZioConfigVersion
+  val zioHttp              = "io.d11"  %% "zhttp"                  % ZioHttpVersion
+  val zioJson              = "dev.zio" %% "zio-json"               % ZioJsonVersion
+  val zioLogging           = "dev.zio" %% "zio-logging"            % ZioLoggingVersion
+  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j"      % ZioLoggingVersion
+  val zioMacros            = "dev.zio" %% "zio-macros"             % ZioVersion
   val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
+  val zioPrelude           = "dev.zio" %% "zio-prelude"            % ZioPreludeVersion
 
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
+  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC9"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -57,12 +58,12 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val scalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"        % "3.9.5"  // Scala 3 compatible
-  val slf4jApi           = "org.slf4j"                   % "slf4j-api"            % "2.0.5"  // the logging interface
-  val logbackClassic     = "ch.qos.logback"              % "logback-classic"      % "1.4.5"  // the logging implementation
-  val logbackJsonClassic = "ch.qos.logback.contrib"      % "logback-json-classic" % "0.1.5"  // the logging implementation
-  val logbackJackson     = "ch.qos.logback.contrib"      % "logback-jackson"      % "0.1.5"  // the logging implementation
   val jacksonDatabind    = "com.fasterxml.jackson.core"  % "jackson-databind"     % "2.14.0" // the logging implementation
+  val logbackClassic     = "ch.qos.logback"              % "logback-classic"      % "1.4.5"  // the logging implementation
+  val logbackJackson     = "ch.qos.logback.contrib"      % "logback-jackson"      % "0.1.5"  // the logging implementation
+  val logbackJsonClassic = "ch.qos.logback.contrib"      % "logback-json-classic" % "0.1.5"  // the logging implementation
+  val scalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"        % "3.9.5"  // Scala 3 compatible
+  val slf4jApi           = "org.slf4j"                   % "slf4j-api"            % "2.0.6"  // the logging interface
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
@@ -105,8 +106,8 @@ object Dependencies {
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
   val akkaStreamTestkit    = "com.typesafe.akka"    %% "akka-stream-testkit"       % AkkaActorVersion // Scala 3 compatible
   val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % AkkaActorVersion // Scala 3 compatible
-  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.8.4"
-  val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.8.4"
+  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.9.0"
+  val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.9.0"
   val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.14"         // Scala 3 compatible
   val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.6"
 
@@ -127,7 +128,7 @@ object Dependencies {
     zioTestSbt
   ).map(_ % IntegrationTest)
 
-  val webapiTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt, zioMock).map(_ % Test)
 
   val webapiDependencies = Seq(
     akkaActor,

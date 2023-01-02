@@ -51,7 +51,7 @@ final case class ResourcesResponderV1SpecContextData(appConfig: AppConfig) {
           restype_name = Some("http://www.knora.org/ontology/0803/incunabula#book"),
           restype_id = "http://www.knora.org/ontology/0803/incunabula#book",
           person_id = "http://rdfh.ch/users/91e19f1e01",
-          project_id = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+          project_id = "http://rdfh.ch/projects/0803"
         )
       ),
       parent_res_id = Some("http://rdfh.ch/0803/c5058f3a"),
@@ -168,7 +168,7 @@ final case class ResourcesResponderV1SpecContextData(appConfig: AppConfig) {
           restype_name = Some("http://www.knora.org/ontology/0803/incunabula#page"),
           restype_id = "http://www.knora.org/ontology/0803/incunabula#page",
           person_id = "http://rdfh.ch/users/91e19f1e01",
-          project_id = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+          project_id = "http://rdfh.ch/projects/0803"
         )
       ),
       canonical_res_id = "http://rdfh.ch/0803/8a0b1e75",
