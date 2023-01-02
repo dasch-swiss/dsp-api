@@ -337,7 +337,6 @@ case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Bool
     with ListADMJsonProtocol {
   def toJsValue: JsValue = ListNodeCommentsDeleteResponseADMFormat.write(this)
 
-  def format: ListNodeCommentsDeleteResponseADM = this
 }
 
 /**
@@ -352,7 +351,6 @@ case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
 
   def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 
-  def format: CanDeleteListResponseADM = this
 }
 
 /**
@@ -363,7 +361,6 @@ case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
 case class ListsGetResponseADM(lists: Seq[ListNodeInfoADM]) extends KnoraResponseADM with ListADMJsonProtocol {
   def toJsValue: JsValue = listsGetResponseADMFormat.write(this)
 
-  def format: ListsGetResponseADM = this
 }
 
 abstract class ListItemGetResponseADM(listItem: ListItemADM) extends KnoraResponseADM with ListADMJsonProtocol
@@ -377,7 +374,6 @@ case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM(list
 
   def toJsValue: JsValue = listGetResponseADMFormat.write(this)
 
-  def format: ListGetResponseADM = this
 }
 
 /**
@@ -389,7 +385,6 @@ case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM(
 
   def toJsValue: JsValue = listNodeGetResponseADMFormat.write(this)
 
-  def format: ListNodeGetResponseADM = this
 }
 
 /**
@@ -408,7 +403,6 @@ case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends Nod
 
   def toJsValue: JsValue = listInfoGetResponseADMFormat.write(this)
 
-  def format: RootNodeInfoGetResponseADM = this
 }
 
 /**
@@ -419,8 +413,6 @@ case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends Nod
 case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends NodeInfoGetResponseADM(nodeinfo) {
 
   def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
-
-  def format: ChildNodeInfoGetResponseADM = this
 
 }
 
@@ -433,7 +425,6 @@ case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends Kno
 
   def toJsValue: JsValue = nodePathGetResponseADMFormat.write(this)
 
-  def format: NodePathGetResponseADM = this
 }
 
 abstract class ListItemDeleteResponseADM extends KnoraResponseADM with ListADMJsonProtocol
@@ -447,8 +438,6 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
 
   def toJsValue: JsValue = listDeleteResponseADMFormat.write(this)
 
-  def format: ListDeleteResponseADM = this
-
 }
 
 /**
@@ -461,7 +450,6 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
 
   def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
 
-  def format: ChildNodeDeleteResponseADM = this
 }
 
 /**
@@ -473,7 +461,6 @@ case class NodePositionChangeResponseADM(node: ListNodeADM) extends KnoraRespons
 
   def toJsValue: JsValue = changeNodePositionApiResponseADMFormat.write(this)
 
-  def format: NodePositionChangeResponseADM = this
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

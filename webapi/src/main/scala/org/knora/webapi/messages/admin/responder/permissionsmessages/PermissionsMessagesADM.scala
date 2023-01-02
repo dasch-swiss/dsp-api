@@ -763,7 +763,6 @@ case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInf
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = permissionsForProjectGetResponseADMFormat.write(this)
 
-  def format: PermissionsForProjectGetResponseADM = this
 }
 
 // All administrative Permissions for project
@@ -778,7 +777,6 @@ case class AdministrativePermissionsForProjectGetResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
 
-  def format: AdministrativePermissionsForProjectGetResponseADM = this
 }
 
 // All Default Object Access Permissions for project
@@ -793,7 +791,6 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
 
-  def format: DefaultObjectAccessPermissionsForProjectGetResponseADM = this
 }
 
 abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
@@ -809,7 +806,6 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
     extends PermissionGetResponseADM(defaultObjectAccessPermission) {
   def toJsValue: JsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
 
-  def format: DefaultObjectAccessPermissionGetResponseADM = this
 }
 
 /**
@@ -821,7 +817,6 @@ case class AdministrativePermissionGetResponseADM(administrativePermission: Admi
     extends PermissionGetResponseADM(administrativePermission) {
   def toJsValue: JsValue = administrativePermissionGetResponseADMFormat.write(this)
 
-  def format: AdministrativePermissionGetResponseADM = this
 }
 
 /**
@@ -834,7 +829,6 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
     with PermissionsADMJsonProtocol {
   def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
 
-  def format: AdministrativePermissionCreateResponseADM = this
 }
 
 /**
@@ -848,7 +842,6 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
 
-  def format: DefaultObjectAccessPermissionCreateResponseADM = this
 }
 
 /**
@@ -870,7 +863,6 @@ case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
 
   def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)
 
-  def format: PermissionDeleteResponseADM = this
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

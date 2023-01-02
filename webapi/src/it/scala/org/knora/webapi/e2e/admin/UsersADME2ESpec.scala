@@ -1095,9 +1095,9 @@ class UsersADME2ESpec
         val projects: Seq[ProjectADM] =
           AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[ProjectADM]]
         projects should contain allElementsOf Seq(
-          SharedTestDataADM.imagesProject.asExternalRepresentation,
-          SharedTestDataADM.incunabulaProject.asExternalRepresentation,
-          SharedTestDataADM.anythingProject.asExternalRepresentation
+          SharedTestDataADM.imagesProjectExternal,
+          SharedTestDataADM.incunabulaProjectExternal,
+          SharedTestDataADM.anythingProjectExternal
         )
 
         // testing getUserProjectMemberships method, which should return the same result
@@ -1128,7 +1128,7 @@ class UsersADME2ESpec
         assert(response.status === StatusCodes.OK)
 
         val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject.asExternalRepresentation))
+        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1170,7 +1170,7 @@ class UsersADME2ESpec
 
       "remove user from project" in {
         val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
-        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject.asExternalRepresentation))
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         val request = Delete(
           baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
@@ -1207,9 +1207,9 @@ class UsersADME2ESpec
         val projects: Seq[ProjectADM] =
           AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
         projects should contain allElementsOf Seq(
-          SharedTestDataADM.imagesProject.asExternalRepresentation,
-          SharedTestDataADM.incunabulaProject.asExternalRepresentation,
-          SharedTestDataADM.anythingProject.asExternalRepresentation
+          SharedTestDataADM.imagesProjectExternal,
+          SharedTestDataADM.incunabulaProjectExternal,
+          SharedTestDataADM.anythingProjectExternal
         )
 
         // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
@@ -1260,7 +1260,7 @@ class UsersADME2ESpec
 
         // verify that user has been added as project admin to images project
         val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject.asExternalRepresentation))
+        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1277,7 +1277,7 @@ class UsersADME2ESpec
       "remove user from project admin group" in {
         val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
 
-        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject.asExternalRepresentation))
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         val request = Delete(
           baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
@@ -1313,7 +1313,7 @@ class UsersADME2ESpec
 
         // verify that user has been added as project admin to images project
         val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject.asExternalRepresentation))
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         // remove user as project member from images project
         val request = Delete(
@@ -1342,7 +1342,7 @@ class UsersADME2ESpec
 
         val groups: Seq[GroupADM] =
           AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[GroupADM]]
-        groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroup.asExternalRepresentation)
+        groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroupExternal)
 
         // testing getUserGroupMemberships method, which should return the same result
         groups should contain allElementsOf getUserGroupMemberships(multiUserIri, rootCreds)
@@ -1374,7 +1374,7 @@ class UsersADME2ESpec
         assert(response.status === StatusCodes.OK)
 
         val membershipsAfterUpdate = getUserGroupMemberships(normalUserIri, rootCreds)
-        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroup.asExternalRepresentation))
+        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroupExternal))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1390,7 +1390,7 @@ class UsersADME2ESpec
 
       "remove user from group" in {
         val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
-        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroup.asExternalRepresentation))
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroupExternal))
 
         val request = Delete(
           baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/group-memberships/$imagesReviewerGroupIriEnc"

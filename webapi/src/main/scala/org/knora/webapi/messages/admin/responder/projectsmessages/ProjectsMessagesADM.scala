@@ -22,7 +22,6 @@ import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
-import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
@@ -306,7 +305,6 @@ case class ProjectChangeRequestADM(
 case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsResponseADMFormat.write(this)
 
-  def format: ProjectsGetResponseADM = copy(projects = this.projects.map(_.asExternalRepresentation))
 }
 
 /**
@@ -317,7 +315,6 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraRespon
 case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectResponseADMFormat.write(this)
 
-  def format: ProjectGetResponseADM = copy(project = this.project.asExternalRepresentation)
 }
 
 /**
@@ -329,7 +326,6 @@ case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResp
 
   def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
 
-  def format: ProjectMembersGetResponseADM = copy(members = this.members.map(_.asExternalRepresentation))
 }
 
 /**
@@ -343,7 +339,6 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
 
   def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
 
-  def format: ProjectAdminMembersGetResponseADM = copy(members = this.members.map(_.asExternalRepresentation))
 }
 
 /**
@@ -354,7 +349,6 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
 case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
 
-  def format: ProjectsKeywordsGetResponseADM = this
 }
 
 /**
@@ -365,7 +359,6 @@ case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRe
 case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
 
-  def format: ProjectKeywordsGetResponseADM = this
 }
 
 /**
@@ -378,7 +371,6 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
     with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
 
-  def format: ProjectRestrictedViewSettingsGetResponseADM = this
 }
 
 /**
@@ -389,7 +381,6 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
 case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 
-  def format: ProjectOperationResponseADM = copy(project = this.project.asExternalRepresentation)
 }
 
 /**
@@ -466,12 +457,6 @@ case class ProjectADM(
       status = status,
       selfjoin = selfjoin
     )
-  }
-
-  def asExternalRepresentation: ProjectADM = {
-    val sf                 = StringFormatter.getGeneralInstance
-    val ontologiesExternal = this.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
-    copy(ontologies = ontologiesExternal)
   }
 
   override def equals(that: Any): Boolean =

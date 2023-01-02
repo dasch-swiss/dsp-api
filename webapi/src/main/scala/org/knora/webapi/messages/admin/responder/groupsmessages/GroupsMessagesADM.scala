@@ -17,7 +17,6 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
@@ -204,7 +203,6 @@ case class GroupPermissionUpdateRequestADM(requestingUser: UserADM, apiRequestID
 case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupsGetResponseADMFormat.write(this)
 
-  def format: GroupsGetResponseADM = copy(groups = this.groups.map(_.asExternalRepresentation))
 }
 
 /**
@@ -215,7 +213,6 @@ case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM 
 case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupResponseADMFormat.write(this)
 
-  def format: GroupGetResponseADM = copy(group = this.group.asExternalRepresentation)
 }
 
 /**
@@ -226,7 +223,6 @@ case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with Gr
 case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupMembersResponseADMFormat.write(this)
 
-  def format: GroupMembersGetResponseADM = copy(members = this.members.map(_.asExternalRepresentation))
 }
 
 /**
@@ -237,8 +233,6 @@ case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraRespon
 case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupOperationResponseADMFormat.write(this)
 
-  def format: GroupOperationResponseADM =
-    copy(group = this.group.asExternalRepresentation)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,12 +261,6 @@ case class GroupADM(
    * Allows to sort collections of GroupADM. Sorting is done by the id.
    */
   def compare(that: GroupADM): Int = this.id.compareTo(that.id)
-
-  def asExternalRepresentation: GroupADM = {
-    val sf              = StringFormatter.getGeneralInstance
-    val projectExternal = project.asExternalRepresentation
-    copy(project = projectExternal)
-  }
 
   def asGroupShortADM: GroupShortADM =
     GroupShortADM(

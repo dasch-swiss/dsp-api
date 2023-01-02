@@ -159,7 +159,7 @@ object SharedTestDataADM {
       )
     )
 
-  /* represents the full project info of the Knora System project */
+  /* represents the full ProjectADM of the Knora System project */
   def systemProject: ProjectADM = ProjectADM(
     id = OntologyConstants.KnoraAdmin.SystemProject,
     shortname = "SystemProject",
@@ -178,7 +178,7 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  /* represents the full project info of the default shared ontologies project */
+  /* represents the full ProjectADM of the default shared ontologies project */
   def defaultSharedOntologiesProject: ProjectADM = ProjectADM(
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
     shortname = "DefaultSharedOntologiesProject",
@@ -294,7 +294,7 @@ object SharedTestDataADM {
       )
     )
 
-  /* represents the full project info of the images project */
+  /* represents the full ProjectADM of the images project */
   def imagesProject: ProjectADM = ProjectADM(
     id = imagesProjectIri,
     shortname = "images",
@@ -308,7 +308,21 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  /* represents the full GroupInfoV1 of the images ProjectAdmin group */
+  /* represents the full ProjectADM of the images project in the external format */
+  def imagesProjectExternal: ProjectADM = ProjectADM(
+    id = imagesProjectIri,
+    shortname = "images",
+    shortcode = "00FF",
+    longname = Some("Image Collection Demo"),
+    description = Seq(StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
+    keywords = Seq("images", "collection").sorted,
+    logo = None,
+    ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
+    status = true,
+    selfjoin = false
+  )
+
+  /* represents the full GroupADM of the images ProjectAdmin group */
   def imagesProjectAdminGroup: GroupADM = GroupADM(
     id = "-",
     name = "ProjectAdmin",
@@ -318,7 +332,7 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  /* represents the full GroupInfoV1 of the images ProjectMember group */
+  /* represents the full GroupADM of the images ProjectMember group */
   def imagesProjectMemberGroup: GroupADM = GroupADM(
     id = "-",
     name = "ProjectMember",
@@ -328,12 +342,22 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  /* represents the full GroupInfoV1 of the images project reviewer group */
+  /* represents the full GroupADM of the images project reviewer group */
   def imagesReviewerGroup: GroupADM = GroupADM(
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
     descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
     project = imagesProject,
+    status = true,
+    selfjoin = false
+  )
+
+  /* represents the full GroupADM of the images project reviewer group in the external format*/
+  def imagesReviewerGroupExternal: GroupADM = GroupADM(
+    id = "http://rdfh.ch/groups/00FF/images-reviewer",
+    name = "Image reviewer",
+    descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
+    project = imagesProjectExternal,
     status = true,
     selfjoin = false
   )
@@ -432,7 +456,7 @@ object SharedTestDataADM {
       )
     )
 
-  /* represents the ProjectInfoV1 of the incunabula project */
+  /* represents the ProjectADM of the incunabula project */
   def incunabulaProject: ProjectADM = ProjectADM(
     id = incunabulaProjectIri,
     shortname = "incunabula",
@@ -463,6 +487,41 @@ object SharedTestDataADM {
     ).sorted,
     logo = Some("incunabula_logo.png"),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
+    status = true,
+    selfjoin = false
+  )
+
+  /* represents the ProjectADM of the incunabula project in the external format*/
+  def incunabulaProjectExternal: ProjectADM = ProjectADM(
+    id = incunabulaProjectIri,
+    shortname = "incunabula",
+    shortcode = "0803",
+    longname = Some("Bilderfolgen Basler Frühdrucke"),
+    description = Seq(
+      StringLiteralV2(
+        value =
+          "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
+        language = None
+      )
+    ),
+    keywords = Seq(
+      "Basler Frühdrucke",
+      "Inkunabel",
+      "Narrenschiff",
+      "Wiegendrucke",
+      "Sebastian Brant",
+      "Bilderfolgen",
+      "early print",
+      "incunabula",
+      "ship of fools",
+      "Kunsthistorisches Seminar Universität Basel",
+      "Late Middle Ages",
+      "Letterpress Printing",
+      "Basel",
+      "Contectualisation of images"
+    ).sorted,
+    logo = Some("incunabula_logo.png"),
+    ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
     status = true,
     selfjoin = false
   )
@@ -580,12 +639,28 @@ object SharedTestDataADM {
     description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
-    ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
+    ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SOMETHING_ONTOLOGY_IRI),
     status = true,
     selfjoin = false
   )
 
-  /* represents the full GroupInfoV1 of the Thing searcher group */
+  def anythingProjectExternal: ProjectADM = ProjectADM(
+    id = anythingProjectIri,
+    shortname = "anything",
+    shortcode = "0001",
+    longname = Some("Anything Project"),
+    description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
+    keywords = Seq("things", "arbitrary test data").sorted,
+    logo = None,
+    ontologies = Seq(
+      SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost,
+      SharedOntologyTestDataADM.SOMETHING_ONTOLOGY_IRI_LocalHost
+    ),
+    status = true,
+    selfjoin = false
+  )
+
+  /* represents the full GroupADM of the Thing searcher group */
   def thingSearcherGroup: GroupADM = GroupADM(
     id = "http://rdfh.ch/groups/0001/thing-searcher",
     name = "Thing searcher",

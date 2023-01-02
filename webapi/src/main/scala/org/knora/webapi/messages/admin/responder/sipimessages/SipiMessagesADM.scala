@@ -47,7 +47,6 @@ case class SipiFileInfoGetResponseADM(
 ) extends KnoraResponseADM {
   def toJsValue: JsValue = SipiResponderResponseADMJsonProtocol.sipiFileInfoGetResponseADMFormat.write(this)
 
-  def format: SipiFileInfoGetResponseADM = this
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

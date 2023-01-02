@@ -10,6 +10,4 @@ import org.knora.webapi.messages.traits.Jsonable
 /**
  * A trait for Knora Admin response messages. Any response message can be converted into JSON.
  */
-trait KnoraResponseADM extends Jsonable {
-  def format: KnoraResponseADM
-}
+trait KnoraResponseADM extends Jsonable
