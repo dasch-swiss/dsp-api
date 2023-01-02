@@ -9,7 +9,7 @@ import dsp.errors.BadRequestException
 object RouteUtilZ {
 
   /**
-   * Url decode a [[String]].
+   * Url decodes a [[String]].
    * Fails if String is not a well formed utf-8 [[String]] in `application/x-www-form-urlencoded` MIME format.
    *
    * Wraps Java's [[java.net.URLDecoder#decode(java.lang.String, java.lang.String)]] into the zio world.
