@@ -52,7 +52,7 @@ object HealthRouteZ {
     }
 
   /**
-   * creates the HTTP response from the health check result (healthy/unhealthy)
+   * Creates the HTTP response from the health check result (healthy/unhealthy).
    *
    * @param result the result of the health check
    * @return an HTTP response
