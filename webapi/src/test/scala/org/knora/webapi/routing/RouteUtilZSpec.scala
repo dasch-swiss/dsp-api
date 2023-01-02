@@ -10,7 +10,7 @@ import dsp.errors.BadRequestException
 object RouteUtilZSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Throwable] = suite("routeUtilZSpec")(
     suite("function `urlDecode` should")(
-      test("given a valid encoding should return the decoded value") {
+      test("given a valid encoding, return the decoded value") {
         for {
           actual <- RouteUtilZ.urlDecode("http%3A%2F%2Frdfh.ch%2Fprojects%2FLw3FC39BSzCwvmdOaTyLqQ")
         } yield assertTrue(actual == "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ")
