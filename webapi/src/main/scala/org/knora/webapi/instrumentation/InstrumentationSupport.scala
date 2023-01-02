@@ -56,7 +56,7 @@ trait InstrumentationSupport {
 
   /**
    * Based on the current class name, create a logger with the name in the
-   * form 'M-ClassName', e.g., 'M-RedisManager'.
+   * form 'M-ClassName', e.g., 'M-CacheManager'.
    * All loggers returned by this method can be configured in 'logback.xml',
    * i.e., turned on or off.
    */
