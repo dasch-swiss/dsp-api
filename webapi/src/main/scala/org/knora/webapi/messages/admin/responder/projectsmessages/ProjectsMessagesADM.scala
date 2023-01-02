@@ -304,7 +304,6 @@ case class ProjectChangeRequestADM(
  */
 case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsResponseADMFormat.write(this)
-
 }
 
 /**
@@ -314,7 +313,6 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraRespon
  */
 case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectResponseADMFormat.write(this)
-
 }
 
 /**
@@ -325,7 +323,6 @@ case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM w
 case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -338,7 +335,6 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
     with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -348,7 +344,6 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
  */
 case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -358,7 +353,6 @@ case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRe
  */
 case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -370,7 +364,6 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
     extends KnoraResponseADM
     with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -380,7 +373,6 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
  */
 case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
-
 }
 
 /**

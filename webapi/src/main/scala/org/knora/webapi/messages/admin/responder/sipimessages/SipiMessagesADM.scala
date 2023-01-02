@@ -46,7 +46,6 @@ case class SipiFileInfoGetResponseADM(
   restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM]
 ) extends KnoraResponseADM {
   def toJsValue: JsValue = SipiResponderResponseADMJsonProtocol.sipiFileInfoGetResponseADMFormat.write(this)
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

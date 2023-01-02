@@ -202,7 +202,6 @@ case class GroupPermissionUpdateRequestADM(requestingUser: UserADM, apiRequestID
  */
 case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupsGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -212,7 +211,6 @@ case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM 
  */
 case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupResponseADMFormat.write(this)
-
 }
 
 /**
@@ -222,7 +220,6 @@ case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with Gr
  */
 case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupMembersResponseADMFormat.write(this)
-
 }
 
 /**
@@ -232,7 +229,6 @@ case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraRespon
  */
 case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupOperationResponseADMFormat.write(this)
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

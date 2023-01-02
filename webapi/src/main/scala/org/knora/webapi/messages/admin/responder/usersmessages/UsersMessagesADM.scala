@@ -381,7 +381,6 @@ case class UserGroupMembershipRemoveRequestADM(
  */
 case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -391,7 +390,6 @@ case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
  */
 case class UserResponseADM(user: UserADM) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProfileResponseADMFormat.write(this)
-
 }
 
 /**
@@ -401,7 +399,6 @@ case class UserResponseADM(user: UserADM) extends KnoraResponseADM {
  */
 case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectMembershipsGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -411,7 +408,6 @@ case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) exten
  */
 case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectAdminMembershipsGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -421,7 +417,6 @@ case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) 
  */
 case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userGroupMembershipsGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -431,7 +426,6 @@ case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends Kno
  */
 case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

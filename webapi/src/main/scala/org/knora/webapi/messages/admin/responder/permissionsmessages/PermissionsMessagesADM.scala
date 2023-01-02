@@ -762,7 +762,6 @@ case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInf
     extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = permissionsForProjectGetResponseADMFormat.write(this)
-
 }
 
 // All administrative Permissions for project
@@ -776,7 +775,6 @@ case class AdministrativePermissionsForProjectGetResponseADM(
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
-
 }
 
 // All Default Object Access Permissions for project
@@ -790,7 +788,6 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
-
 }
 
 abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
@@ -805,7 +802,6 @@ abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
 case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM)
     extends PermissionGetResponseADM(defaultObjectAccessPermission) {
   def toJsValue: JsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -816,7 +812,6 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
 case class AdministrativePermissionGetResponseADM(administrativePermission: AdministrativePermissionADM)
     extends PermissionGetResponseADM(administrativePermission) {
   def toJsValue: JsValue = administrativePermissionGetResponseADMFormat.write(this)
-
 }
 
 /**
@@ -828,7 +823,6 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
     extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
-
 }
 
 /**
@@ -841,7 +835,6 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
-
 }
 
 /**
@@ -862,7 +855,6 @@ case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
     with PermissionsADMJsonProtocol {
 
   def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1089,7 +1081,6 @@ case class PermissionADM(name: String, additionalInformation: Option[IRI] = None
   def toJsValue: JsValue = permissionADMFormat.write(this)
 
   override def toString: String = name
-
 }
 
 /**
