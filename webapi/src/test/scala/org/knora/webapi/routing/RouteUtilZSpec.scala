@@ -8,7 +8,7 @@ import zio.test.assertTrue
 import dsp.errors.BadRequestException
 
 object RouteUtilZSpec extends ZIOSpecDefault {
-  val spec = suite("routeUtilZSpec")(
+  val spec: Spec[Any, Throwable] = suite("routeUtilZSpec")(
     suite("function `urlDecode` should")(
       test("given a valid encoding should return the decoded value") {
         for {
