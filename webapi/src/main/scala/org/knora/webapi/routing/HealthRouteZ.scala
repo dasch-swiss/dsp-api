@@ -80,7 +80,7 @@ object HealthRouteZ {
   private def status(s: Boolean): String = if (s) "healthy" else "unhealthy"
 
   /**
-   * returns the HTTP status according to the input boolean
+   * Returns the HTTP status according to the input boolean.
    *
    * @param s a boolean from which to derive the HTTP status
    * @return the HTTP status (OK or ServiceUnavailable)
