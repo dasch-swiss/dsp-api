@@ -18,6 +18,7 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+import dsp.errors.NotFoundException
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.instrumentation.InstrumentationSupport
@@ -36,19 +37,21 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProje
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
+import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 /**
- * Returns information about Knora projects.
+ * Returns information about projects.
  */
-class ProjectsResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
+final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings: CacheServiceSettings)
+    extends Responder(actorDeps)
+    with InstrumentationSupport {
 
   // Global lock IRI used for project creation and update
   private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
@@ -224,7 +227,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @return information about the project as a [[ProjectGetResponseADM]].
    * @throws NotFoundException when no project for the given IRI can be found
    */
-  private def getSingleProjectADMRequest(
+  def getSingleProjectADMRequest(
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Future[ProjectGetResponseADM] =
@@ -1046,7 +1049,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         // check the custom IRI; if not given, create an unused IRI
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(_.value).map(_.toSmartIri)
-        newProjectIRI: IRI <- checkOrCreateEntityIri(
+        newProjectIRI: IRI <- iriService.checkOrCreateEntityIri(
                                 customProjectIri,
                                 stringFormatter.makeRandomProjectIri
                               )

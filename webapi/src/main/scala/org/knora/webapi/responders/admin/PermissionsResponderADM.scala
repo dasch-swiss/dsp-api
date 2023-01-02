@@ -35,13 +35,12 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Provides information about permissions to other responders.
  */
-class PermissionsResponderADM(responderData: ResponderData) extends Responder(responderData) {
+class PermissionsResponderADM(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
   /* Entity types used to more clearly distinguish what kind of entity is meant */
@@ -717,11 +716,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           }
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        newPermissionIri: IRI <-
-          checkOrCreateEntityIri(
-            customPermissionIri,
-            stringFormatter.makeRandomPermissionIri(project.shortcode)
-          )
+        newPermissionIri: IRI <- iriService.checkOrCreateEntityIri(
+                                   customPermissionIri,
+                                   stringFormatter.makeRandomPermissionIri(project.shortcode)
+                                 )
 
         // Create the administrative permission.
         createAdministrativePermissionSparqlString =
@@ -1615,11 +1613,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           )
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        newPermissionIri: IRI <-
-          checkOrCreateEntityIri(
-            customPermissionIri,
-            stringFormatter.makeRandomPermissionIri(project.shortcode)
-          )
+        newPermissionIri: IRI <- iriService.checkOrCreateEntityIri(
+                                   customPermissionIri,
+                                   stringFormatter.makeRandomPermissionIri(project.shortcode)
+                                 )
         // verify group, if any given.
         // Is a group given that is not a built-in one?
         maybeGroupIri: Option[IRI] <-

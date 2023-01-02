@@ -28,14 +28,13 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
  * Responds to requests for user search queries and returns responses in Knora API
  * v1 format.
  */
-class SearchResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class SearchResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   // Valid combinations of value types and comparison operators, for determining whether a requested search
   // criterion is valid. The valid comparison operators for search criteria involving link properties can be

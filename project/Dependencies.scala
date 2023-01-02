@@ -44,6 +44,7 @@ object Dependencies {
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
+  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC9"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -127,7 +128,7 @@ object Dependencies {
     zioTestSbt
   ).map(_ % IntegrationTest)
 
-  val webapiTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt, zioMock).map(_ % Test)
 
   val webapiDependencies = Seq(
     akkaActor,

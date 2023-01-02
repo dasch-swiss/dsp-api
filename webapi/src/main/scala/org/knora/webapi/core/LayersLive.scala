@@ -11,6 +11,9 @@ import zio.ZLayer
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
@@ -54,7 +57,9 @@ object LayersLive {
    */
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
+      ActorDeps.layer,
       ActorSystem.layer,
+      ActorToZioBridge.live,
       ApiRoutes.layer,
       AppConfig.live,
       AppRouter.layer,
@@ -67,6 +72,7 @@ object LayersLive {
       IriConverter.layer,
       JWTService.layer,
       ProjectsRouteZ.layer,
+      ProjectsService.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,

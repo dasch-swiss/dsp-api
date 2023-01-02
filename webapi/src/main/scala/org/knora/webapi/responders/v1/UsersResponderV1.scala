@@ -28,13 +28,12 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class UsersResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   // The IRI used to lock user creation and update
   val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
