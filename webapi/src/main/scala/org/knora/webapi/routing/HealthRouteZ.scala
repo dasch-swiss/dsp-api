@@ -72,7 +72,7 @@ object HealthRouteZ {
     )
 
   /**
-   * returns a string representation "healthy" or "unhealthy" from a boolean
+   * Returns a string representation "healthy" or "unhealthy" from a boolean.
    *
    * @param s a boolean from which to derive the state
    * @return either "healthy" or "unhealthy"
