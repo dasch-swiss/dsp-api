@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.domain.m
+package org.knora.webapi.slice.ontology.domain.model
 
 import zio.Random
 import zio.Scope
 import zio.test._
 
-import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 
 object CardinalitySpec extends ZIOSpecDefault {
@@ -30,6 +29,20 @@ object CardinalitySpec extends ZIOSpecDefault {
       },
       test("same upper and lower bound") {
         assertTrue(ExactlyOne.toString == "1")
+      }
+    ),
+    suite("Cardinality to owl property and value")(
+      test("AtLeastOne") {
+        assertTrue(toOwlPropertyAndValue(AtLeastOne) == """owl:minCardinality "1"^^xsd:nonNegativeInteger""")
+      },
+      test("ExactlyOne") {
+        assertTrue(toOwlPropertyAndValue(ExactlyOne) == """owl:cardinality "1"^^xsd:nonNegativeInteger""")
+      },
+      test("ZeroOrOne") {
+        assertTrue(toOwlPropertyAndValue(ZeroOrOne) == """owl:maxCardinality "1"^^xsd:nonNegativeInteger""")
+      },
+      test("Unbounded") {
+        assertTrue(toOwlPropertyAndValue(Unbounded) == """owl:minCardinality "0"^^xsd:nonNegativeInteger""")
       }
     ),
     suite("Cardinality isStricter")(

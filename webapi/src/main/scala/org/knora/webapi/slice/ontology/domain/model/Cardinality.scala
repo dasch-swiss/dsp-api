@@ -25,6 +25,15 @@ sealed trait Cardinality {
 }
 
 object Cardinality {
+  def toOwlPropertyAndValue(c: Cardinality): String =
+    (c.min, c.max) match {
+      case (x, None)              => s"""owl:minCardinality "$x"^^xsd:nonNegativeInteger"""
+      case (0, Some(y))           => s"""owl:maxCardinality "$y"^^xsd:nonNegativeInteger"""
+      case (x, Some(y)) if x == y => s"""owl:cardinality "$x"^^xsd:nonNegativeInteger"""
+      case (x, Some(y)) =>
+        s"""owl:minCardinality "$x"^^xsd:nonNegativeInteger
+           |owl:maxCardinality "$y"^^xsd:nonNegativeInteger""".stripMargin
+    }
 
   case object AtLeastOne extends Cardinality {
     val min: Int         = 1
