@@ -22,7 +22,7 @@ object RouteUtilZSpec extends ZIOSpecDefault {
           fails(equalTo(BadRequestException("Failed to url decode IRI.")))
         )
       },
-      test("given an empty value should return BadRequestException with default error message") {
+      test("given an empty value, return BadRequestException with default error message") {
         for {
           error <- RouteUtilZ.urlDecode("%-5").exit
         } yield assert(error)(
