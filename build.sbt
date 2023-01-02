@@ -110,6 +110,10 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Universal / mappings ++= {
       directory("sipi/scripts")
     },
+    dockerCommands += Cmd(
+      """HEALTHCHECK --interval=15s --timeout=5s --retries=3 --start-period=30s \
+        |CMD bash /sipi/scripts/healthcheck.sh || exit 1""".stripMargin
+    ),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
 
