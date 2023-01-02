@@ -14,19 +14,12 @@ client code without the need for a running Knora instance.
 
 Client test data is generated as a side effect of running E2E tests.
 E2E tests use `ClientTestDataCollector` to collect API requests and
-responses. The implementation of `ClientTestDataCollector` collects these
-in a Redis hash. When the E2E tests have completed, the script
+responses. When the E2E tests have completed, the script
 `webapi/scripts/dump-client-test-data.sh` saves the collected test data
 in a Zip file. It then checks the filenames in the Zip file by comparing them
 with the list in `webapi/scripts/expected-client-test-data.txt`.
 
 ## Usage
-
-On macOS, you will need to install Redis in order to have the `redis-cli` command-line tool:
-
-```
-brew install redis
-```
 
 To generate client test data, type:
 
