@@ -15,7 +15,7 @@
 <http://www.knora.org/ontology/0001/minimal>
     rdf:type                        owl:Ontology ;
     rdfs:label                      "A minimal ontology" ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
     knora-base:lastModificationDate "2019-09-10T08:57:46.633162Z"^^xsd:dateTime .
 
 :hasName

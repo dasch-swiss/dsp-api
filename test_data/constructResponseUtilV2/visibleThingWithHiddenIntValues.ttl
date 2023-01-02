@@ -7,7 +7,7 @@
     knora-base:Resource;
   <http://www.knora.org/ontology/0001/anything#hasInteger> <http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g>,
     <http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw>;
-  knora-base:attachedToProject <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:creationDate "2019-11-29T10:00:00.673298Z"^^xsd:dateTime;
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";

@@ -60,7 +60,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
@@ -360,7 +359,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           }
 
       resourceIri: IRI <-
-        checkOrCreateEntityIri(
+        iriService.checkOrCreateEntityIri(
           createResourceRequestV2.createResource.resourceIri,
           stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode)
         )
@@ -705,12 +704,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
-        _ <- throwIfEntityIsUsed(
+        _ <- iriService.throwIfEntityIsUsed(
                entityIri = resourceSmartIri,
+               ignoreRdfSubjectAndObject = true,
                errorFun = throw BadRequestException(
                  s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
-               ),
-               ignoreRdfSubjectAndObject = true
+               )
              )
 
         // Get the IRI of the named graph from which the resource will be erased.

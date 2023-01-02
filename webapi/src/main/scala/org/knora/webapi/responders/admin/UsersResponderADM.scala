@@ -39,12 +39,13 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
+class UsersResponderADM(responderData: ResponderData)
+    extends Responder(responderData.actorDeps)
+    with InstrumentationSupport {
 
   // The IRI used to lock user creation and update
   private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -1707,7 +1708,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         // check the custom IRI; if not given, create an unused IRI
         customUserIri: Option[SmartIri] = userCreatePayloadADM.id.map(_.value.toSmartIri)
-        userIri: IRI                   <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
+        userIri: IRI                   <- iriService.checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password
         encoder        = new BCryptPasswordEncoder(responderData.appConfig.bcryptPasswordStrength)
@@ -1804,7 +1805,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def getUserFromCacheOrTriplestore(
     identifier: UserIdentifierADM
   ): Future[Option[UserADM]] = tracedFuture("admin-user-get-user-from-cache-or-triplestore") {
-    if (cacheServiceSettings.cacheServiceEnabled) {
+    if (responderData.cacheServiceSettings.cacheServiceEnabled) {
       // caching enabled
       getUserFromCache(identifier).flatMap {
         case None =>
@@ -2194,7 +2195,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[Unit]]
    */
   private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Future[Unit] =
-    if (cacheServiceSettings.cacheServiceEnabled) {
+    if (responderData.cacheServiceSettings.cacheServiceEnabled) {
       val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
       // only send to cache if keys are not empty
       if (keys.nonEmpty) {

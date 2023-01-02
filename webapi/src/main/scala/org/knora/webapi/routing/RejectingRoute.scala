@@ -40,7 +40,7 @@ class RejectingRoute(routeData: KnoraRouteData, runtime: Runtime[State]) { self 
         .runToFuture(
           for {
             state <- ZIO.service[State]
-            state <- state.get
+            state <- state.getAppState
           } yield state
         )
     }

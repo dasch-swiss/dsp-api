@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
@@ -53,7 +58,7 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 22, plugin = new UpgradePluginPR2081(log)),
       PluginForKnoraBaseVersion(versionNumber = 23, plugin = new UpgradePluginPR2094(log)),
       PluginForKnoraBaseVersion(versionNumber = 24, plugin = new NoopPlugin), // PR 2076
-      PluginForKnoraBaseVersion(versionNumber = 25, plugin = new UpgradePluginPR2255(log))
+      PluginForKnoraBaseVersion(versionNumber = 25, plugin = new NoopPlugin)  // PR 2268
       // KEEP IT ON THE BOTTOM
       // From "versionNumber = 6" don't use prBasedVersionString!
     )

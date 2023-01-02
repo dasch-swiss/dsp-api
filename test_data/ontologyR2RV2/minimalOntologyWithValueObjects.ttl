@@ -9,7 +9,7 @@
 <http://0.0.0.0:3333/ontology/0001/minimal/v2>
         rdf:type                        owl:Ontology ;
         rdfs:label                      "A minimal ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2019-09-10T08:57:46.633162Z"^^xsd:dateTimeStamp .
 
 minimal:hasName  rdf:type             owl:ObjectProperty ;

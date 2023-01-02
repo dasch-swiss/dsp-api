@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.store.triplestore.api
 
 import zio._
@@ -6,21 +11,7 @@ import zio.macros.accessible
 import java.nio.file.Path
 
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
-import org.knora.webapi.messages.store.triplestoremessages.DropAllRepositoryContentACK
-import org.knora.webapi.messages.store.triplestoremessages.FileWrittenResponse
-import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentResponse
-import org.knora.webapi.messages.store.triplestoremessages.InsertTriplestoreContentACK
-import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.RepositoryUploadedResponse
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 
@@ -132,9 +123,14 @@ trait TriplestoreService {
   ): UIO[ResetRepositoryContentACK]
 
   /**
-   * Drops (deletes) all data from the triplestore.
+   * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
    */
   def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK]
+
+  /**
+   * Wipes all triplestore data out using HTTP requests.
+   */
+  def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK]
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`

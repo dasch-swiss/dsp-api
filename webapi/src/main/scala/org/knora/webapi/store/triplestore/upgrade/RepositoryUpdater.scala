@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
@@ -82,9 +87,16 @@ object RepositoryUpdater {
             for {
               // No. Construct the list of updates that it needs.
               _ <-
-                ZIO.logInfo(
-                  s"Repository not up to date. Found: ${foundRepositoryVersion.getOrElse("None")}, Required: $requiredRepositoryVersion"
-                )
+                foundRepositoryVersion match {
+                  case Some(foundRepositoryVersion) =>
+                    ZIO.logInfo(
+                      s"Repository not up to date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion"
+                    )
+                  case None =>
+                    ZIO.logWarning(
+                      s"Repository not up to date. Found: None, Required: $requiredRepositoryVersion"
+                    )
+                }
               _               <- deleteTmpDirectories()
               selectedPlugins <- selectPluginsForNeededUpdates(foundRepositoryVersion)
               _ <-
@@ -202,8 +214,7 @@ object RepositoryUpdater {
              )
 
         // Empty the repository.
-        _ <- ZIO.logInfo("Emptying the repository...")
-        _ <- triplestoreService.dropAllTriplestoreContent()
+        _ <- triplestoreService.dropDataGraphByGraph()
 
         // Upload the transformed repository.
         _ <- ZIO.logInfo("Uploading transformed repository data...")

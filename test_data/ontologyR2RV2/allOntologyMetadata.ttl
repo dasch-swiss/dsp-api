@@ -6,13 +6,13 @@
 <http://0.0.0.0:3333/ontology/0001/something/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The something ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://0.0.0.0:3333/ontology/0001/minimal/v2>
         a                               owl:Ontology ;
         rdfs:label                      "A minimal ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2019-09-10T08:57:46.633162Z"^^xsd:dateTimeStamp .
 
 <http://api.knora.org/ontology/salsah-gui/v2>
@@ -24,7 +24,7 @@
 <http://0.0.0.0:3333/ontology/0806/webern/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The Anton Webern project ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/UzTunPytT2W52aHcsiBsKw> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0806> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://api.knora.org/ontology/knora-admin/v2>
@@ -36,7 +36,7 @@
 <http://0.0.0.0:3333/ontology/0804/dokubib/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The dokubib ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/oIjhUsZmQLuJ0VMGvJ2pfg> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0804> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://api.knora.org/ontology/shared/example-box/v2>
@@ -49,7 +49,7 @@
 <http://0.0.0.0:3333/ontology/00FF/images/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The images demo ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/MTvoB0EJRrqovzRkWXqfkA> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/00FF> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://api.knora.org/ontology/knora-api/v2>
@@ -61,31 +61,31 @@
 <http://0.0.0.0:3333/ontology/0801/biblio/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The Biblio ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://0.0.0.0:3333/ontology/0803/incunabula/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The incunabula ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0803> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://0.0.0.0:3333/ontology/0001/freetest/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The free test ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://0.0.0.0:3333/ontology/0801/beol/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The BEOL ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
 
 <http://0.0.0.0:3333/ontology/0001/anything/v2>
         a                               owl:Ontology ;
         rdfs:label                      "The anything ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ> ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2017-12-19T15:23:42.166Z"^^xsd:dateTimeStamp .
 
 <http://api.knora.org/ontology/standoff/v2>

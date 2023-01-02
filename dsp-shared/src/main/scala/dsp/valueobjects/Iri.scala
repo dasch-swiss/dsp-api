@@ -6,6 +6,8 @@
 package dsp.valueobjects
 
 import org.apache.commons.validator.routines.UrlValidator
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import scala.util.Try
@@ -47,7 +49,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraGroupIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -78,7 +80,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraListIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -108,9 +110,11 @@ object Iri {
       if (value.isEmpty) {
         Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
       } else {
+        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
+
         if (!V2IriValidation.isKnoraProjectIriStr(value)) {
           Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        } else if (!V2IriValidation.isKnoraBuiltInProjectIriStr(value) && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val eitherValue = Try(
@@ -145,7 +149,7 @@ object Iri {
         Validation.fail(ValidationException(IriErrorMessages.UuidMissing))
       } else if (!V2UuidValidation.hasUuidLength(value)) {
         Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(value)))
-      } else if (!V2UuidValidation.isUuidVersion4Or5(value)) {
+      } else if (!V2UuidValidation.isUuidSupported(value)) {
         Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
       } else Validation.succeed(new Base64Uuid(value) {})
   }
@@ -163,7 +167,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraRoleIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -183,6 +187,11 @@ object Iri {
    */
   sealed abstract case class UserIri private (value: String) extends Iri
   object UserIri {
+    implicit val decoder: JsonDecoder[UserIri] = JsonDecoder[String].mapOrFail { case value =>
+      UserIri.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
+
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
@@ -191,7 +200,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraUserIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid(value)))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(

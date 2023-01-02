@@ -60,9 +60,6 @@ final case class RoleRepoLive(
     } yield id).commit.tap(_ => ZIO.logInfo(s"Deleted role: ${id.uuid}"))
 }
 
-/**
- * Companion object providing the layer with an initialized implementation of [[RoleRepo]]
- */
 object RoleRepoLive {
   val layer: ZLayer[Any, Nothing, RoleRepo] =
     ZLayer {

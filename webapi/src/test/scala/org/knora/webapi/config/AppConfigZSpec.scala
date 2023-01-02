@@ -1,7 +1,13 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.config
 
-import zio._
-import zio.test._
+import zio.ZIO
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
@@ -18,7 +24,10 @@ object AppConfigZSpec extends ZIOSpecDefault {
         assertTrue(appConfig.printExtendedConfig == false) &&
         assertTrue(appConfig.jwtLongevityAsDuration == FiniteDuration(30L, TimeUnit.DAYS)) &&
         assertTrue(appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS)) &&
-        assertTrue(appConfig.bcryptPasswordStrength == User.PasswordStrength(12))
+        assertTrue(appConfig.bcryptPasswordStrength == User.PasswordStrength(12)) &&
+        assertTrue(
+          appConfig.instrumentationServerConfig.interval == java.time.Duration.ofSeconds(5)
+        )
       }
     }.provideLayer(AppConfig.live)
   )

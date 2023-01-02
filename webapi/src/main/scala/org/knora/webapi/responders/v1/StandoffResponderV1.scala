@@ -21,13 +21,12 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInf
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class StandoffResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message.

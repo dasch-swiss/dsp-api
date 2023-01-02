@@ -179,37 +179,31 @@ object AppServer {
     } yield appServer
 
   /**
-   * The AppServer live layer
+   * The live AppServer
    */
-  val live: ZLayer[AppServerEnvironment, Nothing, Unit] =
-    ZLayer {
-      for {
-        appServer <- AppServer.init()
-        _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true)
-      } yield ()
-    }
+  val live: ZIO[AppServerEnvironment, Nothing, Unit] =
+    for {
+      appServer <- AppServer.init()
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true)
+    } yield ()
 
   /**
-   * The AppServer test layer with Sipi, which initiates the startup checks. Before this layer does what it does,
+   * The test AppServer with Sipi, which initiates the startup checks. Before this effect does what it does,
    * the complete server should have already been started.
    */
-  val testWithSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
-    ZLayer {
-      for {
-        appServer <- AppServer.init()
-        _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = true)
-      } yield ()
-    }
+  val testWithSipi: ZIO[AppServerEnvironment, Nothing, Unit] =
+    for {
+      appServer <- AppServer.init()
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = true)
+    } yield ()
 
   /**
-   * The AppServer test layer without Sipi, which initiates the startup checks. Before this layer does what it does,
+   * The test AppServer without Sipi, which initiates the startup checks. Before this effect does what it does,
    * the complete server should have already been started.
    */
-  val testWithoutSipi: ZLayer[AppServerEnvironment, Nothing, Unit] =
-    ZLayer {
-      for {
-        appServer <- AppServer.init()
-        _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = false)
-      } yield ()
-    }
+  val testWithoutSipi: ZIO[AppServerEnvironment, Nothing, Unit] =
+    for {
+      appServer <- AppServer.init()
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = false)
+    } yield ()
 }

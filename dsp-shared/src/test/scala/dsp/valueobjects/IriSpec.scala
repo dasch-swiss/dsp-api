@@ -27,6 +27,7 @@ object IriSpec extends ZIOSpecDefault {
 
   val invalidProjectIri          = "http://rdfh.ch/projects/0001"
   val validProjectIri            = "http://rdfh.ch/projects/CwQ8hXF9Qlm1gl2QE6pTpg"
+  val beolProjectIri             = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
   val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
   val builtInProjectIri          = "http://www.knora.org/ontology/knora-admin#SystemProject"
 
@@ -183,9 +184,11 @@ object IriSpec extends ZIOSpecDefault {
       (for {
         iri      <- makeProjectIri(validProjectIri)
         iri2     <- makeProjectIri(builtInProjectIri)
+        beolIri  <- makeProjectIri(beolProjectIri)
         maybeIri <- maybeProjectIri
       } yield assertTrue(iri.value == validProjectIri) &&
         assertTrue(iri2.value == builtInProjectIri) &&
+        assertTrue(beolIri.value == beolProjectIri) &&
         assert(maybeIri)(isSome(equalTo(iri)))).toZIO
     },
     test("successfully validate passing None") {
@@ -199,7 +202,7 @@ object IriSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(Base64Uuid.make("") == Validation.fail(ValidationException(IriErrorMessages.UuidMissing)))
     },
-    test("pass an invalid UUID  and return an error") {
+    test("pass an invalid UUID and return an error") {
       assertTrue(
         Base64Uuid.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(invalidIri)))
       )

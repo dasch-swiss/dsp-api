@@ -1,24 +1,28 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.config
 
 import com.typesafe.config.ConfigFactory
 import zio._
 import zio.config._
+import zio.config.magnolia._
+import zio.config.typesafe._
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Duration
 import scala.concurrent.duration
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
 import dsp.errors.FileWriteException
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.util.cache.CacheUtil
-
-import typesafe._
-import magnolia._
 
 /**
  * Represents the configuration as defined in application.conf.
@@ -50,7 +54,8 @@ final case class AppConfig(
   triplestore: Triplestore,
   shacl: Shacl,
   cacheService: CacheService,
-  clientTestDataService: ClientTestDataService
+  clientTestDataService: ClientTestDataService,
+  instrumentationServerConfig: InstrumentationServerConfig
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -90,7 +95,8 @@ final case class KnoraApi(
   internalPort: Int,
   externalProtocol: String,
   externalHost: String,
-  externalPort: Int
+  externalPort: Int,
+  externalZioPort: Int
 ) {
   val internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                                       ":" + internalPort
@@ -225,6 +231,11 @@ final case class ClientTestDataService(
   collectClientTestData: Boolean
 )
 
+final case class InstrumentationServerConfig(
+  port: Int,
+  interval: Duration
+)
+
 /**
  * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading
  * the Typesafe-Config format.
@@ -253,7 +264,6 @@ object AppConfig {
       for {
         c <- configFromSource.orDie
         _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
-        _ <- ZIO.attempt(StringFormatter.init(c)).orDie   // needs early init before first usage
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Live Initialized <<<"))
 
@@ -264,8 +274,7 @@ object AppConfig {
     ZLayer {
       for {
         c <- configFromSource.orDie
-        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie     // needs early init before first usage
-        _ <- ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
+        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Test Initialized <<<"))
 

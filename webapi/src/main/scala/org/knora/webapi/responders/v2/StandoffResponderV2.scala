@@ -54,14 +54,13 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util._
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
+class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   private def xmlMimeTypes = Set(
     "text/xml",

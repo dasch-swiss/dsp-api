@@ -6,7 +6,7 @@
 package org.knora.webapi.util
 
 import zio.test.ZIOSpecDefault
-import zio.test._
+import zio.test.assertTrue
 
 /**
  * Tests [[Base64UrlCheckDigit]].

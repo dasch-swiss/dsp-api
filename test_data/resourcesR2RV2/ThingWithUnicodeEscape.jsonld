@@ -1,7 +1,7 @@
 {
   "@type": "anything:Thing",
   "knora-api:attachedToProject": {
-    "@id": "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+    "@id": "http://rdfh.ch/projects/0001"
   },
   "rdfs:label": "Pr\u00e9sentation du projet à \"Lausanne\"",
   "@context": {
