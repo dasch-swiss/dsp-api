@@ -18,7 +18,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestXMLV2
-import org.knora.webapi.sharedtestdata.SharedTestDataV1.ANYTHING_PROJECT_IRI
+import org.knora.webapi.sharedtestdata.SharedTestDataV1.anythingProjectIri
 
 sealed abstract case class DefineStandoffMapping private (
   mappingName: String,
@@ -101,7 +101,7 @@ object DefineStandoffMapping {
       mappingName = mappingName,
       projectIRI = projectIRI match {
         case Some(iri) => iri
-        case None      => ANYTHING_PROJECT_IRI
+        case None      => anythingProjectIri
       },
       label = label match {
         case Some(v) => v

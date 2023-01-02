@@ -37,14 +37,14 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authentica
       PermissionUtilADM.getUserPermissionV1(
         entityIri = "http://rdfh.ch/00014b43f902",
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         userProfile = SharedTestDataV1.incunabulaMemberUser
       ) should equal(Some(6)) // modify permission
 
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.incunabulaMemberUser
       ) should equal(Some(ModifyPermission)) // modify permission
@@ -54,14 +54,14 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authentica
       PermissionUtilADM.getUserPermissionV1(
         entityIri = "http://rdfh.ch/00014b43f902",
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         userProfile = SharedTestDataV1.incunabulaProjectAdminUser
       ) should equal(Some(8)) // change rights permission
 
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
       ) should equal(Some(ChangeRightsPermission)) // change rights permission
@@ -71,14 +71,14 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authentica
       PermissionUtilADM.getUserPermissionV1(
         entityIri = "http://rdfh.ch/00014b43f902",
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         userProfile = SharedTestDataV1.incunabulaCreatorUser
       ) should equal(Some(8)) // change rights permission
 
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.incunabulaCreatorUser
       ) should equal(Some(ChangeRightsPermission)) // change rights permission
@@ -88,14 +88,14 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authentica
       PermissionUtilADM.getUserPermissionV1(
         entityIri = "http://rdfh.ch/00014b43f902",
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         userProfile = SharedTestDataV1.rootUser
       ) should equal(Some(8)) // change rights permission
 
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.rootUser
       ) should equal(Some(ChangeRightsPermission)) // change rights permission
@@ -105,14 +105,14 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authentica
       PermissionUtilADM.getUserPermissionV1(
         entityIri = "http://rdfh.ch/00014b43f902",
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         userProfile = SharedTestDataV1.normalUser
       ) should equal(Some(2)) // view permission
 
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.normalUser
       ) should equal(Some(ViewPermission)) // view permission
@@ -122,14 +122,14 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authentica
       PermissionUtilADM.getUserPermissionV1(
         entityIri = "http://rdfh.ch/00014b43f902",
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         userProfile = SharedTestDataV1.anonymousUser
       ) should equal(Some(1)) // restricted view permission
 
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        entityProject = SharedTestDataV1.incunabulaProjectIri,
         entityPermissionLiteral = permissionLiteral,
         requestingUser = SharedTestDataADM.anonymousUser
       ) should equal(Some(RestrictedViewPermission)) // restricted view permission
@@ -138,7 +138,7 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authentica
     "return user's max permission from assertions for a specific resource" in {
       val assertions: Seq[(IRI, String)] = Seq(
         (OntologyConstants.KnoraBase.AttachedToUser, "http://rdfh.ch/users/91e19f1e01"),
-        (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataV1.INCUNABULA_PROJECT_IRI),
+        (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataV1.incunabulaProjectIri),
         (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
       )
 

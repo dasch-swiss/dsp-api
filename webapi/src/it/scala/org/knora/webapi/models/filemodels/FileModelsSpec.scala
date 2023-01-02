@@ -230,7 +230,7 @@ class FileModelsSpec extends CoreSpec {
             "knora-api:fileValueHasFilename" -> fileNamePDF
           ).toJson,
           "knora-api:attachedToProject" -> Map(
-            "@id" -> "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+            "@id" -> "http://rdfh.ch/projects/0001"
           ).toJson,
           "rdfs:label" -> "test label".toJson,
           "@context" -> Map(

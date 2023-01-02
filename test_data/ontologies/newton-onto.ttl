@@ -18,7 +18,7 @@
 <http://www.knora.org/ontology/0801/newton>
     rdf:type                        owl:Ontology ;
     rdfs:label                      "The Newton-Project ontology" ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/bL0y8GRuTUiFmvF1oXbeFQ> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
     knora-base:lastModificationDate "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
 
 ##########################################################

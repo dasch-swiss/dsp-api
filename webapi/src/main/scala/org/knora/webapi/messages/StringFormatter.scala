@@ -13,6 +13,7 @@ import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import spray.json._
+import zio.ZLayer
 
 import java.nio.ByteBuffer
 import java.time._
@@ -311,6 +312,16 @@ object StringFormatter {
         creationFun()
       })
     )
+
+  val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
+    StringFormatter.init(appConfig)
+    StringFormatter.getGeneralInstance
+  }
+
+  val test: ZLayer[Any, Nothing, StringFormatter] = ZLayer.fromFunction { () =>
+    StringFormatter.initForTest()
+    StringFormatter.getGeneralInstance
+  }
 }
 
 /**
@@ -344,6 +355,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    * Returns this IRI as a string in angle brackets.
    */
   def toSparql: String
+
+  def toIri: IRI = toString
 
   /**
    * Returns `true` if this is a Knora data or definition IRI.
@@ -484,6 +497,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    * @param targetSchema the target schema.
    */
   override def toOntologySchema(targetSchema: OntologySchema): SmartIri
+
+  def internalIri: IRI = toOntologySchema(InternalSchema).toIri
 
   /**
    * Constructs a short prefix label for the ontology that the IRI belongs to.
@@ -2761,6 +2776,7 @@ class StringFormatter private (
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.
+   *
    * @param s the string (IRI) to be checked.
    * @return UUID version.
    */
@@ -2770,12 +2786,16 @@ class StringFormatter private (
   }
 
   /**
-   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * Checks if UUID used to create IRI has supported version (4 and 5 are allowed).
+   * With an exception of BEOL project IRI `http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF`.
+   *
    * @param s the string (IRI) to be checked.
-   * @return TRUE for correct versions, FALSE for incorrect.
+   * @return TRUE for supported versions, FALSE for not supported.
    */
-  def isUuidVersion4Or5(s: IRI): Boolean =
-    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+  def isUuidSupported(s: String): Boolean =
+    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
+      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+    } else true
 
   /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
@@ -2788,19 +2808,21 @@ class StringFormatter private (
 
   /**
    * Validates resource IRI
+   *
    * @param iri to be validated
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
-    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidVersion4Or5(iri.toString)) {
+    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidSupported(iri.toString)) {
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     }
 
   /**
    * Validates permission IRI
+   *
    * @param iri to be validated.
    */
   def validatePermissionIRI(iri: IRI): Unit =
-    if (isKnoraPermissionIriStr(iri) && !isUuidVersion4Or5(iri)) {
+    if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) {
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     } else {
       validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))

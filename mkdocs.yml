@@ -51,8 +51,13 @@ nav:
                           - Permissions Endpoint: 03-endpoints/api-admin/permissions.md
                           - Stores Endpoint: 03-endpoints/api-admin/stores.md
                   - Util API:
-                          - Health: 03-endpoints/api-util/health.md
+
                           - Version: 03-endpoints/api-util/version.md
+                  - Instrumentation API:
+                          - Introduction: 03-endpoints/instrumentation/introduction.md
+                          - Health Endpoint: 03-endpoints/instrumentation/health.md
+                          - Metrics Endpoint: 03-endpoints/instrumentation/metrics.md
+
         - Publishing and Deployment:
                   - Publishing: 04-publishing-deployment/publishing.md
                   - Configuration: 04-publishing-deployment/configuration.md
@@ -98,7 +103,6 @@ nav:
                             - Setup Visual Studio Code for development of DSP-API: 05-internals/development/vscode-config.md
                             - Testing: 05-internals/development/testing.md
                             - Docker Cheat Sheet: 05-internals/development/docker-cheat-sheet.md
-                            - Monitoring DSP-API: 05-internals/development/monitoring.md
                             - Starting the DSP-Stack inside Docker Container: 05-internals/development/docker-compose.md
                             - Updating Repositories: 05-internals/development/updating-repositories.md
                             - Generating Client Test Data: 05-internals/development/generating-client-test-data.md

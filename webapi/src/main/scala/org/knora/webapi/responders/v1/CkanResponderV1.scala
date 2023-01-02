@@ -34,13 +34,12 @@ import org.knora.webapi.messages.v1.responder.valuemessages.HierarchicalListValu
 import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 /**
  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
  * under http://data.humanities.ch
  */
-class CkanResponderV1(responderData: ResponderData) extends Responder(responderData) {
+class CkanResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * A user representing the Knora API server, used in those cases where a user is required.

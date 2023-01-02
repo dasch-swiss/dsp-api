@@ -25,7 +25,7 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
  */
 class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
-  private val resourcesPath = new ResourcesRouteV2(routeData).makeRoute
+  private val resourcesPath = new ResourcesRouteV2(routeData, null).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

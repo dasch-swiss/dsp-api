@@ -44,10 +44,10 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val imagesUser           = SharedTestDataADM.imagesUser01
-  private val imagesProjectIri     = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri
+  private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri.toSmartIri
   private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
-  private val anythingProjectIri   = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
+  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.toSmartIri
 
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(

@@ -10,7 +10,16 @@ import zio.ZLayer
 
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -48,20 +57,29 @@ object LayersLive {
    */
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
+      ActorDeps.layer,
       ActorSystem.layer,
+      ActorToZioBridge.live,
       ApiRoutes.layer,
       AppConfig.live,
       AppRouter.layer,
-      CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
+      CacheServiceManager.layer,
       HttpServer.layer,
-      HttpServerWithZIOHttp.layer, // this is the new ZIO HTTP server layer
+      HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
+      IriConverter.layer,
       JWTService.layer,
+      ProjectsRouteZ.layer,
+      ProjectsService.layer,
       RepositoryUpdater.layer,
+      ResourceInfoRepo.layer,
+      ResourceInfoRoute.layer,
+      RestResourceInfoService.layer,
       State.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer
+      StringFormatter.live,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      TriplestoreServiceManager.layer
     )
 }

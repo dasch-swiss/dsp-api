@@ -33,12 +33,11 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 /**
- * A responder that returns information about hierarchical lists.
+ * A responder that returns information about lists.
  */
-class ListsResponderADM(responderData: ResponderData) extends Responder(responderData) {
+class ListsResponderADM(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   // The IRI used to lock user creation and update
   private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
@@ -984,7 +983,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       // check the custom IRI; if not given, create an unused IRI
       customListIri: Option[SmartIri] = id.map(_.value).map(_.toSmartIri)
       maybeShortcode: String          = project.shortcode
-      newListNodeIri: IRI            <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
+      newListNodeIri: IRI <-
+        iriService.checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
       // Create the new list node depending on type
       createNewListSparqlString: String = createNodeRequest match {

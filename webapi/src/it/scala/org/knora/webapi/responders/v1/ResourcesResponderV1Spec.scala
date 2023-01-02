@@ -7,13 +7,12 @@ package org.knora.webapi.responders.v1
 
 import akka.testkit.ImplicitSender
 import spray.json.JsValue
-
 import java.util.UUID
 import scala.concurrent.duration._
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.errors.OntologyConstraintException
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -171,7 +170,7 @@ object ResourcesResponderV1Spec {
       restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
       restype_id = "http://www.knora.org/ontology/0001/anything#Thing",
       person_id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-      project_id = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+      project_id = "http://rdfh.ch/projects/0001"
     ),
     ext_res_id = ExternalResourceIDV1(
       pid = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
@@ -196,7 +195,7 @@ object ResourcesResponderV1Spec {
       restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
       restype_id = "http://www.knora.org/ontology/0001/anything#Thing",
       person_id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-      project_id = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ"
+      project_id = "http://rdfh.ch/projects/0001"
     ),
     ext_res_id = ExternalResourceIDV1(
       pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -656,7 +655,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
+  override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 60.seconds
@@ -1085,7 +1084,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       val resourceCreateRequest = ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#misc",
         label = "Test-Misc",
-        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
+        projectIri = "http://rdfh.ch/projects/0803",
         values = valuesToBeCreated,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
@@ -1125,7 +1124,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       val resourceCreateRequest = ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book",
         label = "Test-Book",
-        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
+        projectIri = "http://rdfh.ch/projects/0803",
         values = valuesToBeCreated,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
@@ -1183,7 +1182,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book",
         label = "Book with reference to nonexistent resource",
-        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
+        projectIri = "http://rdfh.ch/projects/0803",
         values = valuesToBeCreated,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
@@ -1266,7 +1265,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = INCUNABULA_BOOK_RESOURCE_CLASS,
         label = "Test-Book",
-        projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
+        projectIri = SharedTestDataADM.incunabulaProjectIri,
         values = valuesToBeCreated,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
@@ -1337,7 +1336,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = INCUNABULA_PAGE_RESOURCE_CLASS,
         label = "Test-Page",
-        projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
+        projectIri = SharedTestDataADM.incunabulaProjectIri,
         values = valuesToBeCreated,
         file = Some(fileValue),
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1542,7 +1541,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/knora-base#Resource",
         label = "Test Resource",
-        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
+        projectIri = "http://rdfh.ch/projects/0803",
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1558,7 +1557,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0001/anything#Thing",
         label = "Test Resource",
-        projectIri = "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w",
+        projectIri = "http://rdfh.ch/projects/0803",
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1612,7 +1611,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0001/anything#BlueThing",
         label = "Test Thing",
-        projectIri = "http://rdfh.ch/projects/Lw3FC39BSzCwvmdOaTyLqQ",
+        projectIri = "http://rdfh.ch/projects/0001",
         values = valuesToBeCreated,
         file = None,
         userProfile = SharedTestDataADM.anythingUser1,
