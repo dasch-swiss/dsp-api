@@ -46,15 +46,15 @@ object RouteUtilADM {
       project.copy(ontologies = ontologiesExternal)
     }
 
+    def groupAsExternalRepresentation(group: GroupADM): GroupADM = {
+      val projectExternal = projectAsExternalRepresentation(group.project)
+      group.copy(project = projectExternal)
+    }
+
     def userAsExternalRepresentation(user: UserADM): UserADM = {
       val groupsExternal   = user.groups.map { g: GroupADM => groupAsExternalRepresentation(g) }
       val projectsExternal = user.projects.map { p: ProjectADM => projectAsExternalRepresentation(p) }
       user.copy(groups = groupsExternal, projects = projectsExternal)
-    }
-
-    def groupAsExternalRepresentation(group: GroupADM): GroupADM = {
-      val projectExternal = projectAsExternalRepresentation(group.project)
-      group.copy(project = projectExternal)
     }
 
     response match {
@@ -81,6 +81,8 @@ object RouteUtilADM {
       case UserGroupMembershipsGetResponseADM(groups) =>
         UserGroupMembershipsGetResponseADM(groups.map(groupAsExternalRepresentation(_)))
       case UserOperationResponseADM(user) => UserOperationResponseADM(userAsExternalRepresentation(user))
+
+      case _ => response
     }
   }
 
