@@ -1,11 +1,11 @@
 package org.knora.webapi.routing.admin
 
 import zhttp.http._
+import zio.URLayer
 import zio.ZLayer
+
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
-import zio.URLayer
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.responders.admin.RestProjectsService
