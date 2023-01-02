@@ -10,13 +10,12 @@ import akka.http.scaladsl.server.Directives.get
 import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import zio._
+import zio.json._
 
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.util.LogAspect
-
-import zio.json._
 
 /**
  * Provides health check logic
