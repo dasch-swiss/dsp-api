@@ -2,9 +2,10 @@ package org.knora.webapi.routing.admin
 
 import zhttp.http._
 import zio.ZLayer
-
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
+import zio.URLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.responders.admin.RestProjectsService
@@ -35,6 +36,5 @@ final case class ProjectsRouteZ(
 }
 
 object ProjectsRouteZ {
-  val layer: ZLayer[AppConfig with RestProjectsService, Nothing, ProjectsRouteZ] =
-    ZLayer.fromFunction(ProjectsRouteZ.apply _)
+  val layer: URLayer[AppConfig with RestProjectsService, ProjectsRouteZ] = ZLayer.fromFunction(ProjectsRouteZ.apply _)
 }
