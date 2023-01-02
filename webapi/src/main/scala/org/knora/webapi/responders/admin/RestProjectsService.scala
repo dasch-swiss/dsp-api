@@ -12,7 +12,7 @@ import org.knora.webapi.responders.ActorToZioBridge
 final case class RestProjectsService(bridge: ActorToZioBridge) {
 
   /**
-   * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].
+   * Finds the project by an [[IRI]] and returns the information as a [[ProjectGetResponseADM]].
    *
    * @param projectIri           an [[IRI]] identifying the project
    * @return
