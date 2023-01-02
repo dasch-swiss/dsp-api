@@ -1,15 +1,18 @@
 package org.knora.webapi.slice.ontology.domain.model
 
-final case class Cardinality private (min: Int, max: Option[Int]) {
+sealed trait Cardinality {
+  def min: Int
+  def max: Option[Int]
+
   def isStricter(other: Cardinality): Boolean =
     if (this == other) {
       false
     } else if (this.min > other.min) {
       true
     } else if (this.max.nonEmpty) {
-      other match {
-        case Cardinality(_, Some(otherMax)) => this.max.get < otherMax
-        case _                              => true
+      other.max match {
+        case Some(otherMax) => this.max.get < otherMax
+        case _              => true
       }
     } else {
       false
@@ -23,22 +26,23 @@ final case class Cardinality private (min: Int, max: Option[Int]) {
 
 object Cardinality {
 
-  def make(min: Int, max: Int): Option[Cardinality] = make(min, Some(max))
-
-  def make(min: Int, maxMaybe: Option[Int] = None): Option[Cardinality] = {
-    if (min < 0) {
-      return None
-    } else if (maxMaybe.nonEmpty) {
-      val max = maxMaybe.get
-      if (max < 0 || min > max) {
-        return None
-      }
-    }
-    Some(Cardinality(min, maxMaybe))
+  case object AtLeastOne extends Cardinality {
+    val min: Int         = 1
+    val max: Option[Int] = None
   }
 
-  val AtLeastOne: Cardinality = Cardinality.make(1).get
-  val ExactlyOne: Cardinality = Cardinality.make(1, 1).get
-  val Unbounded: Cardinality  = Cardinality.make(0).get
-  val ZeroOrOne: Cardinality  = Cardinality.make(0, 1).get
+  case object ExactlyOne extends Cardinality {
+    val min: Int         = 1
+    val max: Option[Int] = Some(1)
+  }
+
+  case object Unbounded extends Cardinality {
+    val min: Int         = 0
+    val max: Option[Int] = None
+  }
+
+  case object ZeroOrOne extends Cardinality {
+    val min: Int         = 0
+    val max: Option[Int] = Some(1)
+  }
 }

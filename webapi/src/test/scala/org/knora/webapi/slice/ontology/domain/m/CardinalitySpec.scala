@@ -21,19 +21,6 @@ object CardinalitySpec extends ZIOSpecDefault {
   }
 
   val spec: Spec[TestEnvironment with Scope, Nothing] = suite("CardinalitySpec")(
-    suite("Cardinality make")(
-      test("with min only => return Some with min only") {
-        assertTrue(Cardinality.make(0).contains(Cardinality(0, None)))
-      },
-      test("with min and max => return Some with min and max") {
-        assertTrue(Cardinality.make(1, 2).contains(Cardinality(1, Some(2))))
-      },
-      test("with min greater than max => return None") {
-        check(Gen.int(0, Int.MaxValue)) { i =>
-          assertTrue(Cardinality.make(i + 1, i).isEmpty)
-        }
-      }
-    ),
     suite("Cardinality to String")(
       test("lower bound only") {
         assertTrue(AtLeastOne.toString == "1-n")

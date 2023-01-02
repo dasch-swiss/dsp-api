@@ -8,12 +8,13 @@ package org.knora.webapi.responders
 import akka.actor.Actor
 import akka.actor.Props
 import akka.actor.ActorSystem
+import zio.ULayer
 import zio.ZLayer
 import scala.concurrent.duration.DurationInt
 
 object ActorDepsTest {
 
-  val stub = ZLayer.succeed {
+  val stub: ULayer[ActorDeps] = ZLayer.succeed {
     class StubActor extends Actor {
       def receive = println(_)
     }
