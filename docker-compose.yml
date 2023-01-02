@@ -53,6 +53,7 @@ services:
     image: daschswiss/knora-api:latest
     ports:
       - "3333:3333"
+      - "3339:3339"
     volumes:
       - /tmp:/tmp
     networks:

@@ -28,12 +28,13 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 /**
- * Returns information about Knora projects.
+ * Returns information about groups.
  */
-class GroupsResponderADM(responderData: ResponderData) extends Responder(responderData) with GroupsADMJsonProtocol {
+class GroupsResponderADM(responderData: ResponderData)
+    extends Responder(responderData.actorDeps)
+    with GroupsADMJsonProtocol {
 
   // Global lock IRI used for group creation and updating
   private val GROUPS_GLOBAL_LOCK_IRI: IRI = "http://rdfh.ch/groups"
@@ -451,7 +452,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
         // check the custom IRI; if not given, create an unused IRI
         customGroupIri: Option[SmartIri] = createRequest.id.map(_.value).map(iri => iri.toSmartIri)
-        groupIri: IRI <- checkOrCreateEntityIri(
+        groupIri: IRI <- iriService.checkOrCreateEntityIri(
                            customGroupIri,
                            stringFormatter.makeRandomGroupIri(projectADM.shortcode)
                          )

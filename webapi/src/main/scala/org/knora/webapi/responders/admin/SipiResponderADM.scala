@@ -29,13 +29,12 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
  * ADM format.
  */
-class SipiResponderADM(responderData: ResponderData) extends Responder(responderData) {
+class SipiResponderADM(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message of type [[SipiResponderRequestADM]], and returns an appropriate response message, or

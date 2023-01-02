@@ -69,7 +69,7 @@ class CreateListItemsRouteADME2ESpec
   def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String =
     s"""{
        |    "parentNodeIri": "$parentNodeIri",
-       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+       |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
        |    "name": "$name",
        |    "labels": [{ "value": "$label", "language": "en"}],
        |    "comments": [{ "value": "$comment", "language": "en"}]
@@ -81,7 +81,7 @@ class CreateListItemsRouteADME2ESpec
         val createListWithCustomIriRequest: String =
           s"""{
              |    "id": "${SharedTestDataADM.customListIRI}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
@@ -130,7 +130,7 @@ class CreateListItemsRouteADME2ESpec
           s"""
              |{
              |    "id": "${SharedTestDataADM.customListIRI}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "New List", "language": "en"}],
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
@@ -154,7 +154,7 @@ class CreateListItemsRouteADME2ESpec
           s"""
              |{   "id": "$customChildNodeIRI",
              |    "parentNodeIri": "${SharedTestDataADM.customListIRI}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "name": "node with a custom IRI",
              |    "labels": [{ "value": "New List Node", "language": "en"}],
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
@@ -212,7 +212,7 @@ class CreateListItemsRouteADME2ESpec
       "create a list" in {
         val createListRequest: String =
           s"""{
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
@@ -238,7 +238,7 @@ class CreateListItemsRouteADME2ESpec
         val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
         val listInfo = receivedList.listinfo
-        listInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        listInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(1)
@@ -264,11 +264,32 @@ class CreateListItemsRouteADME2ESpec
         newListIri.set(listInfo.id)
       }
 
+      "create a list using bad project IRI, created in the old way with bad UUID version" in {
+        val createListRequest: String =
+          s"""{
+             |    "projectIri": "${SharedTestDataADM.beolProjectIri}",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
+             |}""".stripMargin
+
+        val request = Post(
+          baseApiUrl + s"/admin/lists",
+          HttpEntity(ContentTypes.`application/json`, createListRequest)
+        ) ~> addCredentials(beolAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+
+        val listInfo = receivedList.listinfo
+        listInfo.projectIri should be(SharedTestDataADM.beolProjectIri)
+      }
+
       "return a ForbiddenException if the user creating the list is not project or system admin" in {
         val params =
           s"""
              |{
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
@@ -316,7 +337,7 @@ class CreateListItemsRouteADME2ESpec
         val params03 =
           s"""
              |{
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [],
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
@@ -480,7 +501,7 @@ class CreateListItemsRouteADME2ESpec
         val insertChild =
           s"""{
              |    "parentNodeIri": "${newListIri.get}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "name": "$name",
              |    "position": 1,
              |    "labels": [{ "value": "$label", "language": "en"}],

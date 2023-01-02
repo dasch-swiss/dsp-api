@@ -29,7 +29,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -617,7 +617,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -1573,7 +1573,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -1863,7 +1863,7 @@
             },
             "rdfs:label": "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": {
@@ -2076,7 +2076,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "knora-api:attachedToUser": {
@@ -2317,7 +2317,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -3204,7 +3204,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -3797,7 +3797,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "knora-api:creationDate": {
@@ -3937,7 +3937,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -4452,7 +4452,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -4760,7 +4760,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -5116,7 +5116,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:description": {
@@ -5892,7 +5892,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -6689,7 +6689,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -7760,7 +7760,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -8695,7 +8695,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:description": {
@@ -9886,7 +9886,7 @@
             },
             "rdfs:label": "Zeitglöcklein des Lebens und Leidens Christi",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -10170,7 +10170,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:citation": [
@@ -10643,7 +10643,7 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/yISnUYe6SYmoyuqeMdW39w"
+                "@id": "http://rdfh.ch/projects/0803"
             },
             "knora-api:userHasPermission": "CR",
             "incunabula:description": {
