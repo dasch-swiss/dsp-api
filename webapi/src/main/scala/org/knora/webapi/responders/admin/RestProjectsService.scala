@@ -12,18 +12,18 @@ import org.knora.webapi.responders.ActorToZioBridge
 final case class RestProjectsService(bridge: ActorToZioBridge) {
 
   /**
-   * Finds the project by an [[IRI]] and returns the information as a [[ProjectGetResponseADM]].
+   * Finds the project by a [[IRI]] and returns the information as a [[ProjectGetResponseADM]].
    *
    * @param projectIri           an [[IRI]] identifying the project
    * @return
    *     '''success''': information about the project as a [[ProjectGetResponseADM]]
    *
-   *     '''error''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
    *                  [[dsp.errors.ValidationException]] if the given `projectIri` is invalid
    */
-  def getSingleProjectADMRequest(projectIri: IRI): Task[ProjectGetResponseADM] =
+  def getSingleProjectADMRequest(projectIdentifierAsString: IRI): Task[ProjectGetResponseADM] =
     ProjectIdentifierADM.IriIdentifier
-      .fromString(projectIri)
+      .fromString(projectIdentifierAsString)
       .toZIO
       .flatMap(getSingleProjectADMRequest(_))
 
