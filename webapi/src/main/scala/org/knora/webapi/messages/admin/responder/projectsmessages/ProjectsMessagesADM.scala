@@ -172,14 +172,6 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
 case class ProjectsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
- * Get all information about all projects in form of a sequence of [[ProjectADM]]. Returns an empty sequence if
- * no projects are found. Administration permission checking is skipped.
- *
- * @param requestingUser       the user making the request.
- */
-case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
-
-/**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
  * of [[ProjectGetResponseADM]]. External use.
  *
