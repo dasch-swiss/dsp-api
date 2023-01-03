@@ -201,9 +201,10 @@ object Cache extends LazyLogging {
       exception match {
         case inconsistentRepositoryDataException: InconsistentRepositoryDataException =>
           log.error(inconsistentRepositoryDataException.message)
-          SuccessResponseV2(
-            s"An error occurred when loading ontologies: ${inconsistentRepositoryDataException.message}"
-          )
+          // SuccessResponseV2(
+          //   s"An error occurred when loading ontologies: ${inconsistentRepositoryDataException.message}"
+          // )
+          throw inconsistentRepositoryDataException
 
         case other => throw other
       }

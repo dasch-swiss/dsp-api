@@ -80,10 +80,15 @@ final case class AppServer(
    *
    * @param requiresRepository If `true`, calls the AppRouter to populate the ontology caches, otherwise returns ()
    */
-  private def populateOntologyCaches(requiresRepository: Boolean): UIO[Unit] =
+  private def populateOntologyCaches(requiresRepository: Boolean): IO[Throwable, Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
-      _ <- ar.populateOntologyCaches.when(requiresRepository)
+      _ <-
+        ar.populateOntologyCaches
+          .tapError(e =>
+            state.set(AppState.FailedToLoadOntologies(s"Failed to load ontologies from triplestore: ${e.getMessage()}"))
+          )
+          .when(requiresRepository)
       _ <- state.set(AppState.OntologiesReady)
     } yield ()
 
@@ -132,7 +137,7 @@ final case class AppServer(
   def start(
     requiresAdditionalRepositoryChecks: Boolean,
     requiresIIIFService: Boolean
-  ): UIO[Unit] =
+  ): IO[Throwable, Unit] =
     for {
       _ <- ZIO.logInfo("=> Startup checks initiated")
       _ <- checkTriplestoreService
@@ -184,7 +189,7 @@ object AppServer {
   val live: ZIO[AppServerEnvironment, Nothing, Unit] =
     for {
       appServer <- AppServer.init()
-      _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true)
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true).orElse(ZIO.unit)
     } yield ()
 
   /**
@@ -194,7 +199,7 @@ object AppServer {
   val testWithSipi: ZIO[AppServerEnvironment, Nothing, Unit] =
     for {
       appServer <- AppServer.init()
-      _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = true)
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = true).orDie
     } yield ()
 
   /**
@@ -204,6 +209,6 @@ object AppServer {
   val testWithoutSipi: ZIO[AppServerEnvironment, Nothing, Unit] =
     for {
       appServer <- AppServer.init()
-      _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = false)
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = false).orDie
     } yield ()
 }
