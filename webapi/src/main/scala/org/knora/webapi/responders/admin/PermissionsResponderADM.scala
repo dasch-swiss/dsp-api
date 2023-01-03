@@ -624,7 +624,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
               requestingUser = KnoraSystemInstances.Users.SystemUser
             )
       result = ap match {
-                 case Some(ap) => { permissionsmessages.AdministrativePermissionGetResponseADM(ap) }
+                 case Some(ap) => permissionsmessages.AdministrativePermissionGetResponseADM(ap)
                  case None =>
                    throw NotFoundException(
                      s"No Administrative Permission found for project: $projectIri, group: $groupIri combination"
