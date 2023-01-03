@@ -9,9 +9,8 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.get
 import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
-import spray.json.JsObject
-import spray.json.JsString
 import zio._
+import zio.json._
 
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
@@ -64,12 +63,7 @@ trait HealthCheck {
           status = statusCode(result.status),
           entity = HttpEntity(
             ContentTypes.`application/json`,
-            JsObject(
-              "name"     -> JsString("AppState"),
-              "severity" -> JsString("non fatal"),
-              "status"   -> JsString(status(result.status)),
-              "message"  -> JsString(result.message)
-            ).compactPrint
+            result.toJson
           )
         )
       )
@@ -80,6 +74,10 @@ trait HealthCheck {
   private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
 
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
+
+  private object HealthCheckResult {
+    implicit val encoder: JsonEncoder[HealthCheckResult] = DeriveJsonEncoder.gen[HealthCheckResult]
+  }
 
   private def unhealthy(message: String) =
     HealthCheckResult(
