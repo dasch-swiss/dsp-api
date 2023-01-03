@@ -102,13 +102,11 @@ object Dependencies {
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.0"
 
   // test
-  val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaStreamTestkit    = "com.typesafe.akka"    %% "akka-stream-testkit"       % AkkaActorVersion // Scala 3 compatible
-  val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % AkkaActorVersion // Scala 3 compatible
-  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.9.0"
-  val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.9.0"
-  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.14"         // Scala 3 compatible
-  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.6"
+  val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
+  val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
+  val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
+  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.14"         // Scala 3 compatible
+  val testcontainers    = "org.testcontainers" % "testcontainers"      % "1.17.6"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
@@ -117,8 +115,6 @@ object Dependencies {
     akkaHttpTestkit,
     akkaStreamTestkit,
     akkaTestkit,
-    gatlingHighcharts,
-    gatlingTestFramework,
     rdf4jClient,
     scalaTest,
     testcontainers,
