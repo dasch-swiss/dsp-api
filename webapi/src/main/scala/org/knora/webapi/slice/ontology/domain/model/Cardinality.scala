@@ -1,8 +1,20 @@
 package org.knora.webapi.slice.ontology.domain.model
+import dsp.schema.domain
+import dsp.schema.domain.Cardinality.MayHaveMany
+import dsp.schema.domain.Cardinality.MayHaveOne
+import dsp.schema.domain.Cardinality.MustHaveOne
+import dsp.schema.domain.Cardinality.MustHaveSome
+
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 
 sealed trait Cardinality {
   def min: Int
   def max: Option[Int]
+
+  val oldCardinality: dsp.schema.domain.Cardinality
+
+  def isStricter(other: KnoraCardinalityInfo): Boolean =
+    Cardinality.get(other).isStricter(this)
 
   def isStricter(other: Cardinality): Boolean =
     if (this == other) {
@@ -36,24 +48,30 @@ object Cardinality {
     }
 
   case object AtLeastOne extends Cardinality {
-    val min: Int         = 1
-    val max: Option[Int] = None
+    override val min: Int                           = 1
+    override val max: Option[Int]                   = None
+    override val oldCardinality: domain.Cardinality = MustHaveSome
   }
 
   case object ExactlyOne extends Cardinality {
-    val min: Int         = 1
-    val max: Option[Int] = Some(1)
+    override val min: Int                           = 1
+    override val max: Option[Int]                   = Some(1)
+    override val oldCardinality: domain.Cardinality = MustHaveOne
   }
 
   case object Unbounded extends Cardinality {
-    val min: Int         = 0
-    val max: Option[Int] = None
+    override val min: Int                           = 0
+    override val max: Option[Int]                   = None
+    override val oldCardinality: domain.Cardinality = MayHaveMany
   }
 
   case object ZeroOrOne extends Cardinality {
-    val min: Int         = 0
-    val max: Option[Int] = Some(1)
+    override val min: Int                           = 0
+    override val max: Option[Int]                   = Some(1)
+    override val oldCardinality: domain.Cardinality = MayHaveOne
   }
 
   val allCardinalities: Array[Cardinality] = Array(AtLeastOne, ExactlyOne, Unbounded, ZeroOrOne)
+  def get(cardinalityInfo: KnoraCardinalityInfo) =
+    allCardinalities.find(_.oldCardinality == cardinalityInfo.cardinality).getOrElse(throw new IllegalStateException)
 }

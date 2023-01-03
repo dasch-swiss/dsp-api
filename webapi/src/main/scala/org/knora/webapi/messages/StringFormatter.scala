@@ -14,7 +14,6 @@ import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import spray.json._
 import zio.ZLayer
-
 import java.nio.ByteBuffer
 import java.time._
 import java.time.format.DateTimeFormatter
@@ -29,10 +28,10 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import scala.util.matching.Regex
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -1087,27 +1086,28 @@ class StringFormatter private (
 
     override def getStandoffStartIndex: Option[Int] = iriInfo.standoffStartIndex
 
-    lazy val ontologyFromEntity: SmartIri = if (isKnoraOntologyIri) {
-      throw DataConversionException(s"$iri is not a Knora entity IRI")
-    } else {
-      val lastHashPos = iri.lastIndexOf('#')
-
-      val entityDelimPos = if (lastHashPos >= 0) {
-        lastHashPos
+    lazy val ontologyFromEntity: SmartIri =
+      if (isKnoraOntologyIri) {
+        throw DataConversionException(s"$iri is not a Knora entity IRI")
       } else {
-        val lastSlashPos = iri.lastIndexOf('/')
+        val lastHashPos = iri.lastIndexOf('#')
 
-        if (lastSlashPos < iri.length - 1) {
-          lastSlashPos
+        val entityDelimPos = if (lastHashPos >= 0) {
+          lastHashPos
         } else {
-          throw DataConversionException(s"Can't interpret IRI $iri as an entity IRI")
+          val lastSlashPos = iri.lastIndexOf('/')
+
+          if (lastSlashPos < iri.length - 1) {
+            lastSlashPos
+          } else {
+            throw DataConversionException(s"Can't interpret IRI $iri as an entity IRI")
+          }
         }
+
+        val convertedIriStr = iri.substring(0, entityDelimPos)
+
+        getOrCacheSmartIri(convertedIriStr, () => new SmartIriImpl(convertedIriStr))
       }
-
-      val convertedIriStr = iri.substring(0, entityDelimPos)
-
-      getOrCacheSmartIri(convertedIriStr, () => new SmartIriImpl(convertedIriStr))
-    }
 
     override def getOntologyFromEntity: SmartIri = ontologyFromEntity
 

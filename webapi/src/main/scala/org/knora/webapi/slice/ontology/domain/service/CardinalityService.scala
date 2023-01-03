@@ -24,6 +24,7 @@ import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 @accessible
@@ -85,7 +86,9 @@ trait CardinalityService {
 final case class CardinalityServiceLive(
   private val actorDeps: ActorDeps,
   private val stringFormatter: StringFormatter,
-  private val tripleStore: TriplestoreService
+  private val tripleStore: TriplestoreService,
+  private val ontologyRepo: OntologyRepo,
+  private val iriConverter: IriConverter
 ) extends CardinalityService {
   private implicit val ec: ExecutionContext = actorDeps.executionContext
   private implicit val timeout: Timeout     = actorDeps.timeout
@@ -141,9 +144,21 @@ final case class CardinalityServiceLive(
     classIri: InternalIri,
     propertyIri: InternalIri,
     newCardinality: Cardinality
-  ): Task[Boolean] = ZIO.succeed(false)
+  ): Task[Boolean] = {
+    val foo = ""
+    for {
+      propSmartIri        <- iriConverter.asSmartIri(propertyIri)
+      classInfoMaybe      <- ontologyRepo.findClassBy(classIri)
+      cardinalityInfoMaybe = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri))
+    } yield cardinalityInfoMaybe.map(Cardinality.get).forall(!_.isStricter(newCardinality))
+  }
+
 }
 
 object CardinalityService {
-  val layer = ZLayer.fromFunction(CardinalityServiceLive.apply _)
+  val layer: ZLayer[
+    ActorDeps with StringFormatter with TriplestoreService with OntologyRepo with IriConverter,
+    Nothing,
+    CardinalityServiceLive
+  ] = ZLayer.fromFunction(CardinalityServiceLive.apply _)
 }

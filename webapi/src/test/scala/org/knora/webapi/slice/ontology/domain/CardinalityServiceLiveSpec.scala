@@ -13,6 +13,11 @@ import zio.test._
 import zio.Random
 
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.responders.ActorDepsTest
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.allCardinalities
@@ -21,10 +26,15 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.CardinalityServiceLiveSpec.CanWidenCardinality.anOntologySmartIri
+import org.knora.webapi.slice.ontology.repo.OntologyCacheFake
+import org.knora.webapi.slice.ontology.repo.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri.Property.KnoraBase
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
+import org.knora.webapi.ApiV2Complex
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 
@@ -67,10 +77,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
          |""".stripMargin
   }
 
-  private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService](
-    CardinalityService.layer,
-    StringFormatter.test,
+  private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService with OntologyCacheFake](
     ActorDepsTest.stub,
+    CardinalityService.layer,
+    IriConverter.layer,
+    OntologyCacheFake.emptyCache,
+    OntologyRepo.layer,
+    StringFormatter.test,
     TriplestoreServiceFake.layer
   )
 
@@ -110,7 +123,21 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
         test("Unbounded Cardinality (MayHaveMany) can NOT be widened any further on super class") {
           check(cardinalitiesGen()) { c =>
             val propertyIri: InternalIri = CanWidenCardinality.mayHaveManyProperty
+            val ontologyData = OntologyCacheFake.empty.copy(
+              ontologies = Map(
+                anOntologySmartIri -> ReadOntologyV2(
+                  OntologyMetadataV2(anOntologySmartIri),
+                  classes = Map(
+                    anOntologySmartIri -> ReadClassInfoV2(
+                      ClassInfoContentV2(anOntologySmartIri, ontologySchema = ApiV2Complex),
+                      List.empty
+                    )
+                  )
+                )
+              )
+            )
             for {
+              _      <- OntologyCacheFake.set(ontologyData)
               result <- CardinalityService.canWidenCardinality(CanWidenCardinality.aClass, propertyIri, c)
             } yield assertTrue(!result)
           }
@@ -157,40 +184,24 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             } yield assertTrue(!result)
           }
         }
-      ).provide(commonLayers, datasetLayerFromTurtle(CanWidenCardinality.testData))
+      ).provide(commonLayers, emptyDataSet)
     )
 
   object CanWidenCardinality {
-    val aClass: InternalIri    = InternalIri("http://aClass")
-    val aSubClass: InternalIri = InternalIri("http://aSubClass")
+    implicit val sf: StringFormatter = { StringFormatter.initForTest(); StringFormatter.getGeneralInstance }
 
-    val mayHaveManyProperty: InternalIri  = InternalIri("http://example/ontology#mayHaveManyValue")
-    val mayHaveOneProperty: InternalIri   = InternalIri("http://example/ontology#mayHaveOneValue")
-    val mustHaveOneProperty: InternalIri  = InternalIri("http://example/ontology#mustHaveOneValue")
-    val mustHaveSomeProperty: InternalIri = InternalIri("http://example/ontology#mustHaveSomeValue")
+    val anOntologySmartIri: SmartIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2")
+    val anOntology: InternalIri      = anOntologySmartIri.toInternalIri
 
-    val testData: String =
-      s"""
-         |@prefix owl:         <http://www.w3.org/2002/07/owl#> .
-         |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-         |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
-         |@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
-         |
-         |<http://aClass>
-         |    rdf:type        owl:Class ;
-         |    rdfs:subClassOf <${aClass.value}> ;
-         |    rdfs:subClassOf [ rdf:type            owl:Restriction ;
-         |                      owl:onProperty      <${mayHaveManyProperty.value}> ;
-         |                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ] ;
-         |    rdfs:subClassOf [ rdf:type            owl:Restriction ;
-         |                      owl:onProperty      <${mayHaveOneProperty.value}> ;
-         |                      owl:maxCardinality  "1"^^xsd:nonNegativeInteger ] ;
-         |    rdfs:subClassOf [ rdf:type            owl:Restriction ;
-         |                      owl:onProperty      <${mustHaveOneProperty.value}> ;
-         |                      owl:cardinality     "1"^^xsd:nonNegativeInteger ] ;
-         |    rdfs:subClassOf [ rdf:type            owl:Restriction ;
-         |                      owl:onProperty      <${mustHaveSomeProperty.value}> ;
-         |                      owl:minCardinality  "1"^^xsd:nonNegativeInteger ] .
-         |""".stripMargin
+    val aClassSmartIri: SmartIri = anOntologySmartIri.makeEntityIri("aClass")
+    val aClass: InternalIri      = aClassSmartIri.toInternalIri
+
+    val aSubClassSmartIri: SmartIri = anOntologySmartIri.makeEntityIri("aSubClass")
+    val aSubClass: InternalIri      = aSubClassSmartIri.toInternalIri
+
+    val mayHaveManyProperty: InternalIri  = InternalIri(s"${anOntology.value}#mayHaveManyValue")
+    val mayHaveOneProperty: InternalIri   = InternalIri(s"${anOntology.value}#mayHaveOneValue")
+    val mustHaveOneProperty: InternalIri  = InternalIri(s"${anOntology.value}#mustHaveOneValue")
+    val mustHaveSomeProperty: InternalIri = InternalIri(s"${anOntology.value}#mustHaveSomeValue")
   }
 }

@@ -40,4 +40,5 @@ object TestDatasetBuilder {
   def asLayer(ds: Task[Dataset]): TaskLayer[Ref[Dataset]] = ZLayer.fromZIO(ds.flatMap(Ref.make[Dataset](_)))
 
   def datasetLayerFromTurtle(turtle: String): TaskLayer[Ref[Dataset]] = asLayer(datasetFromTurtle(turtle))
+  val emptyDataSet: TaskLayer[Ref[Dataset]]                           = datasetLayerFromTurtle("")
 }
