@@ -996,7 +996,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forGroup.get == projectMember)
+        assert(doap.forGroup == Some(projectMember))
         assert(doap.forProperty.isEmpty)
       }
     }
@@ -1307,7 +1307,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forResourceClass.get == resourceClassIri)
+        assert(doap.forResourceClass == Some(resourceClassIri))
       }
 
       "update resource class of a default object access permission, and delete group" in {
@@ -1326,7 +1326,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forResourceClass.get == resourceClassIri)
+        assert(doap.forResourceClass == Some(resourceClassIri))
         assert(doap.forGroup.isEmpty)
       }
 
@@ -1410,7 +1410,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forProperty.get == propertyIri)
+        assert(doap.forProperty == Some(propertyIri))
       }
 
       "update property of a default object access permission, delete group" in {
@@ -1429,7 +1429,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forProperty.get == propertyIri)
+        assert(doap.forProperty == Some(propertyIri))
         assert(doap.forGroup.isEmpty)
       }
     }
