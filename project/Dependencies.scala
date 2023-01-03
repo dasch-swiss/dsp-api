@@ -10,7 +10,7 @@ import sbt._
 object Dependencies {
 
   val fusekiImage =
-    "daschswiss/apache-jena-fuseki:2.0.8" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+    "daschswiss/apache-jena-fuseki:2.0.11" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
   val sipiImage = "daschswiss/sipi:3.5.0" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.8"
@@ -19,14 +19,14 @@ object Dependencies {
   val AkkaHttpVersion  = "10.2.10"
   val JenaVersion      = "4.6.1"
 
-  val ZioConfigVersion            = "3.0.2"
+  val ZioConfigVersion            = "3.0.6"
   val ZioHttpVersion              = "2.0.0-RC11"
   val ZioJsonVersion              = "0.3.0"
-  val ZioLoggingVersion           = "2.1.5"
+  val ZioLoggingVersion           = "2.1.7"
   val ZioMetricsConnectorsVersion = "2.0.4"
   val ZioPreludeVersion           = "1.0.0-RC16"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.4"
+  val ZioVersion                  = "2.0.5"
 
   // ZIO - all Scala 3 compatible
   val zio                  = "dev.zio" %% "zio"                    % ZioVersion
@@ -66,7 +66,7 @@ object Dependencies {
   val slf4jApi           = "org.slf4j"                   % "slf4j-api"            % "2.0.6"  // the logging interface
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
+  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.19"
   val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.12" // Scala 3 compatible
   val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.12" // Scala 3 incompatible
 
@@ -78,12 +78,11 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.0.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.0.1" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.72"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
-  val jedis   = "redis.clients"  % "jedis"   % "4.3.1"
 
   // serialization
   val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
@@ -103,13 +102,11 @@ object Dependencies {
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.0"
 
   // test
-  val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaStreamTestkit    = "com.typesafe.akka"    %% "akka-stream-testkit"       % AkkaActorVersion // Scala 3 compatible
-  val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % AkkaActorVersion // Scala 3 compatible
-  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.9.0"
-  val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.9.0"
-  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.14"         // Scala 3 compatible
-  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.6"
+  val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
+  val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
+  val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
+  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.14"         // Scala 3 compatible
+  val testcontainers    = "org.testcontainers" % "testcontainers"      % "1.17.6"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
@@ -118,8 +115,6 @@ object Dependencies {
     akkaHttpTestkit,
     akkaStreamTestkit,
     akkaTestkit,
-    gatlingHighcharts,
-    gatlingTestFramework,
     rdf4jClient,
     scalaTest,
     testcontainers,
@@ -145,7 +140,6 @@ object Dependencies {
     icu4j,
     jacksonDatabind,
     jakartaJSON,
-    jedis,
     jenaText,
     jodd,
     jwtSprayJson,

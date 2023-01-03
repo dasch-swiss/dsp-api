@@ -39,6 +39,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.IriLocker
@@ -59,14 +60,12 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
 
   /**
-   * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
+   * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   def receive(msg: ProjectsResponderRequestADM) = msg match {
-    case ProjectsGetADM(requestingUser)        => projectsGetADM(requestingUser)
     case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
     case ProjectGetADM(identifier)             => getSingleProjectADM(identifier)
-    case ProjectGetRequestADM(identifier, requestingUser) =>
-      getSingleProjectADMRequest(identifier, requestingUser)
+    case ProjectGetRequestADM(identifier)      => getSingleProjectADMRequest(identifier)
     case ProjectMembersGetRequestADM(identifier, requestingUser) =>
       projectMembersGetRequestADM(identifier, requestingUser)
     case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
@@ -108,44 +107,31 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     requestingUser: UserADM
   ): Future[Seq[ProjectADM]] =
     for {
-      sparqlQueryString <- Future(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                               .getProjects(
-                                 maybeIri = None,
-                                 maybeShortname = None,
-                                 maybeShortcode = None
-                               )
-                               .toString()
-                           )
-      // _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
-
-      projectsResponse <- appActor
-                            .ask(
-                              SparqlExtendedConstructRequest(
-                                sparql = sparqlQueryString
-                              )
-                            )
-                            .mapTo[SparqlExtendedConstructResponse]
-      // _ = log.debug(s"projectsGetADM - projectsResponse: $projectsResponse")
-
-      statements: List[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = projectsResponse.statements.toList
-      // _ = log.debug(s"projectsGetADM - statements: $statements")
-
-      projectIris = statements.map { case (projectIri: SubjectV2, _) =>
-                      projectIri.toString
-                    }.toSet
+      sparqlQueryString <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getProjects(
+              maybeIri = None,
+              maybeShortname = None,
+              maybeShortcode = None
+            )
+            .toString()
+        )
+      request           = SparqlExtendedConstructRequest(sparql = sparqlQueryString)
+      projectsResponse <- appActor.ask(request).mapTo[SparqlExtendedConstructResponse]
+      projectIris       = projectsResponse.statements.keySet.map(_.toString)
 
       ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris, requestingUser)
-
-      projects: Seq[ProjectADM] = statements.map {
-                                    case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                                      val projectOntologies =
-                                        ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
-                                      statements2ProjectADM(
-                                        statements = (projectIriSubject, propsMap),
-                                        ontologies = projectOntologies
-                                      )
-                                  }
+      projects =
+        projectsResponse.statements.toList.map {
+          case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+            val projectOntologies =
+              ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
+            statements2ProjectADM(
+              statements = (projectIriSubject, propsMap),
+              ontologies = projectOntologies
+            )
+        }
 
     } yield projects.sorted
 
@@ -156,55 +142,39 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * @param requestingUser the requesting user.
    * @return a map of project IRIs to sequences of ontology IRIs.
    */
-  private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] =
+  private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] = {
+    def getIriPair(ontology: OntologyMetadataV2) =
+      ontology.projectIri.fold(
+        throw InconsistentRepositoryDataException(s"Ontology ${ontology.ontologyIri} has no project")
+      )(project => (project.toString, ontology.ontologyIri.toString))
+
+    val request = OntologyMetadataGetByProjectRequestV2(
+      projectIris = projectIris.map(_.toSmartIri),
+      requestingUser = requestingUser
+    )
+
     for {
-      ontologyMetadataResponse: ReadOntologyMetadataV2 <- appActor
-                                                            .ask(
-                                                              OntologyMetadataGetByProjectRequestV2(
-                                                                projectIris = projectIris.map(_.toSmartIri),
-                                                                requestingUser = requestingUser
-                                                              )
-                                                            )
-                                                            .mapTo[ReadOntologyMetadataV2]
-    } yield ontologyMetadataResponse.ontologies.map { ontology =>
-      val ontologyIri: IRI = ontology.ontologyIri.toString
-      val projectIri: IRI = ontology.projectIri
-        .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $ontologyIri has no project"))
-        .toString
-      projectIri -> ontologyIri
-    }
-      .groupBy(_._1)
-      .map { case (projectIri, projectIriAndOntologies: Set[(IRI, IRI)]) =>
-        projectIri -> projectIriAndOntologies.map(_._2).toSeq
-      }
+      ontologyMetadataResponse <- appActor.ask(request).mapTo[ReadOntologyMetadataV2]
+      ontologies                = ontologyMetadataResponse.ontologies.toList
+      iriPairs                  = ontologies.map(getIriPair(_))
+      projectToOntologyMap      = iriPairs.groupMap { case (project, _) => project } { case (_, onto) => onto }
+    } yield projectToOntologyMap
+  }
 
   /**
-   * Gets all the projects and returns them as a [[ProjectsResponseV1]].
+   * Gets all the projects and returns them as a [[ProjectADM]].
    *
    * @param requestingUser       the user that is making the request.
-   * @return all the projects as a [[ProjectsResponseV1]].
+   * @return all the projects as a [[ProjectADM]].
    * @throws NotFoundException if no projects are found.
    */
   private def projectsGetRequestADM(
     requestingUser: UserADM
   ): Future[ProjectsGetResponseADM] =
-    // log.debug("projectsGetRequestADM")
-
-    // ToDo: What permissions should be required, if any?
     for {
-      projects <- projectsGetADM(
-                    requestingUser = requestingUser
-                  )
-
-      result =
-        if (projects.nonEmpty) {
-          ProjectsGetResponseADM(
-            projects = projects
-          )
-        } else {
-          throw NotFoundException(s"No projects found")
-        }
-
+      projects <- projectsGetADM(requestingUser = requestingUser)
+      result = if (projects.nonEmpty) { ProjectsGetResponseADM(projects = projects) }
+               else { throw NotFoundException(s"No projects found") }
     } yield result
 
   /**
@@ -251,26 +221,13 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * as a [[ProjectGetResponseADM]].
    *
    * @param identifier           the IRI, shortname, shortcode or UUID of the project.
-   * @param requestingUser       the user making the request.
    * @return information about the project as a [[ProjectGetResponseADM]].
    * @throws NotFoundException when no project for the given IRI can be found
    */
-  def getSingleProjectADMRequest(
-    identifier: ProjectIdentifierADM,
-    requestingUser: UserADM
-  ): Future[ProjectGetResponseADM] =
-    for {
-      maybeProject: Option[ProjectADM] <- getSingleProjectADM(
-                                            identifier = identifier
-                                          )
-
-      project = maybeProject match {
-                  case Some(p) => p
-                  case None    => throw NotFoundException(s"Project '${getId(identifier)}' not found")
-                }
-    } yield ProjectGetResponseADM(
-      project = project
-    )
+  def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Future[ProjectGetResponseADM] = for {
+    maybeProject <- getSingleProjectADM(identifier)
+    project       = maybeProject.getOrElse(throw NotFoundException(s"Project '${getId(identifier)}' not found"))
+  } yield ProjectGetResponseADM(project)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -284,7 +241,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Future[ProjectMembersGetResponseADM] =
-    // log.debug("projectMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
     for {
 
       /* Get project and verify permissions. */
@@ -314,7 +270,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
                                )
                                .toString()
                            )
-      // _ = log.debug(s"projectMembersGetRequestADM - query: $sparqlQueryString")
 
       projectMembersResponse <- appActor
                                   .ask(
@@ -325,8 +280,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
                                   .mapTo[SparqlExtendedConstructResponse]
 
       statements = projectMembersResponse.statements.toList
-
-      // _ = log.debug(s"projectMembersGetRequestADM - statements: {}", MessageUtil.toSource(statements))
 
       // get project member IRI from results rows
       userIris: Seq[IRI] =
@@ -351,8 +304,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
 
-      // _ = log.debug(s"projectMembersGetRequestADM - users: {}", users)
-
     } yield ProjectMembersGetResponseADM(members = users)
 
   /**
@@ -367,7 +318,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Future[ProjectAdminMembersGetResponseADM] =
-    // log.debug("projectAdminMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
     for {
       /* Get project and verify permissions. */
       project <- getSingleProjectADM(
@@ -392,7 +342,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
                                )
                                .toString()
                            )
-      // _ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
       projectAdminMembersResponse <- appActor
                                        .ask(
@@ -401,7 +350,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
                                          )
                                        )
                                        .mapTo[SparqlExtendedConstructResponse]
-      // _ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
       statements = projectAdminMembersResponse.statements.toList
 
@@ -427,8 +375,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
                                                        }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
-
-      // _ = log.debug(s"projectMembersGetRequestADM - users: $users")
 
     } yield ProjectAdminMembersGetResponseADM(members = users)
 
@@ -765,8 +711,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[ProjectOperationResponseADM] = {
-
-    // log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
 
     /**
      * The actual change project task run with an IRI lock.
@@ -1248,7 +1192,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     } yield maybeProjectADM
 
   /**
-   * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
+   * Helper method that turns SPARQL result rows into a [[ProjectADM]].
    *
    * @param statements results from the SPARQL query representing information about the project.
    * @param ontologies the ontologies in the project.

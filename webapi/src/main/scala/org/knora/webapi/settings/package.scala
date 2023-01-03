@@ -113,9 +113,4 @@ package object settings {
   val IIIFManagerActorPath: String = StoreManagerActorPath + "/" + IIIFManagerActorName
 
   val SipiConnectorActorName: String = "sipiConnector"
-
-  /* Cache */
-  val CacheServiceManagerActorName: String = "redisManager"
-  val CacheServiceManagerActorPath: String = StoreManagerActorPath + "/" + CacheServiceManagerActorName
-
 }

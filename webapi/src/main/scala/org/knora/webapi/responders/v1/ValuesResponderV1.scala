@@ -837,11 +837,10 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       projectResponse <-
         appActor
           .ask(
-            ProjectGetRequestADM(
-              identifier = IriIdentifier
+            ProjectGetRequestADM(identifier =
+              IriIdentifier
                 .fromString(resourceInfoResponse.resource_info.get.project_id)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-              requestingUser = changeFileValueRequest.userProfile
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
           .mapTo[ProjectGetResponseADM]

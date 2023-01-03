@@ -10,7 +10,7 @@ services:
       - knora-net
 
   db:
-    image: daschswiss/apache-jena-fuseki:2.0.8 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+    image: daschswiss/apache-jena-fuseki:2.0.11 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
     ports:
       - "3030:3030"
     volumes:
@@ -69,8 +69,6 @@ services:
       - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME=admin
       - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD=test
       - KNORA_WEBAPI_CACHE_SERVICE_ENABLED=true
-      - KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis
-      - KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT=6379
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=0.0.0.0
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333

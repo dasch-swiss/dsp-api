@@ -13,8 +13,9 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
-import org.knora.webapi.responders.admin.ProjectsService
+import org.knora.webapi.responders.admin.RestProjectsService
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
@@ -63,6 +64,7 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.live,
       AppRouter.layer,
+      AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       HttpServer.layer,
@@ -72,11 +74,11 @@ object LayersLive {
       IriConverter.layer,
       JWTService.layer,
       ProjectsRouteZ.layer,
-      ProjectsService.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
       RestResourceInfoService.layer,
+      RestProjectsService.layer,
       State.layer,
       StringFormatter.live,
       TriplestoreServiceHttpConnectorImpl.layer,
