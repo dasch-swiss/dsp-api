@@ -148,13 +148,12 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
         throw InconsistentRepositoryDataException(s"Ontology ${ontology.ontologyIri} has no project")
       )(project => (project.toString, ontology.ontologyIri.toString))
 
+    val request = OntologyMetadataGetByProjectRequestV2(
+      projectIris = projectIris.map(_.toSmartIri),
+      requestingUser = requestingUser
+    )
+
     for {
-      request <- Future.successful(
-                   OntologyMetadataGetByProjectRequestV2(
-                     projectIris = projectIris.map(_.toSmartIri),
-                     requestingUser = requestingUser
-                   )
-                 )
       ontologyMetadataResponse <- appActor.ask(request).mapTo[ReadOntologyMetadataV2]
       ontologies                = ontologyMetadataResponse.ontologies.toList
       iriPairs                  = ontologies.map(getIriPair(_))
