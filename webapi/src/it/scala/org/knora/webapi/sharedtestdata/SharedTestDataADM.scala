@@ -639,7 +639,7 @@ object SharedTestDataADM {
     description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
-    ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SOMETHING_ONTOLOGY_IRI),
+    ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
     status = true,
     selfjoin = false
   )
@@ -654,7 +654,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq(
       SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost,
-      SharedOntologyTestDataADM.SOMETHING_ONTOLOGY_IRI_LocalHost
+      SharedOntologyTestDataADM.SomethingOntologyIriLocalhost
     ),
     status = true,
     selfjoin = false

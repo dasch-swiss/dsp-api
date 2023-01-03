@@ -20,8 +20,8 @@ object SharedOntologyTestDataADM {
   val ANYTHING_HasDate_PROPERTY_LocalHost: IRI     = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasDate"
 
   // something
-  val SOMETHING_ONTOLOGY_IRI: IRI           = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/something"
-  val SOMETHING_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0001/something/v2"
+  val SomethingOntologyIri: IRI          = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/something"
+  val SomethingOntologyIriLocalhost: IRI = LocalHost_Ontology + "/0001/something/v2"
 
   // freetest
   val FREETEST_ONTOLOGY_IRI: IRI           = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/freetest"
