@@ -148,9 +148,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
+    Test / libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
-  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, BuildInfoPlugin)
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin)
   .settings(
     name := "webapi",
     resolvers ++= Seq(
@@ -158,9 +158,12 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
+  .configs(IntegrationTest)
   .settings(
-    inConfig(IntegrationTest)(Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings),
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
+    inConfig(IntegrationTest) {
+      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings
+    },
+    IntegrationTest / libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
   .settings(
     // add needed files to production jar
