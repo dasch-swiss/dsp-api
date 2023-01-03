@@ -732,7 +732,7 @@ object Authenticator extends InstrumentationSupport {
    * @return a [[UserADM]]
    * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
    */
-  private def getUserADMThroughCredentialsV2(
+  def getUserADMThroughCredentialsV2(
     credentials: Option[KnoraCredentialsV2],
     appConfig: AppConfig
   )(implicit

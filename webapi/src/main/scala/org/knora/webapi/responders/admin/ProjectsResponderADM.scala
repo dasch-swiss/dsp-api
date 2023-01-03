@@ -65,8 +65,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   def receive(msg: ProjectsResponderRequestADM) = msg match {
     case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
     case ProjectGetADM(identifier)             => getSingleProjectADM(identifier)
-    case ProjectGetRequestADM(identifier, requestingUser) =>
-      getSingleProjectADMRequest(identifier, requestingUser)
+    case ProjectGetRequestADM(identifier)      => getSingleProjectADMRequest(identifier)
     case ProjectMembersGetRequestADM(identifier, requestingUser) =>
       projectMembersGetRequestADM(identifier, requestingUser)
     case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
@@ -223,22 +222,13 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * as a [[ProjectGetResponseADM]].
    *
    * @param identifier           the IRI, shortname, shortcode or UUID of the project.
-   * @param requestingUser       the user making the request.
    * @return information about the project as a [[ProjectGetResponseADM]].
    * @throws NotFoundException when no project for the given IRI can be found
    */
-  def getSingleProjectADMRequest(
-    identifier: ProjectIdentifierADM,
-    requestingUser: UserADM
-  ): Future[ProjectGetResponseADM] =
-    for {
-      maybeProject <- getSingleProjectADM(identifier = identifier)
-      project =
-        maybeProject match {
-          case Some(p) => p
-          case None    => throw NotFoundException(s"Project '${getId(identifier)}' not found")
-        }
-    } yield ProjectGetResponseADM(project = project)
+  def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Future[ProjectGetResponseADM] = for {
+    maybeProject <- getSingleProjectADM(identifier)
+    project       = maybeProject.getOrElse(throw NotFoundException(s"Project '${getId(identifier)}' not found"))
+  } yield ProjectGetResponseADM(project)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
