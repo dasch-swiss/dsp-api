@@ -323,7 +323,7 @@ class UsersADME2ESpec
     }
 
     "given a custom Iri" should {
-      "create a user with the provided custom IRI " in {
+      "create a user with the provided custom IRI" in {
         val createUserWithCustomIriRequest: String =
           s"""{
              |    "id": "$customUserIri",
@@ -469,7 +469,7 @@ class UsersADME2ESpec
     }
 
     "used to create a user" should {
-      "create the user if the supplied email and username are unique " in {
+      "create the user if the supplied email and username are unique" in {
         val createUserRequest: String =
           s"""{
              |    "username": "donald.duck",
@@ -519,7 +519,7 @@ class UsersADME2ESpec
         )
       }
 
-      "return a 'BadRequest' if the supplied username is not unique " in {
+      "return a 'BadRequest' if the supplied username is not unique" in {
         val createUserRequest: String =
           s"""{
              |    "username": "donald.duck",
@@ -559,7 +559,7 @@ class UsersADME2ESpec
         )
       }
 
-      "return a 'BadRequest' if the supplied email is not unique " in {
+      "return a 'BadRequest' if the supplied email is not unique" in {
         val createUserRequest: String =
           s"""{
              |    "username": "new.donald.duck",
@@ -1095,9 +1095,9 @@ class UsersADME2ESpec
         val projects: Seq[ProjectADM] =
           AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[ProjectADM]]
         projects should contain allElementsOf Seq(
-          SharedTestDataADM.imagesProject,
-          SharedTestDataADM.incunabulaProject,
-          SharedTestDataADM.anythingProject
+          SharedTestDataADM.imagesProjectExternal,
+          SharedTestDataADM.incunabulaProjectExternal,
+          SharedTestDataADM.anythingProjectExternal
         )
 
         // testing getUserProjectMemberships method, which should return the same result
@@ -1128,7 +1128,7 @@ class UsersADME2ESpec
         assert(response.status === StatusCodes.OK)
 
         val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject))
+        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1170,7 +1170,7 @@ class UsersADME2ESpec
 
       "remove user from project" in {
         val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
-        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         val request = Delete(
           baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
@@ -1207,9 +1207,9 @@ class UsersADME2ESpec
         val projects: Seq[ProjectADM] =
           AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
         projects should contain allElementsOf Seq(
-          SharedTestDataADM.imagesProject,
-          SharedTestDataADM.incunabulaProject,
-          SharedTestDataADM.anythingProject
+          SharedTestDataADM.imagesProjectExternal,
+          SharedTestDataADM.incunabulaProjectExternal,
+          SharedTestDataADM.anythingProjectExternal
         )
 
         // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
@@ -1260,7 +1260,7 @@ class UsersADME2ESpec
 
         // verify that user has been added as project admin to images project
         val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject))
+        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1277,7 +1277,7 @@ class UsersADME2ESpec
       "remove user from project admin group" in {
         val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
 
-        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         val request = Delete(
           baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
@@ -1313,7 +1313,7 @@ class UsersADME2ESpec
 
         // verify that user has been added as project admin to images project
         val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         // remove user as project member from images project
         val request = Delete(
@@ -1342,7 +1342,7 @@ class UsersADME2ESpec
 
         val groups: Seq[GroupADM] =
           AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[GroupADM]]
-        groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroup)
+        groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroupExternal)
 
         // testing getUserGroupMemberships method, which should return the same result
         groups should contain allElementsOf getUserGroupMemberships(multiUserIri, rootCreds)
@@ -1374,7 +1374,7 @@ class UsersADME2ESpec
         assert(response.status === StatusCodes.OK)
 
         val membershipsAfterUpdate = getUserGroupMemberships(normalUserIri, rootCreds)
-        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroup))
+        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroupExternal))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1390,7 +1390,7 @@ class UsersADME2ESpec
 
       "remove user from group" in {
         val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
-        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroup))
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroupExternal))
 
         val request = Delete(
           baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/group-memberships/$imagesReviewerGroupIriEnc"

@@ -84,18 +84,18 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       }
 
-      "return 'NotFoundException' when the project shortname is unknown " in {
-        appActor ! ProjectGetRequestADM(identifier =
-          ShortnameIdentifier
+      "return 'NotFoundException' when the project shortname is unknown" in {
+        appActor ! ProjectGetRequestADM(
+          identifier = ShortnameIdentifier
             .fromString("wrongshortname")
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
       }
 
-      "return 'NotFoundException' when the project shortcode is unknown " in {
-        appActor ! ProjectGetRequestADM(identifier =
-          ShortcodeIdentifier
+      "return 'NotFoundException' when the project shortcode is unknown" in {
+        appActor ! ProjectGetRequestADM(
+          identifier = ShortcodeIdentifier
             .fromString("9999")
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
@@ -209,10 +209,12 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         // Check Administrative Permission of ProjectAdmin
         val receivedApAdmin: AdministrativePermissionsForProjectGetResponseADM =
           expectMsgType[AdministrativePermissionsForProjectGetResponseADM]
+
         val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter { ap: AdministrativePermissionADM =>
           ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
-          ap.hasPermissions
-            .equals(Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission))
+          ap.hasPermissions.equals(
+            Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
+          )
         }
 
         hasAPForProjectAdmin.size shouldBe 1

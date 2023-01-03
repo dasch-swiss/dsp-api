@@ -5,10 +5,9 @@
 
 package org.knora.webapi.instrumentation.health
 
-import spray.json.JsObject
-import spray.json.JsString
 import zhttp.http._
 import zio._
+import zio.json._
 
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
@@ -60,14 +59,7 @@ object HealthRouteZ {
   private def createResponse(result: HealthCheckResult): UIO[Response] =
     ZIO.succeed(
       Response
-        .json(
-          JsObject(
-            "name"     -> JsString("AppState"),
-            "severity" -> JsString("non fatal"),
-            "status"   -> JsString(status(result.status)),
-            "message"  -> JsString(result.message)
-          ).toString()
-        )
+        .json(result.toJson)
         .setStatus(statusCode(result.status))
     )
 
@@ -90,12 +82,16 @@ object HealthRouteZ {
   /**
    * The result of a health check which is either unhealthy or healthy.
    *
-   * @param name     ???
-   * @param severity ???
+   * @param name     always "AppState"
+   * @param severity severity of the health status. Always "non fatal", otherwise the application would not respond
    * @param status   the status (either false = unhealthy or true = healthy)
    * @param message  the message
    */
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
+
+  private object HealthCheckResult {
+    implicit val encoder: JsonEncoder[HealthCheckResult] = DeriveJsonEncoder.gen[HealthCheckResult]
+  }
 
   private def unhealthy(message: String) =
     HealthCheckResult(
