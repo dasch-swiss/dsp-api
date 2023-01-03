@@ -961,7 +961,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forGroup.get == newGroupIri)
+        assert(doap.forGroup == Some(newGroupIri))
       }
 
       "update group of a default object access permission, resource class must be deleted" in {
