@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import akka.actor.Status
 import akka.testkit.ImplicitSender
 
 import scala.concurrent.duration._
@@ -16,7 +17,6 @@ import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryConten
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import akka.actor.Status
 
 /**
  * Tests that the [[LoadOntologiesRequestV2]] request does not load invalid data into the cache.
@@ -42,7 +42,6 @@ class LoadOntologiesRequestV2Spec extends CoreSpec with ImplicitSender {
     )
 
     expectMsgPF(10.seconds) { res =>
-      println(res)
       res match {
         case sr: SuccessResponseV2 => Right(sr)
         case f: Status.Failure     => Left(f)

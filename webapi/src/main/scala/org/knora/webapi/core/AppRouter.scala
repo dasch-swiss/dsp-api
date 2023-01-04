@@ -26,7 +26,7 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 trait AppRouter {
   val system: akka.actor.ActorSystem
   val ref: ActorRef
-  val populateOntologyCaches: IO[Throwable, Unit]
+  val populateOntologyCaches: Task[Unit]
 }
 
 object AppRouter {
@@ -60,7 +60,7 @@ object AppRouter {
         )
 
         /* Calls into the OntologyResponderV2 to initiate loading of the ontologies into the cache. */
-        val populateOntologyCaches: IO[Throwable, Unit] = {
+        val populateOntologyCaches: Task[Unit] = {
 
           val request = LoadOntologiesRequestV2(requestingUser = KnoraSystemInstances.Users.SystemUser)
           val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(60, scala.concurrent.duration.SECONDS))

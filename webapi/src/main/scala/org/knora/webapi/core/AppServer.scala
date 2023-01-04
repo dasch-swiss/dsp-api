@@ -80,7 +80,7 @@ final case class AppServer(
    *
    * @param requiresRepository If `true`, calls the AppRouter to populate the ontology caches, otherwise returns ()
    */
-  private def populateOntologyCaches(requiresRepository: Boolean): IO[Throwable, Unit] =
+  private def populateOntologyCaches(requiresRepository: Boolean): Task[Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
       _ <-
@@ -137,7 +137,7 @@ final case class AppServer(
   def start(
     requiresAdditionalRepositoryChecks: Boolean,
     requiresIIIFService: Boolean
-  ): IO[Throwable, Unit] =
+  ): Task[Unit] =
     for {
       _ <- ZIO.logInfo("=> Startup checks initiated")
       _ <- checkTriplestoreService

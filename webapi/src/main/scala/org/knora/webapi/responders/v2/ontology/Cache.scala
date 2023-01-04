@@ -104,8 +104,8 @@ object Cache extends LazyLogging {
   def loadOntologies(
     appActor: ActorRef,
     requestingUser: UserADM
-  )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] = {
-    val loadOntologiesFuture: Future[SuccessResponseV2] = for {
+  )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] =
+    for {
       _ <- Future {
              if (
                !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)
@@ -196,20 +196,6 @@ object Cache extends LazyLogging {
 
       _ = makeOntologyCache(allOntologyMetadata, ontologyGraphs)
     } yield SuccessResponseV2("Ontologies loaded.")
-
-    loadOntologiesFuture.recover { case exception: Throwable =>
-      exception match {
-        case inconsistentRepositoryDataException: InconsistentRepositoryDataException =>
-          log.error(inconsistentRepositoryDataException.message)
-          // SuccessResponseV2(
-          //   s"An error occurred when loading ontologies: ${inconsistentRepositoryDataException.message}"
-          // )
-          throw inconsistentRepositoryDataException
-
-        case other => throw other
-      }
-    }
-  }
 
   /**
    * Creates an [[OntologyCacheData]] object on the basis of a map of ontology IRIs to the corresponding [[ReadOntologyV2]].
