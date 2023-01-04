@@ -1,10 +1,16 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.ontology.repo.service
-import org.knora.webapi.responders.v2.ontology.Cache
 import zio.Task
-import zio.macros.accessible
 import zio.ULayer
 import zio.ZIO
 import zio.ZLayer
+import zio.macros.accessible
+
+import org.knora.webapi.responders.v2.ontology.Cache
 
 @accessible
 trait OntologyCache {

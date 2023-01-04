@@ -6,10 +6,11 @@
 package org.knora.webapi.responders
 
 import akka.actor.Actor
-import akka.actor.Props
 import akka.actor.ActorSystem
+import akka.actor.Props
 import zio.ULayer
 import zio.ZLayer
+
 import scala.concurrent.duration.DurationInt
 
 object ActorDepsTest {

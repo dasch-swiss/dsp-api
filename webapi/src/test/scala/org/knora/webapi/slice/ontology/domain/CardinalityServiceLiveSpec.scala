@@ -6,38 +6,38 @@
 package org.knora.webapi.slice.ontology.domain
 
 import org.apache.jena.query.Dataset
+import zio.Random
 import zio.Ref
 import zio.ZLayer
 import zio.test.ZIOSpecDefault
 import zio.test._
-import zio.Random
 
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.ActorDepsTest
+import org.knora.webapi.responders.v2.ontology.Cache
+import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.allCardinalities
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.KnoraBase
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.responders.v2.ontology.Cache
-import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
-import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.KnoraBase
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 

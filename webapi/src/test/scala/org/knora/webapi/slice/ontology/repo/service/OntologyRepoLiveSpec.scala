@@ -1,19 +1,24 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.ontology.repo.service
 
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import zio.Scope
 import zio.test.ZIOSpecDefault
 import zio.test._
-import zio.Scope
 
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 
 object OntologyRepoLiveSpec extends ZIOSpecDefault {
 

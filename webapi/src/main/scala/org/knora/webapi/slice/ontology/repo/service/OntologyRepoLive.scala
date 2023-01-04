@@ -1,13 +1,18 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.ontology.repo.service
 
 import zio.Task
 import zio.ZLayer
 
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 final case class OntologyRepoLive(private val converter: IriConverter, private val ontologyCache: OntologyCache)

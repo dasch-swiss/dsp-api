@@ -1,10 +1,14 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.ontology.domain.model
 import dsp.schema.domain
 import dsp.schema.domain.Cardinality.MayHaveMany
 import dsp.schema.domain.Cardinality.MayHaveOne
 import dsp.schema.domain.Cardinality.MustHaveOne
 import dsp.schema.domain.Cardinality.MustHaveSome
-
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 
 sealed trait Cardinality {
