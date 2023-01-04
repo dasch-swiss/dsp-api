@@ -10,7 +10,6 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -155,14 +154,7 @@ final case class CardinalityServiceLive(
       propSmartIri          <- iriConverter.asInternalSmartIri(propertyIri)
       classInfoMaybe        <- ontologyRepo.findClassBy(classIri)
       inheritedCardinalities = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri)).map(Cardinality.get)
-    } yield inheritedCardinalities.forall { it =>
-      val upper = it
-      val newer = newCardinality
-      val nToO  = newer.isStricter(upper)
-      val oToN  = upper.isStricter(newer)
-      !oToN
-    }
-
+    } yield inheritedCardinalities.forall(!_.isStricter(newCardinality))
 }
 
 object CardinalityService {
