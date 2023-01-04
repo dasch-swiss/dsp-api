@@ -38,7 +38,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             actual <- OntologyRepo.findOntologyBy(anUnknownInternalOntologyIri)
           } yield assertTrue(actual.isEmpty)
         },
-        test("when searching for known iri => return ReadOntology") {
+        test("when searching for known iri => return Some(ReadOntology)") {
           val ontologyData = ReadOntologyV2(OntologyMetadataV2(ontologySmartIri))
           val cacheData    = OntologyCacheFake.emptyData.copy(ontologies = Map(ontologySmartIri -> ontologyData))
           for {
@@ -48,7 +48,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
         }
       ),
       suite("findClassBy(InternalIri)")(
-        test("when searching for unknown iri => return None") {
+        test("when searching for a known iri => return Some(ReadClassInfoV2])") {
           val classData = ReadClassInfoV2(
             ClassInfoContentV2(aKnownClassSmartIri, ontologySchema = ApiV2Complex),
             allBaseClasses = List.empty
