@@ -31,48 +31,48 @@ object CardinalitySpec extends ZIOSpecDefault {
         assertTrue(ExactlyOne.toString == "1")
       }
     ),
-    suite("Cardinality isStricter")(
+    suite("Cardinality isStricterThan")(
       test("Same cardinality is never stricter") {
-        check(cardinalityGen)(c => assertTrue(!c.isStricter(c)))
+        check(cardinalityGen)(c => assertTrue(!c.isStricterThan(c)))
       },
       suite(s"Unbounded $Unbounded")(
         test(s"'$AtLeastOne' is stricter than $Unbounded") {
-          assertTrue(AtLeastOne.isStricter(Unbounded))
+          assertTrue(AtLeastOne.isStricterThan(Unbounded))
         },
         test(s"'$ExactlyOne is stricter than $Unbounded") {
-          assertTrue(ExactlyOne.isStricter(Unbounded))
+          assertTrue(ExactlyOne.isStricterThan(Unbounded))
         },
         test(s"'$ZeroOrOne' is stricter than $Unbounded") {
-          assertTrue(ZeroOrOne.isStricter(Unbounded))
+          assertTrue(ZeroOrOne.isStricterThan(Unbounded))
         },
         test(s"'$Unbounded' is NOT stricter than any other") {
           check(cardinalityGen) { other =>
-            assertTrue(!Unbounded.isStricter(other))
+            assertTrue(!Unbounded.isStricterThan(other))
           }
         }
       ),
       suite(s"AtLeastOne $AtLeastOne")(
         test(s"'$AtLeastOne' is NOT stricter than $ExactlyOne") {
-          assertTrue(!AtLeastOne.isStricter(ExactlyOne))
+          assertTrue(!AtLeastOne.isStricterThan(ExactlyOne))
         },
         test(s"'$AtLeastOne' is stricter than $ZeroOrOne") {
-          assertTrue(AtLeastOne.isStricter(ZeroOrOne))
+          assertTrue(AtLeastOne.isStricterThan(ZeroOrOne))
         }
       ),
       suite(s"ExactlyOne $ExactlyOne")(
         test(s"'$ExactlyOne' is stricter than $AtLeastOne") {
-          assertTrue(ExactlyOne.isStricter(AtLeastOne))
+          assertTrue(ExactlyOne.isStricterThan(AtLeastOne))
         },
         test(s"'$ExactlyOne' is stricter than $ZeroOrOne") {
-          assertTrue(ExactlyOne.isStricter(ZeroOrOne))
+          assertTrue(ExactlyOne.isStricterThan(ZeroOrOne))
         }
       ),
       suite(s"ExactlyOne $ZeroOrOne")(
         test(s"'$ZeroOrOne' is stricter than $AtLeastOne") {
-          assertTrue(ZeroOrOne.isStricter(AtLeastOne))
+          assertTrue(ZeroOrOne.isStricterThan(AtLeastOne))
         },
         test(s"'$ZeroOrOne' is NOT stricter than $ExactlyOne") {
-          assertTrue(!ZeroOrOne.isStricter(ExactlyOne))
+          assertTrue(!ZeroOrOne.isStricterThan(ExactlyOne))
         }
       )
     )

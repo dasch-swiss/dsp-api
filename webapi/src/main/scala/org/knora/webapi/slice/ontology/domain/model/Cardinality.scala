@@ -18,10 +18,10 @@ sealed trait Cardinality {
 
   val oldCardinality: dsp.schema.domain.Cardinality
 
-  def isStricter(other: KnoraCardinalityInfo): Boolean =
-    Cardinality.get(other).isStricter(this)
+  def isStricterThan(other: KnoraCardinalityInfo): Boolean =
+    Cardinality.get(other).isStricterThan(this)
 
-  def isStricter(other: Cardinality): Boolean = (other.min, other.max) match {
+  def isStricterThan(other: Cardinality): Boolean = (other.min, other.max) match {
     case (otherMin, _) if otherMin < this.min => true
     case (_, otherMax) if this.max.nonEmpty   => otherMax.forall(_ > this.max.get)
     case _                                    => false
