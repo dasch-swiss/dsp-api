@@ -264,13 +264,13 @@ object TestClientService {
     val socketConfig: SocketConfig = SocketConfig
       .custom()
       .setTcpNoDelay(true)
-      .build();
+      .build()
 
     // Configure the connection manager to use socket configuration by default.
     connManager.setDefaultSocketConfig(socketConfig)
 
     // Validate connections after 1 sec of inactivity
-    connManager.setValidateAfterInactivity(1000);
+    connManager.setValidateAfterInactivity(1000)
 
     // Configure total max or per route limits for persistent connections
     // that can be kept in the pool or leased by the connection manager.
