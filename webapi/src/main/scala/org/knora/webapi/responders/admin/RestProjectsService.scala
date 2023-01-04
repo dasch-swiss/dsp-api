@@ -19,7 +19,7 @@ final case class RestProjectsService(bridge: ActorToZioBridge) {
    *     '''success''': information about the project as a [[ProjectGetResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
-   *                  [[dsp.errors.ValidationException]] if the given `projectIri` is invalid
+   *                    [[dsp.errors.ValidationException]] if the given `projectIri` is invalid
    */
   def getSingleProjectADMRequest(projectIri: IRI): Task[ProjectGetResponseADM] =
     ProjectIdentifierADM.IriIdentifier

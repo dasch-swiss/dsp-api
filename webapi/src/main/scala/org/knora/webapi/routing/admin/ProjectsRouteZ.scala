@@ -32,10 +32,11 @@ final case class ProjectsRouteZ(
       }
 
   private def getProjectByIriEncoded(iriUrlEncoded: String): Task[Response] =
-    RouteUtilZ
-      .urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      .flatMap(projectsService.getSingleProjectADMRequest(_).map(_.toJsValue.toString()))
-      .map(Response.json(_))
+    for {
+      iriDecoded         <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iri                <- IriIdentifier.fromString(iriDecoded).toZIO
+      projectGetResponse <- projectsService.getSingleProjectADMRequest(identifier = iri)
+    } yield Response.json(projectGetResponse.toJsValue.toString())
 
   private def getProjectByShortname(shortname: String): Task[Response] =
     for {
