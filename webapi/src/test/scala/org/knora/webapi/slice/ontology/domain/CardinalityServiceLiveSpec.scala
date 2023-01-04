@@ -177,11 +177,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
         }
       ).provide(commonLayers, datasetLayerFromTurtle(IsPropertyUsedInResourcesTestData.turtle)),
       suite("canSetCardinality")(
-        suite("Given 'ExactlyOne' Cardinality on super class property")(
+        suite(s"Given 'ExactlyOne $ExactlyOne' Cardinality on super class property")(
           test(
-            """
-              |when checking new cardinalities '''AtLeastOne, Unbounded, ZeroOrOne'''' 
-              |then this is not possible""".stripMargin
+            s"""
+               |when checking new cardinalities 'AtLeastOne $AtLeastOne', 'Unbounded $Unbounded', 'ZeroOrOne $ZeroOrOne' 
+               |then this is NOT possible""".stripMargin
           ) {
             check(cardinalitiesGen(AtLeastOne, Unbounded, ZeroOrOne)) { newCardinality =>
               val d = CanWidenCardinalityTestData.makeOntologyTestData(ExactlyOne)
@@ -192,9 +192,9 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             }
           },
           test(
-            """
-              |when checking new cardinality '''ExactlyOne''' 
-              |then this is possible""".stripMargin
+            s"""
+               |when checking new cardinality 'ExactlyOne $ExactlyOne' 
+               |then this is possible""".stripMargin
           ) {
             val d = CanWidenCardinalityTestData.makeOntologyTestData(ExactlyOne)
             for {
@@ -203,11 +203,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             } yield assertTrue(actual)
           }
         ),
-        suite("Given 'AtLeastOne' Cardinality on super class property")(
+        suite(s"Given 'AtLeastOne $AtLeastOne' Cardinality on super class property")(
           test(
-            """
-              |when checking new cardinalities '''Unbounded, ZeroOrOne'''' 
-              |then this is not possible""".stripMargin
+            s"""
+               |when checking new cardinalities 'Unbounded $Unbounded', 'ZeroOrOne $ZeroOrOne' 
+               |then this is NOT possible""".stripMargin
           ) {
             check(cardinalitiesGen(Unbounded, ZeroOrOne)) { newCardinality =>
               val d = CanWidenCardinalityTestData.makeOntologyTestData(AtLeastOne)
@@ -219,9 +219,9 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             }
           },
           test(
-            """
-              |when checking new cardinalities '''AtLeastOne, ExactlyOne''''
-              |then this is possible""".stripMargin
+            s"""
+               |when checking new cardinalities 'AtLeastOne $AtLeastOne', 'ExactlyOne $ExactlyOne'
+               |then this is possible""".stripMargin
           ) {
             check(cardinalitiesGen(AtLeastOne, ExactlyOne)) { newCardinality =>
               val d = CanWidenCardinalityTestData.makeOntologyTestData(AtLeastOne)
@@ -232,11 +232,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             }
           }
         ),
-        suite("Given 'ZeroOrOne' Cardinality on super class property")(
+        suite(s"Given 'ZeroOrOne $ZeroOrOne' Cardinality on super class property")(
           test(
-            """
-              |when checking new cardinalities '''AtLeastOne, Unbounded'''' 
-              |then this is not possible""".stripMargin
+            s"""
+               |when checking new cardinalities 'AtLeastOne $AtLeastOne', 'Unbounded $Unbounded' 
+               |then this is NOT possible""".stripMargin
           ) {
             check(cardinalitiesGen(AtLeastOne, Unbounded)) { newCardinality =>
               val d = CanWidenCardinalityTestData.makeOntologyTestData(ZeroOrOne)
@@ -247,9 +247,9 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             }
           },
           test(
-            """
-              |when checking new cardinalities '''ExactlyOne, ZeroOrOne'''' 
-              |then this is possible""".stripMargin
+            s"""
+               |when checking new cardinalities 'ExactlyOne $ExactlyOne', 'ZeroOrOne $ZeroOrOne'
+               |then this is possible""".stripMargin
           ) {
             check(cardinalitiesGen(ExactlyOne, ZeroOrOne)) { newCardinality =>
               val d = CanWidenCardinalityTestData.makeOntologyTestData(ZeroOrOne)
@@ -261,10 +261,10 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           }
         ),
         test(
-          """
-            |Given 'Unbounded' Cardinality on super class property'
-            |when checking all cardinalities
-            |then this is always possible""".stripMargin
+          s"""
+             |Given 'Unbounded $Unbounded' Cardinality on super class property'
+             |when checking all cardinalities
+             |then this is always possible""".stripMargin
         ) {
           check(cardinalitiesGen()) { newCardinality =>
             val d = CanWidenCardinalityTestData.makeOntologyTestData(Unbounded)
