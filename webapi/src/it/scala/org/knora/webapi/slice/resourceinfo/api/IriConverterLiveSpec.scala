@@ -49,7 +49,7 @@ object IriConverterLiveSpec extends ZIOSpecDefault {
             actual <- IriConverter.asInternalSmartIri(someInternalIri)
           } yield assertTrue(actual.toIri == someInternalIri)
         },
-        test("should fail if if not an InternalIri") {
+        test("should fail if it is an external IRI") {
           for {
             actual <-
               IriConverter.asInternalSmartIri(someExternalIri).exit
