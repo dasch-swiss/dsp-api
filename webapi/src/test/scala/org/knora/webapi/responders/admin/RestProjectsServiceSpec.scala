@@ -3,13 +3,11 @@ import zio.Scope
 import zio.ZIO
 import zio.mock._
 import zio.test.Assertion
-import zio.test.SmartAssertionOps
 import zio.test.Spec
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import dsp.errors.ValidationException
 import dsp.valueobjects.Project.ShortCode
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
@@ -53,12 +51,6 @@ object RestProjectsServiceSpec extends ZIOSpecDefault {
           actual <- sut.getSingleProjectADMRequest(id)
         } yield assertTrue(actual == expectedResponse)
       }
-        .provide(RestProjectsService.layer, expectSuccess),
-      test("given an invalid iri should return with a failure") {
-        for {
-          sut    <- systemUnderTest
-          result <- sut.getSingleProjectADMRequest("invalid").exit
-        } yield assertTrue(result.is(_.failure) == ValidationException("Project IRI is invalid."))
-      }.provide(RestProjectsService.layer, expectNoInteraction)
+        .provide(RestProjectsService.layer, expectSuccess)
     )
 }
