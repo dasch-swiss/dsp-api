@@ -437,6 +437,7 @@ object GravsearchParser {
       // Do nothing, because this is handled elsewhere.
     }
 
+    @deprecated("'org.eclipse.rdf4j.query.algebra.CompareAll' is deprecated and marked for removal")
     override def meet(node: algebra.CompareAll): Unit =
       unsupported(node)
 
@@ -574,6 +575,7 @@ object GravsearchParser {
     override def meet(node: algebra.SingletonSet): Unit =
       node.visitChildren(this)
 
+    @deprecated("'org.eclipse.rdf4j.query.algebra.CompareAny' is deprecated and marked for removal")
     override def meet(node: algebra.CompareAny): Unit =
       unsupported(node)
 
@@ -771,6 +773,7 @@ object GravsearchParser {
     override def meet(load: algebra.Load): Unit =
       unsupported(load)
 
+    @deprecated("'org.eclipse.rdf4j.query.algebra.Like' is deprecated and marked for removal ")
     override def meet(node: algebra.Like): Unit =
       unsupported(node)
 
