@@ -9,6 +9,7 @@ import dsp.schema.domain.Cardinality.MayHaveMany
 import dsp.schema.domain.Cardinality.MayHaveOne
 import dsp.schema.domain.Cardinality.MustHaveOne
 import dsp.schema.domain.Cardinality.MustHaveSome
+
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 
 sealed trait Cardinality {
@@ -21,17 +22,10 @@ sealed trait Cardinality {
     Cardinality.get(other).isStricter(this)
 
   def isStricter(other: Cardinality): Boolean =
-    if (this == other) {
-      false
-    } else if (this.min > other.min) {
-      true
-    } else if (this.max.nonEmpty) {
-      other.max match {
-        case Some(otherMax) => this.max.get < otherMax
-        case _              => true
-      }
-    } else {
-      false
+    (other.min, other.max) match {
+      case (otherMin, _) if otherMin < this.min => true
+      case (_, otherMax) if this.max.nonEmpty   => otherMax.forall(_ > this.max.get)
+      case _                                    => false
     }
 
   override def toString: String = (min, max) match {
