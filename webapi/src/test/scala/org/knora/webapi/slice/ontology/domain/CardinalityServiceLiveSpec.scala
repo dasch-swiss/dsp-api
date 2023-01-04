@@ -13,7 +13,6 @@ import zio.test._
 import zio.Random
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
@@ -21,30 +20,26 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.responders.ActorDepsTest
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.allCardinalities
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.CardinalityServiceLiveSpec.CanWidenCardinality.anOntologySmartIri
-import org.knora.webapi.slice.ontology.repo.OntologyCacheFake
-import org.knora.webapi.slice.ontology.repo.OntologyRepo
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri.Property.KnoraBase
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.responders.v2.ontology.Cache
+import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.KnoraBase
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
-
-  // test data
-  private val ontologyAnything = InternalIri("http://www.knora.org/ontology/0001/anything#")
-  private val ontologyBooks    = InternalIri("http://www.knora.org/ontology/0001/books#")
-
-  private val classThing    = InternalIri(s"${ontologyAnything.value}Thing")
-  private val classBook     = InternalIri(s"${ontologyBooks.value}Book")
-  private val classTextBook = InternalIri(s"${ontologyBooks.value}Textbook")
 
   def cardinalitiesGen(cardinalities: Cardinality*): Gen[Any, Cardinality] = Gen.fromZIO {
     val candidates: Array[Cardinality] = if (cardinalities != Nil) { cardinalities.toArray }
@@ -57,15 +52,22 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     }
   }
 
-  private object IsPropertyUsedInResources {
-    val testData: String =
+  private object IsPropertyUsedInResourcesTestData {
+
+    private val ontologyAnything = "http://www.knora.org/ontology/0001/anything#"
+    private val ontologyBooks    = "http://www.knora.org/ontology/0001/books#"
+
+    val classThing: InternalIri    = InternalIri(s"${ontologyAnything}Thing")
+    val classBook: InternalIri     = InternalIri(s"${ontologyBooks}Book")
+    val classTextBook: InternalIri = InternalIri(s"${ontologyBooks}Textbook")
+    val turtle: String =
       s"""
          |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
          |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
          |
          |<http://aThing>
          |  a <${classThing.value}> ;
-         |  <${KnoraBase.isDeleted.value}> false .
+         |  <${KnoraBase.Property.isDeleted.value}> false .
          |
          |<http://aBook> a <${classBook.value}> .
          |
@@ -73,8 +75,63 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
          |
          |<http://aTextBook>
          |  a <${classTextBook.value}> ;
-         |  <${KnoraBase.isEditable.value}> true .
+         |  <${KnoraBase.Property.isEditable.value}> true .
          |""".stripMargin
+  }
+
+  private object CanWidenCardinalityTestData {
+    case class DataCreated(subclass: InternalIri, property: InternalIri, data: OntologyCacheData)
+
+    def makeOntologyTestData(cardinality: Cardinality): DataCreated = {
+      val propertyCardinality = makePropertyCardinality(aPropertySmartIri, cardinality)
+      val classInfo           = makeClassInfoContent(aClassSmartIri, directCardinalities = propertyCardinality)
+      val subClassInfo = makeClassInfoContent(
+        aSubClassSmartIri,
+        superClassIris = List(aClassSmartIri),
+        inheritedCardinalities = propertyCardinality
+      )
+      val ontologyData = makeOntologyData(anOntologySmartIri, classes = classInfo, subClassInfo)
+      DataCreated(aSubClassSmartIri.toInternalIri, aPropertySmartIri.toInternalIri, ontologyData)
+    }
+
+    private def makePropertyCardinality(
+      propertyIri: SmartIri,
+      cardinality: Cardinality
+    ): Map[SmartIri, KnoraCardinalityInfo] = Map(propertyIri -> KnoraCardinalityInfo(cardinality.oldCardinality))
+
+    private def makeClassInfoContent(
+      classIri: SmartIri,
+      superClassIris: List[SmartIri] = List.empty,
+      directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty,
+      inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty
+    ): (SmartIri, ReadClassInfoV2) =
+      (
+        classIri,
+        ReadClassInfoV2(
+          ClassInfoContentV2(
+            classIri = classIri,
+            ontologySchema = ApiV2Complex,
+            directCardinalities = directCardinalities
+          ),
+          allBaseClasses = superClassIris,
+          inheritedCardinalities = inheritedCardinalities
+        )
+      )
+
+    private def makeOntologyData(
+      ontologyIri: SmartIri,
+      classes: (SmartIri, ReadClassInfoV2)*
+    ): Cache.OntologyCacheData =
+      OntologyCacheFake.emptyData.copy(ontologies =
+        Map(ontologyIri -> ReadOntologyV2(OntologyMetadataV2(ontologyIri), classes = classes.toMap))
+      )
+
+    private val sf: StringFormatter = { StringFormatter.initForTest(); StringFormatter.getGeneralInstance }
+    private val anOntologySmartIri: SmartIri =
+      sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2").toOntologySchema(InternalSchema)
+    private val aClassSmartIri: SmartIri    = anOntologySmartIri.makeEntityIri("aClass")
+    private val aSubClassSmartIri: SmartIri = anOntologySmartIri.makeEntityIri("aSubClass")
+    private val aPropertySmartIri: SmartIri = anOntologySmartIri.makeEntityIri("aProperty")
   }
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService with OntologyCacheFake](
@@ -82,7 +139,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     CardinalityService.layer,
     IriConverter.layer,
     OntologyCacheFake.emptyCache,
-    OntologyRepo.layer,
+    OntologyRepoLive.layer,
     StringFormatter.test,
     TriplestoreServiceFake.layer
   )
@@ -91,117 +148,133 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     suite("CardinalityServiceLive")(
       suite("isPropertyUsedInResources should")(
         test("given a property is in use by the class => return true") {
-          val classIri    = classThing
-          val propertyIri = KnoraBase.isDeleted
+          val classIri    = IsPropertyUsedInResourcesTestData.classThing
+          val propertyIri = KnoraBase.Property.isDeleted
           for {
             result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
           } yield assertTrue(result)
         },
         test("given a property is not used by the class but in a different class => return false") {
-          val classIri    = classBook
-          val propertyIri = KnoraBase.isDeleted
+          val classIri    = IsPropertyUsedInResourcesTestData.classBook
+          val propertyIri = KnoraBase.Property.isDeleted
           for {
             result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
           } yield assertTrue(!result)
         },
         test("given a property is never used => return false") {
-          val classIri    = classThing
-          val propertyIri = KnoraBase.isMainResource
+          val classIri    = IsPropertyUsedInResourcesTestData.classThing
+          val propertyIri = KnoraBase.Property.isMainResource
           for {
             result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
           } yield assertTrue(!result)
         },
         test("given a property is in use in a subclass => return true") {
-          val classIri    = classTextBook
-          val propertyIri = KnoraBase.isEditable
+          val classIri    = IsPropertyUsedInResourcesTestData.classTextBook
+          val propertyIri = KnoraBase.Property.isEditable
           for {
             result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
           } yield assertTrue(result)
         }
-      ).provide(commonLayers, datasetLayerFromTurtle(IsPropertyUsedInResources.testData)),
-      suite("canWidenCardinality")(
-        test("Unbounded Cardinality (MayHaveMany) can NOT be widened any further on super class") {
-          check(cardinalitiesGen()) { c =>
-            val propertyIri: InternalIri = CanWidenCardinality.mayHaveManyProperty
-            val ontologyData = OntologyCacheFake.empty.copy(
-              ontologies = Map(
-                anOntologySmartIri -> ReadOntologyV2(
-                  OntologyMetadataV2(anOntologySmartIri),
-                  classes = Map(
-                    anOntologySmartIri -> ReadClassInfoV2(
-                      ClassInfoContentV2(anOntologySmartIri, ontologySchema = ApiV2Complex),
-                      List.empty
-                    )
-                  )
-                )
-              )
-            )
+      ).provide(commonLayers, datasetLayerFromTurtle(IsPropertyUsedInResourcesTestData.turtle)),
+      suite("canSetCardinality")(
+        suite("Given 'ExactlyOne' Cardinality on super class property")(
+          test(
+            """
+              |when checking new cardinalities '''AtLeastOne, Unbounded, ZeroOrOne'''' 
+              |then this is not possible""".stripMargin
+          ) {
+            check(cardinalitiesGen(AtLeastOne, Unbounded, ZeroOrOne)) { newCardinality =>
+              val d = CanWidenCardinalityTestData.makeOntologyTestData(ExactlyOne)
+              for {
+                _      <- OntologyCacheFake.set(d.data)
+                actual <- CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
+              } yield assertTrue(!actual)
+            }
+          },
+          test(
+            """
+              |when checking new cardinality '''ExactlyOne''' 
+              |then this is possible""".stripMargin
+          ) {
+            val d = CanWidenCardinalityTestData.makeOntologyTestData(ExactlyOne)
             for {
-              _      <- OntologyCacheFake.set(ontologyData)
-              result <- CardinalityService.canWidenCardinality(CanWidenCardinality.aClass, propertyIri, c)
-            } yield assertTrue(!result)
+              _      <- OntologyCacheFake.set(d.data)
+              actual <- CardinalityService.canSetCardinality(d.subclass, d.property, ExactlyOne)
+            } yield assertTrue(actual)
           }
-        },
-        test("ZeroOrOne Cardinality (MayHaveOne) can be widened on a super class, by Unbounded") {
-          val propertyIri: InternalIri = CanWidenCardinality.mayHaveOneProperty
-          for {
-            result <- CardinalityService.canWidenCardinality(CanWidenCardinality.aClass, propertyIri, Unbounded)
-          } yield assertTrue(result)
-        },
-        test(
-          "ZeroOrOne Cardinality (MayHaveOne) can NOT be widened on a super class, by AtLeastOne,  ExactlyOne, ZeroOrOne"
-        ) {
-          check(cardinalitiesGen(AtLeastOne, Unbounded, ZeroOrOne)) { c =>
-            val propertyIri: InternalIri = CanWidenCardinality.mayHaveOneProperty
-            for {
-              result <- CardinalityService.canWidenCardinality(CanWidenCardinality.aClass, propertyIri, c)
-            } yield assertTrue(!result)
+        ),
+        suite("Given 'AtLeastOne' Cardinality on super class property")(
+          test(
+            """
+              |when checking new cardinalities '''Unbounded, ZeroOrOne'''' 
+              |then this is not possible""".stripMargin
+          ) {
+            check(cardinalitiesGen(Unbounded, ZeroOrOne)) { newCardinality =>
+              val d = CanWidenCardinalityTestData.makeOntologyTestData(AtLeastOne)
+              for {
+                _ <- OntologyCacheFake.set(d.data)
+                actual <-
+                  CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
+              } yield assertTrue(!actual)
+            }
+          },
+          test(
+            """
+              |when checking new cardinalities '''AtLeastOne, ExactlyOne''''
+              |then this is possible""".stripMargin
+          ) {
+            check(cardinalitiesGen(AtLeastOne, ExactlyOne)) { newCardinality =>
+              val d = CanWidenCardinalityTestData.makeOntologyTestData(AtLeastOne)
+              for {
+                _      <- OntologyCacheFake.set(d.data)
+                actual <- CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
+              } yield assertTrue(actual)
+            }
           }
-        },
-        test(
-          "ExactlyOne Cardinality (MustHaveOne) can be widened on a super class, by AtLeastOne, Unbounded, ZeroOrOne"
-        ) {
-          check(cardinalitiesGen(AtLeastOne, Unbounded, ZeroOrOne)) { c =>
-            val propertyIri: InternalIri = CanWidenCardinality.mustHaveOneProperty
-            for {
-              result <- CardinalityService.canWidenCardinality(CanWidenCardinality.aClass, propertyIri, c)
-            } yield assertTrue(result)
+        ),
+        suite("Given 'ZeroOrOne' Cardinality on super class property")(
+          test(
+            """
+              |when checking new cardinalities '''AtLeastOne, Unbounded'''' 
+              |then this is not possible""".stripMargin
+          ) {
+            check(cardinalitiesGen(AtLeastOne, Unbounded)) { newCardinality =>
+              val d = CanWidenCardinalityTestData.makeOntologyTestData(ZeroOrOne)
+              for {
+                _      <- OntologyCacheFake.set(d.data)
+                actual <- CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
+              } yield assertTrue(!actual)
+            }
+          },
+          test(
+            """
+              |when checking new cardinalities '''ExactlyOne, ZeroOrOne'''' 
+              |then this is possible""".stripMargin
+          ) {
+            check(cardinalitiesGen(ExactlyOne, ZeroOrOne)) { newCardinality =>
+              val d = CanWidenCardinalityTestData.makeOntologyTestData(ZeroOrOne)
+              for {
+                _      <- OntologyCacheFake.set(d.data)
+                actual <- CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
+              } yield assertTrue(actual)
+            }
           }
-        },
+        ),
         test(
-          "ExactlyOne Cardinality (MustHaveOne) can NOT be widened on a super class, by ExactlyOne"
+          """
+            |Given 'Unbounded' Cardinality on super class property'
+            |when checking all cardinalities
+            |then this is always possible""".stripMargin
         ) {
-          val propertyIri: InternalIri = CanWidenCardinality.mustHaveOneProperty
-          for {
-            result <- CardinalityService.canWidenCardinality(CanWidenCardinality.aClass, propertyIri, ExactlyOne)
-          } yield assertTrue(!result)
-        },
-        test("AtLeastOne Cardinality (MustHaveSome) can NOT be widened any further on super class") {
-          check(cardinalitiesGen()) { c =>
-            val propertyIri: InternalIri = CanWidenCardinality.mustHaveSomeProperty
+          check(cardinalitiesGen()) { newCardinality =>
+            val d = CanWidenCardinalityTestData.makeOntologyTestData(Unbounded)
             for {
-              result <- CardinalityService.canWidenCardinality(CanWidenCardinality.aClass, propertyIri, c)
-            } yield assertTrue(!result)
+              _      <- OntologyCacheFake.set(d.data)
+              actual <- CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
+            } yield assertTrue(actual)
           }
         }
       ).provide(commonLayers, emptyDataSet)
     )
 
-  object CanWidenCardinality {
-    implicit val sf: StringFormatter = { StringFormatter.initForTest(); StringFormatter.getGeneralInstance }
-
-    val anOntologySmartIri: SmartIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2")
-    val anOntology: InternalIri      = anOntologySmartIri.toInternalIri
-
-    val aClassSmartIri: SmartIri = anOntologySmartIri.makeEntityIri("aClass")
-    val aClass: InternalIri      = aClassSmartIri.toInternalIri
-
-    val aSubClassSmartIri: SmartIri = anOntologySmartIri.makeEntityIri("aSubClass")
-    val aSubClass: InternalIri      = aSubClassSmartIri.toInternalIri
-
-    val mayHaveManyProperty: InternalIri  = InternalIri(s"${anOntology.value}#mayHaveManyValue")
-    val mayHaveOneProperty: InternalIri   = InternalIri(s"${anOntology.value}#mayHaveOneValue")
-    val mustHaveOneProperty: InternalIri  = InternalIri(s"${anOntology.value}#mustHaveOneValue")
-    val mustHaveSomeProperty: InternalIri = InternalIri(s"${anOntology.value}#mustHaveSomeValue")
-  }
 }

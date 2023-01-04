@@ -1,4 +1,4 @@
-package org.knora.webapi.slice.ontology.repo
+package org.knora.webapi.slice.ontology.repo.service
 import zio.Ref
 import zio.Task
 import zio.UIO
@@ -28,5 +28,4 @@ object OntologyCacheFake {
     OntologyCacheData(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Set.empty)
 
   val emptyCache: ZLayer[Any, Nothing, OntologyCacheFake] = withCache(emptyData)
-
 }

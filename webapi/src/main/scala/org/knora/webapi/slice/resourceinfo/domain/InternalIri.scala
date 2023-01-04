@@ -7,22 +7,4 @@ package org.knora.webapi.slice.resourceinfo.domain
 
 import org.knora.webapi.IRI
 
-final case class InternalIri(value: IRI)
-
-object InternalIri {
-  object Ontology {
-    val knoraBase = "http://www.knora.org/ontology/knora-base#"
-  }
-  object Property {
-    object KnoraBase {
-      val isDeleted: InternalIri      = InternalIri(Ontology.knoraBase + "isDeleted")
-      val isEditable: InternalIri     = InternalIri(Ontology.knoraBase + "isEditable")
-      val isMainResource: InternalIri = InternalIri(Ontology.knoraBase + "isMainResource")
-    }
-  }
-  object Class {
-    object KnoraBase {
-      val Resource: InternalIri = InternalIri(Ontology.knoraBase + "Resource")
-    }
-  }
-}
+case class InternalIri(value: IRI)

@@ -31,14 +31,19 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 trait CardinalityService {
 
   /**
-   * Check if a specific cardinality may be widened.
+   * Check if a specific cardinality may be set on a property in the context of a class.
    *
-   * @param classIri
-   * @param propertyIri
-   * @param newCardinality the desired cardinality
-   * @return a [[Boolean]] indicating whether a class's cardinalities can be widen.
+   * Setting a wider cardinality on a sub class is not possible if for the same property a stricter cardinality already exists in one of its super classes.
+   *
+   * @param classIri class to check
+   * @param propertyIri property to check
+   * @param newCardinality the newly desired cardinality
+   * @return
+   *    '''success''' a [[Boolean]] indicating whether a class's cardinalities can be widen.
+   *
+   *    '''error''' a [[Throwable]] indicating that something went wrong
    */
-  def canWidenCardinality(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality): Task[Boolean]
+  def canSetCardinality(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality): Task[Boolean]
 
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
@@ -140,17 +145,22 @@ final case class CardinalityServiceLive(
     tripleStore.sparqlHttpAsk(query.toString).map(_.result)
   }
 
-  override def canWidenCardinality(
+  override def canSetCardinality(
     classIri: InternalIri,
     propertyIri: InternalIri,
     newCardinality: Cardinality
-  ): Task[Boolean] = {
+  ): Task[Boolean] =
     for {
-      propSmartIri        <- iriConverter.asSmartIri(propertyIri)
-      classInfoMaybe      <- ontologyRepo.findClassBy(classIri)
-      cardinalityInfoMaybe = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri))
-    } yield cardinalityInfoMaybe.map(Cardinality.get).forall(!_.isStricter(newCardinality))
-  }
+      propSmartIri          <- iriConverter.asInternalSmartIri(propertyIri)
+      classInfoMaybe        <- ontologyRepo.findClassBy(classIri)
+      inheritedCardinalities = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri)).map(Cardinality.get)
+    } yield inheritedCardinalities.forall { it =>
+      val upper = it
+      val newer = newCardinality
+      val nToO  = newer.isStricter(upper)
+      val oToN  = upper.isStricter(newer)
+      !oToN
+    }
 
 }
 

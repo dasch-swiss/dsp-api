@@ -1,4 +1,5 @@
-package org.knora.webapi.slice.ontology.repo
+package org.knora.webapi.slice.ontology.repo.service
+
 import zio.Task
 import zio.ZLayer
 
@@ -13,7 +14,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
     extends OntologyRepo {
 
   override def findOntologyBy(iri: InternalIri): Task[Option[ReadOntologyV2]] =
-    converter.asSmartIri(iri).flatMap(findOntologyBy)
+    converter.asInternalSmartIri(iri).flatMap(findOntologyBy)
 
   private def findOntologyBy(ontologyIri: SmartIri): Task[Option[ReadOntologyV2]] =
     ontologyCache.get.map(_.ontologies.get(ontologyIri))
@@ -21,11 +22,11 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
   override def findClassBy(iri: InternalIri): Task[Option[ReadClassInfoV2]] = for {
     ontologyIri <- converter.getOntologyIriFromClassIri(iri)
     ontology    <- findOntologyBy(ontologyIri)
-    classIri    <- converter.asSmartIri(iri)
+    classIri    <- converter.asInternalSmartIri(iri)
   } yield ontology.flatMap(_.classes.get(classIri))
 }
 
-object OntologyRepo {
+object OntologyRepoLive {
   val layer: ZLayer[IriConverter with OntologyCache, Nothing, OntologyRepoLive] =
     ZLayer.fromFunction(OntologyRepoLive.apply _)
 }

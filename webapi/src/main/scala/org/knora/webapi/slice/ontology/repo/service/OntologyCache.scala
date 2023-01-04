@@ -1,11 +1,10 @@
-package org.knora.webapi.slice.ontology.repo
+package org.knora.webapi.slice.ontology.repo.service
+import org.knora.webapi.responders.v2.ontology.Cache
 import zio.Task
-import zio.ZIO
-import zio.ZLayer
 import zio.macros.accessible
 import zio.ULayer
-
-import org.knora.webapi.responders.v2.ontology.Cache
+import zio.ZIO
+import zio.ZLayer
 
 @accessible
 trait OntologyCache {
