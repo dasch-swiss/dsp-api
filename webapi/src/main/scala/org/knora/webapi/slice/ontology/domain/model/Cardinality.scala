@@ -21,12 +21,11 @@ sealed trait Cardinality {
   def isStricter(other: KnoraCardinalityInfo): Boolean =
     Cardinality.get(other).isStricter(this)
 
-  def isStricter(other: Cardinality): Boolean =
-    (other.min, other.max) match {
-      case (otherMin, _) if otherMin < this.min => true
-      case (_, otherMax) if this.max.nonEmpty   => otherMax.forall(_ > this.max.get)
-      case _                                    => false
-    }
+  def isStricter(other: Cardinality): Boolean = (other.min, other.max) match {
+    case (otherMin, _) if otherMin < this.min => true
+    case (_, otherMax) if this.max.nonEmpty   => otherMax.forall(_ > this.max.get)
+    case _                                    => false
+  }
 
   override def toString: String = (min, max) match {
     case (min, None)      => s"$min-n"
