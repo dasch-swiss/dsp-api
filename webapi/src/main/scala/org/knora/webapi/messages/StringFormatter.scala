@@ -1499,6 +1499,14 @@ class StringFormatter private (
   }
 
   /**
+   * Constructs a [[SmartIri]] by validating and parsing a string representing an IRI. Throws
+   * [[DataConversionException]] if the IRI is invalid or is is not an internal representation.
+   *
+   * @param iri the IRI string to be parsed.
+   */
+  def toInternalSmartIri(iri: IRI): SmartIri = toSmartIri(iri, requireInternal = true)
+
+  /**
    * Constructs a [[SmartIri]] by validating and parsing a string representing an IRI.
    *
    * @param iri      the IRI string to be parsed.

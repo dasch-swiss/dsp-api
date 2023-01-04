@@ -9,7 +9,6 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-import scala.util.Try
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
@@ -17,25 +16,17 @@ import org.knora.webapi.messages.StringFormatter
 
 @accessible
 trait IriConverter {
-  def asInternalIri(iri: IRI): Task[InternalIri]
-  def asSmartIri(iri: InternalIri): Task[SmartIri]
-  def getOntologyIriFromClassIri(iri: InternalIri): Task[SmartIri]
+  def asInternalIri(iri: IRI): Task[InternalIri]           = asSmartIri(iri).mapAttempt(_.toInternalIri)
+  def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)
+  def asInternalSmartIri(iri: String): Task[SmartIri]
+  def asSmartIri(iri: IRI): Task[SmartIri]
+  def getOntologyIriFromClassIri(iri: InternalIri): Task[SmartIri] =
+    asInternalSmartIri(iri.value).mapAttempt(_.getOntologyFromEntity)
 }
 
-final case class IriConverterLive(stringFormatter: StringFormatter) extends IriConverter {
-  def asInternalIri(iri: IRI): Task[InternalIri] =
-    ZIO.attempt {
-      stringFormatter.toSmartIri(iri, requireInternal = true).internalIri
-    }.map(InternalIri(_))
-
-  override def asSmartIri(iri: InternalIri): Task[SmartIri] =
-    ZIO.attempt(stringFormatter.toSmartIri(iri.value, requireInternal = true))
-
-  override def getOntologyIriFromClassIri(iri: InternalIri): Task[SmartIri] =
-    ZIO.fromTry {
-      Try(stringFormatter.toSmartIri(iri.value, requireInternal = true))
-        .flatMap(smartIri => Try(smartIri.getOntologyFromEntity))
-    }
+final case class IriConverterLive(sf: StringFormatter) extends IriConverter {
+  override def asInternalSmartIri(iri: IRI): Task[SmartIri] = ZIO.attempt(sf.toInternalSmartIri(iri))
+  override def asSmartIri(iri: IRI): Task[SmartIri]         = ZIO.attempt(sf.toSmartIri(iri))
 }
 
 object IriConverter {
