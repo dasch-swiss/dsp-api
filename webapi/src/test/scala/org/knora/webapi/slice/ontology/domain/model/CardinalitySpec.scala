@@ -31,20 +31,6 @@ object CardinalitySpec extends ZIOSpecDefault {
         assertTrue(ExactlyOne.toString == "1")
       }
     ),
-    suite("Cardinality to owl property and value")(
-      test("AtLeastOne") {
-        assertTrue(toOwlPropertyAndValue(AtLeastOne) == """owl:minCardinality "1"^^xsd:nonNegativeInteger""")
-      },
-      test("ExactlyOne") {
-        assertTrue(toOwlPropertyAndValue(ExactlyOne) == """owl:cardinality "1"^^xsd:nonNegativeInteger""")
-      },
-      test("ZeroOrOne") {
-        assertTrue(toOwlPropertyAndValue(ZeroOrOne) == """owl:maxCardinality "1"^^xsd:nonNegativeInteger""")
-      },
-      test("Unbounded") {
-        assertTrue(toOwlPropertyAndValue(Unbounded) == """owl:minCardinality "0"^^xsd:nonNegativeInteger""")
-      }
-    ),
     suite("Cardinality isStricter")(
       test("Same cardinality is never stricter") {
         check(cardinalityGen)(c => assertTrue(!c.isStricter(c)))
