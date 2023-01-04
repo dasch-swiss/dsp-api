@@ -6,9 +6,9 @@ import zio.ZLayer
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.responders.ActorToZioBridge
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
+import org.knora.webapi.responders.ActorToZioBridge
 
 final case class RestProjectsService(bridge: ActorToZioBridge) {
 
