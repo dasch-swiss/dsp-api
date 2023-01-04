@@ -24,9 +24,9 @@ object OntologyCacheFake {
     } yield OntologyCacheFake(ref)
   }
 
-  val empty =
+  val emptyData: OntologyCacheData =
     OntologyCacheData(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Set.empty)
 
-  val emptyCache: ZLayer[Any, Nothing, OntologyCacheFake] = withCache(empty)
+  val emptyCache: ZLayer[Any, Nothing, OntologyCacheFake] = withCache(emptyData)
 
 }
