@@ -33,7 +33,7 @@ final case class ProjectsRouteZ(
 
   private def getProjectByIriEncoded(iriUrlEncoded: String): Task[Response] =
     RouteUtilZ
-      .urlDecode(iriUrlEncoded, "Failed to url decode IRI parameter.")
+      .urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       .flatMap(projectsService.getSingleProjectADMRequest(_).map(_.toJsValue.toString()))
       .map(Response.json(_))
 
