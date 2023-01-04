@@ -17,10 +17,10 @@ object ActorDepsTest {
 
   val stub: ULayer[ActorDeps] = ZLayer.succeed {
     class StubActor extends Actor {
-      def receive = println(_)
+      def receive: Receive = println(_)
     }
     val system = ActorSystem("test-system")
-    val ref    = system.actorOf(Props[StubActor], "stub-actor")
+    val ref    = system.actorOf(Props[StubActor](), "stub-actor")
     ActorDeps(system, ref, 5.seconds)
   }
 }
