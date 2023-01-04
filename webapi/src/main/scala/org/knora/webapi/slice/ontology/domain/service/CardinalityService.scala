@@ -145,7 +145,6 @@ final case class CardinalityServiceLive(
     propertyIri: InternalIri,
     newCardinality: Cardinality
   ): Task[Boolean] = {
-    val foo = ""
     for {
       propSmartIri        <- iriConverter.asSmartIri(propertyIri)
       classInfoMaybe      <- ontologyRepo.findClassBy(classIri)

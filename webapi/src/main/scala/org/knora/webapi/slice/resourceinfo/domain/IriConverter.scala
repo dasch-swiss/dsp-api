@@ -16,10 +16,12 @@ import org.knora.webapi.messages.StringFormatter
 
 @accessible
 trait IriConverter {
-  def asInternalIri(iri: IRI): Task[InternalIri]           = asSmartIri(iri).mapAttempt(_.toInternalIri)
-  def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)
   def asInternalSmartIri(iri: String): Task[SmartIri]
   def asSmartIri(iri: IRI): Task[SmartIri]
+
+  def asInternalIri(iri: IRI): Task[InternalIri]           = asSmartIri(iri).mapAttempt(_.toInternalIri)
+  def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)
+
   def getOntologyIriFromClassIri(iri: InternalIri): Task[SmartIri] =
     asInternalSmartIri(iri.value).mapAttempt(_.getOntologyFromEntity)
 }
