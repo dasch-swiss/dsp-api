@@ -16,9 +16,9 @@ object RouteUtilZ {
    *
    * @param value The value in utf-8 to be url decoded
    * @param errorMsg Custom error message for the error type
-   * @return ```success``` the decoded string
+   * @return '''success''' the decoded string
    *
-   *         ```failure``` A [[BadRequestException]] with the `errorMsg`
+   *         '''failure''' A [[BadRequestException]] with the `errorMsg`
    */
   def urlDecode(value: String, errorMsg: String = ""): Task[String] =
     ZIO
