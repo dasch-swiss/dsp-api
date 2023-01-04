@@ -89,47 +89,53 @@ object ProjectRouteZSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Serializable] =
     suite("ProjectsRouteZSpec")(
-      test("given valid project iri should respond with success") {
-        val urlWithValidIri = URL.empty.setPath(basePathIri / validIriUrlEncoded)
-        for {
-          route  <- systemUnderTest
-          actual <- route.apply(Request(url = urlWithValidIri)).flatMap(_.body.asString)
-        } yield assertTrue(actual == expectedResponseSuccess.toJsValue.toString())
-      }.provide(commonLayers, expectMessageToProjectResponderIri),
-      test("given valid project shortname should respond with success") {
-        val urlWithValidShortname = URL.empty.setPath(basePathShortname / validShortname)
-        for {
-          route  <- systemUnderTest
-          actual <- route.apply(Request(url = urlWithValidShortname)).flatMap(_.body.asString)
-        } yield assertTrue(actual == expectedResponseSuccess.toJsValue.toString())
-      }.provide(commonLayers, expectMessageToProjectResponderShortname),
-      test("given valid project shortcode should respond with success") {
-        val urlWithValidShortcode = URL.empty.setPath(basePathShortcode / validShortcode)
-        for {
-          route  <- systemUnderTest
-          actual <- route.apply(Request(url = urlWithValidShortcode)).flatMap(_.body.asString)
-        } yield assertTrue(actual == expectedResponseSuccess.toJsValue.toString())
-      }.provide(commonLayers, expectMessageToProjectResponderShortcode),
-      test("given invalid project iri should respond with bad request") {
-        val urlWithInvalidIri = URL.empty.setPath(basePathIri / "invalid")
-        for {
-          route  <- systemUnderTest
-          actual <- route.apply(Request(url = urlWithInvalidIri)).map(_.status)
-        } yield assertTrue(actual == Status.BadRequest)
-      }.provide(commonLayers, expectNoInteractionWithProjectsResponderADM),
-      test("given invalid project shortname should respond with bad request") {
-        val urlWithInvalidShortname = URL.empty.setPath(basePathShortname / "123")
-        for {
-          route  <- systemUnderTest
-          actual <- route.apply(Request(url = urlWithInvalidShortname)).map(_.status)
-        } yield assertTrue(actual == Status.BadRequest)
-      }.provide(commonLayers, expectNoInteractionWithProjectsResponderADM),
-      test("given invalid project shortcode should respond with bad request") {
-        val urlWithInvalidShortcode = URL.empty.setPath(basePathShortcode / "invalid")
-        for {
-          route  <- systemUnderTest
-          actual <- route.apply(Request(url = urlWithInvalidShortcode)).map(_.status)
-        } yield assertTrue(actual == Status.BadRequest)
-      }.provide(commonLayers, expectNoInteractionWithProjectsResponderADM)
+      suite("get project by IRI")(
+        test("given valid project iri should respond with success") {
+          val urlWithValidIri = URL.empty.setPath(basePathIri / validIriUrlEncoded)
+          for {
+            route  <- systemUnderTest
+            actual <- route.apply(Request(url = urlWithValidIri)).flatMap(_.body.asString)
+          } yield assertTrue(actual == expectedResponseSuccess.toJsValue.toString())
+        }.provide(commonLayers, expectMessageToProjectResponderIri),
+        test("given invalid project iri should respond with bad request") {
+          val urlWithInvalidIri = URL.empty.setPath(basePathIri / "invalid")
+          for {
+            route  <- systemUnderTest
+            actual <- route.apply(Request(url = urlWithInvalidIri)).map(_.status)
+          } yield assertTrue(actual == Status.BadRequest)
+        }.provide(commonLayers, expectNoInteractionWithProjectsResponderADM)
+      ),
+      suite("get project by shortname")(
+        test("given valid project shortname should respond with success") {
+          val urlWithValidShortname = URL.empty.setPath(basePathShortname / validShortname)
+          for {
+            route  <- systemUnderTest
+            actual <- route.apply(Request(url = urlWithValidShortname)).flatMap(_.body.asString)
+          } yield assertTrue(actual == expectedResponseSuccess.toJsValue.toString())
+        }.provide(commonLayers, expectMessageToProjectResponderShortname),
+        test("given invalid project shortname should respond with bad request") {
+          val urlWithInvalidShortname = URL.empty.setPath(basePathShortname / "123")
+          for {
+            route  <- systemUnderTest
+            actual <- route.apply(Request(url = urlWithInvalidShortname)).map(_.status)
+          } yield assertTrue(actual == Status.BadRequest)
+        }.provide(commonLayers, expectNoInteractionWithProjectsResponderADM)
+      ),
+      suite("get project by shortcode")(
+        test("given valid project shortcode should respond with success") {
+          val urlWithValidShortcode = URL.empty.setPath(basePathShortcode / validShortcode)
+          for {
+            route  <- systemUnderTest
+            actual <- route.apply(Request(url = urlWithValidShortcode)).flatMap(_.body.asString)
+          } yield assertTrue(actual == expectedResponseSuccess.toJsValue.toString())
+        }.provide(commonLayers, expectMessageToProjectResponderShortcode),
+        test("given invalid project shortcode should respond with bad request") {
+          val urlWithInvalidShortcode = URL.empty.setPath(basePathShortcode / "invalid")
+          for {
+            route  <- systemUnderTest
+            actual <- route.apply(Request(url = urlWithInvalidShortcode)).map(_.status)
+          } yield assertTrue(actual == Status.BadRequest)
+        }.provide(commonLayers, expectNoInteractionWithProjectsResponderADM)
+      )
     )
 }
