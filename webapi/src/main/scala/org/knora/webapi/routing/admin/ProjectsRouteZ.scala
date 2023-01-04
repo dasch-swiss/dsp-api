@@ -22,6 +22,7 @@ final case class ProjectsRouteZ(
   val route: HttpApp[Any, Nothing] =
     Http
       .collectZIO[Request] {
+        case Method.GET -> !! / "admin" / "projects"                           => getProjects()
         case Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded   => getProjectByIriEncoded(iriUrlEncoded)
         case Method.GET -> !! / "admin" / "projects" / "shortname" / shortname => getProjectByShortname(shortname)
         case Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode => getProjectByShortcode(shortcode)
@@ -30,6 +31,11 @@ final case class ProjectsRouteZ(
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
         case InternalServerException(e)  => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
       }
+
+  private def getProjects(): Task[Response] =
+    for {
+      projectGetResponse <- projectsService.getProjectsADMRequest()
+    } yield Response.json(projectGetResponse.toJsValue.toString())
 
   private def getProjectByIriEncoded(iriUrlEncoded: String): Task[Response] =
     for {

@@ -166,17 +166,14 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
 /**
  * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
- *
- * @param requestingUser       the user making the request.
  */
-case class ProjectsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
+case class ProjectsGetRequestADM() extends ProjectsResponderRequestADM
 
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
  * of [[ProjectGetResponseADM]]. External use.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param requestingUser       the user making the request.
  */
 case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
@@ -212,10 +209,8 @@ case class ProjectAdminMembersGetRequestADM(
 
 /**
  * Returns all unique keywords for all projects.
- *
- * @param requestingUser       the user making the request.
  */
-case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
+case class ProjectsKeywordsGetRequestADM() extends ProjectsResponderRequestADM
 
 /**
  * Returns all keywords for a project identified through IRI.

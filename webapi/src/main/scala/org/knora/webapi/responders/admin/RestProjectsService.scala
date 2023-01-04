@@ -7,8 +7,21 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequ
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 
 final case class RestProjectsService(bridge: ActorToZioBridge) {
+
+  /**
+   * Returns all projects as a [[ProjectsGetResponseADM]].
+   *
+   * @return
+   *     '''success''': information about the projects as a [[ProjectsGetResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
+   */
+  def getProjectsADMRequest(): Task[ProjectsGetResponseADM] =
+    bridge.askAppActor(ProjectsGetRequestADM())
 
   /**
    * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].

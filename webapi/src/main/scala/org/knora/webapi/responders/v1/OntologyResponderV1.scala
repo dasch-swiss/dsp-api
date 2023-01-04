@@ -414,9 +414,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     for {
       projectsResponse <- appActor
                             .ask(
-                              ProjectsGetRequestADM(
-                                requestingUser = userProfile
-                              )
+                              ProjectsGetRequestADM()
                             )
                             .mapTo[ProjectsGetResponseADM]
 
