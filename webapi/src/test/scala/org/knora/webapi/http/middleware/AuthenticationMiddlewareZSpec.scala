@@ -53,7 +53,7 @@ object AuthenticationMiddlewareZSpec extends ZIOSpecDefault {
         resId    <- response.body.asString
       } yield assertTrue(resId == anonymousUser.id)
     },
-    test("should return a different user if valid authentication was provided") {
+    test("should return the requesting user if valid authentication was provided") {
       val middleware = AuthenticationMiddleware(authServiceSome).authenticationMiddleware
       val app        = passUserThroughApp @@ middleware
       for {
