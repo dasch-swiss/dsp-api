@@ -15,7 +15,7 @@ import org.knora.webapi.core.domain.AppState
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-object HealthRouteZ {
+final case class HealthRouteZ() {
 
   val route: HttpApp[State, Nothing] =
     Http.collectZIO[Request] { case Method.GET -> !! / "health" =>
@@ -108,4 +108,8 @@ object HealthRouteZ {
       status = true,
       message = "Application is healthy"
     )
+}
+
+object HealthRouteZ {
+  val layer = ZLayer.succeed(HealthRouteZ())
 }
