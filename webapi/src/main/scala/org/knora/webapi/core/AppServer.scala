@@ -184,7 +184,7 @@ object AppServer {
   val live: ZIO[AppServerEnvironment, Nothing, Unit] =
     for {
       appServer <- AppServer.init()
-      _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true).orElse(ZIO.unit)
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true).orDie
     } yield ()
 
   /**
