@@ -10,7 +10,6 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -151,11 +150,19 @@ final case class CardinalityServiceLive(
     propertyIri: InternalIri,
     newCardinality: Cardinality
   ): Task[Boolean] =
+    doesSuperClassExistWithStricterCardinality(classIri, propertyIri, newCardinality)
+      .map(!_)
+
+  private def doesSuperClassExistWithStricterCardinality(
+    classIri: InternalIri,
+    propertyIri: InternalIri,
+    newCardinality: Cardinality
+  ) =
     for {
       propSmartIri          <- iriConverter.asInternalSmartIri(propertyIri)
       classInfoMaybe        <- ontologyRepo.findClassBy(classIri)
       inheritedCardinalities = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri)).map(Cardinality.get)
-    } yield inheritedCardinalities.forall(!_.isStricterThan(newCardinality))
+    } yield inheritedCardinalities.forall(_.isStricterThan(newCardinality))
 }
 
 object CardinalityService {
