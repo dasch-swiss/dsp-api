@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.http.middleware
 
 import zhttp.http.Http
@@ -13,7 +18,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.admin.AuthenticatorService
 
-object AuthenticationMiddlewareZSpec extends ZIOSpecDefault {
+object AuthenticationMiddlewareSpec extends ZIOSpecDefault {
   private val passUserThroughApp: Http[Any, Nothing, (Request, UserADM), Response] =
     Http.collect[(Request, UserADM)] { case (_, user) => Response.text(user.id) }
 

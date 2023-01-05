@@ -38,11 +38,11 @@ final case class AuthenticationMiddleware(authenticatorService: AuthenticatorSer
     Middleware.codecZIO[Request, Response](
       request =>
         for {
-          ru <-
+          requestingUser <-
             authenticatorService
               .getUser(request)
-              .catchAll(_ => ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
-        } yield (request, ru),
+              .orElseSucceed(KnoraSystemInstances.Users.AnonymousUser)
+        } yield (request, requestingUser),
       out => ZIO.succeed(out)
     )
 }
