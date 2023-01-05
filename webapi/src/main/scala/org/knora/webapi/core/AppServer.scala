@@ -83,12 +83,7 @@ final case class AppServer(
   private def populateOntologyCaches(requiresRepository: Boolean): Task[Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
-      _ <-
-        ar.populateOntologyCaches
-          .tapError(e =>
-            state.set(AppState.FailedToLoadOntologies(s"Failed to load ontologies from triplestore: ${e.getMessage()}"))
-          )
-          .when(requiresRepository)
+      _ <- ar.populateOntologyCaches.when(requiresRepository)
       _ <- state.set(AppState.OntologiesReady)
     } yield ()
 
