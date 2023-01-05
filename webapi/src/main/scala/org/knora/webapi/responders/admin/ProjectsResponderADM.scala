@@ -63,15 +63,14 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   def receive(msg: ProjectsResponderRequestADM) = msg match {
-    case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
-    case ProjectGetADM(identifier)             => getSingleProjectADM(identifier)
-    case ProjectGetRequestADM(identifier)      => getSingleProjectADMRequest(identifier)
+    case ProjectsGetRequestADM()          => projectsGetRequestADM()
+    case ProjectGetADM(identifier)        => getSingleProjectADM(identifier)
+    case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
     case ProjectMembersGetRequestADM(identifier, requestingUser) =>
       projectMembersGetRequestADM(identifier, requestingUser)
     case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
       projectAdminMembersGetRequestADM(identifier, requestingUser)
-    case ProjectsKeywordsGetRequestADM(requestingUser) =>
-      projectsKeywordsGetRequestADM(requestingUser)
+    case ProjectsKeywordsGetRequestADM() => projectsKeywordsGetRequestADM()
     case ProjectKeywordsGetRequestADM(projectIri, requestingUser) =>
       projectKeywordsGetRequestADM(projectIri, requestingUser)
     case ProjectRestrictedViewSettingsGetADM(identifier, requestingUser) =>
@@ -100,12 +99,9 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   /**
    * Gets all the projects and returns them as a sequence containing [[ProjectADM]].
    *
-   * @param requestingUser       the user making the request.
    * @return all the projects as a sequence containing [[ProjectADM]].
    */
-  private def projectsGetADM(
-    requestingUser: UserADM
-  ): Future[Seq[ProjectADM]] =
+  private def projectsGetADM(): Future[Seq[ProjectADM]] =
     for {
       sparqlQueryString <-
         Future(
@@ -121,7 +117,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       projectsResponse <- appActor.ask(request).mapTo[SparqlExtendedConstructResponse]
       projectIris       = projectsResponse.statements.keySet.map(_.toString)
 
-      ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris, requestingUser)
+      ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris)
       projects =
         projectsResponse.statements.toList.map {
           case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
@@ -139,10 +135,9 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * Given a set of project IRIs, gets the ontologies that belong to each project.
    *
    * @param projectIris    a set of project IRIs. If empty, returns the ontologies for all projects.
-   * @param requestingUser the requesting user.
    * @return a map of project IRIs to sequences of ontology IRIs.
    */
-  private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] = {
+  private def getOntologiesForProjects(projectIris: Set[IRI]): Future[Map[IRI, Seq[IRI]]] = {
     def getIriPair(ontology: OntologyMetadataV2) =
       ontology.projectIri.fold(
         throw InconsistentRepositoryDataException(s"Ontology ${ontology.ontologyIri} has no project")
@@ -150,7 +145,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
 
     val request = OntologyMetadataGetByProjectRequestV2(
       projectIris = projectIris.map(_.toSmartIri),
-      requestingUser = requestingUser
+      requestingUser = KnoraSystemInstances.Users.SystemUser
     )
 
     for {
@@ -164,15 +159,12 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   /**
    * Gets all the projects and returns them as a [[ProjectADM]].
    *
-   * @param requestingUser       the user that is making the request.
    * @return all the projects as a [[ProjectADM]].
    * @throws NotFoundException if no projects are found.
    */
-  private def projectsGetRequestADM(
-    requestingUser: UserADM
-  ): Future[ProjectsGetResponseADM] =
+  private def projectsGetRequestADM(): Future[ProjectsGetResponseADM] =
     for {
-      projects <- projectsGetADM(requestingUser = requestingUser)
+      projects <- projectsGetADM()
       result = if (projects.nonEmpty) { ProjectsGetResponseADM(projects = projects) }
                else { throw NotFoundException(s"No projects found") }
     } yield result
@@ -381,16 +373,11 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
    *
-   * @param requestingUser       the user making the request.
    * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
    */
-  private def projectsKeywordsGetRequestADM(
-    requestingUser: UserADM
-  ): Future[ProjectsKeywordsGetResponseADM] =
+  private def projectsKeywordsGetRequestADM(): Future[ProjectsKeywordsGetResponseADM] =
     for {
-      projects <- projectsGetADM(
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                  )
+      projects <- projectsGetADM()
 
       keywords: Seq[String] = projects.flatMap(_.keywords).distinct.sorted
 
@@ -1175,7 +1162,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
 
       ontologies <-
         if (projectResponse.statements.nonEmpty) {
-          getOntologiesForProjects(projectIris, KnoraSystemInstances.Users.SystemUser)
+          getOntologiesForProjects(projectIris)
         } else {
           FastFuture.successful(Map.empty[IRI, Seq[IRI]])
         }

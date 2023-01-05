@@ -74,17 +74,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def getProjects(): Route = path(projectsBasePath) {
     get { requestContext =>
       log.info("All projects requested.")
-      val requestMessage: Future[ProjectsGetRequestADM] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
-      } yield ProjectsGetRequestADM(
-        requestingUser = requestingUser
-      )
-
       RouteUtilADM.runJsonRoute(
-        requestMessageF = requestMessage,
+        requestMessageF = FastFuture.successful(ProjectsGetRequestADM()),
         requestContext = requestContext,
         appActor = appActor,
         log = log
@@ -137,17 +128,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   private def getKeywords(): Route = path(projectsBasePath / "Keywords") {
     get { requestContext =>
-      val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
-      } yield ProjectsKeywordsGetRequestADM(
-        requestingUser = requestingUser
-      )
-
       RouteUtilADM.runJsonRoute(
-        requestMessageF = requestMessage,
+        requestMessageF = FastFuture.successful(ProjectsKeywordsGetRequestADM()),
         requestContext = requestContext,
         appActor = appActor,
         log = log

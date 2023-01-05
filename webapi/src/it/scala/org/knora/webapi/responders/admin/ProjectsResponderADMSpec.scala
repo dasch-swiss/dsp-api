@@ -46,9 +46,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
   "The ProjectsResponderADM" when {
     "used to query for project information" should {
       "return information for every project" in {
-        appActor ! ProjectsGetRequestADM(
-          requestingUser = rootUser
-        )
+        appActor ! ProjectsGetRequestADM()
         val received = expectMsgType[ProjectsGetResponseADM](timeout)
 
         assert(received.projects.contains(SharedTestDataADM.imagesProject))
@@ -648,9 +646,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
     "used to query keywords" should {
 
       "return all unique keywords for all projects" in {
-        appActor ! ProjectsKeywordsGetRequestADM(
-          SharedTestDataADM.rootUser
-        )
+        appActor ! ProjectsKeywordsGetRequestADM()
         val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
         received.keywords.size should be(21)
       }
