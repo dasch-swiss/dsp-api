@@ -35,7 +35,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.KnoraBase
+import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants._
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
 
@@ -54,12 +54,12 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 
   private object IsPropertyUsedInResourcesTestData {
 
-    private val ontologyAnything = "http://www.knora.org/ontology/0001/anything#"
-    private val ontologyBooks    = "http://www.knora.org/ontology/0001/books#"
+    private val ontologyAnything = "http://www.knora.org/ontology/0001/anything"
+    private val ontologyBooks    = "http://www.knora.org/ontology/0001/books"
 
-    val classThing: InternalIri    = InternalIri(s"${ontologyAnything}Thing")
-    val classBook: InternalIri     = InternalIri(s"${ontologyBooks}Book")
-    val classTextBook: InternalIri = InternalIri(s"${ontologyBooks}Textbook")
+    val classThing: InternalIri    = InternalIri(s"${ontologyAnything}#Thing")
+    val classBook: InternalIri     = InternalIri(s"${ontologyBooks}#Book")
+    val classTextBook: InternalIri = InternalIri(s"${ontologyBooks}#Textbook")
     val turtle: String =
       s"""
          |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -80,9 +80,58 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
   }
 
   private object CanWidenCardinalityTestData {
+    object Gens {
+      case class TestIris(
+        ontologyIri: InternalIri,
+        classIri: InternalIri,
+        subClassIri: InternalIri,
+        propertyIri: InternalIri
+      )
+
+      val knoraOntologiesGen: Gen[Any, TestIris] = Gen.fromZIO {
+        val values = Array(
+          (KnoraBase.Ontology, KnoraBase.Class.Resource, KnoraBase.Class.Annotation, KnoraBase.Property.isDeleted),
+          (
+            KnoraAdmin.Ontology,
+            KnoraAdmin.Class.Permission,
+            KnoraAdmin.Class.AdministrativePermission,
+            KnoraAdmin.Property.belongsToProject
+          )
+        )
+        Random
+          .nextIntBounded(values.length)
+          .map(values(_))
+          .map(iris => TestIris(iris._1, iris._2, iris._3, iris._4))
+      }
+    }
+
+    private val sf: StringFormatter = { StringFormatter.initForTest(); StringFormatter.getGeneralInstance }
+
     case class DataCreated(subclass: InternalIri, property: InternalIri, data: OntologyCacheData)
 
     def makeOntologyTestData(cardinality: Cardinality): DataCreated = {
+      val ontologyIri: InternalIri = InternalIri("http://www.knora.org/ontology/0001/anything")
+      makeOntologyTestData(
+        cardinality = cardinality,
+        propertyIri = InternalIri(s"${ontologyIri.value}#aProperty"),
+        subClassIri = InternalIri(s"${ontologyIri.value}#aSubClass"),
+        classIri = InternalIri(s"${ontologyIri.value}#aClass"),
+        ontologyIri = ontologyIri
+      )
+    }
+
+    def makeOntologyTestData(
+      cardinality: Cardinality,
+      ontologyIri: InternalIri,
+      classIri: InternalIri,
+      subClassIri: InternalIri,
+      propertyIri: InternalIri
+    ) = {
+      val anOntologySmartIri: SmartIri = sf.toSmartIri(ontologyIri.value).toOntologySchema(InternalSchema)
+      val aClassSmartIri: SmartIri     = sf.toSmartIri(classIri.value).toOntologySchema(InternalSchema)
+      val aSubClassSmartIri: SmartIri  = sf.toSmartIri(subClassIri.value).toOntologySchema(InternalSchema)
+      val aPropertySmartIri: SmartIri  = sf.toSmartIri(propertyIri.value).toOntologySchema(InternalSchema)
+
       val propertyCardinality = makePropertyCardinality(aPropertySmartIri, cardinality)
       val classInfo           = makeClassInfoContent(aClassSmartIri, directCardinalities = propertyCardinality)
       val subClassInfo = makeClassInfoContent(
@@ -125,13 +174,6 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       OntologyCacheFake.emptyData.copy(ontologies =
         Map(ontologyIri -> ReadOntologyV2(OntologyMetadataV2(ontologyIri), classes = classes.toMap))
       )
-
-    private val sf: StringFormatter = { StringFormatter.initForTest(); StringFormatter.getGeneralInstance }
-    private val anOntologySmartIri: SmartIri =
-      sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2").toOntologySchema(InternalSchema)
-    private val aClassSmartIri: SmartIri    = anOntologySmartIri.makeEntityIri("aClass")
-    private val aSubClassSmartIri: SmartIri = anOntologySmartIri.makeEntityIri("aSubClass")
-    private val aPropertySmartIri: SmartIri = anOntologySmartIri.makeEntityIri("aProperty")
   }
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService with OntologyCacheFake](
@@ -177,6 +219,23 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
         }
       ).provide(commonLayers, datasetLayerFromTurtle(IsPropertyUsedInResourcesTestData.turtle)),
       suite("canSetCardinality")(
+        test("Any class/property of the Knora admin or base ontologies may never be changed") {
+          check(CanWidenCardinalityTestData.Gens.knoraOntologiesGen) { iris =>
+            check(cardinalitiesGen()) { cardinality =>
+              val d = CanWidenCardinalityTestData.makeOntologyTestData(
+                cardinality,
+                iris.ontologyIri,
+                iris.classIri,
+                iris.subClassIri,
+                iris.propertyIri
+              )
+              for {
+                _      <- OntologyCacheFake.set(d.data)
+                actual <- CardinalityService.canSetCardinality(iris.classIri, iris.propertyIri, cardinality)
+              } yield assertTrue(!actual)
+            }
+          }
+        },
         suite(s"Given 'ExactlyOne $ExactlyOne' Cardinality on super class property")(
           test(
             s"""

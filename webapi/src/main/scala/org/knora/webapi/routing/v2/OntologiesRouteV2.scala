@@ -430,7 +430,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def canReplaceCardinalities(): Route =
+  private def canReplaceCardinalities(): Route = {
+    // GET basePath/{iriEncode}
+    // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIriStr: IRI =>
       get { requestContext =>
         val classIri = classIriStr.toSmartIri
@@ -461,6 +463,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         )
       }
     }
+  }
 
   // Replaces all cardinalities with what was sent. Deleting means send empty
   // replace request.

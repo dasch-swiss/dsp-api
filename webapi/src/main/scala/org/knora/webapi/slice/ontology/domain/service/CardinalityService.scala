@@ -40,8 +40,9 @@ trait CardinalityService {
    * @param newCardinality the newly desired cardinality
    * @return
    *    '''success''' a [[Boolean]] indicating whether a class's cardinalities can be widen.
+   *                  Returns false for setting Cardinalities KnoraBase and KnoraAdmin Permission is not possible
    *
-   *    '''error''' a [[Throwable]] indicating that something went wrong
+   *    '''error''' a [[Throwable]] indicating that something went wrong,
    */
   def canSetCardinality(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality): Task[Boolean]
 
@@ -150,8 +151,15 @@ final case class CardinalityServiceLive(
     propertyIri: InternalIri,
     newCardinality: Cardinality
   ): Task[Boolean] =
-    doesSuperClassExistWithStricterCardinality(classIri, propertyIri, newCardinality)
-      .map(!_)
+    ZIO.ifZIO(isNotPartOfKnoraOntology(classIri))(
+      onTrue = doesSuperClassExistWithStricterCardinality(classIri, propertyIri, newCardinality).map(!_),
+      onFalse = ZIO.succeed(false)
+    )
+
+  private def isNotPartOfKnoraOntology(someIri: InternalIri): Task[Boolean] =
+    iriConverter.getOntologyIriFromClassIri(someIri).map(_.toIri).map { iri =>
+      !(iri == "http://www.knora.org/ontology/knora-base" || iri == "http://www.knora.org/ontology/knora-admin")
+    }
 
   private def doesSuperClassExistWithStricterCardinality(
     classIri: InternalIri,
