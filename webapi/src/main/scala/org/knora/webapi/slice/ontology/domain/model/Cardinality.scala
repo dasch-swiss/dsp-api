@@ -18,11 +18,12 @@ sealed trait Cardinality {
 
   val oldCardinality: OldCardinality
 
-  def isStricterThan(other: Cardinality): Boolean = (other.min, other.max) match {
-    case (otherMin, _) if otherMin < this.min => true
-    case (_, otherMax) if this.max.nonEmpty   => otherMax.forall(_ > this.max.get)
-    case _                                    => false
-  }
+  def isStricterThan(other: Cardinality): Boolean =
+    (other.min, this.min, other.max, this.max) match {
+      case (otherMin, thisMin, _, _) if otherMin < thisMin => true
+      case (_, _, otherMax, Some(thisMax))                 => otherMax.forall(_ > thisMax)
+      case _                                               => false
+    }
 
   override def toString: String = (min, max) match {
     case (min, None)      => s"$min-n"
