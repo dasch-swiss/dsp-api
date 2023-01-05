@@ -27,9 +27,10 @@ case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, 
   private implicit val ec: ExecutionContext = actorDeps.executionContext
 
   private val authCookieName = Authenticator.calculateCookieName(appConfig)
+
   override def getUser(request: Request): Task[UserADM] =
     ZIO
-      .succeed(extractCredentialsFromRequest(request, authCookieName))
+      .attempt(extractCredentialsFromRequest(request, authCookieName))
       .flatMap(credentials => ZIO.fromFuture(_ => Authenticator.getUserADMThroughCredentialsV2(credentials, appConfig)))
 }
 
