@@ -16,7 +16,7 @@ import org.knora.webapi.messages.StringFormatter
 
 @accessible
 trait IriConverter {
-  def asInternalSmartIri(iri: String): Task[SmartIri]
+  def asInternalSmartIri(iri: IRI): Task[SmartIri]
   def asSmartIri(iri: IRI): Task[SmartIri]
 
   def asInternalIri(iri: IRI): Task[InternalIri]           = asSmartIri(iri).mapAttempt(_.toInternalIri)
