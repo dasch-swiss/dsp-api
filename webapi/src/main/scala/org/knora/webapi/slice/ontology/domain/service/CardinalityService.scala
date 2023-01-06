@@ -23,6 +23,7 @@ import org.knora.webapi.queries.sparql._
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -39,12 +40,15 @@ trait CardinalityService {
    * @param propertyIri property to check
    * @param newCardinality the newly desired cardinality
    * @return
-   *    '''success''' a [[Boolean]] indicating whether a class's cardinalities can be widen.
-   *                  Returns false for setting Cardinalities KnoraBase and KnoraAdmin Permission is not possible
+   *    '''success''' a [[CanSetCardinalityCheckResult]] indicating whether a class's cardinalities can be set.
    *
    *    '''error''' a [[Throwable]] indicating that something went wrong,
    */
-  def canSetCardinality(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality): Task[Boolean]
+  def canSetCardinality(
+    classIri: InternalIri,
+    propertyIri: InternalIri,
+    newCardinality: Cardinality
+  ): Task[CanSetCardinalityCheckResult]
 
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
@@ -87,6 +91,31 @@ trait CardinalityService {
    * @return a [[Boolean]] denoting if the property entity is used.
    */
   def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean]
+}
+
+object CanSetCardinalityCheckResult {
+
+  sealed trait CanSetCardinalityCheckResult {
+    def isSuccess: Boolean
+  }
+
+  val success: CanSetCardinalityCheckResult                            = CheckSuccess()
+  val failureSuperClassExists: CanSetCardinalityCheckResult            = SuperClassCheckFailure()
+  val failureImmutableKnoraOntologyWrite: CanSetCardinalityCheckResult = KnoraOntologyCheckFailure()
+
+  private abstract class CheckFailure() extends CanSetCardinalityCheckResult {
+    val isSuccess: Boolean = false
+    def reason: String
+  }
+  final case class SuperClassCheckFailure() extends CheckFailure {
+    override val reason: String = "A super class exists which is more restrictive"
+  }
+  final case class KnoraOntologyCheckFailure() extends CheckFailure {
+    override val reason: String = "Ontologies knora-admin and knora-base cannot be changed"
+  }
+  final case class CheckSuccess() extends CanSetCardinalityCheckResult {
+    override val isSuccess: Boolean = true
+  }
 }
 
 final case class CardinalityServiceLive(
@@ -150,15 +179,18 @@ final case class CardinalityServiceLive(
     classIri: InternalIri,
     propertyIri: InternalIri,
     newCardinality: Cardinality
-  ): Task[Boolean] =
-    ZIO.ifZIO(isNotPartOfKnoraOntology(classIri))(
-      onTrue = doesSuperClassExistWithStricterCardinality(classIri, propertyIri, newCardinality).map(!_),
-      onFalse = ZIO.succeed(false)
+  ): Task[CanSetCardinalityCheckResult] =
+    ZIO.ifZIO(isPartOfKnoraOntology(classIri))(
+      onTrue = ZIO.succeed(CanSetCardinalityCheckResult.failureImmutableKnoraOntologyWrite),
+      onFalse = doesSuperClassExistWithStricterCardinality(classIri, propertyIri, newCardinality).map {
+        case false => CanSetCardinalityCheckResult.success
+        case true  => CanSetCardinalityCheckResult.failureSuperClassExists
+      }
     )
 
-  private def isNotPartOfKnoraOntology(someIri: InternalIri): Task[Boolean] =
+  private def isPartOfKnoraOntology(someIri: InternalIri): Task[Boolean] =
     iriConverter.getOntologyIriFromClassIri(someIri).map(_.toIri).map { iri =>
-      !(iri == "http://www.knora.org/ontology/knora-base" || iri == "http://www.knora.org/ontology/knora-admin")
+      iri == "http://www.knora.org/ontology/knora-base" || iri == "http://www.knora.org/ontology/knora-admin"
     }
 
   private def doesSuperClassExistWithStricterCardinality(
@@ -171,6 +203,7 @@ final case class CardinalityServiceLive(
       classInfoMaybe        <- ontologyRepo.findClassBy(classIri)
       inheritedCardinalities = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri)).map(Cardinality.get)
     } yield inheritedCardinalities.forall(_.isStricterThan(newCardinality))
+
 }
 
 object CardinalityService {
