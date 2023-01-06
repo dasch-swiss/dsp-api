@@ -3,12 +3,11 @@ import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import zio.IO
 import zio.Task
-import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
+import zio.macros.accessible
 
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -16,24 +15,41 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-case class RestCardinalityService(
+@accessible
+trait RestCardinalityService {
+  def canSetCardinality(
+    classIri: String,
+    propertyIri: String,
+    cardinality: String,
+    user: UserADM
+  ): Task[CanDoResponseV2]
+}
+
+private final case class PermissionService(ontologyRepo: OntologyRepo) {
+  def hasOntologyWriteAccess(user: UserADM, ontologyIri: InternalIri): Task[Boolean] = {
+    val permissions = user.permissions
+    for {
+      data           <- ontologyRepo.findOntologyBy(ontologyIri)
+      projectIriMaybe = data.flatMap(_.ontologyMetadata.projectIri.map(_.toIri))
+      hasPermission   = projectIriMaybe.exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
+    } yield hasPermission
+  }
+}
+
+case class RestCardinalityServiceLive(
   cardinalityService: CardinalityService,
   iriConverter: IriConverter,
   ontologyRepo: OntologyRepo
-) {
-  private val permissionService: PermissionService = PermissionService(ontologyRepo)
-  private final case class PermissionService(ontologyRepo: OntologyRepo) {
-    def hasOntologyWriteAccess(requestingUser: UserADM, ontologyIri: InternalIri): Task[Boolean] = {
-      val userPermissions = requestingUser.permissions
-      for {
-        data           <- ontologyRepo.findOntologyBy(ontologyIri)
-        projectIriMaybe = data.flatMap(_.ontologyMetadata.projectIri.map(_.toIri))
-        hasPermission   = projectIriMaybe.exists(userPermissions.isSystemAdmin || userPermissions.isProjectAdmin(_))
-      } yield hasPermission
-    }
-  }
+) extends RestCardinalityService {
 
-  def canSetCardinality(classIri: IRI, propertyIri: IRI, cardinality: String, user: UserADM): Task[CanDoResponseV2] =
+  private val permissionService: PermissionService = PermissionService(ontologyRepo)
+
+  def canSetCardinality(
+    classIri: String,
+    propertyIri: String,
+    cardinality: String,
+    user: UserADM
+  ): Task[CanDoResponseV2] =
     for {
       classIri       <- iriConverter.asInternalIri(classIri).orElseFail(BadRequestException("Invalid classIri"))
       _              <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
@@ -58,6 +74,6 @@ case class RestCardinalityService(
 }
 
 object RestCardinalityService {
-  val layer: URLayer[CardinalityService with IriConverter with OntologyRepo, RestCardinalityService] =
-    ZLayer.fromFunction(RestCardinalityService.apply _)
+  val layer: ZLayer[CardinalityService with IriConverter with OntologyRepo, Nothing, RestCardinalityService] =
+    ZLayer.fromFunction(RestCardinalityServiceLive.apply _)
 }

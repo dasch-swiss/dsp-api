@@ -2113,7 +2113,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
       val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-      DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData).makeRoute)
+      DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData, null).makeRoute)
       val auth = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it

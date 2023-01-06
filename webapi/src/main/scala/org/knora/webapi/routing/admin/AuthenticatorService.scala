@@ -8,13 +8,19 @@ package org.knora.webapi.routing.admin
 import zhttp.http._
 import zio.Task
 import zio.ZLayer
+import zio.macros.accessible
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.ActorDeps
 
+@accessible
 trait AuthenticatorService {
   def getUser(request: Request): Task[UserADM]
 }
 
 object AuthenticatorService {
-  val layer = ZLayer.fromFunction(AuthenticatorServiceLive(_, _, _))
+  val layer: ZLayer[ActorDeps with AppConfig with StringFormatter, Nothing, AuthenticatorServiceLive] =
+    ZLayer.fromFunction(AuthenticatorServiceLive(_, _, _))
 }

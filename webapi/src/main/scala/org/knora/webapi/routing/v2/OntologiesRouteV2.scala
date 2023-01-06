@@ -7,12 +7,11 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import zio.prelude.Validation
-
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -21,6 +20,8 @@ import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
+import zio.ZIO
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -36,11 +37,15 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
  */
-class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runtime[RestCardinalityService])
+    extends KnoraRoute(routeData)
+    with Authenticator {
 
   val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
 
@@ -430,40 +435,36 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def canReplaceCardinalities(): Route = {
+  private def getQueryParamsMap(requestContext: RequestContext): Map[String, String] =
+    requestContext.request.uri.query().toMap
+  private def getStringQueryParam(requestContext: RequestContext, key: String): Option[String] =
+    getQueryParamsMap(requestContext).get(key)
+  private def canReplaceCardinalities(): Route =
     // GET basePath/{iriEncode}
     // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIriStr: IRI =>
       get { requestContext =>
-        val classIri = classIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(classIri)
-
-        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
-        }
-
-        val requestMessageFuture: Future[CanChangeCardinalitiesRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-        } yield CanChangeCardinalitiesRequestV2(
-          classIri = classIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        val propertyIriMaybe = ZIO
+          .fromOption(getStringQueryParam(requestContext, "propertyIri"))
+          .orElseFail(BadRequestException("propertyIri is required"))
+        val newCardinalityMaybe = ZIO
+          .fromOption(getStringQueryParam(requestContext, "newCardinality"))
+          .orElseFail(BadRequestException("newCardinality is required"))
+        val responseZio = for {
+          propertyIri    <- propertyIriMaybe
+          newCardinality <- newCardinalityMaybe
+          user           <- ZIO.fromFuture(_ => getUserADM(requestContext, routeData.appConfig))
+          response       <- RestCardinalityService.canSetCardinality(classIriStr, propertyIri, newCardinality, user)
+        } yield response
+        RouteUtilV2.completeResponse(
+          UnsafeZioRun.runToFuture(responseZio),
+          requestContext,
+          routeData.appConfig,
+          ApiV2Complex,
+          RouteUtilV2.getSchemaOptions(requestContext)
         )
       }
     }
-  }
 
   // Replaces all cardinalities with what was sent. Deleting means send empty
   // replace request.
