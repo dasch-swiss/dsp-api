@@ -23,7 +23,10 @@ import org.knora.webapi.queries.sparql._
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.BaseClassCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CheckSuccess
+import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.KnoraOntologyCheckFailure
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -98,22 +101,17 @@ object CanSetCardinalityCheckResult {
   sealed trait CanSetCardinalityCheckResult {
     def isSuccess: Boolean
   }
-
-  val success: CanSetCardinalityCheckResult                            = CheckSuccess()
-  val failureSuperClassExists: CanSetCardinalityCheckResult            = SuperClassCheckFailure()
-  val failureImmutableKnoraOntologyWrite: CanSetCardinalityCheckResult = KnoraOntologyCheckFailure()
-
   abstract class CheckFailure() extends CanSetCardinalityCheckResult {
     val isSuccess: Boolean = false
     def reason: String
   }
-  final case class SuperClassCheckFailure() extends CheckFailure {
-    override val reason: String = "A super class exists which is more restrictive"
+  final case object BaseClassCheckFailure extends CheckFailure {
+    override val reason: String = "A base class exists which is more restrictive"
   }
-  final case class KnoraOntologyCheckFailure() extends CheckFailure {
-    override val reason: String = "Ontologies knora-admin and knora-base cannot be changed"
+  final case object KnoraOntologyCheckFailure extends CheckFailure {
+    override val reason: String = "Ontologies 'knora-admin' and 'knora-base' cannot be changed"
   }
-  final case class CheckSuccess() extends CanSetCardinalityCheckResult {
+  final case object CheckSuccess extends CanSetCardinalityCheckResult {
     override val isSuccess: Boolean = true
   }
 }
@@ -181,10 +179,10 @@ final case class CardinalityServiceLive(
     newCardinality: Cardinality
   ): Task[CanSetCardinalityCheckResult] =
     ZIO.ifZIO(isPartOfKnoraOntology(classIri))(
-      onTrue = ZIO.succeed(CanSetCardinalityCheckResult.failureImmutableKnoraOntologyWrite),
+      onTrue = ZIO.succeed(KnoraOntologyCheckFailure),
       onFalse = doesSuperClassExistWithStricterCardinality(classIri, propertyIri, newCardinality).map {
-        case false => CanSetCardinalityCheckResult.success
-        case true  => CanSetCardinalityCheckResult.failureSuperClassExists
+        case false => CheckSuccess
+        case true  => BaseClassCheckFailure
       }
     )
 
