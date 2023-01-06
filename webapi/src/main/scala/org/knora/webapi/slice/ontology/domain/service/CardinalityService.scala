@@ -106,10 +106,10 @@ object CanSetCardinalityCheckResult {
     def reason: String
   }
   final case object BaseClassCheckFailure extends CheckFailure {
-    override val reason: String = "A base class exists which is more restrictive"
+    override val reason: String = "A base class exists which is more restrictive."
   }
   final case object KnoraOntologyCheckFailure extends CheckFailure {
-    override val reason: String = "Ontologies 'knora-admin' and 'knora-base' cannot be changed"
+    override val reason: String = "Ontologies 'knora-admin' and 'knora-base' cannot be changed."
   }
   final case object CheckSuccess extends CanSetCardinalityCheckResult {
     override val isSuccess: Boolean = true
@@ -186,8 +186,8 @@ final case class CardinalityServiceLive(
       }
     )
 
-  private def isPartOfKnoraOntology(someIri: InternalIri): Task[Boolean] =
-    iriConverter.getOntologyIriFromClassIri(someIri).map(_.toIri).map { iri =>
+  private def isPartOfKnoraOntology(classIri: InternalIri): Task[Boolean] =
+    iriConverter.getOntologyIriFromClassIri(classIri).map(_.toIri).map { iri =>
       iri == "http://www.knora.org/ontology/knora-base" || iri == "http://www.knora.org/ontology/knora-admin"
     }
 
