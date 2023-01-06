@@ -103,7 +103,7 @@ object CanSetCardinalityCheckResult {
   val failureSuperClassExists: CanSetCardinalityCheckResult            = SuperClassCheckFailure()
   val failureImmutableKnoraOntologyWrite: CanSetCardinalityCheckResult = KnoraOntologyCheckFailure()
 
-  private abstract class CheckFailure() extends CanSetCardinalityCheckResult {
+  abstract class CheckFailure() extends CanSetCardinalityCheckResult {
     val isSuccess: Boolean = false
     def reason: String
   }
