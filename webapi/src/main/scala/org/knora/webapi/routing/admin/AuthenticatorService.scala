@@ -11,8 +11,8 @@ import zio.ZLayer
 import zio.macros.accessible
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.responders.ActorDeps
 
 @accessible

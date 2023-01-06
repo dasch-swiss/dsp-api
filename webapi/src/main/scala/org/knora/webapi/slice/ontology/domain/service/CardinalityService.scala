@@ -10,6 +10,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -186,7 +187,7 @@ final case class CardinalityServiceLive(
       }
     )
 
-  private val knoraAdminAndBaseOntologies= Seq(
+  private val knoraAdminAndBaseOntologies = Seq(
     "http://www.knora.org/ontology/knora-base",
     "http://www.knora.org/ontology/knora-admin"
   ).map(InternalIri)

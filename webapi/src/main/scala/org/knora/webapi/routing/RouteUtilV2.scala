@@ -6,19 +6,20 @@
 package org.knora.webapi.routing
 
 import akka.actor.ActorRef
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
+
 import dsp.errors.BadRequestException
 import dsp.errors.UnexpectedMessageException
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._

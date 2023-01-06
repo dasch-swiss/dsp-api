@@ -1,16 +1,16 @@
 package org.knora.webapi.slice.ontology.api.service
-import dsp.errors.BadRequestException
-import dsp.errors.ForbiddenException
 import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
 
-import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter

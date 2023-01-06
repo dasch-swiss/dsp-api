@@ -9,9 +9,12 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
+import zio.ZIO
 import zio.prelude.Validation
+
 import java.util.UUID
 import scala.concurrent.Future
+
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -20,8 +23,6 @@ import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
-import zio.ZIO
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
