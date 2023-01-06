@@ -186,10 +186,13 @@ final case class CardinalityServiceLive(
       }
     )
 
+  private val knoraAdminAndBaseOntologies= Seq(
+    "http://www.knora.org/ontology/knora-base",
+    "http://www.knora.org/ontology/knora-admin"
+  ).map(InternalIri)
+
   private def isPartOfKnoraOntology(classIri: InternalIri): Task[Boolean] =
-    iriConverter.getOntologyIriFromClassIri(classIri).map(_.toIri).map { iri =>
-      iri == "http://www.knora.org/ontology/knora-base" || iri == "http://www.knora.org/ontology/knora-admin"
-    }
+    iriConverter.getOntologyIriFromClassIri(classIri).map(knoraAdminAndBaseOntologies.contains)
 
   private def doesSuperClassExistWithStricterCardinality(
     classIri: InternalIri,

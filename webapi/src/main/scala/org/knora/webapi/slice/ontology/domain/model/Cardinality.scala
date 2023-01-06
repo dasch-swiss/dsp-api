@@ -61,4 +61,6 @@ object Cardinality {
   def get(cardinalityInfo: KnoraCardinalityInfo): Cardinality = get(cardinalityInfo.cardinality)
   def get(cardinality: OldCardinality): Cardinality =
     allCardinalities.find(_.oldCardinality == cardinality).getOrElse(throw new IllegalStateException)
+
+  def fromString(str: String): Option[Cardinality] = allCardinalities.find(_.toString == str)
 }

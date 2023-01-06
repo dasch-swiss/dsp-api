@@ -21,8 +21,9 @@ trait IriConverter {
 
   def asInternalIri(iri: IRI): Task[InternalIri]           = asSmartIri(iri).mapAttempt(_.toInternalIri)
   def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)
-
-  def getOntologyIriFromClassIri(iri: InternalIri): Task[SmartIri] =
+  def getOntologyIriFromClassIri(iri: InternalIri): Task[InternalIri] =
+    getOntologySmartIriFromClassIri(iri).mapAttempt(_.toInternalIri)
+  def getOntologySmartIriFromClassIri(iri: InternalIri): Task[SmartIri] =
     asInternalSmartIri(iri.value).mapAttempt(_.getOntologyFromEntity)
 }
 
