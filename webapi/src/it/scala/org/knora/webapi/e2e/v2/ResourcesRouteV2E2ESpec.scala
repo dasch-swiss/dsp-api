@@ -21,15 +21,14 @@ import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.JsValue
 import spray.json.JsonParser
-
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import dsp.errors.AssertionException
+
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.InstanceChecker
@@ -2113,7 +2112,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
       val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-      DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData, null).makeRoute)
+      DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData, runtime).makeRoute)
       val auth = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it

@@ -54,6 +54,7 @@ object LayersLive {
       with IIIFService
       with JWTService
       with RepositoryUpdater
+      with RestResourceInfoService
       with RestCardinalityService
       with State
       with TriplestoreServiceManager
