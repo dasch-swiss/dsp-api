@@ -10,7 +10,6 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -102,19 +101,17 @@ object CanSetCardinalityCheckResult {
   sealed trait CanSetCardinalityCheckResult {
     def isSuccess: Boolean
   }
-  abstract class CheckFailure() extends CanSetCardinalityCheckResult {
-    val isSuccess: Boolean = false
-    def reason: String
-  }
-  final case object BaseClassCheckFailure extends CheckFailure {
-    override val reason: String = "A base class exists which is more restrictive."
-  }
-  final case object KnoraOntologyCheckFailure extends CheckFailure {
-    override val reason: String = "Ontologies 'knora-admin' and 'knora-base' cannot be changed."
-  }
   final case object CheckSuccess extends CanSetCardinalityCheckResult {
     override val isSuccess: Boolean = true
   }
+  abstract class CheckFailure(final val reason: String) extends CanSetCardinalityCheckResult {
+    override final val isSuccess: Boolean = false
+  }
+
+  final case object BaseClassCheckFailure
+      extends CheckFailure(reason = "A base class exists which is more restrictive.")
+  final case object KnoraOntologyCheckFailure
+      extends CheckFailure(reason = "Ontologies 'knora-admin' and 'knora-base' cannot be changed.")
 }
 
 final case class CardinalityServiceLive(
