@@ -14,7 +14,7 @@ import zio.metrics.connectors.prometheus
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.instrumentation.health.HealthApp
+import org.knora.webapi.instrumentation.health.HealthRouteZ
 import org.knora.webapi.instrumentation.index.IndexApp
 import org.knora.webapi.instrumentation.prometheus.PrometheusApp
 
@@ -23,7 +23,7 @@ object InstrumentationHttpServer {
   private val routes =
     for {
       index      <- ZIO.service[IndexApp].map(_.route)
-      health     <- ZIO.service[HealthApp].map(_.route)
+      health     <- ZIO.service[HealthRouteZ].map(_.route)
       prometheus <- ZIO.service[PrometheusApp].map(_.route)
     } yield index ++ health ++ prometheus
 
@@ -43,7 +43,7 @@ object InstrumentationHttpServer {
           .provideSome[AppConfig with State](
             // HttpApp implementation layers
             IndexApp.layer,
-            HealthApp.layer,
+            HealthRouteZ.layer,
             PrometheusApp.layer,
 
             // Metrics config

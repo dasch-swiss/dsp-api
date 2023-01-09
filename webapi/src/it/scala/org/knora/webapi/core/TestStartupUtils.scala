@@ -31,7 +31,7 @@ trait TestStartupUtils extends LazyLogging {
       _         <- ZIO.logInfo("... loading test data done.")
       _         <- ZIO.logInfo("Loading ontologies into cache started ...")
       appRouter <- ZIO.service[AppRouter]
-      _         <- appRouter.populateOntologyCaches
+      _         <- appRouter.populateOntologyCaches.orDie
       _         <- ZIO.logInfo("... loading ontologies into cache done.")
     } yield ()
 
