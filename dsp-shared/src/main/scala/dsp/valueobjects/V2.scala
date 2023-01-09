@@ -7,6 +7,7 @@ package dsp.valueobjects
 
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import org.apache.commons.lang3.StringUtils
+import zio.json._
 
 import java.nio.ByteBuffer
 import java.util.Base64
@@ -27,6 +28,16 @@ object V2 {
    * @param language the language iso.
    */
   case class StringLiteralV2(value: String, language: Option[String])
+  object StringLiteralV2 {
+    // implicit val decoder: JsonDecoder[StringLiteralV2] = JsonDecoder[(String, Option[String])].mapOrFail {
+    //   case (value, language) =>
+    //     StringLiteralV2(value, language).toEitherWith(e => e.head.getMessage())
+    // }
+    // implicit val encoder: JsonEncoder[StringLiteralV2] =
+    //   JsonEncoder[String].contramap((shortName: StringLiteralV2) => shortName.value)
+
+    implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
+  }
 }
 
 object V2IriValidation {
