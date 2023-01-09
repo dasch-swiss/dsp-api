@@ -106,6 +106,12 @@ object Iri {
    */
   sealed abstract case class ProjectIri private (value: String) extends Iri
   object ProjectIri { self =>
+    implicit val decoder: JsonDecoder[ProjectIri] = JsonDecoder[String].mapOrFail { case value =>
+      ProjectIri.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[ProjectIri] =
+      JsonEncoder[String].contramap((projectIri: ProjectIri) => projectIri.value)
+
     def make(value: String): Validation[ValidationException, ProjectIri] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))

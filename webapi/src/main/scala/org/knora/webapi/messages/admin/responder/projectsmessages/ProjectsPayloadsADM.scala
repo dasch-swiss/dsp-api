@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
+import zio.json._
+
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 
@@ -22,3 +24,7 @@ final case class ProjectCreatePayloadADM(
   status: ProjectStatus,
   selfjoin: ProjectSelfJoin
 )
+
+object ProjectCreatePayloadADM {
+  implicit val codec: JsonCodec[ProjectCreatePayloadADM] = DeriveJsonCodec.gen[ProjectCreatePayloadADM]
+}
