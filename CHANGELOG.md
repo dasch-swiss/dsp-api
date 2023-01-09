@@ -1,5 +1,55 @@
 # Changelog
 
+## [26.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v25.0.0...v26.0.0) (2023-01-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* return external representation of ontology IRIs in admin routes (#2330)
+
+### Bug Fixes
+
+* return external representation of ontology IRIs in admin routes ([#2330](https://www.github.com/dasch-swiss/dsp-api/issues/2330)) ([b58828a](https://www.github.com/dasch-swiss/dsp-api/commit/b58828a7557c24aac3cfa88101f4b12ed8d474ff))
+
+
+### Documentation
+
+* update admin documentation ([#2328](https://www.github.com/dasch-swiss/dsp-api/issues/2328)) ([cedb603](https://www.github.com/dasch-swiss/dsp-api/commit/cedb603f57ceb31acf4ca88052b12c9641e7c954))
+
+
+### Maintenance
+
+* Add BEOL exception to UUID validation (DEV-1570) ([#2349](https://www.github.com/dasch-swiss/dsp-api/issues/2349)) ([ed34df1](https://www.github.com/dasch-swiss/dsp-api/commit/ed34df105f29d7c64e468d17f7c6066e7650c631))
+* add docker healthcheck to SIPI image (INFRA-130) ([#2359](https://www.github.com/dasch-swiss/dsp-api/issues/2359)) ([8554e3b](https://www.github.com/dasch-swiss/dsp-api/commit/8554e3b06c5a87267a8d61b9f732477484e119c0))
+* Add dorny/test-reporter for webapi test results DEV-1544 ([#2322](https://www.github.com/dasch-swiss/dsp-api/issues/2322)) ([5c76338](https://www.github.com/dasch-swiss/dsp-api/commit/5c76338f8b3799c6c3c9dc10807fabd10d4f8c6e))
+* add metrics endpoint (DEV-1555) ([#2331](https://www.github.com/dasch-swiss/dsp-api/issues/2331)) ([b06f5b4](https://www.github.com/dasch-swiss/dsp-api/commit/b06f5b4631c5c748d87adb94655dd4cc3db11e22))
+* Add sbt-header plugin to webapi project and add missing headers ([#2317](https://www.github.com/dasch-swiss/dsp-api/issues/2317)) ([afec4a7](https://www.github.com/dasch-swiss/dsp-api/commit/afec4a74f14355599f00058c01fcd4a86a53258d))
+* add stack-without-app target ([#2324](https://www.github.com/dasch-swiss/dsp-api/issues/2324)) ([5ec3223](https://www.github.com/dasch-swiss/dsp-api/commit/5ec32236505daab1ed22941854ae00ee6f8c0065))
+* Add test report generation for integration tests (DEV-1544) ([#2325](https://www.github.com/dasch-swiss/dsp-api/issues/2325)) ([a61f227](https://www.github.com/dasch-swiss/dsp-api/commit/a61f227ad86a38db3122430edfe8377864ae5eef))
+* Extract common code from responders into EntityAndClassIriS… ([#2348](https://www.github.com/dasch-swiss/dsp-api/issues/2348)) ([238ed71](https://www.github.com/dasch-swiss/dsp-api/commit/238ed712567be4c86ad0f0885a5d1e5d53c8e3bf))
+* make it possible to debug integration tests with sbt or IDE ([#2327](https://www.github.com/dasch-swiss/dsp-api/issues/2327)) ([3a222bb](https://www.github.com/dasch-swiss/dsp-api/commit/3a222bb265e2fc064bef1b6404c2bff4a9097c8b))
+* refactor project route for ZIO HTTP ([#2338](https://www.github.com/dasch-swiss/dsp-api/issues/2338)) ([e5be1db](https://www.github.com/dasch-swiss/dsp-api/commit/e5be1db9ad85647872b6d93b47a298ee85997a1f))
+* remove methods that gets project and members by UUID ([#2346](https://www.github.com/dasch-swiss/dsp-api/issues/2346)) ([2c8da6c](https://www.github.com/dasch-swiss/dsp-api/commit/2c8da6c6ce1c16dda209a248912cc15de36adffb))
+* remove PR2255 plugin and revert project IRIs (DEV-1571) ([#2350](https://www.github.com/dasch-swiss/dsp-api/issues/2350)) ([86a19ab](https://www.github.com/dasch-swiss/dsp-api/commit/86a19ab19c625289a757a2a0555c67e8582532c6))
+* remove Redis cache implementation leftovers (DEV-1503) ([#2290](https://www.github.com/dasch-swiss/dsp-api/issues/2290)) ([a678dc5](https://www.github.com/dasch-swiss/dsp-api/commit/a678dc5ceaf84a4a60e8a2eb4d3ba299d20cdcc7))
+* Remove unused dependency to gatling ([#2361](https://www.github.com/dasch-swiss/dsp-api/issues/2361)) ([baca8a8](https://www.github.com/dasch-swiss/dsp-api/commit/baca8a8d009d500a59c633608960d3e6a11ae4c9))
+* remove unused route GET /admin/stores ([#2329](https://www.github.com/dasch-swiss/dsp-api/issues/2329)) ([1e11655](https://www.github.com/dasch-swiss/dsp-api/commit/1e116559df4013dec346f681e7d6acf1ccd63dc2))
+* replace Spray-JSON with ZIO-JSON in health route ([#2360](https://www.github.com/dasch-swiss/dsp-api/issues/2360)) ([1b8e74b](https://www.github.com/dasch-swiss/dsp-api/commit/1b8e74b3d81105ca726f315d059c3b424c65ae0c))
+* simplify health route setup ([#2337](https://www.github.com/dasch-swiss/dsp-api/issues/2337)) ([26e9596](https://www.github.com/dasch-swiss/dsp-api/commit/26e95960e37bd34c1c56152d5c1fc08672c11dcf))
+* Simplify layer setup for integration-tests and reduce to two layers ([#2339](https://www.github.com/dasch-swiss/dsp-api/issues/2339)) ([94836e8](https://www.github.com/dasch-swiss/dsp-api/commit/94836e88b90193a0cdde8fc96a174ead3398be12))
+* Split long running integration tests and fast unit tests (DEV-1537) ([#2315](https://www.github.com/dasch-swiss/dsp-api/issues/2315)) ([5b4d601](https://www.github.com/dasch-swiss/dsp-api/commit/5b4d60146a98008132f28da1ea63c40023b239d2))
+* update dependencies ([#2347](https://www.github.com/dasch-swiss/dsp-api/issues/2347)) ([560b84f](https://www.github.com/dasch-swiss/dsp-api/commit/560b84f8c65d98dccfc2545c6b8d5fcfc5c4efe9))
+* update dependencies ([#2358](https://www.github.com/dasch-swiss/dsp-api/issues/2358)) ([6007266](https://www.github.com/dasch-swiss/dsp-api/commit/6007266dc35423cd257825568b8bb1cb00774fce))
+* upgrade Apache Jena Fuseki docker image to v2.0.11 (DEV-1299) ([#2362](https://www.github.com/dasch-swiss/dsp-api/issues/2362)) ([c91d284](https://www.github.com/dasch-swiss/dsp-api/commit/c91d28403e879c183505bd1490a60cbdab79cb43))
+
+
+### Enhancements
+
+* Add resources/info endpoint (DEV-792) ([#2309](https://www.github.com/dasch-swiss/dsp-api/issues/2309)) ([c3f96a9](https://www.github.com/dasch-swiss/dsp-api/commit/c3f96a92651d5b32dee4fdebc11e871c212a88e9))
+* expose GET /admin/projects as ZIO HTTP route ([#2366](https://www.github.com/dasch-swiss/dsp-api/issues/2366)) ([b19f81c](https://www.github.com/dasch-swiss/dsp-api/commit/b19f81c2ac896b26f18e53ec236881877ba721ea))
+* expose GET /admin/projects/[shortname | shortcode]/{shortname | shortcode} as ZIO HTTP routes ([#2365](https://www.github.com/dasch-swiss/dsp-api/issues/2365)) ([9907cdf](https://www.github.com/dasch-swiss/dsp-api/commit/9907cdf6d2ec18bfffb206ae93200c4e781c9885))
+* Expose GET /admin/projects/iri/{iriUrlEncoded} as zio-http route ([#2355](https://www.github.com/dasch-swiss/dsp-api/issues/2355)) ([2f42906](https://www.github.com/dasch-swiss/dsp-api/commit/2f42906387f3f0775b3c4e797e8a3959d34dcc84))
+
 ## [25.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.8...v25.0.0) (2022-12-02)
 
 
