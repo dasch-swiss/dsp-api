@@ -17,24 +17,32 @@ import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
+import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.responders.admin.RestProjectsService
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.routing.RouteUtilZ
 
 final case class ProjectsRouteZ(
   appConfig: AppConfig,
-  projectsService: RestProjectsService
+  projectsService: ProjectsService,
+  authenticationMiddleware: AuthenticationMiddleware
 ) {
 
-  val route: HttpApp[Any, Nothing] =
+  lazy val route: Http[Any, Nothing, Request, Response] =
+    projectRoutes @@ authenticationMiddleware.authenticationMiddleware
+
+  private val projectRoutes =
     Http
-      .collectZIO[Request] {
-        case Method.GET -> !! / "admin" / "projects"                           => getProjects()
-        case Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded   => getProjectByIriEncoded(iriUrlEncoded)
-        case Method.GET -> !! / "admin" / "projects" / "shortname" / shortname => getProjectByShortname(shortname)
-        case Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode => getProjectByShortcode(shortcode)
-        case request @ Method.POST -> !! / "admin" / "projects"                => createProject(request)
+      .collectZIO[(Request, UserADM)] {
+        case (Method.GET -> !! / "admin" / "projects", _) => getProjects()
+        case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, _) =>
+          getProjectByIriEncoded(iriUrlEncoded)
+        case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname, _) => getProjectByShortname(shortname)
+        case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode, _) => getProjectByShortcode(shortcode)
+        case (request @ Method.POST -> !! / "admin" / "projects", requestingUser) =>
+          createProject(request, requestingUser)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -65,29 +73,15 @@ final case class ProjectsRouteZ(
       projectGetResponse  <- projectsService.getSingleProjectADMRequest(identifier = shortcodeIdentifier)
     } yield Response.json(projectGetResponse.toJsValue.toString)
 
-  private def createProject(request: Request): Task[Response] =
+  private def createProject(request: Request, requestingUser: UserADM): Task[Response] =
     for {
       body                  <- request.body.asString
       payload               <- ZIO.fromEither(body.fromJson[ProjectCreatePayloadADM]).mapError(e => new BadRequestException(e))
-      projectCreateResponse <- projectsService.createProjectADMRequest(payload)
+      projectCreateResponse <- projectsService.createProjectADMRequest(payload, requestingUser)
     } yield Response.json(projectCreateResponse.toJsValue.toString)
 }
 
-final case class CreateProjectPayload(
-  shortcode: String,
-  shortname: String,
-  description: String,
-  keywords: List[String],
-  status: Boolean,
-  selfjoin: Boolean,
-  longname: Option[String],
-  logo: Option[String]
-)
-
-object CreateProjectPayload {
-  implicit val codec: JsonCodec[CreateProjectPayload] = DeriveJsonCodec.gen[CreateProjectPayload]
-}
-
 object ProjectsRouteZ {
-  val layer: URLayer[AppConfig with RestProjectsService, ProjectsRouteZ] = ZLayer.fromFunction(ProjectsRouteZ.apply _)
+  val layer: URLayer[AppConfig with ProjectsService with AuthenticationMiddleware, ProjectsRouteZ] =
+    ZLayer.fromFunction(ProjectsRouteZ.apply _)
 }

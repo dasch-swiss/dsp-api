@@ -2,11 +2,7 @@ package org.knora.webapi.responders
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import zio.Tag
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
+import zio._
 
 import org.knora.webapi.messages.ResponderRequest
 

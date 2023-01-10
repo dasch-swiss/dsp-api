@@ -18,7 +18,7 @@ import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.admin.AuthenticatorServiceLive.extractCredentialsFromRequest
 
-case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, stringFormatter: StringFormatter)
+final case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, stringFormatter: StringFormatter)
     extends AuthenticatorService {
   private implicit val sf: StringFormatter  = stringFormatter
   private implicit val system: ActorSystem  = actorDeps.system
