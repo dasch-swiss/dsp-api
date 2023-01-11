@@ -11,15 +11,16 @@ import zio.mock.Expectation
 import zio.test.ZIOSpecDefault
 import zio.test._
 
+import java.net.URLEncoder
+
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.http.middleware.AuthenticationMiddleware
-import java.net.URLEncoder
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
