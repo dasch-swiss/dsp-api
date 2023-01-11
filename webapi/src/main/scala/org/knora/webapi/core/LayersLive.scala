@@ -32,6 +32,7 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import dsp.util.UuidGeneratorLive
 
 object LayersLive {
 
@@ -84,6 +85,7 @@ object LayersLive {
       State.layer,
       StringFormatter.live,
       TriplestoreServiceHttpConnectorImpl.layer,
-      TriplestoreServiceManager.layer
+      TriplestoreServiceManager.layer,
+      UuidGeneratorLive.layer
     )
 }
