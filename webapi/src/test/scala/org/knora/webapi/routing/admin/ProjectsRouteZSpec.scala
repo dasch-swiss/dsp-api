@@ -8,20 +8,27 @@ package org.knora.webapi.routing.admin
 import zhttp.http._
 import zio._
 import zio.mock.Expectation
+import zio.prelude.Validation
 import zio.test.ZIOSpecDefault
 import zio.test._
 
 import java.net.URLEncoder
 
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.Project._
+import dsp.valueobjects.V2
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
@@ -402,7 +409,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     .provideSome[ProjectsService](
       AppConfig.test,
       AuthenticationMiddleware.layer,
-      AuthenticatorService.mock(),
+      AuthenticatorService.mock(Some(KnoraSystemInstances.Users.SystemUser)),
       ProjectsRouteZ.layer
     )
 
@@ -410,12 +417,54 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
   def spec = suite("ProjectsRouteZ")(
     getProjectsSpec,
-    getSingleProjectSpec
+    getSingleProjectSpec,
+    createProjectSpec
   )
+
+  val createProjectSpec = test("create a project") {
+    val projectCreatePayloadString =
+      """|{
+         |  "shortname": "newproject",
+         |  "shortcode": "3333",
+         |  "longname": "project longname",
+         |  "description": [{"value": "project description", "language": "en"}],
+         |  "keywords": ["test project"],
+         |  "status": true,
+         |  "selfjoin": false
+         |}
+         |""".stripMargin
+    val body    = Body.fromString(projectCreatePayloadString)
+    val request = Request(url = URL(basePathProjects), method = Method.POST, body = body)
+    val user    = KnoraSystemInstances.Users.SystemUser
+    val projectCreatePayload: ProjectCreatePayloadADM =
+      Validation
+        .validateWith(
+          ProjectIri.make(None),
+          ShortName.make("newproject"),
+          ShortCode.make("3333"),
+          Name.make(Some("project longname")),
+          ProjectDescription.make(Seq(V2.StringLiteralV2("project description", Some("en")))),
+          Keywords.make(Seq("test project")),
+          Logo.make(None),
+          ProjectStatus.make(true),
+          ProjectSelfJoin.make(false)
+        )(ProjectCreatePayloadADM.apply)
+        .getOrElse(throw new Exception("Invalid Payload"))
+    val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
+    val mockService = ProjectsServiceMock
+      .CreateProject(
+        assertion = Assertion.equalTo((projectCreatePayload, user)),
+        result = expectedResult
+      )
+      .toLayer
+    for {
+      _ <- applyRoutes(request).provide(mockService)
+    } yield assertTrue(true)
+  }
 
   val getProjectsSpec = test("get all projects") {
     val request        = Request(url = URL(basePathProjects))
-    val expectedResult = Expectation.value[ProjectsGetResponseADM](ProjectsGetResponseADM(Seq(getProjectADM("..."))))
+    val expectedResult = Expectation.value[ProjectsGetResponseADM](ProjectsGetResponseADM(Seq(getProjectADM())))
     val mockService    = ProjectsServiceMock.GetProjects(expectedResult).toLayer
     for {
       response <- applyRoutes(request).provide(mockService)
