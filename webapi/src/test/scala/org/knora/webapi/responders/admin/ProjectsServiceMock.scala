@@ -27,7 +27,7 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
         proxy <- ZIO.service[Proxy]
       } yield new ProjectsService {
         def getProjectsADMRequest(): Task[ProjectsGetResponseADM] =
-          proxy(GetProjects, ())
+          proxy(GetProjects)
 
         def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
           proxy(GetSingleProject, identifier)

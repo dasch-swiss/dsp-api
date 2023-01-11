@@ -21,8 +21,17 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
+
+  /**
+   * Paths
+   */
+  private val basePathProjects: Path          = !! / "admin" / "projects"
+  private val basePathProjectsIri: Path       = !! / "admin" / "projects" / "iri"
+  private val basePathProjectsShortname: Path = !! / "admin" / "projects" / "shortname"
+  private val basePathProjectsShortcode: Path = !! / "admin" / "projects" / "shortcode"
 
   // private val systemUnderTest: URIO[ProjectsRouteZ, HttpApp[Any, Nothing]] = ZIO.service[ProjectsRouteZ].map(_.route)
 
@@ -38,14 +47,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   //     AuthenticationMiddleware.layer,
   //     AuthenticatorService.mock(KnoraSystemInstances.Users.AnonymousUser)
   //   )
-
-  /**
-   * Paths
-   */
-  private val basePathProjects: Path          = !! / "admin" / "projects"
-  private val basePathProjectsIri: Path       = !! / "admin" / "projects" / "iri"
-  private val basePathProjectsShortname: Path = !! / "admin" / "projects" / "shortname"
-  private val basePathProjectsShortcode: Path = !! / "admin" / "projects" / "shortcode"
 
   /**
    * Test data and values used by multiple tests
@@ -375,6 +376,9 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   //     } yield assertTrue(responseString == expectation)
   //   }
 
+  /**
+   * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
+   */
   private def getProjectADM(id: String = "") =
     ProjectADM(
       id = id,
@@ -388,7 +392,12 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       status = true,
       selfjoin = false
     )
-  def applyRoutes(request: Request) = ZIO
+
+  /**
+   * Returns a ZIO effect that requires a [[ProjectsService]] (so that a mock can be provided) that applies the
+   * provided [[Request]] to the `routes` of a [[ProjectsRouteZ]], returning a [[Response]].
+   */
+  private def applyRoutes(request: Request): ZIO[ProjectsService, Option[Nothing], Response] = ZIO
     .serviceWithZIO[ProjectsRouteZ](_.route.apply(request))
     .provideSome[ProjectsService](
       AppConfig.test,
@@ -397,42 +406,81 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       ProjectsRouteZ.layer
     )
 
+  private def encode(iri: String) = URLEncoder.encode(iri, "utf-8")
+
   def spec = suite("ProjectsRouteZ")(
     getProjectsSpec,
     getSingleProjectSpec
   )
 
   val getProjectsSpec = test("get all projects") {
-    assertTrue(true)
-  }
-
-  val getProjectByIriSpec = test("get a project by IRI") {
-    val iri = "http://rdfh.ch/projects/0001"
-    val identifierIri: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
-      .fromString(iri)
-      .getOrElse(throw new Exception("Invalid IRI"))
-    val validIriUrlEncoded: String = URLEncoder.encode(iri, "utf-8")
-    val url                        = URL.empty.setPath(basePathProjectsIri / validIriUrlEncoded)
-    val request                    = Request(url = url)
-
-    val mockService: ULayer[ProjectsService] = ProjectsServiceMock
-      .GetSingleProject(
-        assertion = Assertion.equalTo(identifierIri),
-        result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-          ProjectGetResponseADM(getProjectADM(id.valueAsString))
-        )
-      )
-      .toLayer
-
+    val request        = Request(url = URL(basePathProjects))
+    val expectedResult = Expectation.value[ProjectsGetResponseADM](ProjectsGetResponseADM(Seq(getProjectADM("..."))))
+    val mockService    = ProjectsServiceMock.GetProjects(expectedResult).toLayer
     for {
       response <- applyRoutes(request).provide(mockService)
       body     <- response.body.asString
-      _         = println(body)
     } yield assertTrue(true)
   }
 
-  val getSingleProjectSpec = suite("get a single project by identifier")(
-    getProjectByIriSpec
-  )
-
+  val getSingleProjectSpec =
+    suite("get a single project by identifier")(
+      test("get a project by IRI") {
+        val iri = "http://rdfh.ch/projects/0001"
+        val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
+          .fromString(iri)
+          .getOrElse(throw new Exception("Invalid IRI"))
+        val request = Request(url = URL(basePathProjectsIri / encode(iri)))
+        val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+          .GetSingleProject(
+            assertion = Assertion.equalTo(identifier),
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
+              ProjectGetResponseADM(getProjectADM(id.valueAsString))
+            )
+          )
+          .toLayer
+        for {
+          response <- applyRoutes(request).provide(mockService)
+          body     <- response.body.asString
+        } yield assertTrue(body.contains(iri))
+      },
+      test("get a project by shortcode") {
+        val shortcode = "0001"
+        val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
+          .fromString(shortcode)
+          .getOrElse(throw new Exception("Invalid Shortcode"))
+        val request = Request(url = URL(basePathProjectsShortcode / shortcode))
+        val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+          .GetSingleProject(
+            assertion = Assertion.equalTo(identifier),
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
+              ProjectGetResponseADM(getProjectADM(id.valueAsString))
+            )
+          )
+          .toLayer
+        for {
+          response <- applyRoutes(request).provide(mockService)
+          body     <- response.body.asString
+        } yield assertTrue(body.contains(shortcode))
+      },
+      test("get a project by shortname") {
+        val shortname = "someProject"
+        val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortnameIdentifier
+          .fromString(shortname)
+          .getOrElse(throw new Exception("Invalid Shortname"))
+        val request = Request(url = URL(basePathProjectsShortname / shortname))
+        val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+          .GetSingleProject(
+            assertion = Assertion.equalTo(identifier),
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
+              ProjectGetResponseADM(getProjectADM(id.valueAsString))
+            )
+          )
+          .toLayer
+        for {
+          response <- applyRoutes(request).provide(mockService)
+          body     <- response.body.asString
+        } yield assertTrue(body.contains(shortname))
+      }
+    )
 }
