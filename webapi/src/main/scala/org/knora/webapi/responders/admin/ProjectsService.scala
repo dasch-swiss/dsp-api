@@ -7,10 +7,10 @@ package org.knora.webapi.responders.admin
 
 import zio._
 
+import dsp.util.UuidGenerator
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ActorToZioBridge
-import dsp.util.UuidGenerator
 
 trait ProjectsService {
   def getProjectsADMRequest(): Task[ProjectsGetResponseADM]

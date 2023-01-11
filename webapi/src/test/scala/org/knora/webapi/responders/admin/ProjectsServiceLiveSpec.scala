@@ -10,6 +10,9 @@ import zio.mock._
 import zio.prelude.Validation
 import zio.test._
 
+import java.util.UUID
+
+import dsp.util.UuidGenerator
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project.ShortCode
 import dsp.valueobjects.Project._
@@ -28,8 +31,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.ActorToZioBridgeMock
 import org.knora.webapi.responders.admin.ProjectsService
-import dsp.util.UuidGenerator
-import java.util.UUID
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
