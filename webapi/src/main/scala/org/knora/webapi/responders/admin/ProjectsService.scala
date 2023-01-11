@@ -6,8 +6,8 @@ import java.util.UUID
 
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.responders.ActorToZioBridge
 
 trait ProjectsService {
   def getProjectsADMRequest(): Task[ProjectsGetResponseADM]
