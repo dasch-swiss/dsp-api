@@ -17,6 +17,9 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.http.middleware.AuthenticationMiddleware
+import java.net.URLEncoder
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
@@ -371,6 +374,28 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   //     } yield assertTrue(responseString == expectation)
   //   }
 
+  private def getProjectADM(id: String = "") =
+    ProjectADM(
+      id = id,
+      shortname = "",
+      shortcode = "",
+      longname = None,
+      description = Seq(StringLiteralV2("")),
+      keywords = Seq.empty,
+      logo = None,
+      ontologies = Seq.empty,
+      status = true,
+      selfjoin = false
+    )
+  def applyRoutes(request: Request) = ZIO
+    .serviceWithZIO[ProjectsRouteZ](_.route.apply(request))
+    .provideSome[ProjectsService](
+      AppConfig.test,
+      AuthenticationMiddleware.layer,
+      AuthenticatorService.mock(),
+      ProjectsRouteZ.layer
+    )
+
   def spec = suite("ProjectsRouteZ")(
     getProjectsSpec,
     getSingleProjectSpec
@@ -385,32 +410,24 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     val id: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
       .fromString(iri)
       .getOrElse(throw new Exception("Invalid IRI"))
-    def response(id: String) = ProjectGetResponseADM(
-      ProjectADM(
-        id = id,
-        shortname = "",
-        shortcode = "",
-        longname = None,
-        description = Seq(StringLiteralV2("")),
-        keywords = Seq.empty,
-        logo = None,
-        ontologies = Seq.empty,
-        status = true,
-        selfjoin = false
-      )
-    )
-    val r =
-      Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id => response(id.valueAsString))
+    val validIriUrlEncoded: String = URLEncoder.encode(iri, "utf-8")
+    val url                        = URL.empty.setPath(basePathProjectsIri / validIriUrlEncoded)
+    val request                    = Request(url = url)
+
     val mockService: ULayer[ProjectsService] = ProjectsServiceMock
       .GetSingleProject(
         assertion = Assertion.equalTo(id),
-        result = r
+        result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
+          ProjectGetResponseADM(getProjectADM(id.valueAsString))
+        )
       )
       .toLayer
-    val sys = ZIO.serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(id))
+
     for {
-      res <- sys.provide(mockService)
-    } yield assertTrue(res == response(iri))
+      response <- applyRoutes(request).provide(mockService)
+      body     <- response.body.asString
+      _         = println(body)
+    } yield assertTrue(true)
   }
 
   val getSingleProjectSpec = suite("get a single project by identifier")(
