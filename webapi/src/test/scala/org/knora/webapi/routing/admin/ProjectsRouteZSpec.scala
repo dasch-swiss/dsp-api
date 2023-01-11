@@ -407,7 +407,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
   val getProjectByIriSpec = test("get a project by IRI") {
     val iri = "http://rdfh.ch/projects/0001"
-    val id: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
+    val identifierIri: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
       .fromString(iri)
       .getOrElse(throw new Exception("Invalid IRI"))
     val validIriUrlEncoded: String = URLEncoder.encode(iri, "utf-8")
@@ -416,7 +416,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
     val mockService: ULayer[ProjectsService] = ProjectsServiceMock
       .GetSingleProject(
-        assertion = Assertion.equalTo(id),
+        assertion = Assertion.equalTo(identifierIri),
         result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
           ProjectGetResponseADM(getProjectADM(id.valueAsString))
         )

@@ -56,10 +56,8 @@ final case class ProjectsRouteZ(
 
   private def getProjectByIriEncoded(iriUrlEncoded: String): Task[Response] =
     for {
-      iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      // iri        <- IriIdentifier.fromString(iriDecoded + "#foo").toZIO
-      iri <- IriIdentifier.fromString(iriDecoded).toZIO
-      // projectGetResponse <- projectsService.getProjectsADMRequest()
+      iriDecoded         <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iri                <- IriIdentifier.fromString(iriDecoded).toZIO
       projectGetResponse <- projectsService.getSingleProjectADMRequest(identifier = iri)
     } yield Response.json(projectGetResponse.toJsValue.toString)
 
