@@ -30,10 +30,10 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.allCardinalities
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.BaseClassCheckFailure
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CheckSuccess
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.KnoraOntologyCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.BaseClassCheckFailure
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CanSetCheckSuccess
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.KnoraOntologyCheckFailure
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -262,7 +262,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             for {
               _      <- OntologyCacheFake.set(d.data)
               actual <- CardinalityService.canSetCardinality(d.subclass, d.property, ExactlyOne)
-            } yield assertTrue(actual == CheckSuccess)
+            } yield assertTrue(actual == CanSetCheckSuccess)
           }
         ),
         suite(s"Given 'AtLeastOne $AtLeastOne' Cardinality on super class property")(
@@ -290,7 +290,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <- CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
-              } yield assertTrue(actual == CheckSuccess)
+              } yield assertTrue(actual == CanSetCheckSuccess)
             }
           }
         ),
@@ -318,7 +318,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <- CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
-              } yield assertTrue(actual == CheckSuccess)
+              } yield assertTrue(actual == CanSetCheckSuccess)
             }
           }
         ),
@@ -333,7 +333,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             for {
               _      <- OntologyCacheFake.set(d.data)
               actual <- CardinalityService.canSetCardinality(d.subclass, d.property, newCardinality)
-            } yield assertTrue(actual == CheckSuccess)
+            } yield assertTrue(actual == CanSetCheckSuccess)
           }
         }
       ).provide(commonLayers, emptyDataSet)

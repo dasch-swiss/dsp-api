@@ -10,12 +10,12 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.twirl.queries
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
@@ -24,13 +24,15 @@ import org.knora.webapi.queries.sparql._
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.BaseClassCheckFailure
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CheckSuccess
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.KnoraOntologyCheckFailure
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.CanReplaceCheckSuccess
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
 
 @accessible
 trait CardinalityService {
@@ -53,6 +55,19 @@ trait CardinalityService {
     propertyIri: InternalIri,
     newCardinality: Cardinality
   ): Task[CanSetCardinalityCheckResult]
+
+  /**
+   * Check if a specific cardinality may be replaced.
+   *
+   * Replacing an existing cardinality is only possible it is not in use yet.
+   *
+   * @param classIri class to check
+   * @return
+   *    '''success''' a [[CanReplaceCardinalityCheckResult]] indicating whether a class's cardinalities can be replaced.
+   *
+   *    '''error''' a [[Throwable]] indicating that something went wrong.
+   */
+  def canReplaceCardinality(classIri: InternalIri): Task[CanReplaceCardinalityCheckResult]
 
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
@@ -97,24 +112,46 @@ trait CardinalityService {
   def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean]
 }
 
-object CanSetCardinalityCheckResult {
+object ChangeCardinalityCheckResult {
 
-  sealed trait CanSetCardinalityCheckResult {
+  sealed trait ChangeCardinalityCheckResult {
     def isSuccess: Boolean
   }
-  final case object CheckSuccess extends CanSetCardinalityCheckResult {
-    override val isSuccess: Boolean = true
+
+  trait Success extends ChangeCardinalityCheckResult {
+    override final val isSuccess: Boolean = true
   }
-  abstract class CheckFailure(final val reason: String) extends CanSetCardinalityCheckResult {
+  trait Failure extends ChangeCardinalityCheckResult {
     override final val isSuccess: Boolean = false
+    val reason: String
   }
 
-  final case object BaseClassCheckFailure
-      extends CheckFailure(reason = "A base class exists which is more restrictive.")
-  final case object KnoraOntologyCheckFailure
-      extends CheckFailure(reason = "Ontologies 'knora-admin' and 'knora-base' cannot be changed.")
-}
+  abstract class KnoraOntologyCheckFailure extends Failure {
+    override final val reason: String = "A base class exists which is more restrictive."
+  }
 
+  object CanReplaceCardinalityCheckResult {
+    sealed trait CanReplaceCardinalityCheckResult extends ChangeCardinalityCheckResult
+    final case object CanReplaceCheckSuccess      extends Success with CanReplaceCardinalityCheckResult
+    final case object IsInUseCheckFailure extends Failure with CanReplaceCardinalityCheckResult {
+      override val reason: String = "Cardinality is in use"
+    }
+    final case object KnoraOntologyCheckFailure
+        extends ChangeCardinalityCheckResult.KnoraOntologyCheckFailure
+        with CanReplaceCardinalityCheckResult
+  }
+
+  object CanSetCardinalityCheckResult {
+    sealed trait CanSetCardinalityCheckResult extends ChangeCardinalityCheckResult
+    final case object CanSetCheckSuccess      extends Success with CanSetCardinalityCheckResult
+    final case object BaseClassCheckFailure extends Failure with CanSetCardinalityCheckResult {
+      val reason: String = "A base class exists which is more restrictive."
+    }
+    final case object KnoraOntologyCheckFailure
+        extends ChangeCardinalityCheckResult.KnoraOntologyCheckFailure
+        with CanSetCardinalityCheckResult
+  }
+}
 final case class CardinalityServiceLive(
   private val actorDeps: ActorDeps,
   private val stringFormatter: StringFormatter,
@@ -178,10 +215,10 @@ final case class CardinalityServiceLive(
     newCardinality: Cardinality
   ): Task[CanSetCardinalityCheckResult] =
     ZIO.ifZIO(isPartOfKnoraOntology(classIri))(
-      onTrue = ZIO.succeed(KnoraOntologyCheckFailure),
+      onTrue = ZIO.succeed(CanSetCardinalityCheckResult.KnoraOntologyCheckFailure),
       onFalse = doesSuperClassExistWithStricterCardinality(classIri, propertyIri, newCardinality).map {
-        case false => CheckSuccess
-        case true  => BaseClassCheckFailure
+        case false => CanSetCardinalityCheckResult.CanSetCheckSuccess
+        case true  => CanSetCardinalityCheckResult.BaseClassCheckFailure
       }
     )
 
@@ -204,6 +241,36 @@ final case class CardinalityServiceLive(
       inheritedCardinalities = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri)).map(Cardinality.get)
     } yield inheritedCardinalities.forall(_.isStricterThan(newCardinality))
 
+  /**
+   * Check if a specific cardinality may be replaced.
+   *
+   * Replacing an existing cardinality on a class is only possible if it is not in use.
+   *
+   * @param classIri class to check
+   * @return
+   *    '''success''' a [[CanSetCardinalityCheckResult]] indicating whether a class's cardinalities can be set.
+   *
+   *    '''error''' a [[Throwable]] indicating that something went wrong,
+   */
+  override def canReplaceCardinality(classIri: InternalIri): Task[CanReplaceCardinalityCheckResult] = {
+    val doCheck: Task[CanReplaceCardinalityCheckResult] = {
+      // ignoreKnoraConstraints: It is OK if a property refers to the class
+      // via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+      val query = queries.sparql.v2.txt.isEntityUsed(classIri, ignoreKnoraConstraints = true)
+      tripleStore
+        .sparqlHttpSelect(query.toString())
+        .map(_.results.bindings)
+        .map {
+          case seq if seq.isEmpty => CanReplaceCheckSuccess
+          case _                  => IsInUseCheckFailure
+        }
+    }
+
+    ZIO.ifZIO(isPartOfKnoraOntology(classIri))(
+      onTrue = ZIO.succeed(CanReplaceCardinalityCheckResult.KnoraOntologyCheckFailure),
+      onFalse = doCheck
+    )
+  }
 }
 
 object CardinalityService {

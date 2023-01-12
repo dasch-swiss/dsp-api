@@ -9,22 +9,24 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CheckFailure
-import org.knora.webapi.slice.ontology.domain.service.CanSetCardinalityCheckResult.CheckSuccess
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.ChangeCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 @accessible
 trait RestCardinalityService {
+
+  def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2]
+
   def canSetCardinality(
     classIri: String,
     propertyIri: String,
@@ -52,6 +54,24 @@ case class RestCardinalityServiceLive(
 
   private val permissionService: PermissionService = PermissionService(ontologyRepo)
 
+  def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2] =
+    for {
+      classIri <- iriConverter.asInternalIri(classIri).orElseFail(BadRequestException("Invalid classIri"))
+      _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
+      result   <- cardinalityService.canReplaceCardinality(classIri)
+    } yield toResponse(result)
+
+  private def checkUserHasWriteAccessToOntologyOfClass(user: UserADM, classIri: InternalIri): Task[Unit] = {
+    val hasWriteAccess = for {
+      ontologyIri    <- iriConverter.getOntologyIriFromClassIri(classIri)
+      hasWriteAccess <- permissionService.hasOntologyWriteAccess(user, ontologyIri)
+    } yield hasWriteAccess
+    ZIO.ifZIO(hasWriteAccess)(
+      onTrue = ZIO.unit,
+      onFalse = ZIO.fail(ForbiddenException(s"User has no access to ontology"))
+    )
+  }
+
   def canSetCardinality(
     classIri: String,
     propertyIri: String,
@@ -66,23 +86,12 @@ case class RestCardinalityServiceLive(
       result         <- cardinalityService.canSetCardinality(classIri, propertyIri, newCardinality)
     } yield toResponse(result)
 
-  private def checkUserHasWriteAccessToOntologyOfClass(user: UserADM, classIri: InternalIri): Task[Unit] = {
-    val hasWriteAccess = for {
-      ontologyIri    <- iriConverter.getOntologyIriFromClassIri(classIri)
-      hasWriteAccess <- permissionService.hasOntologyWriteAccess(user, ontologyIri)
-    } yield hasWriteAccess
-    ZIO.ifZIO(hasWriteAccess)(
-      onTrue = ZIO.unit,
-      onFalse = ZIO.fail(ForbiddenException(s"User has no access to ontology"))
-    )
-  }
-
   private def parseCardinality(cardinality: String): IO[Option[Nothing], Cardinality] =
     ZIO.fromOption(Cardinality.fromString(cardinality))
 
-  private def toResponse(result: CanSetCardinalityCheckResult): CanDoResponseV2 = result match {
-    case CheckSuccess          => CanDoResponseV2(canDo = true)
-    case failure: CheckFailure => CanDoResponseV2(canDo = false, Some(failure.reason))
+  private def toResponse(result: ChangeCardinalityCheckResult): CanDoResponseV2 = result match {
+    case _: ChangeCardinalityCheckResult.Success       => CanDoResponseV2(canDo = true)
+    case failure: ChangeCardinalityCheckResult.Failure => CanDoResponseV2(canDo = false, Some(failure.reason))
   }
 }
 
