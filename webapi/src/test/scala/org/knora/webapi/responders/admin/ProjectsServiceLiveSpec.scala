@@ -143,13 +143,13 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
             )(ProjectCreatePayloadADM.apply)
             .getOrElse(throw new Exception("Invalid Payload"))
         val requestingUser = KnoraSystemInstances.Users.SystemUser
+        val projectsService =
+          ZIO
+            .serviceWithZIO[ProjectsService](_.createProjectADMRequest(payload, requestingUser))
+            .provideSome[ActorToZioBridge](layers)
         for {
-          uuid <- ZIO.random.flatMap(_.nextUUID)
-          _    <- TestRandom.feedUUIDs(uuid)
-          projectsService =
-            ZIO
-              .serviceWithZIO[ProjectsService](_.createProjectADMRequest(payload, requestingUser))
-              .provideSome[ActorToZioBridge](layers)
+          uuid   <- ZIO.random.flatMap(_.nextUUID)
+          _      <- TestRandom.feedUUIDs(uuid)
           request = ProjectCreateRequestADM(payload, requestingUser, uuid)
           bridge =
             ActorToZioBridgeMock.AskAppActor
