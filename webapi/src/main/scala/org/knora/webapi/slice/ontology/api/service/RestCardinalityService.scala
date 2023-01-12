@@ -37,7 +37,7 @@ private final case class PermissionService(ontologyRepo: OntologyRepo) {
   def hasOntologyWriteAccess(user: UserADM, ontologyIri: InternalIri): Task[Boolean] = {
     val permissions = user.permissions
     for {
-      data           <- ontologyRepo.findOntologyBy(ontologyIri)
+      data           <- ontologyRepo.findById(ontologyIri)
       projectIriMaybe = data.flatMap(_.ontologyMetadata.projectIri.map(_.toIri))
       hasPermission   = projectIriMaybe.exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
     } yield hasPermission

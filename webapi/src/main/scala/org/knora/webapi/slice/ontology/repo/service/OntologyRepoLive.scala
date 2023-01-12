@@ -18,17 +18,21 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 final case class OntologyRepoLive(private val converter: IriConverter, private val ontologyCache: OntologyCache)
     extends OntologyRepo {
 
-  override def findOntologyBy(iri: InternalIri): Task[Option[ReadOntologyV2]] =
-    converter.asInternalSmartIri(iri).flatMap(findOntologyBy)
+  override def findById(iri: InternalIri): Task[Option[ReadOntologyV2]] =
+    converter.asInternalSmartIri(iri).flatMap(findBySmartIri)
 
-  private def findOntologyBy(ontologyIri: SmartIri): Task[Option[ReadOntologyV2]] =
-    ontologyCache.get.map(_.ontologies.get(ontologyIri))
+  private def findBySmartIri(ontologyIri: SmartIri): Task[Option[ReadOntologyV2]] =
+    getOntologiesMap.map(_.get(ontologyIri))
+
+  private def getOntologiesMap: Task[Map[SmartIri, ReadOntologyV2]] = ontologyCache.get.map(_.ontologies)
 
   override def findClassBy(iri: InternalIri): Task[Option[ReadClassInfoV2]] = for {
     ontologyIri <- converter.getOntologyIriFromClassIri(iri)
-    ontology    <- findOntologyBy(ontologyIri)
+    ontology    <- findById(ontologyIri)
     classIri    <- converter.asInternalSmartIri(iri)
   } yield ontology.flatMap(_.classes.get(classIri))
+
+  override def findAll(): Task[List[ReadOntologyV2]] = getOntologiesMap.map(_.values.toList)
 }
 
 object OntologyRepoLive {

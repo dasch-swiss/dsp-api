@@ -26,7 +26,10 @@ final case class UuidGeneratorLive() extends UuidGenerator {
    *
    * @return a random UUID
    */
-  override def createRandomUuid: UIO[UUID] = ZIO.succeed(UUID.randomUUID())
+  override def createRandomUuid: UIO[UUID] = ZIO.succeed(
+
+
+    UUID.randomUUID())
 }
 object UuidGeneratorLive {
   val layer: ULayer[UuidGeneratorLive] =

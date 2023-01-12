@@ -9,10 +9,13 @@ import zio.macros.accessible
 
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.common.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 @accessible
-trait OntologyRepo {
-  def findOntologyBy(iri: InternalIri): Task[Option[ReadOntologyV2]]
+trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
+
+  override def findById(id: InternalIri): Task[Option[ReadOntologyV2]]
+  override def findAll(): Task[List[ReadOntologyV2]]
   def findClassBy(iri: InternalIri): Task[Option[ReadClassInfoV2]]
 }

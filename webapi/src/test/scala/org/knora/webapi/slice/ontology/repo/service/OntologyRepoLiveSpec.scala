@@ -35,7 +35,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
       suite("findOntologyBy(InternalIri)")(
         test("when searching for unknown iri => return None") {
           for {
-            actual <- OntologyRepo.findOntologyBy(anUnknownInternalOntologyIri)
+            actual <- OntologyRepo.findById(anUnknownInternalOntologyIri)
           } yield assertTrue(actual.isEmpty)
         },
         test("when searching for known iri => return Some(ReadOntology)") {
@@ -43,7 +43,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
           val cacheData    = OntologyCacheFake.emptyData.copy(ontologies = Map(ontologySmartIri -> ontologyData))
           for {
             _      <- OntologyCacheFake.set(cacheData)
-            actual <- OntologyRepo.findOntologyBy(ontologySmartIri.toInternalIri)
+            actual <- OntologyRepo.findById(ontologySmartIri.toInternalIri)
           } yield assertTrue(actual.contains(ontologyData))
         }
       ),
@@ -65,6 +65,21 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
           for {
             actual <- OntologyRepo.findClassBy(anUnknownClassIri)
           } yield assertTrue(actual.isEmpty)
+        }
+      ),
+      suite("findAll()")(
+        test("given cache is Empty => return empty List") {
+          for {
+            actual <- OntologyRepo.findAll()
+          } yield assertTrue(actual.isEmpty)
+        },
+        test("given cache has an ontology => return List of ontologies") {
+          val ontologyData = ReadOntologyV2(OntologyMetadataV2(ontologySmartIri))
+          val cacheData    = OntologyCacheFake.emptyData.copy(ontologies = Map(ontologySmartIri -> ontologyData))
+          for {
+            _      <- OntologyCacheFake.set(cacheData)
+            actual <- OntologyRepo.findAll()
+          } yield assertTrue(actual == List(ontologyData))
         }
       )
     ).provide(OntologyRepoLive.layer, OntologyCacheFake.emptyCache, IriConverter.layer, StringFormatter.test)
