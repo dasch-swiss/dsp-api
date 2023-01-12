@@ -10,6 +10,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -24,15 +25,15 @@ import org.knora.webapi.queries.sparql._
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.CanReplaceCheckSuccess
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 @accessible
 trait CardinalityService {
