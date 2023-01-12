@@ -7,11 +7,8 @@ package org.knora.webapi.responders.admin
 
 import zio._
 
-import java.util.UUID
-
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders.ActorToZioBridge
 
 trait ProjectsService {
@@ -60,38 +57,17 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
   def createProjectADMRequest(
     payload: ProjectCreatePayloadADM,
     requestingUser: UserADM
-  ): Task[ProjectOperationResponseADM] = {
-    val requestUuid: UUID = UUID.randomUUID()
-    bridge.askAppActor(ProjectCreateRequestADM(payload, requestingUser, requestUuid))
-  }
-}
-
-final case class ProjectsServiceMock() extends ProjectsService {
-  private val project =
-    ProjectADM("", "", "", None, Seq(StringLiteralV2("")), Seq.empty, None, Seq.empty, true, false)
-
-  private val projectCreateProject    = project.copy(id = "createProjectADMRequest")
-  private val projectGetSingleProject = project.copy(id = "getSingleProjectADMRequest")
-  private val projectGetProjects      = project.copy(id = "getProjectsADMRequest")
-
-  val createProjectResponseAsString    = ProjectOperationResponseADM(projectCreateProject).toJsValue.toString()
-  val getSingleProjectResponseAsString = ProjectGetResponseADM(projectGetSingleProject).toJsValue.toString()
-  val getProjectsResponseAsString      = ProjectsGetResponseADM(Seq(projectGetProjects)).toJsValue.toString()
-
-  override def getProjectsADMRequest(): Task[ProjectsGetResponseADM] =
-    ZIO.attempt(ProjectsGetResponseADM(Seq(projectGetProjects)))
-
-  override def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
-    ZIO.attempt(ProjectGetResponseADM(projectGetSingleProject))
-
-  override def createProjectADMRequest(
-    payload: ProjectCreatePayloadADM,
-    requestingUser: UserADM
-  ): Task[ProjectOperationResponseADM] = ZIO.attempt(ProjectOperationResponseADM(projectCreateProject))
+  ): Task[ProjectOperationResponseADM] = for {
+    random      <- ZIO.random
+    requestUuid <- random.nextUUID
+    response <-
+      bridge.askAppActor[ProjectOperationResponseADM](
+        ProjectCreateRequestADM(payload, requestingUser, requestUuid)
+      )
+  } yield response
 }
 
 object ProjectsService {
-  val live: URLayer[ActorToZioBridge, ProjectsServiceLive] = ZLayer.fromFunction(ProjectsServiceLive.apply _)
-
-  val mock: ULayer[ProjectsServiceMock] = ZLayer(ZIO.succeed(ProjectsServiceMock()))
+  val live: URLayer[ActorToZioBridge, ProjectsServiceLive] =
+    ZLayer.fromFunction(ProjectsServiceLive.apply _)
 }

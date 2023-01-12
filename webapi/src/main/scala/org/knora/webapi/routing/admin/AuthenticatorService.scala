@@ -9,6 +9,7 @@ import zhttp.http._
 import zio._
 
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
 
 trait AuthenticatorService {
   def getUser(request: Request): Task[UserADM]
@@ -17,11 +18,11 @@ trait AuthenticatorService {
 object AuthenticatorService {
   val layer = ZLayer.fromFunction(AuthenticatorServiceLive.apply _)
 
-  def mock(user: UserADM) = ZLayer(
+  def mock(user: Option[UserADM] = None) = ZLayer(
     ZIO.succeed(
       new AuthenticatorService() {
         override def getUser(request: Request): Task[UserADM] =
-          ZIO.attempt(user)
+          ZIO.attempt(user.getOrElse(KnoraSystemInstances.Users.AnonymousUser))
       }
     )
   )
