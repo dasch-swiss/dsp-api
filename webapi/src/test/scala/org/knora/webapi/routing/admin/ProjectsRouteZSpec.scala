@@ -70,6 +70,9 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       ProjectsRouteZ.layer
     )
 
+  /**
+   * URL encodes a string, assuming utf-8
+   */
   private def encode(iri: String) = URLEncoder.encode(iri, "utf-8")
 
   def spec = suite("ProjectsRouteZ")(
