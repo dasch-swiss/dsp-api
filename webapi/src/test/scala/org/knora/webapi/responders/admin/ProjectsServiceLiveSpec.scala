@@ -52,115 +52,121 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       selfjoin = false
     )
 
+  val getAllProjectsSpec = test("get all projects") {
+    val expectedResponse = ProjectsGetResponseADM(Seq(getProjectADM()))
+    val projectsService =
+      ZIO
+        .serviceWithZIO[ProjectsService](_.getProjectsADMRequest())
+        .provideSome[ActorToZioBridge](layers)
+    val bridge = ActorToZioBridgeMock.AskAppActor
+      .of[ProjectsGetResponseADM]
+      .apply(assertion = Assertion.equalTo(ProjectsGetRequestADM()), result = Expectation.value(expectedResponse))
+      .toLayer
+    for {
+      _ <- projectsService.provide(bridge)
+    } yield assertTrue(true)
+  }
+
+  val getProjectByIdSpec = suite("get project by identifier")(
+    test("get project by shortcode") {
+      val identifier = ProjectIdentifierADM.ShortcodeIdentifier
+        .fromString("0001")
+        .getOrElse(throw new Exception("invalid shortcode"))
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
+          .provideSome[ActorToZioBridge](layers)
+      val bridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
+          result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(bridge)
+      } yield assertTrue(true)
+    },
+    test("get project by shortname") {
+      val identifier = ProjectIdentifierADM.ShortnameIdentifier
+        .fromString("someProject")
+        .getOrElse(throw new Exception("invalid shortname"))
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
+          .provideSome[ActorToZioBridge](layers)
+      val bridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
+          result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(bridge)
+      } yield assertTrue(true)
+    },
+    test("get project by IRI") {
+      val identifier = ProjectIdentifierADM.IriIdentifier
+        .fromString("http://rdfh.ch/projects/0001")
+        .getOrElse(throw new Exception("invalid IRI"))
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
+          .provideSome[ActorToZioBridge](layers)
+      val bridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
+          result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(bridge)
+      } yield assertTrue(true)
+    }
+  )
+
+  val createProjectSpec = test("create a project") {
+    val payload: ProjectCreatePayloadADM =
+      Validation
+        .validateWith(
+          ProjectIri.make(None),
+          ShortName.make("newproject"),
+          ShortCode.make("3333"),
+          Name.make(Some("project longname")),
+          ProjectDescription.make(Seq(V2.StringLiteralV2("project description", Some("en")))),
+          Keywords.make(Seq("test project")),
+          Logo.make(None),
+          ProjectStatus.make(true),
+          ProjectSelfJoin.make(false)
+        )(ProjectCreatePayloadADM.apply)
+        .getOrElse(throw new Exception("Invalid Payload"))
+    val requestingUser = KnoraSystemInstances.Users.SystemUser
+    val projectsService =
+      ZIO
+        .serviceWithZIO[ProjectsService](_.createProjectADMRequest(payload, requestingUser))
+        .provideSome[ActorToZioBridge](layers)
+    for {
+      uuid   <- ZIO.random.flatMap(_.nextUUID)
+      _      <- TestRandom.feedUUIDs(uuid)
+      request = ProjectCreateRequestADM(payload, requestingUser, uuid)
+      bridge =
+        ActorToZioBridgeMock.AskAppActor
+          .of[ProjectOperationResponseADM]
+          .apply(
+            assertion = Assertion.equalTo(request),
+            result = Expectation.value(ProjectOperationResponseADM(getProjectADM()))
+          )
+          .toLayer
+      _ <- projectsService.provide(bridge)
+    } yield assertTrue(true)
+  }
+
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("RestProjectsService")(
-      test("get all projects") {
-        val expectedResponse = ProjectsGetResponseADM(Seq(getProjectADM()))
-        val projectsService =
-          ZIO
-            .serviceWithZIO[ProjectsService](_.getProjectsADMRequest())
-            .provideSome[ActorToZioBridge](layers)
-        val bridge = ActorToZioBridgeMock.AskAppActor
-          .of[ProjectsGetResponseADM]
-          .apply(assertion = Assertion.equalTo(ProjectsGetRequestADM()), result = Expectation.value(expectedResponse))
-          .toLayer
-        for {
-          _ <- projectsService.provide(bridge)
-        } yield assertTrue(true)
-      },
-      suite("get project by identifier")(
-        test("get project by shortcode") {
-          val identifier = ProjectIdentifierADM.ShortcodeIdentifier
-            .fromString("0001")
-            .getOrElse(throw new Exception("invalid shortcode"))
-          val projectsService =
-            ZIO
-              .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
-              .provideSome[ActorToZioBridge](layers)
-          val bridge = ActorToZioBridgeMock.AskAppActor
-            .of[ProjectGetResponseADM]
-            .apply(
-              assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
-              result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
-            )
-            .toLayer
-          for {
-            _ <- projectsService.provide(bridge)
-          } yield assertTrue(true)
-        },
-        test("get project by shortname") {
-          val identifier = ProjectIdentifierADM.ShortnameIdentifier
-            .fromString("someProject")
-            .getOrElse(throw new Exception("invalid shortname"))
-          val projectsService =
-            ZIO
-              .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
-              .provideSome[ActorToZioBridge](layers)
-          val bridge = ActorToZioBridgeMock.AskAppActor
-            .of[ProjectGetResponseADM]
-            .apply(
-              assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
-              result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
-            )
-            .toLayer
-          for {
-            _ <- projectsService.provide(bridge)
-          } yield assertTrue(true)
-        },
-        test("get project by IRI") {
-          val identifier = ProjectIdentifierADM.IriIdentifier
-            .fromString("http://rdfh.ch/projects/0001")
-            .getOrElse(throw new Exception("invalid IRI"))
-          val projectsService =
-            ZIO
-              .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
-              .provideSome[ActorToZioBridge](layers)
-          val bridge = ActorToZioBridgeMock.AskAppActor
-            .of[ProjectGetResponseADM]
-            .apply(
-              assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
-              result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
-            )
-            .toLayer
-          for {
-            _ <- projectsService.provide(bridge)
-          } yield assertTrue(true)
-        }
-      ),
-      test("create a project") {
-        val payload: ProjectCreatePayloadADM =
-          Validation
-            .validateWith(
-              ProjectIri.make(None),
-              ShortName.make("newproject"),
-              ShortCode.make("3333"),
-              Name.make(Some("project longname")),
-              ProjectDescription.make(Seq(V2.StringLiteralV2("project description", Some("en")))),
-              Keywords.make(Seq("test project")),
-              Logo.make(None),
-              ProjectStatus.make(true),
-              ProjectSelfJoin.make(false)
-            )(ProjectCreatePayloadADM.apply)
-            .getOrElse(throw new Exception("Invalid Payload"))
-        val requestingUser = KnoraSystemInstances.Users.SystemUser
-        val projectsService =
-          ZIO
-            .serviceWithZIO[ProjectsService](_.createProjectADMRequest(payload, requestingUser))
-            .provideSome[ActorToZioBridge](layers)
-        for {
-          uuid   <- ZIO.random.flatMap(_.nextUUID)
-          _      <- TestRandom.feedUUIDs(uuid)
-          request = ProjectCreateRequestADM(payload, requestingUser, uuid)
-          bridge =
-            ActorToZioBridgeMock.AskAppActor
-              .of[ProjectOperationResponseADM]
-              .apply(
-                assertion = Assertion.equalTo(request),
-                result = Expectation.value(ProjectOperationResponseADM(getProjectADM()))
-              )
-              .toLayer
-          _ <- projectsService.provide(bridge)
-        } yield assertTrue(true)
-      }
+      getAllProjectsSpec,
+      getProjectByIdSpec,
+      createProjectSpec
     )
 }
