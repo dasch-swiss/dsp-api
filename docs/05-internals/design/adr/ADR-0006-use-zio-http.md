@@ -8,12 +8,13 @@ Accepted
 
 ## Context
 
-The current routes use `Akka` to 
+The current routes use the `Akka Http` framework. Because Lightbend's decision that `Akka` will no longer be open source and their introduction of a commercial license, we need to get away from `Akka Http`.
 
 ## Decision
 
-In preparation of the move from `Akka` to `ZIO`, it was decided that the routes should be implemented using a `ZIO HTTP` server.
+In preparation of the move from `Akka` to `ZIO`, it was decided that the routes should be ported to use the `ZIO HTTP` server / library instead of `Akka Http`.
 
 ## Consequences
 
+In a first step only the routes are going to be ported, one by one, to use `ZIO HTTP` instead of being routed through `Akka Http`. The `Akka Actor System` still remains and will be dealt with later.
 
