@@ -511,11 +511,6 @@ sealed trait ProjectIdentifierADM { self =>
       case ShortnameIdentifier(value) => Some(value.value)
       case _                          => None
     }
-  def valueAsString: String = self match {
-    case IriIdentifier(value)       => value.value
-    case ShortcodeIdentifier(value) => value.value
-    case ShortnameIdentifier(value) => value.value
-  }
 }
 
 object ProjectIdentifierADM {

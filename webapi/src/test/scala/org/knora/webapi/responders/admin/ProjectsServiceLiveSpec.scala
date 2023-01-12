@@ -38,9 +38,9 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   /**
    * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
    */
-  private def getProjectADM(id: String = "") =
+  val projectADM =
     ProjectADM(
-      id = id,
+      id = "",
       shortname = "",
       shortcode = "",
       longname = None,
@@ -53,17 +53,17 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     )
 
   val getAllProjectsSpec = test("get all projects") {
-    val expectedResponse = ProjectsGetResponseADM(Seq(getProjectADM()))
+    val expectedResponse = ProjectsGetResponseADM(Seq(projectADM))
     val projectsService =
       ZIO
         .serviceWithZIO[ProjectsService](_.getProjectsADMRequest())
         .provideSome[ActorToZioBridge](layers)
-    val bridge = ActorToZioBridgeMock.AskAppActor
+    val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
       .of[ProjectsGetResponseADM]
       .apply(assertion = Assertion.equalTo(ProjectsGetRequestADM()), result = Expectation.value(expectedResponse))
       .toLayer
     for {
-      _ <- projectsService.provide(bridge)
+      _ <- projectsService.provide(actorToZioBridge)
     } yield assertTrue(true)
   }
 
@@ -76,15 +76,15 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
           .provideSome[ActorToZioBridge](layers)
-      val bridge = ActorToZioBridgeMock.AskAppActor
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
         .of[ProjectGetResponseADM]
         .apply(
           assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
-          result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
+          result = Expectation.value(ProjectGetResponseADM(projectADM))
         )
         .toLayer
       for {
-        _ <- projectsService.provide(bridge)
+        _ <- projectsService.provide(actorToZioBridge)
       } yield assertTrue(true)
     },
     test("get project by shortname") {
@@ -95,15 +95,15 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
           .provideSome[ActorToZioBridge](layers)
-      val bridge = ActorToZioBridgeMock.AskAppActor
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
         .of[ProjectGetResponseADM]
         .apply(
           assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
-          result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
+          result = Expectation.value(ProjectGetResponseADM(projectADM))
         )
         .toLayer
       for {
-        _ <- projectsService.provide(bridge)
+        _ <- projectsService.provide(actorToZioBridge)
       } yield assertTrue(true)
     },
     test("get project by IRI") {
@@ -114,15 +114,15 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
           .provideSome[ActorToZioBridge](layers)
-      val bridge = ActorToZioBridgeMock.AskAppActor
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
         .of[ProjectGetResponseADM]
         .apply(
           assertion = Assertion.equalTo(ProjectGetRequestADM(identifier)),
-          result = Expectation.value(ProjectGetResponseADM(getProjectADM()))
+          result = Expectation.value(ProjectGetResponseADM(projectADM))
         )
         .toLayer
       for {
-        _ <- projectsService.provide(bridge)
+        _ <- projectsService.provide(actorToZioBridge)
       } yield assertTrue(true)
     }
   )
@@ -151,15 +151,15 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       uuid   <- ZIO.random.flatMap(_.nextUUID)
       _      <- TestRandom.feedUUIDs(uuid)
       request = ProjectCreateRequestADM(payload, requestingUser, uuid)
-      bridge =
+      actorToZioBridge =
         ActorToZioBridgeMock.AskAppActor
           .of[ProjectOperationResponseADM]
           .apply(
             assertion = Assertion.equalTo(request),
-            result = Expectation.value(ProjectOperationResponseADM(getProjectADM()))
+            result = Expectation.value(ProjectOperationResponseADM(projectADM))
           )
           .toLayer
-      _ <- projectsService.provide(bridge)
+      _ <- projectsService.provide(actorToZioBridge)
     } yield assertTrue(true)
   }
 

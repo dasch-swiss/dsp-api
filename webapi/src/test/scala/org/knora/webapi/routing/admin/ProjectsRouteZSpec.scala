@@ -144,7 +144,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
           .GetSingleProject(
             assertion = Assertion.equalTo(identifier),
             result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-              ProjectGetResponseADM(getProjectADM(id.valueAsString))
+              ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
             )
           )
           .toLayer
@@ -163,7 +163,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
           .GetSingleProject(
             assertion = Assertion.equalTo(identifier),
             result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-              ProjectGetResponseADM(getProjectADM(id.valueAsString))
+              ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
             )
           )
           .toLayer
@@ -182,7 +182,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
           .GetSingleProject(
             assertion = Assertion.equalTo(identifier),
             result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-              ProjectGetResponseADM(getProjectADM(id.valueAsString))
+              ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
             )
           )
           .toLayer
