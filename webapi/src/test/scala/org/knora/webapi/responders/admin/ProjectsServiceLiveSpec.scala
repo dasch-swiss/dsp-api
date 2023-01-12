@@ -10,8 +10,6 @@ import zio.mock._
 import zio.prelude.Validation
 import zio.test._
 
-import java.util.UUID
-
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project.ShortCode
 import dsp.valueobjects.Project._
@@ -34,12 +32,6 @@ import org.knora.webapi.responders.admin.ProjectsService
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   private val expectNoInteraction = ActorToZioBridgeMock.empty
-
-  def nextUuid: UIO[UUID] = for {
-    random <- ZIO.random
-    _      <- random.setSeed(0) // makes the random deterministic: bb20b45f-d4d9-4138-bd93-cb799b3970be
-    uuid   <- random.nextUUID
-  } yield uuid
 
   val layers = ZLayer.makeSome[ActorToZioBridge, ProjectsService](ProjectsService.live)
 
@@ -151,17 +143,19 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
             )(ProjectCreatePayloadADM.apply)
             .getOrElse(throw new Exception("Invalid Payload"))
         val requestingUser = KnoraSystemInstances.Users.SystemUser
-        val projectsService =
-          ZIO
-            .serviceWithZIO[ProjectsService](_.createProjectADMRequest(payload, requestingUser))
-            .provideSome[ActorToZioBridge](layers)
         for {
-          uuid <- nextUuid
+          uuid <- ZIO.random.flatMap(_.nextUUID)
+          _    <- TestRandom.feedUUIDs(uuid)
+          projectsService =
+            ZIO
+              .serviceWithZIO[ProjectsService](_.createProjectADMRequest(payload, requestingUser))
+              .provideSome[ActorToZioBridge](layers)
+          request = ProjectCreateRequestADM(payload, requestingUser, uuid)
           bridge =
             ActorToZioBridgeMock.AskAppActor
               .of[ProjectOperationResponseADM]
               .apply(
-                assertion = Assertion.equalTo(ProjectCreateRequestADM(payload, requestingUser, uuid)),
+                assertion = Assertion.equalTo(request),
                 result = Expectation.value(ProjectOperationResponseADM(getProjectADM()))
               )
               .toLayer

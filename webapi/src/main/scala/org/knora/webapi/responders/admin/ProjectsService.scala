@@ -60,10 +60,8 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
   ): Task[ProjectOperationResponseADM] = for {
     random      <- ZIO.random
     requestUuid <- random.nextUUID
-    response <-
-      bridge.askAppActor[ProjectOperationResponseADM](
-        ProjectCreateRequestADM(payload, requestingUser, requestUuid)
-      )
+    request      = ProjectCreateRequestADM(payload, requestingUser, requestUuid)
+    response    <- bridge.askAppActor[ProjectOperationResponseADM](request)
   } yield response
 }
 
