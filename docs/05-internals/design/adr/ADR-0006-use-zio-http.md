@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The current routes use the `Akka Http` framework. Because Lightbend's decision that `Akka` will no longer be open source and their introduction of a commercial license, we need to get away from `Akka Http`.
+The current routes use the `Akka Http` framework. Because of Lightbend's decision that `Akka` will no longer be open source and their introduction of a commercial license, we want to get away from `Akka Http`. This also fits the general strategic decision to use ZIO for the backend.
 
 ## Decision
 
