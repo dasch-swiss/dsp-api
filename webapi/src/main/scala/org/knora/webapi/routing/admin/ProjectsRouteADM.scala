@@ -101,7 +101,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
 
         val projectCreatePayload: Validation[Throwable, ProjectCreatePayloadADM] =
           Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(
-            ProjectCreatePayloadADM
+            ProjectCreatePayloadADM.apply
           )
 
         val requestMessage: Future[ProjectCreateRequestADM] = for {

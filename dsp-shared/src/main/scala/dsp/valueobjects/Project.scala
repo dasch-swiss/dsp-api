@@ -5,6 +5,7 @@
 
 package dsp.valueobjects
 
+import zio.json._
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
@@ -26,6 +27,12 @@ object Project {
    */
   sealed abstract case class ShortCode private (value: String)
   object ShortCode { self =>
+    implicit val decoder: JsonDecoder[ShortCode] = JsonDecoder[String].mapOrFail { case value =>
+      ShortCode.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[ShortCode] =
+      JsonEncoder[String].contramap((shortCode: ShortCode) => shortCode.value)
+
     def make(value: String): Validation[ValidationException, ShortCode] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeMissing))
@@ -48,6 +55,12 @@ object Project {
    */
   sealed abstract case class ShortName private (value: String)
   object ShortName { self =>
+    implicit val decoder: JsonDecoder[ShortName] = JsonDecoder[String].mapOrFail { case value =>
+      ShortName.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[ShortName] =
+      JsonEncoder[String].contramap((shortName: ShortName) => shortName.value)
+
     def make(value: String): Validation[ValidationException, ShortName] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
@@ -75,6 +88,12 @@ object Project {
   // TODO-BL: [domain-model] this should be multi-lang-string, I suppose; needs real validation once value constraints are defined
   sealed abstract case class Name private (value: String)
   object Name { self =>
+    implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { case value =>
+      Name.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[Name] =
+      JsonEncoder[String].contramap((name: Name) => name.value)
+
     def make(value: String): Validation[ValidationException, Name] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))
@@ -96,6 +115,13 @@ object Project {
   // ATM it can't be changed to MultiLangString, because that has the language tag required, whereas in V2, it's currently optional, so this would be a breaking change.
   sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
   object ProjectDescription { self =>
+    implicit val decoder: JsonDecoder[ProjectDescription] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail {
+      case value =>
+        ProjectDescription.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[ProjectDescription] =
+      JsonEncoder[Seq[V2.StringLiteralV2]].contramap((description: ProjectDescription) => description.value)
+
     def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, ProjectDescription] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing))
@@ -115,6 +141,12 @@ object Project {
    */
   sealed abstract case class Keywords private (value: Seq[String])
   object Keywords { self =>
+    implicit val decoder: JsonDecoder[Keywords] = JsonDecoder[Seq[String]].mapOrFail { case value =>
+      Keywords.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[Keywords] =
+      JsonEncoder[Seq[String]].contramap((keywords: Keywords) => keywords.value)
+
     def make(value: Seq[String]): Validation[ValidationException, Keywords] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing))
@@ -134,6 +166,12 @@ object Project {
    */
   sealed abstract case class Logo private (value: String)
   object Logo { self =>
+    implicit val decoder: JsonDecoder[Logo] = JsonDecoder[String].mapOrFail { case value =>
+      Logo.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[Logo] =
+      JsonEncoder[String].contramap((logo: Logo) => logo.value)
+
     def make(value: String): Validation[ValidationException, Logo] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(ProjectErrorMessages.LogoMissing))
@@ -152,6 +190,12 @@ object Project {
    */
   sealed abstract case class ProjectSelfJoin private (value: Boolean)
   object ProjectSelfJoin { self =>
+    implicit val decoder: JsonDecoder[ProjectSelfJoin] = JsonDecoder[Boolean].mapOrFail { case value =>
+      ProjectSelfJoin.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[ProjectSelfJoin] =
+      JsonEncoder[Boolean].contramap((selfJoin: ProjectSelfJoin) => selfJoin.value)
+
     def make(value: Boolean): Validation[ValidationException, ProjectSelfJoin] =
       Validation.succeed(new ProjectSelfJoin(value) {})
 
@@ -167,6 +211,12 @@ object Project {
    */
   sealed abstract case class ProjectStatus private (value: Boolean)
   object ProjectStatus { self =>
+    implicit val decoder: JsonDecoder[ProjectStatus] = JsonDecoder[Boolean].mapOrFail { case value =>
+      ProjectStatus.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[ProjectStatus] =
+      JsonEncoder[Boolean].contramap((status: ProjectStatus) => status.value)
+
     def make(value: Boolean): Validation[ValidationException, ProjectStatus] =
       Validation.succeed(new ProjectStatus(value) {})
 

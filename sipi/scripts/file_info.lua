@@ -18,6 +18,7 @@ ARCHIVE = "archive"
 -------------------------------------------------------------------------------
 
 local IMAGE_JP2 = "image/jp2"
+local IMAGE_JPX = "image/jpx"
 local IMAGE_TIFF = "image/tiff"
 local IMAGE_PNG = "image/png"
 local IMAGE_JPG = "image/jpeg"
@@ -48,6 +49,7 @@ local VIDEO_MP4 = "video/mp4"
 
 local image_mime_types = {
     IMAGE_JP2,
+    IMAGE_JPX,
     IMAGE_TIFF,
     IMAGE_PNG,
     IMAGE_JPG

@@ -10,6 +10,7 @@ import zio.ZLayer
 
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
@@ -64,6 +65,7 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.live,
       AppRouter.layer,
+      AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,

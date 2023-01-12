@@ -3,8 +3,7 @@ package org.knora.webapi.routing.admin
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import zhttp.http._
-import zio.Task
-import zio.ZIO
+import zio._
 
 import scala.concurrent.ExecutionContext
 
@@ -27,9 +26,9 @@ case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, 
   private implicit val ec: ExecutionContext = actorDeps.executionContext
 
   private val authCookieName = Authenticator.calculateCookieName(appConfig)
+
   override def getUser(request: Request): Task[UserADM] =
-    ZIO
-      .succeed(extractCredentialsFromRequest(request, authCookieName))
+    extractCredentialsFromRequest(request, authCookieName)
       .flatMap(credentials => ZIO.fromFuture(_ => Authenticator.getUserADMThroughCredentialsV2(credentials, appConfig)))
 }
 
@@ -38,8 +37,10 @@ object AuthenticatorServiceLive {
   // visible for testing
   def extractCredentialsFromRequest(request: Request, cookieName: String)(implicit
     sf: StringFormatter
-  ): Option[KnoraCredentialsV2] =
-    extractCredentialsFromParameters(request).orElse(extractCredentialsFromHeader(request, cookieName))
+  ): Task[Option[KnoraCredentialsV2]] =
+    ZIO.attempt(
+      extractCredentialsFromParameters(request).orElse(extractCredentialsFromHeader(request, cookieName))
+    )
 
   private def extractCredentialsFromParameters(request: Request)(implicit
     sf: StringFormatter
