@@ -12,7 +12,6 @@ import zio.test._
 
 import java.util.UUID
 
-import dsp.util.UuidGenerator
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project.ShortCode
 import dsp.valueobjects.Project._
@@ -36,17 +35,13 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   private val expectNoInteraction = ActorToZioBridgeMock.empty
 
-  val uuidGenerator = new UuidGenerator {
-    override def createRandomUuid: UIO[UUID] = for {
-      random <- ZIO.random
-      _      <- random.setSeed(0) // makes the random deterministic: bb20b45f-d4d9-4138-bd93-cb799b3970be
-      uuid   <- random.nextUUID
-    } yield uuid
-  }
+  def nextUuid: UIO[UUID] = for {
+    random <- ZIO.random
+    _      <- random.setSeed(0) // makes the random deterministic: bb20b45f-d4d9-4138-bd93-cb799b3970be
+    uuid   <- random.nextUUID
+  } yield uuid
 
-  val uuid: UIO[UUID] = uuidGenerator.createRandomUuid
-
-  val layers = ZLayer.makeSome[ActorToZioBridge, ProjectsService](ProjectsService.live, ZLayer.succeed(uuidGenerator))
+  val layers = ZLayer.makeSome[ActorToZioBridge, ProjectsService](ProjectsService.live)
 
   /**
    * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
@@ -161,7 +156,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
             .serviceWithZIO[ProjectsService](_.createProjectADMRequest(payload, requestingUser))
             .provideSome[ActorToZioBridge](layers)
         for {
-          uuid <- uuid
+          uuid <- nextUuid
           bridge =
             ActorToZioBridgeMock.AskAppActor
               .of[ProjectOperationResponseADM]

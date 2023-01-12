@@ -7,7 +7,6 @@ package org.knora.webapi.responders.admin
 
 import zio._
 
-import dsp.util.UuidGenerator
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ActorToZioBridge
@@ -21,7 +20,7 @@ trait ProjectsService {
   ): Task[ProjectOperationResponseADM]
 }
 
-final case class ProjectsServiceLive(bridge: ActorToZioBridge, uuidGenerator: UuidGenerator) extends ProjectsService {
+final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
 
   /**
    * Returns all projects as a [[ProjectsGetResponseADM]].
@@ -59,7 +58,8 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge, uuidGenerator: Uu
     payload: ProjectCreatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM] = for {
-    requestUuid <- uuidGenerator.createRandomUuid
+    random      <- ZIO.random
+    requestUuid <- random.nextUUID
     response <-
       bridge.askAppActor[ProjectOperationResponseADM](
         ProjectCreateRequestADM(payload, requestingUser, requestUuid)
@@ -68,6 +68,6 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge, uuidGenerator: Uu
 }
 
 object ProjectsService {
-  val live: URLayer[ActorToZioBridge with UuidGenerator, ProjectsServiceLive] =
+  val live: URLayer[ActorToZioBridge, ProjectsServiceLive] =
     ZLayer.fromFunction(ProjectsServiceLive.apply _)
 }

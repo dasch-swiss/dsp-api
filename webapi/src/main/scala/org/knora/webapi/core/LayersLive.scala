@@ -8,7 +8,6 @@ package org.knora.webapi.core
 import zio.ULayer
 import zio.ZLayer
 
-import dsp.util.UuidGeneratorLive
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
@@ -85,7 +84,6 @@ object LayersLive {
       State.layer,
       StringFormatter.live,
       TriplestoreServiceHttpConnectorImpl.layer,
-      TriplestoreServiceManager.layer,
-      UuidGeneratorLive.layer
+      TriplestoreServiceManager.layer
     )
 }
