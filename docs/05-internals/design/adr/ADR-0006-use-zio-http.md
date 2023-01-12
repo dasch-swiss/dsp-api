@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The current routes use the `Akka Http` framework. The current routes use the `Akka Http` library. Because of changes to the licensing of the `Akka` framework, we want to move away from using `Akka Http`. This also fits the general strategic decision to use ZIO for the backend.
+The current routes use the `Akka Http` library. Because of changes to the licensing of the `Akka` framework, we want to move away from using `Akka Http`. This also fits the general strategic decision to use ZIO for the backend.
 
 ## Decision
 
