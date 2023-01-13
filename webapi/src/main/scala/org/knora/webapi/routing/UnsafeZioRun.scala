@@ -23,7 +23,7 @@ object UnsafeZioRun {
 
   /**
    * Executes the effect synchronously and returns its result as a
-   * [[zio.Exit]] value.
+   * [[Future]].
    *
    * This method is effectful and should only be used at the edges of your
    * application.
