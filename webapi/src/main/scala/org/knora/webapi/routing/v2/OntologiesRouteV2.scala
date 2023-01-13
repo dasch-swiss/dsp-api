@@ -7,14 +7,11 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import zio.ZIO
 import zio.prelude.Validation
-
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -23,6 +20,7 @@ import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -39,6 +37,8 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.RouteUtilV2.completeZioApiV2ComplexResponse
+import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 
 /**
@@ -436,10 +436,6 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
       }
     }
 
-  private def getQueryParamsMap(requestContext: RequestContext): Map[String, String] =
-    requestContext.request.uri.query().toMap
-  private def getStringQueryParam(requestContext: RequestContext, key: String): Option[String] =
-    getQueryParamsMap(requestContext).get(key)
   private def canReplaceCardinalities: Route =
     // GET basePath/{iriEncode} or
     // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
@@ -455,7 +451,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
             case (p, c)          => RestCardinalityService.canUpdateCardinality(classIri, user, p zip c)
           }
         val responseZio = getUserADMZio(requestContext, routeData.appConfig).flatMap(checkCardinality)
-        RouteUtilV2.completeZioApiV2ComplexResponse(responseZio, requestContext, routeData.appConfig)
+        completeZioApiV2ComplexResponse(responseZio, requestContext, routeData.appConfig)
       }
     }
 
