@@ -13,13 +13,13 @@ import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
-
 import dsp.errors.BadRequestException
 import dsp.errors.UnexpectedMessageException
+import zio.ZIO
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -245,6 +245,15 @@ object RouteUtilV2 {
         )
     }
     completeResponse(askResponse, requestContext, appConfig, targetSchema, schemaOptions)
+  }
+
+  def completeZioApiV2ComplexResponse[R](
+    responseZio: ZIO[R, Throwable, KnoraResponseV2],
+    ctx: RequestContext,
+    config: AppConfig
+  )(implicit ec: ExecutionContext, runtime: zio.Runtime[R]): Future[RouteResult] = {
+    val responseFuture = UnsafeZioRun.runToFuture(responseZio)
+    completeResponse(responseFuture, ctx, config, ApiV2Complex, RouteUtilV2.getSchemaOptions(ctx))
   }
 
   def completeResponse(

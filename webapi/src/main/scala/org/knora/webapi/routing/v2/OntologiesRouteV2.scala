@@ -38,7 +38,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 
 /**
@@ -460,13 +459,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           user     <- ZIO.fromFuture(_ => getUserADM(requestContext, routeData.appConfig))
           response <- checkCardinality(user)
         } yield response
-        RouteUtilV2.completeResponse(
-          UnsafeZioRun.runToFuture(responseZio),
-          requestContext,
-          routeData.appConfig,
-          ApiV2Complex,
-          RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.completeZioApiV2ComplexResponse(responseZio, requestContext, routeData.appConfig)
       }
     }
 
