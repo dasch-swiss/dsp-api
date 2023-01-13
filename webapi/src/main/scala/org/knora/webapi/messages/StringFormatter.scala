@@ -501,8 +501,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    */
   override def toOntologySchema(targetSchema: OntologySchema): SmartIri
 
-  def internalIri: IRI = toOntologySchema(InternalSchema).toIri
-
   /**
    * Constructs a short prefix label for the ontology that the IRI belongs to.
    */
@@ -1498,14 +1496,6 @@ class StringFormatter private (
       smartIri
     }
   }
-
-  /**
-   * Constructs a [[SmartIri]] by validating and parsing a string representing an IRI. Throws
-   * [[DataConversionException]] if the IRI is invalid or is not an internal representation.
-   *
-   * @param iri the IRI string to be parsed.
-   */
-  def toInternalSmartIri(iri: IRI): SmartIri = toSmartIri(iri, requireInternal = true)
 
   /**
    * Constructs a [[SmartIri]] by validating and parsing a string representing an IRI.

@@ -11,6 +11,7 @@ import zio.ZLayer
 import zio.macros.accessible
 
 import org.knora.webapi.IRI
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 
@@ -28,8 +29,10 @@ trait IriConverter {
 }
 
 final case class IriConverterLive(sf: StringFormatter) extends IriConverter {
-  override def asInternalSmartIri(iri: IRI): Task[SmartIri] = ZIO.attempt(sf.toInternalSmartIri(iri))
-  override def asSmartIri(iri: IRI): Task[SmartIri]         = ZIO.attempt(sf.toSmartIri(iri))
+  override def asInternalSmartIri(iri: IRI): Task[SmartIri] = ZIO
+    .attempt(sf.toSmartIri(iri))
+    .mapAttempt(_.toOntologySchema(InternalSchema))
+  override def asSmartIri(iri: IRI): Task[SmartIri] = ZIO.attempt(sf.toSmartIri(iri))
 }
 
 object IriConverter {
