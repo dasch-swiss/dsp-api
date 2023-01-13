@@ -9,8 +9,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import zio.prelude.Validation
+
 import java.util.UUID
 import scala.concurrent.Future
+
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -19,7 +21,6 @@ import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -439,8 +440,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
     // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
       get { requestContext =>
-          val appConfig = routeData.appConfig
-          val responseZio = getUserADMZio(requestContext, appConfig)
+        val appConfig = routeData.appConfig
+        val responseZio = getUserADMZio(requestContext, appConfig)
           .flatMap(user =>
             RestCardinalityService.canUpdateCardinality(
               classIri,
