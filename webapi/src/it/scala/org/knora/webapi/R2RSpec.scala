@@ -109,13 +109,13 @@ abstract class R2RSpec
         .getOrThrow()
     }
 
-  final override def afterAll(): Unit =
-//
-//    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-//    Unsafe.unsafe { implicit u =>
-//      runtime.unsafe.shutdown()
-//    }
-    system.terminate()
+  final override def afterAll(): Unit = {
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
+    system.terminate().wait()
+  }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =
