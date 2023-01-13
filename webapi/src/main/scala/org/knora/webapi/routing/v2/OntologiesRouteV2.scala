@@ -441,7 +441,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
       get { requestContext =>
         val appConfig = routeData.appConfig
-        val responseZio = getUserADMZio(requestContext, appConfig)
+        val responseZio = getUserADMZ(requestContext, appConfig)
           .flatMap(user =>
             RestCardinalityService.canUpdateCardinality(
               classIri,
