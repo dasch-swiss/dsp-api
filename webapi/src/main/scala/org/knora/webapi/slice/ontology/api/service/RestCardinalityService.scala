@@ -9,11 +9,15 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
-import dsp.errors.BadRequestException
+import dsp.errors.BadRequestException.invalidQueryParamValue
+import dsp.errors.BadRequestException.missingQueryParamValue
 import dsp.errors.ForbiddenException
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.classIriKey
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.newCardinalityKey
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.propertyIriKey
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult
@@ -21,28 +25,29 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.IRI
 
 @accessible
 trait RestCardinalityService {
 
   def canUpdateCardinality(
-    classIri: String,
+    classIri: IRI,
     user: UserADM,
-    propertyIri: Option[String],
+    propertyIri: Option[IRI],
     newCardinality: Option[String]
   ): Task[CanDoResponseV2] =
     (propertyIri, newCardinality) match {
-      case (None, Some(_))                           => ZIO.fail(BadRequestException("Missing 'propertyIri' query parameter"))
-      case (Some(_), None)                           => ZIO.fail(BadRequestException("Missing 'newCardinality' query parameter"))
+      case (None, Some(_))                           => ZIO.fail(missingQueryParamValue(propertyIriKey))
+      case (Some(_), None)                           => ZIO.fail(missingQueryParamValue(newCardinalityKey))
       case (None, None)                              => canReplaceCardinality(classIri, user)
       case (Some(propertyIri), Some(newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
     }
 
-  def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2]
+  def canReplaceCardinality(classIri: IRI, user: UserADM): Task[CanDoResponseV2]
 
   def canSetCardinality(
-    classIri: String,
-    propertyIri: String,
+    classIri: IRI,
+    propertyIri: IRI,
     cardinality: String,
     user: UserADM
   ): Task[CanDoResponseV2]
@@ -67,9 +72,9 @@ case class RestCardinalityServiceLive(
 
   private val permissionService: PermissionService = PermissionService(ontologyRepo)
 
-  def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2] =
+  def canReplaceCardinality(classIri: IRI, user: UserADM): Task[CanDoResponseV2] =
     for {
-      classIri <- iriConverter.asInternalIri(classIri).orElseFail(BadRequestException("Invalid classIri"))
+      classIri <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
       _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
       result   <- cardinalityService.canReplaceCardinality(classIri)
     } yield toResponse(result)
@@ -86,16 +91,16 @@ case class RestCardinalityServiceLive(
   }
 
   def canSetCardinality(
-    classIri: String,
-    propertyIri: String,
+    classIri: IRI,
+    propertyIri: IRI,
     cardinality: String,
     user: UserADM
   ): Task[CanDoResponseV2] =
     for {
-      classIri       <- iriConverter.asInternalIri(classIri).orElseFail(BadRequestException("Invalid classIri"))
+      classIri       <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
       _              <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
-      newCardinality <- parseCardinality(cardinality).orElseFail(BadRequestException(s"Unknown cardinality"))
-      propertyIri    <- iriConverter.asInternalIri(propertyIri).orElseFail(BadRequestException("Invalid propertyIri"))
+      newCardinality <- parseCardinality(cardinality).orElseFail(invalidQueryParamValue(newCardinalityKey))
+      propertyIri    <- iriConverter.asInternalIri(propertyIri).orElseFail(invalidQueryParamValue(propertyIriKey))
       result         <- cardinalityService.canSetCardinality(classIri, propertyIri, newCardinality)
     } yield toResponse(result)
 
@@ -109,6 +114,9 @@ case class RestCardinalityServiceLive(
 }
 
 object RestCardinalityService {
+  val classIriKey: String       = "classIri"
+  val propertyIriKey: String    = "propertyIri"
+  val newCardinalityKey: String = "newCardinality"
   val layer: ZLayer[CardinalityService with IriConverter with OntologyRepo, Nothing, RestCardinalityService] =
     ZLayer.fromFunction(RestCardinalityServiceLive.apply _)
 }
