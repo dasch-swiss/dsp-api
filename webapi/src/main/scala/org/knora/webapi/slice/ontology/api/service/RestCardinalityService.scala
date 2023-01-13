@@ -28,11 +28,14 @@ trait RestCardinalityService {
   def canUpdateCardinality(
     classIri: String,
     user: UserADM,
-    propertyCardinality: Option[(String, String)]
+    propertyIri: Option[String],
+    newCardinality: Option[String]
   ): Task[CanDoResponseV2] =
-    propertyCardinality match {
-      case None                                => canReplaceCardinality(classIri, user)
-      case Some((propertyIri, newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
+    (propertyIri, newCardinality) match {
+      case (None, Some(_))                           => ZIO.fail(BadRequestException("Missing 'propertyIri' query parameter"))
+      case (Some(_), None)                           => ZIO.fail(BadRequestException("Missing 'newCardinality' query parameter"))
+      case (None, None)                              => canReplaceCardinality(classIri, user)
+      case (Some(propertyIri), Some(newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
     }
 
   def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2]

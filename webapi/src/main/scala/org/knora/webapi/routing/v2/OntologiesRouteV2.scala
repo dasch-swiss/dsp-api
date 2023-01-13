@@ -8,7 +8,6 @@ package org.knora.webapi.routing.v2
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import zio.ZIO
 import zio.prelude.Validation
 import java.util.UUID
 import scala.concurrent.Future
@@ -31,7 +30,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -441,16 +439,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
     // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
       get { requestContext =>
-        def checkCardinality(user: UserADM): ZIO[RestCardinalityService, Throwable, CanDoResponseV2] =
-          (
-            getStringQueryParam(requestContext, "propertyIri"),
-            getStringQueryParam(requestContext, "newCardinality")
-          ) match {
-            case (None, Some(_)) => ZIO.fail(BadRequestException("Missing 'propertyIri' query parameter"))
-            case (Some(_), None) => ZIO.fail(BadRequestException("Missing 'newCardinality' query parameter"))
-            case (p, c)          => RestCardinalityService.canUpdateCardinality(classIri, user, p zip c)
-          }
-        val responseZio = getUserADMZio(requestContext, routeData.appConfig).flatMap(checkCardinality)
+        val responseZio = getUserADMZio(requestContext, routeData.appConfig)
+          .flatMap(user =>
+            RestCardinalityService.canUpdateCardinality(
+              classIri,
+              user,
+              propertyIri = getStringQueryParam(requestContext, "propertyIri"),
+              newCardinality = getStringQueryParam(requestContext, "newCardinality")
+            )
+          )
         completeZioApiV2ComplexResponse(responseZio, requestContext, routeData.appConfig)
       }
     }

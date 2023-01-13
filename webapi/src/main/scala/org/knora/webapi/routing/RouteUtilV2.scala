@@ -14,12 +14,13 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import zio.ZIO
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
+
 import dsp.errors.BadRequestException
 import dsp.errors.UnexpectedMessageException
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -104,7 +105,7 @@ object RouteUtilV2 {
   val JSON_LD_RENDERING_HIERARCHICAL: String = "hierarchical"
 
   def getStringQueryParam(ctx: RequestContext, key: String): Option[String] = getQueryParamsMap(ctx).get(key)
-  private def getQueryParamsMap(ctx: RequestContext): Map[String, String] = ctx.request.uri.query().toMap
+  private def getQueryParamsMap(ctx: RequestContext): Map[String, String]   = ctx.request.uri.query().toMap
 
   /**
    * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
