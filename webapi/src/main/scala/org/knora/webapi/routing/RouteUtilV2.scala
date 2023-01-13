@@ -14,13 +14,12 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import zio.ZIO
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
-
 import dsp.errors.BadRequestException
 import dsp.errors.UnexpectedMessageException
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -205,11 +204,14 @@ object RouteUtilV2 {
 
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
+   * Throws [[BadRequestException]] if no project was provided, the project IRI is invalid, or cannot be found.
    *
-   * @param ctx the akka-http [[RequestContext]].
-   * @return the [[Try]] contains the specified project IRI, or if invalid a BadRequestException
-   * @throws [[BadRequestException]] if project was not provided in the header
+   * @param ctx The akka-http [[RequestContext]].
+   *
+   * @param stringFormatter An instance of the [[StringFormatter]].
+   * @return The [[SmartIri]] contains the specified project IRI.
    */
+  @throws(classOf[BadRequestException])
   def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
     getProject(ctx).getOrElse(
       throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
@@ -238,7 +240,7 @@ object RouteUtilV2 {
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption]
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
-    val askResponse = (appActor.ask(requestMessage)).map {
+    val askResponse = appActor.ask(requestMessage).map {
       case replyMessage: KnoraResponseV2 => replyMessage
 
       case other =>
@@ -251,13 +253,29 @@ object RouteUtilV2 {
     completeResponse(askResponse, requestContext, appConfig, targetSchema, schemaOptions)
   }
 
+  /**
+   * Completes the HTTP request in the [[RequestContext]] by returning the response as RDF [[ApiV2Complex]].
+   * Determines the content type of the representation using content negotiation.
+   * The response is calculated by _unsafely_ running the `responseZio` in the provided [[zio.Runtime]]
+   *
+   * @param responseZio       A zio containing a [[KnoraResponseV2]] message that will be run unsafe.
+   * @param ctx               The akka-http [[RequestContext]].
+   * @param appConfig         The application configuration [[AppConfig]] used for rendering the response.
+   *
+   * @param executionContext  An [[ExecutionContext]] for futures.
+   * @param runtime           A [[zio.Runtime]] used for executing the response zio effect.
+   *
+   * @tparam R                The requirements for the response zio, must be present in the [[zio.Runtime]].
+   *
+   * @return a [[Future]]     Containing the [[RouteResult]] for Akka HTTP.
+   */
   def completeZioApiV2ComplexResponse[R](
     responseZio: ZIO[R, Throwable, KnoraResponseV2],
     ctx: RequestContext,
-    config: AppConfig
-  )(implicit ec: ExecutionContext, runtime: zio.Runtime[R]): Future[RouteResult] = {
+    appConfig: AppConfig
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[R]): Future[RouteResult] = {
     val responseFuture = UnsafeZioRun.runToFuture(responseZio)
-    completeResponse(responseFuture, ctx, config, ApiV2Complex, RouteUtilV2.getSchemaOptions(ctx))
+    completeResponse(responseFuture, ctx, appConfig, ApiV2Complex, RouteUtilV2.getSchemaOptions(ctx))
   }
 
   private def completeResponse(
@@ -266,7 +284,7 @@ object RouteUtilV2 {
     appConfig: AppConfig,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption]
-  )(implicit ec: ExecutionContext): Future[RouteResult] = {
+  )(implicit executionContext: ExecutionContext): Future[RouteResult] = {
 
     val httpResponse = for {
       knoraResponse    <- responseFuture
@@ -284,7 +302,7 @@ object RouteUtilV2 {
    *
    * @param requestMessageF      a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param responderManager     a reference to the responder manager.
+   * @param appActor             a reference to the [[org.knora.webapi.core.actors.RoutingActor]].
    * @param log                  a logging adapter.
    * @param targetSchema         the API schema that should be used in the response.
    * @param timeout              a timeout for `ask` messages.
@@ -305,7 +323,7 @@ object RouteUtilV2 {
 
       requestMessage <- requestMessageF
 
-      teiResponse <- (appActor.ask(requestMessage)).map {
+      teiResponse <- appActor.ask(requestMessage).map {
                        case replyMessage: ResourceTEIGetResponseV2 => replyMessage
 
                        case other =>
