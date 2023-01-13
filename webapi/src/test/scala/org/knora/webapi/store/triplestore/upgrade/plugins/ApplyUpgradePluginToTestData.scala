@@ -50,7 +50,7 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault {
     } yield model
 
   def applyPluginToModel(plugin: UpgradePlugin, model: RdfModel) = ZIO.succeed {
-    plugin.transform(model);
+    plugin.transform(model)
     model
   }
 
