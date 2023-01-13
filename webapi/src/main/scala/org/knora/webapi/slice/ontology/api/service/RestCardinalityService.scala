@@ -78,7 +78,7 @@ case class RestCardinalityServiceLive(
     } yield hasWriteAccess
     ZIO.ifZIO(hasWriteAccess)(
       onTrue = ZIO.unit,
-      onFalse = ZIO.fail(ForbiddenException(s"User has no access to ontology"))
+      onFalse = ZIO.fail(ForbiddenException(s"User has no write access to ontology"))
     )
   }
 
