@@ -1,4 +1,4 @@
-# 3. Change IIIF Service Manager and Sipi implementation to zlayer
+# ADR-0003 Change IIIF Service Manager and Sipi implementation to zlayer
 
 Date: 2022-04-29
 
