@@ -9,9 +9,9 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -24,6 +24,16 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 @accessible
 trait RestCardinalityService {
+
+  def canUpdateCardinality(
+    classIri: String,
+    user: UserADM,
+    propertyCardinality: Option[(String, String)]
+  ): Task[CanDoResponseV2] =
+    propertyCardinality match {
+      case None                                => canReplaceCardinality(classIri, user)
+      case Some((propertyIri, newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
+    }
 
   def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2]
 

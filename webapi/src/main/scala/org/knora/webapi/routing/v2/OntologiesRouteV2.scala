@@ -11,10 +11,8 @@ import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import zio.ZIO
 import zio.prelude.Validation
-
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -23,6 +21,7 @@ import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -34,6 +33,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -445,19 +445,18 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
     // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
       get { requestContext =>
-        def checkCardinality(user: UserADM) =
+        def checkCardinality(user: UserADM): ZIO[RestCardinalityService, Throwable, CanDoResponseV2] =
           (
             getStringQueryParam(requestContext, "propertyIri"),
             getStringQueryParam(requestContext, "newCardinality")
           ) match {
             case (None, Some(_)) => ZIO.fail(BadRequestException("Missing 'propertyIri' query parameter"))
             case (Some(_), None) => ZIO.fail(BadRequestException("Missing 'newCardinality' query parameter"))
-            case (None, None)    => RestCardinalityService.canReplaceCardinality(classIri, user)
-            case (Some(property), Some(cardinality)) =>
-              RestCardinalityService.canSetCardinality(classIri, property, cardinality, user)
+            case (p, c)    => RestCardinalityService.canUpdateCardinality(classIri, user, p zip c)
           }
 
-        val responseZio = for {
+
+        val responseZio:  ZIO[RestCardinalityService, Throwable, CanDoResponseV2] = for {
           user     <- ZIO.fromFuture(_ => getUserADM(requestContext, routeData.appConfig))
           response <- checkCardinality(user)
         } yield response
