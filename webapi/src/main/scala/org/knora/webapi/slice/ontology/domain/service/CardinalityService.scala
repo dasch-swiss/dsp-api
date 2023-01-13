@@ -33,7 +33,7 @@ trait CardinalityService {
    *
    * @param classIri class to check
    * @param propertyIri property to check
-   * @param newCardinality the newly desired cardinality
+   * @param newCardinality the new cardinality
    * @return
    *    '''success''' a [[CanSetCardinalityCheckResult]] indicating whether a class's cardinalities can be set.
    *
