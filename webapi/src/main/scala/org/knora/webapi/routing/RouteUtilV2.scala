@@ -257,7 +257,7 @@ object RouteUtilV2 {
     completeResponse(responseFuture, ctx, config, ApiV2Complex, RouteUtilV2.getSchemaOptions(ctx))
   }
 
-  def completeResponse(
+  private def completeResponse(
     responseFuture: Future[KnoraResponseV2],
     requestContext: RequestContext,
     appConfig: AppConfig,
