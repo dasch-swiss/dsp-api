@@ -30,7 +30,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 @accessible
 trait RestCardinalityService {
 
-  def canUpdateCardinality(
+  def canChangeCardinality(
     classIri: IRI,
     user: UserADM,
     propertyIri: Option[IRI],

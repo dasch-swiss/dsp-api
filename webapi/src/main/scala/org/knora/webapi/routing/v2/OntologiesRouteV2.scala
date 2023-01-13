@@ -443,7 +443,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         val appConfig = routeData.appConfig
         val responseZio = getUserADMZ(requestContext, appConfig)
           .flatMap(user =>
-            RestCardinalityService.canUpdateCardinality(
+            RestCardinalityService.canChangeCardinality(
               classIri,
               user,
               propertyIri = getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey),
