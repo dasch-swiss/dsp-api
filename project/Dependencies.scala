@@ -99,7 +99,7 @@ object Dependencies {
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.5" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.1"
-  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.0"
+  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
   // test
   val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
