@@ -17,6 +17,7 @@ import java.net.URLEncoder
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
+import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -39,6 +40,35 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   private val basePathProjectsIri: Path       = !! / "admin" / "projects" / "iri"
   private val basePathProjectsShortname: Path = !! / "admin" / "projects" / "shortname"
   private val basePathProjectsShortcode: Path = !! / "admin" / "projects" / "shortcode"
+
+  /**
+   * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
+   */
+  private val validProject: ProjectADM = ProjectADM(
+    id = "id",
+    shortname = "shortname",
+    shortcode = "AB12",
+    longname = None,
+    description = List(StringLiteralV2("description")),
+    keywords = List.empty,
+    logo = None,
+    ontologies = List.empty,
+    status = false,
+    selfjoin = false
+  )
+
+  private val validProject2: ProjectADM = ProjectADM(
+    id = "id2",
+    shortname = "shortname2",
+    shortcode = "AB13",
+    longname = None,
+    description = List(StringLiteralV2("description")),
+    keywords = List.empty,
+    logo = None,
+    ontologies = List.empty,
+    status = false,
+    selfjoin = false
+  )
 
   /**
    * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
@@ -192,4 +222,23 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         } yield assertTrue(body.contains(shortname))
       }
     )
+
+  val deleteProjectSpec =
+    test("delete a project by IRI") {
+      val iri: IRI = "http://rdfh.ch/projects/0001"
+      // val request  = Request(url = URL(basePathProjectsIri / encode(iri)))
+      val request        = Request(url = URL(basePathProjectsIri / encode(iri)), method = Method.DELETE)
+      val user           = KnoraSystemInstances.Users.SystemUser
+      val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .DeleteProject(
+          assertion = Assertion.equalTo(iri, user),
+          result = expectedResult
+        )
+        .toLayer
+      for {
+        _ <- applyRoutes(request).provide(mockService)
+      } yield assertTrue(true)
+    }
+
 }

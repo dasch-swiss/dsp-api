@@ -1,28 +1,20 @@
-/*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package org.knora.webapi.responders.admin
+import zio.Task
+import zio.URLayer
+import zio.ZLayer
 
-import zio._
+import java.util.UUID
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ActorToZioBridge
 
-trait ProjectsService {
-  def getProjectsADMRequest(): Task[ProjectsGetResponseADM]
-  def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM]
-  def createProjectADMRequest(
-    payload: ProjectCreatePayloadADM,
-    requestingUser: UserADM
-  ): Task[ProjectOperationResponseADM]
-  def deleteProject(iri: IRI, requestingUser: UserADM): Task[ProjectOperationResponseADM]
-}
-
-final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
+final case class RestProjectsService(bridge: ActorToZioBridge) {
 
   /**
    * Returns all projects as a [[ProjectsGetResponseADM]].
@@ -38,7 +30,7 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
   /**
    * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].
    *
-   * @param identifier           a [[ProjectIdentifierADM]] instance
+   * @param identifier   a [[ProjectIdentifierADM]] instance
    * @return
    *     '''success''': information about the project as a [[ProjectGetResponseADM]]
    *
@@ -59,18 +51,14 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
    *                    [[dsp.errors.ForbiddenException]] when the user is not allowed to perform the operation
    */
   def deleteProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectOperationResponseADM] =
-    for {
-      random      <- ZIO.random
-      requestUuid <- random.nextUUID
-      result <- bridge.askAppActor(
-                  ProjectChangeRequestADM(
-                    projectIri = projectIri,
-                    changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
-                    requestingUser = requestingUser,
-                    apiRequestID = requestUuid
-                  )
-                )
-    } yield result
+    bridge.askAppActor(
+      ProjectChangeRequestADM(
+        projectIri = projectIri,
+        changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+        requestingUser = requestingUser,
+        apiRequestID = UUID.randomUUID()
+      )
+    )
 
   /**
    * Creates a project
@@ -81,18 +69,33 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
    */
-  def createProjectADMRequest(
-    payload: ProjectCreatePayloadADM,
-    requestingUser: UserADM
-  ): Task[ProjectOperationResponseADM] = for {
-    random      <- ZIO.random
-    requestUuid <- random.nextUUID
-    request      = ProjectCreateRequestADM(payload, requestingUser, requestUuid)
-    response    <- bridge.askAppActor[ProjectOperationResponseADM](request)
-  } yield response
+  def createProjectADMRequest(payload: ProjectCreatePayloadADM): Task[ProjectOperationResponseADM] = {
+    val requestingUser: UserADM =
+      UserADM(
+        id = "http://rdfh.ch/users/root",
+        username = "root",
+        email = "root@example.com",
+        password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+        token = None,
+        givenName = "System",
+        familyName = "Administrator",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq.empty[ProjectADM],
+        sessionId = None,
+        permissions = PermissionsDataADM(
+          groupsPerProject = Map(
+            OntologyConstants.KnoraAdmin.SystemProject -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
+          ),
+          administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]]
+        )
+      )
+    val requestUuid: UUID = UUID.randomUUID()
+    bridge.askAppActor(ProjectCreateRequestADM(payload, requestingUser, requestUuid))
+  }
 }
 
-object ProjectsService {
-  val live: URLayer[ActorToZioBridge, ProjectsServiceLive] =
-    ZLayer.fromFunction(ProjectsServiceLive.apply _)
+object RestProjectsService {
+  val layer: URLayer[ActorToZioBridge, RestProjectsService] = ZLayer.fromFunction(RestProjectsService.apply _)
 }
