@@ -37,8 +37,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   private val expectNoInteraction = ActorToZioBridgeMock.empty
 
-  val layers =
-    ZLayer.makeSome[ActorToZioBridge, ProjectsService](ProjectsService.live)
+  val layers = ZLayer.makeSome[ActorToZioBridge, ProjectsService](ProjectsService.live)
 
   /**
    * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
