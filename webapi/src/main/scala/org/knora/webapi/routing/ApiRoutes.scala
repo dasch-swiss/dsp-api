@@ -21,6 +21,7 @@ import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 
 trait ApiRoutes {
@@ -32,8 +33,11 @@ object ApiRoutes {
   /**
    * All routes composed together.
    */
-  val layer
-    : ZLayer[State with RestResourceInfoService with AppConfig with AppRouter with ActorSystem, Nothing, ApiRoutes] =
+  val layer: ZLayer[
+    AppConfig with AppRouter with RestCardinalityService with RestResourceInfoService with State with ActorSystem,
+    Nothing,
+    ApiRoutes
+  ] =
     ZLayer {
       for {
         sys       <- ZIO.service[ActorSystem]
@@ -46,7 +50,7 @@ object ApiRoutes {
                          appConfig = appConfig
                        )
                      )
-        runtime <- ZIO.runtime[core.State with RestResourceInfoService]
+        runtime <- ZIO.runtime[core.State with RestResourceInfoService with RestCardinalityService]
       } yield ApiRoutesImpl(routeData, runtime, appConfig)
     }
 }
@@ -60,7 +64,7 @@ object ApiRoutes {
  */
 private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
-  runtime: Runtime[core.State with RestResourceInfoService],
+  runtime: Runtime[core.State with RestResourceInfoService with RestCardinalityService],
   appConfig: AppConfig
 ) extends ApiRoutes
     with AroundDirectives {
@@ -85,7 +89,7 @@ private final case class ApiRoutesImpl(
                 new CkanRouteV1(routeData).makeRoute ~
                 new UsersRouteV1(routeData).makeRoute ~
                 new ProjectsRouteV1(routeData).makeRoute ~
-                new OntologiesRouteV2(routeData).makeRoute ~
+                new OntologiesRouteV2(routeData, runtime).makeRoute ~
                 new SearchRouteV2(routeData).makeRoute ~
                 new ResourcesRouteV2(routeData, runtime).makeRoute ~
                 new ValuesRouteV2(routeData).makeRoute ~

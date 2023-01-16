@@ -64,9 +64,9 @@ class OntologyV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val ontologiesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData, runtime).makeRoute)
   private val resourcesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, null).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, runtime).makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration
@@ -1010,7 +1010,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val expectedResponse: String =
           s"""{
              |   "knora-api:lastModificationDate": {
-             |       "@value": "${newFreetestLastModDate}",
+             |       "@value": "$newFreetestLastModDate",
              |       "@type": "xsd:dateTimeStamp"
              |   },
              |   "rdfs:label": "freetest",
@@ -1092,7 +1092,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val expectedResponse: String =
           s"""{
              |   "knora-api:lastModificationDate": {
-             |       "@value": "${newFreetestLastModDate}",
+             |       "@value": "$newFreetestLastModDate",
              |       "@type": "xsd:dateTimeStamp"
              |   },
              |   "rdfs:label": "freetest",
@@ -1718,7 +1718,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     "add all IRIs to newly created link value property again" in {
       val url = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
       Get(
-        s"/v2/ontologies/allentities/${url}"
+        s"/v2/ontologies/allentities/$url"
       ) ~> ontologiesPath ~> check {
         val responseStr: String = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -1754,7 +1754,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         iris should equal(expectedIris)
 
         val isEditable = hasOtherNothingValue.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable)
-        isEditable shouldBe (true)
+        isEditable shouldBe true
       }
     }
 
@@ -1816,7 +1816,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // load back the ontology to verify that the updated property still is editable
         val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
         Get(
-          s"/v2/ontologies/allentities/${encodedIri}"
+          s"/v2/ontologies/allentities/$encodedIri"
         ) ~> ontologiesPath ~> check {
           val responseStr: String = responseAs[String]
           assert(status == StatusCodes.OK, response.toString)
@@ -1889,7 +1889,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // load back the ontology to verify that the updated property still is editable
         val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
         Get(
-          s"/v2/ontologies/allentities/${encodedIri}"
+          s"/v2/ontologies/allentities/$encodedIri"
         ) ~> ontologiesPath ~> check {
           val responseStr: String = responseAs[String]
           assert(status == StatusCodes.OK, response.toString)
@@ -1935,7 +1935,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // load back the ontology to verify that the updated property still is editable
         val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
         Get(
-          s"/v2/ontologies/allentities/${encodedIri}"
+          s"/v2/ontologies/allentities/$encodedIri"
         ) ~> ontologiesPath ~> check {
           val responseStr: String = responseAs[String]
           assert(status == StatusCodes.OK, response.toString)
@@ -2008,7 +2008,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // load back the ontology to verify that the updated property still is editable
         val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
         Get(
-          s"/v2/ontologies/allentities/${encodedIri}"
+          s"/v2/ontologies/allentities/$encodedIri"
         ) ~> ontologiesPath ~> check {
           val responseStr: String = responseAs[String]
           assert(status == StatusCodes.OK, response.toString)
@@ -3712,7 +3712,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     // check the ontology to see if all worked as it should
     val url = URLEncoder.encode(s"http://0.0.0.0:3333/ontology/0001/freetest/v2", "UTF-8")
     Get(
-      s"/v2/ontologies/allentities/${url}"
+      s"/v2/ontologies/allentities/$url"
     ) ~> ontologiesPath ~> check {
       val responseStr: String = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -3845,7 +3845,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     // check the ontology to see if all worked as it should
     val url = URLEncoder.encode(s"http://0.0.0.0:3333/ontology/0001/freetest/v2", "UTF-8")
     Get(
-      s"/v2/ontologies/allentities/${url}"
+      s"/v2/ontologies/allentities/$url"
     ) ~> ontologiesPath ~> check {
       val responseStr: String = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
