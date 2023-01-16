@@ -20,6 +20,7 @@ import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
@@ -97,7 +98,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       AppConfig.test,
       AuthenticationMiddleware.layer,
       AuthenticatorService.mock(Some(KnoraSystemInstances.Users.SystemUser)),
-      ProjectsRouteZ.layer
+      ProjectsRouteZ.layer,
+      StringFormatter.test
     )
 
   /**
@@ -225,8 +227,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
   val deleteProjectSpec =
     test("delete a project by IRI") {
-      val iri: IRI = "http://rdfh.ch/projects/0001"
-      // val request  = Request(url = URL(basePathProjectsIri / encode(iri)))
+      val iri: IRI       = "http://rdfh.ch/projects/0001"
       val request        = Request(url = URL(basePathProjectsIri / encode(iri)), method = Method.DELETE)
       val user           = KnoraSystemInstances.Users.SystemUser
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))

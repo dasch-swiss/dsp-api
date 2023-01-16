@@ -8,6 +8,7 @@ package org.knora.webapi.responders.admin
 import zio._
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ActorToZioBridge
@@ -19,7 +20,7 @@ trait ProjectsService {
     payload: ProjectCreatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
-  def deleteProject(iri: IRI, requestingUser: UserADM): Task[ProjectOperationResponseADM]
+  def deleteProject(iri: IRI, requestingUser: UserADM): RIO[StringFormatter, ProjectOperationResponseADM]
 }
 
 final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
@@ -48,31 +49,6 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
     bridge.askAppActor(ProjectGetRequestADM(identifier))
 
   /**
-   * Deletes the project by its [[IRI]].
-   *
-   * @param projectIri           the [[IRI]] of the project
-   * @param requestingUser       the user making the request.
-   * @return
-   *     '''success''': a [[ProjectOperationResponseADM]]
-   *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
-   *                    [[dsp.errors.ForbiddenException]] when the user is not allowed to perform the operation
-   */
-  def deleteProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectOperationResponseADM] =
-    for {
-      random      <- ZIO.random
-      requestUuid <- random.nextUUID
-      result <- bridge.askAppActor(
-                  ProjectChangeRequestADM(
-                    projectIri = projectIri,
-                    changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
-                    requestingUser = requestingUser,
-                    apiRequestID = requestUuid
-                  )
-                )
-    } yield result
-
-  /**
    * Creates a project
    *
    * @param payload   a [[CreateProjectPayload]] instance
@@ -90,9 +66,34 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
     request      = ProjectCreateRequestADM(payload, requestingUser, requestUuid)
     response    <- bridge.askAppActor[ProjectOperationResponseADM](request)
   } yield response
+
+  /**
+   * Deletes the project by its [[IRI]].
+   *
+   * @param projectIri           the [[IRI]] of the project
+   * @param requestingUser       the user making the request.
+   * @return
+   *     '''success''': a [[ProjectOperationResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
+   *                    [[dsp.errors.ForbiddenException]] when the user is not allowed to perform the operation
+   */
+  def deleteProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectOperationResponseADM] =
+    for {
+      random      <- ZIO.random
+      requestUuid <- random.nextUUID
+      response <- bridge.askAppActor[ProjectOperationResponseADM](
+                    ProjectChangeRequestADM(
+                      projectIri = projectIri,
+                      changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                      requestingUser = requestingUser,
+                      apiRequestID = requestUuid
+                    )
+                  )
+    } yield response
 }
 
 object ProjectsService {
-  val live: URLayer[ActorToZioBridge, ProjectsServiceLive] =
+  val live: URLayer[ActorToZioBridge with StringFormatter, ProjectsServiceLive] =
     ZLayer.fromFunction(ProjectsServiceLive.apply _)
 }
