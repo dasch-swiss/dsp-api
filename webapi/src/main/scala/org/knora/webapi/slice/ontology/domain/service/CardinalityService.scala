@@ -46,7 +46,7 @@ trait CardinalityService {
   ): Task[CanSetCardinalityCheckResult]
 
   /**
-   * Check if on a specific class any cardinality may be replaced.
+   * Checks if on a specific class any cardinality may be replaced.
    *
    * Replacing an existing cardinality is only possible if the class is not in use yet.
    *
@@ -59,7 +59,7 @@ trait CardinalityService {
   def canReplaceCardinality(classIri: InternalIri): Task[CanReplaceCardinalityCheckResult]
 
   /**
-   * Check if a property entity is used in resource instances. Returns `true` if
+   * Checks if a property entity is used in resource instances. Returns `true` if
    * it is used, and `false` if it is not used.
    *
    * @param classIri the IRI of the class that is being checked for usage.
