@@ -54,7 +54,7 @@ final case class EntityAndClassIriService(
     ignoreRdfSubjectAndObject: Boolean = false
   ): Future[Boolean] = {
     val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-      .isEntityUsed(entityIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
+      .isEntityUsed(entityIri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
       .toString()
     appActor
       .ask(SparqlSelectRequest(query))

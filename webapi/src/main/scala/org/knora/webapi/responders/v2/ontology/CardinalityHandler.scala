@@ -19,7 +19,6 @@ import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
@@ -28,6 +27,8 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.queries.sparql.v2
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /**
  * Contains methods used for dealing with cardinalities on a class
@@ -37,7 +38,7 @@ object CardinalityHandler {
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
    *
-   * @param storeManager the store manager actor.
+   * @param appActor Reference to the [[org.knora.webapi.core.actors.RoutingActor]]
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
@@ -122,8 +123,8 @@ object CardinalityHandler {
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(
                                    appActor,
-                                   internalClassIri,
-                                   submittedPropertyToDelete
+                                   internalClassIri.toInternalIri,
+                                   submittedPropertyToDelete.toInternalIri
                                  )
 
       // Make an update class definition in which the cardinality to delete is removed
@@ -157,7 +158,7 @@ object CardinalityHandler {
 
       allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
 
-      (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
+      (newInternalClassDefWithLinkValueProps, _) =
         OntologyHelpers
           .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
             internalClassDef = newClassDefinitionWithRemovedCardinality,
@@ -193,7 +194,7 @@ object CardinalityHandler {
    * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
    * of the class and any subclasses.
    *
-   * @param storeManager the store manager actor.
+   * @param appActor Reference to the [[org.knora.webapi.core.actors.RoutingActor]]
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
@@ -279,8 +280,8 @@ object CardinalityHandler {
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(
                                    appActor,
-                                   internalClassIri,
-                                   submittedPropertyToDelete
+                                   internalClassIri.toInternalIri,
+                                   submittedPropertyToDelete.toInternalIri
                                  )
       _ = if (propertyIsUsed) {
             throw BadRequestException("Property is used in data. The cardinality cannot be deleted.")
@@ -437,31 +438,21 @@ object CardinalityHandler {
    * Check if a property entity is used in resource instances. Returns `true` if
    * it is used, and `false` if it is not used.
    *
-   * @param storeManager store manager actor ref.
-   * @param internalPropertyIri the IRI of the entity that is being checked for usage.
+   * @param appActor Reference to the [[org.knora.webapi.core.actors.RoutingActor]]
+   * @param classIri the IRI of the class that is being checked for usage.
+   * @param propertyIri the IRI of the entity that is being checked for usage.
+   *
    * @param ec the execution context onto with the future will run.
    * @param timeout the timeout for the future.
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  def isPropertyUsedInResources(
-    appActor: ActorRef,
-    internalClassIri: SmartIri,
-    internalPropertyIri: SmartIri
-  )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] =
-    for {
-      request <- Future(
-                   org.knora.webapi.queries.sparql.v2.txt
-                     .isPropertyUsed(
-                       internalPropertyIri = internalPropertyIri.toString,
-                       internalClassIri = internalClassIri.toString,
-                       ignoreKnoraConstraints = true,
-                       ignoreRdfSubjectAndObject = true
-                     )
-                     .toString()
-                 )
-      response: SparqlAskResponse <-
-        appActor.ask(SparqlAskRequest(request)).mapTo[SparqlAskResponse]
-    } yield response.result
+  def isPropertyUsedInResources(appActor: ActorRef, classIri: InternalIri, propertyIri: InternalIri)(implicit
+    ec: ExecutionContext,
+    timeout: Timeout
+  ): Future[Boolean] = {
+    val request = new SparqlAskRequest(v2.txt.isPropertyUsed(propertyIri, classIri))
+    appActor.ask(request).mapTo[SparqlAskResponse].map(_.result)
+  }
 
   /**
    * Checks if the class is defined inside the ontology found in the cache.
@@ -505,7 +496,7 @@ object CardinalityHandler {
     cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
-  )(implicit ec: ExecutionContext): Future[Boolean] = {
+  ): Future[Boolean] = {
     val currentOntologyState: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
 
     val readClassInfo: ReadClassInfoV2 = currentOntologyState.classes
@@ -539,26 +530,5 @@ object CardinalityHandler {
           s"Submitted cardinality for property $propertyIri is not defined for class $internalClassIri."
         )
     }
-
   }
-
-  /**
-   * Checks if the class is a subclass of `knora-base:Resource`.
-   *
-   * @param submittedClassInfoContentV2 the class to check
-   * @return `true` if the class is a subclass of `knora-base:Resource`, otherwise throws an exception.
-   */
-  def isKnoraResourceClass(
-    submittedClassInfoContentV2: ClassInfoContentV2
-  )(implicit ec: ExecutionContext, stringFormatter: StringFormatter): Future[Boolean] =
-    if (submittedClassInfoContentV2.subClassOf.contains(KnoraBase.Resource.toSmartIri)) {
-      FastFuture.successful(true)
-    } else {
-      FastFuture.failed(
-        throw BadRequestException(
-          s"Class ${submittedClassInfoContentV2.classIri} is not a subclass of ${KnoraBase.Resource.toSmartIri}. $submittedClassInfoContentV2"
-        )
-      )
-    }
-
 }

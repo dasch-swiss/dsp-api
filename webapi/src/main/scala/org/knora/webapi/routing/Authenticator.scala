@@ -23,6 +23,8 @@ import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
 import pdi.jwt.JwtSprayJson
 import spray.json._
+import zio.Task
+import zio.ZIO
 
 import java.util.Base64
 import java.util.UUID
@@ -412,6 +414,25 @@ trait Authenticator extends InstrumentationSupport {
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // GET USER PROFILE / AUTHENTICATION ENTRY POINT
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Returns a User that matches the credentials found in the [[RequestContext]].
+   * The credentials can be email/password as parameters or auth headers, or session token in a cookie header. If no
+   * credentials are found, then a default UserProfile is returned. If the credentials are not correct, then the
+   * corresponding error is returned.
+   *
+   * @param requestContext       a [[RequestContext]] containing the http request
+   * @param appConfig            the application's configuration.
+   * @param system               the current [[ActorSystem]]
+   * @param appActor             a reference to the application actor
+   * @param executionContext  the current execution context
+   * @return a [[Task[UserADM]]
+   */
+  def getUserADMZ(requestContext: RequestContext, appConfig: AppConfig)(implicit
+    system: ActorSystem,
+    appActor: ActorRef,
+    executionContext: ExecutionContext
+  ): Task[UserADM] = ZIO.fromFuture(_ => getUserADM(requestContext, appConfig))
 
   /**
    * Returns a User that match the credentials found in the [[RequestContext]].
