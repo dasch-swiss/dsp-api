@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import zio._
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ActorToZioBridge
@@ -20,7 +19,7 @@ trait ProjectsService {
     payload: ProjectCreatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
-  def deleteProject(iri: IRI, requestingUser: UserADM): RIO[StringFormatter, ProjectOperationResponseADM]
+  def deleteProject(iri: IRI, requestingUser: UserADM): Task[ProjectOperationResponseADM]
 }
 
 final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
@@ -94,6 +93,6 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
 }
 
 object ProjectsService {
-  val live: URLayer[ActorToZioBridge with StringFormatter, ProjectsServiceLive] =
+  val live: URLayer[ActorToZioBridge, ProjectsServiceLive] =
     ZLayer.fromFunction(ProjectsServiceLive.apply _)
 }

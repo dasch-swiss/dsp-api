@@ -18,7 +18,6 @@ import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -31,7 +30,7 @@ final case class ProjectsRouteZ(
   authenticationMiddleware: AuthenticationMiddleware
 ) {
 
-  lazy val route: Http[StringFormatter, Nothing, Request, Response] =
+  lazy val route: HttpApp[Any, Nothing] =
     projectRoutes @@ authenticationMiddleware.authenticationMiddleware
 
   private val projectRoutes =
@@ -85,13 +84,8 @@ final case class ProjectsRouteZ(
 
   private def deleteProject(iriUrlEncoded: String, requestingUser: UserADM) =
     for {
-      stringFormatter <- ZIO.service[StringFormatter]
-      iriDecoded      <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      iri = stringFormatter.validateAndEscapeProjectIri(
-              iriDecoded,
-              throw BadRequestException(s"Invalid project IRI $iriDecoded")
-            )
-      projectDeleteResponse <- projectsService.deleteProject(iri, requestingUser)
+      iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      projectDeleteResponse <- projectsService.deleteProject(iriDecoded, requestingUser)
     } yield Response.json(projectDeleteResponse.toJsValue.toString())
 }
 

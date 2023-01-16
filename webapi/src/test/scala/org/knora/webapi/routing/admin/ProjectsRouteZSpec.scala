@@ -98,8 +98,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       AppConfig.test,
       AuthenticationMiddleware.layer,
       AuthenticatorService.mock(Some(KnoraSystemInstances.Users.SystemUser)),
-      ProjectsRouteZ.layer,
-      StringFormatter.test
+      ProjectsRouteZ.layer
     )
 
   /**
