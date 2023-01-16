@@ -416,7 +416,7 @@ trait Authenticator extends InstrumentationSupport {
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Returns a User that match the credentials found in the [[RequestContext]].
+   * Returns a User that matches the credentials found in the [[RequestContext]].
    * The credentials can be email/password as parameters or auth headers, or session token in a cookie header. If no
    * credentials are found, then a default UserProfile is returned. If the credentials are not correct, then the
    * corresponding error is returned.
