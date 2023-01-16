@@ -44,35 +44,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   /**
    * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
    */
-  private val validProject: ProjectADM = ProjectADM(
-    id = "id",
-    shortname = "shortname",
-    shortcode = "AB12",
-    longname = None,
-    description = List(StringLiteralV2("description")),
-    keywords = List.empty,
-    logo = None,
-    ontologies = List.empty,
-    status = false,
-    selfjoin = false
-  )
-
-  private val validProject2: ProjectADM = ProjectADM(
-    id = "id2",
-    shortname = "shortname2",
-    shortcode = "AB13",
-    longname = None,
-    description = List(StringLiteralV2("description")),
-    keywords = List.empty,
-    logo = None,
-    ontologies = List.empty,
-    status = false,
-    selfjoin = false
-  )
-
-  /**
-   * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
-   */
   private def getProjectADM(id: String = "") =
     ProjectADM(
       id = id,
