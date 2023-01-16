@@ -1,14 +1,16 @@
 package org.knora.webapi.slice.resourceinfo.api
 
+import zio.test._
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.resourceinfo.domain.{InternalIri, IriConverter}
-import zio.test._
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object IriConverterLiveSpec extends ZIOSpecDefault {
 
   private val someInternalIri: IRI = "http://www.knora.org/ontology/0001/anything#Thing"
-  private val someExternalIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
+  private val someExternalIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
 
   def spec: Spec[Any, Throwable] =
     suite("IriConverter")(
