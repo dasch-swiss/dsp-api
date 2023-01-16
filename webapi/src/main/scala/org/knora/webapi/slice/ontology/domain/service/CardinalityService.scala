@@ -27,7 +27,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 trait CardinalityService {
 
   /**
-   * Check if a specific cardinality may be set on a property in the context of a class.
+   * Checks if a specific cardinality may be set on a property in the context of a class.
    *
    * Setting a wider cardinality on a sub class is not possible if for the same property a stricter cardinality already exists in one of its super classes.
    *
