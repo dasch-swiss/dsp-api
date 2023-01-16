@@ -99,8 +99,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
     case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>
       addCardinalitiesToClass(addCardinalitiesToClassRequest)
-    case canChangeCardinalitiesRequest: CanChangeCardinalitiesRequestV2 =>
-      canChangeClassCardinalities(canChangeCardinalitiesRequest)
     case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 =>
       changeClassCardinalities(changeCardinalitiesRequest)
     case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
@@ -1474,43 +1472,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         )
                     )
     } yield taskResult
-  }
-
-  /**
-   * Checks whether a class's cardinalities can be replaced.
-   *
-   * @param canChangeCardinalitiesRequest the request message.
-   * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be replaced.
-   */
-  private def canChangeClassCardinalities(
-    canChangeCardinalitiesRequest: CanChangeCardinalitiesRequestV2
-  ): Future[CanDoResponseV2] = {
-    val internalClassIri: SmartIri    = canChangeCardinalitiesRequest.classIri.toOntologySchema(InternalSchema)
-    val internalOntologyIri: SmartIri = internalClassIri.getOntologyFromEntity
-
-    for {
-      cacheData <- Cache.getCacheData
-
-      ontology = cacheData.ontologies.getOrElse(
-                   internalOntologyIri,
-                   throw BadRequestException(
-                     s"Ontology ${canChangeCardinalitiesRequest.classIri.getOntologyFromEntity} does not exist"
-                   )
-                 )
-
-      _ = if (!ontology.classes.contains(internalClassIri)) {
-            throw BadRequestException(s"Class ${canChangeCardinalitiesRequest.classIri} does not exist")
-          }
-
-      userCanUpdateOntology <-
-        OntologyHelpers.canUserUpdateOntology(internalOntologyIri, canChangeCardinalitiesRequest.requestingUser)
-
-      classIsUsed <- iriService.isEntityUsed(
-                       entityIri = internalClassIri,
-                       ignoreKnoraConstraints =
-                         true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-                     )
-    } yield CanDoResponseV2(userCanUpdateOntology && !classIsUsed)
   }
 
   /**

@@ -611,17 +611,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
 }
 
 /**
- * Checks whether the cardinalities of a class can be replaced. A successful response will be a [[CanDoResponseV2]].
- *
- * @param classIri the class IRI.
- * @param requestingUser the user making the request.
- */
-case class CanChangeCardinalitiesRequestV2(
-  classIri: SmartIri,
-  requestingUser: UserADM
-) extends OntologiesResponderRequestV2
-
-/**
  * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.

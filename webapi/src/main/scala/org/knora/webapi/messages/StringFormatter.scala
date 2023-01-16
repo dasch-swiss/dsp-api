@@ -44,6 +44,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
 
@@ -358,6 +359,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
 
   def toIri: IRI = toString
 
+  def toInternalIri: InternalIri = InternalIri(toOntologySchema(InternalSchema).toIri)
+
   /**
    * Returns `true` if this is a Knora data or definition IRI.
    */
@@ -497,8 +500,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    * @param targetSchema the target schema.
    */
   override def toOntologySchema(targetSchema: OntologySchema): SmartIri
-
-  def internalIri: IRI = toOntologySchema(InternalSchema).toIri
 
   /**
    * Constructs a short prefix label for the ontology that the IRI belongs to.
@@ -1084,27 +1085,28 @@ class StringFormatter private (
 
     override def getStandoffStartIndex: Option[Int] = iriInfo.standoffStartIndex
 
-    lazy val ontologyFromEntity: SmartIri = if (isKnoraOntologyIri) {
-      throw DataConversionException(s"$iri is not a Knora entity IRI")
-    } else {
-      val lastHashPos = iri.lastIndexOf('#')
-
-      val entityDelimPos = if (lastHashPos >= 0) {
-        lastHashPos
+    lazy val ontologyFromEntity: SmartIri =
+      if (isKnoraOntologyIri) {
+        throw DataConversionException(s"$iri is not a Knora entity IRI")
       } else {
-        val lastSlashPos = iri.lastIndexOf('/')
+        val lastHashPos = iri.lastIndexOf('#')
 
-        if (lastSlashPos < iri.length - 1) {
-          lastSlashPos
+        val entityDelimPos = if (lastHashPos >= 0) {
+          lastHashPos
         } else {
-          throw DataConversionException(s"Can't interpret IRI $iri as an entity IRI")
+          val lastSlashPos = iri.lastIndexOf('/')
+
+          if (lastSlashPos < iri.length - 1) {
+            lastSlashPos
+          } else {
+            throw DataConversionException(s"Can't interpret IRI $iri as an entity IRI")
+          }
         }
+
+        val convertedIriStr = iri.substring(0, entityDelimPos)
+
+        getOrCacheSmartIri(convertedIriStr, () => new SmartIriImpl(convertedIriStr))
       }
-
-      val convertedIriStr = iri.substring(0, entityDelimPos)
-
-      getOrCacheSmartIri(convertedIriStr, () => new SmartIriImpl(convertedIriStr))
-    }
 
     override def getOntologyFromEntity: SmartIri = ontologyFromEntity
 

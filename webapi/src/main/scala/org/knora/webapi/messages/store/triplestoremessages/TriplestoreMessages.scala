@@ -7,6 +7,7 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
+import play.twirl.api.TxtFormat
 import spray.json._
 import zio._
 
@@ -254,7 +255,9 @@ case class SparqlUpdateResponse()
  *
  * @param sparql the SPARQL string.
  */
-case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
+case class SparqlAskRequest(sparql: String) extends TriplestoreRequest {
+  def this(txt: TxtFormat.Appendable) = this(txt.toString())
+}
 
 /**
  * Represents a response to a SPARQL ASK query, containing the result.

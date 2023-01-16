@@ -18,6 +18,10 @@ import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -50,6 +54,8 @@ object LayersLive {
       with IIIFService
       with JWTService
       with RepositoryUpdater
+      with RestResourceInfoService
+      with RestCardinalityService
       with State
       with TriplestoreServiceManager
       with TriplestoreService
@@ -69,16 +75,20 @@ object LayersLive {
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
+      CardinalityService.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       JWTService.layer,
+      OntologyCache.layer,
+      OntologyRepoLive.layer,
       ProjectsRouteZ.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
+      RestCardinalityService.layer,
       RestResourceInfoService.layer,
       ProjectsService.live,
       State.layer,

@@ -2324,7 +2324,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val isEntityUsedSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .isEntityUsed(
-          entityIri = resourceIriToErase.get.toSmartIri,
+          entityIri = resourceIriToErase.get.toSmartIri.toInternalIri,
           ignoreKnoraConstraints = true
         )
         .toString()

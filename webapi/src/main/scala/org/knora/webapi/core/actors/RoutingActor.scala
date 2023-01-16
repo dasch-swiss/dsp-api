@@ -161,10 +161,10 @@ final case class RoutingActor(
     case sipiResponderRequestADM: SipiResponderRequestADM =>
       ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
     case msg: CacheServiceRequest =>
-      ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), appConfig, log, runtime)
-    case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), appConfig, log, runtime)
+      ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), log, runtime)
+    case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, runtime)
     case msg: TriplestoreRequest =>
-      ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), appConfig, log, runtime)
+      ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), log, runtime)
 
     case other =>
       throw UnexpectedMessageException(
