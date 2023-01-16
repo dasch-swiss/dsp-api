@@ -10,6 +10,7 @@ import Cardinality._
 /**
  * Represents a cardinality value object.
  */
+@deprecated
 sealed trait Cardinality { self =>
 
   /**
