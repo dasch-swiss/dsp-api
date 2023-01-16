@@ -17,10 +17,9 @@ import org.knora.webapi.messages.StringFormatter
 
 @accessible
 trait IriConverter {
-  def asInternalSmartIri(iri: IRI): Task[SmartIri]
   def asSmartIri(iri: IRI): Task[SmartIri]
-
   def asInternalIri(iri: IRI): Task[InternalIri]           = asSmartIri(iri).mapAttempt(_.toInternalIri)
+  def asInternalSmartIri(iri: IRI): Task[SmartIri]         = asSmartIri(iri).mapAttempt(_.toOntologySchema(InternalSchema))
   def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)
   def getOntologyIriFromClassIri(iri: InternalIri): Task[InternalIri] =
     getOntologySmartIriFromClassIri(iri).mapAttempt(_.toInternalIri)
@@ -29,10 +28,7 @@ trait IriConverter {
 }
 
 final case class IriConverterLive(sf: StringFormatter) extends IriConverter {
-  override def asInternalSmartIri(iri: IRI): Task[SmartIri] = ZIO
-    .attempt(sf.toSmartIri(iri))
-    .mapAttempt(_.toOntologySchema(InternalSchema))
-  override def asSmartIri(iri: IRI): Task[SmartIri] = ZIO.attempt(sf.toSmartIri(iri))
+  override def asSmartIri(iri: IRI): Task[SmartIri] = ZIO.attempt(sf.toSmartIri(iri, requireInternal = false))
 }
 
 object IriConverter {
