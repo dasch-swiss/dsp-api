@@ -1,16 +1,14 @@
 package org.knora.webapi.slice.resourceinfo.api
 
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import zio.test._
-
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.resourceinfo.domain.{InternalIri, IriConverter}
+import zio.test._
 
 object IriConverterLiveSpec extends ZIOSpecDefault {
 
   private val someInternalIri: IRI = "http://www.knora.org/ontology/0001/anything#Thing"
-  private val someExternalIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
+  private val someExternalIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
 
   def spec: Spec[Any, Throwable] =
     suite("IriConverter")(
@@ -49,11 +47,10 @@ object IriConverterLiveSpec extends ZIOSpecDefault {
             actual <- IriConverter.asInternalSmartIri(someInternalIri)
           } yield assertTrue(actual.toIri == someInternalIri)
         },
-        test("should fail if it is an external IRI") {
+        test("when provided an external Iri should return converted iri") {
           for {
-            actual <-
-              IriConverter.asInternalSmartIri(someExternalIri).exit
-          } yield assertTrue(actual.isFailure)
+            actual <- IriConverter.asInternalSmartIri(someExternalIri)
+          } yield assertTrue(actual.toIri == someInternalIri)
         }
       )
     ).provide(IriConverter.layer, StringFormatter.test)
