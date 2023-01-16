@@ -34,7 +34,7 @@ trait Repository[Entity, Id] {
   def findAllById(ids: Seq[Id]): Task[List[Entity]] = ZIO.foreach(ids)(findById).map(_.flatten.toList)
 
   /**
-   * Returns whether an entity with the given id exists.
+   * Checks whether an entity with the given id exists.
    *
    * @param id The identifier of type [[Id]].
    * @return true if an entity with the given id exists, false otherwise.
