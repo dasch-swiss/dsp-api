@@ -1,4 +1,4 @@
-# 4. Change Triplestore Service Manager and Fuseki implementation to ZLayer
+# ADR-0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer
 
 Date: 2022-05-23
 

@@ -170,7 +170,4 @@ object IriLocker {
         }
       })
     )
-
-  def dumpLockMap(): Unit =
-    println(lockMap)
 }

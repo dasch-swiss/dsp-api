@@ -1,4 +1,4 @@
-# 2. Change Cache Service Manager from Akka-Actor to ZLayer
+# ADR-0002 Change Cache Service Manager from Akka-Actor to ZLayer
 
 Date: 2022-04-06
 

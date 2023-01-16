@@ -1,4 +1,4 @@
-# 1. Record architectural decisions
+# ADR-0001 Record architectural decisions as ADR
 
 Date: 2022-03-14
 
