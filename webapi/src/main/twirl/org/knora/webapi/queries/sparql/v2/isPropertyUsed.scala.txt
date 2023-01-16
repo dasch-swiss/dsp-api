@@ -5,7 +5,7 @@
 
 @*
  * This query is asking whether there are any instances of a class or subclass that have a specific property.
- * I.e. checks whether a property is used, for example is the property of any statements.
+ * I.e. checks whether a property is used, for example whether it is the property of any statements.
  *
  * @param propertyIri the IRI of the property
  * @param classIri the IRI of class to check
