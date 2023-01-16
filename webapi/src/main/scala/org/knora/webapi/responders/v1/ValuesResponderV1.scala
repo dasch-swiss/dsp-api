@@ -12,7 +12,6 @@ import scala.annotation.tailrec
 import scala.concurrent.Future
 
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -48,6 +47,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.util._
 
 /**
@@ -210,7 +211,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // ones that the user is allowed to see, otherwise checking for duplicate values would be a security risk), plus empty
         // properties for which the resource's class has cardinalities. If the resources responder returns no information about
         // the property, this could be because the property isn't allowed for the resource, or because it's allowed, has a
-        // cardinality of MustHaveOne or MayHaveOne, and already has a value that the user isn't allowed to see. We'll have to
+        // cardinality of ExactlyOne `1` or ZeroOrOne `0-1`, and already has a value that the user isn't allowed to see. We'll have to
         // implement this in a different way in API v2.
         cardinalityOK = resourceFullResponse.props.flatMap(
                           _.properties.find(_.pid == createValueRequest.propertyIri)
@@ -223,7 +224,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                               throw DuplicateValueException()
                             }
 
-                            !((prop.occurrence.get == MayHaveOne.value || prop.occurrence.get == MustHaveOne.value) && prop.values.nonEmpty)
+                            !((prop.occurrence.get == ZeroOrOne.toString || prop.occurrence.get == ExactlyOne.toString) && prop.values.nonEmpty)
 
                           case None =>
                             false

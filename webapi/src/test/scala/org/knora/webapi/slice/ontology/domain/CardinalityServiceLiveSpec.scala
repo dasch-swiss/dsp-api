@@ -150,7 +150,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     private def makePropertyCardinality(
       propertyIri: SmartIri,
       cardinality: Cardinality
-    ): Map[SmartIri, KnoraCardinalityInfo] = Map(propertyIri -> KnoraCardinalityInfo(cardinality.oldCardinality))
+    ): Map[SmartIri, KnoraCardinalityInfo] = Map(propertyIri -> KnoraCardinalityInfo(cardinality))
 
     private def makeClassInfoContent(
       classIri: SmartIri,

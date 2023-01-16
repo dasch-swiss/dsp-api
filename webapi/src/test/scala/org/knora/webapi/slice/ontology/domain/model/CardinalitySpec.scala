@@ -9,6 +9,7 @@ import zio.Random
 import zio.Scope
 import zio.test._
 
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 
 object CardinalitySpec extends ZIOSpecDefault {
@@ -67,7 +68,7 @@ object CardinalitySpec extends ZIOSpecDefault {
           assertTrue(ExactlyOne.isStricterThan(ZeroOrOne))
         }
       ),
-      suite(s"ExactlyOne $ZeroOrOne")(
+      suite(s"ZeroOrOne $ZeroOrOne")(
         test(s"'$ZeroOrOne' is stricter than $AtLeastOne") {
           assertTrue(ZeroOrOne.isStricterThan(AtLeastOne))
         },
@@ -75,6 +76,40 @@ object CardinalitySpec extends ZIOSpecDefault {
           assertTrue(!ZeroOrOne.isStricterThan(ExactlyOne))
         }
       )
+    ),
+    suite("toOwl")(
+      test(s"AtLeastOne $AtLeastOne") {
+        assertTrue(
+          Cardinality
+            .toOwl(AtLeastOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#minCardinality", 1)
+        )
+      },
+      test(s"ExactlyOne $ExactlyOne") {
+        assertTrue(
+          Cardinality
+            .toOwl(ExactlyOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#cardinality", 1)
+        )
+      },
+      test(s"ZeroOrOne $ZeroOrOne") {
+        assertTrue(
+          Cardinality
+            .toOwl(ZeroOrOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#maxCardinality", 1)
+        )
+      },
+      test(s"Unbounded $Unbounded") {
+        assertTrue(
+          Cardinality
+            .toOwl(Unbounded) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#minCardinality", 0)
+        )
+      }
+    ),
+    suite("getIntersection")(
+      test(s"$AtLeastOne <> $ZeroOrOne => $ExactlyOne") {
+        assertTrue(AtLeastOne.getIntersection(ZeroOrOne).contains(ExactlyOne))
+      },
+      test(s"$Unbounded <> $AtLeastOne => $AtLeastOne") {
+        assertTrue(Unbounded.getIntersection(AtLeastOne).contains(AtLeastOne))
+      }
     )
   )
 }

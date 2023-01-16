@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -15,6 +14,7 @@ import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 
 /**
  * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Simple]] schema.
@@ -398,9 +398,9 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
   )
 
   private val ResourceCardinalites = Map(
-    OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> MayHaveMany,
-    OntologyConstants.KnoraApiV2Simple.ArkUrl          -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Simple.VersionArkUrl   -> MustHaveOne
+    OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Unbounded,
+    OntologyConstants.KnoraApiV2Simple.ArkUrl          -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Simple.VersionArkUrl   -> ExactlyOne
   )
 
   /**

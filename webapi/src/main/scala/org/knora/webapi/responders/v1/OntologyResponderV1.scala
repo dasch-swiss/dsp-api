@@ -250,7 +250,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         )
                                                                       ),
                                                                       vocabulary = entityInfo.ontologyIri,
-                                                                      occurrence = cardinalityInfo.cardinality.value,
+                                                                      occurrence = cardinalityInfo.cardinality.toString,
                                                                       valuetype_id =
                                                                         OntologyConstants.KnoraBase.LinkValue,
                                                                       attributes = valueUtilV1.makeAttributeString(
@@ -300,7 +300,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         )
                                                                       ),
                                                                       vocabulary = entityInfo.ontologyIri,
-                                                                      occurrence = cardinalityInfo.cardinality.value,
+                                                                      occurrence = cardinalityInfo.cardinality.toString,
                                                                       valuetype_id = entityInfo
                                                                         .getPredicateObject(
                                                                           OntologyConstants.KnoraBase.ObjectClassConstraint
