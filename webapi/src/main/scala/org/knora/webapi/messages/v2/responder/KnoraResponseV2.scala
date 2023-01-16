@@ -10,6 +10,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple
+import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.SchemaOption
@@ -173,7 +174,8 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
  *
  * @param canDo `true` if the operation can be performed.
  */
-final case class CanDoResponseV2(canDo: Boolean) extends KnoraJsonLDResponseV2 {
+final case class CanDoResponseV2(canDo: Boolean, cannotDoReason: Option[String] = None) extends KnoraJsonLDResponseV2 {
+  require((cannotDoReason.nonEmpty && !canDo) || cannotDoReason.isEmpty)
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
@@ -182,11 +184,12 @@ final case class CanDoResponseV2(canDo: Boolean) extends KnoraJsonLDResponseV2 {
     if (targetSchema != ApiV2Complex) {
       throw BadRequestException(s"Response is available only in the complex schema")
     }
-
+    val bodyMap: Map[IRI, JsonLDValue] = Map(OntologyConstants.KnoraApiV2Complex.CanDo -> JsonLDBoolean(canDo))
+    val reasonMap: Map[IRI, JsonLDValue] = cannotDoReason
+      .map(reason => Map(OntologyConstants.KnoraApiV2Complex.CannotDoReason -> JsonLDString(reason)))
+      .getOrElse(Map.empty)
     JsonLDDocument(
-      body = JsonLDObject(
-        Map(OntologyConstants.KnoraApiV2Complex.CanDo -> JsonLDBoolean(canDo))
-      ),
+      body = JsonLDObject(bodyMap ++ reasonMap),
       context = JsonLDObject(
         Map(
           OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(

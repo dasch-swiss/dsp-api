@@ -7,7 +7,12 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
@@ -44,6 +49,7 @@ object LayersTest {
     with IriConverter
     with RepositoryUpdater
     with ResourceInfoRepo
+    with RestCardinalityService
     with RestResourceInfoService
     with State
     with StringFormatter
@@ -53,15 +59,20 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
+      ActorDeps.layer,
       ApiRoutes.layer,
       AppRouter.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
+      CardinalityService.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
+      OntologyCache.layer,
+      OntologyRepoLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
+      RestCardinalityService.layer,
       RestResourceInfoService.layer,
       State.layer,
       StringFormatter.test,

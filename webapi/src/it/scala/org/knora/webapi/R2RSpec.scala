@@ -5,6 +5,7 @@
 
 package org.knora.webapi
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.typesafe.scalalogging.Logger
@@ -13,16 +14,17 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
 import zio.logging.backend.SLF4J
-
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.Future
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
@@ -50,7 +52,8 @@ abstract class R2RSpec
    * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers(Some(system))
+  lazy val effectLayers: ULayer[DefaultTestEnvironmentWithoutSipi] =
+    core.LayersTest.integrationTestsWithFusekiTestcontainers(Some(system))
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
@@ -63,10 +66,7 @@ abstract class R2RSpec
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // create a configured runtime
-  private val runtime = Unsafe.unsafe { implicit u =>
-    Runtime.unsafe
-      .fromLayer(bootstrap)
-  }
+  val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
@@ -90,11 +90,11 @@ abstract class R2RSpec
   // main difference to other specs (no own systen and executionContext defined)
   lazy val rdfDataObjects = List.empty[RdfDataObject]
   val log: Logger         = Logger(this.getClass())
-  val appActor            = router.ref
+  val appActor: ActorRef  = router.ref
 
   // needed by some tests
-  val routeData = KnoraRouteData(system, appActor, config)
-  val appConfig = config
+  val routeData: KnoraRouteData = KnoraRouteData(system, appActor, config)
+  val appConfig: AppConfig      = config
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
@@ -110,7 +110,6 @@ abstract class R2RSpec
     }
 
   final override def afterAll(): Unit = {
-
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
