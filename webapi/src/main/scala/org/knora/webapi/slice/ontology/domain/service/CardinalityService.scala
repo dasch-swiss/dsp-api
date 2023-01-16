@@ -155,7 +155,7 @@ final case class CardinalityServiceLive(
     } yield inheritedCardinalities.forall(_.isStricterThan(newCardinality))
 
   /**
-   * Check if a specific cardinality may be replaced.
+   * Checks if a specific cardinality may be replaced.
    *
    * Replacing an existing cardinality on a class is only possible if it is not in use.
    *
