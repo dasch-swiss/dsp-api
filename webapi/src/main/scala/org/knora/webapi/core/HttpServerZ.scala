@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.core
+import zhttp.http._
 import zhttp.service.Server
 import zio.ZLayer
 import zio._
@@ -12,7 +13,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
-import zhttp.http._
 
 object HttpServerZ {
 
