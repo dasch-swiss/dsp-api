@@ -15,7 +15,6 @@ import scala.util.Failure
 import scala.util.Success
 
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -60,6 +59,9 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
@@ -808,7 +810,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               )
 
               if (
-                (cardinalityInfo.cardinality == MayHaveOne || cardinalityInfo.cardinality == MustHaveOne) && valuesForProperty.size > 1
+                (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
               ) {
                 throw OntologyConstraintException(
                   s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
@@ -820,7 +822,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Check that no required values are missing.
 
       requiredProps: Set[SmartIri] = knoraPropertyCardinalities.filter { case (_, cardinalityInfo) =>
-                                       cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome
+                                       cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne
                                      }.keySet -- resourceClassInfo.linkProperties
 
       internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet

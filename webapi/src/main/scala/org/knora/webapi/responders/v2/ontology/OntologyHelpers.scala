@@ -19,13 +19,7 @@ import scala.util.Try
 
 import dsp.constants.SalsahGui
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.ApiV2Simple
-import org.knora.webapi.IRI
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.OntologySchema
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -39,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 
 object OntologyHelpers {
 
@@ -119,8 +114,7 @@ object OntologyHelpers {
   /**
    * Reads an ontology's metadata.
    *
-   * @param internalOntologyIri  the ontology's internal IRI.
-   *
+   * @param internalOntologyIri the ontology's internal IRI.
    * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
    */
   def loadOntologyMetadata(
@@ -624,9 +618,9 @@ object OntologyHelpers {
   /**
    * Checks for invalid cardinalities on boolean properties.
    *
-   * @param classIri the class IRI.
+   * @param classIri            the class IRI.
    * @param directCardinalities the cardinalities directly defined on the class.
-   * @param allPropertyDefs all property definitions.
+   * @param allPropertyDefs     all property definitions.
    */
   def checkForInvalidBooleanCardinalities(
     classIri: SmartIri,
@@ -648,7 +642,7 @@ object OntologyHelpers {
         )
 
         propertyObjectClassConstraint == OntologyConstants.KnoraBase.BooleanValue.toSmartIri &&
-        !(knoraCardinalityInfo.cardinality == MustHaveOne || knoraCardinalityInfo.cardinality == MayHaveOne)
+        !(knoraCardinalityInfo.cardinality == ExactlyOne || knoraCardinalityInfo.cardinality == ZeroOrOne)
     }.keySet
 
     if (invalidCardinalitiesOnBooleanProps.nonEmpty) {
@@ -829,7 +823,9 @@ object OntologyHelpers {
                      .mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically."
                )
              )
-           } else { Validation.succeed(()) }
+           } else {
+             Validation.succeed(())
+           }
 
       // Add a link value prop cardinality for each new link prop cardinality.
 
@@ -952,43 +948,31 @@ object OntologyHelpers {
    * This method is used to check if an inherited property of a class uses a cardinality that is compatible with the cardinalities
    * of the class' super class.
    *
-   * @param classes           the set of class IRIs.
-   * @param cacheData         the ontology cache data. It is needed to get the class definitions from the cache
-   * @return                  a map with the property IRIs and their respective cardinality definitions
+   * @param classes the set of class IRIs.
+   * @param cache   the ontology cache data. It is needed to get the class definitions from the cache
+   * @return a map with the property IRIs and their respective cardinality definitions
    */
   def getStrictestCardinalitiesFromClasses(
     classes: Set[SmartIri],
-    cacheData: OntologyCacheData
-  ): Map[SmartIri, KnoraCardinalityInfo] =
-    classes.foldLeft(Map[SmartIri, KnoraCardinalityInfo]()) {
-      (acc: Map[SmartIri, KnoraCardinalityInfo], baseClassIri: SmartIri) =>
-        val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
-        val cardinalitiesOfBaseClass: List[(SmartIri, KnoraCardinalityInfo)] = ontology match {
-          case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities.toList
-          case _                        => List.empty
-        }
-
-        val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, nextBaseClassCardinality) =>
-          // if there are multiple instances of the same property the class gets from inheritance, keep only the strictest one
-          acc.get(iri) match {
-            // if the previous base class cardinality is stricter than the next base class cardinality, keep the previous
-            case Some(previousCardinality)
-                if previousCardinality.cardinality.isStricterThan(nextBaseClassCardinality.cardinality) =>
-              (iri, previousCardinality)
-            // if the previous base class cardinality is "1-n" or "0-1" and the next base class cardinality is also "1-n" or "0-1", update the
-            // accumulator with cardinality of "1", because only this is stricter than both
-            case Some(previousCardinality)
-                if (
-                  (nextBaseClassCardinality.cardinality == MustHaveSome || nextBaseClassCardinality.cardinality == MayHaveOne) &&
-                    (previousCardinality.cardinality == MustHaveSome || previousCardinality.cardinality == MayHaveOne)
-                ) =>
-              (iri, KnoraCardinalityInfo(MustHaveOne, previousCardinality.guiOrder))
-            // in all other cases, keep the next base class cardinality
-            case _ => (iri, nextBaseClassCardinality)
-          }
-        }.toMap
-        acc ++ additionalCardinalities
+    cache: OntologyCacheData
+  ): Map[SmartIri, KnoraCardinalityInfo] = {
+    def findCardinalitiesForClass(classIri: SmartIri): Map[SmartIri, KnoraCardinalityInfo] = {
+      val maybeOntology = cache.ontologies.get(classIri.getOntologyFromEntity)
+      maybeOntology.flatMap(_.classes.get(classIri).map(_.allCardinalities)).getOrElse(Map.empty)
     }
+
+    classes.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) { (acc, classIri) =>
+      val additionalCardinalities = findCardinalitiesForClass(classIri).flatMap { case (iri, next) =>
+        acc.get(iri) match {
+          case Some(previous) =>
+            val intersectionCardinality = previous.cardinality.getIntersection(next.cardinality)
+            intersectionCardinality.map(it => (iri, KnoraCardinalityInfo(it, previous.guiOrder)))
+          case _ => Some(iri, next)
+        }
+      }
+      acc ++ additionalCardinalities
+    }
+  }
 
   /**
    * Given a set of property IRIs, determines whether the set contains a property P and a subproperty of P.
@@ -1069,9 +1053,8 @@ object OntologyHelpers {
   /**
    * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
    *
-   * @param appActor the store manager actor ref.
+   * @param appActor    the store manager actor ref.
    * @param propertyIri the IRI of the property to be loaded.
-   *
    * @return a [[PropertyInfoContentV2]] representing the property definition.
    */
   def loadPropertyDefinition(
@@ -1516,7 +1499,6 @@ object OntologyHelpers {
    *
    * @param appActor the store manager actor ref.
    * @param classIri the IRI of the class to be loaded.
-   *
    * @return a [[ClassInfoContentV2]] representing the class definition.
    */
   def loadClassDefinition(
@@ -1701,10 +1683,9 @@ object OntologyHelpers {
    * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
    * an error message fitting for the "before update" case.
    *
-   * @param appActor the store manager actor ref.
+   * @param appActor                     the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   *
    * @return a failed Future if the expected last modification date is not found.
    */
   def checkOntologyLastModificationDateBeforeUpdate(
@@ -1725,10 +1706,9 @@ object OntologyHelpers {
    * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
    * an error message fitting for the "after update" case.
    *
-   * @param appActor the store manager actor ref.
+   * @param appActor                     the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   *
    * @return a failed Future if the expected last modification date is not found.
    */
   def checkOntologyLastModificationDateAfterUpdate(
@@ -1748,10 +1728,9 @@ object OntologyHelpers {
   /**
    * Checks that the last modification date of an ontology is the same as the one we expect it to be.
    *
-   * @param appActor the store manager actor ref.
+   * @param appActor                     the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
-   *
    * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
    * @return a failed Future if the expected last modification date is not found.
    */
@@ -1960,8 +1939,8 @@ object OntologyHelpers {
               if (baseClassCardinality.cardinality.isStricterThan(thisClassCardinality.cardinality)) {
                 // No. Throw an exception.
                 errorFun(
-                  s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality '${thisClassCardinality.cardinality.value}' on ${thisClassProp
-                      .toOntologySchema(errorSchema)} is not compatible with the inherited or allowed cardinality '${baseClassCardinality.cardinality.value}' on ${baseClassProp
+                  s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality '${thisClassCardinality.cardinality.toString}' on ${thisClassProp
+                      .toOntologySchema(errorSchema)} is not compatible with the inherited or allowed cardinality '${baseClassCardinality.cardinality.toString}' on ${baseClassProp
                       .toOntologySchema(errorSchema)}, because it is less restrictive"
                 )
               } else {
@@ -2006,7 +1985,7 @@ object OntologyHelpers {
       if (thisClassProps.size > 1) {
         val overriddenCardinality: KnoraCardinalityInfo = inheritableCardinalities(baseClassProp)
 
-        if (overriddenCardinality.cardinality == MustHaveOne || overriddenCardinality.cardinality == MayHaveOne) {
+        if (overriddenCardinality.cardinality == ExactlyOne || overriddenCardinality.cardinality == ZeroOrOne) {
           errorFun(
             s"In class <${classIri.toOntologySchema(errorSchema)}>, there is more than one cardinality that would override the inherited cardinality $overriddenCardinality on <${baseClassProp
                 .toOntologySchema(errorSchema)}>"
