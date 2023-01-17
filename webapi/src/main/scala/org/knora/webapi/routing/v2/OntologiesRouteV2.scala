@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import zio.prelude.Validation
 
-import java.util.UUID
+import java.util.UUID.randomUUID
 import scala.concurrent.Future
 
 import dsp.constants.SalsahGui
@@ -21,7 +21,6 @@ import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
-import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -186,7 +185,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
               requestMessage: ChangeOntologyMetadataRequestV2 <- ChangeOntologyMetadataRequestV2.fromJsonLD(
                                                                    jsonLDDocument = requestDoc,
-                                                                   apiRequestID = UUID.randomUUID,
+                                                                   apiRequestID = randomUUID,
                                                                    requestingUser = requestingUser,
                                                                    appActor = appActor,
                                                                    log = log
@@ -296,7 +295,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
             requestMessage: CreateClassRequestV2 <- CreateClassRequestV2.fromJsonLD(
                                                       jsonLDDocument = requestDoc,
-                                                      apiRequestID = UUID.randomUUID,
+                                                      apiRequestID = randomUUID,
                                                       requestingUser = requestingUser,
                                                       appActor = appActor,
                                                       log = log
@@ -333,7 +332,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
               requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
                                   jsonLDDocument = requestDoc,
-                                  apiRequestID = UUID.randomUUID,
+                                  apiRequestID = randomUUID,
                                   requestingUser = requestingUser,
                                   appActor = appActor,
                                   log = log
@@ -382,7 +381,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         } yield DeleteClassCommentRequestV2(
           classIri = classIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
@@ -414,7 +413,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
               requestMessage: AddCardinalitiesToClassRequestV2 <- AddCardinalitiesToClassRequestV2.fromJsonLD(
                                                                     jsonLDDocument = requestDoc,
-                                                                    apiRequestID = UUID.randomUUID,
+                                                                    apiRequestID = randomUUID,
                                                                     requestingUser = requestingUser,
                                                                     appActor = appActor,
                                                                     log = log
@@ -459,34 +458,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
   private def replaceCardinalities(): Route =
     path(ontologiesBasePath / "cardinalities") {
       put {
-        entity(as[String]) { jsonRequest => requestContext =>
+        entity(as[String]) { reqBody => requestContext =>
           {
-            val requestMessageFuture: Future[ChangeCardinalitiesRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext,
-                                  routeData.appConfig
-                                )
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: ChangeCardinalitiesRequestV2 <- ChangeCardinalitiesRequestV2.fromJsonLD(
-                                                                jsonLDDocument = requestDoc,
-                                                                apiRequestID = UUID.randomUUID,
-                                                                requestingUser = requestingUser,
-                                                                appActor = appActor,
-                                                                log = log
-                                                              )
-            } yield requestMessage
-
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            val messageF = for {
+              user    <- getUserADM(requestContext, appConfig)
+              document = JsonLDUtil.parseJsonLD(reqBody)
+              msg     <- ChangeCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
+            } yield msg
+            val options = RouteUtilV2.getSchemaOptions(requestContext)
+            RouteUtilV2.runRdfRouteWithFuture(messageF, requestContext, appConfig, appActor, log, ApiV2Complex, options)
           }
         }
       }
@@ -508,7 +488,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
               requestMessage: CanDeleteCardinalitiesFromClassRequestV2 <-
                 CanDeleteCardinalitiesFromClassRequestV2.fromJsonLD(
                   jsonLDDocument = requestDoc,
-                  apiRequestID = UUID.randomUUID,
+                  apiRequestID = randomUUID,
                   requestingUser = requestingUser,
                   appActor = appActor,
                   log = log
@@ -546,7 +526,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
               requestMessage: DeleteCardinalitiesFromClassRequestV2 <- DeleteCardinalitiesFromClassRequestV2.fromJsonLD(
                                                                          jsonLDDocument = requestDoc,
-                                                                         apiRequestID = UUID.randomUUID,
+                                                                         apiRequestID = randomUUID,
                                                                          requestingUser = requestingUser,
                                                                          appActor = appActor,
                                                                          log = log
@@ -583,7 +563,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
               requestMessage: ChangeGuiOrderRequestV2 <- ChangeGuiOrderRequestV2.fromJsonLD(
                                                            jsonLDDocument = requestDoc,
-                                                           apiRequestID = UUID.randomUUID,
+                                                           apiRequestID = randomUUID,
                                                            requestingUser = requestingUser,
                                                            appActor = appActor,
                                                            log = log
@@ -733,7 +713,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         } yield DeleteClassRequestV2(
           classIri = classIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
@@ -776,7 +756,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         } yield DeleteOntologyCommentRequestV2(
           ontologyIri = ontologyIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
@@ -850,7 +830,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
               requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
                                                            jsonLDDocument = requestDoc,
-                                                           apiRequestID = UUID.randomUUID,
+                                                           apiRequestID = randomUUID,
                                                            requestingUser = requestingUser,
                                                            appActor = appActor,
                                                            log = log
@@ -1021,7 +1001,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
               requestMessage: ChangePropertyLabelsOrCommentsRequestV2 <- ChangePropertyLabelsOrCommentsRequestV2
                                                                            .fromJsonLD(
                                                                              jsonLDDocument = requestDoc,
-                                                                             apiRequestID = UUID.randomUUID,
+                                                                             apiRequestID = randomUUID,
                                                                              requestingUser = requestingUser,
                                                                              appActor = appActor,
                                                                              log = log
@@ -1070,7 +1050,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         } yield DeletePropertyCommentRequestV2(
           propertyIri = propertyIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
@@ -1148,7 +1128,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                  propertyIri = propertyIri.fold(e => throw e.head, v => v),
                                  newGuiObject = guiObject,
                                  lastModificationDate = lastModificationDate,
-                                 apiRequestID = UUID.randomUUID,
+                                 apiRequestID = randomUUID,
                                  requestingUser = requestingUser
                                )
 
@@ -1297,7 +1277,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         } yield DeletePropertyRequestV2(
           propertyIri = propertyIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
@@ -1328,7 +1308,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
             requestMessage: CreateOntologyRequestV2 <- CreateOntologyRequestV2.fromJsonLD(
                                                          jsonLDDocument = requestDoc,
-                                                         apiRequestID = UUID.randomUUID,
+                                                         apiRequestID = randomUUID,
                                                          requestingUser = requestingUser,
                                                          appActor = appActor,
                                                          log = log
@@ -1410,7 +1390,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
       } yield DeleteOntologyRequestV2(
         ontologyIri = ontologyIri,
         lastModificationDate = lastModificationDate,
-        apiRequestID = UUID.randomUUID,
+        apiRequestID = randomUUID,
         requestingUser = requestingUser
       )
 
