@@ -17,6 +17,7 @@ import java.net.URLEncoder
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
+import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -78,7 +79,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   def spec = suite("ProjectsRouteZ")(
     getProjectsSpec,
     getSingleProjectSpec,
-    createProjectSpec
+    createProjectSpec,
+    deleteProjectSpec
   )
 
   val createProjectSpec = test("create a project") {
@@ -192,4 +194,22 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         } yield assertTrue(body.contains(shortname))
       }
     )
+
+  val deleteProjectSpec =
+    test("delete a project by IRI") {
+      val iri: IRI       = "http://rdfh.ch/projects/0001"
+      val request        = Request(url = URL(basePathProjectsIri / encode(iri)), method = Method.DELETE)
+      val user           = KnoraSystemInstances.Users.SystemUser
+      val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .DeleteProject(
+          assertion = Assertion.equalTo(iri, user),
+          result = expectedResult
+        )
+        .toLayer
+      for {
+        _ <- applyRoutes(request).provide(mockService)
+      } yield assertTrue(true)
+    }
+
 }

@@ -7,7 +7,6 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -59,7 +58,6 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
-      ActorDeps.layer,
       ApiRoutes.layer,
       AppRouter.layer,
       CacheServiceInMemImpl.layer,
