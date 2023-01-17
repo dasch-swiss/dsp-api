@@ -617,7 +617,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
  * @param apiRequestID         the ID of the API request.
  * @param requestingUser       the user making the request.
  */
-case class ChangeCardinalitiesRequestV2(
+case class ReplaceCardinalitiesRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
@@ -625,19 +625,19 @@ case class ChangeCardinalitiesRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[ChangeCardinalitiesRequestV2]] based on JSON-LD input.
+ * Constructs instances of [[ReplaceCardinalitiesRequestV2]] based on JSON-LD input.
  */
-object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCardinalitiesRequestV2] {
+object ReplaceCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ReplaceCardinalitiesRequestV2] {
 
   /**
-   * Converts JSON-LD input into a [[ChangeCardinalitiesRequestV2]].
+   * Converts JSON-LD input into a [[ReplaceCardinalitiesRequestV2]].
    *
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
    * @param appActor       a reference to the application actor.
    * @param log            a logging adapter.
-   * @return a [[ChangeCardinalitiesRequestV2]] representing the input.
+   * @return a [[ReplaceCardinalitiesRequestV2]] representing the input.
    */
   override def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
@@ -645,7 +645,7 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     requestingUser: UserADM,
     appActor: ActorRef,
     log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] =
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReplaceCardinalitiesRequestV2] =
     Future {
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
@@ -658,13 +658,13 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
-  ): ChangeCardinalitiesRequestV2 = {
+  ): ReplaceCardinalitiesRequestV2 = {
     val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
     val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
-    ChangeCardinalitiesRequestV2(
+    ReplaceCardinalitiesRequestV2(
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,

@@ -98,8 +98,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
     case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>
       addCardinalitiesToClass(addCardinalitiesToClassRequest)
-    case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 =>
-      changeClassCardinalities(changeCardinalitiesRequest)
+    case changeCardinalitiesRequest: ReplaceCardinalitiesRequestV2 =>
+      replaceClassCardinalities(changeCardinalitiesRequest)
     case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
       canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
     case deleteCardinalitiesfromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
@@ -1475,23 +1475,21 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   /**
    * Replaces a class's cardinalities with new ones.
    *
-   * @param changeCardinalitiesRequest the request to add the cardinalities.
+   * @param request the [[ReplaceCardinalitiesRequestV2]] defining the cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  private def changeClassCardinalities(
-    changeCardinalitiesRequest: ChangeCardinalitiesRequestV2
-  ): Future[ReadOntologyV2] = {
+  private def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
         cacheData <- Cache.getCacheData
         internalClassDef: ClassInfoContentV2 =
-          changeCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
+          request.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
-               expectedLastModificationDate = changeCardinalitiesRequest.lastModificationDate
+               expectedLastModificationDate = request.lastModificationDate
              )
 
         // Check that the class's rdf:type is owl:Class.
@@ -1513,7 +1511,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           ontology.classes
             .getOrElse(
               internalClassIri,
-              throw BadRequestException(s"Class ${changeCardinalitiesRequest.classInfoContent.classIri} does not exist")
+              throw BadRequestException(s"Class ${request.classInfoContent.classIri} does not exist")
             )
             .entityInfoContent
 
@@ -1524,7 +1522,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                entityIri = internalClassIri,
                ignoreKnoraConstraints = true,
                errorFun = throw BadRequestException(
-                 s"The cardinalities of class ${changeCardinalitiesRequest.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"
+                 s"The cardinalities of class ${request.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"
                )
              )
 
@@ -1603,7 +1601,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                            ontologyIri = internalOntologyIri,
                            classIri = internalClassIri,
                            newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
-                           lastModificationDate = changeCardinalitiesRequest.lastModificationDate,
+                           lastModificationDate = request.lastModificationDate,
                            currentTime = currentTime
                          )
                          .toString()
@@ -1647,15 +1645,15 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         response <- getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
-                      requestingUser = changeCardinalitiesRequest.requestingUser
+                      requestingUser = request.requestingUser
                     )
       } yield response
     }
 
     for {
-      requestingUser <- FastFuture.successful(changeCardinalitiesRequest.requestingUser)
+      requestingUser <- FastFuture.successful(request.requestingUser)
 
-      externalClassIri    = changeCardinalitiesRequest.classInfoContent.classIri
+      externalClassIri    = request.classInfoContent.classIri
       externalOntologyIri = externalClassIri.getOntologyFromEntity
 
       _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
@@ -1669,7 +1667,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(
-                      apiRequestID = changeCardinalitiesRequest.apiRequestID,
+                      apiRequestID = request.apiRequestID,
                       iri = ONTOLOGY_CACHE_LOCK_IRI,
                       task = () =>
                         makeTaskFuture(

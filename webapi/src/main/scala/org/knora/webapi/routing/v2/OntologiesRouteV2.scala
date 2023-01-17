@@ -463,7 +463,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
             val messageF = for {
               user    <- getUserADM(requestContext, appConfig)
               document = JsonLDUtil.parseJsonLD(reqBody)
-              msg     <- ChangeCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
+              msg     <- ReplaceCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
             } yield msg
             val options = RouteUtilV2.getSchemaOptions(requestContext)
             RouteUtilV2.runRdfRouteWithFuture(messageF, requestContext, appConfig, appActor, log, ApiV2Complex, options)
