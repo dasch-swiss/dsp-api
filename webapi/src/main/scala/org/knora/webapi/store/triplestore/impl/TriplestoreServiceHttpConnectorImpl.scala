@@ -723,6 +723,7 @@ case class TriplestoreServiceHttpConnectorImpl(
           if (isAdministrativeQuery) administrativeTimeoutString
           else if (isGravsearch) gravsearchTimeoutString
           else queryTimeoutString
+        println(s"xxxxxxx $timeout")
         formParams.add(new BasicNameValuePair("timeout", timeout))
         val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
         val queryHttpPost: HttpPost             = new HttpPost(queryPath)
@@ -736,6 +737,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       ctx <- makeHttpContext.orDie
       clt <- httpClient.orDie
       req <- httpPost.orDie
+      _   <- ZIO.logInfo(s"Preparing Request: $sparql with $req ${req.getEntity()}")
       res <- doHttpRequest(
                client = clt,
                request = req,
@@ -743,6 +745,7 @@ case class TriplestoreServiceHttpConnectorImpl(
                processResponse = returnResponseAsString,
                simulateTimeout = simulateTimeout
              )
+      _ <- ZIO.logInfo(s"Received response: $res")
     } yield res
   }
 
@@ -879,6 +882,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     def executeQuery(): UIO[CloseableHttpResponse] =
       ZIO
         .attempt(client.execute(targetHost, request, context))
+        .debug("Attempted to actually execute the query")
         .catchSome {
           case socketTimeoutException: java.net.SocketTimeoutException => {
             val message =
@@ -895,6 +899,7 @@ case class TriplestoreServiceHttpConnectorImpl(
           }
         }
         .tap(_ => ZIO.logDebug(s"Executing Query: $request"))
+        .tapErrorCause(cause => ZIO.logErrorCause(cause))
         .orDie
 
     def checkResponse(response: CloseableHttpResponse, statusCode: Int): UIO[Unit] =
@@ -921,14 +926,14 @@ case class TriplestoreServiceHttpConnectorImpl(
     (for {
       _ <- checkSimulateTimeout()
       // start      <- ZIO.attempt(java.lang.System.currentTimeMillis()).orDie
-      _          <- ZIO.logDebug("Executing query...")
+      _          <- ZIO.logInfo("Executing query...")
       response   <- executeQuery()
       statusCode <- ZIO.attempt(response.getStatusLine.getStatusCode).orDie
-      _          <- ZIO.logDebug(s"Executing query done with status code: $statusCode")
+      _          <- ZIO.logInfo(s"Executing query done with status code: $statusCode")
       _          <- checkResponse(response, statusCode)
-      _          <- ZIO.logDebug("Checking response done.")
+      _          <- ZIO.logInfo("Checking response done.")
       result     <- processResponse(response)
-      _          <- ZIO.logDebug("Processing response done.")
+      _          <- ZIO.logInfo("Processing response done.")
       _          <- ZIO.attempt(response.close()).orDie // TODO: rewrite with ensuring
       // _          <- logTimeTook(start, statusCode)
     } yield result)
