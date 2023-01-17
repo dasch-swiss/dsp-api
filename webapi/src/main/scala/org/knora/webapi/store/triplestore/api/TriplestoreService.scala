@@ -34,7 +34,8 @@ trait TriplestoreService {
   def sparqlHttpSelect(
     sparql: String,
     simulateTimeout: Boolean = false,
-    isGravsearch: Boolean = false
+    isGravsearch: Boolean = false,
+    isAdministrativeQuery: Boolean = false
   ): UIO[SparqlSelectResult]
 
   /**

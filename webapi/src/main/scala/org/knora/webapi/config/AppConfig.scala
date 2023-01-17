@@ -202,12 +202,15 @@ final case class Triplestore(
   host: String,
   queryTimeout: String,
   gravsearchTimeout: String,
+  administrationTimeout: String,
   autoInit: Boolean,
   fuseki: Fuseki,
   profileQueries: Boolean
 ) {
   val queryTimeoutAsDuration      = zio.Duration.fromScala(scala.concurrent.duration.Duration(queryTimeout))
   val gravsearchTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(gravsearchTimeout))
+  val administrationTimeoutAsDuration =
+    zio.Duration.fromScala(scala.concurrent.duration.Duration(administrationTimeout))
 }
 
 final case class Fuseki(
@@ -263,6 +266,13 @@ object AppConfig {
     ZLayer {
       for {
         c <- configFromSource.orDie
+        _ <-
+          Console
+            .printLine(s"""|Timeouts:
+                           |  Query: ${c.triplestore.queryTimeout}
+                           |  Gravsearch: ${c.triplestore.gravsearchTimeout}
+                           |  Admin: ${c.triplestore.administrationTimeout}""".stripMargin)
+            .orDie
         _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
       } yield c
     }.tap(_ => ZIO.logInfo(">>> AppConfig Live Initialized <<<"))

@@ -84,8 +84,9 @@ case class TriplestoreServiceHttpConnectorImpl(
   )
 
   // timeouts sent to Fuseki
-  private val queryTimeoutString      = config.triplestore.queryTimeoutAsDuration.toSeconds.toInt.toString
-  private val gravsearchTimeoutString = config.triplestore.gravsearchTimeoutAsDuration.toSeconds.toInt.toString
+  private val queryTimeoutString          = config.triplestore.queryTimeoutAsDuration.toSeconds.toInt.toString
+  private val gravsearchTimeoutString     = config.triplestore.gravsearchTimeoutAsDuration.toSeconds.toInt.toString
+  private val administrativeTimeoutString = config.triplestore.administrationTimeoutAsDuration.toSeconds.toInt.toString
 
   // the client config used for queries to the triplestore. The timeout has to be larger than
   // config.triplestore.queryTimeoutAsDuration and config.triplestore.gravsearchTimeoutAsDuration.
@@ -137,7 +138,8 @@ case class TriplestoreServiceHttpConnectorImpl(
   def sparqlHttpSelect(
     sparql: String,
     simulateTimeout: Boolean = false,
-    isGravsearch: Boolean = false
+    isGravsearch: Boolean = false,
+    isAdministrativeQuery: Boolean = false
   ): UIO[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
@@ -162,7 +164,13 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     for {
       resultStr <-
-        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout, isGravsearch = isGravsearch)
+        getSparqlHttpResponse(
+          sparql,
+          isUpdate = false,
+          simulateTimeout = simulateTimeout,
+          isGravsearch = isGravsearch,
+          isAdministrativeQuery = isAdministrativeQuery
+        )
 
       // Parse the response as a JSON object and generate a response message.
       responseMessage <- parseJsonResponse(sparql, resultStr).orDie
@@ -372,7 +380,7 @@ case class TriplestoreServiceHttpConnectorImpl(
          | }""".stripMargin
 
     for {
-      res      <- sparqlHttpSelect(sparqlQuery)
+      res      <- sparqlHttpSelect(sparqlQuery, isAdministrativeQuery = true)
       bindings <- ZIO.succeed(res.results.bindings)
       graphs    = bindings.map(_.rowMap("graph"))
     } yield graphs
@@ -383,18 +391,21 @@ case class TriplestoreServiceHttpConnectorImpl(
    * This method is useful in cases with large amount of data (over 10 million statements),
    * where the method [[dropAllTriplestoreContent()]] could create timeout issues.
    */
-  def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK] = {
-    val sparqlQuery = (graph: String) => s"DROP GRAPH <$graph>"
-
+  def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK] =
     for {
       _      <- ZIO.logInfo("==>> Drop All Data Start")
       graphs <- getAllGraphs()
-      _ <- ZIO.foreach(graphs)(graph =>
-             getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true)
-               .tap(result => ZIO.logDebug(s"==>> Dropped graph: $graph"))
-           )
-      _ <- ZIO.logInfo("==>> Drop All Data End")
+      _      <- ZIO.foreach(graphs)(dropGraph(_))
+      _      <- ZIO.logInfo("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
+
+  private def dropGraph(graph: String) = {
+    val sparqlQuery = (graph: String) => s"DROP GRAPH <$graph>"
+    for {
+      _   <- ZIO.logInfo(s"    Dropping graph: $graph")
+      res <- getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true, isAdministrativeQuery = true)
+      _   <- ZIO.logInfo(s"    ==>> Dropped graph: $graph")
+    } yield ()
   }
 
   /**
@@ -691,7 +702,8 @@ case class TriplestoreServiceHttpConnectorImpl(
     isUpdate: Boolean,
     isGravsearch: Boolean = false,
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
-    simulateTimeout: Boolean = false
+    simulateTimeout: Boolean = false,
+    isAdministrativeQuery: Boolean = false
   ): UIO[String] = {
 
     val httpClient = ZIO.attempt(queryHttpClient)
@@ -707,10 +719,11 @@ case class TriplestoreServiceHttpConnectorImpl(
         // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2, "query via POST with URL-encoded parameters").
         val formParams = new util.ArrayList[NameValuePair]()
         formParams.add(new BasicNameValuePair("query", sparql))
-        // in case of a gravsearch query, a specific (longer) timeout is set
-        formParams.add(
-          new BasicNameValuePair("timeout", (if (isGravsearch) gravsearchTimeoutString else queryTimeoutString))
-        )
+        val timeout =
+          if (isAdministrativeQuery) administrativeTimeoutString
+          else if (isGravsearch) gravsearchTimeoutString
+          else queryTimeoutString
+        formParams.add(new BasicNameValuePair("timeout", timeout))
         val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
         val queryHttpPost: HttpPost             = new HttpPost(queryPath)
         queryHttpPost.setEntity(requestEntity)
