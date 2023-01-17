@@ -14,7 +14,11 @@ import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project.ShortCode
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.ChangeProjectApiRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangeRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
@@ -163,10 +167,35 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertTrue(true)
   }
 
+  // needs to have the StringFormatter in the environment because ChangeProjectApiRequestADM needs it
+  val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
+    val projectIri: IRI      = "http://rdfh.ch/projects/0001"
+    val changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false))
+    val requestingUser       = KnoraSystemInstances.Users.SystemUser
+    val projectsService = ZIO
+      .serviceWithZIO[ProjectsService](_.deleteProject(projectIri, requestingUser))
+      .provideSome[ActorToZioBridge](layers)
+    for {
+      uuid   <- ZIO.random.flatMap(_.nextUUID)
+      _      <- TestRandom.feedUUIDs(uuid)
+      request = ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, uuid)
+      actorToZioBridge =
+        ActorToZioBridgeMock.AskAppActor
+          .of[ProjectOperationResponseADM]
+          .apply(
+            assertion = Assertion.equalTo(request),
+            result = Expectation.value(ProjectOperationResponseADM(projectADM))
+          )
+          .toLayer
+      _ <- projectsService.provide(actorToZioBridge)
+    } yield assertTrue(true)
+  }
+
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("RestProjectsService")(
+    suite("ProjectsService")(
       getAllProjectsSpec,
       getProjectByIdSpec,
-      createProjectSpec
-    )
+      createProjectSpec,
+      deleteProjectSpec
+    ).provide(StringFormatter.test)
 }

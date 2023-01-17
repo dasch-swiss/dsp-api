@@ -4,7 +4,7 @@
  */
 
 package org.knora.webapi.core
-import zhttp.http.HttpApp
+import zhttp.http._
 import zhttp.service.Server
 import zio.ZLayer
 import zio._
@@ -15,7 +15,7 @@ import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 
 object HttpServerZ {
 
-  private val apiRoutes: URIO[ResourceInfoRoute with ProjectsRouteZ, HttpApp[Any, Nothing]] = for {
+  private val apiRoutes: URIO[ProjectsRouteZ with ResourceInfoRoute, HttpApp[Any, Nothing]] = for {
     projectsRoute <- ZIO.service[ProjectsRouteZ].map(_.route)
     riRoute       <- ZIO.service[ResourceInfoRoute].map(_.route)
   } yield projectsRoute ++ riRoute
