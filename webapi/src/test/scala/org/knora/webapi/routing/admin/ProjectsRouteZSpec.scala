@@ -79,7 +79,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   def spec = suite("ProjectsRouteZ")(
     getProjectsSpec,
     getSingleProjectSpec,
-    createProjectSpec
+    createProjectSpec,
+    deleteProjectSpec
   )
 
   val createProjectSpec = test("create a project") {
