@@ -49,7 +49,8 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset]) extends Triple
   override def sparqlHttpSelect(
     sparql: String,
     simulateTimeout: Boolean,
-    isGravsearch: Boolean
+    isGravsearch: Boolean,
+    isAdministrativeQuery: Boolean
   ): UIO[SparqlSelectResult] = {
     require(!simulateTimeout, "`simulateTimeout` parameter is not supported by fake implementation yet")
     require(!isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
