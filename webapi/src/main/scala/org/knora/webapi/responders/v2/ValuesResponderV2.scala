@@ -13,7 +13,6 @@ import java.util.UUID
 import scala.concurrent.Future
 
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -37,6 +36,9 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.util.ActorUtil
 
 /**
@@ -224,7 +226,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ =
           if (
-            (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome) && currentValuesForProp.isEmpty
+            (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty
           ) {
             throw InconsistentRepositoryDataException(
               s"Resource class <${resourceInfo.resourceClassIri
@@ -234,7 +236,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ =
           if (
-            cardinalityInfo.cardinality == MustHaveOne || (cardinalityInfo.cardinality == MayHaveOne && currentValuesForProp.nonEmpty)
+            cardinalityInfo.cardinality == ExactlyOne || (cardinalityInfo.cardinality == ZeroOrOne && currentValuesForProp.nonEmpty)
           ) {
             throw OntologyConstraintException(
               s"Resource class <${resourceInfo.resourceClassIri
@@ -1771,7 +1773,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ =
           if (
-            (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome) && currentValuesForProp.size == 1
+            (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.size == 1
           ) {
             throw OntologyConstraintException(
               s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValueRequest.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValueRequest.resourceIri}>"

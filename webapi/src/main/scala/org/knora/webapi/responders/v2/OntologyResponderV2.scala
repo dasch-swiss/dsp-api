@@ -13,7 +13,6 @@ import scala.concurrent.Future
 
 import dsp.constants.SalsahGui
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -1301,8 +1300,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Is there any property with minCardinality>0 or Cardinality=1?
         hasCardinality: Option[(SmartIri, KnoraCardinalityInfo)] =
           addCardinalitiesRequest.classInfoContent.directCardinalities.find {
-            case (_, constraint: KnoraCardinalityInfo) =>
-              constraint.cardinality == MustHaveSome || constraint.cardinality == MustHaveOne
+            case (_, constraint: KnoraCardinalityInfo) => constraint.cardinality.min > 0
           }
 
         _ <- hasCardinality match {

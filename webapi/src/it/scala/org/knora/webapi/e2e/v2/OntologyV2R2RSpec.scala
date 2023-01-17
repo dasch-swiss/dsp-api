@@ -18,10 +18,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
-
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
-import dsp.schema.domain.Cardinality._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi._
@@ -42,6 +40,7 @@ import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.util._
 
 object OntologyV2R2RSpec {
@@ -3728,7 +3727,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         .directCardinalities
       assert(videoSequenceCardinalities.keySet.contains(isSequenceOfVideoPropertyIri))
       val cardinality = videoSequenceCardinalities.get(isSequenceOfVideoPropertyIri).get.cardinality
-      assert(cardinality == MustHaveOne)
+      assert(cardinality == ExactlyOne)
     }
 
   }
@@ -3861,7 +3860,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         .directCardinalities
       assert(audioSequenceCardinalities.keySet.contains(isSequenceOfAudioPropertyIri))
       val cardinality = audioSequenceCardinalities.get(isSequenceOfAudioPropertyIri).get.cardinality
-      assert(cardinality == MustHaveOne)
+      assert(cardinality == ExactlyOne)
     }
   }
 

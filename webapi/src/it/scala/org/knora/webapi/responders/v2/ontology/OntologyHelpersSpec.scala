@@ -5,19 +5,16 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
-import dsp.schema.domain.Cardinality
-import dsp.schema.domain.Cardinality._
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.responders.v2.ontology.Cache._
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
+import org.knora.webapi.{CoreSpec, InternalSchema}
+
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.OntologyHelpers]].
@@ -25,7 +22,6 @@ import org.knora.webapi.responders.v2.ontology.Cache._
 class OntologyHelpersSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout                          = 10.seconds
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -49,30 +45,30 @@ class OntologyHelpersSpec extends CoreSpec {
       val cacheData: OntologyCacheData               = Await.result(cacheDataFuture, 2.seconds)
 
       // define the classes
-      val mayHaveMany  = freetestOntologyIri.makeEntityIri("PubMayHaveMany").toOntologySchema(InternalSchema)  // 0-n
-      val mustHaveSome = freetestOntologyIri.makeEntityIri("PubMustHaveSome").toOntologySchema(InternalSchema) // 1-n
-      val mayHaveOne   = freetestOntologyIri.makeEntityIri("PubMayHaveOne").toOntologySchema(InternalSchema)   // 0-1
-      val mustHaveOne  = freetestOntologyIri.makeEntityIri("PubMustHaveOne").toOntologySchema(InternalSchema)  // 1
+      val unbounded  = freetestOntologyIri.makeEntityIri("PubMayHaveMany").toOntologySchema(InternalSchema)  // 0-n
+      val atLeastOne = freetestOntologyIri.makeEntityIri("PubMustHaveSome").toOntologySchema(InternalSchema) // 1-n
+      val zeroOrOne  = freetestOntologyIri.makeEntityIri("PubMayHaveOne").toOntologySchema(InternalSchema)   // 0-1
+      val exactlyOne = freetestOntologyIri.makeEntityIri("PubMustHaveOne").toOntologySchema(InternalSchema)  // 1
 
       val hasPublicationDateProperty = freetestOntologyIri.makeEntityIri("hasPublicationDate")
 
       // define all test cases and the expected results
       val testCases: List[(Set[SmartIri], Option[Cardinality])] = List(
-        (Set(mayHaveMany), Some(MayHaveMany)),
-        (Set(mustHaveSome), Some(MustHaveSome)),
-        (Set(mayHaveOne), Some(MayHaveOne)),
-        (Set(mustHaveOne), Some(MustHaveOne)),
-        (Set(mayHaveMany, mustHaveSome), Some(MustHaveSome)),
-        (Set(mayHaveMany, mayHaveOne), Some(MayHaveOne)),
-        (Set(mayHaveMany, mustHaveOne), Some(MustHaveOne)),
-        (Set(mustHaveSome, mayHaveOne), Some(MustHaveOne)),
-        (Set(mustHaveSome, mustHaveOne), Some(MustHaveOne)),
-        (Set(mayHaveOne, mustHaveOne), Some(MustHaveOne)),
-        (Set(mayHaveMany, mustHaveSome, mayHaveOne), Some(MustHaveOne)),
-        (Set(mayHaveMany, mustHaveSome, mustHaveOne), Some(MustHaveOne)),
-        (Set(mayHaveMany, mayHaveOne, mustHaveOne), Some(MustHaveOne)),
-        (Set(mustHaveSome, mayHaveOne, mustHaveOne), Some(MustHaveOne)),
-        (Set(mayHaveMany, mustHaveSome, mayHaveOne, mustHaveOne), Some(MustHaveOne))
+        (Set(unbounded), Some(Unbounded)),
+        (Set(atLeastOne), Some(AtLeastOne)),
+        (Set(zeroOrOne), Some(ZeroOrOne)),
+        (Set(exactlyOne), Some(ExactlyOne)),
+        (Set(unbounded, atLeastOne), Some(AtLeastOne)),
+        (Set(unbounded, zeroOrOne), Some(ZeroOrOne)),
+        (Set(unbounded, exactlyOne), Some(ExactlyOne)),
+        (Set(atLeastOne, zeroOrOne), Some(ExactlyOne)),
+        (Set(atLeastOne, exactlyOne), Some(ExactlyOne)),
+        (Set(zeroOrOne, exactlyOne), Some(ExactlyOne)),
+        (Set(unbounded, atLeastOne, zeroOrOne), Some(ExactlyOne)),
+        (Set(unbounded, atLeastOne, exactlyOne), Some(ExactlyOne)),
+        (Set(unbounded, zeroOrOne, exactlyOne), Some(ExactlyOne)),
+        (Set(atLeastOne, zeroOrOne, exactlyOne), Some(ExactlyOne)),
+        (Set(unbounded, atLeastOne, zeroOrOne, exactlyOne), Some(ExactlyOne))
       )
 
       def getStrictest(classes: Set[SmartIri]): Option[Cardinality] =
@@ -84,7 +80,6 @@ class OntologyHelpersSpec extends CoreSpec {
       testCases.map { case (testCase: Set[SmartIri], expectedResult: Option[Cardinality]) =>
         assert(getStrictest(testCase) == expectedResult)
       }
-
     }
   }
 }
