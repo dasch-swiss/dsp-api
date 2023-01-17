@@ -2329,30 +2329,6 @@ sealed trait EntityInfoContentV2 {
     }
 
   /**
-   * Returns the first object specified as a boolean value for the given predicate, or `false` if the
-   * entity doesn't have that predicate.
-   *
-   * @param predicateIri the IRI of the predicate.
-   * @return the predicate's object, if given, otherwise `false`.
-   */
-  def getPredicateBooleanObject(predicateIri: SmartIri): Boolean = {
-    val values: Seq[Boolean] = predicates.get(predicateIri) match {
-      case Some(predicateInfo) =>
-        predicateInfo.objects.collect { case BooleanLiteralV2(value) =>
-          value
-        }
-
-      case None => Seq.empty[Boolean]
-    }
-
-    if (values.nonEmpty) {
-      values.head
-    } else {
-      false
-    }
-  }
-
-  /**
    * Returns the first object specified as an IRI for the given predicate.
    *
    * @param predicateIri the IRI of the predicate.
