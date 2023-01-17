@@ -41,6 +41,7 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isFileValueProp
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isKnoraResourceProperty
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isLinkProp
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isLinkValueProp
+import org.knora.webapi.responders.v2.ontology.OntologyLegacyRepo
 import org.knora.webapi.util._
 
 /**
@@ -1486,10 +1487,22 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
   private def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
-    val newClassInfo = request.classInfoContent.toOntologySchema(InternalSchema)
+    val newClassInfo        = request.classInfoContent.toOntologySchema(InternalSchema)
+    val classIriExternal    = newClassInfo.classIri
+    val classIri            = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIriExternal = classIri.getOntologyFromEntity
+    val ontologyIri         = ontologyIriExternal.toOntologySchema(InternalSchema)
+
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData   <- Cache.getCacheData
+        cacheData <- OntologyLegacyRepo.getCache
+        ontology <- OntologyLegacyRepo
+                      .findOntologyBy(ontologyIri)
+                      .map(_.getOrElse(throw BadRequestException(s"Ontology $ontologyIriExternal does not exist")))
+        oldClassInfo <-
+          OntologyLegacyRepo
+            .findClassBy(classIri, ontologyIri)
+            .map(_.getOrElse(throw BadRequestException(s"Class $ontologyIriExternal does not exist")).entityInfoContent)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
@@ -1501,15 +1514,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class exists.
 
-        ontology = cacheData.ontologies(internalOntologyIri)
-
-        existingClassDef: ClassInfoContentV2 =
-          ontology.classes
-            .getOrElse(
-              internalClassIri,
-              throw BadRequestException(s"Class ${request.classInfoContent.classIri} does not exist")
-            )
-            .entityInfoContent
+        existingClassDef: ClassInfoContentV2 = oldClassInfo
 
         // Check that the class isn't used in data, and that it has no subclasses.
         // TODO: If class is used in data, check additionally if the property(ies) being removed is(are) truly used and if not, then allow.

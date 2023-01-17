@@ -21,13 +21,13 @@ object OntologyLegacyRepo {
 
   def findClassBy(classIri: SmartIri)(implicit
     ec: ExecutionContext
-  ): Future[Option[(ReadOntologyV2, ReadClassInfoV2)]] =
+  ): Future[Option[ReadClassInfoV2]] =
     findClassBy(classIri, ensureInternal(classIri).getOntologyFromEntity)
 
   def findClassBy(classIri: SmartIri, ontologyIri: SmartIri)(implicit
     ec: ExecutionContext
-  ): Future[Option[(ReadOntologyV2, ReadClassInfoV2)]] = for {
+  ): Future[Option[ReadClassInfoV2]] = for {
     ontologyInfo <- findOntologyBy(ontologyIri.toOntologySchema(InternalSchema))
     classInfo     = ontologyInfo.flatMap(_.classes.get(ensureInternal(classIri)))
-  } yield ontologyInfo zip classInfo
+  } yield classInfo
 }

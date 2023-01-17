@@ -16,11 +16,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import dsp.errors.ApplicationCacheException
-import dsp.errors.BadRequestException
-import dsp.errors.ForbiddenException
-import dsp.errors.InconsistentRepositoryDataException
-import dsp.errors.MissingLastModificationDateOntologyException
+import dsp.errors._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.KnoraBaseVersion
@@ -38,14 +34,8 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.OntologyUtil
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.IndividualInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.util.cache.CacheUtil
 
@@ -98,7 +88,7 @@ object Cache extends LazyLogging {
   /**
    * Loads and caches all ontology information.
    *
-   * @param requestingUser       the user making the request.
+   * @param requestingUser the user making the request.
    * @return a [[SuccessResponseV2]].
    */
   def loadOntologies(
@@ -1085,7 +1075,7 @@ object Cache extends LazyLogging {
   /**
    * Deletes an ontology from the cache.
    *
-   * @param updatedOntologyIri  the IRI of the ontology to delete
+   * @param updatedOntologyIri the IRI of the ontology to delete
    * @return the updated cache data
    */
   def deleteOntology(ontologyIri: SmartIri)(implicit
