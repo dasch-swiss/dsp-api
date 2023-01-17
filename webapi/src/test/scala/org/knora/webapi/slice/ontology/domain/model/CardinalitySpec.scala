@@ -110,6 +110,20 @@ object CardinalitySpec extends ZIOSpecDefault {
       test(s"$Unbounded <> $AtLeastOne => $AtLeastOne") {
         assertTrue(Unbounded.getIntersection(AtLeastOne).contains(AtLeastOne))
       }
+    ),
+    suite("fromString")(
+      test("`0-n` => Unbounded") {
+        assertTrue(Cardinality.fromString("0-n").contains(Unbounded))
+      },
+      test("`0-1` => ZeroOrOne") {
+        assertTrue(Cardinality.fromString("0-1").contains(ZeroOrOne))
+      },
+      test("`1-n` => AtLeastOne") {
+        assertTrue(Cardinality.fromString("1-n").contains(AtLeastOne))
+      },
+      test("`1` => ExactlyOne") {
+        assertTrue(Cardinality.fromString("1").contains(ExactlyOne))
+      }
     )
   )
 }
