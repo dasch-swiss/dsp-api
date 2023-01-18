@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.core
+import io.netty.handler.codec.http.HttpHeaderNames
 import zhttp.http._
 import zhttp.http.middleware.Cors
 import zhttp.service.Server
@@ -24,7 +25,14 @@ object HttpServerZ {
   private def isAllowedOrigin(origin: String): Boolean =
     allowedOrigins.contains(origin)
 
-  private val corsMiddleware = Middleware.cors(Cors.CorsConfig(anyOrigin = false, allowedOrigins = isAllowedOrigin))
+  private val corsMiddleware =
+    Middleware.cors(
+      Cors.CorsConfig(
+        anyOrigin = false,
+        allowedOrigins = isAllowedOrigin,
+        allowedHeaders = Some(Set(HttpHeaderNames.AUTHORIZATION.toString))
+      )
+    )
 
   private val apiRoutes: URIO[ProjectsRouteZ with ResourceInfoRoute, HttpApp[Any, Nothing]] = for {
     projectsRoute <- ZIO.service[ProjectsRouteZ].map(_.route)
