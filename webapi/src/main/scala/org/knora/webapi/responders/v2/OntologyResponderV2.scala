@@ -505,8 +505,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] =
       for {
-        cacheData <- Cache.getCacheData
-
         // Make sure the ontology doesn't already exist.
         existingOntologyMetadata: Option[OntologyMetadataV2] <- OntologyHelpers.loadOntologyMetadata(
                                                                   appActor,
