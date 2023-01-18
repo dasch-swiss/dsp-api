@@ -83,11 +83,6 @@ case class TriplestoreServiceHttpConnectorImpl(
     new UsernamePasswordCredentials(config.triplestore.fuseki.username, config.triplestore.fuseki.password)
   )
 
-  // timeouts sent to Fuseki
-  private val queryTimeoutString          = config.triplestore.queryTimeoutAsDuration.toSeconds.toInt.toString
-  private val gravsearchTimeoutString     = config.triplestore.gravsearchTimeoutAsDuration.toSeconds.toInt.toString
-  private val administrativeTimeoutString = config.triplestore.administrationTimeoutAsDuration.toSeconds.toInt.toString
-
   // the client config used for queries to the triplestore. The timeout has to be larger than
   // config.triplestore.queryTimeoutAsDuration and config.triplestore.gravsearchTimeoutAsDuration.
   private val requestTimeoutMillis = 7200000 // 2 hours
@@ -396,7 +391,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     for {
       _   <- ZIO.logInfo(s"    Dropping graph: $graph")
       res <- getSparqlHttpUpdateResponse(sparqlQuery(graph))
-      _   <- ZIO.logInfo(s"    ==>> Dropped graph: $graph")
+      _   <- ZIO.logInfo(s"    ==>> Dropped graph: $graph with result: $res")
     } yield ()
   }
 
@@ -711,7 +706,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     simulateTimeout = simulateTimeout
   )
 
-  private def executeHttpRequest(request: Task[HttpPost], simulateTimeout: Boolean = false) =
+  private def executeHttpRequest(request: Task[HttpPost], simulateTimeout: Boolean) =
     for {
       ctx <- makeHttpContext.orDie
       clt <- ZIO.attempt(queryHttpClient).orDie
