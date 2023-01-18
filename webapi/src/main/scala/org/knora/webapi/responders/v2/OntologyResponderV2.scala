@@ -643,7 +643,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
    * @param changeOntologyMetadataRequest the request to change the metadata.
    * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
    */
-  def changeOntologyMetadata(
+  private def changeOntologyMetadata(
     changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2
   ): Future[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] =
