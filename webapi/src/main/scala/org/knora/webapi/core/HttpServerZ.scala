@@ -4,7 +4,6 @@
  */
 
 package org.knora.webapi.core
-import io.netty.handler.codec.http.HttpHeaderNames
 import zhttp.http._
 import zhttp.http.middleware.Cors
 import zhttp.service.Server
@@ -16,23 +15,17 @@ import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 
 object HttpServerZ {
-  // TODO-BL: make this a config
-  private val allowedOrigins =
-    Set(
-      "http://localhost:4200",
-      "http://127.0.0.1:4200"
-    )
-  private def isAllowedOrigin(origin: String): Boolean =
-    allowedOrigins.contains(origin)
 
   private val corsMiddleware =
-    Middleware.cors(
-      Cors.CorsConfig(
-        anyOrigin = false,
-        allowedOrigins = isAllowedOrigin,
-        allowedHeaders = Some(Set(HttpHeaderNames.AUTHORIZATION.toString))
-      )
-    )
+    for {
+      config <- ZIO.service[AppConfig]
+      corsConfig =
+        Cors.CorsConfig(
+          anyOrigin = false,
+          allowedOrigins = config.zioHttp.corsAllowedOrigins.contains(_),
+          allowedHeaders = Some(Set(config.zioHttp.corsAllowedHeaders))
+        )
+    } yield Middleware.cors(corsConfig)
 
   private val apiRoutes: URIO[ProjectsRouteZ with ResourceInfoRoute, HttpApp[Any, Nothing]] = for {
     projectsRoute <- ZIO.service[ProjectsRouteZ].map(_.route)
@@ -43,7 +36,8 @@ object HttpServerZ {
     for {
       port   <- ZIO.service[AppConfig].map(_.knoraApi.externalZioPort)
       routes <- apiRoutes
-      _      <- Server.start(port, routes @@ corsMiddleware).forkDaemon
+      cors   <- corsMiddleware
+      _      <- Server.start(port, routes @@ cors).forkDaemon
       _      <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
     } yield ()
   }
