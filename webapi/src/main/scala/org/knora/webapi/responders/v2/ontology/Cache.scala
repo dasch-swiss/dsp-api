@@ -852,32 +852,17 @@ object Cache extends LazyLogging {
   /**
    * Checks a class definition to ensure that it doesn't refer to any non-shared ontologies in other projects.
    *
-   * @param ontologyCacheData the ontology cache data.
-   * @param classDef          the class definition.
-   * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
+   * @param cache    the ontology cache data.
+   * @param classDef the class definition.
+   * @param errorFun a function that throws an exception with the specified message if the property definition is invalid.
    */
   def checkOntologyReferencesInClassDef(
-    ontologyCacheData: OntologyCacheData,
+    cache: OntologyCacheData,
     classDef: ClassInfoContentV2,
     errorFun: String => Nothing
   ): Unit = {
-    for (subClassOf <- classDef.subClassOf) {
-      checkOntologyReferenceInEntity(
-        ontologyCacheData = ontologyCacheData,
-        sourceEntityIri = classDef.classIri,
-        targetEntityIri = subClassOf,
-        errorFun = errorFun
-      )
-    }
-
-    for (cardinalityPropIri <- classDef.directCardinalities.keys) {
-      checkOntologyReferenceInEntity(
-        ontologyCacheData = ontologyCacheData,
-        sourceEntityIri = classDef.classIri,
-        targetEntityIri = cardinalityPropIri,
-        errorFun = errorFun
-      )
-    }
+    classDef.subClassOf.foreach(checkOntologyReferenceInEntity(cache, classDef.classIri, _, errorFun))
+    classDef.directCardinalities.keys.foreach(checkOntologyReferenceInEntity(cache, classDef.classIri, _, errorFun))
   }
 
   /**
@@ -901,7 +886,7 @@ object Cache extends LazyLogging {
 
       for (classInfo <- ontology.classes.values) {
         checkOntologyReferencesInClassDef(
-          ontologyCacheData = ontologyCacheData,
+          cache = ontologyCacheData,
           classDef = classInfo.entityInfoContent,
           errorFun = { msg: String =>
             throw InconsistentRepositoryDataException(msg)
@@ -938,8 +923,7 @@ object Cache extends LazyLogging {
    * Given the IRI of a base class, updates inherited cardinalities in subclasses.
    *
    * @param baseClassIri the internal IRI of the base class.
-   * @param cacheData the ontology cache.
-   *
+   * @param cacheData    the ontology cache.
    * @return the updated ontology cache.
    */
   def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {

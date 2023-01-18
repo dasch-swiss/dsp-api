@@ -938,7 +938,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
-              ontologyCacheData = cacheData,
+              cache = cacheData,
               classDef = internalClassDefWithLinkValueProps,
               errorFun = { msg: String =>
                 throw BadRequestException(msg)
@@ -1348,7 +1348,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
-              ontologyCacheData = cacheData,
+              cache= cacheData,
               classDef = newInternalClassDefWithLinkValueProps,
               errorFun = { msg: String =>
                 throw BadRequestException(msg)
@@ -1512,7 +1512,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class exists.
 
-        existingClassDef: ClassInfoContentV2 = oldClassInfo
 
         // Check that the class isn't used in data, and that it has no subclasses.
         // TODO: If class is used in data, check additionally if the property(ies) being removed is(are) truly used and if not, then allow.
@@ -1528,7 +1527,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Make an updated class definition.
 
         newInternalClassDef: ClassInfoContentV2 =
-          existingClassDef.copy(directCardinalities = newClassInfo.directCardinalities)
+          oldClassInfo.copy(directCardinalities = newClassInfo.directCardinalities)
 
         // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
 
@@ -1552,7 +1551,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
-              ontologyCacheData = cacheData,
+              cache = cacheData,
               classDef = newInternalClassDefWithLinkValueProps,
               errorFun = { msg: String =>
                 throw BadRequestException(msg)

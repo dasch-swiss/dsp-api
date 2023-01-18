@@ -178,7 +178,7 @@ object CardinalityHandler {
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
       _ = Cache.checkOntologyReferencesInClassDef(
-            ontologyCacheData = cacheData,
+            cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
               throw BadRequestException(msg)
@@ -338,7 +338,7 @@ object CardinalityHandler {
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
       _ = Cache.checkOntologyReferencesInClassDef(
-            ontologyCacheData = cacheData,
+            cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
               throw BadRequestException(msg)
@@ -348,7 +348,7 @@ object CardinalityHandler {
       // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
       // isn't any text to escape in cardinalities.)
 
-      propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+      propertyIrisOfAllCardinalitiesForClass: Set[SmartIri] = cardinalitiesForClassWithInheritance.keySet
 
       inheritedCardinalities: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
         cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
