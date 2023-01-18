@@ -162,17 +162,15 @@ case class TriplestoreServiceHttpConnectorImpl(
           ZIO.succeed(_)
         )
 
-    for {
-      resultStr <-
-        getSparqlHttpResponse(
-          sparql,
-          isUpdate = false,
-          simulateTimeout = simulateTimeout,
-          isGravsearch = isGravsearch,
-          isAdministrativeQuery = isAdministrativeQuery
-        )
+    val timeout =
+      (isAdministrativeQuery, isGravsearch) match {
+        case (true, _) => config.triplestore.administrationTimeoutAsDuration
+        case (_, true) => config.triplestore.gravsearchTimeoutAsDuration
+        case _         => config.triplestore.queryTimeoutAsDuration
+      }
 
-      // Parse the response as a JSON object and generate a response message.
+    for {
+      resultStr       <- getSparqlHttpQueryResponse(sparql, timeout = timeout, simulateTimeout = simulateTimeout)
       responseMessage <- parseJsonResponse(sparql, resultStr).orDie
     } yield responseMessage
   }
@@ -225,13 +223,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       )
 
     for {
-      turtleStr <-
-        getSparqlHttpResponse(
-          sparqlConstructRequest.sparql,
-          isUpdate = false,
-          acceptMimeType = mimeTypeTextTurtle
-        )
-
+      turtleStr <- getSparqlHttpQueryResponse(sparqlConstructRequest.sparql, acceptMimeType = mimeTypeTextTurtle)
       response <- parseTurtleResponse(
                     sparql = sparqlConstructRequest.sparql,
                     turtleStr = turtleStr,
@@ -258,7 +250,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
     for {
-      turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
+      turtleStr <- getSparqlHttpQueryResponse(sparql, acceptMimeType = mimeTypeTextTurtle)
       _ <- ZIO
              .attempt(
                rdfFormatUtil
@@ -283,13 +275,13 @@ case class TriplestoreServiceHttpConnectorImpl(
     sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
   ): UIO[SparqlExtendedConstructResponse] =
     for {
-      turtleStr <- getSparqlHttpResponse(
-                     sparqlExtendedConstructRequest.sparql,
-                     isUpdate = false,
-                     isGravsearch = sparqlExtendedConstructRequest.isGravsearch,
+      turtleStr <- getSparqlHttpQueryResponse(
+                     sparql = sparqlExtendedConstructRequest.sparql,
+                     timeout =
+                       if (sparqlExtendedConstructRequest.isGravsearch) config.triplestore.gravsearchTimeoutAsDuration
+                       else config.triplestore.queryTimeoutAsDuration,
                      acceptMimeType = mimeTypeTextTurtle
                    )
-
       response <- SparqlExtendedConstructResponse
                     .parseTurtleResponse(turtleStr)
                     .foldZIO(
@@ -312,7 +304,7 @@ case class TriplestoreServiceHttpConnectorImpl(
   def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse] =
     for {
       // Send the request to the triplestore.
-      _ <- getSparqlHttpResponse(sparqlUpdate, isUpdate = true)
+      _ <- getSparqlHttpUpdateResponse(sparqlUpdate)
     } yield SparqlUpdateResponse()
 
   /**
@@ -323,7 +315,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    */
   def sparqlHttpAsk(sparql: String): UIO[SparqlAskResponse] =
     for {
-      resultString <- getSparqlHttpResponse(sparql, isUpdate = false)
+      resultString <- getSparqlHttpQueryResponse(sparql)
       _            <- ZIO.logDebug(s"sparqlHttpAsk - resultString: ${resultString}")
       result <- ZIO
                   .attemptBlocking(
@@ -361,7 +353,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     for {
       _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- getSparqlHttpResponse(sparqlQuery, isUpdate = true)
+      result <- getSparqlHttpUpdateResponse(sparqlQuery)
       _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
     } yield DropAllRepositoryContentACK()
   }
@@ -403,7 +395,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     val sparqlQuery = (graph: String) => s"DROP GRAPH <$graph>"
     for {
       _   <- ZIO.logInfo(s"    Dropping graph: $graph")
-      res <- getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true, isAdministrativeQuery = true)
+      res <- getSparqlHttpUpdateResponse(sparqlQuery(graph))
       _   <- ZIO.logInfo(s"    ==>> Dropped graph: $graph")
     } yield ()
   }
@@ -686,58 +678,45 @@ case class TriplestoreServiceHttpConnectorImpl(
     } yield res
   }
 
-  /**
-   * Submits a SPARQL request to the triplestore and returns the response as a string.
-   *   According to the request type a different timeout are used.
-   *
-   * @param sparql         the SPARQL request to be submitted.
-   * @param isUpdate       `true` if this is an update request.
-   * @param isGravsearch   `true` if this is a Gravsearch query (needs a greater timeout).
-   * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
-   * @param simulateTimeout if `true`, simulate a read timeout.
-   * @return the triplestore's response.
-   */
-  private def getSparqlHttpResponse(
-    sparql: String,
-    isUpdate: Boolean,
-    isGravsearch: Boolean = false,
-    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
-    simulateTimeout: Boolean = false,
-    isAdministrativeQuery: Boolean = false
-  ): UIO[String] = {
-
-    val httpClient = ZIO.attempt(queryHttpClient)
-
-    val httpPost = ZIO.attempt {
-      if (isUpdate) {
+  private def getSparqlHttpUpdateResponse(sparql: String, simulateTimeout: Boolean = false): UIO[String] =
+    executeHttpRequest(
+      ZIO.attempt {
         // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
         val requestEntity  = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
         val updateHttpPost = new HttpPost(sparqlUpdatePath)
         updateHttpPost.setEntity(requestEntity)
         updateHttpPost
-      } else {
-        // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2, "query via POST with URL-encoded parameters").
-        val formParams = new util.ArrayList[NameValuePair]()
-        formParams.add(new BasicNameValuePair("query", sparql))
-        val timeout =
-          if (isAdministrativeQuery) administrativeTimeoutString
-          else if (isGravsearch) gravsearchTimeoutString
-          else queryTimeoutString
-        println(s"Add timeout to query: $timeout")
-        formParams.add(new BasicNameValuePair("timeout", timeout))
-        val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
-        val queryHttpPost: HttpPost             = new HttpPost(queryPath)
-        queryHttpPost.setEntity(requestEntity)
-        queryHttpPost.addHeader("Accept", acceptMimeType)
-        queryHttpPost
-      }
-    }
+      },
+      simulateTimeout = simulateTimeout
+    )
 
+  private def getSparqlHttpQueryResponse(
+    sparql: String,
+    timeout: Duration = config.triplestore.queryTimeoutAsDuration,
+    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
+    simulateTimeout: Boolean = false
+  ): UIO[String] = executeHttpRequest(
+    ZIO.attempt {
+      // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2, "query via POST with URL-encoded parameters").
+      val formParams = new util.ArrayList[NameValuePair]()
+      formParams.add(new BasicNameValuePair("query", sparql))
+      println(s"Add timeout to query: $timeout")
+      formParams.add(new BasicNameValuePair("timeout", timeout.toSeconds.toInt.toString))
+      val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
+      val queryHttpPost: HttpPost             = new HttpPost(queryPath)
+      queryHttpPost.setEntity(requestEntity)
+      queryHttpPost.addHeader("Accept", acceptMimeType)
+      queryHttpPost
+    },
+    simulateTimeout = simulateTimeout
+  )
+
+  private def executeHttpRequest(request: Task[HttpPost], simulateTimeout: Boolean = false) =
     for {
       ctx <- makeHttpContext.orDie
-      clt <- httpClient.orDie
-      req <- httpPost.orDie
-      _   <- ZIO.logInfo(s"Preparing Request: $sparql with $req ${req.getEntity()}")
+      clt <- ZIO.attempt(queryHttpClient).orDie
+      req <- request.orDie
+      _   <- ZIO.logInfo(s"Preparing Request:  $req ${req.getEntity()}")
       res <- doHttpRequest(
                client = clt,
                request = req,
@@ -747,7 +726,6 @@ case class TriplestoreServiceHttpConnectorImpl(
              )
       _ <- ZIO.logInfo(s"Received response: $res")
     } yield res
-  }
 
   /**
    * Dumps the whole repository in N-Quads format, saving the response in a file.
