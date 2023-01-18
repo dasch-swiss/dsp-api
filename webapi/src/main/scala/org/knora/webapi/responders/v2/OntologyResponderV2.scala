@@ -107,8 +107,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       replaceClassCardinalities(replaceCardinalityRequest)
     case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
       canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
-    case deleteCardinalitiesfromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
-      deleteCardinalitiesFromClass(deleteCardinalitiesfromClassRequest)
+    case deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
+      deleteCardinalitiesFromClass(deleteCardinalitiesFromClassRequest)
     case changeGuiOrderRequest: ChangeGuiOrderRequestV2 => changeGuiOrder(changeGuiOrderRequest)
     case canDeleteClassRequest: CanDeleteClassRequestV2 => canDeleteClass(canDeleteClassRequest)
     case deleteClassRequest: DeleteClassRequestV2       => deleteClass(deleteClassRequest)
