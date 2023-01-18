@@ -151,7 +151,7 @@ final case class CardinalityServiceLive(
     for {
       propSmartIri          <- iriConverter.asInternalSmartIri(propertyIri)
       classInfoMaybe        <- ontologyRepo.findClassBy(classIri)
-      inheritedCardinalities = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri)).map(Cardinality.get)
+      inheritedCardinalities = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri)).map(_.cardinality)
     } yield inheritedCardinalities.forall(_.isStricterThan(newCardinality))
 
   /**

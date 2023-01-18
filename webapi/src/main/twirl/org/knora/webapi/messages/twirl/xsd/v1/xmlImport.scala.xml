@@ -9,7 +9,7 @@
 @import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
 @import org.knora.webapi.messages.OntologyConstants
 @import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
-@import dsp.schema.domain.Cardinality._
+@import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 
 @**
  * Generates an XML schema based on ontology definitions.
@@ -78,19 +78,19 @@
 
                                                 @cardinalityInfo.cardinality match {
 
-                                                    case MayHaveOne => { minOccurs="0" maxOccurs="1"
+                                                    case ZeroOrOne => { minOccurs="0" maxOccurs="1"
                     
                                                     }
 
-                                                    case MayHaveMany => { minOccurs="0" maxOccurs="unbounded"
+                                                    case Unbounded => { minOccurs="0" maxOccurs="unbounded"
 
                                                     }
 
-                                                    case MustHaveOne => { minOccurs="1" maxOccurs="1"
+                                                    case ExactlyOne => { minOccurs="1" maxOccurs="1"
 
                                                     }
 
-                                                    case MustHaveSome => { minOccurs="1" maxOccurs="unbounded"
+                                                    case AtLeastOne => { minOccurs="1" maxOccurs="unbounded"
 
                                                     }
                                                 }

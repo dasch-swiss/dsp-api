@@ -24,7 +24,6 @@ import scala.xml.NodeSeq
 import scala.xml.XML
 
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -54,6 +53,8 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.util._
 import org.knora.webapi.util.cache.CacheUtil
 
@@ -1154,7 +1155,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
               .standoffClassInfoMap(standoffClass.toSmartIri)
               .allCardinalities
               .filter { case (property: SmartIri, card: KnoraCardinalityInfo) =>
-                card.cardinality == MustHaveOne || card.cardinality == MustHaveSome
+                card.cardinality == ExactlyOne || card.cardinality == AtLeastOne
               }
               .keySet -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dataTypeProperties
               .map(_.toSmartIri)

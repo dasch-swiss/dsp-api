@@ -6,35 +6,32 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+import dsp.constants.SalsahGui
+import dsp.errors._
+import dsp.valueobjects.{Iri, Schema}
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages.{
+  CreateResourceRequestV2,
+  CreateResourceV2,
+  CreateValueInNewResourceV2,
+  ReadResourcesSequenceV2
+}
+import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
+import org.knora.webapi.util.MutableTestIri
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
-
-import dsp.constants.SalsahGui
-import dsp.errors._
-import dsp.schema.domain.Cardinality._
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Schema
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v2.responder.CanDoResponseV2
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.MutableTestIri
 
 /**
  * Tests [[OntologyResponderV2]].
@@ -1094,7 +1091,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasComicAuthor".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             )
           )
         ),
@@ -2403,9 +2400,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne),
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
           AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(20)
           )
         ),
@@ -2447,9 +2444,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasOtherThing") -> KnoraCardinalityInfo(MustHaveOne),
+          AnythingOntologyIri.makeEntityIri("hasOtherThing") -> KnoraCardinalityInfo(ExactlyOne),
           AnythingOntologyIri.makeEntityIri("hasBlueThing") -> KnoraCardinalityInfo(
-            cardinality = MustHaveOne
+            cardinality = ExactlyOne
           )
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
@@ -2490,7 +2487,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInterestingThingValue") -> KnoraCardinalityInfo(MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasInterestingThingValue") -> KnoraCardinalityInfo(ZeroOrOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -2529,7 +2526,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(ZeroOrOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -2799,9 +2796,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne),
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
           AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(20)
           )
         ),
@@ -2889,7 +2886,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -2970,7 +2967,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(ZeroOrOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -3008,7 +3005,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -3089,7 +3086,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -3542,7 +3539,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities =
-          Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> KnoraCardinalityInfo(MayHaveOne)),
+          Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> KnoraCardinalityInfo(ZeroOrOne)),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
         ontologySchema = ApiV2Complex
       )
@@ -3583,7 +3580,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             )
           )
         ),
-        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(MayHaveOne)),
+        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(ZeroOrOne)),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
         ontologySchema = ApiV2Complex
       )
@@ -3624,7 +3621,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             )
           )
         ),
-        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(MustHaveOne)),
+        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(ExactlyOne)),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
       )
@@ -3642,7 +3639,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val readClassInfo = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent should ===(classInfoContent)
         readClassInfo.allCardinalities(AnythingOntologyIri.makeEntityIri("hasBoolean")).cardinality should ===(
-          MustHaveOne
+          ExactlyOne
         )
 
         val metadata = externalOntology.ontologyMetadata
@@ -3677,7 +3674,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             )
           )
         ),
-        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(MayHaveMany)),
+        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(Unbounded)),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
       )
@@ -4111,7 +4108,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(MustHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(ExactlyOne)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -4203,7 +4200,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(0)
           )
         ),
@@ -4285,7 +4282,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          propertyIri -> KnoraCardinalityInfo(cardinality = MayHaveOne, guiOrder = Some(0))
+          propertyIri -> KnoraCardinalityInfo(cardinality = ZeroOrOne, guiOrder = Some(0))
         ),
         ontologySchema = ApiV2Complex
       )
@@ -4298,9 +4295,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val expectedDirectCardinalities = Map(
-        propertyIri -> KnoraCardinalityInfo(cardinality = MayHaveOne, guiOrder = Some(0)),
+        propertyIri -> KnoraCardinalityInfo(cardinality = ZeroOrOne, guiOrder = Some(0)),
         propertyIri.fromLinkPropToLinkValueProp -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(0)
         )
       )
@@ -4347,7 +4344,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-            cardinality = MayHaveMany,
+            cardinality = Unbounded,
             guiOrder = Some(0)
           )
         ),
@@ -4379,7 +4376,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(0)
           )
         ),
@@ -4395,15 +4392,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val expectedDirectCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(0)
         )
       )
@@ -4444,7 +4441,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MustHaveSome)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(AtLeastOne)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -4474,7 +4471,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -4571,7 +4568,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(1)
           )
         ),
@@ -4587,19 +4584,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val expectedDirectCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(1)
         )
       )
@@ -4643,7 +4640,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(0)
           )
         ),
@@ -4676,15 +4673,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(1)
           ),
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(2)
           ),
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(3)
           )
         ),
@@ -4700,19 +4697,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val expectedCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(1)
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(1)
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(2)
         ),
         AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(3)
         )
       )
@@ -4745,7 +4742,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(0)
           )
         ),
@@ -5060,7 +5057,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
         directCardinalities =
-          Map(IncunabulaOntologyIri.makeEntityIri("description") -> KnoraCardinalityInfo(MayHaveOne)),
+          Map(IncunabulaOntologyIri.makeEntityIri("description") -> KnoraCardinalityInfo(ZeroOrOne)),
         ontologySchema = ApiV2Complex
       )
 
@@ -5302,8 +5299,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
-        directCardinalities =
-          Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)),
+        directCardinalities = Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)),
         ontologySchema = ApiV2Complex
       )
 
@@ -5781,13 +5777,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             ),
             (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             ),
             (anythingOntology + "testLinkProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             )
           )
         ),
@@ -5817,10 +5813,10 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             ),
             (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             )
           )
         ),
@@ -6030,10 +6026,10 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             ),
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             )
           )
         ),
@@ -6096,7 +6092,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             )
           )
         ),
@@ -6123,7 +6119,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = MayHaveOne
+              cardinality = ZeroOrOne
             )
           )
         ),
@@ -6186,8 +6182,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
           "http://xmlns.com/foaf/0.1/Person".toSmartIri
         ),
-        directCardinalities =
-          Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)),
+        directCardinalities = Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)),
         ontologySchema = ApiV2Complex
       )
 
@@ -6311,7 +6306,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           propertyIri -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(0)
           )
         ),
@@ -6328,11 +6323,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       // check if cardinality was added correctly
       val expectedDirectCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map(
         propertyIri -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne,
+          cardinality = ZeroOrOne,
           guiOrder = Some(0)
         ),
         ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(
-          cardinality = MayHaveOne
+          cardinality = ZeroOrOne
         )
       )
 
@@ -6377,7 +6372,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         directCardinalities = Map(
           propertyIri -> KnoraCardinalityInfo(
-            cardinality = MayHaveOne,
+            cardinality = ZeroOrOne,
             guiOrder = Some(0)
           )
         ),
@@ -6439,7 +6434,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "change the GUI order of a cardinality in a base class, and update its subclass in the ontology cache" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Thing")
 
-      val newCardinality = KnoraCardinalityInfo(cardinality = MayHaveMany, guiOrder = Some(100))
+      val newCardinality = KnoraCardinalityInfo(cardinality = Unbounded, guiOrder = Some(100))
 
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
