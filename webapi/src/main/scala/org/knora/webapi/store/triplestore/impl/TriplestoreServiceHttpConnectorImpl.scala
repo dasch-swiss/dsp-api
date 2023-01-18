@@ -723,7 +723,7 @@ case class TriplestoreServiceHttpConnectorImpl(
           if (isAdministrativeQuery) administrativeTimeoutString
           else if (isGravsearch) gravsearchTimeoutString
           else queryTimeoutString
-        println(s"xxxxxxx $timeout")
+        println(s"Add timeout to query: $timeout")
         formParams.add(new BasicNameValuePair("timeout", timeout))
         val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
         val queryHttpPost: HttpPost             = new HttpPost(queryPath)
