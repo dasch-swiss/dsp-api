@@ -20,6 +20,9 @@ import scala.util.Try
 
 import dsp.errors.NotFoundException
 import dsp.errors._
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Project
+import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
@@ -81,13 +84,13 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
           projectIri,
-          changeProjectRequest,
+          changeProjectPayload,
           requestingUser,
           apiRequestID
         ) =>
       changeBasicInformationRequestADM(
         projectIri,
-        changeProjectRequest,
+        changeProjectPayload,
         requestingUser,
         apiRequestID
       )
@@ -113,10 +116,9 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
             )
             .toString()
         )
-      request           = SparqlExtendedConstructRequest(sparql = sparqlQueryString)
-      projectsResponse <- appActor.ask(request).mapTo[SparqlExtendedConstructResponse]
-      projectIris       = projectsResponse.statements.keySet.map(_.toString)
-
+      request                                    = SparqlExtendedConstructRequest(sparql = sparqlQueryString)
+      projectsResponse                          <- appActor.ask(request).mapTo[SparqlExtendedConstructResponse]
+      projectIris                                = projectsResponse.statements.keySet.map(_.toString)
       ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris)
       projects =
         projectsResponse.statements.toList.map {
@@ -685,16 +687,15 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * Changes project's basic information.
    *
    * @param projectIri           the IRI of the project.
-   * @param changeProjectRequest the change payload.
-   *
+   * @param projectChangePayload the change payload.
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique api request ID.
    * @return a [[ProjectOperationResponseADM]].
    * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
    */
   private def changeBasicInformationRequestADM(
-    projectIri: IRI,
-    changeProjectRequest: ChangeProjectApiRequestADM,
+    projectIri: Iri.ProjectIri,
+    projectChangePayload: ProjectChangePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[ProjectOperationResponseADM] = {
@@ -703,47 +704,31 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
      * The actual change project task run with an IRI lock.
      */
     def changeProjectTask(
-      projectIri: IRI,
-      changeProjectRequest: ChangeProjectApiRequestADM,
+      projectIri: Iri.ProjectIri,
+      projectChangePayload: ProjectChangePayloadADM,
       requestingUser: UserADM
-    ): Future[ProjectOperationResponseADM] =
+    ): Future[ProjectOperationResponseADM] = {
+      // check if the requesting user is allowed to perform updates
+      if (!requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin) {
+        throw ForbiddenException("Project's information can only be changed by a project or system admin.")
+      }
+
       for {
-
-        _ <- Future(
-               // check if necessary information is present
-               if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-             )
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-              // not a project admin and not a system admin
-              throw ForbiddenException("Project's information can only be changed by a project or system admin.")
-            }
-
-        // create the update request
-        projectUpdatePayload = ProjectUpdatePayloadADM(
-                                 longname = changeProjectRequest.longname,
-                                 description = changeProjectRequest.description,
-                                 keywords = changeProjectRequest.keywords,
-                                 logo = changeProjectRequest.logo,
-                                 status = changeProjectRequest.status,
-                                 selfjoin = changeProjectRequest.selfjoin
-                               )
-
         result <- updateProjectADM(
                     projectIri = projectIri,
-                    projectUpdatePayload = projectUpdatePayload,
+                    projectUpdatePayload = projectChangePayload,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
       } yield result
+    }
 
     for {
       // run the change status task with an IRI lock
       taskResult <- IriLocker.runWithIriLock(
                       apiRequestID,
-                      projectIri,
-                      () => changeProjectTask(projectIri, changeProjectRequest, requestingUser)
+                      projectIri.value,
+                      () => changeProjectTask(projectIri, projectChangePayload, requestingUser)
                     )
     } yield taskResult
 
@@ -761,8 +746,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * @throws NotFoundException in the case that the project's IRI is not found.
    */
   private def updateProjectADM(
-    projectIri: IRI,
-    projectUpdatePayload: ProjectUpdatePayloadADM,
+    projectIri: Iri.ProjectIri,
+    projectUpdatePayload: ProjectChangePayloadADM,
     requestingUser: UserADM
   ): Future[ProjectOperationResponseADM] = {
 
@@ -784,13 +769,13 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       maybeCurrentProject: Option[ProjectADM] <-
         getSingleProjectADM(
           identifier = IriIdentifier
-            .fromString(projectIri)
+            .fromString(projectIri.value)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           skipCache = true
         )
 
       _ = if (maybeCurrentProject.isEmpty) {
-            throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
+            throw NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request.")
           }
       // we are changing the project, so lets get rid of the cached copy
       _ = appActor.ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
@@ -800,19 +785,17 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
                                      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                        .updateProject(
                                          adminNamedGraphIri = "http://www.knora.org/data/admin",
-                                         projectIri = projectIri,
-                                         maybeShortname = projectUpdatePayload.shortname,
-                                         maybeLongname = projectUpdatePayload.longname,
-                                         maybeDescriptions = projectUpdatePayload.description,
-                                         maybeKeywords = projectUpdatePayload.keywords,
-                                         maybeLogo = projectUpdatePayload.logo,
-                                         maybeStatus = projectUpdatePayload.status,
-                                         maybeSelfjoin = projectUpdatePayload.selfjoin
+                                         projectIri = projectIri.value,
+                                         maybeShortname = projectUpdatePayload.shortname.map(_.value),
+                                         maybeLongname = projectUpdatePayload.longname.map(_.value),
+                                         maybeDescriptions = projectUpdatePayload.description.map(_.value),
+                                         maybeKeywords = projectUpdatePayload.keywords.map(_.value),
+                                         maybeLogo = projectUpdatePayload.logo.map(_.value),
+                                         maybeStatus = projectUpdatePayload.status.map(_.value),
+                                         maybeSelfjoin = projectUpdatePayload.selfjoin.map(_.value)
                                        )
                                        .toString
                                    )
-
-      // _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
 
       _ <- appActor
              .ask(SparqlUpdateRequest(updateProjectSparqlString))
@@ -822,7 +805,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       maybeUpdatedProject <-
         getSingleProjectADM(
           identifier = IriIdentifier
-            .fromString(projectIri)
+            .fromString(projectIri.value)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
           skipCache = true
         )
@@ -838,24 +821,27 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
             updatedProject
           )
 
-      _ = if (projectUpdatePayload.shortname.isDefined) {
-            val unescapedShortName: String = stringFormatter.fromSparqlEncodedString(projectUpdatePayload.shortname.get)
+      _ = projectUpdatePayload.shortname.map { shortname =>
+            val unescapedShortName: String = stringFormatter.fromSparqlEncodedString(shortname.value)
             if (updatedProject.shortname != unescapedShortName)
               throw UpdateNotPerformedException(
                 "Project's 'shortname' was not updated. Please report this as a possible bug."
               )
           }
-      _ = if (projectUpdatePayload.longname.isDefined) {
-            val unescapedLongname: Option[String] =
-              stringFormatter.unescapeOptionalString(projectUpdatePayload.longname)
-            if (updatedProject.longname != unescapedLongname)
-              throw UpdateNotPerformedException(
-                s"Project's 'longname' was not updated. Please report this as a possible bug."
-              )
+
+      _ = projectUpdatePayload.longname.map { longname: Project.Name =>
+            val unescapedLongname: String = stringFormatter.fromSparqlEncodedString(longname.value)
+            updatedProject.longname.map { value =>
+              if (value != unescapedLongname)
+                throw UpdateNotPerformedException(
+                  s"Project's 'longname' was not updated. Please report this as a possible bug."
+                )
+            }
           }
-      _ = if (projectUpdatePayload.description.isDefined) {
-            val unescapedDescriptions: Seq[StringLiteralV2] = projectUpdatePayload.description.get.map(desc =>
-              StringLiteralV2(stringFormatter.fromSparqlEncodedString(desc.value), desc.language)
+
+      _ = projectUpdatePayload.description.map { descriptions =>
+            val unescapedDescriptions: Seq[V2.StringLiteralV2] = descriptions.value.map(desc =>
+              V2.StringLiteralV2(stringFormatter.fromSparqlEncodedString(desc.value), desc.language)
             )
             if (updatedProject.description.diff(unescapedDescriptions).nonEmpty)
               throw UpdateNotPerformedException(
@@ -863,37 +849,39 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
               )
           }
 
-      _ = if (projectUpdatePayload.keywords.isDefined) {
-            val unescapedKeywords: Seq[String] =
-              projectUpdatePayload.keywords.get.map(key => stringFormatter.fromSparqlEncodedString(key))
+      _ = projectUpdatePayload.keywords.map { keywords =>
+            val unescapedKeywords: Seq[String] = keywords.value.map(key => stringFormatter.fromSparqlEncodedString(key))
             if (updatedProject.keywords.sorted != unescapedKeywords.sorted)
               throw UpdateNotPerformedException(
                 "Project's 'keywords' was not updated. Please report this as a possible bug."
               )
           }
-      _ = if (projectUpdatePayload.logo.isDefined) {
-            val unescapedLogo: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.logo)
-            if (updatedProject.logo != unescapedLogo)
-              throw UpdateNotPerformedException(
-                "Project's 'logo' was not updated. Please report this as a possible bug."
-              )
+
+      _ = projectUpdatePayload.logo.map { logo: Project.Logo =>
+            updatedProject.logo.map { value =>
+              val unescapedLogo: String = stringFormatter.fromSparqlEncodedString(logo.value)
+              if (value != unescapedLogo)
+                throw UpdateNotPerformedException(
+                  s"Project's 'longname' was not updated. Please report this as a possible bug."
+                )
+            }
           }
-      _ = if (projectUpdatePayload.status.isDefined) {
-            if (updatedProject.status != projectUpdatePayload.status.get)
+
+      _ = projectUpdatePayload.status.map { projectStatus: Project.ProjectStatus =>
+            if (updatedProject.status != projectStatus.value)
               throw UpdateNotPerformedException(
                 "Project's 'status' was not updated. Please report this as a possible bug."
               )
           }
 
-      _ = if (projectUpdatePayload.selfjoin.isDefined) {
-            if (updatedProject.selfjoin != projectUpdatePayload.selfjoin.get)
+      _ = projectUpdatePayload.selfjoin.map { selfjoin =>
+            if (updatedProject.selfjoin != selfjoin.value)
               throw UpdateNotPerformedException(
                 "Project's 'selfjoin' status was not updated. Please report this as a possible bug."
               )
           }
 
     } yield ProjectOperationResponseADM(project = updatedProject)
-
   }
 
   /**
@@ -1190,10 +1178,18 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     ontologies: Seq[IRI]
   ): ProjectADM = {
 
-    // log.debug("statements2ProjectADM - statements: {}", statements)
-
     val projectIri: IRI                         = statements._1.toString
     val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
+
+    // transformation from StringLiteralV2 to V2.StringLiteralV2 for project description
+    val descriptionsStringLiteralV2: Seq[StringLiteralV2] = propsMap
+      .getOrElse(
+        OntologyConstants.KnoraAdmin.ProjectDescription.toSmartIri,
+        throw InconsistentRepositoryDataException(s"Project: $projectIri has no description defined.")
+      )
+      .map(_.asInstanceOf[StringLiteralV2])
+    val descriptionsV2StringLiteralV2: Seq[V2.StringLiteralV2] =
+      descriptionsStringLiteralV2.map(desc => V2.StringLiteralV2(desc.value, desc.language))
 
     ProjectADM(
       id = projectIri,
@@ -1216,12 +1212,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       longname = propsMap
         .get(OntologyConstants.KnoraAdmin.ProjectLongname.toSmartIri)
         .map(_.head.asInstanceOf[StringLiteralV2].value),
-      description = propsMap
-        .getOrElse(
-          OntologyConstants.KnoraAdmin.ProjectDescription.toSmartIri,
-          throw InconsistentRepositoryDataException(s"Project: $projectIri has no description defined.")
-        )
-        .map(_.asInstanceOf[StringLiteralV2]),
+      description = descriptionsV2StringLiteralV2,
       keywords = propsMap
         .getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword.toSmartIri, Seq.empty[String])
         .map(_.asInstanceOf[StringLiteralV2].value)

@@ -34,6 +34,7 @@ import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtoco
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
+import dsp.valueobjects.V2
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
@@ -222,9 +223,7 @@ class ProjectsADME2ESpec
         result.shortname should be("newprojectWithIri")
         result.longname should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
-        result.description should be(
-          Seq(StringLiteralV2(value = "a project created with a custom IRI", language = Some("en")))
-        )
+        result.description should be(Seq(V2.StringLiteralV2("a project created with a custom IRI", Some("en"))))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -305,7 +304,7 @@ class ProjectsADME2ESpec
         result.shortname should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("project longname"))
-        result.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+        result.description should be(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
         result.keywords should be(Seq("keywords"))
         result.logo should be(Some("/fu/bar/baz.jpg"))
         result.status should be(true)
@@ -451,7 +450,9 @@ class ProjectsADME2ESpec
         result.shortname should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
-        result.description should be(Seq(StringLiteralV2(value = "updated project description", language = Some("en"))))
+        result.description should be(
+          Seq(V2.StringLiteralV2(value = "updated project description", language = Some("en")))
+        )
         result.keywords.sorted should be(Seq("updated", "keywords").sorted)
         result.logo should be(Some("/fu/bar/baz-updated.jpg"))
         result.status should be(true)
@@ -498,8 +499,8 @@ class ProjectsADME2ESpec
 
         val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
         result.description.size should be(2)
-        result.description should contain(StringLiteralV2(value = "Test Project", language = Some("en")))
-        result.description should contain(StringLiteralV2(value = "Test Project", language = Some("se")))
+        result.description should contain(V2.StringLiteralV2(value = "Test Project", language = Some("en")))
+        result.description should contain(V2.StringLiteralV2(value = "Test Project", language = Some("se")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(

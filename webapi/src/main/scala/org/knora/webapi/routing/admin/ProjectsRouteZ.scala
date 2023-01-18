@@ -15,9 +15,11 @@ import zio.json._
 import dsp.errors.BadRequestException
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
+import dsp.valueobjects.Iri
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -45,6 +47,8 @@ final case class ProjectsRouteZ(
           createProject(request, requestingUser)
         case (Method.DELETE -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, requestingUser) =>
           deleteProject(iriUrlEncoded, requestingUser)
+        case (request @ Method.PUT -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, requestingUser) =>
+          changeProject(iriUrlEncoded, request, requestingUser)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -82,11 +86,21 @@ final case class ProjectsRouteZ(
       projectCreateResponse <- projectsService.createProjectADMRequest(payload, requestingUser)
     } yield Response.json(projectCreateResponse.toJsValue.toString)
 
-  private def deleteProject(iriUrlEncoded: String, requestingUser: UserADM) =
+  private def deleteProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
       iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectDeleteResponse <- projectsService.deleteProject(iriDecoded, requestingUser)
+      projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO
+      projectDeleteResponse <- projectsService.deleteProject(projectIri, requestingUser)
     } yield Response.json(projectDeleteResponse.toJsValue.toString())
+
+  private def changeProject(iriUrlEncoded: String, request: Request, requestingUser: UserADM): Task[Response] =
+    for {
+      iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO
+      body                  <- request.body.asString
+      payload               <- ZIO.fromEither(body.fromJson[ProjectChangePayloadADM]).mapError(e => new BadRequestException(e))
+      projectCreateResponse <- projectsService.changeProject(projectIri, payload, requestingUser)
+    } yield Response.json(projectCreateResponse.toJsValue.toString)
 }
 
 object ProjectsRouteZ {

@@ -7,7 +7,9 @@ package org.knora.webapi.responders.admin
 
 import zio._
 
-import org.knora.webapi.IRI
+import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri.ProjectIri
+import dsp.valueobjects.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ActorToZioBridge
@@ -19,7 +21,12 @@ trait ProjectsService {
     payload: ProjectCreatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
-  def deleteProject(iri: IRI, requestingUser: UserADM): Task[ProjectOperationResponseADM]
+  def deleteProject(projectIri: ProjectIri, requestingUser: UserADM): Task[ProjectOperationResponseADM]
+  def changeProject(
+    projectIri: ProjectIri,
+    payload: ProjectChangePayloadADM,
+    requestingUser: UserADM
+  ): Task[ProjectOperationResponseADM]
 }
 
 final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
@@ -77,19 +84,49 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
    *                    [[dsp.errors.ForbiddenException]] when the user is not allowed to perform the operation
    */
-  def deleteProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectOperationResponseADM] =
+  def deleteProject(projectIri: ProjectIri, requestingUser: UserADM): Task[ProjectOperationResponseADM] = {
+    val projectStatus = Project.ProjectStatus.make(false).getOrElse(throw BadRequestException(""))
     for {
       random      <- ZIO.random
       requestUuid <- random.nextUUID
       response <- bridge.askAppActor[ProjectOperationResponseADM](
                     ProjectChangeRequestADM(
                       projectIri = projectIri,
-                      changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                      projectChangePayload =
+                        ProjectChangePayloadADM(projectIri = projectIri, status = Some(projectStatus)),
                       requestingUser = requestingUser,
                       apiRequestID = requestUuid
                     )
                   )
     } yield response
+  }
+
+  /**
+   * Updates a project
+   *
+   * @param projectIri           the [[IRI]] of the project
+   * @param payload              a [[ProjectChangePayloadADM]] instance
+   * @param requestingUser       the user making the request.
+   * @return
+   *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
+   */
+  def changeProject(
+    projectIri: ProjectIri,
+    payload: ProjectChangePayloadADM,
+    requestingUser: UserADM
+  ): Task[ProjectOperationResponseADM] = for {
+    random      <- ZIO.random
+    requestUuid <- random.nextUUID
+    request = ProjectChangeRequestADM(
+                projectIri = projectIri,
+                projectChangePayload = payload,
+                requestingUser = requestingUser,
+                apiRequestID = requestUuid
+              )
+    response <- bridge.askAppActor[ProjectOperationResponseADM](request)
+  } yield response
 }
 
 object ProjectsService {

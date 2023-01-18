@@ -28,3 +28,21 @@ final case class ProjectCreatePayloadADM(
 object ProjectCreatePayloadADM {
   implicit val codec: JsonCodec[ProjectCreatePayloadADM] = DeriveJsonCodec.gen[ProjectCreatePayloadADM]
 }
+
+/**
+ * Project update payload
+ */
+final case class ProjectChangePayloadADM(
+  projectIri: ProjectIri,
+  shortname: Option[ShortName] = None,
+  longname: Option[Name] = None,
+  description: Option[ProjectDescription] = None,
+  keywords: Option[Keywords] = None,
+  logo: Option[Logo] = None,
+  status: Option[ProjectStatus] = None,
+  selfjoin: Option[ProjectSelfJoin] = None
+)
+
+object ProjectChangePayloadADM {
+  implicit val codec: JsonCodec[ProjectChangePayloadADM] = DeriveJsonCodec.gen[ProjectChangePayloadADM]
+}

@@ -14,10 +14,11 @@ import zio.test._
 
 import java.net.URLEncoder
 
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
-import org.knora.webapi.IRI
+import dsp.valueobjects.V2._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -26,7 +27,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResp
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
@@ -50,7 +50,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       shortname = "",
       shortcode = "",
       longname = None,
-      description = Seq(StringLiteralV2("")),
+      description = Seq(V2.StringLiteralV2("", None)),
       keywords = Seq.empty,
       logo = None,
       ontologies = Seq.empty,
@@ -105,7 +105,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
           ShortName.make("newproject"),
           ShortCode.make("3333"),
           Name.make(Some("project longname")),
-          ProjectDescription.make(Seq(V2.StringLiteralV2("project description", Some("en")))),
+          ProjectDescription.make(Seq(StringLiteralV2("project description", Some("en")))),
           Keywords.make(Seq("test project")),
           Logo.make(None),
           ProjectStatus.make(true),
@@ -197,10 +197,10 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
   val deleteProjectSpec =
     test("delete a project by IRI") {
-      val iri: IRI       = "http://rdfh.ch/projects/0001"
-      val request        = Request(url = URL(basePathProjectsIri / encode(iri)), method = Method.DELETE)
-      val user           = KnoraSystemInstances.Users.SystemUser
-      val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
+      val iri: ProjectIri = ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException(""))
+      val request         = Request(url = URL(basePathProjectsIri / encode(iri.value)), method = Method.DELETE)
+      val user            = KnoraSystemInstances.Users.SystemUser
+      val expectedResult  = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .DeleteProject(
           assertion = Assertion.equalTo(iri, user),
