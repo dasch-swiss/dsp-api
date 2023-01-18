@@ -68,7 +68,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   /**
    * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: OntologiesResponderRequestV2) = msg match {
+  def receive(msg: OntologiesResponderRequestV2): Future[Product] = msg match {
     case LoadOntologiesRequestV2(requestingUser) =>
       Cache.loadOntologies(appActor, requestingUser)
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
@@ -103,8 +103,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
     case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>
       addCardinalitiesToClass(addCardinalitiesToClassRequest)
-    case changeCardinalitiesRequest: ReplaceCardinalitiesRequestV2 =>
-      replaceClassCardinalities(changeCardinalitiesRequest)
+    case replaceCardinalityRequest: ReplaceCardinalitiesRequestV2 =>
+      replaceClassCardinalities(replaceCardinalityRequest)
     case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
       canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
     case deleteCardinalitiesfromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
@@ -2562,7 +2562,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                            maybeLinkValuePropertyIri =
                              maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
                            maybeNewGuiElement = newGuiElementIri,
-                           newGuiAttributes = newGuiAttributeIris.toSet,
+                           newGuiAttributes = newGuiAttributeIris,
                            lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
                            currentTime = currentTime
                          )
@@ -3051,7 +3051,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   /**
    * Delete the `rdfs:comment` in a property definition.
    *
-   * @param deletePropertyCommentRequestV2 the request to delete the property's comment
+   * @param deletePropertyCommentRequest the request to delete the property's comment
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
   private def deletePropertyComment(
@@ -3266,7 +3266,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   /**
    * Delete the `rdfs:comment` in a class definition.
    *
-   * @param deleteClassCommentRequestV2 the request to delete the class' comment
+   * @param deleteClassCommentRequest the request to delete the class' comment
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
   private def deleteClassComment(
