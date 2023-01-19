@@ -8,6 +8,8 @@ jobs:
     name: Publish from branch
     runs-on: ubuntu-latest
     steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
@@ -17,6 +19,7 @@ jobs:
     name: Send google chat notification
     needs: [publish-from-branch]
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Send notification to google chat room "DSP releases"
         uses: lakto/google-chat-action@main
