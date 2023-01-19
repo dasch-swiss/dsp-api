@@ -22,8 +22,19 @@ object HttpServerZ {
       corsConfig =
         Cors.CorsConfig(
           anyOrigin = false,
-          allowedOrigins = config.zioHttp.corsAllowedOrigins.contains(_),
-          allowedHeaders = Some(Set(config.zioHttp.corsAllowedHeaders))
+          allowedOrigins = { x =>
+            val y = config.zioHttp.corsAllowedOrigins.contains(x)
+            println(s"CORS Checked: $x (result: $y) ")
+            y
+          }
+          // allowedHeaders = Some(Set(config.zioHttp.corsAllowedHeaders)),
+          // allowedHeaders = Some(Set("*"))
+          // allowedHeaders = Some(Set(HttpHeaderNames.CONTENT_TYPE.toString, HttpHeaderNames.AUTHORIZATION.toString))
+          // allowedHeaders = Some(Set("authorization,content-type"))
+          // allowedHeaders = Some(Set("Content-Type"))
+          // allowedHeaders = Some(Set("authorization", "content-type"))
+          // allowedHeaders = Some(Set("authorization", "Content-Type"))
+          // allowedHeaders = None
         )
     } yield Middleware.cors(corsConfig)
 
