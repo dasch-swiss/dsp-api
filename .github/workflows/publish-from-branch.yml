@@ -14,3 +14,13 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
+
+  send-chat-notification:
+    name: Send google chat notification
+    needs: [publish-from-branch]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification to google chat room "DSP releases"
+        uses: Co-qn/google-chat-notification@releases/v1
+        with:
+          url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
