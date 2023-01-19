@@ -1634,16 +1634,15 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
   def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
-    val classIriExternal    = request.classInfoContent.classIri
-    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
-
-    def taskFuture: () => Future[ReadOntologyV2] = () =>
+    val taskFuture: () => Future[ReadOntologyV2] = () =>
       for {
         newReadClassInfo <- makeUpdatedClassModel(request)
         _                <- checkPreconditions(request)
         response         <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
       } yield response
 
+    val classIriExternal = request.classInfoContent.classIri
+    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
     for {
       _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
              externalOntologyIri = ontologyIriExternal,
