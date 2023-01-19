@@ -22,7 +22,7 @@ import dsp.valueobjects.V2._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -226,8 +226,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     val projectStatus = ProjectStatus.make(true).getOrElse(throw BadRequestException("Invalid Project Status"))
     val selfJoin      = ProjectSelfJoin.make(true).getOrElse(throw BadRequestException("Invalid SelfJoin"))
 
-    val projectChangePayload = ProjectChangePayloadADM(
-      projectIri = projectIri,
+    val projectUpdatePayload = ProjectUpdatePayloadADM(
       shortname = Some(updatedShortname),
       longname = Some(updatedLongname),
       description = Some(updatedDescription),
@@ -237,7 +236,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       selfjoin = Some(selfJoin)
     )
 
-    val projectChangePayloadString =
+    val projectUpdatePayloadString =
       s"""|{
           |  "shortname": "${updatedShortname.value}",
           |  "longname": "${updatedLongname.value}",
@@ -249,14 +248,14 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
           |}
           |""".stripMargin
 
-    val body    = Body.fromString(projectChangePayloadString)
+    val body    = Body.fromString(projectUpdatePayloadString)
     val request = Request(url = URL(basePathProjectsIri / encode(projectIri.value)), method = Method.PUT, body = body)
     val user    = KnoraSystemInstances.Users.SystemUser
 
     val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
     val mockService = ProjectsServiceMock
       .ChangeProject(
-        assertion = Assertion.equalTo((projectIri, projectChangePayload, user)),
+        assertion = Assertion.equalTo((projectIri, projectUpdatePayload, user)),
         result = expectedResult
       )
       .toLayer

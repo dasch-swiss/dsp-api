@@ -24,7 +24,7 @@ trait ProjectsService {
   def deleteProject(projectIri: ProjectIri, requestingUser: UserADM): Task[ProjectOperationResponseADM]
   def changeProject(
     projectIri: ProjectIri,
-    payload: ProjectChangePayloadADM,
+    payload: ProjectUpdatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
 }
@@ -92,8 +92,7 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
       response <- bridge.askAppActor[ProjectOperationResponseADM](
                     ProjectChangeRequestADM(
                       projectIri = projectIri,
-                      projectChangePayload =
-                        ProjectChangePayloadADM(projectIri = projectIri, status = Some(projectStatus)),
+                      projectUpdatePayload = ProjectUpdatePayloadADM(status = Some(projectStatus)),
                       requestingUser = requestingUser,
                       apiRequestID = requestUuid
                     )
@@ -105,7 +104,7 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
    * Updates a project
    *
    * @param projectIri           the [[IRI]] of the project
-   * @param payload              a [[ProjectChangePayloadADM]] instance
+   * @param payload              a [[ProjectUpdatePayloadADM]] instance
    * @param requestingUser       the user making the request.
    * @return
    *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
@@ -114,14 +113,14 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
    */
   def changeProject(
     projectIri: ProjectIri,
-    payload: ProjectChangePayloadADM,
+    payload: ProjectUpdatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM] = for {
     random      <- ZIO.random
     requestUuid <- random.nextUUID
     request = ProjectChangeRequestADM(
                 projectIri = projectIri,
-                projectChangePayload = payload,
+                projectUpdatePayload = payload,
                 requestingUser = requestingUser,
                 apiRequestID = requestUuid
               )

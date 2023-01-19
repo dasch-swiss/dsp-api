@@ -17,7 +17,7 @@ import dsp.valueobjects.Project._
 import dsp.valueobjects.V2._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangeRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequestADM
@@ -180,7 +180,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val projectIri: ProjectIri =
       ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException(""))
     val projectStatus        = Some(ProjectStatus.make(false).getOrElse(throw BadRequestException("")))
-    val changeProjectPayload = ProjectChangePayloadADM(projectIri = projectIri, status = projectStatus)
+    val changeProjectPayload = ProjectUpdatePayloadADM(status = projectStatus)
     val requestingUser       = KnoraSystemInstances.Users.SystemUser
     val projectsService = ZIO
       .serviceWithZIO[ProjectsService](_.deleteProject(projectIri, requestingUser))
@@ -215,8 +215,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val projectStatus = ProjectStatus.make(true).getOrElse(throw BadRequestException("Invalid Project Status"))
     val selfJoin      = ProjectSelfJoin.make(true).getOrElse(throw BadRequestException("Invalid SelfJoin"))
 
-    val projectChangePayload = ProjectChangePayloadADM(
-      projectIri = projectIri,
+    val projectUpatePayload = ProjectUpdatePayloadADM(
       shortname = Some(updatedShortname),
       longname = Some(updatedLongname),
       description = Some(updatedDescription),
@@ -228,12 +227,12 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val requestingUser = KnoraSystemInstances.Users.SystemUser
     val projectsService =
       ZIO
-        .serviceWithZIO[ProjectsService](_.changeProject(projectIri, projectChangePayload, requestingUser))
+        .serviceWithZIO[ProjectsService](_.changeProject(projectIri, projectUpatePayload, requestingUser))
         .provideSome[ActorToZioBridge](layers)
     for {
       uuid   <- ZIO.random.flatMap(_.nextUUID)
       _      <- TestRandom.feedUUIDs(uuid)
-      request = ProjectChangeRequestADM(projectIri, projectChangePayload, requestingUser, uuid)
+      request = ProjectChangeRequestADM(projectIri, projectUpatePayload, requestingUser, uuid)
       actorToZioBridge =
         ActorToZioBridgeMock.AskAppActor
           .of[ProjectOperationResponseADM]

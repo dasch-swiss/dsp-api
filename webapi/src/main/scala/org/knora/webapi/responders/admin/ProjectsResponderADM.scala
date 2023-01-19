@@ -684,10 +684,10 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     } yield ProjectRestrictedViewSettingsGetResponseADM(settings)
 
   /**
-   * Changes project's basic information.
+   * Update project's basic information.
    *
    * @param projectIri           the IRI of the project.
-   * @param projectChangePayload the change payload.
+   * @param projectUpdatePayload the update payload.
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique api request ID.
    * @return a [[ProjectOperationResponseADM]].
@@ -695,7 +695,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    */
   private def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    projectChangePayload: ProjectChangePayloadADM,
+    projectUpdatePayload: ProjectUpdatePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[ProjectOperationResponseADM] = {
@@ -705,7 +705,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
      */
     def changeProjectTask(
       projectIri: Iri.ProjectIri,
-      projectChangePayload: ProjectChangePayloadADM,
+      projectUpdatePayload: ProjectUpdatePayloadADM,
       requestingUser: UserADM
     ): Future[ProjectOperationResponseADM] = {
       // check if the requesting user is allowed to perform updates
@@ -716,7 +716,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       for {
         result <- updateProjectADM(
                     projectIri = projectIri,
-                    projectUpdatePayload = projectChangePayload,
+                    projectUpdatePayload = projectUpdatePayload,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
@@ -728,7 +728,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       taskResult <- IriLocker.runWithIriLock(
                       apiRequestID,
                       projectIri.value,
-                      () => changeProjectTask(projectIri, projectChangePayload, requestingUser)
+                      () => changeProjectTask(projectIri, projectUpdatePayload, requestingUser)
                     )
     } yield taskResult
 
@@ -747,11 +747,9 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    */
   private def updateProjectADM(
     projectIri: Iri.ProjectIri,
-    projectUpdatePayload: ProjectChangePayloadADM,
+    projectUpdatePayload: ProjectUpdatePayloadADM,
     requestingUser: UserADM
   ): Future[ProjectOperationResponseADM] = {
-
-    // log.debug("updateProjectADM - projectIri: {}, projectUpdatePayload: {}", projectIri, projectUpdatePayload)
 
     val parametersCount = List(
       projectUpdatePayload.shortname,

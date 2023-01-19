@@ -10,7 +10,7 @@ import zio._
 import zio.mock._
 
 import dsp.valueobjects.Iri._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -24,7 +24,7 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
   object CreateProject    extends Effect[(ProjectCreatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
   object DeleteProject    extends Effect[(ProjectIri, UserADM), Throwable, ProjectOperationResponseADM]
   object ChangeProject
-      extends Effect[(ProjectIri, ProjectChangePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
+      extends Effect[(ProjectIri, ProjectUpdatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
 
   override val compose: URLayer[Proxy, ProjectsService] =
     ZLayer {
@@ -49,7 +49,7 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
 
         def changeProject(
           projectIri: ProjectIri,
-          payload: ProjectChangePayloadADM,
+          payload: ProjectUpdatePayloadADM,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
           proxy(ChangeProject, (projectIri, payload, requestingUser))

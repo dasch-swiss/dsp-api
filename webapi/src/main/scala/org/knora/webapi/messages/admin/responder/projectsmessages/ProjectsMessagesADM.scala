@@ -272,13 +272,13 @@ case class ProjectCreateRequestADM(
  * Requests updating an existing project.
  *
  * @param projectIri            the IRI of the project to be updated.
- * @param projectChangePayload  the [[ProjectChangePayloadADM]] which needs to be update.
+ * @param projectUpdatePayload  the [[ProjectUpdatePayload]]
  * @param requestingUser        the user making the request.
  * @param apiRequestID          the ID of the API request.
  */
 case class ProjectChangeRequestADM(
   projectIri: ProjectIri,
-  projectChangePayload: ProjectChangePayloadADM,
+  projectUpdatePayload: ProjectUpdatePayloadADM,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM
@@ -574,27 +574,6 @@ object ProjectIdentifierADM {
  * @param watermark the watermark file.
  */
 case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
-
-/**
- * Payload used for updating of an existing project.
- *
- * @param shortname   The project's shortname. Needs to be system wide unique.
- * @param longname    The project's long name.
- * @param description The project's description.
- * @param keywords    The project's keywords.
- * @param logo        The project's logo.
- * @param status      The project's status.
- * @param selfjoin    The project's self-join status.
- */
-// case class ProjectUpdatePayloadADM(
-//   shortname: Option[String] = None,
-//   longname: Option[String] = None,
-//   description: Option[Seq[V2.StringLiteralV2]] = None,
-//   keywords: Option[Seq[String]] = None,
-//   logo: Option[String] = None,
-//   status: Option[Boolean] = None,
-//   selfjoin: Option[Boolean] = None
-// )
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating
