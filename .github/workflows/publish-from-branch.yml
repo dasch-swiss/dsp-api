@@ -1,4 +1,4 @@
-name: Publish from branch
+name: Publish from branch 
 
 on:
   workflow_dispatch:
@@ -22,3 +22,4 @@ jobs:
         uses: lakto/google-chat-action@main
         with:
           url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
+
