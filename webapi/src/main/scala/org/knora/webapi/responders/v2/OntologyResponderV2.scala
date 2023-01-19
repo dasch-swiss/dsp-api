@@ -1635,7 +1635,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
    */
   def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
     val classIriExternal    = request.classInfoContent.classIri
-    val classIri            = classIriExternal.toOntologySchema(InternalSchema)
     val ontologyIriExternal = classIriExternal.getOntologyFromEntity
 
     def taskFuture: () => Future[ReadOntologyV2] = () =>
