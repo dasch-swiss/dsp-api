@@ -1554,6 +1554,23 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     } yield readClassInfo
   }
 
+  private def replaceClassCardinalitiesInPersistence(
+    request: ReplaceCardinalitiesRequestV2,
+    newReadClassInfo: ReadClassInfoV2
+  ): Future[ReadOntologyV2] = {
+    val timeOfUpdate = Instant.now()
+    val classIri     = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
+    for {
+      _ <- replaceClassCardinalitiesInTripleStore(request, newReadClassInfo, timeOfUpdate)
+      _ <- replaceClassCardinalitiesInOntologyCache(request, newReadClassInfo, timeOfUpdate)
+      // Return the response with the new data from the cache
+      response <- getClassDefinitionsFromOntologyV2(
+                    classIris = Set(classIri),
+                    allLanguages = true,
+                    requestingUser = request.requestingUser
+                  )
+    } yield response
+  }
   private def replaceClassCardinalitiesInTripleStore(
     request: ReplaceCardinalitiesRequestV2,
     newReadClassInfo: ReadClassInfoV2,
@@ -1600,11 +1617,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     .findOntologyBy(ontologyIri)
                     .map(_.getOrElse(throw BadRequestException(s"Ontology $ontologyIriExternal does not exist")))
       updatedOntologyMetaData = ontology.ontologyMetadata.copy(lastModificationDate = Some(timeOfUpdate))
-      updatedOntology = ontology.copy(
-                          ontologyMetadata = updatedOntologyMetaData,
-                          classes = ontology.classes + (classIri -> newReadClassInfo)
-                        )
-      _ <- Cache.cacheUpdatedOntologyWithClass(ontologyIri, updatedOntology, classIri)
+      updatedOntologyClasses  = ontology.classes + (classIri -> newReadClassInfo)
+      updatedOntology         = ontology.copy(ontologyMetadata = updatedOntologyMetaData, classes = updatedOntologyClasses)
+      _                      <- Cache.cacheUpdatedOntologyWithClass(ontologyIri, updatedOntology, classIri)
     } yield ()
   }
 
@@ -1638,21 +1653,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                )
              )
 
-        // Create new model
         newReadClassInfo: ReadClassInfoV2 <- makeUpdatedEntities(request)
-
-        // Update the persistence in Triplestore
-        timeOfUpdate = Instant.now()
-        _           <- replaceClassCardinalitiesInTripleStore(request, newReadClassInfo, timeOfUpdate)
-        // Update persistence in the cache.
-        _ <- replaceClassCardinalitiesInOntologyCache(request, newReadClassInfo, timeOfUpdate)
-
-        // Return the response with the new data from the cache
-        response <- getClassDefinitionsFromOntologyV2(
-                      classIris = Set(classIri),
-                      allLanguages = true,
-                      requestingUser = request.requestingUser
-                    )
+        response                          <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
       } yield response
 
     for {
