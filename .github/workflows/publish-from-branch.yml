@@ -1,6 +1,7 @@
 name: Publish from branch 
 
 on:
+  release:
   workflow_dispatch:
 
 jobs:
@@ -19,7 +20,6 @@ jobs:
     name: Send google chat notification
     needs: [publish-from-branch]
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Send notification to google chat room "DSP releases"
         uses: lakto/google-chat-action@main
