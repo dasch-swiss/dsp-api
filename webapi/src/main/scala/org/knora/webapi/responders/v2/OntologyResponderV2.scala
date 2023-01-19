@@ -10,6 +10,7 @@ import akka.pattern._
 
 import java.time.Instant
 import scala.concurrent.Future
+
 import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
@@ -34,7 +35,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.Cache
-import org.knora.webapi.responders.v2.ontology.Cache.{ONTOLOGY_CACHE_LOCK_IRI, loadOntologies}
+import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isFileValueProp
@@ -1553,32 +1554,25 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           )
 
       // Build the model
-      propertyIrisOfAllCardinalitiesForClass: Set[SmartIri] = cardinalitiesForClassWithInheritance.keySet
-
-      inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
-        cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
-          newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
-        }
-      readClassInfo = ReadClassInfoV2(
-                        entityInfoContent = newInternalClassDefWithLinkValueProps,
-                        allBaseClasses = allBaseClassIris,
-                        isResourceClass = true,
-                        canBeInstantiated = true,
-                        inheritedCardinalities = inheritedCardinalities,
-                        knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          isKnoraResourceProperty(propertyIri, cacheData)
-                        ),
-                        linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          isLinkProp(propertyIri, cacheData)
-                        ),
-                        linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          isLinkValueProp(propertyIri, cacheData)
-                        ),
-                        fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          isFileValueProp(propertyIri, cacheData)
-                        )
-                      )
-    } yield readClassInfo
+      inheritedCardinalities = cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
+                                 newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
+                               }
+      propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+      knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(isKnoraResourceProperty(_, cacheData))
+      linkProperties          = propertyIrisOfAllCardinalitiesForClass.filter(isLinkProp(_, cacheData))
+      linkValueProperties     = propertyIrisOfAllCardinalitiesForClass.filter(isLinkValueProp(_, cacheData))
+      fileValueProperties     = propertyIrisOfAllCardinalitiesForClass.filter(isFileValueProp(_, cacheData))
+    } yield ReadClassInfoV2(
+      entityInfoContent = newInternalClassDefWithLinkValueProps,
+      allBaseClasses = allBaseClassIris,
+      isResourceClass = true,
+      canBeInstantiated = true,
+      inheritedCardinalities = inheritedCardinalities,
+      knoraResourceProperties = knoraResourceProperties,
+      linkProperties = linkProperties,
+      linkValueProperties = linkValueProperties,
+      fileValueProperties = fileValueProperties
+    )
   }
 
   private def checkPreconditions(request: ReplaceCardinalitiesRequestV2): Future[Unit] = {
