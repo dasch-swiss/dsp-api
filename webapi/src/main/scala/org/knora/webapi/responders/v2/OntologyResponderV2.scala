@@ -1559,8 +1559,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     newReadClassInfo: ReadClassInfoV2,
     timeOfUpdate: Instant
   ): Future[Unit] = {
-    val classIri         = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
-    val ontologyIri      = classIri.getOntologyFromEntity
+    val classIri    = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
+    val ontologyIri = classIri.getOntologyFromEntity
     val updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .replaceClassCardinalities(
         ontologyNamedGraphIri = ontologyIri,
@@ -1584,6 +1584,27 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               s"Attempted to save class definition ${newReadClassInfo.entityInfoContent}, but $loadedClassDef was saved"
             )
           }
+    } yield ()
+  }
+  private def replaceClassCardinalitiesInOntologyCache(
+    request: ReplaceCardinalitiesRequestV2,
+    newReadClassInfo: ReadClassInfoV2,
+    timeOfUpdate: Instant
+  ): Future[Unit] = {
+    val classIriExternal    = request.classInfoContent.classIri
+    val classIri            = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
+    val ontologyIri         = classIri.getOntologyFromEntity
+    for {
+      ontology <- OntologyLegacyRepo
+                    .findOntologyBy(ontologyIri)
+                    .map(_.getOrElse(throw BadRequestException(s"Ontology $ontologyIriExternal does not exist")))
+      updatedOntologyMetaData = ontology.ontologyMetadata.copy(lastModificationDate = Some(timeOfUpdate))
+      updatedOntology = ontology.copy(
+                          ontologyMetadata = updatedOntologyMetaData,
+                          classes = ontology.classes + (classIri -> newReadClassInfo)
+                        )
+      _ <- Cache.cacheUpdatedOntologyWithClass(ontologyIri, updatedOntology, classIri)
     } yield ()
   }
 
@@ -1623,18 +1644,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Update the persistence in Triplestore
         timeOfUpdate = Instant.now()
         _           <- replaceClassCardinalitiesInTripleStore(request, newReadClassInfo, timeOfUpdate)
-
         // Update persistence in the cache.
-        ontology <- OntologyLegacyRepo
-                      .findOntologyBy(ontologyIri)
-                      .map(_.getOrElse(throw BadRequestException(s"Ontology $ontologyIriExternal does not exist")))
-        updatedOntology = ontology.copy(
-                            ontologyMetadata = ontology.ontologyMetadata.copy(
-                              lastModificationDate = Some(timeOfUpdate)
-                            ),
-                            classes = ontology.classes + (classIri -> newReadClassInfo)
-                          )
-        _ <- Cache.cacheUpdatedOntologyWithClass(ontologyIri, updatedOntology, classIri)
+        _ <- replaceClassCardinalitiesInOntologyCache(request, newReadClassInfo, timeOfUpdate)
 
         // Return the response with the new data from the cache
         response <- getClassDefinitionsFromOntologyV2(
