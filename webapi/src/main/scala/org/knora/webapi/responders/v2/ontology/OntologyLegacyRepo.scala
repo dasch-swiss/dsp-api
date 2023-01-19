@@ -14,20 +14,14 @@ object OntologyLegacyRepo {
 
   private def ensureInternal(iri: SmartIri) = iri.toOntologySchema(InternalSchema)
 
-  def findOntologyBy(ontologyIri: SmartIri)(implicit ec: ExecutionContext): Future[Option[ReadOntologyV2]] = {
-    val internalOntologyIri = ensureInternal(ontologyIri)
-    getCache.map(_.ontologies.get(internalOntologyIri))
-  }
+  def findOntologyBy(ontologyIri: SmartIri)(implicit ec: ExecutionContext): Future[Option[ReadOntologyV2]] =
+    getCache.map(_.ontologies.get(ensureInternal(ontologyIri)))
 
-  def findClassBy(classIri: SmartIri)(implicit
-    ec: ExecutionContext
-  ): Future[Option[ReadClassInfoV2]] =
-    findClassBy(classIri, ensureInternal(classIri).getOntologyFromEntity)
+  def findClassBy(classIri: SmartIri)(implicit ec: ExecutionContext): Future[Option[ReadClassInfoV2]] =
+    findClassBy(ensureInternal(classIri), ensureInternal(classIri).getOntologyFromEntity)
 
   def findClassBy(classIri: SmartIri, ontologyIri: SmartIri)(implicit
     ec: ExecutionContext
-  ): Future[Option[ReadClassInfoV2]] = for {
-    ontologyInfo <- findOntologyBy(ontologyIri.toOntologySchema(InternalSchema))
-    classInfo     = ontologyInfo.flatMap(_.classes.get(ensureInternal(classIri)))
-  } yield classInfo
+  ): Future[Option[ReadClassInfoV2]] =
+    findOntologyBy(ensureInternal(ontologyIri)).map(_.flatMap(_.classes.get(ensureInternal(classIri))))
 }
