@@ -1,4 +1,4 @@
-name: Publish from branch 
+name: Publish from branch
 
 on:
   workflow_dispatch:
@@ -8,18 +8,9 @@ jobs:
     name: Publish from branch
     runs-on: ubuntu-latest
     steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-
-  send-chat-notification:
-    name: Send google chat notification
-    needs: [publish-from-branch]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send notification to google chat room "DSP releases"
-        uses: lakto/google-chat-action@main
-        with:
-          url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
-
