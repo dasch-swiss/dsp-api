@@ -5,10 +5,10 @@
 
 package org.knora.webapi.instrumentation.index
 
-import zhttp.html.Html
-import zhttp.http._
-import zio.ULayer
-import zio.ZLayer
+import zio.http.html.Html
+import zio.http._
+import zio.http.model._
+import zio._
 
 /**
  * Provides the '/' endpoint serving a small index page.

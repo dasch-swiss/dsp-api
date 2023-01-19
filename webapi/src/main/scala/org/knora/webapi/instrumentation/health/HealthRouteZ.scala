@@ -5,7 +5,8 @@
 
 package org.knora.webapi.instrumentation.health
 
-import zhttp.http._
+import zio.http._
+import zio.http.model._
 import zio._
 import zio.json._
 

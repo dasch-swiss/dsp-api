@@ -5,7 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
-import zhttp.http._
+import zio.http._
 import zio._
 
 import org.knora.webapi.messages.admin.responder.usersmessages._

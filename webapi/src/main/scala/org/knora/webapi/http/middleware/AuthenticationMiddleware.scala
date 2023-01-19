@@ -5,7 +5,7 @@
 
 package org.knora.webapi.http.middleware
 
-import zhttp.http._
+import zio.http._
 import zio._
 
 import org.knora.webapi.config.AppConfig

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zhttp.http.HttpError
 import zio.IO
 
 import java.time.Instant
@@ -14,6 +13,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive._
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
+import zio.http.model.HttpError
 
 final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverter: IriConverter)
     extends RestResourceInfoService {

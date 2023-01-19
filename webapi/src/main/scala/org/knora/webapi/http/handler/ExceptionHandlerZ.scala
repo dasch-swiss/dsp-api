@@ -6,12 +6,11 @@
 package org.knora.webapi.http.handler
 
 import spray.json._
-import zhttp.http.Http
-import zhttp.http.Response
 
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.status.ApiStatusCodesZ
+import zio.http._
 
 /**
  * Migrated from [[org.knora.webapi.http.handler.KnoraExceptionHandler]]

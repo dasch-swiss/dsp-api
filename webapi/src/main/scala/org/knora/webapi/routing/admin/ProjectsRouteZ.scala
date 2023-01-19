@@ -5,11 +5,9 @@
 
 package org.knora.webapi.routing.admin
 
-import zhttp.http._
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
+import zio.http._
+import zio.http.model._
+import zio._
 import zio.json._
 
 import dsp.errors.BadRequestException

@@ -5,9 +5,9 @@
 
 package org.knora.webapi.instrumentation.prometheus
 
-import zhttp.http._
-import zio.ZIO
-import zio.ZLayer
+import zio.http._
+import zio.http.model._
+import zio._
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 
 /**
