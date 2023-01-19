@@ -33,7 +33,8 @@ object InstrumentationHttpServer {
       _ <- Server
              .serve(r)
              .provideSome[State with prometheus.PrometheusPublisher](Server.live, serverConfig)
-             .orDie // TODO: fork?
+             .fork
+      //  .orDie // TODO: fork?
       // _      <- Server.start(config.instrumentationServerConfig.port, r).forkDaemon
       _ <- ZIO.logInfo(s"Starting instrumentation http server on port: ${config.instrumentationServerConfig.port}")
     } yield ()
