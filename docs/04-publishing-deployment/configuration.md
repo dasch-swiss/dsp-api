@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 
-<!-- TODO: adjust/update -->
-
 # Configuration
 
 All configuration for Knora is done in `application.conf`. Besides the Knora application
