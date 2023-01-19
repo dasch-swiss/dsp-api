@@ -1482,7 +1482,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   // Make an updated class definition.
   // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
   // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-  private def makeUpdatedEntities(request: ReplaceCardinalitiesRequestV2): Future[ReadClassInfoV2] = {
+  private def makeUpdatedClassModel(request: ReplaceCardinalitiesRequestV2): Future[ReadClassInfoV2] = {
     val newClassInfo        = checkRdfTypeOfClassIsClass(request.classInfoContent.toOntologySchema(InternalSchema))
     val classIriExternal    = newClassInfo.classIri
     val classIri            = classIriExternal.toOntologySchema(InternalSchema)
@@ -1638,17 +1638,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
     def taskFuture: () => Future[ReadOntologyV2] = () =>
       for {
-        _ <- checkPreconditions(request)
-
-        newReadClassInfo: ReadClassInfoV2 <- makeUpdatedEntities(request)
-        response                          <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
+        newReadClassInfo <- makeUpdatedClassModel(request)
+        _                <- checkPreconditions(request, newReadClassInfo)
+        response         <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
       } yield response
 
     for {
       response <- IriLocker.runWithIriLock(request.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, taskFuture)
     } yield response
   }
-  def checkPreconditions(request: ReplaceCardinalitiesRequestV2): Future[Unit] = {
+  def checkPreconditions(request: ReplaceCardinalitiesRequestV2, newReadClassInfo: ReadClassInfoV2): Future[Unit] = {
     val classIriExternal    = request.classInfoContent.classIri
     val classIri            = classIriExternal.toOntologySchema(InternalSchema)
     val ontologyIriExternal = classIriExternal.getOntologyFromEntity
