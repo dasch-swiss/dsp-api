@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
+import zio.ZLayer
+import zio.http._
 import zio.http.model.HttpError.BadRequest
 import zio.http.model._
-import zio.http._
-import zio.ZLayer
 import zio.json.EncoderOps
 import zio.prelude.Validation
 

@@ -7,8 +7,8 @@ package org.knora.webapi.routing.admin
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import zio.http._
 import zio._
+import zio.http._
 
 import scala.concurrent.ExecutionContext
 

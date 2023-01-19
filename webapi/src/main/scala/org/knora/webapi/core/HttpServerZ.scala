@@ -4,8 +4,8 @@
  */
 
 package org.knora.webapi.core
-import zio.http._
 import zio._
+import zio.http._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.admin.ProjectsRouteZ

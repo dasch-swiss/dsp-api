@@ -5,6 +5,7 @@
 
 package org.knora.webapi.routing.admin
 import zio.http._
+import zio.http.model._
 import zio.test.Assertion._
 import zio.test._
 
@@ -13,7 +14,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
-import zio.http.model._
 
 object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
 

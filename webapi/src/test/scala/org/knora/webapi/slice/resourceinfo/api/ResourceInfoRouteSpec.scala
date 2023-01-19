@@ -5,8 +5,10 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zio.http._
+import zio.Chunk
 import zio.ZIO
+import zio.http._
+import zio.http.model._
 import zio.test.ZIOSpecDefault
 import zio.test._
 
@@ -22,8 +24,6 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.projec
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.resourceClassKey
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
-import zio.http.model._
-import zio.Chunk
 
 object ResourceInfoRouteSpec extends ZIOSpecDefault {
 
