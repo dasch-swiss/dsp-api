@@ -1636,39 +1636,37 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     val ontologyIriExternal = classIriExternal.getOntologyFromEntity
     val ontologyIri         = classIri.getOntologyFromEntity
 
-    def makeTaskFuture: Future[ReadOntologyV2] =
+    def taskFuture: () => Future[ReadOntologyV2] = () =>
       for {
-        // check preconditions
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
-               appActor,
-               internalOntologyIri = ontologyIri,
-               expectedLastModificationDate = request.lastModificationDate
-             )
-        _ <- iriService.throwIfEntityIsUsed(
-               entityIri = classIri,
-               ignoreKnoraConstraints = true,
-               errorFun = throw BadRequestException(
-                 s"The cardinalities of class ${request.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"
-               )
-             )
+        _ <- checkPreconditions(request)
 
         newReadClassInfo: ReadClassInfoV2 <- makeUpdatedEntities(request)
         response                          <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
       } yield response
 
     for {
-      _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
-             externalOntologyIri = ontologyIriExternal,
-             externalEntityIri = classIriExternal,
-             requestingUser = request.requestingUser
+      response <- IriLocker.runWithIriLock(request.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, taskFuture)
+    } yield response
+  }
+  def checkPreconditions(request: ReplaceCardinalitiesRequestV2): Future[Unit] = {
+    val classIriExternal    = request.classInfoContent.classIri
+    val classIri            = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
+    val ontologyIri         = classIri.getOntologyFromEntity
+    for {
+      _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+             appActor,
+             internalOntologyIri = ontologyIri,
+             expectedLastModificationDate = request.lastModificationDate
            )
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      apiRequestID = request.apiRequestID,
-                      iri = ONTOLOGY_CACHE_LOCK_IRI,
-                      task = () => makeTaskFuture
-                    )
-    } yield taskResult
+      _ <- iriService.throwIfEntityIsUsed(
+             entityIri = classIri,
+             ignoreKnoraConstraints = true,
+             errorFun = throw BadRequestException(
+               s"The cardinalities of class ${classIriExternal} cannot be changed, because it is used in data or has a subclass"
+             )
+           )
+    } yield ()
   }
 
   /**

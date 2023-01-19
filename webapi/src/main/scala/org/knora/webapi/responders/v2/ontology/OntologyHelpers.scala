@@ -1043,7 +1043,7 @@ object OntologyHelpers {
   )(implicit ex: ExecutionContext): Future[Unit] =
     for {
       _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
-      _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalEntityIri)
+      _ <- checkExternalEntityIriForUpdate(externalEntityIri)
       _ <- checkPermissionsForOntologyUpdate(
              internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
              requestingUser = requestingUser
