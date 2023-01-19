@@ -204,35 +204,27 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   val updateProjectSpec = test("update a project") {
     val projectIri =
       ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid Project IRI"))
-    val updatedShortname = ShortName.make("usn").getOrElse(throw BadRequestException("Invalid Shortname"))
-    val updatedLongname  = Name.make("updated project longname").getOrElse(throw BadRequestException("Invalid Longname"))
-    val updatedDescription = ProjectDescription
-      .make(Seq(StringLiteralV2("updated project description", Some("en"))))
-      .getOrElse(throw BadRequestException("Invalid Project Description"))
-    val updatedKeywords =
-      Keywords.make(Seq("updated", "keywords")).getOrElse(throw BadRequestException("Invalid Keywords"))
-    val updatedLogo   = Logo.make("../logo.png").getOrElse(throw BadRequestException("Invalid Logo"))
-    val projectStatus = ProjectStatus.make(true).getOrElse(throw BadRequestException("Invalid Project Status"))
-    val selfJoin      = ProjectSelfJoin.make(true).getOrElse(throw BadRequestException("Invalid SelfJoin"))
-
-    val projectUpatePayload = ProjectUpdatePayloadADM(
-      shortname = Some(updatedShortname),
-      longname = Some(updatedLongname),
-      description = Some(updatedDescription),
-      keywords = Some(updatedKeywords),
-      logo = Some(updatedLogo),
-      status = Some(projectStatus),
-      selfjoin = Some(selfJoin)
-    )
+    val projectUpdatePayload: ProjectUpdatePayloadADM =
+      Validation
+        .validateWith(
+          ShortName.make(Some("usn")),
+          Name.make(Some("updated project longname")),
+          ProjectDescription.make(Some(Seq(StringLiteralV2("updated project description", Some("en"))))),
+          Keywords.make(Some(Seq("updated", "project"))),
+          Logo.make(Some("../logo.png")),
+          ProjectStatus.make(Some(true)),
+          ProjectSelfJoin.make(Some(true))
+        )(ProjectUpdatePayloadADM.apply)
+        .getOrElse(throw new Exception("Invalid Payload"))
     val requestingUser = KnoraSystemInstances.Users.SystemUser
     val projectsService =
       ZIO
-        .serviceWithZIO[ProjectsService](_.changeProject(projectIri, projectUpatePayload, requestingUser))
+        .serviceWithZIO[ProjectsService](_.changeProject(projectIri, projectUpdatePayload, requestingUser))
         .provideSome[ActorToZioBridge](layers)
     for {
       uuid   <- ZIO.random.flatMap(_.nextUUID)
       _      <- TestRandom.feedUUIDs(uuid)
-      request = ProjectChangeRequestADM(projectIri, projectUpatePayload, requestingUser, uuid)
+      request = ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
       actorToZioBridge =
         ActorToZioBridgeMock.AskAppActor
           .of[ProjectOperationResponseADM]
