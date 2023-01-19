@@ -1,14 +1,14 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.instrumentation.index
 
-import zhttp.html.Html
-import zhttp.http._
-import zio.ULayer
-import zio.ZLayer
+import zio._
+import zio.http._
+import zio.http.html.Html
+import zio.http.model._
 
 /**
  * Provides the '/' endpoint serving a small index page.

@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -587,7 +587,7 @@ of `kb:isPartOfValue`.
 Part-of relations are recommended for resources of type `kb:StillImageRepresentation`. In that case, the resource that 
 is part of another resource needs to have a property `kb:seqnum` or a subproperty thereof, with an integer as value. A 
 client can then use this information to leaf through the parts of the compound resource (p.ex. to leaf through the pages
-of a book like in [this](https://docs.dasch.swiss/DSP-API/01-introduction/example-project/#resource-classes) example).
+of a book like in [this](../01-introduction/example-project.md#resource-classes) example).
 
 #### isSequenceOf
 
@@ -798,7 +798,7 @@ When text is converted from XML into standoff, tags are also given indexes, whic
 of a particular text. This makes it possible to order tags that share the same position, and to preserve the hierarchy
 of the original XML document. An ordinary, hierarchical XML tag is converted to a standoff tag that has one index, as
 well as the index of its parent tag, if any. The Knora base ontology also supports non-hierarchical markup such as
-[CLIX](http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6), which enables overlapping
+[CLIX](https://en.wikipedia.org/wiki/CLIX_(markup)), which enables overlapping
 markup to be represented in XML. When non-hierarchical markup is converted to standoff, both the start position and the
 end position of the standoff tag have indexes and parent indexes.
 
@@ -1065,7 +1065,7 @@ subject or object class that is a subclass of the one specified in the base prop
 the subproperty to make the base property's constraint less restrictive.
 
 See
-also [Why doesn’t Knora use rdfs:domain and rdfs:range for consistency checking?](../08-faq/index.md#why-doesnt-knora-use-rdfs-domain-and-rdfs-range-for-consistency-checking-)
+also [Why doesn't DSP-API use `rdfs:domain` and `rdfs:range` for consistency checking?](../08-faq/index.md#why-doesnt-dsp-api-use-rdfsdomain-and-rdfsrange-for-consistency-checking)
 
 ### Consistency Constraint Example
 
@@ -1093,7 +1093,7 @@ A user-created ontology could define consistency constraints as in this simplifi
 ## Summary of Restrictions on User-Created Ontologies
 
 An ontology can refer to a Knora ontology in another project only if the other ontology is built-in or shared
-(see [Shared Ontologies](../03-endpoints/api-v2/knora-iris.md#shared-ontologies)).
+(see [Shared Ontologies](../02-dsp-ontologies/introduction.md#shared-ontologies)).
 
 ### Restrictions on Classes
 
@@ -1133,7 +1133,7 @@ The [DaSCH](http://dasch.swiss/) intends to coordinate the standardisation of ge
 user-created ontologies. We envisage a process in which two or more projects would initiate the process by starting a
 public discussion on proposed entities to be shared. Once a consensus was reached, the
 [DaSCH](http://dasch.swiss/) would publish these entities in a
-[shared ontology](../03-endpoints/api-v2/knora-iris.md#shared-ontologies)).
+[Shared Ontology](../02-dsp-ontologies/introduction.md#shared-ontologies)).
 
 ## Knora Ontology Versions
 

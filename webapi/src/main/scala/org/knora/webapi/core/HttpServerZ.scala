@@ -1,18 +1,18 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.core
-import zhttp.http._
-import zhttp.http.middleware.Cors
-import zhttp.service.Server
+
 import zio.ZLayer
 import zio._
+import zio.http._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
+import zio.http.middleware.Cors
 
 object HttpServerZ {
 
@@ -45,11 +45,12 @@ object HttpServerZ {
 
   val layer: ZLayer[ResourceInfoRoute with ProjectsRouteZ with AppConfig, Nothing, Unit] = ZLayer {
     for {
-      port   <- ZIO.service[AppConfig].map(_.knoraApi.externalZioPort)
-      routes <- apiRoutes
-      cors   <- corsMiddleware
-      _      <- Server.start(port, routes @@ cors).forkDaemon
-      _      <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
+      port        <- ZIO.service[AppConfig].map(_.knoraApi.externalZioPort)
+      routes      <- apiRoutes
+      cors        <- corsMiddleware
+      serverConfig = ZLayer.succeed(ServerConfig.default.port(port))
+      _           <- Server.serve(routes @@ cors).provide(Server.live, serverConfig).forkDaemon
+      _           <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
     } yield ()
   }
 }

@@ -1,14 +1,12 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.core
 
-import zhttp.service.Server
-import zio.Runtime
-import zio.ZIO
-import zio.ZLayer
+import zio._
+import zio.http._
 import zio.metrics.connectors.MetricsConfig
 import zio.metrics.connectors.prometheus
 import zio.metrics.jvm.DefaultJvmMetrics
@@ -29,10 +27,14 @@ object InstrumentationHttpServer {
 
   private val run =
     for {
-      config <- ZIO.service[AppConfig]
-      r      <- routes
-      _      <- Server.start(config.instrumentationServerConfig.port, r).forkDaemon
-      _      <- ZIO.logInfo(s"Starting instrumentation http server on port: ${config.instrumentationServerConfig.port}")
+      config      <- ZIO.service[AppConfig]
+      r           <- routes
+      serverConfig = ZLayer.succeed(ServerConfig.default.port(config.instrumentationServerConfig.port))
+      _ <- Server
+             .serve(r)
+             .provideSome[State with prometheus.PrometheusPublisher](Server.live, serverConfig)
+             .forkDaemon
+      _ <- ZIO.logInfo(s"Starting instrumentation http server on port: ${config.instrumentationServerConfig.port}")
     } yield ()
 
   val make: ZIO[AppConfig with State, Throwable, Unit] =

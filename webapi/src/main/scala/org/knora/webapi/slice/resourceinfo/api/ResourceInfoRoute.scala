@@ -1,13 +1,14 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zhttp.http.HttpError.BadRequest
-import zhttp.http._
 import zio.ZLayer
+import zio.http._
+import zio.http.model.HttpError.BadRequest
+import zio.http.model._
 import zio.json.EncoderOps
 import zio.prelude.Validation
 
@@ -41,8 +42,8 @@ final case class ResourceInfoRoute(restService: RestResourceInfoService) {
       .toZIO
   }
 
-  private def getOrder(params: Map[String, List[String]]) = {
-    val order: Validation[BadRequest, Order] = params.get("order") match {
+  private def getOrder(params: QueryParams) = {
+    val order: Validation[BadRequest, Order] = params.get("order").map(_.toList) match {
       case Some(s :: Nil) =>
         Order.make(s).map(Validation.succeed).getOrElse(Validation.fail(BadRequest(s"Invalid order param $s")))
       case Some(_ :: _ :: _) => Validation.fail(BadRequest(s"orderBy param may only be a single value"))
@@ -51,8 +52,8 @@ final case class ResourceInfoRoute(restService: RestResourceInfoService) {
     order
   }
 
-  private def getOrderBy(params: Map[String, List[String]]) = {
-    val orderBy: Validation[BadRequest, OrderBy] = params.get("orderBy") match {
+  private def getOrderBy(params: QueryParams) = {
+    val orderBy: Validation[BadRequest, OrderBy] = params.get("orderBy").map(_.toList) match {
       case Some(s :: Nil) =>
         OrderBy
           .make(s)
@@ -64,8 +65,8 @@ final case class ResourceInfoRoute(restService: RestResourceInfoService) {
     orderBy
   }
 
-  private def getResourceClass(params: Map[String, List[String]]) = {
-    val resourceClassIri: Validation[BadRequest, IRI] = params.get("resourceClass") match {
+  private def getResourceClass(params: QueryParams) = {
+    val resourceClassIri: Validation[BadRequest, IRI] = params.get("resourceClass").map(_.toList) match {
       case Some(s :: Nil) => Validation.succeed(s)
       case _              => Validation.fail(BadRequest(s"resourceClass param is mandatory with a single value"))
     }
@@ -74,8 +75,8 @@ final case class ResourceInfoRoute(restService: RestResourceInfoService) {
 
   private def getProjectIri(headers: Headers) = {
     val projectIri: Validation[BadRequest, IRI] = headers.header(RouteUtilV2.PROJECT_HEADER) match {
-      case None             => Validation.fail(BadRequest(s"Header ${RouteUtilV2.PROJECT_HEADER} may not be empty"))
-      case Some((_, value)) => Validation.succeed(value.toString)
+      case None         => Validation.fail(BadRequest(s"Header ${RouteUtilV2.PROJECT_HEADER} may not be empty"))
+      case Some(header) => Validation.succeed(header.value.toString)
     }
     projectIri
   }

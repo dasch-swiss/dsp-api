@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -7,8 +7,7 @@
 
 ## Requirements
 
-In Knora, text with markup is stored using
-[standoff markup](http://uahost.uantwerpen.be/lse/index.php/lexicon/markup-standoff/), i.e. markup that
+In Knora, text with markup is stored using standoff markup, i.e. markup that
 is stored separately from the content it applies to.
 
 Knora's standoff design is based on these requirements:

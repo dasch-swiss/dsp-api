@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -30,9 +30,6 @@ and add it to the `org.knora.webapi.responders.v1` package.
 
 Give your responder a `receive(msg: YourCustomType)` method that handles each of your
 request message types by generating a `Future` containing a response message.
-
-See [Triplestore Access](../principles/design-overview.md#triplestore-access) for details of how
-to access the triplestore in your responder.
 
 Add the path of your responder to the `org.knora.webapi.responders` package object,
 and add code to `ResponderManager` to instantiate an object for your responder class.

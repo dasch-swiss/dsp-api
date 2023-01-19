@@ -1,15 +1,14 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.routing.admin
 
-import zhttp.http._
 import zio._
+import zio.http._
 import zio.mock.Expectation
 import zio.prelude.Validation
-import zio.test.ZIOSpecDefault
 import zio.test._
 
 import java.net.URLEncoder
@@ -96,7 +95,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
          |}
          |""".stripMargin
     val body    = Body.fromString(projectCreatePayloadString)
-    val request = Request(url = URL(basePathProjects), method = Method.POST, body = body)
+    val request = Request.post(url = URL(basePathProjects), body = body)
     val user    = KnoraSystemInstances.Users.SystemUser
     val projectCreatePayload: ProjectCreatePayloadADM =
       Validation
@@ -125,7 +124,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   }
 
   val getProjectsSpec = test("get all projects") {
-    val request        = Request(url = URL(basePathProjects))
+    val request        = Request.get(url = URL(basePathProjects))
     val expectedResult = Expectation.value[ProjectsGetResponseADM](ProjectsGetResponseADM(Seq(getProjectADM())))
     val mockService    = ProjectsServiceMock.GetProjects(expectedResult).toLayer
     for {
@@ -141,7 +140,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
           .fromString(iri)
           .getOrElse(throw new Exception("Invalid IRI"))
-        val request = Request(url = URL(basePathProjectsIri / encode(iri)))
+        val request = Request.get(url = URL(basePathProjectsIri / encode(iri)))
         val mockService: ULayer[ProjectsService] = ProjectsServiceMock
           .GetSingleProject(
             assertion = Assertion.equalTo(identifier),
@@ -160,7 +159,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
           .fromString(shortcode)
           .getOrElse(throw new Exception("Invalid Shortcode"))
-        val request = Request(url = URL(basePathProjectsShortcode / shortcode))
+        val request = Request.get(url = URL(basePathProjectsShortcode / shortcode))
         val mockService: ULayer[ProjectsService] = ProjectsServiceMock
           .GetSingleProject(
             assertion = Assertion.equalTo(identifier),
@@ -179,7 +178,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortnameIdentifier
           .fromString(shortname)
           .getOrElse(throw new Exception("Invalid Shortname"))
-        val request = Request(url = URL(basePathProjectsShortname / shortname))
+        val request = Request.get(url = URL(basePathProjectsShortname / shortname))
         val mockService: ULayer[ProjectsService] = ProjectsServiceMock
           .GetSingleProject(
             assertion = Assertion.equalTo(identifier),
@@ -198,7 +197,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   val deleteProjectSpec =
     test("delete a project by IRI") {
       val iri: IRI       = "http://rdfh.ch/projects/0001"
-      val request        = Request(url = URL(basePathProjectsIri / encode(iri)), method = Method.DELETE)
+      val request        = Request.delete(url = URL(basePathProjectsIri / encode(iri)))
       val user           = KnoraSystemInstances.Users.SystemUser
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
