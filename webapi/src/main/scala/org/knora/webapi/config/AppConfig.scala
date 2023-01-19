@@ -238,7 +238,6 @@ final case class InstrumentationServerConfig(
 )
 
 final case class ZioHttp(
-  corsAllowedHeaders: String,
   corsAllowedOrigins: Set[String]
 )
 
