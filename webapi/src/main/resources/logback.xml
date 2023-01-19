@@ -23,8 +23,7 @@
     <logger name="net.sf.ehcache.config" level="ERROR"/>
     <logger name="net.sf.ehcache.cache" level="ERROR"/>
     <logger name="kamon.metric" level="ERROR"/>
-    <logger name="org.apache.http" level="INFO"/>
-    <logger name="org.apache.http.wire" level="INFO"/>
+    <logger name="org.apache.http" level="DEBUG"/>
 
     <!-- Logging inside ZIO -->
     <logger name="zio-slf4j-logger" level="INFO"/>
