@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import zio.ZLayer
 import zio._
 import zio.http._
 import zio.http.middleware.Cors
