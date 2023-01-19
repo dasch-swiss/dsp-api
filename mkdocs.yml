@@ -3,7 +3,7 @@ site_name: DSP-API
 repo_url: https://github.com/dasch-swiss/dsp-api
 repo_name: dasch-swiss/dsp-api
 edit_uri: blob/main/docs/
-copyright: "Copyright © 2021 - 2022 <a href='https://dasch.swiss' target='_blank'>Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.</a>"
+copyright: "Copyright © 2021 - 2023 <a href='https://dasch.swiss' target='_blank'>Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.</a>"
 
 nav:
         - Introduction:
