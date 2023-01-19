@@ -199,15 +199,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       // silence twirl templates unused imports warnings
       "-Wconf:src=target/.*:s",
       "-Wunused:imports"
-      // probably nice to enable
-      // "-Ywarn-unused:imports", // An import selector is not referenced.
-      // "-Ywarn-unused:locals",  // A local definition is unused.
-      // "-Ywarn-unused:params",  // A value parameter is unused.
-      // "-Ywarn-unused:patvars", // A variable bound in a pattern is unused.
-      // "-Ywarn-unused:privates" // A private member is unused.
-      // not sure yet
-      // "-Ywarn-unused:implicits", // An implicit parameter is unused.
-      // "-Ywarn-value-discard",    // Non-Unit expression results are unused.
     ),
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,
