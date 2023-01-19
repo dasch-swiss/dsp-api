@@ -1348,7 +1348,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
-              cache= cacheData,
+              cache = cacheData,
               classDef = newInternalClassDefWithLinkValueProps,
               errorFun = { msg: String =>
                 throw BadRequestException(msg)
@@ -1478,6 +1478,47 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
   }
 
+  case class ReplaceCardinalitiesNewEntities(readClassInfo: ReadClassInfoV2)
+
+  // Make an updated class definition.
+  // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
+  // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
+  def makeUpdatedEntities(
+    request: ReplaceCardinalitiesRequestV2,
+    newInternalClassDefWithLinkValueProps: ClassInfoContentV2,
+    allBaseClassIris: Seq[SmartIri],
+    inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo],
+    propertyIrisOfAllCardinalitiesForClass: Set[SmartIri]
+  ): Future[ReplaceCardinalitiesNewEntities] = {
+    val newClassInfo        = request.classInfoContent.toOntologySchema(InternalSchema)
+    val classIriExternal    = newClassInfo.classIri
+    val classIri            = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIriExternal = classIri.getOntologyFromEntity
+    val ontologyIri         = ontologyIriExternal.toOntologySchema(InternalSchema)
+    for {
+      cacheData <- OntologyLegacyRepo.getCache
+      readClassInfo = ReadClassInfoV2(
+                        entityInfoContent = newInternalClassDefWithLinkValueProps,
+                        allBaseClasses = allBaseClassIris,
+                        isResourceClass = true,
+                        canBeInstantiated = true,
+                        inheritedCardinalities = inheritedCardinalities,
+                        knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
+                          isKnoraResourceProperty(propertyIri, cacheData)
+                        ),
+                        linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
+                          isLinkProp(propertyIri, cacheData)
+                        ),
+                        linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
+                          isLinkValueProp(propertyIri, cacheData)
+                        ),
+                        fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
+                          isFileValueProp(propertyIri, cacheData)
+                        )
+                      )
+    } yield ReplaceCardinalitiesNewEntities(readClassInfo)
+  }
+
   /**
    * Replaces a class's cardinalities with new ones.
    *
@@ -1511,7 +1552,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         _ = checkRdfTypeOfClassIsClass(newClassInfo)
 
         // Check that the class exists.
-
 
         // Check that the class isn't used in data, and that it has no subclasses.
         // TODO: If class is used in data, check additionally if the property(ies) being removed is(are) truly used and if not, then allow.
@@ -1561,33 +1601,21 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
         // isn't any text to escape in cardinalities.)
 
-        propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+        propertyIrisOfAllCardinalitiesForClass: Set[SmartIri] = cardinalitiesForClassWithInheritance.keySet
 
         inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
           cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
             newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
           }
 
-        readClassInfo = ReadClassInfoV2(
-                          entityInfoContent = newInternalClassDefWithLinkValueProps,
-                          allBaseClasses = allBaseClassIris,
-                          isResourceClass = true,
-                          canBeInstantiated = true,
-                          inheritedCardinalities = inheritedCardinalities,
-                          knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            isKnoraResourceProperty(propertyIri, cacheData)
-                          ),
-                          linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            isLinkProp(propertyIri, cacheData)
-                          ),
-                          linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            isLinkValueProp(propertyIri, cacheData)
-                          ),
-                          fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            isFileValueProp(propertyIri, cacheData)
+        updatedEntities <- makeUpdatedEntities(
+                            request,
+                            newInternalClassDefWithLinkValueProps,
+                            allBaseClassIris,
+                            inheritedCardinalities,
+                            propertyIrisOfAllCardinalitiesForClass
                           )
-                        )
-
+        readClassInfo = updatedEntities.readClassInfo
         // Add the cardinalities to the class definition in the triplestore.
 
         currentTime: Instant = Instant.now
