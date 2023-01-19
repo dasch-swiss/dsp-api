@@ -20,7 +20,8 @@ object Dependencies {
   val JenaVersion      = "4.7.0"
 
   val ZioConfigVersion            = "3.0.7"
-  val ZioHttpVersion              = "2.0.0-RC11"
+  val ZioHttpVersionOld           = "2.0.0-RC11"
+  val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.3.0"
   val ZioLoggingVersion           = "2.1.7"
   val ZioMetricsConnectorsVersion = "2.0.4"
@@ -33,7 +34,8 @@ object Dependencies {
   val zioConfig            = "dev.zio" %% "zio-config"             % ZioConfigVersion
   val zioConfigMagnolia    = "dev.zio" %% "zio-config-magnolia"    % ZioConfigVersion
   val zioConfigTypesafe    = "dev.zio" %% "zio-config-typesafe"    % ZioConfigVersion
-  val zioHttp              = "io.d11"  %% "zhttp"                  % ZioHttpVersion
+  val zioHttpOld           = "io.d11"  %% "zhttp"                  % ZioHttpVersionOld
+  val zioHttp              = "dev.zio" %% "zio-http"               % ZioHttpVersion
   val zioJson              = "dev.zio" %% "zio-json"               % ZioJsonVersion
   val zioLogging           = "dev.zio" %% "zio-logging"            % ZioLoggingVersion
   val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j"      % ZioLoggingVersion
@@ -180,7 +182,7 @@ object Dependencies {
   val dspApiMainLibraryDependencies = Seq(
     zio,
     zioMacros,
-    zioHttp,
+    zioHttpOld, // TODO: switch
     zioJson,
     zioMetricsConnectors,
     zioLogging,
@@ -193,7 +195,7 @@ object Dependencies {
 
   // schema project dependencies
   val schemaApiLibraryDependencies = Seq(
-    zioHttp
+    zioHttpOld // TODO: switch
   )
 
   val schemaCoreLibraryDependencies = Seq(
@@ -216,7 +218,7 @@ object Dependencies {
     zioLoggingSlf4j,
     logbackClassic,
     zioJson,
-    zioHttp
+    zioHttpOld // TODO: switch
   )
   val userHandlerLibraryDependencies = Seq(
     bouncyCastle,
