@@ -10,7 +10,6 @@ import akka.pattern._
 
 import java.time.Instant
 import scala.concurrent.Future
-
 import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
@@ -35,7 +34,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.Cache
-import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
+import org.knora.webapi.responders.v2.ontology.Cache.{ONTOLOGY_CACHE_LOCK_IRI, loadOntologies}
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isFileValueProp
@@ -1480,6 +1479,32 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     classInfo
   }
 
+  /**
+   * Replaces a class's cardinalities with new ones.
+   *
+   * @param request the [[ReplaceCardinalitiesRequestV2]] defining the cardinalities.
+   * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
+   */
+  def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
+    val taskFuture: () => Future[ReadOntologyV2] = () =>
+      for {
+        newReadClassInfo <- makeUpdatedClassModel(request)
+        _                <- checkPreconditions(request)
+        response         <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
+      } yield response
+
+    val classIriExternal    = request.classInfoContent.classIri
+    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
+    for {
+      _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
+             externalOntologyIri = ontologyIriExternal,
+             externalEntityIri = classIriExternal,
+             requestingUser = request.requestingUser
+           )
+      response <- IriLocker.runWithIriLock(request.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, taskFuture)
+    } yield response
+  }
+
   // Make an updated class definition.
   // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
   // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
@@ -1556,6 +1581,26 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     } yield readClassInfo
   }
 
+  private def checkPreconditions(request: ReplaceCardinalitiesRequestV2): Future[Unit] = {
+    val classIriExternal = request.classInfoContent.classIri
+    val classIri         = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIri      = classIri.getOntologyFromEntity
+    for {
+      _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+             appActor,
+             internalOntologyIri = ontologyIri,
+             expectedLastModificationDate = request.lastModificationDate
+           )
+      _ <- iriService.throwIfEntityIsUsed(
+             entityIri = classIri,
+             ignoreKnoraConstraints = true,
+             errorFun = throw BadRequestException(
+               s"The cardinalities of class $classIriExternal cannot be changed, because it is used in data or has a subclass"
+             )
+           )
+    } yield ()
+  }
+
   private def replaceClassCardinalitiesInPersistence(
     request: ReplaceCardinalitiesRequestV2,
     newReadClassInfo: ReadClassInfoV2
@@ -1624,52 +1669,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       updatedOntologyClasses  = ontology.classes + (classIri -> newReadClassInfo)
       updatedOntology         = ontology.copy(ontologyMetadata = updatedOntologyMetaData, classes = updatedOntologyClasses)
       _                      <- Cache.cacheUpdatedOntologyWithClass(ontologyIri, updatedOntology, classIri)
-    } yield ()
-  }
-
-  /**
-   * Replaces a class's cardinalities with new ones.
-   *
-   * @param request the [[ReplaceCardinalitiesRequestV2]] defining the cardinalities.
-   * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
-   */
-  def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
-    val taskFuture: () => Future[ReadOntologyV2] = () =>
-      for {
-        newReadClassInfo <- makeUpdatedClassModel(request)
-        _                <- checkPreconditions(request)
-        response         <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
-      } yield response
-
-    val classIriExternal    = request.classInfoContent.classIri
-    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
-    for {
-      _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
-             externalOntologyIri = ontologyIriExternal,
-             externalEntityIri = classIriExternal,
-             requestingUser = request.requestingUser
-           )
-      response <- IriLocker.runWithIriLock(request.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, taskFuture)
-    } yield response
-  }
-
-  private def checkPreconditions(request: ReplaceCardinalitiesRequestV2): Future[Unit] = {
-    val classIriExternal = request.classInfoContent.classIri
-    val classIri         = classIriExternal.toOntologySchema(InternalSchema)
-    val ontologyIri      = classIri.getOntologyFromEntity
-    for {
-      _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
-             appActor,
-             internalOntologyIri = ontologyIri,
-             expectedLastModificationDate = request.lastModificationDate
-           )
-      _ <- iriService.throwIfEntityIsUsed(
-             entityIri = classIri,
-             ignoreKnoraConstraints = true,
-             errorFun = throw BadRequestException(
-               s"The cardinalities of class $classIriExternal cannot be changed, because it is used in data or has a subclass"
-             )
-           )
     } yield ()
   }
 
