@@ -5,10 +5,8 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zhttp.http.HttpError
-import zio.IO
-import zio.ZIO
-import zio.ZLayer
+import zio._
+import zio.http.model.HttpError
 
 import org.knora.webapi.IRI
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order

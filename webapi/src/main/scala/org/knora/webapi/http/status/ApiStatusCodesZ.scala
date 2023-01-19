@@ -5,7 +5,7 @@
 
 package org.knora.webapi.http.status
 
-import zhttp.http.Status
+import zio.http.model.Status
 
 import dsp.errors._
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException

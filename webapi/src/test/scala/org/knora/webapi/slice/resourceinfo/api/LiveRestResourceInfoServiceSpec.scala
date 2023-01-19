@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zhttp.http.HttpError.BadRequest
+import zio.http.model.HttpError.BadRequest
 import zio.test.Assertion.equalTo
 import zio.test.Assertion.fails
 import zio.test._

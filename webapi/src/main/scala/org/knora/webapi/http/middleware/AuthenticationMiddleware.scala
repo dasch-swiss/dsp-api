@@ -5,8 +5,8 @@
 
 package org.knora.webapi.http.middleware
 
-import zhttp.http._
 import zio._
+import zio.http._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM

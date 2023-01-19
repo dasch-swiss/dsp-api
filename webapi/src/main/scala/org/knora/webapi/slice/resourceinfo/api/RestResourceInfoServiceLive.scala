@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zhttp.http.HttpError
 import zio.IO
+import zio.http.model.HttpError
 
 import java.time.Instant
 

@@ -6,8 +6,7 @@
 package org.knora.webapi.http.handler
 
 import spray.json._
-import zhttp.http.Http
-import zhttp.http.Response
+import zio.http._
 
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.AppConfig
