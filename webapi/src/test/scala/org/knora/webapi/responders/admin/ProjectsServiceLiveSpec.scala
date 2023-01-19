@@ -180,7 +180,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val projectIri: ProjectIri =
       ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException(""))
     val projectStatus        = Some(ProjectStatus.make(false).getOrElse(throw BadRequestException("")))
-    val changeProjectPayload = ProjectUpdatePayloadADM(status = projectStatus)
+    val projectUpdatePayload = ProjectUpdatePayloadADM(status = projectStatus)
     val requestingUser       = KnoraSystemInstances.Users.SystemUser
     val projectsService = ZIO
       .serviceWithZIO[ProjectsService](_.deleteProject(projectIri, requestingUser))
@@ -188,7 +188,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     for {
       uuid   <- ZIO.random.flatMap(_.nextUUID)
       _      <- TestRandom.feedUUIDs(uuid)
-      request = ProjectChangeRequestADM(projectIri, changeProjectPayload, requestingUser, uuid)
+      request = ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
       actorToZioBridge =
         ActorToZioBridgeMock.AskAppActor
           .of[ProjectOperationResponseADM]

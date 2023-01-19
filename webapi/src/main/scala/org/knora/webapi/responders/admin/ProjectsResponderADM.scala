@@ -84,13 +84,13 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
           projectIri,
-          changeProjectPayload,
+          projectUpdatePayload,
           requestingUser,
           apiRequestID
         ) =>
       changeBasicInformationRequestADM(
         projectIri,
-        changeProjectPayload,
+        projectUpdatePayload,
         requestingUser,
         apiRequestID
       )
