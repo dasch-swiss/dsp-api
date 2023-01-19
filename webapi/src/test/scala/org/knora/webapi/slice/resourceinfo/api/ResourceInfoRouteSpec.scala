@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zhttp.http._
+import zio.http._
 import zio.ZIO
 import zio.test.ZIOSpecDefault
 import zio.test._
@@ -22,6 +22,8 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.projec
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.resourceClassKey
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
+import zio.http.model._
+import zio.Chunk
 
 object ResourceInfoRouteSpec extends ZIOSpecDefault {
 
@@ -39,35 +41,36 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
   def spec =
     suite("ResourceInfoRoute /v2/resources/info")(
       test("given no required params/headers were passed should respond with BadRequest") {
-        val request = Request(url = baseUrl)
+        val request = Request.get(url = baseUrl)
         for {
           response <- sendRequest(request)
         } yield assertTrue(response.status == Status.BadRequest)
       },
       test("given more than one resource class should respond with BadRequest") {
-        val url     = baseUrl.setQueryParams(Map("resourceClass" -> List(testResourceClass, "http://anotherResourceClass")))
-        val request = Request(url = url, headers = projectHeader)
+        val params  = QueryParams(("resourceClass", Chunk(testResourceClass, "http://anotherResourceClass")))
+        val url     = baseUrl.setQueryParams(params)
+        val request = Request.get(url = url).setHeaders(projectHeader)
         for {
           response <- sendRequest(request)
         } yield assertTrue(response.status == Status.BadRequest)
       },
       test("given no projectIri should respond with BadRequest") {
-        val url     = baseUrl.setQueryParams(Map("resourceClass" -> List(testResourceClass)))
-        val request = Request(url = url)
+        val url     = baseUrl.setQueryParams(QueryParams(("resourceClass", testResourceClass)))
+        val request = Request.get(url = url)
         for {
           response <- sendRequest(request)
         } yield assertTrue(response.status == Status.BadRequest)
       },
       test("given all mandatory parameters should respond with OK") {
-        val url     = baseUrl.setQueryParams(Map("resourceClass" -> List(testResourceClass)))
-        val request = Request(url = url, headers = projectHeader)
+        val url     = baseUrl.setQueryParams(QueryParams(("resourceClass", testResourceClass)))
+        val request = Request.get(url = url).setHeaders(headers = projectHeader)
         for {
           response <- sendRequest(request)
         } yield assertTrue(response.status == Status.Ok)
       },
       test("given all parameters rest service should be called with default order") {
-        val url     = baseUrl.setQueryParams(Map("resourceClass" -> List(testResourceClass)))
-        val request = Request(url = url, headers = projectHeader)
+        val url     = baseUrl.setQueryParams(QueryParams(("resourceClass", testResourceClass)))
+        val request = Request.get(url = url).setHeaders(projectHeader)
         for {
           expectedResourceClassIri <- IriConverter.asInternalIri(testResourceClass).map(_.value)
           expectedProjectIri       <- IriConverter.asInternalIri(testProjectIri).map(_.value)
@@ -83,13 +86,13 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
       },
       test("given all parameters rest service should be called with correct parameters") {
         val url = baseUrl.setQueryParams(
-          Map(
-            "resourceClass" -> List(testResourceClass),
-            "orderBy"       -> List("creationDate"),
-            "order"         -> List("DESC")
+          QueryParams(
+            ("resourceClass", testResourceClass),
+            ("orderBy", "creationDate"),
+            ("order", "DESC")
           )
         )
-        val request = Request(url = url, headers = projectHeader)
+        val request = Request.get(url = url).setHeaders(projectHeader)
         for {
           expectedProjectIri       <- IriConverter.asInternalIri(testProjectIri).map(_.value)
           expectedResourceClassIri <- IriConverter.asInternalIri(testResourceClass).map(_.value)

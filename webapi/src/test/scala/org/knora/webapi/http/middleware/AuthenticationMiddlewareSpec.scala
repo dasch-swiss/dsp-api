@@ -5,9 +5,7 @@
 
 package org.knora.webapi.http.middleware
 
-import zhttp.http.Http
-import zhttp.http.Request
-import zhttp.http.Response
+import zio.http._
 import zio._
 import zio.test._
 
@@ -54,7 +52,7 @@ object AuthenticationMiddlewareSpec extends ZIOSpecDefault {
       val middleware = AuthenticationMiddleware(authServiceAnonymous).authenticationMiddleware
       val app        = passUserThroughApp @@ middleware
       for {
-        response <- app.apply(Request())
+        response <- app.apply(Request.get(URL.empty))
         resId    <- response.body.asString
       } yield assertTrue(resId == anonymousUser.id)
     },
@@ -62,7 +60,7 @@ object AuthenticationMiddlewareSpec extends ZIOSpecDefault {
       val middleware = AuthenticationMiddleware(authServiceSome).authenticationMiddleware
       val app        = passUserThroughApp @@ middleware
       for {
-        response <- app.apply(Request())
+        response <- app.apply(Request.get(URL.empty))
         resId    <- response.body.asString
       } yield assertTrue(resId == someUser.id)
     }
@@ -73,7 +71,7 @@ object AuthenticationMiddlewareSpec extends ZIOSpecDefault {
       val middleware = AuthenticationMiddleware(authServiceFailing).authenticationMiddleware
       val app        = passUserThroughApp @@ middleware
       for {
-        response <- app.apply(Request())
+        response <- app.apply(Request.get(URL.empty))
         resId    <- response.body.asString
       } yield assertTrue(resId == anonymousUser.id)
     }

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zhttp.http.HttpError
 import zio._
 
 import org.knora.webapi.IRI
@@ -14,6 +13,7 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.projec
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.resourceClassKey
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
+import zio.http.model.HttpError
 
 case class RestResourceInfoServiceSpy(
   lastInvocation: Ref[Map[String, Any]],
