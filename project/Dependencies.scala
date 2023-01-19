@@ -182,7 +182,7 @@ object Dependencies {
   val dspApiMainLibraryDependencies = Seq(
     zio,
     zioMacros,
-    zioHttpOld, // TODO: switch
+    zioHttpOld,
     zioJson,
     zioMetricsConnectors,
     zioLogging,
@@ -195,7 +195,7 @@ object Dependencies {
 
   // schema project dependencies
   val schemaApiLibraryDependencies = Seq(
-    zioHttpOld // TODO: switch
+    zioHttpOld
   )
 
   val schemaCoreLibraryDependencies = Seq(
@@ -218,7 +218,7 @@ object Dependencies {
     zioLoggingSlf4j,
     logbackClassic,
     zioJson,
-    zioHttpOld // TODO: switch
+    zioHttpOld
   )
   val userHandlerLibraryDependencies = Seq(
     bouncyCastle,
