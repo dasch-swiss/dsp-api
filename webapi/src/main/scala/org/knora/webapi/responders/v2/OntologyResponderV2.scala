@@ -1468,7 +1468,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     } yield taskResult
   }
 
-  private def checkRdfTypeOfClassIsClass(classInfo: ClassInfoContentV2): Unit = {
+  private def checkRdfTypeOfClassIsClass(classInfo: ClassInfoContentV2): ClassInfoContentV2 = {
     val rdfType: SmartIri = classInfo.requireIriObject(
       OntologyConstants.Rdf.Type.toSmartIri,
       throw BadRequestException(s"No rdf:type specified")
@@ -1476,13 +1476,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
       throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
     }
+    classInfo
   }
 
   // Make an updated class definition.
   // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
   // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
   private def makeUpdatedEntities(request: ReplaceCardinalitiesRequestV2): Future[ReadClassInfoV2] = {
-    val newClassInfo        = request.classInfoContent.toOntologySchema(InternalSchema)
+    val newClassInfo        = checkRdfTypeOfClassIsClass(request.classInfoContent.toOntologySchema(InternalSchema))
     val classIriExternal    = newClassInfo.classIri
     val classIri            = classIriExternal.toOntologySchema(InternalSchema)
     val ontologyIriExternal = classIri.getOntologyFromEntity
@@ -1629,8 +1630,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
    * @param request the [[ReplaceCardinalitiesRequestV2]] defining the cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  private def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
-    val newClassInfo        = request.classInfoContent.toOntologySchema(InternalSchema)
+  def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
     val classIriExternal    = request.classInfoContent.classIri
     val classIri            = classIriExternal.toOntologySchema(InternalSchema)
     val ontologyIriExternal = classIriExternal.getOntologyFromEntity
@@ -1644,7 +1644,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                internalOntologyIri = ontologyIri,
                expectedLastModificationDate = request.lastModificationDate
              )
-        _ = checkRdfTypeOfClassIsClass(newClassInfo)
         _ <- iriService.throwIfEntityIsUsed(
                entityIri = classIri,
                ignoreKnoraConstraints = true,
