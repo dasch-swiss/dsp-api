@@ -1641,7 +1641,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         response         <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
       } yield response
 
-    val classIriExternal = request.classInfoContent.classIri
+    val classIriExternal    = request.classInfoContent.classIri
     val ontologyIriExternal = classIriExternal.getOntologyFromEntity
     for {
       _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
