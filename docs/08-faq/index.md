@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -43,9 +43,6 @@ However, an ontology can be defined as shared, meaning that it can be used by mu
 projects, and that its creators promise not to change it in ways that could
 affect other ontologies or data that are based on it. See
 [Shared Ontologies](../02-dsp-ontologies/introduction.md#shared-ontologies) for details.
-
-There will be a standardisation process for shared ontologies
-(issue [#523](https://github.com/dasch-swiss/dsp-api/issues/523)).
 
 ### Why doesn't DSP-API use `rdfs:domain` and `rdfs:range` for consistency checking?
 

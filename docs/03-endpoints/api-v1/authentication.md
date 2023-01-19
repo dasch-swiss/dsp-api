@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -31,10 +31,11 @@ There are two possibilities to do so:
     <http://knora-host/v1/resources/resIri?email=userUrlEncodedEmail&password=pw>)
   - in the HTTP authorization header ([HTTP basic
     authentication](https://en.wikipedia.org/wiki/Basic_access_authentication))
-    when doing a HTTP request to the API When using Python's module
-    `requests`, the credentials (email / password) can simply be submitted as a tuple
-    with each request using the param `auth` ([python
-    requests](https://2.python-requests.org/en/v2.8.1/user/authentication/#basic-authentication)).
+    when doing a HTTP request to the API 
+    
+When using Python's module `requests`, the credentials (email / password) can simply be 
+submitted as a tuple with each request using the param `auth` 
+([python requests](https://requests.readthedocs.io/en/latest/user/authentication/#basic-authentication)).
 
 An alternative way for accessing all routes is to simply supply the
 *email* and *password* credentials on each request either as URL

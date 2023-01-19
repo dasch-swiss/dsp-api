@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -68,7 +68,5 @@ class, because this could cause subclasses to violate the rule that a class cann
 have a cardinality on property P as well as a cardinality on a subproperty of P;
 see [Restrictions on Classes](knora-base.md#restrictions-on-classes).)
 
-A standardisation process for shared ontologies is planned (issue @github[#523](#523)).
-
 For more details about shared ontologies, see
-[Shared Ontology IRIs](../03-endpoints/api-v2/knora-iris.md#shared-ontology-iris).
+[Shared Ontologies](../02-dsp-ontologies/introduction.md#shared-ontologies).
