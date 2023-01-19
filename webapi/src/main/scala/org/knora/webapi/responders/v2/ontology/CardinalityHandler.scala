@@ -348,7 +348,7 @@ object CardinalityHandler {
       // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
       // isn't any text to escape in cardinalities.)
 
-      propertyIrisOfAllCardinalitiesForClass: Set[SmartIri] = cardinalitiesForClassWithInheritance.keySet
+      propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
       inheritedCardinalities: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
         cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
