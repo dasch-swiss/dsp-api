@@ -1511,10 +1511,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           .findClassBy(classIri, ontologyIri)
           .map(_.getOrElse(throw BadRequestException(s"Class $ontologyIriExternal does not exist")).entityInfoContent)
 
-      newInternalClassDef: ClassInfoContentV2 =
-        oldClassInfo.copy(directCardinalities = newClassInfo.directCardinalities)
-
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
+      newInternalClassDef = oldClassInfo.copy(directCardinalities = newClassInfo.directCardinalities)
       allBaseClassIrisWithoutInternal: Seq[SmartIri] = newInternalClassDef.subClassOf.toSeq.flatMap { baseClassIri =>
                                                          cacheData.subClassOfRelations.getOrElse(
                                                            baseClassIri,
