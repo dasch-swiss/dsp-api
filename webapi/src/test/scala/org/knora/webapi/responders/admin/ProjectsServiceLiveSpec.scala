@@ -60,7 +60,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       getAllProjectsSpec,
       getProjectByIdSpec,
       createProjectSpec,
-      deleteProjectSpec
+      deleteProjectSpec,
+      updateProjectSpec
     ).provide(StringFormatter.test)
 
   val getAllProjectsSpec = test("get all projects") {
@@ -200,4 +201,48 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertTrue(true)
   }
 
+  val updateProjectSpec = test("update a project") {
+    val projectIri =
+      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid Project IRI"))
+    val updatedShortname = ShortName.make("usn").getOrElse(throw BadRequestException("Invalid Shortname"))
+    val updatedLongname  = Name.make("updated project longname").getOrElse(throw BadRequestException("Invalid Longname"))
+    val updatedDescription = ProjectDescription
+      .make(Seq(StringLiteralV2("updated project description", Some("en"))))
+      .getOrElse(throw BadRequestException("Invalid Project Description"))
+    val updatedKeywords =
+      Keywords.make(Seq("updated", "keywords")).getOrElse(throw BadRequestException("Invalid Keywords"))
+    val updatedLogo   = Logo.make("../logo.png").getOrElse(throw BadRequestException("Invalid Logo"))
+    val projectStatus = ProjectStatus.make(true).getOrElse(throw BadRequestException("Invalid Project Status"))
+    val selfJoin      = ProjectSelfJoin.make(true).getOrElse(throw BadRequestException("Invalid SelfJoin"))
+
+    val projectChangePayload = ProjectChangePayloadADM(
+      projectIri = projectIri,
+      shortname = Some(updatedShortname),
+      longname = Some(updatedLongname),
+      description = Some(updatedDescription),
+      keywords = Some(updatedKeywords),
+      logo = Some(updatedLogo),
+      status = Some(projectStatus),
+      selfjoin = Some(selfJoin)
+    )
+    val requestingUser = KnoraSystemInstances.Users.SystemUser
+    val projectsService =
+      ZIO
+        .serviceWithZIO[ProjectsService](_.changeProject(projectIri, projectChangePayload, requestingUser))
+        .provideSome[ActorToZioBridge](layers)
+    for {
+      uuid   <- ZIO.random.flatMap(_.nextUUID)
+      _      <- TestRandom.feedUUIDs(uuid)
+      request = ProjectChangeRequestADM(projectIri, projectChangePayload, requestingUser, uuid)
+      actorToZioBridge =
+        ActorToZioBridgeMock.AskAppActor
+          .of[ProjectOperationResponseADM]
+          .apply(
+            assertion = Assertion.equalTo(request),
+            result = Expectation.value(ProjectOperationResponseADM(projectADM))
+          )
+          .toLayer
+      _ <- projectsService.provide(actorToZioBridge)
+    } yield assertTrue(true)
+  }
 }

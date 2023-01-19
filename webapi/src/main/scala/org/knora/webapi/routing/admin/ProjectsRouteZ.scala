@@ -99,8 +99,8 @@ final case class ProjectsRouteZ(
       projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO
       body                  <- request.body.asString
       payload               <- ZIO.fromEither(body.fromJson[ProjectChangePayloadADM]).mapError(e => new BadRequestException(e))
-      projectCreateResponse <- projectsService.changeProject(projectIri, payload, requestingUser)
-    } yield Response.json(projectCreateResponse.toJsValue.toString)
+      projectChangeResponse <- projectsService.changeProject(projectIri, payload, requestingUser)
+    } yield Response.json(projectChangeResponse.toJsValue.toString)
 }
 
 object ProjectsRouteZ {
