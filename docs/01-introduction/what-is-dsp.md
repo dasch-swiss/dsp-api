@@ -106,14 +106,6 @@ for interoperability and reusability of data.
 
 ## Linked Open Data
 
-DSP-API supports publishing data online as as [Linked Open Data](http://linkeddata.org/),
+DSP-API supports publishing data online as as [Linked Open Data](https://de.wikipedia.org/wiki/Linked_Open_Data),
 using open standards to allow interoperability between different repositories
 on the web.
-
-## Build Your Own Application
-
-DSP-API can be used with a general-purpose, browser-based VRE called [DSP-APP](https://dasch-swiss.github.io/dsp-app) or 
-[SALSAH](https://dhlab-basel.github.io/Salsah/).
-Using the DSP-API and [DSP-JS](https://github.com/dasch-swiss/dsp-js-lib) and/or [DSP-UI](https://github.com/dasch-swiss/dsp-ui-lib), a set of
-reusable user-interface components, you can also create your own VRE or project-specific
-web site.

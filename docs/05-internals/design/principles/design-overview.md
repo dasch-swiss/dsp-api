@@ -105,7 +105,7 @@ See also [Futures with Akka](futures-with-akka.md).
 
 The API routes in the `routing` package are defined using the DSL
 provided by the
-[akka-http](http://doc.akka.io/docs/akka/current/scala/http/routing-dsl/index.html)
+[akka-http](https://doc.akka.io/docs/akka-http/current/index.html)
 library. A routing function has to do the following:
 
 1.  Authenticate the client.
