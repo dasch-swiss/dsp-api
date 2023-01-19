@@ -1497,6 +1497,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     val ontologyIri         = ontologyIriExternal.toOntologySchema(InternalSchema)
     for {
       cacheData <- OntologyLegacyRepo.getCache
+
       readClassInfo = ReadClassInfoV2(
                         entityInfoContent = newInternalClassDefWithLinkValueProps,
                         allBaseClasses = allBaseClassIris,
@@ -1532,7 +1533,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     val ontologyIriExternal = classIri.getOntologyFromEntity
     val ontologyIri         = ontologyIriExternal.toOntologySchema(InternalSchema)
 
-    def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
+    def makeTaskFuture: Future[ReadOntologyV2] = {
       for {
         cacheData <- OntologyLegacyRepo.getCache
         ontology <- OntologyLegacyRepo
@@ -1546,7 +1547,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
                appActor,
-               internalOntologyIri = internalOntologyIri,
+               internalOntologyIri = ontologyIri,
                expectedLastModificationDate = request.lastModificationDate
              )
         _ = checkRdfTypeOfClassIsClass(newClassInfo)
@@ -1557,7 +1558,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // TODO: If class is used in data, check additionally if the property(ies) being removed is(are) truly used and if not, then allow.
 
         _ <- iriService.throwIfEntityIsUsed(
-               entityIri = internalClassIri,
+               entityIri = classIri,
                ignoreKnoraConstraints = true,
                errorFun = throw BadRequestException(
                  s"The cardinalities of class ${request.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"
@@ -1578,7 +1579,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                                            )
                                                          }
 
-        allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
+        allBaseClassIris: Seq[SmartIri] = classIri +: allBaseClassIrisWithoutInternal
 
         (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
           OntologyHelpers
@@ -1609,22 +1610,22 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           }
 
         updatedEntities <- makeUpdatedEntities(
-                            request,
-                            newInternalClassDefWithLinkValueProps,
-                            allBaseClassIris,
-                            inheritedCardinalities,
-                            propertyIrisOfAllCardinalitiesForClass
-                          )
+                             request,
+                             newInternalClassDefWithLinkValueProps,
+                             allBaseClassIris,
+                             inheritedCardinalities,
+                             propertyIrisOfAllCardinalitiesForClass
+                           )
         readClassInfo = updatedEntities.readClassInfo
-        // Add the cardinalities to the class definition in the triplestore.
 
+        // Add the cardinalities to the class definition in the triplestore.
         currentTime: Instant = Instant.now
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                          .replaceClassCardinalities(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           classIri = internalClassIri,
+                           ontologyNamedGraphIri = ontologyIri,
+                           ontologyIri = ontologyIri,
+                           classIri = classIri,
                            newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
                            lastModificationDate = request.lastModificationDate,
                            currentTime = currentTime
@@ -1634,19 +1635,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         _ <- appActor.ask(SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
         // Check that the ontology's last modification date was updated.
-
         _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
                appActor,
-               internalOntologyIri = internalOntologyIri,
+               internalOntologyIri = ontologyIri,
                expectedLastModificationDate = currentTime
              )
 
         // Check that the data that was saved corresponds to the data that was submitted.
-
-        loadedClassDef <- OntologyHelpers.loadClassDefinition(
-                            appActor,
-                            classIri = internalClassIri
-                          )
+        loadedClassDef <- OntologyHelpers.loadClassDefinition(appActor, classIri)
 
         _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
               throw InconsistentRepositoryDataException(
@@ -1655,20 +1651,18 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             }
 
         // Update the cache.
-
         updatedOntology = ontology.copy(
                             ontologyMetadata = ontology.ontologyMetadata.copy(
                               lastModificationDate = Some(currentTime)
                             ),
-                            classes = ontology.classes + (internalClassIri -> readClassInfo)
+                            classes = ontology.classes + (classIri -> readClassInfo)
                           )
 
-        _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- Cache.cacheUpdatedOntologyWithClass(ontologyIri, updatedOntology, classIri)
 
         // Read the data back from the cache.
-
         response <- getClassDefinitionsFromOntologyV2(
-                      classIris = Set(internalClassIri),
+                      classIris = Set(classIri),
                       allLanguages = true,
                       requestingUser = request.requestingUser
                     )
@@ -1676,29 +1670,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     for {
-      requestingUser <- FastFuture.successful(request.requestingUser)
-
-      externalClassIri    = request.classInfoContent.classIri
-      externalOntologyIri = externalClassIri.getOntologyFromEntity
-
       _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
-             externalOntologyIri = externalOntologyIri,
-             externalEntityIri = externalClassIri,
-             requestingUser = requestingUser
+             externalOntologyIri = ontologyIriExternal,
+             externalEntityIri = classIriExternal,
+             requestingUser = request.requestingUser
            )
-
-      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(
                       apiRequestID = request.apiRequestID,
                       iri = ONTOLOGY_CACHE_LOCK_IRI,
-                      task = () =>
-                        makeTaskFuture(
-                          internalClassIri = internalClassIri,
-                          internalOntologyIri = internalOntologyIri
-                        )
+                      task = () => makeTaskFuture
                     )
     } yield taskResult
   }
