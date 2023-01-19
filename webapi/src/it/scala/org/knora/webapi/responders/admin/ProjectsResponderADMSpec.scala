@@ -383,7 +383,6 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
           projectUpdatePayload = ProjectUpdatePayloadADM(
-            projectIri = iri,
             shortname = None,
             longname = Some(updatedLongname),
             description = Some(updatedDescription),
@@ -418,7 +417,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val iri      = Iri.ProjectIri.make(notExistingProjectButValidProjectIri).getOrElse(throw BadRequestException(""))
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
-          projectUpdatePayload = ProjectUpdatePayloadADM(iri, longname = Some(longname)),
+          projectUpdatePayload = ProjectUpdatePayloadADM(longname = Some(longname)),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
