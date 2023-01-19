@@ -17,7 +17,6 @@ import dsp.valueobjects.Project._
 import dsp.valueobjects.V2._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangeRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequestADM
@@ -25,6 +24,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequ
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
