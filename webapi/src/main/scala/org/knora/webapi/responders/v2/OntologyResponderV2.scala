@@ -1469,17 +1469,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     } yield taskResult
   }
 
-  private def checkRdfTypeOfClassIsClass(classInfo: ClassInfoContentV2): ClassInfoContentV2 = {
-    val rdfType: SmartIri = classInfo.requireIriObject(
-      OntologyConstants.Rdf.Type.toSmartIri,
-      throw BadRequestException(s"No rdf:type specified")
-    )
-    if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
-      throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
-    }
-    classInfo
-  }
-
   /**
    * Replaces a class's cardinalities with new ones.
    *
@@ -1558,10 +1547,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                  newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
                                }
       propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
-      knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(isKnoraResourceProperty(_, cacheData))
-      linkProperties          = propertyIrisOfAllCardinalitiesForClass.filter(isLinkProp(_, cacheData))
-      linkValueProperties     = propertyIrisOfAllCardinalitiesForClass.filter(isLinkValueProp(_, cacheData))
-      fileValueProperties     = propertyIrisOfAllCardinalitiesForClass.filter(isFileValueProp(_, cacheData))
+      knoraResourceProperties                = propertyIrisOfAllCardinalitiesForClass.filter(isKnoraResourceProperty(_, cacheData))
+      linkProperties                         = propertyIrisOfAllCardinalitiesForClass.filter(isLinkProp(_, cacheData))
+      linkValueProperties                    = propertyIrisOfAllCardinalitiesForClass.filter(isLinkValueProp(_, cacheData))
+      fileValueProperties                    = propertyIrisOfAllCardinalitiesForClass.filter(isFileValueProp(_, cacheData))
     } yield ReadClassInfoV2(
       entityInfoContent = newInternalClassDefWithLinkValueProps,
       allBaseClasses = allBaseClassIris,
@@ -1573,6 +1562,17 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       linkValueProperties = linkValueProperties,
       fileValueProperties = fileValueProperties
     )
+  }
+
+  private def checkRdfTypeOfClassIsClass(classInfo: ClassInfoContentV2): ClassInfoContentV2 = {
+    val rdfType: SmartIri = classInfo.requireIriObject(
+      OntologyConstants.Rdf.Type.toSmartIri,
+      throw BadRequestException(s"No rdf:type specified")
+    )
+    if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
+      throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
+    }
+    classInfo
   }
 
   private def checkPreconditions(request: ReplaceCardinalitiesRequestV2): Future[Unit] = {
