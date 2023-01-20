@@ -1,5 +1,40 @@
 # Changelog
 
+## [26.1.0](https://github.com/dasch-swiss/dsp-api/compare/v26.0.0...v26.1.0) (2023-01-19)
+
+
+### Bug Fixes
+
+* API starts up and reports healthy despite failing to load ontologies ([#2363](https://github.com/dasch-swiss/dsp-api/issues/2363)) ([1696f7d](https://github.com/dasch-swiss/dsp-api/commit/1696f7dd51c0cb5f904cb37f0d68cd234fc60374))
+
+
+### Enhancements
+
+* Add check for can a cardinality be set for specific class and property ([#2382](https://github.com/dasch-swiss/dsp-api/issues/2382)) ([17e7064](https://github.com/dasch-swiss/dsp-api/commit/17e7064987194dd3232a389b05c785ec77eec423))
+* Add mimetype image/jpx as accepted ([#2378](https://github.com/dasch-swiss/dsp-api/issues/2378)) ([d590e38](https://github.com/dasch-swiss/dsp-api/commit/d590e38e80bfa88c1c0c5493b2bc93d2d19ee071))
+* expose DELETE /admin/projects as ZIO HTTP route (DEV-1587)  ([#2386](https://github.com/dasch-swiss/dsp-api/issues/2386)) ([6059012](https://github.com/dasch-swiss/dsp-api/commit/60590129cb21a9e7aef72cc22913b5ed51136f65))
+* expose POST /admin/projects as ZIO HTTP route (DEV-1587) ([#2376](https://github.com/dasch-swiss/dsp-api/issues/2376)) ([983bec7](https://github.com/dasch-swiss/dsp-api/commit/983bec7e9c3624799ad4c69d3db003bf07a98121))
+
+
+### Documentation
+
+* clean up ADRs and add new one for ZIO HTTP ([#2380](https://github.com/dasch-swiss/dsp-api/issues/2380)) ([3a03733](https://github.com/dasch-swiss/dsp-api/commit/3a0373364c2136e75f9b15c7b0b8046b2f760661))
+* Fix broken links in docs ([#2392](https://github.com/dasch-swiss/dsp-api/issues/2392)) ([85d25e3](https://github.com/dasch-swiss/dsp-api/commit/85d25e3e71c86f312319db261549b37e465d4604))
+
+
+### Maintenance
+
+* add authentication middleware ([#2370](https://github.com/dasch-swiss/dsp-api/issues/2370)) ([73a18ff](https://github.com/dasch-swiss/dsp-api/commit/73a18ff9c2a3d32ad55f3764b28b92575bc29799))
+* Add tests for ZIO HTTP project routes ([#2377](https://github.com/dasch-swiss/dsp-api/issues/2377)) ([88e067b](https://github.com/dasch-swiss/dsp-api/commit/88e067bbff6d0f43f586d6f26ffc1de513bc493f))
+* Cleanup and remove unused code ([#2383](https://github.com/dasch-swiss/dsp-api/issues/2383)) ([6aaf1bf](https://github.com/dasch-swiss/dsp-api/commit/6aaf1bffe6da6b7b52ded59d0f859601e9f20616))
+* Expose the zio-http port in docker-compose.yml for the frontend (DEV-1482) ([#2381](https://github.com/dasch-swiss/dsp-api/issues/2381)) ([b11d493](https://github.com/dasch-swiss/dsp-api/commit/b11d49312c7960a756ca87b73aa61cef10458232))
+* fix manual release form branch (DEV-1519) ([#2393](https://github.com/dasch-swiss/dsp-api/issues/2393)) ([97d7399](https://github.com/dasch-swiss/dsp-api/commit/97d73994bf97ca257e3f04aa785efac5b5371264))
+* Remove deprecated Cardinality model ([#2387](https://github.com/dasch-swiss/dsp-api/issues/2387)) ([3c13e3a](https://github.com/dasch-swiss/dsp-api/commit/3c13e3a0d3e0134434ca0b806bcef3070268ee58))
+* Suppress compiler warnings ([#2368](https://github.com/dasch-swiss/dsp-api/issues/2368)) ([62e1193](https://github.com/dasch-swiss/dsp-api/commit/62e11938afe4f8ee77b8730d40c1214e54d5ea10))
+* switch zio http implementation from d11 to dev.zio ([#2395](https://github.com/dasch-swiss/dsp-api/issues/2395)) ([0ef6d2f](https://github.com/dasch-swiss/dsp-api/commit/0ef6d2f2c0cb173ed4c2f6fad449924c3e9c0498))
+* update create-release.yml ([#2371](https://github.com/dasch-swiss/dsp-api/issues/2371)) ([f97f1bd](https://github.com/dasch-swiss/dsp-api/commit/f97f1bdcd007b135d31f7287afb599dc1efa9cb9))
+* update year in the copyright header ([#2391](https://github.com/dasch-swiss/dsp-api/issues/2391)) ([d3740f8](https://github.com/dasch-swiss/dsp-api/commit/d3740f8ea1e3424ace3f7f3bb0eaaddddc7a518c))
+
 ## [26.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v25.0.0...v26.0.0) (2023-01-05)
 
 
