@@ -25,7 +25,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.twirl.queries.sparql._
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
@@ -542,7 +542,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        createOntologySparql = v2.txt
+        createOntologySparql = twirl.queries.sparql.v2.txt
                                  .createOntology(
                                    ontologyNamedGraphIri = internalOntologyIri,
                                    ontologyIri = internalOntologyIri,
@@ -673,7 +673,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changeOntologyMetadata(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -786,7 +786,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changeOntologyMetadata(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -981,7 +981,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .createClass(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -1154,7 +1154,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .replaceClassCardinalities(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -1386,7 +1386,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] =
           newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .addCardinalitiesToClass(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -1618,7 +1618,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   ): Future[Unit] = {
     val classIri    = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
     val ontologyIri = classIri.getOntologyFromEntity
-    val updateSparql = v2.txt
+    val updateSparql = twirl.queries.sparql.v2.txt
       .replaceClassCardinalities(
         ontologyNamedGraphIri = ontologyIri,
         ontologyIri = ontologyIri,
@@ -1810,7 +1810,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .deleteClass(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -1975,7 +1975,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .deleteProperty(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -2099,7 +2099,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Delete everything in the ontology's named graph.
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .deleteOntology(
                            ontologyNamedGraphIri = internalOntologyIri
                          )
@@ -2355,7 +2355,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .createProperty(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -2540,7 +2540,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         newGuiAttributeIris =
           changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changePropertyGuiElement(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -2757,7 +2757,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changePropertyLabelsOrComments(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -2935,7 +2935,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changeClassLabelsOrComments(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -3085,7 +3085,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         currentTime: Instant = Instant.now
 
         // Delete the comment
-        updateSparql: String = v2.txt
+        updateSparql: String = twirl.queries.sparql.v2.txt
                                  .deletePropertyComment(
                                    ontologyNamedGraphIri = internalOntologyIri,
                                    ontologyIri = internalOntologyIri,
@@ -3277,7 +3277,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         currentTime: Instant = Instant.now
 
         // Delete the comment
-        updateSparql: String = v2.txt
+        updateSparql: String = twirl.queries.sparql.v2.txt
                                  .deleteClassComment(
                                    ontologyNamedGraphIri = internalOntologyIri,
                                    ontologyIri = internalOntologyIri,
