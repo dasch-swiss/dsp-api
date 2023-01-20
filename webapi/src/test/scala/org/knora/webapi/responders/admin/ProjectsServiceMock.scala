@@ -23,7 +23,7 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
   object GetSingleProject extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
   object CreateProject    extends Effect[(ProjectCreatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
   object DeleteProject    extends Effect[(ProjectIri, UserADM), Throwable, ProjectOperationResponseADM]
-  object ChangeProject
+  object UpdateProject
       extends Effect[(ProjectIri, ProjectUpdatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
 
   override val compose: URLayer[Proxy, ProjectsService] =
@@ -52,7 +52,7 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
           payload: ProjectUpdatePayloadADM,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
-          proxy(ChangeProject, (projectIri, payload, requestingUser))
+          proxy(UpdateProject, (projectIri, payload, requestingUser))
 
       }
     }

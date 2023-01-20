@@ -255,7 +255,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
     val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
     val mockService = ProjectsServiceMock
-      .ChangeProject(
+      .UpdateProject(
         assertion = Assertion.equalTo((projectIri, projectUpdatePayload, user)),
         result = expectedResult
       )

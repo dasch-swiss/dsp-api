@@ -46,7 +46,7 @@ final case class ProjectsRouteZ(
         case (Method.DELETE -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, requestingUser) =>
           deleteProject(iriUrlEncoded, requestingUser)
         case (request @ Method.PUT -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, requestingUser) =>
-          changeProject(iriUrlEncoded, request, requestingUser)
+          updateProject(iriUrlEncoded, request, requestingUser)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -87,14 +87,14 @@ final case class ProjectsRouteZ(
   private def deleteProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
       iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO
+      projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       projectDeleteResponse <- projectsService.deleteProject(projectIri, requestingUser)
     } yield Response.json(projectDeleteResponse.toJsValue.toString())
 
-  private def changeProject(iriUrlEncoded: String, request: Request, requestingUser: UserADM): Task[Response] =
+  private def updateProject(iriUrlEncoded: String, request: Request, requestingUser: UserADM): Task[Response] =
     for {
       iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO
+      projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       body                  <- request.body.asString
       payload               <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => new BadRequestException(e))
       projectChangeResponse <- projectsService.updateProject(projectIri, payload, requestingUser)
