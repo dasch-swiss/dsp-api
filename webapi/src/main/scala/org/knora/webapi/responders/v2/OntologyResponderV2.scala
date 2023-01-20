@@ -1587,7 +1587,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
              entityIri = classIri,
              ignoreKnoraConstraints = true,
              errorFun = throw BadRequestException(
-               s"The cardinalities of class $classIriExternal cannot be changed, because it is used in data or has a subclass"
+               s"The cardinalities of class $classIriExternal cannot be changed, because it is used in data or has a subclass."
              )
            )
     } yield ()
