@@ -1656,7 +1656,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     for {
       ontology <- OntologyLegacyRepo
                     .findOntologyBy(ontologyIri)
-                    .map(_.getOrElse(throw BadRequestException(s"Ontology $ontologyIriExternal does not exist")))
+                    .map(_.getOrElse(throw BadRequestException(s"Ontology $ontologyIriExternal does not exist.")))
       updatedOntologyMetaData = ontology.ontologyMetadata.copy(lastModificationDate = Some(timeOfUpdate))
       updatedOntologyClasses  = ontology.classes + (classIri -> newReadClassInfo)
       updatedOntology         = ontology.copy(ontologyMetadata = updatedOntologyMetaData, classes = updatedOntologyClasses)
