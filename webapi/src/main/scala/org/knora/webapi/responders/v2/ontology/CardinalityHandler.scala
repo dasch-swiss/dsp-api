@@ -178,7 +178,7 @@ object CardinalityHandler {
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
       _ = Cache.checkOntologyReferencesInClassDef(
-            ontologyCacheData = cacheData,
+            cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
               throw BadRequestException(msg)
@@ -338,7 +338,7 @@ object CardinalityHandler {
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
       _ = Cache.checkOntologyReferencesInClassDef(
-            ontologyCacheData = cacheData,
+            cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
               throw BadRequestException(msg)
