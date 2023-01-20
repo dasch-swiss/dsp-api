@@ -370,15 +370,18 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE a project" in {
-        val iri             = Iri.ProjectIri.make(newProjectIri.get).getOrElse(throw BadRequestException(""))
-        val updatedLongname = Name.make("updated project longname").getOrElse(throw BadRequestException(""))
+        val iri = Iri.ProjectIri.make(newProjectIri.get).getOrElse(throw BadRequestException("Invalid project IRI"))
+        val updatedLongname =
+          Name.make("updated project longname").getOrElse(throw BadRequestException("Invalid longname"))
         val updatedDescription = ProjectDescription
           .make(Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en"))))
-          .getOrElse(throw BadRequestException(""))
-        val updatedKeywords = Keywords.make(Seq("updated", "keywords")).getOrElse(throw BadRequestException(""))
-        val updatedLogo     = Logo.make("/fu/bar/baz-updated.jpg").getOrElse(throw BadRequestException(""))
-        val projectStatus   = ProjectStatus.make(true).getOrElse(throw BadRequestException(""))
-        val selfJoin        = ProjectSelfJoin.make(true).getOrElse(throw BadRequestException(""))
+          .getOrElse(throw BadRequestException("Invalid project description"))
+        val updatedKeywords =
+          Keywords.make(Seq("updated", "keywords")).getOrElse(throw BadRequestException("Invalid keywords"))
+        val updatedLogo =
+          Logo.make("/fu/bar/baz-updated.jpg").getOrElse(throw BadRequestException("Invalid value for logo"))
+        val projectStatus = ProjectStatus.make(true).getOrElse(throw BadRequestException("Invalid project status"))
+        val selfJoin      = ProjectSelfJoin.make(true).getOrElse(throw BadRequestException("Invalid value for self join"))
 
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
@@ -413,8 +416,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
-        val longname = Name.make("longname").getOrElse(throw BadRequestException(""))
-        val iri      = Iri.ProjectIri.make(notExistingProjectButValidProjectIri).getOrElse(throw BadRequestException(""))
+        val longname = Name.make("longname").getOrElse(throw BadRequestException("Invalid longname"))
+        val iri = Iri.ProjectIri
+          .make(notExistingProjectButValidProjectIri)
+          .getOrElse(throw BadRequestException("Invalid project IRI"))
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
           projectUpdatePayload = ProjectUpdatePayloadADM(longname = Some(longname)),

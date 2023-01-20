@@ -85,7 +85,7 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
    *                    [[dsp.errors.ForbiddenException]] when the user is not allowed to perform the operation
    */
   def deleteProject(projectIri: ProjectIri, requestingUser: UserADM): Task[ProjectOperationResponseADM] = {
-    val projectStatus = Project.ProjectStatus.make(false).getOrElse(throw BadRequestException(""))
+    val projectStatus = Project.ProjectStatus.make(false).getOrElse(throw BadRequestException("Invalid project status"))
     for {
       random      <- ZIO.random
       requestUuid <- random.nextUUID

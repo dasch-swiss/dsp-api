@@ -197,7 +197,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     )
 
   val deleteProjectSpec = test("delete a project by IRI") {
-    val projectIri     = ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException(""))
+    val projectIri =
+      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid project IRI"))
     val request        = Request.delete(url = URL(basePathProjectsIri / encode(projectIri.value)))
     val user           = KnoraSystemInstances.Users.SystemUser
     val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))

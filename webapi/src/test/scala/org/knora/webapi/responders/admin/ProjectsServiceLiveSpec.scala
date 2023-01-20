@@ -178,8 +178,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   // needs to have the StringFormatter in the environment because ChangeProjectApiRequestADM needs it
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
     val projectIri: ProjectIri =
-      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException(""))
-    val projectStatus        = Some(ProjectStatus.make(false).getOrElse(throw BadRequestException("")))
+      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid project IRI"))
+    val projectStatus        = Some(ProjectStatus.make(false).getOrElse(throw BadRequestException("Invalid project status")))
     val projectUpdatePayload = ProjectUpdatePayloadADM(status = projectStatus)
     val requestingUser       = KnoraSystemInstances.Users.SystemUser
     val projectsService = ZIO
