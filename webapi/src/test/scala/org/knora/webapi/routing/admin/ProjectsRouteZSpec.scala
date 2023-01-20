@@ -5,11 +5,10 @@
 
 package org.knora.webapi.routing.admin
 
-import zhttp.http._
 import zio._
+import zio.http._
 import zio.mock.Expectation
 import zio.prelude.Validation
-import zio.test.ZIOSpecDefault
 import zio.test._
 
 import java.net.URLEncoder
@@ -98,7 +97,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
          |}
          |""".stripMargin
     val body    = Body.fromString(projectCreatePayloadString)
-    val request = Request(url = URL(basePathProjects), method = Method.POST, body = body)
+    val request = Request.post(url = URL(basePathProjects), body = body)
     val user    = KnoraSystemInstances.Users.SystemUser
     val projectCreatePayload: ProjectCreatePayloadADM =
       Validation
@@ -127,7 +126,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   }
 
   val getProjectsSpec = test("get all projects") {
-    val request        = Request(url = URL(basePathProjects))
+    val request        = Request.get(url = URL(basePathProjects))
     val expectedResult = Expectation.value[ProjectsGetResponseADM](ProjectsGetResponseADM(Seq(getProjectADM())))
     val mockService    = ProjectsServiceMock.GetProjects(expectedResult).toLayer
     for {
@@ -136,69 +135,70 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     } yield assertTrue(true)
   }
 
-  val getSingleProjectSpec = suite("get a single project by identifier")(
-    test("get a project by IRI") {
-      val iri = "http://rdfh.ch/projects/0001"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
-        .fromString(iri)
-        .getOrElse(throw new Exception("Invalid IRI"))
-      val request = Request(url = URL(basePathProjectsIri / encode(iri)))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
-        .GetSingleProject(
-          assertion = Assertion.equalTo(identifier),
-          result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+  val getSingleProjectSpec =
+    suite("get a single project by identifier")(
+      test("get a project by IRI") {
+        val iri = "http://rdfh.ch/projects/0001"
+        val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
+          .fromString(iri)
+          .getOrElse(throw new Exception("Invalid IRI"))
+        val request = Request.get(url = URL(basePathProjectsIri / encode(iri)))
+        val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+          .GetSingleProject(
+            assertion = Assertion.equalTo(identifier),
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
+              ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+            )
           )
-        )
-        .toLayer
-      for {
-        response <- applyRoutes(request).provide(mockService)
-        body     <- response.body.asString
-      } yield assertTrue(body.contains(iri))
-    },
-    test("get a project by shortcode") {
-      val shortcode = "0001"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
-        .fromString(shortcode)
-        .getOrElse(throw new Exception("Invalid Shortcode"))
-      val request = Request(url = URL(basePathProjectsShortcode / shortcode))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
-        .GetSingleProject(
-          assertion = Assertion.equalTo(identifier),
-          result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+          .toLayer
+        for {
+          response <- applyRoutes(request).provide(mockService)
+          body     <- response.body.asString
+        } yield assertTrue(body.contains(iri))
+      },
+      test("get a project by shortcode") {
+        val shortcode = "0001"
+        val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
+          .fromString(shortcode)
+          .getOrElse(throw new Exception("Invalid Shortcode"))
+        val request = Request.get(url = URL(basePathProjectsShortcode / shortcode))
+        val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+          .GetSingleProject(
+            assertion = Assertion.equalTo(identifier),
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
+              ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+            )
           )
-        )
-        .toLayer
-      for {
-        response <- applyRoutes(request).provide(mockService)
-        body     <- response.body.asString
-      } yield assertTrue(body.contains(shortcode))
-    },
-    test("get a project by shortname") {
-      val shortname = "someProject"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortnameIdentifier
-        .fromString(shortname)
-        .getOrElse(throw new Exception("Invalid Shortname"))
-      val request = Request(url = URL(basePathProjectsShortname / shortname))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
-        .GetSingleProject(
-          assertion = Assertion.equalTo(identifier),
-          result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+          .toLayer
+        for {
+          response <- applyRoutes(request).provide(mockService)
+          body     <- response.body.asString
+        } yield assertTrue(body.contains(shortcode))
+      },
+      test("get a project by shortname") {
+        val shortname = "someProject"
+        val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortnameIdentifier
+          .fromString(shortname)
+          .getOrElse(throw new Exception("Invalid Shortname"))
+        val request = Request.get(url = URL(basePathProjectsShortname / shortname))
+        val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+          .GetSingleProject(
+            assertion = Assertion.equalTo(identifier),
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
+              ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+            )
           )
-        )
-        .toLayer
-      for {
-        response <- applyRoutes(request).provide(mockService)
-        body     <- response.body.asString
-      } yield assertTrue(body.contains(shortname))
-    }
-  )
+          .toLayer
+        for {
+          response <- applyRoutes(request).provide(mockService)
+          body     <- response.body.asString
+        } yield assertTrue(body.contains(shortname))
+      }
+    )
 
   val deleteProjectSpec = test("delete a project by IRI") {
     val projectIri     = ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException(""))
-    val request        = Request(url = URL(basePathProjectsIri / encode(projectIri.value)), method = Method.DELETE)
+    val request        = Request.delete(url = URL(basePathProjectsIri / encode(projectIri.value)))
     val user           = KnoraSystemInstances.Users.SystemUser
     val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
     val mockService: ULayer[ProjectsService] = ProjectsServiceMock
@@ -249,7 +249,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
           |""".stripMargin
 
     val body    = Body.fromString(projectUpdatePayloadString)
-    val request = Request(url = URL(basePathProjectsIri / encode(projectIri.value)), method = Method.PUT, body = body)
+    val request = Request.put(url = URL(basePathProjectsIri / encode(projectIri.value)), body = body)
     val user    = KnoraSystemInstances.Users.SystemUser
 
     val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))

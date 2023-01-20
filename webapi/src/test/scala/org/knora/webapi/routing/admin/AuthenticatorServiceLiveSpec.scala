@@ -4,10 +4,8 @@
  */
 
 package org.knora.webapi.routing.admin
-import zhttp.http.Cookie
-import zhttp.http.Headers
-import zhttp.http.Request
-import zhttp.http.URL
+import zio.http._
+import zio.http.model._
 import zio.test.Assertion._
 import zio.test._
 
@@ -26,7 +24,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
   val headerInvalidSuite = suite("given invalid header authentication")(
     test("should fail to extract user email (basic auth)") {
       val userMail = "user.example.com"
-      val req      = Request().setHeaders(Headers.basicAuthorizationHeader(userMail, "pass"))
+      val req      = Request.get(URL.empty).setHeaders(Headers.basicAuthorizationHeader(userMail, "pass"))
       for {
         actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName).exit
       } yield assert(actual)(fails(hasMessage(equalTo("Invalid email Some(user.example.com)"))))
@@ -36,7 +34,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
   val headerValidSuite = suite("given valid header authentication")(
     test("should extract user email (basic auth)") {
       val userMail = "user@example.com"
-      val req      = Request().setHeaders(Headers.basicAuthorizationHeader(userMail, "pass"))
+      val req      = Request.get(URL.empty).setHeaders(Headers.basicAuthorizationHeader(userMail, "pass"))
       for {
         actual  <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName)
         expected = Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(userMail)), "pass"))
@@ -44,7 +42,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
     },
     test("should extract jwt token (bearer token)") {
       val jwtToken = "someToken"
-      val req      = Request().setHeaders(Headers.bearerAuthorizationHeader(jwtToken))
+      val req      = Request.get(URL.empty).setHeaders(Headers.bearerAuthorizationHeader(jwtToken))
       for {
         actual  <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName)
         expected = Some(KnoraJWTTokenCredentialsV2(jwtToken))
@@ -52,7 +50,10 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
     },
     test("should extract session cookie") {
       val sessionCookieValue = "session"
-      val req                = Request().setHeaders(Headers.cookie(Cookie(cookieName, sessionCookieValue)))
+      val req =
+        Request
+          .get(URL.empty)
+          .setHeaders(Headers.cookie(Cookie(cookieName, sessionCookieValue, Cookie.Type.request)))
       for {
         actual  <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName)
         expected = Some(KnoraSessionCredentialsV2(sessionCookieValue))
@@ -62,42 +63,42 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
 
   val queryParamInvalidSuite = suite("given invalid query parameters authentication")(
     test("should fail if different credentials are provided") {
-      val params = Map(
-        "username" -> List("someUsername"),
-        "email"    -> List("user@example.com"),
-        "password" -> List("somePassword")
+      val params = QueryParams(
+        ("username", "someUsername"),
+        ("email", "user@example.com"),
+        ("password", "somePassword")
       )
-      val req = Request().setUrl(URL.empty.setQueryParams(params))
+      val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName).exit
       } yield assert(actual)(fails(hasMessage(equalTo("Only one option allowed for user identifier."))))
     },
     test("should fail if if an invalid email is provided") {
-      val params = Map(
-        "email"    -> List("user.example.com"),
-        "password" -> List("somePassword")
+      val params = QueryParams(
+        ("email", "user.example.com"),
+        ("password", "somePassword")
       )
-      val req = Request().setUrl(URL.empty.setQueryParams(params))
+      val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName).exit
       } yield assert(actual)(fails(hasMessage(equalTo("Invalid email Some(user.example.com)"))))
     },
     test("should fail if if an invalid username is provided") {
-      val params = Map(
-        "username" -> List("some\rUser"),
-        "password" -> List("somePassword")
+      val params = QueryParams(
+        ("username", "some\rUser"),
+        ("password", "somePassword")
       )
-      val req = Request().setUrl(URL.empty.setQueryParams(params))
+      val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName).exit
       } yield assert(actual)(fails(hasMessage(equalTo("Invalid username Some(some\rUser)"))))
     },
     test("should fail if if an invalid IRI is provided") {
-      val params = Map(
-        "iri"      -> List("notAnIri"),
-        "password" -> List("somePassword")
+      val params = QueryParams(
+        ("iri", "notAnIri"),
+        ("password", "somePassword")
       )
-      val req = Request().setUrl(URL.empty.setQueryParams(params))
+      val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName).exit
       } yield assert(actual)(fails(hasMessage(equalTo("Invalid user IRI Some(notAnIri)"))))
@@ -107,7 +108,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
   val queryParamValidSuite = suite("given valid query parameters authentication")(
     test("should extract jwt token") {
       val jwtToken = "someToken"
-      val req      = Request().setUrl(URL.empty.setQueryParams(Map("token" -> List(jwtToken))))
+      val req      = Request.get(URL.empty.setQueryParams(QueryParams(("token", jwtToken))))
       for {
         actual  <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName)
         expected = Some(KnoraJWTTokenCredentialsV2(jwtToken))
@@ -116,8 +117,11 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
     test("should extract username and password") {
       val username = "someUsername"
       val password = "somePassword"
-      val req =
-        Request().setUrl(URL.empty.setQueryParams(Map("username" -> List(username), "password" -> List(password))))
+      val params = QueryParams(
+        ("username", username),
+        ("password", password)
+      )
+      val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual  <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName)
         expected = Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeUsername = Some(username)), password))
@@ -126,8 +130,11 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
     test("should extract email and password") {
       val email    = "user@example.com"
       val password = "somePassword"
-      val req =
-        Request().setUrl(URL.empty.setQueryParams(Map("email" -> List(email), "password" -> List(password))))
+      val params = QueryParams(
+        ("email", email),
+        ("password", password)
+      )
+      val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual  <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName)
         expected = Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(email)), password))
@@ -136,8 +143,11 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
     test("should extract iri and password") {
       val userIri  = "http://rdfh.ch/users/someUser"
       val password = "somePassword"
-      val req =
-        Request().setUrl(URL.empty.setQueryParams(Map("iri" -> List(userIri), "password" -> List(password))))
+      val params = QueryParams(
+        ("iri", userIri),
+        ("password", password)
+      )
+      val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual  <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName)
         expected = Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeIri = Some(userIri)), password))
@@ -151,7 +161,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
     suite("when nothing is given")(
       test("should return None") {
         for {
-          actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(Request(), cookieName)
+          actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(Request.get(URL.empty), cookieName)
         } yield assertTrue(actual.isEmpty)
       }
     )

@@ -4,10 +4,8 @@
  */
 
 package org.knora.webapi.core
-import zhttp.http._
-import zhttp.service.Server
-import zio.ZLayer
 import zio._
+import zio.http._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -22,10 +20,11 @@ object HttpServerZ {
 
   val layer: ZLayer[ResourceInfoRoute with ProjectsRouteZ with AppConfig, Nothing, Unit] = ZLayer {
     for {
-      port   <- ZIO.service[AppConfig].map(_.knoraApi.externalZioPort)
-      routes <- apiRoutes
-      _      <- Server.start(port, routes).forkDaemon
-      _      <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
+      port        <- ZIO.service[AppConfig].map(_.knoraApi.externalZioPort)
+      routes      <- apiRoutes
+      serverConfig = ZLayer.succeed(ServerConfig.default.port(port))
+      _           <- Server.serve(routes).provide(Server.live, serverConfig).forkDaemon
+      _           <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
     } yield ()
   }
 }
