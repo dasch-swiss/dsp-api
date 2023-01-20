@@ -819,65 +819,73 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
             updatedProject
           )
 
-      _ = projectUpdatePayload.shortname.map { shortname =>
-            val unescapedShortName: String = stringFormatter.fromSparqlEncodedString(shortname.value)
-            if (updatedProject.shortname != unescapedShortName)
+      _ = projectUpdatePayload.shortname
+            .map(_.value)
+            .map(stringFormatter.fromSparqlEncodedString(_))
+            .filter(_ != updatedProject.shortname)
+            .getOrElse(
               throw UpdateNotPerformedException(
                 "Project's 'shortname' was not updated. Please report this as a possible bug."
               )
-          }
-
-      _ = projectUpdatePayload.longname.map { longname: Project.Name =>
-            val unescapedLongname: String = stringFormatter.fromSparqlEncodedString(longname.value)
-            updatedProject.longname.map { value =>
-              if (value != unescapedLongname)
-                throw UpdateNotPerformedException(
-                  s"Project's 'longname' was not updated. Please report this as a possible bug."
-                )
-            }
-          }
-
-      _ = projectUpdatePayload.description.map { descriptions =>
-            val unescapedDescriptions: Seq[V2.StringLiteralV2] = descriptions.value.map(desc =>
-              V2.StringLiteralV2(stringFormatter.fromSparqlEncodedString(desc.value), desc.language)
             )
-            if (updatedProject.description.diff(unescapedDescriptions).nonEmpty)
+
+      _ = projectUpdatePayload.longname
+            .map(_.value)
+            .map(stringFormatter.fromSparqlEncodedString(_))
+            .filter(_ != updatedProject.longname)
+            .getOrElse(
+              throw UpdateNotPerformedException(
+                "Project's 'longname' was not updated. Please report this as a possible bug."
+              )
+            )
+
+      _ = projectUpdatePayload.description
+            .map(_.value)
+            .map(_.map(d => V2.StringLiteralV2(stringFormatter.fromSparqlEncodedString(d.value), d.language)))
+            .filter(updatedProject.description.diff(_).nonEmpty)
+            .getOrElse(
               throw UpdateNotPerformedException(
                 "Project's 'description' was not updated. Please report this as a possible bug."
               )
-          }
+            )
 
-      _ = projectUpdatePayload.keywords.map { keywords =>
-            val unescapedKeywords: Seq[String] = keywords.value.map(key => stringFormatter.fromSparqlEncodedString(key))
-            if (updatedProject.keywords.sorted != unescapedKeywords.sorted)
+      _ = projectUpdatePayload.keywords
+            .map(_.value)
+            .map(_.map(key => stringFormatter.fromSparqlEncodedString(key)))
+            .filter(updatedProject.keywords.sorted != _.sorted)
+            .getOrElse(
               throw UpdateNotPerformedException(
                 "Project's 'keywords' was not updated. Please report this as a possible bug."
               )
-          }
+            )
 
-      _ = projectUpdatePayload.logo.map { logo: Project.Logo =>
-            updatedProject.logo.map { value =>
-              val unescapedLogo: String = stringFormatter.fromSparqlEncodedString(logo.value)
-              if (value != unescapedLogo)
-                throw UpdateNotPerformedException(
-                  s"Project's 'longname' was not updated. Please report this as a possible bug."
-                )
-            }
-          }
+      _ = projectUpdatePayload.logo
+            .map(_.value)
+            .map(stringFormatter.fromSparqlEncodedString(_))
+            .filter(_ != updatedProject.logo)
+            .getOrElse(
+              throw UpdateNotPerformedException(
+                "Project's 'logo' was not updated. Please report this as a possible bug."
+              )
+            )
 
-      _ = projectUpdatePayload.status.map { projectStatus: Project.ProjectStatus =>
-            if (updatedProject.status != projectStatus.value)
+      _ = projectUpdatePayload.status
+            .map(_.value)
+            .filter(_ != updatedProject.status)
+            .getOrElse(
               throw UpdateNotPerformedException(
                 "Project's 'status' was not updated. Please report this as a possible bug."
               )
-          }
+            )
 
-      _ = projectUpdatePayload.selfjoin.map { selfjoin =>
-            if (updatedProject.selfjoin != selfjoin.value)
+      _ = projectUpdatePayload.selfjoin
+            .map(_.value)
+            .filter(_ != updatedProject.selfjoin)
+            .getOrElse(
               throw UpdateNotPerformedException(
-                "Project's 'selfjoin' status was not updated. Please report this as a possible bug."
+                "Project's 'selfjoin' was not updated. Please report this as a possible bug."
               )
-          }
+            )
 
     } yield ProjectOperationResponseADM(project = updatedProject)
   }
