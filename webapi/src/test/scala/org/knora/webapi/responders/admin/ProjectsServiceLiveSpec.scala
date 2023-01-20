@@ -219,7 +219,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val requestingUser = KnoraSystemInstances.Users.SystemUser
     val projectsService =
       ZIO
-        .serviceWithZIO[ProjectsService](_.changeProject(projectIri, projectUpdatePayload, requestingUser))
+        .serviceWithZIO[ProjectsService](_.updateProject(projectIri, projectUpdatePayload, requestingUser))
         .provideSome[ActorToZioBridge](layers)
     for {
       uuid   <- ZIO.random.flatMap(_.nextUUID)

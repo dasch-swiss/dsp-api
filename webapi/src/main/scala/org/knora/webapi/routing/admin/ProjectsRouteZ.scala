@@ -97,7 +97,7 @@ final case class ProjectsRouteZ(
       projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO
       body                  <- request.body.asString
       payload               <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => new BadRequestException(e))
-      projectChangeResponse <- projectsService.changeProject(projectIri, payload, requestingUser)
+      projectChangeResponse <- projectsService.updateProject(projectIri, payload, requestingUser)
     } yield Response.json(projectChangeResponse.toJsValue.toString)
 }
 

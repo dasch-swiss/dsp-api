@@ -22,7 +22,7 @@ trait ProjectsService {
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
   def deleteProject(projectIri: ProjectIri, requestingUser: UserADM): Task[ProjectOperationResponseADM]
-  def changeProject(
+  def updateProject(
     projectIri: ProjectIri,
     payload: ProjectUpdatePayloadADM,
     requestingUser: UserADM
@@ -111,7 +111,7 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
    */
-  def changeProject(
+  def updateProject(
     projectIri: ProjectIri,
     payload: ProjectUpdatePayloadADM,
     requestingUser: UserADM
