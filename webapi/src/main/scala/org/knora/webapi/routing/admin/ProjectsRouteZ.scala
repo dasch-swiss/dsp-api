@@ -61,7 +61,7 @@ final case class ProjectsRouteZ(
   private def getProjectByIri(iriUrlEncoded: String): Task[Response] =
     for {
       iriDecoded         <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      iri                <- IriIdentifier.fromString(iriDecoded).toZIO
+      iri                <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       projectGetResponse <- projectsService.getSingleProjectADMRequest(identifier = iri)
     } yield Response.json(projectGetResponse.toJsValue.toString)
 
@@ -80,7 +80,7 @@ final case class ProjectsRouteZ(
   private def createProject(request: Request, requestingUser: UserADM): Task[Response] =
     for {
       body                  <- request.body.asString
-      payload               <- ZIO.fromEither(body.fromJson[ProjectCreatePayloadADM]).mapError(e => new BadRequestException(e))
+      payload               <- ZIO.fromEither(body.fromJson[ProjectCreatePayloadADM]).mapError(e => BadRequestException(e))
       projectCreateResponse <- projectsService.createProjectADMRequest(payload, requestingUser)
     } yield Response.json(projectCreateResponse.toJsValue.toString)
 
@@ -96,7 +96,7 @@ final case class ProjectsRouteZ(
       iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       body                  <- request.body.asString
-      payload               <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => new BadRequestException(e))
+      payload               <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => BadRequestException(e))
       projectChangeResponse <- projectsService.updateProject(projectIri, payload, requestingUser)
     } yield Response.json(projectChangeResponse.toJsValue.toString)
 }

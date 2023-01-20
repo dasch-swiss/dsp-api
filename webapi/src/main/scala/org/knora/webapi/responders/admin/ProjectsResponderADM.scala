@@ -21,7 +21,6 @@ import scala.util.Try
 import dsp.errors.NotFoundException
 import dsp.errors._
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Project
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.instrumentation.InstrumentationSupport
