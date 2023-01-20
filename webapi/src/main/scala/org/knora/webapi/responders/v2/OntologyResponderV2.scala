@@ -1568,7 +1568,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       throw BadRequestException(s"No rdf:type specified")
     )
     if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
-      throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
+      throw BadRequestException(s"Invalid rdf:type of property: ${rdfType}.")
     }
     classInfo
   }
