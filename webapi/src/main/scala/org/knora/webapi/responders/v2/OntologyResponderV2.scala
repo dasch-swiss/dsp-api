@@ -1638,7 +1638,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       loadedClassDef <- OntologyHelpers.loadClassDefinition(appActor, classIri)
       _ = if (loadedClassDef != newReadClassInfo.entityInfoContent) {
             throw InconsistentRepositoryDataException(
-              s"Attempted to save class definition ${newReadClassInfo.entityInfoContent}, but $loadedClassDef was saved"
+              s"Attempted to save class definition ${newReadClassInfo.entityInfoContent}, but $loadedClassDef was saved instead."
             )
           }
     } yield ()
