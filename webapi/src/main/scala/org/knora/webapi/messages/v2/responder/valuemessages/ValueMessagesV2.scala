@@ -3259,22 +3259,10 @@ case class DocumentFileValueContentV2(
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
 
       case ApiV2Complex =>
-        val maybeDimXStatement: Option[(IRI, JsonLDInt)] = dimX.map { definedDimX =>
-          OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX -> JsonLDInt(definedDimX)
-        }
-
-        val maybeDimYStatement: Option[(IRI, JsonLDInt)] = dimY.map { definedDimY =>
-          OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY -> JsonLDInt(definedDimY)
-        }
-
-        val maybePageCountStatement: Option[(IRI, JsonLDInt)] = pageCount.map { definedPageCount =>
-          OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> JsonLDInt(definedPageCount)
-        }
-
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(
             fileUrl
-          ) ++ maybeDimXStatement ++ maybeDimYStatement ++ maybePageCountStatement
+          )
         )
     }
   }

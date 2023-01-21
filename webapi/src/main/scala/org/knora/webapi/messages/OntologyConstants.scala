@@ -898,10 +898,6 @@ object OntologyConstants {
     val StillImageFileValueHasDimY: IRI        = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
     val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
 
-    val DocumentFileValueHasPageCount: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasPageCount"
-    val DocumentFileValueHasDimX: IRI      = KnoraApiV2PrefixExpansion + "documentFileValueHasDimX"
-    val DocumentFileValueHasDimY: IRI      = KnoraApiV2PrefixExpansion + "documentFileValueHasDimY"
-
     val AudioFileValueHasDuration: IRI = KnoraApiV2PrefixExpansion + "audioFileValueHasDuration"
 
     val IntervalValueHasStart: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasStart"
@@ -1084,7 +1080,6 @@ object OntologyConstants {
       KnoraBase.ValueHasGeonameCode      -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
       KnoraBase.ValueHasColor            -> KnoraApiV2Complex.ColorValueAsColor,
       KnoraBase.ValueHasStandoff         -> KnoraApiV2Complex.TextValueHasStandoff,
-      KnoraBase.PageCount                -> KnoraApiV2Complex.DocumentFileValueHasPageCount,
       KnoraAdmin.KnoraProject            -> Xsd.Uri,
       KnoraAdmin.User                    -> Xsd.Uri
     ),
@@ -1126,7 +1121,6 @@ object OntologyConstants {
       KnoraApiV2Complex.GeonameValueAsGeonameCode     -> KnoraBase.ValueHasGeonameCode,
       KnoraApiV2Complex.ColorValueAsColor             -> KnoraBase.ValueHasColor,
       KnoraApiV2Complex.TextValueHasStandoff          -> KnoraBase.ValueHasStandoff,
-      KnoraApiV2Complex.DocumentFileValueHasPageCount -> KnoraBase.PageCount
     )
   )
 

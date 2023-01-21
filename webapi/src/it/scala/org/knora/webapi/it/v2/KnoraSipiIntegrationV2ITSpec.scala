@@ -139,10 +139,7 @@ class KnoraSipiIntegrationV2ITSpec
    */
   case class SavedDocument(
     internalFilename: String,
-    url: String,
-    pageCount: Option[Int],
-    width: Option[Int],
-    height: Option[Int]
+    url: String
   )
 
   /**
@@ -266,16 +263,9 @@ class KnoraSipiIntegrationV2ITSpec
       validationFun = stringFormatter.toSparqlEncodedString
     )
 
-    val pageCount: Option[Int] = savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount)
-    val dimX: Option[Int]      = savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX)
-    val dimY: Option[Int]      = savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY)
-
     SavedDocument(
       internalFilename = internalFilename,
-      url = url,
-      pageCount = pageCount,
-      width = dimX,
-      height = dimY
+      url = url
     )
   }
 
@@ -619,9 +609,6 @@ class KnoraSipiIntegrationV2ITSpec
 
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
       assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-      assert(savedDocument.pageCount.contains(1))
-      assert(savedDocument.width.contains(minimalPdfWidth))
-      assert(savedDocument.height.contains(minimalPdfHeight))
 
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
@@ -672,9 +659,6 @@ class KnoraSipiIntegrationV2ITSpec
 
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
       assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-      assert(savedDocument.pageCount.contains(1))
-      assert(savedDocument.width.contains(testPdfWidth))
-      assert(savedDocument.height.contains(testPdfHeight))
 
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
@@ -1032,7 +1016,6 @@ class KnoraSipiIntegrationV2ITSpec
 
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
       assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-      assert(savedDocument.pageCount.isEmpty)
 
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
@@ -1082,7 +1065,6 @@ class KnoraSipiIntegrationV2ITSpec
 
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
       assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-      assert(savedDocument.pageCount.isEmpty)
 
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
@@ -1147,7 +1129,6 @@ class KnoraSipiIntegrationV2ITSpec
 
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
       assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-      assert(savedDocument.pageCount.isEmpty)
 
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
