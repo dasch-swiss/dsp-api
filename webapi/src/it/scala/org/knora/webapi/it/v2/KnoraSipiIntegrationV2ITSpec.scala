@@ -75,13 +75,9 @@ class KnoraSipiIntegrationV2ITSpec
 
   private val minimalPdfOriginalFilename = "minimal.pdf"
   private val pathToMinimalPdf           = Paths.get("..", s"test_data/test_route/files/$minimalPdfOriginalFilename")
-  private val minimalPdfWidth            = 1250
-  private val minimalPdfHeight           = 600
 
   private val testPdfOriginalFilename = "test.pdf"
   private val pathToTestPdf           = Paths.get("..", s"test_data/test_route/files/$testPdfOriginalFilename")
-  private val testPdfWidth            = 2480
-  private val testPdfHeight           = 3508
 
   private val csv1OriginalFilename = "eggs.csv"
   private val pathToCsv1           = Paths.get("..", s"test_data/test_route/files/$csv1OriginalFilename")
