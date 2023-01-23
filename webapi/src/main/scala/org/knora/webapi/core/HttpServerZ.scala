@@ -22,7 +22,7 @@ object HttpServerZ {
         Cors.CorsConfig(
           anyOrigin = false,
           allowedOrigins = { origin =>
-            config.zioHttp.corsAllowedOrigins.contains(origin)
+            config.httpServer.corsAllowedOrigins.contains(origin)
           }
         )
     } yield Middleware.cors(corsConfig)

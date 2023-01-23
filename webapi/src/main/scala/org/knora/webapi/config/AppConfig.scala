@@ -56,7 +56,7 @@ final case class AppConfig(
   cacheService: CacheService,
   clientTestDataService: ClientTestDataService,
   instrumentationServerConfig: InstrumentationServerConfig,
-  zioHttp: ZioHttp
+  httpServer: HttpServer
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -237,7 +237,7 @@ final case class InstrumentationServerConfig(
   interval: Duration
 )
 
-final case class ZioHttp(
+final case class HttpServer(
   corsAllowedOrigins: Set[String]
 )
 
