@@ -55,7 +55,8 @@ final case class AppConfig(
   shacl: Shacl,
   cacheService: CacheService,
   clientTestDataService: ClientTestDataService,
-  instrumentationServerConfig: InstrumentationServerConfig
+  instrumentationServerConfig: InstrumentationServerConfig,
+  httpServer: HttpServer
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -234,6 +235,10 @@ final case class ClientTestDataService(
 final case class InstrumentationServerConfig(
   port: Int,
   interval: Duration
+)
+
+final case class HttpServer(
+  corsAllowedOrigins: Set[String]
 )
 
 /**
