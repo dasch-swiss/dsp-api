@@ -36,9 +36,8 @@ final case class ProjectsRouteZ(
   private val projectRoutes =
     Http
       .collectZIO[(Request, UserADM)] {
-        case (Method.GET -> !! / "admin" / "projects", _) => getProjects()
-        case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, _) =>
-          getProjectByIri(iriUrlEncoded)
+        case (Method.GET -> !! / "admin" / "projects", _)                           => getProjects()
+        case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, _)   => getProjectByIri(iriUrlEncoded)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname, _) => getProjectByShortname(shortname)
         case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode, _) => getProjectByShortcode(shortcode)
         case (request @ Method.POST -> !! / "admin" / "projects", requestingUser) =>

@@ -446,7 +446,7 @@ class ProjectsADME2ESpec
         response.status should be(StatusCodes.OK)
 
         val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
-        result.shortname should be("newproject")
+        result.shortname should be("updatedproject")
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
         result.description should be(
