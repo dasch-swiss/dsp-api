@@ -418,7 +418,7 @@ class ProjectsADME2ESpec
 
         val updateProjectRequest: String =
           s"""{
-             |    "shortname": "newproject",
+             |    "shortname": "updatedproject",
              |    "longname": "updated project longname",
              |    "description": [{"value": "updated project description", "language": "en"}],
              |    "keywords": ["updated", "keywords"],
@@ -469,7 +469,7 @@ class ProjectsADME2ESpec
         )
       }
 
-      "UPDATE a project with multiple description" in {
+      "UPDATE a project with multi-language description" in {
         val updateProjectMultipleDescriptionRequest: String =
           s"""{
              |    "description": [
@@ -519,7 +519,6 @@ class ProjectsADME2ESpec
           BasicHttpCredentials(rootEmail, testPass)
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
         val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]

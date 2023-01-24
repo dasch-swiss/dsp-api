@@ -750,30 +750,25 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     requestingUser: UserADM
   ): Future[ProjectOperationResponseADM] = {
 
-    val parametersCount = List(
-      projectUpdatePayload.shortname,
-      projectUpdatePayload.longname,
-      projectUpdatePayload.description,
-      projectUpdatePayload.keywords,
-      projectUpdatePayload.logo,
-      projectUpdatePayload.status,
-      projectUpdatePayload.selfjoin
-    ).flatten.size
+    val areAllParamsNone: Boolean = projectUpdatePayload.productIterator.forall {
+      case param: Option[Any] => param.isEmpty
+      case _                  => false
+    }
 
-    if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
+    if (areAllParamsNone) { throw BadRequestException("No data would be changed. Aborting update request.") }
 
     for {
-      maybeCurrentProject: Option[ProjectADM] <-
-        getSingleProjectADM(
-          identifier = IriIdentifier
-            .fromString(projectIri.value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          skipCache = true
-        )
+      maybeCurrentProject <- getSingleProjectADM(
+                               identifier = IriIdentifier
+                                 .fromString(projectIri.value)
+                                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+                               skipCache = true
+                             )
 
-      _ = if (maybeCurrentProject.isEmpty) {
+      _ = maybeCurrentProject.getOrElse(
             throw NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request.")
-          }
+          )
+
       // we are changing the project, so lets get rid of the cached copy
       _ = appActor.ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
 
@@ -799,15 +794,14 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
              .mapTo[SparqlUpdateResponse]
 
       /* Verify that the project was updated. */
-      maybeUpdatedProject <-
-        getSingleProjectADM(
-          identifier = IriIdentifier
-            .fromString(projectIri.value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          skipCache = true
-        )
+      maybeUpdatedProject <- getSingleProjectADM(
+                               identifier = IriIdentifier
+                                 .fromString(projectIri.value)
+                                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+                               skipCache = true
+                             )
 
-      updatedProject: ProjectADM =
+      updatedProject =
         maybeUpdatedProject.getOrElse(
           throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug.")
         )
@@ -818,75 +812,105 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
             updatedProject
           )
 
-      _ = projectUpdatePayload.shortname
-            .map(_.value)
-            .map(stringFormatter.fromSparqlEncodedString(_))
-            .filter(_ != updatedProject.shortname)
-            .getOrElse(
-              throw UpdateNotPerformedException(
-                "Project's 'shortname' was not updated. Please report this as a possible bug."
-              )
-            )
-
-      _ = projectUpdatePayload.longname
-            .map(_.value)
-            .map(stringFormatter.fromSparqlEncodedString(_))
-            .filter(_ != updatedProject.longname)
-            .getOrElse(
-              throw UpdateNotPerformedException(
-                "Project's 'longname' was not updated. Please report this as a possible bug."
-              )
-            )
-
-      _ = projectUpdatePayload.description
-            .map(_.value)
-            .map(_.map(d => V2.StringLiteralV2(stringFormatter.fromSparqlEncodedString(d.value), d.language)))
-            .filter(updatedProject.description.diff(_).nonEmpty)
-            .getOrElse(
-              throw UpdateNotPerformedException(
-                "Project's 'description' was not updated. Please report this as a possible bug."
-              )
-            )
-
-      _ = projectUpdatePayload.keywords
-            .map(_.value)
-            .map(_.map(key => stringFormatter.fromSparqlEncodedString(key)))
-            .filter(updatedProject.keywords.sorted != _.sorted)
-            .getOrElse(
-              throw UpdateNotPerformedException(
-                "Project's 'keywords' was not updated. Please report this as a possible bug."
-              )
-            )
-
-      _ = projectUpdatePayload.logo
-            .map(_.value)
-            .map(stringFormatter.fromSparqlEncodedString(_))
-            .filter(_ != updatedProject.logo)
-            .getOrElse(
-              throw UpdateNotPerformedException(
-                "Project's 'logo' was not updated. Please report this as a possible bug."
-              )
-            )
-
-      _ = projectUpdatePayload.status
-            .map(_.value)
-            .filter(_ != updatedProject.status)
-            .getOrElse(
-              throw UpdateNotPerformedException(
-                "Project's 'status' was not updated. Please report this as a possible bug."
-              )
-            )
-
-      _ = projectUpdatePayload.selfjoin
-            .map(_.value)
-            .filter(_ != updatedProject.selfjoin)
-            .getOrElse(
-              throw UpdateNotPerformedException(
-                "Project's 'selfjoin' was not updated. Please report this as a possible bug."
-              )
-            )
+      _ = checkProjectUpdate(updatedProject, projectUpdatePayload)
 
     } yield ProjectOperationResponseADM(project = updatedProject)
+  }
+
+  /**
+   * Checks if all fields of a projectUpdatePayload are represented in the updated [[ProjectADM]]. If so, the
+   * update is considered successful.
+   *
+   * @param updatedProject       the updated project against which the projectUpdatePayload is compared
+   * @param projectUpdatePayload the payload which defines what should have been updated
+   * @throws UpdateNotPerformedException if one of the fields was not updated
+   */
+  private def checkProjectUpdate(
+    updatedProject: ProjectADM,
+    projectUpdatePayload: ProjectUpdatePayloadADM
+  ): Unit = {
+    if (projectUpdatePayload.shortname.nonEmpty) {
+      projectUpdatePayload.shortname
+        .map(_.value)
+        .map(stringFormatter.fromSparqlEncodedString(_))
+        .filter(_ == updatedProject.shortname)
+        .getOrElse(
+          throw UpdateNotPerformedException(
+            "Project's 'shortname' was not updated. Please report this as a possible bug."
+          )
+        )
+    }
+
+    if (projectUpdatePayload.shortname.nonEmpty) {
+      projectUpdatePayload.longname
+        .map(_.value)
+        .map(stringFormatter.fromSparqlEncodedString(_))
+        .filter(Some(_) == updatedProject.longname)
+        .getOrElse(
+          throw UpdateNotPerformedException(
+            "Project's 'longname' was not updated. Please report this as a possible bug."
+          )
+        )
+    }
+
+    if (projectUpdatePayload.description.nonEmpty) {
+      projectUpdatePayload.description
+        .map(_.value)
+        .map(_.map(d => V2.StringLiteralV2(stringFormatter.fromSparqlEncodedString(d.value), d.language)))
+        .filter(updatedProject.description.diff(_).isEmpty)
+        .getOrElse(
+          throw UpdateNotPerformedException(
+            "Project's 'description' was not updated. Please report this as a possible bug."
+          )
+        )
+    }
+
+    if (projectUpdatePayload.keywords.nonEmpty) {
+      projectUpdatePayload.keywords
+        .map(_.value)
+        .map(_.map(key => stringFormatter.fromSparqlEncodedString(key)))
+        .filter(_.sorted == updatedProject.keywords.sorted)
+        .getOrElse(
+          throw UpdateNotPerformedException(
+            "Project's 'keywords' was not updated. Please report this as a possible bug."
+          )
+        )
+    }
+
+    if (projectUpdatePayload.logo.nonEmpty) {
+      projectUpdatePayload.logo
+        .map(_.value)
+        .map(stringFormatter.fromSparqlEncodedString(_))
+        .filter(Some(_) == updatedProject.logo)
+        .getOrElse(
+          throw UpdateNotPerformedException(
+            "Project's 'logo' was not updated. Please report this as a possible bug."
+          )
+        )
+    }
+
+    if (projectUpdatePayload.status.nonEmpty) {
+      projectUpdatePayload.status
+        .map(_.value)
+        .filter(_ == updatedProject.status)
+        .getOrElse(
+          throw UpdateNotPerformedException(
+            "Project's 'status' was not updated. Please report this as a possible bug."
+          )
+        )
+    }
+
+    if (projectUpdatePayload.selfjoin.nonEmpty) {
+      projectUpdatePayload.selfjoin
+        .map(_.value)
+        .filter(_ == updatedProject.selfjoin)
+        .getOrElse(
+          throw UpdateNotPerformedException(
+            "Project's 'selfjoin' was not updated. Please report this as a possible bug."
+          )
+        )
+    }
+
   }
 
   /**
