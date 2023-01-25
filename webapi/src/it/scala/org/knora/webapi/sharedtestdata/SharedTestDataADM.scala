@@ -17,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import dsp.valueobjects.V2
 
 /**
  * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
@@ -165,7 +166,7 @@ object SharedTestDataADM {
     shortname = "SystemProject",
     shortcode = "FFFF",
     longname = Some("Knora System Project"),
-    description = Seq(StringLiteralV2(value = "Knora System Project", language = Some("en"))),
+    description = Seq(V2.StringLiteralV2(value = "Knora System Project", language = Some("en"))),
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq(
@@ -184,7 +185,7 @@ object SharedTestDataADM {
     shortname = "DefaultSharedOntologiesProject",
     shortcode = "0000",
     longname = Some("Default Knora Shared Ontologies Project"),
-    description = Seq(StringLiteralV2(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
+    description = Seq(V2.StringLiteralV2(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq.empty[IRI],
@@ -300,7 +301,7 @@ object SharedTestDataADM {
     shortname = "images",
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
-    description = Seq(StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
+    description = Seq(V2.StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
@@ -314,7 +315,7 @@ object SharedTestDataADM {
     shortname = "images",
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
-    description = Seq(StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
+    description = Seq(V2.StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
@@ -463,7 +464,7 @@ object SharedTestDataADM {
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
-      StringLiteralV2(
+      V2.StringLiteralV2(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None
@@ -498,7 +499,7 @@ object SharedTestDataADM {
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
-      StringLiteralV2(
+      V2.StringLiteralV2(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None
@@ -636,7 +637,7 @@ object SharedTestDataADM {
     shortname = "anything",
     shortcode = "0001",
     longname = Some("Anything Project"),
-    description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
+    description = Seq(V2.StringLiteralV2(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
@@ -649,7 +650,7 @@ object SharedTestDataADM {
     shortname = "anything",
     shortcode = "0001",
     longname = Some("Anything Project"),
-    description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
+    description = Seq(V2.StringLiteralV2(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
     ontologies = Seq(
@@ -684,7 +685,7 @@ object SharedTestDataADM {
     shortname = "beol",
     shortcode = "0801",
     longname = Some("Bernoulli-Euler Online"),
-    description = Seq(StringLiteralV2(value = "Bernoulli-Euler Online", language = None)),
+    description = Seq(V2.StringLiteralV2(value = "Bernoulli-Euler Online", language = None)),
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq(
@@ -737,7 +738,7 @@ object SharedTestDataADM {
     shortname = "dokubib",
     shortcode = "0804",
     longname = Some("Dokubib"),
-    description = Seq(StringLiteralV2(value = "Dokubib", language = None)),
+    description = Seq(V2.StringLiteralV2(value = "Dokubib", language = None)),
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),

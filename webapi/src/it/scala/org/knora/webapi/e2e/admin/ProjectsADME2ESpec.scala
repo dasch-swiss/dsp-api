@@ -27,13 +27,13 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
+import dsp.valueobjects.V2
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
@@ -222,9 +222,7 @@ class ProjectsADME2ESpec
         result.shortname should be("newprojectWithIri")
         result.longname should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
-        result.description should be(
-          Seq(StringLiteralV2(value = "a project created with a custom IRI", language = Some("en")))
-        )
+        result.description should be(Seq(V2.StringLiteralV2("a project created with a custom IRI", Some("en"))))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -305,7 +303,7 @@ class ProjectsADME2ESpec
         result.shortname should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("project longname"))
-        result.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+        result.description should be(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
         result.keywords should be(Seq("keywords"))
         result.logo should be(Some("/fu/bar/baz.jpg"))
         result.status should be(true)
@@ -420,7 +418,7 @@ class ProjectsADME2ESpec
 
         val updateProjectRequest: String =
           s"""{
-             |    "shortname": "newproject",
+             |    "shortname": "updatedproject",
              |    "longname": "updated project longname",
              |    "description": [{"value": "updated project description", "language": "en"}],
              |    "keywords": ["updated", "keywords"],
@@ -448,10 +446,12 @@ class ProjectsADME2ESpec
         response.status should be(StatusCodes.OK)
 
         val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
-        result.shortname should be("newproject")
+        result.shortname should be("updatedproject")
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
-        result.description should be(Seq(StringLiteralV2(value = "updated project description", language = Some("en"))))
+        result.description should be(
+          Seq(V2.StringLiteralV2(value = "updated project description", language = Some("en")))
+        )
         result.keywords.sorted should be(Seq("updated", "keywords").sorted)
         result.logo should be(Some("/fu/bar/baz-updated.jpg"))
         result.status should be(true)
@@ -469,7 +469,7 @@ class ProjectsADME2ESpec
         )
       }
 
-      "UPDATE a project with multiple description" in {
+      "UPDATE a project with multi-language description" in {
         val updateProjectMultipleDescriptionRequest: String =
           s"""{
              |    "description": [
@@ -498,8 +498,8 @@ class ProjectsADME2ESpec
 
         val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
         result.description.size should be(2)
-        result.description should contain(StringLiteralV2(value = "Test Project", language = Some("en")))
-        result.description should contain(StringLiteralV2(value = "Test Project", language = Some("se")))
+        result.description should contain(V2.StringLiteralV2(value = "Test Project", language = Some("en")))
+        result.description should contain(V2.StringLiteralV2(value = "Test Project", language = Some("se")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -519,7 +519,6 @@ class ProjectsADME2ESpec
           BasicHttpCredentials(rootEmail, testPass)
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
         val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]

@@ -27,9 +27,9 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
+import dsp.valueobjects.Iri
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
@@ -193,7 +193,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         received.project.shortcode should be(shortCode.toUpperCase) // upper case
         received.project.longname should contain("project longname")
         received.project.description should be(
-          Seq(StringLiteralV2(value = "project description", language = Some("en")))
+          Seq(V2.StringLiteralV2(value = "project description", language = Some("en")))
         )
 
         newProjectIri.set(received.project.id)
@@ -288,7 +288,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         received.project.shortcode should be("1112")
         received.project.longname should contain("project longname")
         received.project.description should be(
-          Seq(StringLiteralV2(value = "project description", language = Some("en")))
+          Seq(V2.StringLiteralV2(value = "project description", language = Some("en")))
         )
 
       }
@@ -319,7 +319,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         received.project.longname should contain(stringFormatter.fromSparqlEncodedString(longnameWithSpecialCharacter))
         received.project.description should be(
           Seq(
-            StringLiteralV2(
+            V2.StringLiteralV2(
               value = stringFormatter.fromSparqlEncodedString(descriptionWithSpecialCharacter),
               language = Some("en")
             )
@@ -370,24 +370,30 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE a project" in {
+        val iri = Iri.ProjectIri.make(newProjectIri.get).getOrElse(throw BadRequestException("Invalid project IRI"))
+        val updatedLongname =
+          Name.make("updated project longname").getOrElse(throw BadRequestException("Invalid longname"))
+        val updatedDescription = ProjectDescription
+          .make(Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en"))))
+          .getOrElse(throw BadRequestException("Invalid project description"))
+        val updatedKeywords =
+          Keywords.make(Seq("updated", "keywords")).getOrElse(throw BadRequestException("Invalid keywords"))
+        val updatedLogo =
+          Logo.make("/fu/bar/baz-updated.jpg").getOrElse(throw BadRequestException("Invalid value for logo"))
+        val projectStatus = ProjectStatus.make(true).getOrElse(throw BadRequestException("Invalid project status"))
+        val selfJoin      = ProjectSelfJoin.make(true).getOrElse(throw BadRequestException("Invalid value for self join"))
+
         appActor ! ProjectChangeRequestADM(
-          projectIri = newProjectIri.get,
-          changeProjectRequest = ChangeProjectApiRequestADM(
+          projectIri = iri,
+          projectUpdatePayload = ProjectUpdatePayloadADM(
             shortname = None,
-            longname = Some("updated project longname"),
-            description = Some(
-              Seq(
-                StringLiteralV2(
-                  value = """updated project description with "quotes" and <html tags>""",
-                  language = Some("en")
-                )
-              )
-            ),
-            keywords = Some(Seq("updated", "keywords")),
-            logo = Some("/fu/bar/baz-updated.jpg"),
-            status = Some(false),
-            selfjoin = Some(true)
-          ).validateAndEscape,
+            longname = Some(updatedLongname),
+            description = Some(updatedDescription),
+            keywords = Some(updatedKeywords),
+            logo = Some(updatedLogo),
+            status = Some(projectStatus),
+            selfjoin = Some(selfJoin)
+          ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -397,7 +403,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         received.project.longname should be(Some("updated project longname"))
         received.project.description should be(
           Seq(
-            StringLiteralV2(
+            V2.StringLiteralV2(
               value = """updated project description with "quotes" and <html tags>""",
               language = Some("en")
             )
@@ -405,20 +411,26 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         received.project.keywords.sorted should be(Seq("updated", "keywords").sorted)
         received.project.logo should be(Some("/fu/bar/baz-updated.jpg"))
-        received.project.status should be(false)
+        received.project.status should be(true)
         received.project.selfjoin should be(true)
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
+        val longname = Name.make("longname").getOrElse(throw BadRequestException("Invalid longname"))
+        val iri = Iri.ProjectIri
+          .make(notExistingProjectButValidProjectIri)
+          .getOrElse(throw BadRequestException("Invalid project IRI"))
         appActor ! ProjectChangeRequestADM(
-          projectIri = notExistingProjectButValidProjectIri,
-          changeProjectRequest = ChangeProjectApiRequestADM(longname = Some("new long name")).validateAndEscape,
+          projectIri = iri,
+          projectUpdatePayload = ProjectUpdatePayloadADM(longname = Some(longname)),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
         expectMsg(
           Failure(
-            NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request.")
+            NotFoundException(
+              s"Project '${notExistingProjectButValidProjectIri}' not found. Aborting update request."
+            )
           )
         )
       }

@@ -10,8 +10,8 @@ import dsp.errors.OntologyConstraintException
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import dsp.valueobjects.V2
 
 /**
  * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
@@ -43,7 +43,7 @@ class ProjectsMessagesADMSpec extends CoreSpec {
           shortcode = "1111",
           shortname = "shortname",
           longname = None,
-          description = Seq.empty[StringLiteralV2],
+          description = Seq.empty[V2.StringLiteralV2],
           keywords = Seq.empty[String],
           logo = None,
           ontologies = Seq.empty[IRI],

@@ -27,6 +27,7 @@ import scala.concurrent.Future
 import scala.util.Try
 
 import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import org.knora.webapi.IRI
@@ -238,17 +239,34 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         entity(as[ChangeProjectApiRequestADM]) { apiRequest => requestContext =>
           val checkedProjectIri =
             stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+          val projectIri: ProjectIri =
+            ProjectIri.make(checkedProjectIri).getOrElse(throw BadRequestException(s"Invalid Project IRI"))
+
+          val shortname: Validation[ValidationException, Option[ShortName]] = ShortName.make(apiRequest.shortname)
+          val longname: Validation[Throwable, Option[Name]]                 = Name.make(apiRequest.longname)
+          val description: Validation[Throwable, Option[ProjectDescription]] =
+            ProjectDescription.make(apiRequest.description)
+          val keywords: Validation[Throwable, Option[Keywords]]        = Keywords.make(apiRequest.keywords)
+          val logo: Validation[Throwable, Option[Logo]]                = Logo.make(apiRequest.logo)
+          val status: Validation[Throwable, Option[ProjectStatus]]     = ProjectStatus.make(apiRequest.status)
+          val selfjoin: Validation[Throwable, Option[ProjectSelfJoin]] = ProjectSelfJoin.make(apiRequest.selfjoin)
+
+          val projectUpdatePayloadValidation: Validation[Throwable, ProjectUpdatePayloadADM] =
+            Validation.validateWith(shortname, longname, description, keywords, logo, status, selfjoin)(
+              ProjectUpdatePayloadADM.apply
+            )
 
           /* the api request is already checked at time of creation. see case class. */
 
           val requestMessage: Future[ProjectChangeRequestADM] = for {
+            projectUpdatePayload <- toFuture(projectUpdatePayloadValidation)
             requestingUser <- getUserADM(
                                 requestContext = requestContext,
                                 routeData.appConfig
                               )
           } yield ProjectChangeRequestADM(
-            projectIri = checkedProjectIri,
-            changeProjectRequest = apiRequest.validateAndEscape,
+            projectIri = projectIri,
+            projectUpdatePayload = projectUpdatePayload,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -269,17 +287,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def deleteProject(): Route =
     path(projectsBasePath / "iri" / Segment) { value =>
       delete { requestContext =>
-        val checkedProjectIri =
-          stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-
+        val projectIri = ProjectIri.make(value).getOrElse(throw BadRequestException(s"Invalid Project IRI $value"))
+        val projectStatus =
+          ProjectStatus.make(false).getOrElse(throw BadRequestException(s"Invalid Project Status"))
         val requestMessage: Future[ProjectChangeRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
                               routeData.appConfig
                             )
         } yield ProjectChangeRequestADM(
-          projectIri = checkedProjectIri,
-          changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+          projectIri = projectIri,
+          projectUpdatePayload = ProjectUpdatePayloadADM(status = Some(projectStatus)),
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )

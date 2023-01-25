@@ -29,13 +29,6 @@ object V2 {
    */
   case class StringLiteralV2(value: String, language: Option[String])
   object StringLiteralV2 {
-    // implicit val decoder: JsonDecoder[StringLiteralV2] = JsonDecoder[(String, Option[String])].mapOrFail {
-    //   case (value, language) =>
-    //     StringLiteralV2(value, language).toEitherWith(e => e.head.getMessage())
-    // }
-    // implicit val encoder: JsonEncoder[StringLiteralV2] =
-    //   JsonEncoder[String].contramap((shortName: StringLiteralV2) => shortName.value)
-
     implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
   }
 }

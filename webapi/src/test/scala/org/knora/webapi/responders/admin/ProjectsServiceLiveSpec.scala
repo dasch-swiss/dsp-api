@@ -10,13 +10,12 @@ import zio.mock._
 import zio.prelude.Validation
 import zio.test._
 
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project.ShortCode
 import dsp.valueobjects.Project._
-import dsp.valueobjects.V2
-import org.knora.webapi.IRI
+import dsp.valueobjects.V2._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ChangeProjectApiRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangeRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
@@ -25,9 +24,9 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequ
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.ActorToZioBridgeMock
@@ -48,13 +47,22 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       shortname = "",
       shortcode = "",
       longname = None,
-      description = Seq(StringLiteralV2("")),
+      description = Seq(StringLiteralV2("", None)),
       keywords = Seq.empty,
       logo = None,
       ontologies = Seq.empty,
       status = true,
       selfjoin = false
     )
+
+  override def spec: Spec[TestEnvironment with Scope, Any] =
+    suite("ProjectsService")(
+      getAllProjectsSpec,
+      getProjectByIdSpec,
+      createProjectSpec,
+      deleteProjectSpec,
+      updateProjectSpec
+    ).provide(StringFormatter.test)
 
   val getAllProjectsSpec = test("get all projects") {
     val expectedResponse = ProjectsGetResponseADM(Seq(projectADM))
@@ -139,7 +147,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           ShortName.make("newproject"),
           ShortCode.make("3333"),
           Name.make(Some("project longname")),
-          ProjectDescription.make(Seq(V2.StringLiteralV2("project description", Some("en")))),
+          ProjectDescription.make(Seq(StringLiteralV2("project description", Some("en")))),
           Keywords.make(Seq("test project")),
           Logo.make(None),
           ProjectStatus.make(true),
@@ -169,8 +177,10 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   // needs to have the StringFormatter in the environment because ChangeProjectApiRequestADM needs it
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
-    val projectIri: IRI      = "http://rdfh.ch/projects/0001"
-    val changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false))
+    val projectIri: ProjectIri =
+      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid project IRI"))
+    val projectStatus        = Some(ProjectStatus.make(false).getOrElse(throw BadRequestException("Invalid project status")))
+    val projectUpdatePayload = ProjectUpdatePayloadADM(status = projectStatus)
     val requestingUser       = KnoraSystemInstances.Users.SystemUser
     val projectsService = ZIO
       .serviceWithZIO[ProjectsService](_.deleteProject(projectIri, requestingUser))
@@ -178,7 +188,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     for {
       uuid   <- ZIO.random.flatMap(_.nextUUID)
       _      <- TestRandom.feedUUIDs(uuid)
-      request = ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, uuid)
+      request = ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
       actorToZioBridge =
         ActorToZioBridgeMock.AskAppActor
           .of[ProjectOperationResponseADM]
@@ -191,11 +201,39 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertTrue(true)
   }
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("ProjectsService")(
-      getAllProjectsSpec,
-      getProjectByIdSpec,
-      createProjectSpec,
-      deleteProjectSpec
-    ).provide(StringFormatter.test)
+  val updateProjectSpec = test("update a project") {
+    val projectIri =
+      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid Project IRI"))
+    val projectUpdatePayload: ProjectUpdatePayloadADM =
+      Validation
+        .validateWith(
+          ShortName.make(Some("usn")),
+          Name.make(Some("updated project longname")),
+          ProjectDescription.make(Some(Seq(StringLiteralV2("updated project description", Some("en"))))),
+          Keywords.make(Some(Seq("updated", "project"))),
+          Logo.make(Some("../logo.png")),
+          ProjectStatus.make(Some(true)),
+          ProjectSelfJoin.make(Some(true))
+        )(ProjectUpdatePayloadADM.apply)
+        .getOrElse(throw new Exception("Invalid Payload"))
+    val requestingUser = KnoraSystemInstances.Users.SystemUser
+    val projectsService =
+      ZIO
+        .serviceWithZIO[ProjectsService](_.updateProject(projectIri, projectUpdatePayload, requestingUser))
+        .provideSome[ActorToZioBridge](layers)
+    for {
+      uuid   <- ZIO.random.flatMap(_.nextUUID)
+      _      <- TestRandom.feedUUIDs(uuid)
+      request = ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
+      actorToZioBridge =
+        ActorToZioBridgeMock.AskAppActor
+          .of[ProjectOperationResponseADM]
+          .apply(
+            assertion = Assertion.equalTo(request),
+            result = Expectation.value(ProjectOperationResponseADM(projectADM))
+          )
+          .toLayer
+      _ <- projectsService.provide(actorToZioBridge)
+    } yield assertTrue(true)
+  }
 }

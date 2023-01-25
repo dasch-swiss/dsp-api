@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+@import dsp.valueobjects.V2.StringLiteralV2
 
 @**
  * Updates an existing project with the provided values.

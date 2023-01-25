@@ -28,7 +28,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 
@@ -77,7 +76,7 @@ case class CreateProjectApiRequestADM(
 case class ChangeProjectApiRequestADM(
   shortname: Option[String] = None,
   longname: Option[String] = None,
-  description: Option[Seq[StringLiteralV2]] = None,
+  description: Option[Seq[V2.StringLiteralV2]] = None,
   keywords: Option[Seq[String]] = None,
   logo: Option[String] = None,
   status: Option[Boolean] = None,
@@ -118,15 +117,15 @@ case class ChangeProjectApiRequestADM(
       errorFun = throw BadRequestException(s"The supplied logo: '$logo' is not valid.")
     )
 
-    val validatedDescriptions: Option[Seq[StringLiteralV2]] = description match {
-      case Some(descriptions: Seq[StringLiteralV2]) =>
+    val validatedDescriptions: Option[Seq[V2.StringLiteralV2]] = description match {
+      case Some(descriptions: Seq[V2.StringLiteralV2]) =>
         val escapedDescriptions = descriptions.map { des =>
           val escapedValue =
             stringFormatter.toSparqlEncodedString(
               des.value,
               errorFun = throw BadRequestException(s"The supplied description: '${des.value}' is not valid.")
             )
-          StringLiteralV2(value = escapedValue, language = des.language)
+          V2.StringLiteralV2(value = escapedValue, language = des.language)
         }
         Some(escapedDescriptions)
       case None => None
@@ -272,14 +271,14 @@ case class ProjectCreateRequestADM(
 /**
  * Requests updating an existing project.
  *
- * @param projectIri           the IRI of the project to be updated.
- * @param changeProjectRequest the data which needs to be update.
- * @param requestingUser       the user making the request.
- * @param apiRequestID         the ID of the API request.
+ * @param projectIri            the IRI of the project to be updated.
+ * @param projectUpdatePayload  the [[ProjectUpdatePayload]]
+ * @param requestingUser        the user making the request.
+ * @param apiRequestID          the ID of the API request.
  */
 case class ProjectChangeRequestADM(
-  projectIri: IRI,
-  changeProjectRequest: ChangeProjectApiRequestADM,
+  projectIri: ProjectIri,
+  projectUpdatePayload: ProjectUpdatePayloadADM,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM
@@ -393,7 +392,7 @@ case class ProjectADM(
   shortname: String,
   shortcode: String,
   longname: Option[String],
-  description: Seq[StringLiteralV2],
+  description: Seq[V2.StringLiteralV2],
   keywords: Seq[String],
   logo: Option[String],
   ontologies: Seq[IRI],
@@ -475,8 +474,8 @@ case class ProjectADM(
 
   def unescape: ProjectADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val unescapedDescriptions: Seq[StringLiteralV2] = description.map(desc =>
-      StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(desc.value), language = desc.language)
+    val unescapedDescriptions: Seq[V2.StringLiteralV2] = description.map(desc =>
+      V2.StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(desc.value), language = desc.language)
     )
     val unescapedKeywords: Seq[String] = keywords.map(key => stringFormatter.fromSparqlEncodedString(key))
     copy(
@@ -575,27 +574,6 @@ object ProjectIdentifierADM {
  * @param watermark the watermark file.
  */
 case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
-
-/**
- * Payload used for updating of an existing project.
- *
- * @param shortname   The project's shortname. Needs to be system wide unique.
- * @param longname    The project's long name.
- * @param description The project's description.
- * @param keywords    The project's keywords.
- * @param logo        The project's logo.
- * @param status      The project's status.
- * @param selfjoin    The project's self-join status.
- */
-case class ProjectUpdatePayloadADM(
-  shortname: Option[String] = None,
-  longname: Option[String] = None,
-  description: Option[Seq[StringLiteralV2]] = None,
-  keywords: Option[Seq[String]] = None,
-  logo: Option[String] = None,
-  status: Option[Boolean] = None,
-  selfjoin: Option[Boolean] = None
-)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating
