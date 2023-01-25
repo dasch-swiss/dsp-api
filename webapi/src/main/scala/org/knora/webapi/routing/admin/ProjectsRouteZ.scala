@@ -30,8 +30,7 @@ final case class ProjectsRouteZ(
   authenticationMiddleware: AuthenticationMiddleware
 ) {
 
-  lazy val route: HttpApp[Any, Nothing] =
-    projectRoutes @@ authenticationMiddleware.authenticationMiddleware
+  lazy val route: HttpApp[Any, Nothing] = projectRoutes @@ authenticationMiddleware.authenticationMiddleware
 
   private val projectRoutes =
     Http
