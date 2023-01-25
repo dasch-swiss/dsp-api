@@ -267,22 +267,11 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       } yield assertTrue(true)
     },
     test("return a BadRequest Exception if input (shortname) is invalid") {
-      val projectIri = "http://rdfh.ch/projects/0001"
-      val projectUpdatePayloadString =
-        s"""|{
-            |  "shortname": "invalid shortname",
-            |  "longname": "updated longname",
-            |  "description": [{"value": "updated project description", "language": "en"}],
-            |  "keywords": ["updated", "keywords"],
-            |  "logo": "../logo.png",
-            |  "status": true,
-            |  "selfjoin": true
-            |}
-            |""".stripMargin
-
-      val body    = Body.fromString(projectUpdatePayloadString)
-      val request = Request.put(url = URL(basePathProjectsIri / encode(projectIri)), body = body)
-      val user    = KnoraSystemInstances.Users.SystemUser
+      val projectIri                 = "http://rdfh.ch/projects/0001"
+      val projectUpdatePayloadString = """{"shortname": "invalid shortname"}""".stripMargin
+      val body                       = Body.fromString(projectUpdatePayloadString)
+      val request                    = Request.put(url = URL(basePathProjectsIri / encode(projectIri)), body = body)
+      val user                       = KnoraSystemInstances.Users.SystemUser
 
       for {
         response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
@@ -293,45 +282,22 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         )
     },
     test("return a BadRequest Exception if input (syntax) is invalid") {
-      val projectIri = "http://rdfh.ch/projects/0001"
-      // missing comma after "usn"
-      val projectUpdatePayloadString =
-        s"""|{
-            |  "shortname": "usn"
-            |  "longname": "updated longname",
-            |  "description": [{"value": "updated project description", "language": "en"}],
-            |  "keywords": ["updated", "keywords"],
-            |  "logo": "../logo.png",
-            |  "status": true,
-            |  "selfjoin": true
-            |}
-            |""".stripMargin
-
-      val body    = Body.fromString(projectUpdatePayloadString)
-      val request = Request.put(url = URL(basePathProjectsIri / encode(projectIri)), body = body)
-      val user    = KnoraSystemInstances.Users.SystemUser
+      val projectIri                 = "http://rdfh.ch/projects/0001"
+      val projectUpdatePayloadString = """{"shortname":"usn" "longname":"updated longname"}""".stripMargin
+      val body                       = Body.fromString(projectUpdatePayloadString)
+      val request                    = Request.put(url = URL(basePathProjectsIri / encode(projectIri)), body = body)
+      val user                       = KnoraSystemInstances.Users.SystemUser
 
       for {
         response <- applyRoutes(request).provide(ProjectsServiceMock.empty)
       } yield assertTrue(response.status == Status.BadRequest)
     },
     test("return a BadRequest Exception if project IRI is invalid") {
-      val projectIri = "http://rdfh.ch/project/0001"
-      val projectUpdatePayloadString =
-        s"""|{
-            |  "shortname": "usn",
-            |  "longname": "updated longname",
-            |  "description": [{"value": "updated project description", "language": "en"}],
-            |  "keywords": ["updated", "keywords"],
-            |  "logo": "../logo.png",
-            |  "status": true,
-            |  "selfjoin": true
-            |}
-            |""".stripMargin
-
-      val body    = Body.fromString(projectUpdatePayloadString)
-      val request = Request.put(url = URL(basePathProjectsIri / encode(projectIri)), body = body)
-      val user    = KnoraSystemInstances.Users.SystemUser
+      val projectIri                 = "http://rdfh.ch/project/0001"
+      val projectUpdatePayloadString = """{"shortname":"usn"}""".stripMargin
+      val body                       = Body.fromString(projectUpdatePayloadString)
+      val request                    = Request.put(url = URL(basePathProjectsIri / encode(projectIri)), body = body)
+      val user                       = KnoraSystemInstances.Users.SystemUser
 
       for {
         response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
