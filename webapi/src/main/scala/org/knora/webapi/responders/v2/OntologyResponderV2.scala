@@ -17,6 +17,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -37,6 +38,11 @@ import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isFileValueProp
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isKnoraResourceProperty
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isLinkProp
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isLinkValueProp
+import org.knora.webapi.responders.v2.ontology.OntologyLegacyRepo
 import org.knora.webapi.util._
 
 /**
@@ -63,7 +69,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   /**
    * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: OntologiesResponderRequestV2) = msg match {
+  def receive(msg: OntologiesResponderRequestV2): Future[Product] = msg match {
     case LoadOntologiesRequestV2(requestingUser) =>
       Cache.loadOntologies(appActor, requestingUser)
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
@@ -98,12 +104,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
     case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>
       addCardinalitiesToClass(addCardinalitiesToClassRequest)
-    case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 =>
-      changeClassCardinalities(changeCardinalitiesRequest)
+    case replaceCardinalityRequest: ReplaceCardinalitiesRequestV2 =>
+      replaceClassCardinalities(replaceCardinalityRequest)
     case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
       canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
-    case deleteCardinalitiesfromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
-      deleteCardinalitiesFromClass(deleteCardinalitiesfromClassRequest)
+    case deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
+      deleteCardinalitiesFromClass(deleteCardinalitiesFromClassRequest)
     case changeGuiOrderRequest: ChangeGuiOrderRequestV2 => changeGuiOrder(changeGuiOrderRequest)
     case canDeleteClassRequest: CanDeleteClassRequestV2 => canDeleteClass(canDeleteClassRequest)
     case deleteClassRequest: DeleteClassRequestV2       => deleteClass(deleteClassRequest)
@@ -317,7 +323,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     } yield OntologyKnoraEntitiesIriInfoV2(
       ontologyIri = ontologyIri,
       propertyIris = ontology.properties.keySet.filter { propertyIri =>
-        OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData)
+        isKnoraResourceProperty(propertyIri, cacheData)
       },
       classIris = ontology.classes.filter { case (_, classDef) =>
         classDef.isResourceClass
@@ -500,8 +506,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] =
       for {
-        cacheData <- Cache.getCacheData
-
         // Make sure the ontology doesn't already exist.
         existingOntologyMetadata: Option[OntologyMetadataV2] <- OntologyHelpers.loadOntologyMetadata(
                                                                   appActor,
@@ -538,7 +542,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        createOntologySparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        createOntologySparql = twirl.queries.sparql.v2.txt
                                  .createOntology(
                                    ontologyNamedGraphIri = internalOntologyIri,
                                    ontologyIri = internalOntologyIri,
@@ -640,7 +644,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
    * @param changeOntologyMetadataRequest the request to change the metadata.
    * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
    */
-  def changeOntologyMetadata(
+  private def changeOntologyMetadata(
     changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2
   ): Future[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] =
@@ -669,7 +673,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changeOntologyMetadata(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -782,7 +786,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changeOntologyMetadata(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -935,7 +939,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
-              ontologyCacheData = cacheData,
+              cache = cacheData,
               classDef = internalClassDefWithLinkValueProps,
               errorFun = { msg: String =>
                 throw BadRequestException(msg)
@@ -960,16 +964,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                           canBeInstantiated = true,
                           inheritedCardinalities = inheritedCardinalities,
                           knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData)
+                            isKnoraResourceProperty(propertyIri, cacheData)
                           ),
                           linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isLinkProp(propertyIri, cacheData)
+                            isLinkProp(propertyIri, cacheData)
                           ),
                           linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isLinkValueProp(propertyIri, cacheData)
+                            isLinkValueProp(propertyIri, cacheData)
                           ),
                           fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isFileValueProp(propertyIri, cacheData)
+                            isFileValueProp(propertyIri, cacheData)
                           )
                         )
 
@@ -977,7 +981,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .createClass(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -1150,7 +1154,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .replaceClassCardinalities(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -1345,7 +1349,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
-              ontologyCacheData = cacheData,
+              cache = cacheData,
               classDef = newInternalClassDefWithLinkValueProps,
               errorFun = { msg: String =>
                 throw BadRequestException(msg)
@@ -1355,7 +1359,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
         // isn't any text to escape in cardinalities.)
 
-        propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+        propertyIrisOfAllCardinalities = cardinalitiesForClassWithInheritance.keySet
 
         inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
           cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
@@ -1368,18 +1372,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                           isResourceClass = true,
                           canBeInstantiated = true,
                           inheritedCardinalities = inheritedCardinalities,
-                          knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData)
-                          ),
-                          linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isLinkProp(propertyIri, cacheData)
-                          ),
-                          linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isLinkValueProp(propertyIri, cacheData)
-                          ),
-                          fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isFileValueProp(propertyIri, cacheData)
-                          )
+                          knoraResourceProperties =
+                            propertyIrisOfAllCardinalities.filter(isKnoraResourceProperty(_, cacheData)),
+                          linkProperties = propertyIrisOfAllCardinalities.filter(isLinkProp(_, cacheData)),
+                          linkValueProperties = propertyIrisOfAllCardinalities.filter(isLinkValueProp(_, cacheData)),
+                          fileValueProperties = propertyIrisOfAllCardinalities.filter(isFileValueProp(_, cacheData))
                         )
 
         // Add the cardinalities to the class definition in the triplestore.
@@ -1389,7 +1386,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] =
           newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .addCardinalitiesToClass(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -1475,209 +1472,196 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   /**
    * Replaces a class's cardinalities with new ones.
    *
-   * @param changeCardinalitiesRequest the request to add the cardinalities.
+   * @param request the [[ReplaceCardinalitiesRequestV2]] defining the cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  private def changeClassCardinalities(
-    changeCardinalitiesRequest: ChangeCardinalitiesRequestV2
-  ): Future[ReadOntologyV2] = {
-    def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
+  def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
+    val taskFuture: () => Future[ReadOntologyV2] = () =>
       for {
-        cacheData <- Cache.getCacheData
-        internalClassDef: ClassInfoContentV2 =
-          changeCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
-
-        // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
-               appActor,
-               internalOntologyIri = internalOntologyIri,
-               expectedLastModificationDate = changeCardinalitiesRequest.lastModificationDate
-             )
-
-        // Check that the class's rdf:type is owl:Class.
-
-        rdfType: SmartIri = internalClassDef.requireIriObject(
-                              OntologyConstants.Rdf.Type.toSmartIri,
-                              throw BadRequestException(s"No rdf:type specified")
-                            )
-
-        _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
-              throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
-            }
-
-        // Check that the class exists.
-
-        ontology = cacheData.ontologies(internalOntologyIri)
-
-        existingClassDef: ClassInfoContentV2 =
-          ontology.classes
-            .getOrElse(
-              internalClassIri,
-              throw BadRequestException(s"Class ${changeCardinalitiesRequest.classInfoContent.classIri} does not exist")
-            )
-            .entityInfoContent
-
-        // Check that the class isn't used in data, and that it has no subclasses.
-        // TODO: If class is used in data, check additionally if the property(ies) being removed is(are) truly used and if not, then allow.
-
-        _ <- iriService.throwIfEntityIsUsed(
-               entityIri = internalClassIri,
-               ignoreKnoraConstraints = true,
-               errorFun = throw BadRequestException(
-                 s"The cardinalities of class ${changeCardinalitiesRequest.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"
-               )
-             )
-
-        // Make an updated class definition.
-
-        newInternalClassDef = existingClassDef.copy(
-                                directCardinalities = internalClassDef.directCardinalities
-                              )
-
-        // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
-
-        allBaseClassIrisWithoutInternal: Seq[SmartIri] = newInternalClassDef.subClassOf.toSeq.flatMap { baseClassIri =>
-                                                           cacheData.subClassOfRelations.getOrElse(
-                                                             baseClassIri,
-                                                             Seq.empty[SmartIri]
-                                                           )
-                                                         }
-
-        allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
-
-        (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
-          OntologyHelpers
-            .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
-              internalClassDef = newInternalClassDef,
-              allBaseClassIris = allBaseClassIris.toSet,
-              cacheData = cacheData
-            )
-            .fold(e => throw e.head, v => v)
-
-        // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-        _ = Cache.checkOntologyReferencesInClassDef(
-              ontologyCacheData = cacheData,
-              classDef = newInternalClassDefWithLinkValueProps,
-              errorFun = { msg: String =>
-                throw BadRequestException(msg)
-              }
-            )
-
-        // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
-        // isn't any text to escape in cardinalities.)
-
-        propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
-
-        inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
-          cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
-            newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
-          }
-
-        readClassInfo = ReadClassInfoV2(
-                          entityInfoContent = newInternalClassDefWithLinkValueProps,
-                          allBaseClasses = allBaseClassIris,
-                          isResourceClass = true,
-                          canBeInstantiated = true,
-                          inheritedCardinalities = inheritedCardinalities,
-                          knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData)
-                          ),
-                          linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isLinkProp(propertyIri, cacheData)
-                          ),
-                          linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isLinkValueProp(propertyIri, cacheData)
-                          ),
-                          fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isFileValueProp(propertyIri, cacheData)
-                          )
-                        )
-
-        // Add the cardinalities to the class definition in the triplestore.
-
-        currentTime: Instant = Instant.now
-
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .replaceClassCardinalities(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           classIri = internalClassIri,
-                           newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
-                           lastModificationDate = changeCardinalitiesRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- appActor.ask(SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
-
-        // Check that the ontology's last modification date was updated.
-
-        _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
-               appActor,
-               internalOntologyIri = internalOntologyIri,
-               expectedLastModificationDate = currentTime
-             )
-
-        // Check that the data that was saved corresponds to the data that was submitted.
-
-        loadedClassDef <- OntologyHelpers.loadClassDefinition(
-                            appActor,
-                            classIri = internalClassIri
-                          )
-
-        _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
-              throw InconsistentRepositoryDataException(
-                s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved"
-              )
-            }
-
-        // Update the cache.
-
-        updatedOntology = ontology.copy(
-                            ontologyMetadata = ontology.ontologyMetadata.copy(
-                              lastModificationDate = Some(currentTime)
-                            ),
-                            classes = ontology.classes + (internalClassIri -> readClassInfo)
-                          )
-
-        _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
-
-        // Read the data back from the cache.
-
-        response <- getClassDefinitionsFromOntologyV2(
-                      classIris = Set(internalClassIri),
-                      allLanguages = true,
-                      requestingUser = changeCardinalitiesRequest.requestingUser
-                    )
+        newReadClassInfo <- makeUpdatedClassModel(request)
+        _                <- checkPreconditions(request)
+        response         <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
       } yield response
-    }
 
+    val classIriExternal    = request.classInfoContent.classIri
+    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
     for {
-      requestingUser <- FastFuture.successful(changeCardinalitiesRequest.requestingUser)
-
-      externalClassIri    = changeCardinalitiesRequest.classInfoContent.classIri
-      externalOntologyIri = externalClassIri.getOntologyFromEntity
-
       _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
-             externalOntologyIri = externalOntologyIri,
-             externalEntityIri = externalClassIri,
-             requestingUser = requestingUser
+             externalOntologyIri = ontologyIriExternal,
+             externalEntityIri = classIriExternal,
+             requestingUser = request.requestingUser
            )
+      response <- IriLocker.runWithIriLock(request.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, taskFuture)
+    } yield response
+  }
 
-      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+  // Make an updated class definition.
+  // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
+  // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
+  private def makeUpdatedClassModel(request: ReplaceCardinalitiesRequestV2): Future[ReadClassInfoV2] = {
+    val newClassInfo        = checkRdfTypeOfClassIsClass(request.classInfoContent.toOntologySchema(InternalSchema))
+    val classIriExternal    = newClassInfo.classIri
+    val classIri            = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIriExternal = classIri.getOntologyFromEntity
+    val ontologyIri         = ontologyIriExternal.toOntologySchema(InternalSchema)
+    for {
+      cacheData <- OntologyLegacyRepo.getCache
+      oldClassInfo <-
+        OntologyLegacyRepo
+          .findClassBy(classIri, ontologyIri)
+          .map(_.getOrElse(throw BadRequestException(s"Class $ontologyIriExternal does not exist")).entityInfoContent)
 
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      apiRequestID = changeCardinalitiesRequest.apiRequestID,
-                      iri = ONTOLOGY_CACHE_LOCK_IRI,
-                      task = () =>
-                        makeTaskFuture(
-                          internalClassIri = internalClassIri,
-                          internalOntologyIri = internalOntologyIri
-                        )
-                    )
-    } yield taskResult
+      // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
+      newInternalClassDef = oldClassInfo.copy(directCardinalities = newClassInfo.directCardinalities)
+      allBaseClassIrisWithoutInternal: Seq[SmartIri] = newInternalClassDef.subClassOf.toSeq.flatMap { baseClassIri =>
+                                                         cacheData.subClassOfRelations.getOrElse(
+                                                           baseClassIri,
+                                                           Seq.empty[SmartIri]
+                                                         )
+                                                       }
+
+      allBaseClassIris: Seq[SmartIri] = classIri +: allBaseClassIrisWithoutInternal
+
+      (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
+        OntologyHelpers
+          .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
+            internalClassDef = newInternalClassDef,
+            allBaseClassIris = allBaseClassIris.toSet,
+            cacheData = cacheData
+          )
+          .fold(e => throw e.head, v => v)
+
+      // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
+      _ = Cache.checkOntologyReferencesInClassDef(
+            cache = cacheData,
+            classDef = newInternalClassDefWithLinkValueProps,
+            errorFun = { msg: String =>
+              throw BadRequestException(msg)
+            }
+          )
+
+      // Build the model
+      inheritedCardinalities = cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
+                                 newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
+                               }
+      propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+      knoraResourceProperties                = propertyIrisOfAllCardinalitiesForClass.filter(isKnoraResourceProperty(_, cacheData))
+      linkProperties                         = propertyIrisOfAllCardinalitiesForClass.filter(isLinkProp(_, cacheData))
+      linkValueProperties                    = propertyIrisOfAllCardinalitiesForClass.filter(isLinkValueProp(_, cacheData))
+      fileValueProperties                    = propertyIrisOfAllCardinalitiesForClass.filter(isFileValueProp(_, cacheData))
+    } yield ReadClassInfoV2(
+      entityInfoContent = newInternalClassDefWithLinkValueProps,
+      allBaseClasses = allBaseClassIris,
+      isResourceClass = true,
+      canBeInstantiated = true,
+      inheritedCardinalities = inheritedCardinalities,
+      knoraResourceProperties = knoraResourceProperties,
+      linkProperties = linkProperties,
+      linkValueProperties = linkValueProperties,
+      fileValueProperties = fileValueProperties
+    )
+  }
+
+  private def checkRdfTypeOfClassIsClass(classInfo: ClassInfoContentV2): ClassInfoContentV2 = {
+    val rdfType: SmartIri = classInfo.requireIriObject(
+      OntologyConstants.Rdf.Type.toSmartIri,
+      throw BadRequestException(s"No rdf:type specified")
+    )
+    if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
+      throw BadRequestException(s"Invalid rdf:type of property: ${rdfType}.")
+    }
+    classInfo
+  }
+
+  private def checkPreconditions(request: ReplaceCardinalitiesRequestV2): Future[Unit] = {
+    val classIriExternal = request.classInfoContent.classIri
+    val classIri         = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIri      = classIri.getOntologyFromEntity
+    for {
+      _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+             appActor,
+             internalOntologyIri = ontologyIri,
+             expectedLastModificationDate = request.lastModificationDate
+           )
+      _ <- iriService.throwIfEntityIsUsed(
+             entityIri = classIri,
+             ignoreKnoraConstraints = true,
+             errorFun = throw BadRequestException(
+               s"The cardinalities of class $classIriExternal cannot be changed, because it is used in data or has a subclass."
+             )
+           )
+    } yield ()
+  }
+
+  private def replaceClassCardinalitiesInPersistence(
+    request: ReplaceCardinalitiesRequestV2,
+    newReadClassInfo: ReadClassInfoV2
+  ): Future[ReadOntologyV2] = {
+    val timeOfUpdate = Instant.now()
+    val classIri     = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
+    for {
+      _ <- replaceClassCardinalitiesInTripleStore(request, newReadClassInfo, timeOfUpdate)
+      _ <- replaceClassCardinalitiesInOntologyCache(request, newReadClassInfo, timeOfUpdate)
+      // Return the response with the new data from the cache
+      response <- getClassDefinitionsFromOntologyV2(
+                    classIris = Set(classIri),
+                    allLanguages = true,
+                    requestingUser = request.requestingUser
+                  )
+    } yield response
+  }
+
+  private def replaceClassCardinalitiesInTripleStore(
+    request: ReplaceCardinalitiesRequestV2,
+    newReadClassInfo: ReadClassInfoV2,
+    timeOfUpdate: Instant
+  ): Future[Unit] = {
+    val classIri    = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
+    val ontologyIri = classIri.getOntologyFromEntity
+    val updateSparql = twirl.queries.sparql.v2.txt
+      .replaceClassCardinalities(
+        ontologyNamedGraphIri = ontologyIri,
+        ontologyIri = ontologyIri,
+        classIri = classIri,
+        newCardinalities = newReadClassInfo.entityInfoContent.directCardinalities,
+        lastModificationDate = request.lastModificationDate,
+        currentTime = timeOfUpdate
+      )
+      .toString()
+    for {
+      _ <- appActor.ask(SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+      _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
+             appActor,
+             internalOntologyIri = ontologyIri,
+             expectedLastModificationDate = timeOfUpdate
+           )
+      loadedClassDef <- OntologyHelpers.loadClassDefinition(appActor, classIri)
+      _ = if (loadedClassDef != newReadClassInfo.entityInfoContent) {
+            throw InconsistentRepositoryDataException(
+              s"Attempted to save class definition ${newReadClassInfo.entityInfoContent}, but $loadedClassDef was saved instead."
+            )
+          }
+    } yield ()
+  }
+
+  private def replaceClassCardinalitiesInOntologyCache(
+    request: ReplaceCardinalitiesRequestV2,
+    newReadClassInfo: ReadClassInfoV2,
+    timeOfUpdate: Instant
+  ): Future[Unit] = {
+    val classIriExternal    = request.classInfoContent.classIri
+    val classIri            = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
+    val ontologyIri         = classIri.getOntologyFromEntity
+    for {
+      ontology <- OntologyLegacyRepo
+                    .findOntologyBy(ontologyIri)
+                    .map(_.getOrElse(throw BadRequestException(s"Ontology $ontologyIriExternal does not exist.")))
+      updatedOntologyMetaData = ontology.ontologyMetadata.copy(lastModificationDate = Some(timeOfUpdate))
+      updatedOntologyClasses  = ontology.classes + (classIri -> newReadClassInfo)
+      updatedOntology         = ontology.copy(ontologyMetadata = updatedOntologyMetaData, classes = updatedOntologyClasses)
+      _                      <- Cache.cacheUpdatedOntologyWithClass(ontologyIri, updatedOntology, classIri)
+    } yield ()
   }
 
   /**
@@ -1826,7 +1810,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .deleteClass(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -1991,7 +1975,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .deleteProperty(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -2115,7 +2099,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Delete everything in the ontology's named graph.
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .deleteOntology(
                            ontologyNamedGraphIri = internalOntologyIri
                          )
@@ -2205,11 +2189,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         knoraSuperProperties = internalPropertyDef.subPropertyOf.filter(_.isKnoraInternalEntityIri)
         invalidSuperProperties = knoraSuperProperties.filterNot(baseProperty =>
-                                   OntologyHelpers
-                                     .isKnoraResourceProperty(
-                                       baseProperty,
-                                       cacheData
-                                     ) && baseProperty.toString != OntologyConstants.KnoraBase.ResourceProperty
+                                   isKnoraResourceProperty(
+                                     baseProperty,
+                                     cacheData
+                                   ) && baseProperty.toString != OntologyConstants.KnoraBase.ResourceProperty
                                  )
 
         _ = if (invalidSuperProperties.nonEmpty) {
@@ -2372,7 +2355,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .createProperty(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -2557,7 +2540,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         newGuiAttributeIris =
           changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changePropertyGuiElement(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -2565,7 +2548,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                            maybeLinkValuePropertyIri =
                              maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
                            maybeNewGuiElement = newGuiElementIri,
-                           newGuiAttributes = newGuiAttributeIris.toSet,
+                           newGuiAttributes = newGuiAttributeIris,
                            lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
                            currentTime = currentTime
                          )
@@ -2774,7 +2757,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changePropertyLabelsOrComments(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -2952,7 +2935,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql = twirl.queries.sparql.v2.txt
                          .changeClassLabelsOrComments(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
@@ -3054,7 +3037,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   /**
    * Delete the `rdfs:comment` in a property definition.
    *
-   * @param deletePropertyCommentRequestV2 the request to delete the property's comment
+   * @param deletePropertyCommentRequest the request to delete the property's comment
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
   private def deletePropertyComment(
@@ -3102,7 +3085,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         currentTime: Instant = Instant.now
 
         // Delete the comment
-        updateSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql: String = twirl.queries.sparql.v2.txt
                                  .deletePropertyComment(
                                    ontologyNamedGraphIri = internalOntologyIri,
                                    ontologyIri = internalOntologyIri,
@@ -3269,7 +3252,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   /**
    * Delete the `rdfs:comment` in a class definition.
    *
-   * @param deleteClassCommentRequestV2 the request to delete the class' comment
+   * @param deleteClassCommentRequest the request to delete the class' comment
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
   private def deleteClassComment(
@@ -3294,7 +3277,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         currentTime: Instant = Instant.now
 
         // Delete the comment
-        updateSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        updateSparql: String = twirl.queries.sparql.v2.txt
                                  .deleteClassComment(
                                    ontologyNamedGraphIri = internalOntologyIri,
                                    ontologyIri = internalOntologyIri,

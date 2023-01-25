@@ -4,14 +4,28 @@
  */
 
 package org.knora.webapi.core
+
 import zio._
 import zio.http._
+import zio.http.middleware.Cors
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 
 object HttpServerZ {
+
+  private val corsMiddleware =
+    for {
+      config <- ZIO.service[AppConfig]
+      corsConfig =
+        Cors.CorsConfig(
+          anyOrigin = false,
+          allowedOrigins = { origin =>
+            config.httpServer.corsAllowedOrigins.contains(origin)
+          }
+        )
+    } yield Middleware.cors(corsConfig)
 
   private val apiRoutes: URIO[ProjectsRouteZ with ResourceInfoRoute, HttpApp[Any, Nothing]] = for {
     projectsRoute <- ZIO.service[ProjectsRouteZ].map(_.route)
@@ -22,8 +36,9 @@ object HttpServerZ {
     for {
       port        <- ZIO.service[AppConfig].map(_.knoraApi.externalZioPort)
       routes      <- apiRoutes
+      cors        <- corsMiddleware
       serverConfig = ZLayer.succeed(ServerConfig.default.port(port))
-      _           <- Server.serve(routes).provide(Server.live, serverConfig).forkDaemon
+      _           <- Server.serve(routes @@ cors).provide(Server.live, serverConfig).forkDaemon
       _           <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
     } yield ()
   }
