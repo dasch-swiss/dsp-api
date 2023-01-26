@@ -24,7 +24,7 @@ sealed trait Cardinality {
    * is included in its entire range of possible values.
    *
    * @param other The cardinality to be compared against.
-   * @return `true` if this cardinality is include in the `other`, `false` otherwise.
+   * @return `true` if this cardinality is included in the `other`, `false` otherwise.
    */
   def isIncludedIn(other: Cardinality): Boolean = {
     val lowerBoundIsIncluded = this.min >= other.min && other.max.forall(this.min <= _)
