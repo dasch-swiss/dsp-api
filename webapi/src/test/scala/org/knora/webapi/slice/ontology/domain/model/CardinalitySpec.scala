@@ -51,7 +51,7 @@ object CardinalitySpec extends ZIOSpecDefault {
           assertTrue(other.isIncludedIn(Unbounded))
         }
       },
-      test(s"AtLeastOne '$AtLeastOne' is not included in: ZeroOrOne '$ZeroOrOne', ExactlyOne '$ExactlyOne'") {
+      test(s"AtLeastOne '$AtLeastOne' is NOT included in: ZeroOrOne '$ZeroOrOne', ExactlyOne '$ExactlyOne'") {
         check(cardinalitiesGen(ZeroOrOne, ExactlyOne)) { other =>
           assertTrue(AtLeastOne.isNotIncludedIn(other))
         }
