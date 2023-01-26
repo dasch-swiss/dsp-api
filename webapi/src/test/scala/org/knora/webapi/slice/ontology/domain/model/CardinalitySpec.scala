@@ -25,7 +25,7 @@ object CardinalitySpec extends ZIOSpecDefault {
       if (length == 0) {
         throw new IllegalArgumentException("The parameter cardinalities may not be an empty Array.")
       } else {
-        Random.nextIntBetween(0, length).map(i => candidates(i))
+        Random.nextIntBetween(0, length).map(candidates(_))
       }
     }
   }
