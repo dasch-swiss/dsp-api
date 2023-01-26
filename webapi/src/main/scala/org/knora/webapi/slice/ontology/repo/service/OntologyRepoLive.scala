@@ -51,7 +51,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
   private def findClassBy(classIri: SmartIri, cache: OntologyCacheData): Option[ReadClassInfoV2] =
     _findByClassIri(classIri, cache).flatMap(_.classes.get(classIri))
 
-  override def findSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] =
+  override def findDirectSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] =
     for {
       classIri <- converter.asInternalSmartIri(classIri)
       cache    <- ontologyCache.get

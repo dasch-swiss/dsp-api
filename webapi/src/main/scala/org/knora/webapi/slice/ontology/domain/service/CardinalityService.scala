@@ -197,7 +197,7 @@ final case class CardinalityServiceLive(
   }
 
   private def subclassCheck(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality) = {
-    val subclasses                       = ontologyRepo.findSubclassesBy(classIri)
+    val subclasses                       = ontologyRepo.findDirectSubclassesBy(classIri)
     val subclassCardinalityIsNotIncluded = (other: Cardinality) => other.isNotIncludedIn(newCardinality)
     canSetCheckFor(subclasses, propertyIri, subclassCardinalityIsNotIncluded, SubClassCheckFailure)
   }
