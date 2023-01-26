@@ -470,7 +470,7 @@ Characters provided by the user that have a special meaning in the Lucene Query 
 syntax are replaced by a whitespace character for this search. If a user types "Zeit-Glöcklein" 
 it is interpreted as "Zeit Glöcklein". Whitespace is normalized afterwards. The special
 characters that are replaced are: 
-`+`, `-`, `&`, `|`, `!`, `(`, `)`, `[`, `]`, `{`, `}`, `^`, `"`, `~`, `*`, `?`, `:`, `\`
+`+`, `-`, `&`, `|`, `!`, `(`, `)`, `[`, `]`, `{`, `}`, `^`, `"`, `~`, `*`, `?`, `:`, `\`, `/`
 
 If the `rdfs:label` of a resource contains a special character, it is found nonetheless.
 
