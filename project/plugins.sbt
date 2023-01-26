@@ -6,12 +6,12 @@ resolvers ++= Seq(
 //addDependencyTreePlugin
 
 addSbtPlugin("com.github.sbt"    % "sbt-git"             % "2.0.1")
-addSbtPlugin("com.github.sbt"    % "sbt-native-packager" % "1.9.9")
+addSbtPlugin("com.github.sbt"    % "sbt-native-packager" % "1.9.13")
 addSbtPlugin("io.kamon"          % "sbt-aspectj-runner"  % "1.1.2")
-addSbtPlugin("com.typesafe.sbt"  % "sbt-twirl"           % "1.5.1")
+addSbtPlugin("com.typesafe.play" % "sbt-twirl"           % "1.5.2")
 addSbtPlugin("com.eed3si9n"      % "sbt-assembly"        % "2.1.0")
 addSbtPlugin("com.lightbend.sbt" % "sbt-javaagent"       % "0.1.6")
-addSbtPlugin("org.scoverage"     % "sbt-scoverage"       % "1.9.3")
+addSbtPlugin("org.scoverage"     % "sbt-scoverage"       % "2.0.6")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo"       % "0.11.0")
 addSbtPlugin("org.scalameta"     % "sbt-scalafmt"        % "2.5.0")
 addSbtPlugin("ch.epfl.scala"     % "sbt-scalafix"        % "0.10.4")
