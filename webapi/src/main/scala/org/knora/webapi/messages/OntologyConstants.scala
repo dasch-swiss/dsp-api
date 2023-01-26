@@ -1106,21 +1106,21 @@ object OntologyConstants {
       KnoraApiV2Simple.ListNode           -> KnoraBase.ListValue
     ),
     (ApiV2Complex, InternalSchema) -> Map(
-      KnoraApiV2Complex.SubjectType                   -> KnoraBase.SubjectClassConstraint,
-      KnoraApiV2Complex.ObjectType                    -> KnoraBase.ObjectClassConstraint,
-      KnoraApiV2Complex.UriValueAsUri                 -> KnoraBase.ValueHasUri,
-      KnoraApiV2Complex.IntValueAsInt                 -> KnoraBase.ValueHasInteger,
-      KnoraApiV2Complex.DecimalValueAsDecimal         -> KnoraBase.ValueHasDecimal,
-      KnoraApiV2Complex.BooleanValueAsBoolean         -> KnoraBase.ValueHasBoolean,
-      KnoraApiV2Complex.IntervalValueHasStart         -> KnoraBase.ValueHasIntervalStart,
-      KnoraApiV2Complex.IntervalValueHasEnd           -> KnoraBase.ValueHasIntervalEnd,
-      KnoraApiV2Complex.TimeValueAsTimeStamp          -> KnoraBase.ValueHasTimeStamp,
-      KnoraApiV2Complex.ValueAsString                 -> KnoraBase.ValueHasString,
-      KnoraApiV2Complex.TextValueHasLanguage          -> KnoraBase.ValueHasLanguage,
-      KnoraApiV2Complex.ListValueAsListNode           -> KnoraBase.ValueHasListNode,
-      KnoraApiV2Complex.GeonameValueAsGeonameCode     -> KnoraBase.ValueHasGeonameCode,
-      KnoraApiV2Complex.ColorValueAsColor             -> KnoraBase.ValueHasColor,
-      KnoraApiV2Complex.TextValueHasStandoff          -> KnoraBase.ValueHasStandoff,
+      KnoraApiV2Complex.SubjectType               -> KnoraBase.SubjectClassConstraint,
+      KnoraApiV2Complex.ObjectType                -> KnoraBase.ObjectClassConstraint,
+      KnoraApiV2Complex.UriValueAsUri             -> KnoraBase.ValueHasUri,
+      KnoraApiV2Complex.IntValueAsInt             -> KnoraBase.ValueHasInteger,
+      KnoraApiV2Complex.DecimalValueAsDecimal     -> KnoraBase.ValueHasDecimal,
+      KnoraApiV2Complex.BooleanValueAsBoolean     -> KnoraBase.ValueHasBoolean,
+      KnoraApiV2Complex.IntervalValueHasStart     -> KnoraBase.ValueHasIntervalStart,
+      KnoraApiV2Complex.IntervalValueHasEnd       -> KnoraBase.ValueHasIntervalEnd,
+      KnoraApiV2Complex.TimeValueAsTimeStamp      -> KnoraBase.ValueHasTimeStamp,
+      KnoraApiV2Complex.ValueAsString             -> KnoraBase.ValueHasString,
+      KnoraApiV2Complex.TextValueHasLanguage      -> KnoraBase.ValueHasLanguage,
+      KnoraApiV2Complex.ListValueAsListNode       -> KnoraBase.ValueHasListNode,
+      KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
+      KnoraApiV2Complex.ColorValueAsColor         -> KnoraBase.ValueHasColor,
+      KnoraApiV2Complex.TextValueHasStandoff      -> KnoraBase.ValueHasStandoff
     )
   )
 
