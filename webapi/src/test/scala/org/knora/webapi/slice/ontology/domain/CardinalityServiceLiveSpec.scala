@@ -28,7 +28,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.allCardinalities
+import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.BaseClassCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CanSetCheckSuccess
@@ -42,17 +42,6 @@ import org.knora.webapi.store.triplestore.TestDatasetBuilder._
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
-
-  def cardinalitiesGen(cardinalities: Cardinality*): Gen[Any, Cardinality] = Gen.fromZIO {
-    val candidates: Array[Cardinality] = if (cardinalities != Nil) { cardinalities.toArray }
-    else { allCardinalities }
-    val length = candidates.length
-    if (length == 0) {
-      throw new IllegalArgumentException()
-    } else {
-      Random.nextIntBetween(0, length).map(i => candidates(i))
-    }
-  }
 
   private object IsPropertyUsedInResourcesTestData {
 

@@ -152,7 +152,7 @@ final case class CardinalityServiceLive(
       propSmartIri          <- iriConverter.asInternalSmartIri(propertyIri)
       classInfoMaybe        <- ontologyRepo.findClassBy(classIri)
       inheritedCardinalities = classInfoMaybe.flatMap(_.inheritedCardinalities.get(propSmartIri)).map(_.cardinality)
-    } yield inheritedCardinalities.forall(_.isStricterThan(newCardinality))
+    } yield inheritedCardinalities.forall(newCardinality.isNotIncludedIn)
 
   /**
    * Checks if a specific cardinality may be replaced.

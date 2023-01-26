@@ -18,17 +18,31 @@ sealed trait Cardinality {
   def max: Option[Int]
 
   /**
-   * Checks whether a cardinality is stricter than another one.
+   * Checks whether a cardinality is included in another one.
+   *
+   * A [[Cardinality]] includes another cardinality if and only if the other cardinality
+   * is included in its entire range of possible values.
    *
    * @param other The cardinality to be compared against.
-   * @return `true` if this cardinality is stricter than the `other`, `false` otherwise.
+   * @return `true` if this cardinality is include in the `other`, `false` otherwise.
    */
-  def isStricterThan(other: Cardinality): Boolean =
-    (other.min, this.min, other.max, this.max) match {
-      case (otherMin, thisMin, _, _) if otherMin < thisMin => true
-      case (_, _, otherMax, Some(thisMax))                 => otherMax.forall(_ > thisMax)
-      case _                                               => false
+  def isIncludedIn(other: Cardinality): Boolean = {
+    val lowerBoundIsIncluded = this.min >= other.min && other.max.forall(this.min <= _)
+    lazy val upperBoundIsIncluded = (this.max, other.max) match {
+      case (_, None)                       => true
+      case (None, Some(_))                 => false
+      case (Some(thisMax), Some(otherMax)) => thisMax >= other.min && thisMax <= otherMax
     }
+    lowerBoundIsIncluded && upperBoundIsIncluded
+  }
+
+  /**
+   * Negated check for [[org.knora.webapi.slice.ontology.domain.model.Cardinality#isIncludedIn(org.knora.webapi.slice.ontology.domain.model.Cardinality)]]
+   *
+   * @param other The cardinality to be compared against.
+   * @return `true` if this cardinality is not include in the `other`, `false` otherwise.
+   */
+  def isNotIncludedIn(other: Cardinality): Boolean = !isIncludedIn(other)
 
   def getIntersection(other: Cardinality): Option[Cardinality] = {
     val lower = math.max(this.min, other.min)
