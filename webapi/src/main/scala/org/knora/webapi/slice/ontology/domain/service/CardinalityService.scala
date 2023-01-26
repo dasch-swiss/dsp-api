@@ -196,8 +196,15 @@ final case class CardinalityServiceLive(
     canSetCheckFor(superClasses, propertyIri, newCardinalityIsNotIncluded, SuperClassCheckFailure)
   }
 
+  private def toClassIris(subclasses: List[ReadClassInfoV2]): List[InternalIri] =
+    subclasses.map(_.entityInfoContent.classIri.toInternalIri)
+
   private def subclassCheck(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality) = {
-    val subclasses                       = ontologyRepo.findDirectSubclassesBy(classIri)
+    val subclasses =
+      for {
+        subclasses <- ontologyRepo.findAllSubclassesBy(classIri)
+        superC     <- ontologyRepo.findAllSuperClassesBy(toClassIris(subclasses))
+      } yield subclasses ::: superC
     val subclassCardinalityIsNotIncluded = (other: Cardinality) => other.isNotIncludedIn(newCardinality)
     canSetCheckFor(subclasses, propertyIri, subclassCardinalityIsNotIncluded, SubClassCheckFailure)
   }
@@ -207,7 +214,7 @@ final case class CardinalityServiceLive(
     propertyIri: InternalIri,
     predicate: Cardinality => Boolean,
     errorFactory: List[InternalIri] => CanSetCardinalityCheckResult.Failure
-  ) =
+  ): ZIO[Any, Throwable, Either[CanSetCardinalityCheckResult.Failure, CanSetCardinalityCheckResult.Success.type]] =
     getClasses
       .flatMap(filterPropertyCardinalityIsCompatible(propertyIri, predicate))
       .map {
