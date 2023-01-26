@@ -86,6 +86,7 @@ for file_index, file_params in pairs(server.uploads) do
     local file_info = get_file_info(original_filename, mime_type)
     
     if file_info == nil then
+        server.log("file_info appears to be nil for: " .. tostring(original_filename))
         send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
         return
     end
