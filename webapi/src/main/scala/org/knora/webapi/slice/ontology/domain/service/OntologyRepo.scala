@@ -5,14 +5,11 @@
 
 package org.knora.webapi.slice.ontology.domain.service
 
-import zio.Task
-import zio.ZIO
-import zio.macros.accessible
-
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.{ReadClassInfoV2, ReadOntologyV2}
 import org.knora.webapi.slice.common.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import zio.{Task, ZIO}
+import zio.macros.accessible
 
 @accessible
 trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
@@ -23,13 +20,7 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findClassBy(classIri: InternalIri): Task[Option[ReadClassInfoV2]]
 
-  def findClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]] =
-    ZIO.foreach(classIris)(findClassBy).map(_.flatten)
-
   def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
-
-  def findDirectSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]] =
-    ZIO.foreach(classIris)(findDirectSuperClassesBy).map(_.flatten)
 
   def findAllSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
