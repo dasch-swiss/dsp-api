@@ -1720,7 +1720,7 @@ class StringFormatter private (
    * @return   the normalized string
    */
   def replaceLuceneQueryParserSyntaxCharacters(s: String): String = {
-    val stringWithoutSpecialCharacters = s.replaceAll("[\\+\\-&\\|!\\(\\)\\{\\}\\[\\]\\^\"~\\*\\?:\\\\]", " ")
+    val stringWithoutSpecialCharacters = s.replaceAll("[\\/\\+\\-&\\|!\\(\\)\\{\\}\\[\\]\\^\"~\\*\\?:\\\\]", " ")
     StringUtils.normalizeSpace(stringWithoutSpecialCharacters)
   }
 
