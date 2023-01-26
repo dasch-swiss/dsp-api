@@ -163,20 +163,6 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       createOntologyWithSubClassCardinality(cardinality, ontologySmartIri, classIri, subClassIri, propertyIri)
     }
 
-    def createOntologyWithSubClassCardinality(
-      cardinality: Cardinality,
-      ontologyIntIri: InternalIri,
-      classIntIri: InternalIri,
-      subClassIntIri: InternalIri,
-      propertyIntIri: InternalIri
-    ): DataCreated = {
-      val ontologyIri = sf.toSmartIri(ontologyIntIri.value, requireInternal = true)
-      val classIri    = sf.toSmartIri(classIntIri.value, requireInternal = true)
-      val subClassIri = sf.toSmartIri(subClassIntIri.value, requireInternal = true)
-      val propertyIri = sf.toSmartIri(propertyIntIri.value, requireInternal = true)
-      createOntologyWithSubClassCardinality(cardinality, ontologyIri, classIri, subClassIri, propertyIri)
-    }
-
     private def createOntologyWithSubClassCardinality(
       cardinality: Cardinality,
       ontologyIri: SmartIri,
