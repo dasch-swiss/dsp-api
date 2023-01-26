@@ -26,10 +26,20 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
   def findClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]] =
     ZIO.foreach(classIris)(findClassBy).map(_.flatten)
 
-  def findSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] =
-    findClassBy(classIri)
-      .map(_.toList.flatMap(_.allBaseClasses.map(_.toInternalIri)))
-      .flatMap(findClassesBy)
+  def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
+
+  def findDirectSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]] =
+    ZIO.foreach(classIris)(findDirectSuperClassesBy).map(_.flatten)
+
+  def findAllSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
+
+  def findAllSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]] =
+    ZIO.foreach(classIris)(findAllSuperClassesBy).map(_.flatten)
+
+  private def getSuperClassIris(readClassInfoV2: ReadClassInfoV2): List[InternalIri] = {
+    val iris: List[InternalIri] = readClassInfoV2.allBaseClasses.map(_.toInternalIri).toList
+    iris
+  }
 
   def findSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 }

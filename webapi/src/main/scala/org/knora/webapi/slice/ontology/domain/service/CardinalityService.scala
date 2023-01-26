@@ -191,14 +191,14 @@ final case class CardinalityServiceLive(
     } yield joinOnLeft(a, b)
 
   private def superClassCheck(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality) = {
-    val superClasses                = ontologyRepo.findSuperClassesBy(classIri)
-    val newCardinalityIsNotIncluded = (other: Cardinality) => !newCardinality.isIncludedIn(other)
+    val superClasses                = ontologyRepo.findAllSuperClassesBy(classIri)
+    val newCardinalityIsNotIncluded = (other: Cardinality) => newCardinality.isNotIncludedIn(other)
     canSetCheckFor(superClasses, propertyIri, newCardinalityIsNotIncluded, SuperClassCheckFailure)
   }
 
   private def subclassCheck(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality) = {
     val subclasses                       = ontologyRepo.findSubclassesBy(classIri)
-    val subclassCardinalityIsNotIncluded = (other: Cardinality) => !other.isIncludedIn(newCardinality)
+    val subclassCardinalityIsNotIncluded = (other: Cardinality) => other.isNotIncludedIn(newCardinality)
     canSetCheckFor(subclasses, propertyIri, subclassCardinalityIsNotIncluded, SubClassCheckFailure)
   }
 

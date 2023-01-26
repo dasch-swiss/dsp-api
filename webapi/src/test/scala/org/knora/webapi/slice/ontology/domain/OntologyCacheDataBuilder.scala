@@ -3,6 +3,7 @@ package org.knora.webapi.slice.ontology.domain
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
@@ -12,7 +13,9 @@ import org.knora.webapi.responders.v2.ontology.Cache._
 import org.knora.webapi.slice.ontology.domain.ReadClassInfoV2Builder.ClassInfoContentV2Builder.BuilderClassInfoContentV2Builder
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIriKeyMap
+import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromInternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object SmartIriConversion {
 
@@ -22,6 +25,15 @@ object SmartIriConversion {
 
   implicit class BetterSmartIriKeyMap[V](iris: Map[SmartIri, V]) {
     def internal: Map[SmartIri, V] = iris.map { case (a, b) => (a.internal, b) }
+  }
+
+  implicit class TestSmartIriFromInternalIri(internalIri: InternalIri) {
+    private implicit val sf: StringFormatter = {
+      StringFormatter.initForTest()
+      StringFormatter.getGeneralInstance
+    }
+
+    def smartIri: SmartIri = sf.toSmartIri(internalIri.value, requireInternal = true)
   }
 }
 
@@ -64,6 +76,10 @@ object ReadOntologyV2Builder {
     def toBuilder: Builder = Builder(rci)
   }
 
+  def builder(ontologyIri: InternalIri): Builder = Builder(
+    ReadOntologyV2(OntologyMetadataV2(ontologyIri.smartIri), Map.empty)
+  )
+
   def builder(ontologyIri: SmartIri): Builder = Builder(
     ReadOntologyV2(OntologyMetadataV2(ontologyIri.internal), Map.empty)
   )
@@ -88,11 +104,19 @@ object ReadClassInfoV2Builder {
 
     def setInheritedCardinalities(c: Map[SmartIri, KnoraCardinalityInfo]): Builder =
       copy(rci = rci.copy(inheritedCardinalities = c.internal))
+
+    def addSuperClass(classIri: InternalIri): Builder =
+      addSuperClass(classIri.smartIri)
+
+    def addSuperClass(classIri: SmartIri): Builder =
+      copy(rci = rci.copy(allBaseClasses = rci.allBaseClasses.prepended(classIri)))
   }
 
   implicit class BuilderReadClassInfoV2(rci: ReadClassInfoV2) {
     def toBuilder: Builder = Builder(rci)
   }
+
+  def builder(classIri: InternalIri): Builder = builder(classIri.smartIri)
 
   def builder(classIri: SmartIri): Builder = Builder(
     ReadClassInfoV2(ClassInfoContentV2Builder.builder(classIri).build, allBaseClasses = List.empty)

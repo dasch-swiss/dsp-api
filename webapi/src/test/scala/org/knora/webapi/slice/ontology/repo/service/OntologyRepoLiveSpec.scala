@@ -16,13 +16,21 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
+import org.knora.webapi.slice.ontology.domain.ReadClassInfoV2Builder
+import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Anything
+import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 
 object OntologyRepoLiveSpec extends ZIOSpecDefault {
 
-  private val sf                           = { StringFormatter.initForTest(); StringFormatter.getGeneralInstance }
+  private val sf = {
+    StringFormatter.initForTest()
+    StringFormatter.getGeneralInstance
+  }
   private val anUnknownInternalOntologyIri = InternalIri("http://www.knora.org/ontology/0001/anything")
   private val anUnknownClassIri            = InternalIri("http://www.knora.org/ontology/0001/anything#Thing")
 
@@ -81,6 +89,35 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             actual <- OntologyRepo.findAll()
           } yield assertTrue(actual == List(ontologyData))
         }
-      )
+      ),
+      suite("findAllSuperClassesBy") {
+        test("findAllSuperClassesBy multiple levels up across ontologies") {
+          val anythingOntologyDefinition = ReadOntologyV2Builder
+            .builder(Anything.Ontology)
+            .addClassInfo(ReadClassInfoV2Builder.builder(Anything.Class.Thing))
+          val biblioOntologyDefinition = ReadOntologyV2Builder
+            .builder(Biblio.Ontology)
+            .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Publication))
+            .addClassInfo(
+              ReadClassInfoV2Builder
+                .builder(Biblio.Class.Article)
+                .addSuperClass(Biblio.Class.Publication) // super-class Publication should be found
+                .addSuperClass(Anything.Class.Thing)     // super-class Thing should be found, defined in another ontology
+            )
+            .addClassInfo(
+              ReadClassInfoV2Builder
+                .builder(Biblio.Class.JournalArticle)
+                .addSuperClass(Biblio.Class.Article) // super-class Article should be found
+            )
+          val data = OntologyCacheDataBuilder.builder
+            .addOntology(anythingOntologyDefinition)
+            .addOntology(biblioOntologyDefinition)
+          for {
+            _         <- OntologyCacheFake.set(data.build).debug
+            actual    <- OntologyRepo.findAllSuperClassesBy(Biblio.Class.JournalArticle)
+            actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
+          } yield assertTrue(actualIris == List(Biblio.Class.Article, Anything.Class.Thing, Biblio.Class.Publication))
+        }
+      }
     ).provide(OntologyRepoLive.layer, OntologyCacheFake.emptyCache, IriConverter.layer, StringFormatter.test)
 }

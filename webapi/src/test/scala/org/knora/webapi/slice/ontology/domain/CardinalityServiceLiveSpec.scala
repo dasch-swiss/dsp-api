@@ -183,7 +183,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               .addClassInfo(
                 ReadClassInfoV2Builder
                   .builder(subClassIri)
-                  .setSuperClassIri(classIri)
+                  .addSuperClass(classIri)
                   .setDirectCardinalities(cardinalities)
               )
           )
