@@ -1936,7 +1936,7 @@ object OntologyHelpers {
             if (thisClassProp == baseClassProp || basePropsOfThisClassProp.contains(baseClassProp)) {
               // Yes. Is the directly defined one at least as restrictive as the inheritable one?
 
-              if (baseClassCardinality.cardinality.isStricterThan(thisClassCardinality.cardinality)) {
+              if (thisClassCardinality.cardinality.isNotIncludedIn(baseClassCardinality.cardinality)) {
                 // No. Throw an exception.
                 errorFun(
                   s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality '${thisClassCardinality.cardinality.toString}' on ${thisClassProp
