@@ -60,6 +60,9 @@ object OntologyCacheDataBuilder {
 
   def builder(ontologyIri: SmartIri): Builder = Builder(empty).addOntology(ReadOntologyV2Builder.builder(ontologyIri))
 
+  def cardinalitiesMap(propertyIri: InternalIri, cardinality: Cardinality): Map[SmartIri, KnoraCardinalityInfo] =
+    cardinalitiesMap(propertyIri.smartIri, cardinality)
+
   def cardinalitiesMap(propertyIri: SmartIri, cardinality: Cardinality): Map[SmartIri, KnoraCardinalityInfo] =
     Map(propertyIri.internal -> KnoraCardinalityInfo(cardinality))
 }

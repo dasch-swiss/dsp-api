@@ -19,6 +19,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CurrentClassFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.KnoraOntologyCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SubClassCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SuperClassCheckFailure
@@ -477,25 +478,28 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |does not include the new cardinality to be set
                 |then this is NOT possible
           """.stripMargin) {
-          val classIri    = CanWidenCardinalityTestData.thingSmartIri
-          val propertyIri = CanWidenCardinalityTestData.hasValueSmartIri
-          val d = OntologyCacheDataBuilder.builder
+          val propertyCardinality =
+            OntologyCacheDataBuilder.cardinalitiesMap(Anything.Property.hasOtherThing, Unbounded)
+          val data = OntologyCacheDataBuilder.builder
             .addOntology(
               ReadOntologyV2Builder
-                .builder(CanWidenCardinalityTestData.anythingOntologySmartIri)
+                .builder(Anything.Ontology)
                 .addClassInfo(
                   ReadClassInfoV2Builder
-                    .builder(classIri)
-                    .setDirectCardinalities(OntologyCacheDataBuilder.cardinalitiesMap(propertyIri, Unbounded))
+                    .builder(Anything.Class.Thing)
+                    .setDirectCardinalities(propertyCardinality)
                 )
             )
-            .build
           check(cardinalitiesGen(AtLeastOne, ZeroOrOne, ExactlyOne)) { newCardinality =>
             for {
-              _ <- OntologyCacheFake.set(d)
+              _ <- OntologyCacheFake.set(data.build)
               actual <-
-                CardinalityService.canSetCardinality(classIri.toInternalIri, propertyIri.toInternalIri, newCardinality)
-            } yield assertTrue(actual.isLeft)
+                CardinalityService.canSetCardinality(
+                  Anything.Class.Thing,
+                  Anything.Property.hasOtherThing,
+                  newCardinality
+                )
+            } yield assertTrue(actual== Left(List(CurrentClassFailure(Anything.Class.Thing))))
           }
         }
       ).provide(commonLayers, emptyDataSet)
