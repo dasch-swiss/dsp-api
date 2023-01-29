@@ -22,10 +22,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 
 object OntologyRepoLiveSpec extends ZIOSpecDefault {
 
-  private val sf = {
-    StringFormatter.initForTest()
-    StringFormatter.getGeneralInstance
-  }
+  private val sf = StringFormatter.getInitializedTestInstance
+
   private val anUnknownInternalOntologyIri = InternalIri("http://www.knora.org/ontology/0001/anything")
   private val anUnknownClassIri            = InternalIri("http://www.knora.org/ontology/0001/anything#Thing")
 

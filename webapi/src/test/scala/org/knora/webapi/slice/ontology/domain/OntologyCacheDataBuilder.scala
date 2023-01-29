@@ -56,7 +56,7 @@ object OntologyCacheDataBuilder {
   val empty: OntologyCacheData =
     OntologyCacheData(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Set.empty)
 
-  val builder: Builder                        = Builder(empty)
+  val builder: Builder = Builder(empty)
 
   def builder(ontologyIri: SmartIri): Builder = Builder(empty).addOntology(ReadOntologyV2Builder.builder(ontologyIri))
 
