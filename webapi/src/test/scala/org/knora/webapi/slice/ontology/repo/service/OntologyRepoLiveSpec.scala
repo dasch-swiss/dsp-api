@@ -83,7 +83,64 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
           } yield assertTrue(actual == List(ontology))
         }
       ),
-      suite("findAllSuperClassesBy") {
+      suite("findAllSubclassesBy")(
+        test("findAllSubclassesBy is empty if no superclasses on class") {
+          val data = OntologyCacheDataBuilder.builder
+            .addOntology(
+              ReadOntologyV2Builder
+                .builder(Biblio.Ontology)
+                .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Publication))
+                .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Article))
+            )
+          for {
+            _      <- OntologyCacheFake.set(data.build).debug
+            actual <- OntologyRepo.findAllSubclassesBy(Biblio.Class.Publication)
+          } yield assertTrue(actual.isEmpty)
+        },
+        test("findAllSubclassesBy multiple levels up across ontologies") {
+          val anythingOntologyDefinition = ReadOntologyV2Builder
+            .builder(Anything.Ontology)
+            .addClassInfo(ReadClassInfoV2Builder.builder(Anything.Class.Thing))
+          val biblioOntologyDefinition = ReadOntologyV2Builder
+            .builder(Biblio.Ontology)
+            .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Publication))
+            .addClassInfo(
+              ReadClassInfoV2Builder
+                .builder(Biblio.Class.Article) // subclass Article should be found
+                .addSuperClass(Biblio.Class.Publication)
+                .addSuperClass(Anything.Class.Thing) // no subclass of Publication; Thing should NOT be found
+            )
+            .addClassInfo(
+              ReadClassInfoV2Builder
+                .builder(
+                  Biblio.Class.JournalArticle
+                ) // subclass JournalArticle should be found, is subclass of Article which is subclass of Publication
+                .addSuperClass(Biblio.Class.Article)
+            )
+          val data = OntologyCacheDataBuilder.builder
+            .addOntology(anythingOntologyDefinition)
+            .addOntology(biblioOntologyDefinition)
+          for {
+            _         <- OntologyCacheFake.set(data.build).debug
+            actual    <- OntologyRepo.findAllSubclassesBy(Biblio.Class.Publication)
+            actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
+          } yield assertTrue(actualIris == List(Biblio.Class.Article, Biblio.Class.JournalArticle))
+        }
+      ),
+      suite("findAllSuperClassesBy")(
+        test("findAllSuperClassesBy is empty if no superclasses on class") {
+          val data = OntologyCacheDataBuilder.builder
+            .addOntology(
+              ReadOntologyV2Builder
+                .builder(Biblio.Ontology)
+                .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Publication))
+                .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Article))
+            )
+          for {
+            _      <- OntologyCacheFake.set(data.build).debug
+            actual <- OntologyRepo.findAllSuperClassesBy(Biblio.Class.Article)
+          } yield assertTrue(actual.isEmpty)
+        },
         test("findAllSuperClassesBy multiple levels up across ontologies") {
           val anythingOntologyDefinition = ReadOntologyV2Builder
             .builder(Anything.Ontology)
@@ -111,6 +168,6 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
           } yield assertTrue(actualIris == List(Biblio.Class.Article, Anything.Class.Thing, Biblio.Class.Publication))
         }
-      }
+      )
     ).provide(OntologyRepoLive.layer, OntologyCacheFake.emptyCache, IriConverter.layer, StringFormatter.test)
 }
