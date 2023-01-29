@@ -9,13 +9,8 @@ import zio.Scope
 import zio.test.ZIOSpecDefault
 import zio.test._
 
-import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadClassInfoV2Builder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
@@ -47,30 +42,31 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
           } yield assertTrue(actual.isEmpty)
         },
         test("when searching for known iri => return Some(ReadOntology)") {
-          val ontologyData = ReadOntologyV2(OntologyMetadataV2(ontologySmartIri))
-          val cacheData    = OntologyCacheFake.emptyData.copy(ontologies = Map(ontologySmartIri -> ontologyData))
+          val cacheData = OntologyCacheDataBuilder.builder(ontologySmartIri).build
           for {
             _      <- OntologyCacheFake.set(cacheData)
             actual <- OntologyRepo.findById(ontologySmartIri.toInternalIri)
-          } yield assertTrue(actual.contains(ontologyData))
+          } yield assertTrue(actual == cacheData.ontologies.get(ontologySmartIri))
         }
       ),
       suite("findClassBy(InternalIri)")(
         test("when searching for a known iri => return Some(ReadClassInfoV2])") {
-          val classData = ReadClassInfoV2(
-            ClassInfoContentV2(aKnownClassSmartIri, ontologySchema = ApiV2Complex),
-            allBaseClasses = List.empty
-          )
-          val ontologyData =
-            ReadOntologyV2(OntologyMetadataV2(ontologySmartIri), classes = Map(aKnownClassSmartIri -> classData))
-          val cacheData = OntologyCacheFake.emptyData.copy(ontologies = Map(ontologySmartIri -> ontologyData))
+          val knownClass = ReadClassInfoV2Builder.builder(aKnownClassIri).build
+          val data = OntologyCacheDataBuilder.builder
+            .addOntology(
+              ReadOntologyV2Builder
+                .builder(ontologySmartIri)
+                .addClassInfo(knownClass)
+            )
+            .build
           for {
-            _      <- OntologyCacheFake.set(cacheData)
+            _      <- OntologyCacheFake.set(data)
             actual <- OntologyRepo.findClassBy(aKnownClassIri)
-          } yield assertTrue(actual.contains(classData))
+          } yield assertTrue(actual.contains(knownClass))
         },
         test("when searching for unknown iri => return None") {
           for {
+            _      <- OntologyCacheFake.set(OntologyCacheDataBuilder.empty)
             actual <- OntologyRepo.findClassBy(anUnknownClassIri)
           } yield assertTrue(actual.isEmpty)
         }
@@ -78,16 +74,17 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
       suite("findAll()")(
         test("given cache is Empty => return empty List") {
           for {
+            _      <- OntologyCacheFake.set(OntologyCacheDataBuilder.empty)
             actual <- OntologyRepo.findAll()
           } yield assertTrue(actual.isEmpty)
         },
         test("given cache has an ontology => return List of ontologies") {
-          val ontologyData = ReadOntologyV2(OntologyMetadataV2(ontologySmartIri))
-          val cacheData    = OntologyCacheFake.emptyData.copy(ontologies = Map(ontologySmartIri -> ontologyData))
+          val ontology  = ReadOntologyV2Builder.builder(ontologySmartIri).build
+          val cacheData = OntologyCacheDataBuilder.builder.addOntology(ontology).build
           for {
             _      <- OntologyCacheFake.set(cacheData)
             actual <- OntologyRepo.findAll()
-          } yield assertTrue(actual == List(ontologyData))
+          } yield assertTrue(actual == List(ontology))
         }
       ),
       suite("findAllSuperClassesBy") {
