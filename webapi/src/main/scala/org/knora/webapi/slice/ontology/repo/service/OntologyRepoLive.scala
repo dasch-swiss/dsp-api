@@ -22,84 +22,84 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
     extends OntologyRepo {
 
   override def findById(ontologyIri: InternalIri): Task[Option[ReadOntologyV2]] =
-    _smartIriMapCache(ontologyIri)(_findByIri)
+    smartIriMapCache(ontologyIri)(findById)
 
-  private def _smartIriMapCache[A](iri: InternalIri)(mapper: (SmartIri, OntologyCacheData) => A): Task[A] =
+  private def smartIriMapCache[A](iri: InternalIri)(mapper: (SmartIri, OntologyCacheData) => A): Task[A] =
     toSmartIri(iri).flatMap(smartIri => getCache.map(mapper.apply(smartIri, _)))
 
   private def toSmartIri(iri: InternalIri) = converter.asInternalSmartIri(iri)
 
   private def getCache = ontologyCache.get
 
-  private def _findByIri(ontologyIri: SmartIri, cache: OntologyCacheData): Option[ReadOntologyV2] =
+  private def findById(ontologyIri: SmartIri, cache: OntologyCacheData): Option[ReadOntologyV2] =
     cache.ontologies.get(ontologyIri)
 
-  private def _findByClassIri(classIri: SmartIri, cache: OntologyCacheData): Option[ReadOntologyV2] =
-    _findByIri(classIri.getOntologyFromEntity, cache)
+  private def findByClassIri(classIri: SmartIri, cache: OntologyCacheData): Option[ReadOntologyV2] =
+    findById(classIri.getOntologyFromEntity, cache)
 
   override def findAll(): Task[List[ReadOntologyV2]] = getCache.map(_.ontologies.values.toList)
 
   override def findClassBy(classIri: InternalIri): Task[Option[ReadClassInfoV2]] =
-    _smartIriMapCache(classIri)(_findClassBy)
+    smartIriMapCache(classIri)(findClassBy)
 
-  private def _findClassBy(classIri: SmartIri, cache: OntologyCacheData): Option[ReadClassInfoV2] =
-    _findByClassIri(classIri, cache).flatMap(_.classes.get(classIri))
+  private def findClassBy(classIri: SmartIri, cache: OntologyCacheData): Option[ReadClassInfoV2] =
+    findByClassIri(classIri, cache).flatMap(_.classes.get(classIri))
 
   override def findDirectSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] =
-    _smartIriMapCache(classIri)(_findDirectSubclassesBy)
+    smartIriMapCache(classIri)(findDirectSubclassesBy)
 
-  private def _findDirectSubclassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
+  private def findDirectSubclassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
     cache.ontologies.values.flatMap(_.classes.values.filter(_.allBaseClasses.contains(classIri))).toList
 
-  private def _findDirectSubclassesBy(classIris: List[SmartIri], cache: OntologyCacheData): List[ReadClassInfoV2] =
-    classIris.flatMap(_findDirectSubclassesBy(_, cache))
+  private def findDirectSubclassesBy(classIris: List[SmartIri], cache: OntologyCacheData): List[ReadClassInfoV2] =
+    classIris.flatMap(findDirectSubclassesBy(_, cache))
 
   override def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] =
-    _smartIriMapCache(classIri)(_findAllSubclassesBy)
+    smartIriMapCache(classIri)(findAllSubclassesBy)
 
-  private def _findAllSubclassesBy(classIris: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
-    _findAllSubclassesBy(List(classIris), List.empty, cache)
+  private def findAllSubclassesBy(classIris: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
+    findAllSubclassesBy(List(classIris), List.empty, cache)
 
   @tailrec
-  private def _findAllSubclassesBy(
+  private def findAllSubclassesBy(
     classIris: List[SmartIri],
     acc: List[ReadClassInfoV2],
     cache: OntologyCacheData
   ): List[ReadClassInfoV2] =
-    _findDirectSubclassesBy(classIris, cache) match {
+    findDirectSubclassesBy(classIris, cache) match {
       case Nil     => acc
-      case classes => _findAllSubclassesBy(_toClassIris(classes), acc ::: classes, cache)
+      case classes => findAllSubclassesBy(toClassIris(classes), acc ::: classes, cache)
 
     }
 
-  private def _toClassIris(classes: List[ReadClassInfoV2]): List[SmartIri] = classes.map(_.entityInfoContent.classIri)
+  private def toClassIris(classes: List[ReadClassInfoV2]): List[SmartIri] = classes.map(_.entityInfoContent.classIri)
 
   override def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] = for {
     classSmartIri <- toSmartIri(classIri)
     cache         <- ontologyCache.get
-  } yield _findDirectSuperClassesBy(classSmartIri, cache)
+  } yield findDirectSuperClassesBy(classSmartIri, cache)
 
-  private def _findDirectSuperClassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
-    _findClassBy(classIri, cache).toList.flatMap(_.allBaseClasses).flatMap(_findClassBy(_, cache))
+  private def findDirectSuperClassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
+    findClassBy(classIri, cache).toList.flatMap(_.allBaseClasses).flatMap(findClassBy(_, cache))
 
-  private def _findDirectSuperClassesBy(classIris: List[SmartIri], cache: OntologyCacheData): List[ReadClassInfoV2] =
-    classIris.flatMap(_findDirectSuperClassesBy(_, cache))
+  private def findDirectSuperClassesBy(classIris: List[SmartIri], cache: OntologyCacheData): List[ReadClassInfoV2] =
+    classIris.flatMap(findDirectSuperClassesBy(_, cache))
 
   override def findAllSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] =
-    _smartIriMapCache(classIri)(_findAllSuperClassesBy)
+    smartIriMapCache(classIri)(findAllSuperClassesBy)
 
-  private def _findAllSuperClassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
-    _findAllSuperClassesBy(List(classIri), List.empty, cache)
+  private def findAllSuperClassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
+    findAllSuperClassesBy(List(classIri), List.empty, cache)
 
   @tailrec
-  private def _findAllSuperClassesBy(
+  private def findAllSuperClassesBy(
     classIris: List[SmartIri],
     acc: List[ReadClassInfoV2],
     cache: OntologyCacheData
   ): List[ReadClassInfoV2] =
-    _findDirectSuperClassesBy(classIris, cache) match {
+    findDirectSuperClassesBy(classIris, cache) match {
       case Nil     => acc
-      case classes => _findAllSuperClassesBy(_toClassIris(classes), acc ::: classes, cache)
+      case classes => findAllSuperClassesBy(toClassIris(classes), acc ::: classes, cache)
     }
 }
 
