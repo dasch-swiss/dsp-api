@@ -19,10 +19,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CurrentClassFailure
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.KnoraOntologyCheckFailure
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SubClassCheckFailure
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SuperClassCheckFailure
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -472,9 +469,12 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               } yield assertTrue(actual == Left(List(SubClassCheckFailure(List(d.subclassIri)))))
             }
           }
-        ),
+        )
+      ).provide(commonLayers, emptyDataSet),
+      suite("canSetCardinality with property in use")(
         test(s"""
                 |Given the previous cardinality on the class/property
+                |and property is in use
                 |does not include the new cardinality to be set
                 |then this is NOT possible
           """.stripMargin) {
@@ -499,9 +499,20 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   Anything.Property.hasOtherThing,
                   newCardinality
                 )
-            } yield assertTrue(actual== Left(List(CurrentClassFailure(Anything.Class.Thing))))
+            } yield assertTrue(actual == Left(List(CurrentClassFailure(Anything.Class.Thing))))
           }
         }
-      ).provide(commonLayers, emptyDataSet)
+      ).provide(
+        commonLayers,
+        datasetLayerFromTurtle(s"""
+                                  |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                                  |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+                                  |
+                                  |<http://aThing>
+                                  |  a <${Anything.Class.Thing.value}> ;
+                                  |  <${Anything.Property.hasOtherThing.value}> false .
+                                  |  
+                                  |""".stripMargin)
+      )
     )
 }

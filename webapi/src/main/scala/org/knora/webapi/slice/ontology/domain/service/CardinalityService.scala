@@ -17,6 +17,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.queries.sparql._
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
@@ -244,12 +245,13 @@ final case class CardinalityServiceLive(
     newCardinality: Cardinality
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
-      propertySmartIri       <- iriConverter.asInternalSmartIri(propertyIri)
-      classMaybe             <- ontologyRepo.findClassBy(classIri).map(_.map(_.entityInfoContent))
-      currentCardinalityMaybe = classMaybe.flatMap(getCardinalityForProperty(_, propertySmartIri))
-      isIncluded              = currentCardinalityMaybe.forall(_.isIncludedIn(newCardinality))
+      propertySmartIri  <- iriConverter.asInternalSmartIri(propertyIri)
+      classMaybe        <- ontologyRepo.findClassBy(classIri).map(_.map(_.entityInfoContent))
+      currentCardinality = classMaybe.flatMap(getCardinalityForProperty(_, propertySmartIri)).getOrElse(Unbounded)
+      isIncluded         = currentCardinality.isIncludedIn(newCardinality)
+      isNotInUse        <- isPropertyUsedInResources(classIri, propertyIri).map(!_)
     } yield
-      if (isIncluded) {
+      if (isNotInUse || isIncluded) {
         Right(CanSetCardinalityCheckResult.Success)
       } else {
         Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(classIri)))
