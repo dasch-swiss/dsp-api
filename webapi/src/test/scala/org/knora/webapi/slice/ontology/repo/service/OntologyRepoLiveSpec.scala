@@ -64,7 +64,6 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
         },
         test("when searching for unknown iri => return None") {
           for {
-            _      <- OntologyCacheFake.set(OntologyCacheDataBuilder.empty)
             actual <- OntologyRepo.findClassBy(anUnknownClassIri)
           } yield assertTrue(actual.isEmpty)
         }
@@ -72,7 +71,6 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
       suite("findAll()")(
         test("given cache is Empty => return empty List") {
           for {
-            _      <- OntologyCacheFake.set(OntologyCacheDataBuilder.empty)
             actual <- OntologyRepo.findAll()
           } yield assertTrue(actual.isEmpty)
         },
