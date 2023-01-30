@@ -233,7 +233,7 @@ final case class CardinalityServiceLive(
       classesAndCardinalities =
         classesInfo.flatMap(it => getCardinalityForProperty(it, propSmartIri).map(c => (it.classIri.toInternalIri, c)))
       filteredClasses = classesAndCardinalities.filter { case (_, c) => predicate.apply(c) }
-    } yield filteredClasses.map(_._1)
+    } yield filteredClasses.map { case (classIri, _) => classIri }
   }
 
   private def getCardinalityForProperty(classInfo: ClassInfoContentV2, propertyIri: SmartIri): Option[Cardinality] =
