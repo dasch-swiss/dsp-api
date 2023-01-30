@@ -13,6 +13,7 @@ import zio.prelude.Validation
 import zio.test._
 
 import java.net.URLEncoder
+import java.nio.file
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
@@ -23,6 +24,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
@@ -82,7 +84,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     getSingleProjectSpec,
     createProjectSpec,
     deleteProjectSpec,
-    updateProjectSpec
+    updateProjectSpec,
+    getallDataSpec
   )
 
   val createProjectSpec = test("create a project") {
@@ -306,4 +309,30 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         assertTrue(bodyAsString == "{\"error\":\"dsp.errors.BadRequestException: Project IRI is invalid.\"}")
     }
   )
+
+  val getallDataSpec = suite("get all data") {
+    test("successfully get all data") {
+      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
+        .fromString("http://rdfh.ch/projects/0001")
+        .getOrElse(throw new Exception("Invalid IRI"))
+      val iri  = identifier.asIriIdentifierOption.getOrElse(throw BadRequestException("Invalid project IRI"))
+      val user = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url =
+        URL(
+          basePathProjectsIri / encode(iri) / "AllData"
+        )
+      )
+      val path = file.Paths.get("...")
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .GetAllProjectData(
+          assertion = Assertion.equalTo(identifier, user),
+          result = Expectation.value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(path))
+        )
+        .toLayer
+      for {
+        response <- applyRoutes(request).provide(mockService)
+        body     <- response.body.asString
+      } yield assertTrue(true)
+    }
+  }
 }

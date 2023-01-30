@@ -11,8 +11,8 @@ import zio.http.model._
 import zio.json._
 
 import java.io.File
+import java.nio.file
 import java.nio.file.Files
-import java.nio.file.Paths
 
 import dsp.errors.BadRequestException
 import dsp.errors.InternalServerException
@@ -111,13 +111,14 @@ final case class ProjectsRouteZ(
       iriDecoded             <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       iriIdentifier          <- IriIdentifier.fromString(iriDecoded).toZIO
       projectDataGetResponse <- projectsService.getAllProjectData(iriIdentifier, requestingUser)
-      filePath                = projectDataGetResponse.projectDataFile.toString()
+      filePath: file.Path     = projectDataGetResponse.projectDataFile
+
       response = Response(
                    headers = Headers.contentType("application/trig"),
-                   body = Body.fromFile(new File(filePath))
+                   body = Body.fromFile(new File(filePath.toString()))
                  )
 
-      _ = ZIO.succeed(ZIO.attempt(Files.deleteIfExists(Paths.get(filePath))))
+      _ = ZIO.succeed(ZIO.attempt(Files.deleteIfExists(filePath)))
 
     } yield response
 
