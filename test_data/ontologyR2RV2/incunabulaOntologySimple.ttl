@@ -25,23 +25,23 @@ incunabula:book  rdf:type       owl:Class ;
         rdfs:subClassOf         knora-api:Resource ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:minCardinality  0 ;
-                                  owl:onProperty      incunabula:publisher
+                                  owl:onProperty      knora-api:hasIncomingLink
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasStandoffLinkTo
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:maxCardinality  1 ;
                                   owl:onProperty      incunabula:url
                                 ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:maxCardinality  1 ;
-                                  owl:onProperty      incunabula:pubdate
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:maxCardinality  1 ;
-                                  owl:onProperty      incunabula:publoc
-                                ] ;
         rdfs:subClassOf         [ rdf:type         owl:Restriction ;
                                   owl:cardinality  1 ;
-                                  owl:onProperty   knora-api:versionArkUrl
+                                  owl:onProperty   knora-api:arkUrl
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:minCardinality  1 ;
+                                  owl:onProperty      incunabula:title
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:maxCardinality  1 ;
@@ -49,11 +49,15 @@ incunabula:book  rdf:type       owl:Class ;
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:minCardinality  0 ;
-                                  owl:onProperty      knora-api:hasIncomingLink
+                                  owl:onProperty      incunabula:hasAuthor
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:physical_desc
                                 ] ;
         rdfs:subClassOf         [ rdf:type         owl:Restriction ;
                                   owl:cardinality  1 ;
-                                  owl:onProperty   knora-api:arkUrl
+                                  owl:onProperty   rdfs:label
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:maxCardinality  1 ;
@@ -61,15 +65,15 @@ incunabula:book  rdf:type       owl:Class ;
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:minCardinality  0 ;
-                                  owl:onProperty      incunabula:citation
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:minCardinality  0 ;
-                                  owl:onProperty      knora-api:hasStandoffLinkTo
+                                  owl:onProperty      incunabula:book_comment
                                 ] ;
         rdfs:subClassOf         [ rdf:type         owl:Restriction ;
                                   owl:cardinality  1 ;
-                                  owl:onProperty   rdfs:label
+                                  owl:onProperty   knora-api:versionArkUrl
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:publisher
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:minCardinality  0 ;
@@ -77,19 +81,15 @@ incunabula:book  rdf:type       owl:Class ;
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:maxCardinality  1 ;
-                                  owl:onProperty      incunabula:physical_desc
+                                  owl:onProperty      incunabula:publoc
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:pubdate
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:minCardinality  0 ;
-                                  owl:onProperty      incunabula:book_comment
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:minCardinality  1 ;
-                                  owl:onProperty      incunabula:title
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:minCardinality  0 ;
-                                  owl:onProperty      incunabula:hasAuthor
+                                  owl:onProperty      incunabula:citation
                                 ] ;
         knora-api:resourceIcon  "book.gif" .
 
@@ -106,11 +106,15 @@ incunabula:Sideband  rdf:type  owl:Class ;
         rdfs:subClassOf  knora-api:StillImageRepresentation ;
         rdfs:subClassOf  [ rdf:type         owl:Restriction ;
                            owl:cardinality  1 ;
-                           owl:onProperty   rdfs:label
+                           owl:onProperty   knora-api:hasStillImageFile
+                         ] ;
+        rdfs:subClassOf  [ rdf:type         owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   incunabula:sbTitle
                          ] ;
         rdfs:subClassOf  [ rdf:type            owl:Restriction ;
                            owl:minCardinality  0 ;
-                           owl:onProperty      incunabula:sideband_comment
+                           owl:onProperty      knora-api:hasIncomingLink
                          ] ;
         rdfs:subClassOf  [ rdf:type            owl:Restriction ;
                            owl:minCardinality  0 ;
@@ -118,11 +122,11 @@ incunabula:Sideband  rdf:type  owl:Class ;
                          ] ;
         rdfs:subClassOf  [ rdf:type         owl:Restriction ;
                            owl:cardinality  1 ;
-                           owl:onProperty   knora-api:arkUrl
+                           owl:onProperty   rdfs:label
                          ] ;
-        rdfs:subClassOf  [ rdf:type            owl:Restriction ;
-                           owl:minCardinality  0 ;
-                           owl:onProperty      knora-api:hasIncomingLink
+        rdfs:subClassOf  [ rdf:type         owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
                          ] ;
         rdfs:subClassOf  [ rdf:type            owl:Restriction ;
                            owl:maxCardinality  1 ;
@@ -130,15 +134,11 @@ incunabula:Sideband  rdf:type  owl:Class ;
                          ] ;
         rdfs:subClassOf  [ rdf:type         owl:Restriction ;
                            owl:cardinality  1 ;
-                           owl:onProperty   knora-api:versionArkUrl
+                           owl:onProperty   knora-api:arkUrl
                          ] ;
-        rdfs:subClassOf  [ rdf:type         owl:Restriction ;
-                           owl:cardinality  1 ;
-                           owl:onProperty   incunabula:sbTitle
-                         ] ;
-        rdfs:subClassOf  [ rdf:type         owl:Restriction ;
-                           owl:cardinality  1 ;
-                           owl:onProperty   knora-api:hasStillImageFile
+        rdfs:subClassOf  [ rdf:type            owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      incunabula:sideband_comment
                          ] .
 
 incunabula:pagenum  rdf:type   owl:DatatypeProperty ;
@@ -166,6 +166,12 @@ incunabula:location  rdf:type  owl:DatatypeProperty ;
         rdf:type    owl:Ontology ;
         rdfs:label  "The incunabula ontology" .
 
+incunabula:sbTitle  rdf:type   owl:DatatypeProperty ;
+        rdfs:label             "Title" ;
+        rdfs:subPropertyOf     <http://purl.org/dc/terms/title> , knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:Sideband .
+
 incunabula:miscHasGeometry
         rdf:type               owl:DatatypeProperty ;
         rdfs:label             "Geometrie" ;
@@ -179,12 +185,6 @@ incunabula:hasAuthor  rdf:type  owl:DatatypeProperty ;
         rdfs:subPropertyOf     <http://purl.org/dc/terms/creator> , knora-api:hasValue ;
         knora-api:objectType   xsd:string ;
         knora-api:subjectType  incunabula:book .
-
-incunabula:sbTitle  rdf:type   owl:DatatypeProperty ;
-        rdfs:label             "Title" ;
-        rdfs:subPropertyOf     <http://purl.org/dc/terms/title> , knora-api:hasValue ;
-        knora-api:objectType   xsd:string ;
-        knora-api:subjectType  incunabula:Sideband .
 
 incunabula:seqnum  rdf:type    owl:DatatypeProperty ;
         rdfs:comment           "This property stands for the position within a set of rdered items (resoucres)" ;
@@ -297,24 +297,28 @@ incunabula:misc  rdf:type  owl:Class ;
         rdfs:label       "Sonstiges" ;
         rdfs:subClassOf  knora-api:Resource ;
         rdfs:subClassOf  [ rdf:type            owl:Restriction ;
-                           owl:minCardinality  0 ;
-                           owl:onProperty      knora-api:hasIncomingLink
-                         ] ;
-        rdfs:subClassOf  [ rdf:type            owl:Restriction ;
-                           owl:maxCardinality  1 ;
-                           owl:onProperty      incunabula:miscHasBook
-                         ] ;
-        rdfs:subClassOf  [ rdf:type            owl:Restriction ;
                            owl:maxCardinality  1 ;
                            owl:onProperty      incunabula:miscHasGeometry
                          ] ;
         rdfs:subClassOf  [ rdf:type         owl:Restriction ;
                            owl:cardinality  1 ;
-                           owl:onProperty   rdfs:label
+                           owl:onProperty   knora-api:versionArkUrl
                          ] ;
         rdfs:subClassOf  [ rdf:type         owl:Restriction ;
                            owl:cardinality  1 ;
-                           owl:onProperty   knora-api:versionArkUrl
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ rdf:type            owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ rdf:type            owl:Restriction ;
+                           owl:maxCardinality  1 ;
+                           owl:onProperty      incunabula:miscHasColor
+                         ] ;
+        rdfs:subClassOf  [ rdf:type            owl:Restriction ;
+                           owl:maxCardinality  1 ;
+                           owl:onProperty      incunabula:miscHasBook
                          ] ;
         rdfs:subClassOf  [ rdf:type         owl:Restriction ;
                            owl:cardinality  1 ;
@@ -323,27 +327,63 @@ incunabula:misc  rdf:type  owl:Class ;
         rdfs:subClassOf  [ rdf:type            owl:Restriction ;
                            owl:minCardinality  0 ;
                            owl:onProperty      knora-api:hasStandoffLinkTo
-                         ] ;
-        rdfs:subClassOf  [ rdf:type            owl:Restriction ;
-                           owl:maxCardinality  1 ;
-                           owl:onProperty      incunabula:miscHasColor
                          ] .
 
 incunabula:page  rdf:type       owl:Class ;
         rdfs:comment            "A page is a part of a book" ;
         rdfs:label              "Page" ;
         rdfs:subClassOf         knora-api:StillImageRepresentation ;
+        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:arkUrl
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:hasRightSideband
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:page_comment
+                                ] ;
+        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   rdfs:label
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:seqnum
+                                ] ;
+        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:hasStillImageFile
+                                ] ;
+        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   incunabula:partOf
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:description
+                                ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:minCardinality  0 ;
                                   owl:onProperty      incunabula:citation
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:minCardinality  0 ;
-                                  owl:onProperty      knora-api:hasStandoffLinkTo
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:pagenum
+                                ] ;
+        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   incunabula:origname
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:minCardinality  0 ;
                                   owl:onProperty      knora-api:hasIncomingLink
+                                ] ;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasStandoffLinkTo
                                 ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:minCardinality  0 ;
@@ -353,49 +393,9 @@ incunabula:page  rdf:type       owl:Class ;
                                   owl:cardinality  1 ;
                                   owl:onProperty   knora-api:versionArkUrl
                                 ] ;
-        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
-                                  owl:cardinality  1 ;
-                                  owl:onProperty   rdfs:label
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:maxCardinality  1 ;
-                                  owl:onProperty      incunabula:pagenum
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:minCardinality  0 ;
-                                  owl:onProperty      incunabula:page_comment
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:maxCardinality  1 ;
-                                  owl:onProperty      incunabula:seqnum
-                                ] ;
-        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
-                                  owl:cardinality  1 ;
-                                  owl:onProperty   knora-api:arkUrl
-                                ] ;
-        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
-                                  owl:cardinality  1 ;
-                                  owl:onProperty   incunabula:partOf
-                                ] ;
-        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
-                                  owl:cardinality  1 ;
-                                  owl:onProperty   incunabula:origname
-                                ] ;
-        rdfs:subClassOf         [ rdf:type         owl:Restriction ;
-                                  owl:cardinality  1 ;
-                                  owl:onProperty   knora-api:hasStillImageFile
-                                ] ;
         rdfs:subClassOf         [ rdf:type            owl:Restriction ;
                                   owl:maxCardinality  1 ;
                                   owl:onProperty      incunabula:hasLeftSideband
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:maxCardinality  1 ;
-                                  owl:onProperty      incunabula:description
-                                ] ;
-        rdfs:subClassOf         [ rdf:type            owl:Restriction ;
-                                  owl:maxCardinality  1 ;
-                                  owl:onProperty      incunabula:hasRightSideband
                                 ] ;
         knora-api:resourceIcon  "page.gif" .
 
