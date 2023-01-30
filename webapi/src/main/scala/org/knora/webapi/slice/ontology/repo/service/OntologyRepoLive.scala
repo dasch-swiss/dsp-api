@@ -8,6 +8,7 @@ package org.knora.webapi.slice.ontology.repo.service
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import scala.annotation.tailrec
 
 import org.knora.webapi.messages.SmartIri
@@ -30,7 +31,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
   private def smartIrisMapCache[A](iris: List[InternalIri])(mapper: (List[SmartIri], OntologyCacheData) => A): Task[A] =
     toSmartIris(iris).flatMap(smartIris => getCache.map(mapper.apply(smartIris, _)))
 
-  private def toSmartIri(iri: InternalIri)         = converter.asInternalSmartIri(iri)
+  private def toSmartIri(iri: InternalIri) = converter.asInternalSmartIri(iri)
 
   private def toSmartIris(iris: List[InternalIri]) = ZIO.foreach(iris)(converter.asInternalSmartIri)
 
