@@ -59,7 +59,7 @@ object Cache extends LazyLogging {
    *
    * @param ontologies                a map of ontology IRIs to ontologies.
    * @param classToSuperClassLookup   a map of classes to their super-classes.
-   * @param superClassOfRelations     a map of base classes to their subclasses.
+   * @param classToSubclassLookup     a map of classes to their subclasses.
    * @param subPropertyOfRelations    a map of subproperties to their base properties.
    * @param superPropertyOfRelations  a map of base classes to their subproperties.
    * @param classDefinedInOntology    a map of class IRIs to the ontology where the class is defined
@@ -70,7 +70,7 @@ object Cache extends LazyLogging {
   case class OntologyCacheData(
     ontologies: Map[SmartIri, ReadOntologyV2],
     classToSuperClassLookup: Map[SmartIri, Seq[SmartIri]],
-    superClassOfRelations: Map[SmartIri, Set[SmartIri]],
+    classToSubclassLookup: Map[SmartIri, Set[SmartIri]],
     subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     classDefinedInOntology: Map[SmartIri, SmartIri],
@@ -349,7 +349,7 @@ object Cache extends LazyLogging {
     OntologyCacheData(
       ontologies = ontologiesErrorMap,
       classToSuperClassLookup = subClassOfRelationsErrorMap,
-      superClassOfRelations = superClassOfRelationsErrorMap,
+      classToSubclassLookup = superClassOfRelationsErrorMap,
       subPropertyOfRelations = subPropertyOfRelationsErrorMap,
       superPropertyOfRelations = superPropertyOfRelationsErrorMap,
       classDefinedInOntology = classDefinedInOntologyErrorMap,
@@ -594,7 +594,7 @@ object Cache extends LazyLogging {
       ontologies = new ErrorHandlingMap[SmartIri, ReadOntologyV2](readOntologies, key => s"Ontology not found: $key"),
       classToSuperClassLookup =
         new ErrorHandlingMap[SmartIri, Seq[SmartIri]](allSubClassOfRelations, key => s"Class not found: $key"),
-      superClassOfRelations =
+      classToSubclassLookup =
         new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperClassOfRelations, key => s"Class not found: $key"),
       subPropertyOfRelations =
         new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, key => s"Property not found: $key"),
@@ -929,7 +929,7 @@ object Cache extends LazyLogging {
   def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
     // Get the class definitions of all the subclasses of the base class.
 
-    val allSubClassIris: Set[SmartIri] = cacheData.superClassOfRelations(baseClassIri)
+    val allSubClassIris: Set[SmartIri] = cacheData.classToSubclassLookup(baseClassIri)
 
     val allSubClasses: Set[ReadClassInfoV2] = allSubClassIris.map { subClassIri =>
       cacheData.ontologies(subClassIri.getOntologyFromEntity).classes(subClassIri)

@@ -284,7 +284,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     for {
       cacheData <- Cache.getCacheData
 
-      subClassIris = cacheData.superClassOfRelations(classIri).toVector.sorted
+      subClassIris = cacheData.classToSubclassLookup(classIri).toVector.sorted
 
       subClasses = subClassIris.map { subClassIri =>
                      val classInfo: ReadClassInfoV2 =
