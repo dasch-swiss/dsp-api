@@ -84,7 +84,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
         }
       ),
       suite("findAllSubclassesBy")(
-        test("findAllSubclassesBy is empty if no superclasses on class") {
+        test("findAllSubclassesBy is empty if no subclasses on class") {
           val data = OntologyCacheDataBuilder.builder
             .addOntology(
               ReadOntologyV2Builder
