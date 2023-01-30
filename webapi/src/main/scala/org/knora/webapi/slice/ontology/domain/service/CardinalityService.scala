@@ -132,7 +132,7 @@ object ChangeCardinalityCheckResult {
     }
 
     final case class CurrentClassFailure(currentClassIri: InternalIri) extends CanSetCardinalityCheckResult.Failure {
-      val reason: String = "The cardinality of the current class is not included in the new cardinality"
+      val reason: String = "The cardinality of the current class is not included in the new cardinality."
     }
 
     final case object KnoraOntologyCheckFailure
