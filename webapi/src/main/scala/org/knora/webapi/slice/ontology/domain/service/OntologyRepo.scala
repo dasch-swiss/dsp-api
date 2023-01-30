@@ -28,7 +28,7 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
   def findAllSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   def findAllSuperClassesBy(classIri: List[InternalIri]): Task[List[ReadClassInfoV2]] =
-    ZIO.foreach(classIri)(findAllSubclassesBy).map(_.flatten)
+    ZIO.foreach(classIri)(findAllSuperClassesBy).map(_.flatten)
 
   def findDirectSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
