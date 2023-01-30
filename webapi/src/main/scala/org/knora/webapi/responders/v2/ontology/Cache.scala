@@ -199,7 +199,7 @@ object Cache extends LazyLogging {
     // A map of ontology IRIs to class IRIs in each ontology.
     val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
       case (iri, ontology) =>
-        val classIris = ontology.classes.values.map { case classInfo: ReadClassInfoV2 =>
+        val classIris = ontology.classes.values.map { classInfo: ReadClassInfoV2 =>
           classInfo.entityInfoContent.classIri
         }.toSet
         iri -> classIris
@@ -208,7 +208,7 @@ object Cache extends LazyLogging {
     // A map of ontology IRIs to property IRIs in each ontology.
     val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
       case (iri, ontology) =>
-        val propertyIris = ontology.properties.values.map { case propertyInfo: ReadPropertyInfoV2 =>
+        val propertyIris = ontology.properties.values.map { propertyInfo: ReadPropertyInfoV2 =>
           propertyInfo.entityInfoContent.propertyIri
         }.toSet
         iri -> propertyIris
