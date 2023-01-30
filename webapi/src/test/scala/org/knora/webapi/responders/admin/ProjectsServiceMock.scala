@@ -11,6 +11,7 @@ import zio.mock._
 
 import dsp.valueobjects.Iri._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
@@ -53,6 +54,10 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
           proxy(UpdateProject, (projectIri, payload, requestingUser))
+        override def getAllProjectData(
+          projectIdentifier: ProjectIdentifierADM.IriIdentifier,
+          requestingUser: UserADM
+        ): Task[ProjectDataGetResponseADM] = ???
 
       }
     }

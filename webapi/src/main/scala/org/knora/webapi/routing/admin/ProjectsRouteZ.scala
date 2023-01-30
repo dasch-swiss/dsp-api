@@ -10,6 +10,10 @@ import zio.http._
 import zio.http.model._
 import zio.json._
 
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
+
 import dsp.errors.BadRequestException
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
@@ -32,7 +36,7 @@ final case class ProjectsRouteZ(
 
   lazy val route: HttpApp[Any, Nothing] = projectRoutes @@ authenticationMiddleware.authenticationMiddleware
 
-  private val projectRoutes =
+  private val projectRoutes: Http[Any, Nothing, (Request, UserADM), Response] =
     Http
       .collectZIO[(Request, UserADM)] {
         case (Method.GET -> !! / "admin" / "projects", _)                           => getProjects()
@@ -45,10 +49,14 @@ final case class ProjectsRouteZ(
           deleteProject(iriUrlEncoded, requestingUser)
         case (request @ Method.PUT -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, requestingUser) =>
           updateProject(iriUrlEncoded, request, requestingUser)
+
+        case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
+          getAllProjectData(iriUrlEncoded, requestingUser)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
         case InternalServerException(e)  => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
+        case _                           => ???
       }
 
   private def getProjects(): Task[Response] =
@@ -97,6 +105,22 @@ final case class ProjectsRouteZ(
       payload               <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => BadRequestException(e))
       projectChangeResponse <- projectsService.updateProject(projectIri, payload, requestingUser)
     } yield Response.json(projectChangeResponse.toJsValue.toString)
+
+  private def getAllProjectData(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
+    for {
+      iriDecoded             <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iriIdentifier          <- IriIdentifier.fromString(iriDecoded).toZIO
+      projectDataGetResponse <- projectsService.getAllProjectData(iriIdentifier, requestingUser)
+      filePath                = projectDataGetResponse.projectDataFile.toString()
+      response = Response(
+                   headers = Headers.contentType("application/trig"),
+                   body = Body.fromFile(new File(filePath))
+                 )
+
+      _ = ZIO.succeed(ZIO.attempt(Files.deleteIfExists(Paths.get(filePath))))
+
+    } yield response
+
 }
 
 object ProjectsRouteZ {
