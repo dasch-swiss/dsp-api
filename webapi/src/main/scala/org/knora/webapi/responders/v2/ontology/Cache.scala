@@ -10,13 +10,11 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import com.typesafe.scalalogging.Logger
-
 import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
 import dsp.errors._
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.KnoraBaseVersion
@@ -40,8 +38,6 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.util.cache.CacheUtil
 
 object Cache extends LazyLogging {
-
-  private val log: Logger = logger
 
   // The name of the ontology cache.
   private val OntologyCacheName = "ontologyCache"
