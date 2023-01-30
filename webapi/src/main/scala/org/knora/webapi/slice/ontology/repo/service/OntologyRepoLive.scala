@@ -6,8 +6,8 @@
 package org.knora.webapi.slice.ontology.repo.service
 
 import zio.Task
+import zio.ZIO
 import zio.ZLayer
-
 import scala.annotation.tailrec
 
 import org.knora.webapi.messages.SmartIri
@@ -27,7 +27,12 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
   private def smartIriMapCache[A](iri: InternalIri)(mapper: (SmartIri, OntologyCacheData) => A): Task[A] =
     toSmartIri(iri).flatMap(smartIri => getCache.map(mapper.apply(smartIri, _)))
 
-  private def toSmartIri(iri: InternalIri) = converter.asInternalSmartIri(iri)
+  private def smartIrisMapCache[A](iris: List[InternalIri])(mapper: (List[SmartIri], OntologyCacheData) => A): Task[A] =
+    toSmartIris(iris).flatMap(smartIris => getCache.map(mapper.apply(smartIris, _)))
+
+  private def toSmartIri(iri: InternalIri)         = converter.asInternalSmartIri(iri)
+
+  private def toSmartIris(iris: List[InternalIri]) = ZIO.foreach(iris)(converter.asInternalSmartIri)
 
   private def getCache = ontologyCache.get
 
@@ -92,6 +97,9 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   private def findAllSuperClassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
     findAllSuperClassesBy(List(classIri), List.empty, cache)
+
+  override def findAllSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]] =
+    smartIrisMapCache(classIris)((iris, cache) => findAllSuperClassesBy(iris, List.empty, cache))
 
   @tailrec
   private def findAllSuperClassesBy(
