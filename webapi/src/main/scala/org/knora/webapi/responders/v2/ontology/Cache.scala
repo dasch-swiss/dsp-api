@@ -139,7 +139,7 @@ object Cache extends LazyLogging {
       ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] =
         allOntologyMetadata.keys.map { ontologyIri =>
           val ontology: OntologyMetadataV2 =
-            allOntologyMetadata.get(ontologyIri).get
+            allOntologyMetadata(ontologyIri)
           val lastModificationDate: Option[Instant] =
             ontology.lastModificationDate
           val attachedToProject: Option[SmartIri] =
