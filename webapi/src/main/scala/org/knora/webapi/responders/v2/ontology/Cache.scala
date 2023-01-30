@@ -1057,7 +1057,7 @@ object Cache extends LazyLogging {
   /**
    * Deletes an ontology from the cache.
    *
-   * @param updatedOntologyIri the IRI of the ontology to delete
+   * @param ontologyIri the IRI of the ontology to delete
    * @return the updated cache data
    */
   def deleteOntology(ontologyIri: SmartIri)(implicit
@@ -1070,5 +1070,4 @@ object Cache extends LazyLogging {
       _                     = storeCacheData(newOntologyCacheData)
       updatedOntologyCache <- getCacheData
     } yield updatedOntologyCache
-
 }
