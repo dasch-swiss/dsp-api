@@ -7,6 +7,7 @@ package org.knora.webapi.slice.ontology.repo.service
 
 import zio.Task
 import zio.ZLayer
+
 import scala.annotation.tailrec
 
 import org.knora.webapi.messages.SmartIri
