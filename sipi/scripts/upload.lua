@@ -86,7 +86,7 @@ for file_index, file_params in pairs(server.uploads) do
     local file_info = get_file_info(original_filename, mime_type)
     
     if file_info == nil then
-        server.log("file_info appears to be nil for: " .. tostring(original_filename))
+        server.log("file_info appears to be nil for: " .. tostring(original_filename), server.loglevel.LOG_ERR)
         send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
         return
     end
@@ -171,6 +171,14 @@ for file_index, file_params in pairs(server.uploads) do
         end
         if not check then
             send_error(400, MIMETYPES_INCONSISTENCY)
+            return
+        end
+
+        -- Normalize image orientation to top-left --
+        success, error_msg = uploaded_image:topleft()
+        if not success then
+            server.log("upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg), server.loglevel.LOG_ERR)
+            send_error(500, "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
             return
         end
 
