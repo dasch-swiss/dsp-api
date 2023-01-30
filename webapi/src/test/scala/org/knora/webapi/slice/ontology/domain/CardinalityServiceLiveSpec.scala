@@ -396,7 +396,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <- CardinalityService.canSetCardinality(d.classIri, d.propertyIri, newCardinality)
-              } yield assertTrue(actual == Left(List(SubClassCheckFailure(List(d.subclassIri)))))
+              } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
           },
           test(
@@ -438,7 +438,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <- CardinalityService.canSetCardinality(d.classIri, d.propertyIri, newCardinality)
-              } yield assertTrue(actual == Left(List(SubClassCheckFailure(List(d.subclassIri)))))
+              } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
           },
           test(
@@ -466,7 +466,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <- CardinalityService.canSetCardinality(d.classIri, d.propertyIri, newCardinality)
-              } yield assertTrue(actual == Left(List(SubClassCheckFailure(List(d.subclassIri)))))
+              } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
           }
         )

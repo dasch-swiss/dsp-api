@@ -124,7 +124,7 @@ case class RestCardinalityServiceLive(
 
   private def toExternalErrorMessage(f: CanSetCardinalityCheckResult.Failure): Task[String] =
     f match {
-      case a: CanSetCardinalityCheckResult.SubClassCheckFailure =>
+      case a: CanSetCardinalityCheckResult.SubclassCheckFailure =>
         ZIO
           .foreach(a.subClasses)(iriConverter.asExternalIri)
           .map(_.mkString(","))

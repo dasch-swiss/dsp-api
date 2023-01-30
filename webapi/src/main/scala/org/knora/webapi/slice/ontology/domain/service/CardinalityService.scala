@@ -22,7 +22,7 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SubClassCheckFailure
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SubclassCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SuperClassCheckFailure
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -127,7 +127,7 @@ object ChangeCardinalityCheckResult {
       val reason: String = "Cardinality exists in super-class which is more restrictive."
     }
 
-    final case class SubClassCheckFailure(subClasses: List[InternalIri]) extends CanSetCardinalityCheckResult.Failure {
+    final case class SubclassCheckFailure(subClasses: List[InternalIri]) extends CanSetCardinalityCheckResult.Failure {
       val reason: String = "Cardinality exists in super-class which is more wider."
     }
 
@@ -207,7 +207,7 @@ final case class CardinalityServiceLive(
         superC     <- ontologyRepo.findAllSuperClassesBy(toClassIris(subclasses))
       } yield subclasses ::: superC
     val subclassCardinalityIsNotIncluded = (other: Cardinality) => other.isNotIncludedIn(newCardinality)
-    canSetCheckFor(subclasses, propertyIri, subclassCardinalityIsNotIncluded, SubClassCheckFailure)
+    canSetCheckFor(subclasses, propertyIri, subclassCardinalityIsNotIncluded, SubclassCheckFailure)
   }
 
   private def canSetCheckFor(
