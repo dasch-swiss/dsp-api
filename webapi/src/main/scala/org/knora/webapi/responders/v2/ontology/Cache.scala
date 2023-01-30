@@ -58,8 +58,8 @@ object Cache extends LazyLogging {
    * The in-memory cache of ontologies.
    *
    * @param ontologies                a map of ontology IRIs to ontologies.
-   * @param classToSuperClassLookup   a map of classes to their super-classes.
-   * @param classToSubclassLookup     a map of classes to their subclasses.
+   * @param classToSuperClassLookup   a lookup table of class IRIs to their potential super-classes.
+   * @param classToSubclassLookup     a lookup table of class IRIs to their potential subclasses.
    * @param subPropertyOfRelations    a map of subproperties to their base properties.
    * @param superPropertyOfRelations  a map of base classes to their subproperties.
    * @param classDefinedInOntology    a map of class IRIs to the ontology where the class is defined
