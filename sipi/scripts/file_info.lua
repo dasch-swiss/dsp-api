@@ -25,6 +25,7 @@ local IMAGE_JPG = "image/jpeg"
 local APPLICATION_XML = "application/xml"
 local TEXT_XML = "text/xml"
 local TEXT_PLAIN = "text/plain"
+local TEXT_CSV = "text/csv"
 local AUDIO_MP3 = "audio/mpeg"
 local AUDIO_WAV = "audio/wav"
 local AUDIO_X_WAV = "audio/x-wav"
@@ -66,7 +67,8 @@ local text_mime_types = {
     TEXT_PLAIN,
     APPLICATION_XML,
     TEXT_XML,
-    APPLICATION_CSV
+    APPLICATION_CSV,
+    TEXT_CSV
 }
 
 local document_mime_types = {

@@ -6,20 +6,29 @@
 @prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
-<http://0.0.0.0:3333/ontology/00FF/images/v2>
-        rdf:type                        owl:Ontology ;
-        rdfs:label                      "The images demo ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/00FF> ;
-        knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
-
 images:bild  rdf:type                owl:Class ;
         rdfs:comment                 "An image of the demo image collection" ;
         rdfs:label                   "Image" ;
         rdfs:subClassOf              knora-api:StillImageRepresentation ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  12 ;
-                                       owl:maxCardinality   1 ;
-                                       owl:onProperty       images:urheber
+                                       salsah-gui:guiOrder  3 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       images:description
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  10 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       images:bearbeiter
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  1 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       images:signatur
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  2 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       images:bildnr
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  9 ;
@@ -28,43 +37,8 @@ images:bild  rdf:type                owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasStillImageFileValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToUser
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  8 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       images:erfassungsdatum
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  13 ;
-                                       owl:maxCardinality   1 ;
-                                       owl:onProperty       images:copyright
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  11 ;
-                                       owl:maxCardinality   1 ;
-                                       owl:onProperty       images:negativnummer
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  12 ;
-                                       owl:maxCardinality   1 ;
-                                       owl:onProperty       images:urheberValue
+                                       owl:onProperty         knora-api:deleteDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -73,48 +47,13 @@ images:bild  rdf:type                owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  7 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       images:hatBildformatValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkToValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
+                                       owl:onProperty         knora-api:userHasPermission
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  3 ;
+                                       salsah-gui:guiOrder  5 ;
                                        owl:cardinality      1 ;
-                                       owl:onProperty       images:description
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  6 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       images:jahr_exakt
+                                       owl:onProperty       images:jahrzehnt
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -123,8 +62,23 @@ images:bild  rdf:type                owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:creationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
                                        owl:onProperty         knora-api:deletedBy
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  13 ;
+                                       owl:maxCardinality   1 ;
+                                       owl:onProperty       images:copyrightValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  4 ;
@@ -132,54 +86,9 @@ images:bild  rdf:type                owl:Class ;
                                        owl:onProperty       images:jahreszeit
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  13 ;
-                                       owl:maxCardinality   1 ;
-                                       owl:onProperty       images:copyrightValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  5 ;
+                                       salsah-gui:guiOrder  8 ;
                                        owl:cardinality      1 ;
-                                       owl:onProperty       images:jahrzehnt
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  2 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       images:bildnr
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  10 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       images:bearbeiter
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  1 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       images:signatur
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       images:titel
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
+                                       owl:onProperty       images:erfassungsdatum
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -191,6 +100,97 @@ images:bild  rdf:type                owl:Class ;
                                        owl:minCardinality   0 ;
                                        owl:onProperty       images:hatBildformat
                                      ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  12 ;
+                                       owl:maxCardinality   1 ;
+                                       owl:onProperty       images:urheber
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  11 ;
+                                       owl:maxCardinality   1 ;
+                                       owl:onProperty       images:negativnummer
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  13 ;
+                                       owl:maxCardinality   1 ;
+                                       owl:onProperty       images:copyright
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToProject
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  12 ;
+                                       owl:maxCardinality   1 ;
+                                       owl:onProperty       images:urheberValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToUser
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  0 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       images:titel
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  7 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       images:hatBildformatValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  6 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       images:jahr_exakt
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasStillImageFileValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         rdfs:label
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkToValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true ;
         knora-api:resourceIcon       "bild.png" .
+
+<http://0.0.0.0:3333/ontology/00FF/images/v2>
+        rdf:type                        owl:Ontology ;
+        rdfs:label                      "The images demo ontology" ;
+        knora-api:attachedToProject     <http://rdfh.ch/projects/00FF> ;
+        knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
