@@ -232,7 +232,7 @@ final case class CardinalityServiceLive(
       classesInfo   = classes.map(_.entityInfoContent)
       classesAndCardinalities =
         classesInfo.flatMap(it => getCardinalityForProperty(it, propSmartIri).map(c => (it.classIri.toInternalIri, c)))
-      filteredClasses = classesAndCardinalities.filter { case (_, c) => predicate.apply(c) }
+      filteredClasses = classesAndCardinalities.filter { case (_, cardinality) => predicate.apply(cardinality) }
     } yield filteredClasses.map { case (classIri, _) => classIri }
   }
 
