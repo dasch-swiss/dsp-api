@@ -363,7 +363,7 @@ object Cache extends LazyLogging {
    * @param allOntologyMetadata a map of ontology IRIs to ontology metadata.
    * @param ontologyGraphs      a list of ontology graphs.
    */
-  def makeOntologyCache(
+  private def makeOntologyCache(
     allOntologyMetadata: Map[SmartIri, OntologyMetadataV2],
     ontologyGraphs: Iterable[OntologyGraph]
   )(implicit stringFormatter: StringFormatter): Unit = {
@@ -924,7 +924,7 @@ object Cache extends LazyLogging {
    * @param cacheData    the ontology cache.
    * @return the updated ontology cache.
    */
-  def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
+  private def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
     // Get the class definitions of all the subclasses of the base class.
 
     val allSubClassIris: Set[SmartIri] = cacheData.classToSubclassLookup(baseClassIri)
