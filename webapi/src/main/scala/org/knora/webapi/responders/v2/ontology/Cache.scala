@@ -145,7 +145,7 @@ object Cache extends LazyLogging {
           val attachedToProject: Option[SmartIri] =
             ontology.projectIri
 
-          // throw an expception if ontology doesn't have lastModificationDate property and isn't attached to system project
+          // throw an exception if ontology doesn't have lastModificationDate property and isn't attached to system project
           lastModificationDate match {
             case None =>
               attachedToProject match {
@@ -198,22 +198,20 @@ object Cache extends LazyLogging {
 
     // A map of ontology IRIs to class IRIs in each ontology.
     val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
-      case (iri, ontology) => {
+      case (iri, ontology) =>
         val classIris = ontology.classes.values.map { case classInfo: ReadClassInfoV2 =>
           classInfo.entityInfoContent.classIri
         }.toSet
-        (iri -> classIris)
-      }
+        iri -> classIris
     }
 
     // A map of ontology IRIs to property IRIs in each ontology.
     val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
-      case (iri, ontology) => {
+      case (iri, ontology) =>
         val propertyIris = ontology.properties.values.map { case propertyInfo: ReadPropertyInfoV2 =>
           propertyInfo.entityInfoContent.propertyIri
         }.toSet
-        (iri -> propertyIris)
-      }
+        iri -> propertyIris
     }
 
     // Construct entity definitions.
