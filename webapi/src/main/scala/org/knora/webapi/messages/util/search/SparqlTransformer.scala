@@ -287,7 +287,7 @@ object SparqlTransformer {
                     }
 
                     // look up subclasses from ontology cache
-                    val superClasses = ontoCache.superClassOfRelations
+                    val superClasses = ontoCache.classToSubclassLookup
                     val knownSubClasses = superClasses
                       .get(baseClassIri.iri)
                       .getOrElse({

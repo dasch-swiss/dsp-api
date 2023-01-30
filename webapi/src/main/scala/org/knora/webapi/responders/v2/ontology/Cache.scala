@@ -10,7 +10,6 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import com.typesafe.scalalogging.Logger
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
@@ -41,8 +40,6 @@ import org.knora.webapi.util.cache.CacheUtil
 
 object Cache extends LazyLogging {
 
-  private val log: Logger = logger
-
   // The name of the ontology cache.
   private val OntologyCacheName = "ontologyCache"
 
@@ -58,8 +55,8 @@ object Cache extends LazyLogging {
    * The in-memory cache of ontologies.
    *
    * @param ontologies                a map of ontology IRIs to ontologies.
-   * @param subClassOfRelations       a map of subclasses to their base classes.
-   * @param superClassOfRelations     a map of base classes to their subclasses.
+   * @param classToSuperClassLookup   a lookup table of class IRIs to their potential super-classes.
+   * @param classToSubclassLookup     a lookup table of class IRIs to their potential subclasses.
    * @param subPropertyOfRelations    a map of subproperties to their base properties.
    * @param superPropertyOfRelations  a map of base classes to their subproperties.
    * @param classDefinedInOntology    a map of class IRIs to the ontology where the class is defined
@@ -69,8 +66,8 @@ object Cache extends LazyLogging {
    */
   case class OntologyCacheData(
     ontologies: Map[SmartIri, ReadOntologyV2],
-    subClassOfRelations: Map[SmartIri, Seq[SmartIri]],
-    superClassOfRelations: Map[SmartIri, Set[SmartIri]],
+    classToSuperClassLookup: Map[SmartIri, Seq[SmartIri]],
+    classToSubclassLookup: Map[SmartIri, Set[SmartIri]],
     subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     classDefinedInOntology: Map[SmartIri, SmartIri],
@@ -139,13 +136,13 @@ object Cache extends LazyLogging {
       ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] =
         allOntologyMetadata.keys.map { ontologyIri =>
           val ontology: OntologyMetadataV2 =
-            allOntologyMetadata.get(ontologyIri).get
+            allOntologyMetadata(ontologyIri)
           val lastModificationDate: Option[Instant] =
             ontology.lastModificationDate
           val attachedToProject: Option[SmartIri] =
             ontology.projectIri
 
-          // throw an expception if ontology doesn't have lastModificationDate property and isn't attached to system project
+          // throw an exception if ontology doesn't have lastModificationDate property and isn't attached to system project
           lastModificationDate match {
             case None =>
               attachedToProject match {
@@ -197,23 +194,19 @@ object Cache extends LazyLogging {
     implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
     // A map of ontology IRIs to class IRIs in each ontology.
-    val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
-      case (iri, ontology) => {
-        val classIris = ontology.classes.values.map { case classInfo: ReadClassInfoV2 =>
-          classInfo.entityInfoContent.classIri
-        }.toSet
-        (iri -> classIris)
-      }
+    val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map { case (iri, ontology) =>
+      val classIris = ontology.classes.values.map { classInfo: ReadClassInfoV2 =>
+        classInfo.entityInfoContent.classIri
+      }.toSet
+      iri -> classIris
     }
 
     // A map of ontology IRIs to property IRIs in each ontology.
-    val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
-      case (iri, ontology) => {
-        val propertyIris = ontology.properties.values.map { case propertyInfo: ReadPropertyInfoV2 =>
-          propertyInfo.entityInfoContent.propertyIri
-        }.toSet
-        (iri -> propertyIris)
-      }
+    val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map { case (iri, ontology) =>
+      val propertyIris = ontology.properties.values.map { propertyInfo: ReadPropertyInfoV2 =>
+        propertyInfo.entityInfoContent.propertyIri
+      }.toSet
+      iri -> propertyIris
     }
 
     // Construct entity definitions.
@@ -312,7 +305,7 @@ object Cache extends LazyLogging {
     val subClassOfRelationsErrorMap =
       new ErrorHandlingMap[SmartIri, Seq[SmartIri]](
         allSubClassOfRelations,
-        key => s"Class not found in subClassOfRelations: $key"
+        key => s"Class not found in classToSuperClassLookup: $key"
       )
     val superClassOfRelationsErrorMap =
       new ErrorHandlingMap[SmartIri, Set[SmartIri]](
@@ -348,8 +341,8 @@ object Cache extends LazyLogging {
 
     OntologyCacheData(
       ontologies = ontologiesErrorMap,
-      subClassOfRelations = subClassOfRelationsErrorMap,
-      superClassOfRelations = superClassOfRelationsErrorMap,
+      classToSuperClassLookup = subClassOfRelationsErrorMap,
+      classToSubclassLookup = superClassOfRelationsErrorMap,
       subPropertyOfRelations = subPropertyOfRelationsErrorMap,
       superPropertyOfRelations = superPropertyOfRelationsErrorMap,
       classDefinedInOntology = classDefinedInOntologyErrorMap,
@@ -365,7 +358,7 @@ object Cache extends LazyLogging {
    * @param allOntologyMetadata a map of ontology IRIs to ontology metadata.
    * @param ontologyGraphs      a list of ontology graphs.
    */
-  def makeOntologyCache(
+  private def makeOntologyCache(
     allOntologyMetadata: Map[SmartIri, OntologyMetadataV2],
     ontologyGraphs: Iterable[OntologyGraph]
   )(implicit stringFormatter: StringFormatter): Unit = {
@@ -592,9 +585,9 @@ object Cache extends LazyLogging {
     // Construct the ontology cache data.
     val ontologyCacheData: OntologyCacheData = OntologyCacheData(
       ontologies = new ErrorHandlingMap[SmartIri, ReadOntologyV2](readOntologies, key => s"Ontology not found: $key"),
-      subClassOfRelations =
+      classToSuperClassLookup =
         new ErrorHandlingMap[SmartIri, Seq[SmartIri]](allSubClassOfRelations, key => s"Class not found: $key"),
-      superClassOfRelations =
+      classToSubclassLookup =
         new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperClassOfRelations, key => s"Class not found: $key"),
       subPropertyOfRelations =
         new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, key => s"Property not found: $key"),
@@ -709,7 +702,7 @@ object Cache extends LazyLogging {
       if (OntologyConstants.Owl.ClassesThatCanBeKnoraClassConstraints.contains(constraintValueToBeChecked.toString)) {
         Set(constraintValueToBeChecked)
       } else {
-        cacheData.subClassOfRelations
+        cacheData.classToSuperClassLookup
           .getOrElse(
             constraintValueToBeChecked,
             errorFun(
@@ -926,10 +919,10 @@ object Cache extends LazyLogging {
    * @param cacheData    the ontology cache.
    * @return the updated ontology cache.
    */
-  def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
+  private def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
     // Get the class definitions of all the subclasses of the base class.
 
-    val allSubClassIris: Set[SmartIri] = cacheData.superClassOfRelations(baseClassIri)
+    val allSubClassIris: Set[SmartIri] = cacheData.classToSubclassLookup(baseClassIri)
 
     val allSubClasses: Set[ReadClassInfoV2] = allSubClassIris.map { subClassIri =>
       cacheData.ontologies(subClassIri.getOntologyFromEntity).classes(subClassIri)
@@ -1059,7 +1052,7 @@ object Cache extends LazyLogging {
   /**
    * Deletes an ontology from the cache.
    *
-   * @param updatedOntologyIri the IRI of the ontology to delete
+   * @param ontologyIri the IRI of the ontology to delete
    * @return the updated cache data
    */
   def deleteOntology(ontologyIri: SmartIri)(implicit
@@ -1072,5 +1065,4 @@ object Cache extends LazyLogging {
       _                     = storeCacheData(newOntologyCacheData)
       updatedOntologyCache <- getCacheData
     } yield updatedOntologyCache
-
 }
