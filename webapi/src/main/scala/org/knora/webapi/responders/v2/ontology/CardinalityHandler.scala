@@ -150,7 +150,7 @@ object CardinalityHandler {
 
       allBaseClassIrisWithoutInternal: Seq[SmartIri] =
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
-          cacheData.subClassOfRelations.getOrElse(
+          cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
             Seq.empty[SmartIri]
           )
@@ -310,7 +310,7 @@ object CardinalityHandler {
 
       allBaseClassIrisWithoutInternal: Seq[SmartIri] =
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
-          cacheData.subClassOfRelations.getOrElse(
+          cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
             Seq.empty[SmartIri]
           )

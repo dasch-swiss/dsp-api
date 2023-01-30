@@ -267,7 +267,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     for {
       cacheData <- Cache.getCacheData
       response = CheckSubClassResponseV2(
-                   isSubClass = cacheData.subClassOfRelations.get(subClassIri) match {
+                   isSubClass = cacheData.classToSuperClassLookup.get(subClassIri) match {
                      case Some(baseClasses) => baseClasses.contains(superClassIri)
                      case None              => throw BadRequestException(s"Class $subClassIri not found")
                    }
@@ -284,7 +284,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     for {
       cacheData <- Cache.getCacheData
 
-      subClassIris = cacheData.superClassOfRelations(classIri).toVector.sorted
+      subClassIris = cacheData.classToSubclassLookup(classIri).toVector.sorted
 
       subClasses = subClassIris.map { subClassIri =>
                      val classInfo: ReadClassInfoV2 =
@@ -906,7 +906,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Check for rdfs:subClassOf cycles.
 
         allBaseClassIrisWithoutSelf: Set[SmartIri] = internalClassDef.subClassOf.flatMap { baseClassIri =>
-                                                       cacheData.subClassOfRelations
+                                                       cacheData.classToSuperClassLookup
                                                          .getOrElse(baseClassIri, Set.empty[SmartIri])
                                                          .toSet
                                                      }
@@ -1329,7 +1329,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Check that the new cardinalities are valid, and add any inherited cardinalities.
 
         allBaseClassIrisWithoutInternal: Seq[SmartIri] = newInternalClassDef.subClassOf.toSeq.flatMap { baseClassIri =>
-                                                           cacheData.subClassOfRelations.getOrElse(
+                                                           cacheData.classToSuperClassLookup.getOrElse(
                                                              baseClassIri,
                                                              Seq.empty[SmartIri]
                                                            )
@@ -1514,7 +1514,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
       newInternalClassDef = oldClassInfo.copy(directCardinalities = newClassInfo.directCardinalities)
       allBaseClassIrisWithoutInternal: Seq[SmartIri] = newInternalClassDef.subClassOf.toSeq.flatMap { baseClassIri =>
-                                                         cacheData.subClassOfRelations.getOrElse(
+                                                         cacheData.classToSuperClassLookup.getOrElse(
                                                            baseClassIri,
                                                            Seq.empty[SmartIri]
                                                          )
