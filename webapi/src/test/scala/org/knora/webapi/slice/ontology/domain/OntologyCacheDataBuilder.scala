@@ -125,7 +125,7 @@ object ReadClassInfoV2Builder {
   def builder(classIri: InternalIri): Builder = builder(classIri.smartIri)
 
   def builder(classIri: SmartIri): Builder = Builder(
-    ReadClassInfoV2(ClassInfoContentV2Builder.builder(classIri).build, allBaseClasses = List.empty)
+    ReadClassInfoV2(ClassInfoContentV2Builder.builder(classIri).build, allBaseClasses = List(classIri))
   )
 
   object ClassInfoContentV2Builder {

@@ -7,7 +7,6 @@ package org.knora.webapi.slice.ontology.repo.service
 
 import zio.Task
 import zio.ZLayer
-
 import scala.annotation.tailrec
 
 import org.knora.webapi.messages.SmartIri
@@ -65,12 +64,14 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
     classIris: List[SmartIri],
     acc: List[ReadClassInfoV2],
     cache: OntologyCacheData
-  ): List[ReadClassInfoV2] =
-    findDirectSubclassesBy(classIris, cache) match {
+  ): List[ReadClassInfoV2] = {
+    val subclassesWithSelf = findDirectSubclassesBy(classIris, cache)
+    val subclasses         = subclassesWithSelf.filter(it => !classIris.contains(it.entityInfoContent.classIri))
+    subclasses match {
       case Nil     => acc
       case classes => findAllSubclassesBy(toClassIris(classes), acc ::: classes, cache)
-
     }
+  }
 
   private def toClassIris(classes: List[ReadClassInfoV2]): List[SmartIri] = classes.map(_.entityInfoContent.classIri)
 
@@ -96,11 +97,14 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
     classIris: List[SmartIri],
     acc: List[ReadClassInfoV2],
     cache: OntologyCacheData
-  ): List[ReadClassInfoV2] =
-    findDirectSuperClassesBy(classIris, cache) match {
+  ): List[ReadClassInfoV2] = {
+    val superClassesWithSelf = findDirectSuperClassesBy(classIris, cache)
+    val superClasses         = superClassesWithSelf.filter(it => !classIris.contains(it.entityInfoContent.classIri))
+    superClasses match {
       case Nil     => acc
       case classes => findAllSuperClassesBy(toClassIris(classes), acc ::: classes, cache)
     }
+  }
 }
 
 object OntologyRepoLive {
