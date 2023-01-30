@@ -197,21 +197,19 @@ object Cache extends LazyLogging {
     implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
     // A map of ontology IRIs to class IRIs in each ontology.
-    val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
-      case (iri, ontology) =>
-        val classIris = ontology.classes.values.map { classInfo: ReadClassInfoV2 =>
-          classInfo.entityInfoContent.classIri
-        }.toSet
-        iri -> classIris
+    val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map { case (iri, ontology) =>
+      val classIris = ontology.classes.values.map { classInfo: ReadClassInfoV2 =>
+        classInfo.entityInfoContent.classIri
+      }.toSet
+      iri -> classIris
     }
 
     // A map of ontology IRIs to property IRIs in each ontology.
-    val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
-      case (iri, ontology) =>
-        val propertyIris = ontology.properties.values.map { propertyInfo: ReadPropertyInfoV2 =>
-          propertyInfo.entityInfoContent.propertyIri
-        }.toSet
-        iri -> propertyIris
+    val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map { case (iri, ontology) =>
+      val propertyIris = ontology.properties.values.map { propertyInfo: ReadPropertyInfoV2 =>
+        propertyInfo.entityInfoContent.propertyIri
+      }.toSet
+      iri -> propertyIris
     }
 
     // Construct entity definitions.
