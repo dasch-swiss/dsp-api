@@ -79,9 +79,9 @@ case class RestCardinalityServiceLive(
       classIri <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
       _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
       result   <- cardinalityService.canReplaceCardinality(classIri)
-    } yield toResponse(result)
+    } yield toCanDoResponseV2(result)
 
-  private def toResponse(result: CanReplaceCardinalityCheckResult): CanDoResponseV2 = result match {
+  private def toCanDoResponseV2(result: CanReplaceCardinalityCheckResult): CanDoResponseV2 = result match {
     case CanReplaceCardinalityCheckResult.Success          => CanDoResponseV2.yes
     case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(failure.reason)
   }
@@ -109,13 +109,13 @@ case class RestCardinalityServiceLive(
       newCardinality <- parseCardinality(cardinality).orElseFail(invalidQueryParamValue(newCardinalityKey))
       propertyIri    <- iriConverter.asInternalIri(propertyIri).orElseFail(invalidQueryParamValue(propertyIriKey))
       result         <- cardinalityService.canSetCardinality(classIri, propertyIri, newCardinality)
-      response       <- toResponse(result)
+      response       <- toCanDoResponseV2(result)
     } yield response
 
   private def parseCardinality(cardinality: String): IO[Option[Nothing], Cardinality] =
     ZIO.fromOption(Cardinality.fromString(cardinality))
 
-  private def toResponse(
+  private def toCanDoResponseV2(
     result: Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]
   ): Task[CanDoResponseV2] = result match {
     case Right(_)       => ZIO.succeed(CanDoResponseV2.yes)
