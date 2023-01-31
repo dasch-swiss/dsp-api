@@ -217,6 +217,12 @@ object StringFormatter {
       case None           => throw AssertionException("StringFormatter not yet initialised")
     }
 
+  def getInitializedTestInstance: StringFormatter =
+    generalInstance match {
+      case Some(instance) => instance
+      case None           => StringFormatter.initForTest(); getGeneralInstance
+    }
+
   /**
    * Gets the singleton instance of [[StringFormatter]] that can only handle the IRIs in built-in
    * ontologies.

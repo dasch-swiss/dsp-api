@@ -61,6 +61,7 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -72,7 +73,7 @@ final case class RoutingActor(
   iiifServiceManager: IIIFServiceManager,
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
-  runtime: zio.Runtime[Any]
+  runtime: zio.Runtime[CardinalityService]
 ) extends Actor {
 
   private val log: Logger                                 = Logger(this.getClass)
@@ -93,7 +94,7 @@ final case class RoutingActor(
   private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps)
 
   // V2 responders
-  private val ontologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(responderData)
+  private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, runtime)
   private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData)
   private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
   private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)

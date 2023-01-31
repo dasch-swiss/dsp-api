@@ -7,6 +7,8 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import zio.RIO
+import zio.ZIO
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -15,8 +17,6 @@ import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
@@ -38,11 +38,11 @@ import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isFileValueProp
-import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isKnoraResourceProperty
-import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isLinkProp
-import org.knora.webapi.responders.v2.ontology.OntologyHelpers.isLinkValueProp
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers._
 import org.knora.webapi.responders.v2.ontology.OntologyLegacyRepo
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.util._
 
 /**
@@ -64,7 +64,10 @@ import org.knora.webapi.util._
  *
  * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
  */
-class OntologyResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+final case class OntologyResponderV2(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[CardinalityService]
+) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
@@ -658,7 +661,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                       )
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = changeOntologyMetadataRequest.lastModificationDate
@@ -771,7 +774,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                       )
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = deleteOntologyCommentRequestV2.lastModificationDate
@@ -861,7 +864,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         internalClassDef: ClassInfoContentV2 = createClassRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = createClassRequest.lastModificationDate
@@ -1076,7 +1079,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         internalClassDef: ClassInfoContentV2 = changeGuiOrderRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = changeGuiOrderRequest.lastModificationDate
@@ -1255,7 +1258,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = addCardinalitiesRequest.lastModificationDate
@@ -1478,9 +1481,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
     val taskFuture: () => Future[ReadOntologyV2] = () =>
       for {
-        newReadClassInfo <- makeUpdatedClassModel(request)
-        _                <- checkPreconditions(request)
-        response         <- replaceClassCardinalitiesInPersistence(request, newReadClassInfo)
+        newModel   <- makeUpdatedClassModel(request)
+        validModel <- checkLastModificationDateAndCanCardinalitiesBeSet(request, newModel)
+        response   <- replaceClassCardinalitiesInPersistence(request, validModel)
       } yield response
 
     val classIriExternal    = request.classInfoContent.classIri
@@ -1568,29 +1571,44 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       throw BadRequestException(s"No rdf:type specified")
     )
     if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
-      throw BadRequestException(s"Invalid rdf:type of property: ${rdfType}.")
+      throw BadRequestException(s"Invalid rdf:type of property: $rdfType.")
     }
     classInfo
   }
 
-  private def checkPreconditions(request: ReplaceCardinalitiesRequestV2): Future[Unit] = {
-    val classIriExternal = request.classInfoContent.classIri
-    val classIri         = classIriExternal.toOntologySchema(InternalSchema)
-    val ontologyIri      = classIri.getOntologyFromEntity
+  private def checkLastModificationDateAndCanCardinalitiesBeSet(
+    request: ReplaceCardinalitiesRequestV2,
+    newModel: ReadClassInfoV2
+  ): Future[ReadClassInfoV2] = {
+    val classIriExternal     = request.classInfoContent.classIri
+    val classIri             = classIriExternal.toOntologySchema(InternalSchema)
+    val ontologyIri          = classIri.getOntologyFromEntity
+    val lastModificationDate = request.lastModificationDate
     for {
-      _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
-             appActor,
-             internalOntologyIri = ontologyIri,
-             expectedLastModificationDate = request.lastModificationDate
-           )
-      _ <- iriService.throwIfEntityIsUsed(
-             entityIri = classIri,
-             ignoreKnoraConstraints = true,
-             errorFun = throw BadRequestException(
-               s"The cardinalities of class $classIriExternal cannot be changed, because it is used in data or has a subclass."
-             )
-           )
-    } yield ()
+      _           <- checkOntologyLastModificationDateBeforeUpdate(appActor, ontologyIri, lastModificationDate)
+      checkResult <- checkCanCardinalitiesBeSet(newModel.entityInfoContent)
+      _            = checkResult.fold(checkFailedErrorMsg => throw BadRequestException(checkFailedErrorMsg), _ => ())
+    } yield newModel
+  }
+
+  private def checkCanCardinalitiesBeSet(newModel: ClassInfoContentV2): Future[Either[String, Unit]] = {
+    val classIri             = newModel.classIri.toInternalIri
+    val cardinalitiesToCheck = newModel.directCardinalities.map { case (p, c) => (p.toInternalIri, c.cardinality) }
+
+    val iterableOfZioChecks: Iterable[RIO[CardinalityService, List[CanSetCardinalityCheckResult]]] =
+      cardinalitiesToCheck.map { case (p, c) =>
+        CardinalityService.canSetCardinality(classIri, p, c).map(_.fold(a => a, b => List(b)))
+      }
+    val checkResults: RIO[CardinalityService, List[CanSetCardinalityCheckResult]] =
+      iterableOfZioChecks.reduceLeftOption((a, b) => a.zipWith(b)(_ ::: _)).getOrElse(ZIO.succeed(List.empty))
+
+    val setCheck = checkResults
+      .map(_.filter(_.isFailure))
+      .map {
+        case Nil    => Right(())
+        case errors => Left(errors.mkString(" "))
+      }
+    UnsafeZioRun.runToFuture(setCheck)
   }
 
   private def replaceClassCardinalitiesInPersistence(
@@ -1783,7 +1801,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         cacheData <- Cache.getCacheData
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = deleteClassRequest.lastModificationDate
@@ -1921,7 +1939,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         cacheData <- Cache.getCacheData
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = deletePropertyRequest.lastModificationDate
@@ -2077,7 +2095,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
              )
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = deleteOntologyRequest.lastModificationDate
@@ -2153,7 +2171,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         internalPropertyDef = createPropertyRequest.propertyInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = createPropertyRequest.lastModificationDate
@@ -2506,7 +2524,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           )
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = changePropertyGuiElementRequest.lastModificationDate
@@ -2729,7 +2747,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           )
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate
@@ -2925,7 +2943,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           )
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate
@@ -3053,7 +3071,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       for {
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = deletePropertyCommentRequest.lastModificationDate
@@ -3268,7 +3286,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       for {
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
                appActor,
                internalOntologyIri = internalOntologyIri,
                expectedLastModificationDate = deleteClassCommentRequest.lastModificationDate

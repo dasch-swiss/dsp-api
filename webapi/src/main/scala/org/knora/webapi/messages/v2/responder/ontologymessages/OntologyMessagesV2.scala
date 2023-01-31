@@ -2554,7 +2554,7 @@ sealed trait ReadEntityInfoV2 {
  * Represents an OWL class definition as returned in an API response.
  *
  * @param entityInfoContent       a [[ReadClassInfoV2]] providing information about the class.
- * @param allBaseClasses          a seq of the IRIs of all the base classes of the class.
+ * @param allBaseClasses          a seq of the IRIs of all the super-classes of this class.
  * @param isResourceClass         `true` if this is a subclass of `knora-base:Resource`.
  * @param isStandoffClass         `true` if this is a subclass of `knora-base:StandoffTag`.
  * @param isValueClass            `true` if the class is a Knora value class.

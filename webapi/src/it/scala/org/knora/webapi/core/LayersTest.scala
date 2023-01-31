@@ -43,6 +43,7 @@ object LayersTest {
     with AppRouter
     with CacheService
     with CacheServiceManager
+    with CardinalityService
     with HttpServer
     with IIIFServiceManager
     with IriConverter
