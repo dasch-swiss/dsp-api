@@ -11,7 +11,6 @@ import zio.http.model._
 import zio.json._
 
 import java.io.File
-import java.nio.file
 import java.nio.file.Files
 
 import dsp.errors.BadRequestException
