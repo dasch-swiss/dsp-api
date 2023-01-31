@@ -241,7 +241,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertTrue(true)
   }
 
-  val getAllProjectDataSpec = suite("get all project data")(test("get project by shortcode") {
+  val getAllProjectDataSpec = test("get all project data") {
     val identifier = ProjectIdentifierADM.IriIdentifier
       .fromString("http://rdfh.ch/projects/0001")
       .getOrElse(throw BadRequestException("Invalid project IRI"))
@@ -261,5 +261,5 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     for {
       _ <- projectsService.provide(actorToZioBridge)
     } yield assertTrue(true)
-  })
+  }
 }
