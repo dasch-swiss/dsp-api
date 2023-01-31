@@ -27,5 +27,5 @@ WHERE {
   ?s  a          ?classIri;
       ?property  ?o .
 
- }
+}
 GROUP BY ?total
