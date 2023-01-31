@@ -21,7 +21,11 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT (COUNT(*) AS ?total)
 WHERE {
-  ?s a                      <@{classIri.value}>;
-     <@{propertyIri.value}> ?o .
+  BIND(IRI("@{propertyIri.value}") AS ?property)
+  BIND(IRI("@{classIri.value}") AS ?classIri)
+
+  ?s  a          ?classIri;
+      ?property  ?o .
+
  }
 GROUP BY ?total
