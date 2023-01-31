@@ -33,6 +33,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRes
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
+import zio.http.model.HttpError
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
@@ -116,7 +117,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
           ProjectStatus.make(true),
           ProjectSelfJoin.make(false)
         )(ProjectCreatePayloadADM.apply)
-        .getOrElse(throw new Exception("Invalid Payload"))
+        .getOrElse(throw BadRequestException("Invalid Payload"))
     val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
     val mockService = ProjectsServiceMock
       .CreateProject(
@@ -144,7 +145,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val iri = "http://rdfh.ch/projects/0001"
       val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
         .fromString(iri)
-        .getOrElse(throw new Exception("Invalid IRI"))
+        .getOrElse(throw BadRequestException("Invalid IRI"))
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri)))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetSingleProject(
@@ -163,7 +164,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val shortcode = "0001"
       val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
         .fromString(shortcode)
-        .getOrElse(throw new Exception("Invalid Shortcode"))
+        .getOrElse(throw BadRequestException("Invalid Shortcode"))
       val request = Request.get(url = URL(basePathProjectsShortcode / shortcode))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetSingleProject(
@@ -182,7 +183,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val shortname = "someProject"
       val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortnameIdentifier
         .fromString(shortname)
-        .getOrElse(throw new Exception("Invalid Shortname"))
+        .getOrElse(throw BadRequestException("Invalid Shortname"))
       val request = Request.get(url = URL(basePathProjectsShortname / shortname))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetSingleProject(
@@ -310,11 +311,11 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val getAllDataSpec = suite("get all data") {
+  val getAllDataSpec = suite("get all data")(
     test("successfully get all data") {
       val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
         .fromString("http://rdfh.ch/projects/0001")
-        .getOrElse(throw new Exception("Invalid IRI"))
+        .getOrElse(throw BadRequestException("Invalid project IRI"))
       val iri     = identifier.asIriIdentifierOption.getOrElse(throw BadRequestException("Invalid project IRI"))
       val user    = KnoraSystemInstances.Users.SystemUser
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "AllData"))
@@ -329,6 +330,18 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
       } yield assertTrue(true)
+    },
+    test("return a BadRequest Exception if project IRI is invalid") {
+      val iri     = "http://rdfh.ch/project/0001"
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "AllData"))
+      val path    = file.Paths.get("src/test/resources/getAllDataFile.trig")
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == "{\"error\":\"dsp.errors.BadRequestException: Project IRI is invalid.\"}")
     }
-  }
+  )
 }

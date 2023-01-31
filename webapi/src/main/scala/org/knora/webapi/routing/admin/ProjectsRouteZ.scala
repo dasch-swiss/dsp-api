@@ -107,15 +107,13 @@ final case class ProjectsRouteZ(
   private def getAllProjectData(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
       iriDecoded             <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      iriIdentifier          <- IriIdentifier.fromString(iriDecoded).toZIO
+      iriIdentifier          <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       projectDataGetResponse <- projectsService.getAllProjectData(iriIdentifier, requestingUser)
       filePath                = projectDataGetResponse.projectDataFile
-
       response = Response(
                    headers = Headers.contentType("application/trig"),
                    body = Body.fromFile(new File(filePath.toString()))
                  )
-
       _ = ZIO.succeed(ZIO.attempt(Files.deleteIfExists(filePath)))
     } yield response
 
