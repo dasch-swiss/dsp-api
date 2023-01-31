@@ -124,11 +124,11 @@ object ChangeCardinalityCheckResult {
 
     final case class SuperClassCheckFailure(superClasses: List[InternalIri])
         extends CanSetCardinalityCheckResult.Failure {
-      val reason: String = "Cardinality exists in super-class which is more restrictive."
+      val reason: String = "The new cardinality is not included in the cardinality of a super-class."
     }
 
     final case class SubclassCheckFailure(subClasses: List[InternalIri]) extends CanSetCardinalityCheckResult.Failure {
-      val reason: String = "Cardinality exists in super-class which is more wider."
+      val reason: String = "The new cardinality does not include the cardinality of a subclass."
     }
 
     final case class CurrentClassFailure(currentClassIri: InternalIri) extends CanSetCardinalityCheckResult.Failure {
