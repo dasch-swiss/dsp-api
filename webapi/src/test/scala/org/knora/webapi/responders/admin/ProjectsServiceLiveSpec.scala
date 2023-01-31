@@ -9,6 +9,7 @@ import zio._
 import zio.mock._
 import zio.prelude.Validation
 import zio.test._
+
 import java.nio.file
 
 import dsp.errors.BadRequestException
@@ -21,6 +22,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangeRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -32,8 +35,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.ActorToZioBridgeMock
 import org.knora.webapi.responders.admin.ProjectsService
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetRequestADM
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
