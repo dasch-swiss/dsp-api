@@ -37,12 +37,20 @@ sealed trait Cardinality {
   }
 
   /**
-   * Negated check for [[org.knora.webapi.slice.ontology.domain.model.Cardinality#isIncludedIn(org.knora.webapi.slice.ontology.domain.model.Cardinality)]]
+   * Negated check for [[Cardinality.isIncludedIn(org.knora.webapi.slice.ontology.domain.model.Cardinality)]]
    *
    * @param other The cardinality to be compared against.
    * @return `true` if this cardinality is not include in the `other`, `false` otherwise.
    */
   def isNotIncludedIn(other: Cardinality): Boolean = !isIncludedIn(other)
+
+  /**
+   * Check whether a `count` is in included in the range of the [[Cardinality]].
+   *
+   * @param count  The quantity to check.
+   * @return `true` if the count is a valid value for the given [[Cardinality]].
+   */
+  def isCountIncluded(count: Int): Boolean = min <= count && max.forall(_ >= count)
 
   def getIntersection(other: Cardinality): Option[Cardinality] = {
     val lower = math.max(this.min, other.min)
