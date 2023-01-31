@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.ontology.domain.service
+
 import zio.Task
 import zio.macros.accessible
 
@@ -16,6 +17,18 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   override def findById(id: InternalIri): Task[Option[ReadOntologyV2]]
+
   override def findAll(): Task[List[ReadOntologyV2]]
-  def findClassBy(iri: InternalIri): Task[Option[ReadClassInfoV2]]
+
+  def findClassBy(classIri: InternalIri): Task[Option[ReadClassInfoV2]]
+
+  def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
+
+  def findAllSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
+
+  def findAllSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]]
+
+  def findDirectSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
+
+  def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 }

@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.ontology.api.service
+
 import zio.IO
 import zio.Task
 import zio.ZIO
@@ -21,8 +22,9 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.newCar
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.propertyIriKey
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.ChangeCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -77,7 +79,12 @@ case class RestCardinalityServiceLive(
       classIri <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
       _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
       result   <- cardinalityService.canReplaceCardinality(classIri)
-    } yield toResponse(result)
+    } yield toCanDoResponseV2(result)
+
+  private def toCanDoResponseV2(result: CanReplaceCardinalityCheckResult): CanDoResponseV2 = result match {
+    case CanReplaceCardinalityCheckResult.Success          => CanDoResponseV2.yes
+    case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(failure.reason)
+  }
 
   private def checkUserHasWriteAccessToOntologyOfClass(user: UserADM, classIri: InternalIri): Task[Unit] = {
     val hasWriteAccess = for {
@@ -102,15 +109,37 @@ case class RestCardinalityServiceLive(
       newCardinality <- parseCardinality(cardinality).orElseFail(invalidQueryParamValue(newCardinalityKey))
       propertyIri    <- iriConverter.asInternalIri(propertyIri).orElseFail(invalidQueryParamValue(propertyIriKey))
       result         <- cardinalityService.canSetCardinality(classIri, propertyIri, newCardinality)
-    } yield toResponse(result)
+      response       <- toCanDoResponseV2(result)
+    } yield response
 
   private def parseCardinality(cardinality: String): IO[Option[Nothing], Cardinality] =
     ZIO.fromOption(Cardinality.fromString(cardinality))
 
-  private def toResponse(result: ChangeCardinalityCheckResult): CanDoResponseV2 = result match {
-    case _: ChangeCardinalityCheckResult.Success       => CanDoResponseV2(canDo = true)
-    case failure: ChangeCardinalityCheckResult.Failure => CanDoResponseV2(canDo = false, Some(failure.reason))
+  private def toCanDoResponseV2(
+    result: Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]
+  ): Task[CanDoResponseV2] = result match {
+    case Right(_)       => ZIO.succeed(CanDoResponseV2.yes)
+    case Left(failures) => ZIO.foreach(failures)(toExternalErrorMessage).map(_.mkString(" ")).map(CanDoResponseV2.no(_))
   }
+
+  private def toExternalErrorMessage(f: CanSetCardinalityCheckResult.Failure): Task[String] =
+    f match {
+      case a: CanSetCardinalityCheckResult.SubclassCheckFailure =>
+        ZIO
+          .foreach(a.subClasses)(iriConverter.asExternalIri)
+          .map(_.mkString(","))
+          .map(sc => s"${a.reason}. Please fix subclasses first: $sc.")
+      case b: CanSetCardinalityCheckResult.SuperClassCheckFailure =>
+        ZIO
+          .foreach(b.superClasses)(iriConverter.asExternalIri)
+          .map(_.mkString(","))
+          .map(sc => s"${b.reason}. Please fix super-classes first: $sc.")
+      case c: CanSetCardinalityCheckResult.CurrentClassFailure =>
+        iriConverter
+          .asExternalIri(c.currentClassIri)
+          .map(classIri => s"${c.reason} Please fix cardinalities for class $classIri first.")
+      case d => ZIO.succeed(d.reason)
+    }
 }
 
 object RestCardinalityService {

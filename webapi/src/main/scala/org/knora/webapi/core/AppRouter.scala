@@ -18,6 +18,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.settings._
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
@@ -31,7 +32,12 @@ trait AppRouter {
 
 object AppRouter {
   val layer: ZLayer[
-    core.ActorSystem with CacheServiceManager with IIIFServiceManager with TriplestoreServiceManager with AppConfig,
+    core.ActorSystem
+      with AppConfig
+      with CacheServiceManager
+      with CardinalityService
+      with IIIFServiceManager
+      with TriplestoreServiceManager,
     Nothing,
     AppRouter
   ] =
@@ -42,13 +48,13 @@ object AppRouter {
         iiifServiceManager        <- ZIO.service[IIIFServiceManager]
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
-        runtime                   <- ZIO.runtime[Any]
+        runtime                   <- ZIO.runtime[CardinalityService]
       } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem = as.system
 
         val ref: ActorRef = system.actorOf(
           Props(
-            new core.actors.RoutingActor(
+            core.actors.RoutingActor(
               cacheServiceManager,
               iiifServiceManager,
               triplestoreServiceManager,
@@ -66,7 +72,7 @@ object AppRouter {
           val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(60, scala.concurrent.duration.SECONDS))
 
           for {
-            response <- ZIO.fromFuture(_ => (ref.ask(request)(timeout)).mapTo[SuccessResponseV2])
+            response <- ZIO.fromFuture(_ => ref.ask(request)(timeout).mapTo[SuccessResponseV2])
             _        <- ZIO.logInfo(response.message)
           } yield ()
         }
