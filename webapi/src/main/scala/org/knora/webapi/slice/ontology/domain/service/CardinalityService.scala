@@ -234,7 +234,7 @@ final case class CardinalityServiceLive(
       classMaybe                 <- ontologyRepo.findClassBy(classIri).map(_.map(_.entityInfoContent))
       currentCardinality          = classMaybe.flatMap(getCardinalityForProperty(_, propertySmartIri)).getOrElse(Unbounded)
       isIncluded                  = currentCardinality.isIncludedIn(newCardinality)
-      numberOfTimesUsed          <- predicateRepository.getCountForPropertyUseNumberOfTimesWithClass(classIri, propertyIri)
+      numberOfTimesUsed          <- predicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(propertyIri, classIri)
       isCompatibleWithPersistence = numberOfTimesUsed == 0 || newCardinality.isCountIncluded(numberOfTimesUsed)
     } yield
       if (isIncluded || isCompatibleWithPersistence) {

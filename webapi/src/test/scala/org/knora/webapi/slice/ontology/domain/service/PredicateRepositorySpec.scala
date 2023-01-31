@@ -6,6 +6,7 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Anything
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataSet
@@ -46,9 +47,9 @@ object PredicateRepositorySpec extends ZIOSpecDefault {
       test("given a property is not used by the class => return 0") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUseNumberOfTimesWithClass(
-              Anything.Class.Thing,
-              Anything.Property.hasOtherThing
+            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
+              Anything.Property.hasOtherThing,
+              Anything.Class.Thing
             )
         } yield assertTrue(result == 0)
       }
@@ -57,9 +58,9 @@ object PredicateRepositorySpec extends ZIOSpecDefault {
       test("given a property is in use by the class => return 1") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUseNumberOfTimesWithClass(
-              Anything.Class.Thing,
-              Anything.Property.hasOtherThing
+            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
+              Anything.Property.hasOtherThing,
+              Anything.Class.Thing
             )
         } yield assertTrue(result == 1)
       }
@@ -68,9 +69,9 @@ object PredicateRepositorySpec extends ZIOSpecDefault {
       test("given a property is in use by the class => return 2") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUseNumberOfTimesWithClass(
-              Anything.Class.Thing,
-              Anything.Property.hasOtherThing
+            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
+              Anything.Property.hasOtherThing,
+              Anything.Class.Thing
             )
         } yield assertTrue(result == 2)
       }
