@@ -1,9 +1,9 @@
 name: Dependencies
 
-# This workflow will launch at 00:00 every Sunday
+# This workflow will launch at 00:00 on every 1th and 15th of the month
 on:
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 0 1,15 * *'
   workflow_dispatch:
 
 jobs:
