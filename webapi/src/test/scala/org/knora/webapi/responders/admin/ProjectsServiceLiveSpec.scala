@@ -9,6 +9,7 @@ import zio._
 import zio.mock._
 import zio.prelude.Validation
 import zio.test._
+import java.nio.file
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
@@ -31,6 +32,8 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.ActorToZioBridgeMock
 import org.knora.webapi.responders.admin.ProjectsService
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetRequestADM
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
@@ -61,7 +64,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       getProjectByIdSpec,
       createProjectSpec,
       deleteProjectSpec,
-      updateProjectSpec
+      updateProjectSpec,
+      getAllProjectDataSpec
     ).provide(StringFormatter.test)
 
   val getAllProjectsSpec = test("get all projects") {
@@ -83,7 +87,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     test("get project by shortcode") {
       val identifier = ProjectIdentifierADM.ShortcodeIdentifier
         .fromString("0001")
-        .getOrElse(throw new Exception("invalid shortcode"))
+        .getOrElse(throw BadRequestException("invalid shortcode"))
       val projectsService =
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
@@ -102,7 +106,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     test("get project by shortname") {
       val identifier = ProjectIdentifierADM.ShortnameIdentifier
         .fromString("someProject")
-        .getOrElse(throw new Exception("invalid shortname"))
+        .getOrElse(throw BadRequestException("invalid shortname"))
       val projectsService =
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
@@ -121,7 +125,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     test("get project by IRI") {
       val identifier = ProjectIdentifierADM.IriIdentifier
         .fromString("http://rdfh.ch/projects/0001")
-        .getOrElse(throw new Exception("invalid IRI"))
+        .getOrElse(throw BadRequestException("invalid IRI"))
       val projectsService =
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
@@ -153,7 +157,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           ProjectStatus.make(true),
           ProjectSelfJoin.make(false)
         )(ProjectCreatePayloadADM.apply)
-        .getOrElse(throw new Exception("Invalid Payload"))
+        .getOrElse(throw BadRequestException("Invalid Payload"))
     val requestingUser = KnoraSystemInstances.Users.SystemUser
     val projectsService =
       ZIO
@@ -215,7 +219,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           ProjectStatus.make(Some(true)),
           ProjectSelfJoin.make(Some(true))
         )(ProjectUpdatePayloadADM.apply)
-        .getOrElse(throw new Exception("Invalid Payload"))
+        .getOrElse(throw BadRequestException("Invalid Payload"))
     val requestingUser = KnoraSystemInstances.Users.SystemUser
     val projectsService =
       ZIO
@@ -236,4 +240,26 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       _ <- projectsService.provide(actorToZioBridge)
     } yield assertTrue(true)
   }
+
+  val getAllProjectDataSpec = suite("get all project data")(test("get project by shortcode") {
+    val identifier = ProjectIdentifierADM.IriIdentifier
+      .fromString("http://rdfh.ch/projects/0001")
+      .getOrElse(throw BadRequestException("Invalid project IRI"))
+    val requestingUser = KnoraSystemInstances.Users.SystemUser
+    val path           = file.Paths.get("...")
+    val projectsService =
+      ZIO
+        .serviceWithZIO[ProjectsService](_.getAllProjectData(identifier, requestingUser))
+        .provideSome[ActorToZioBridge](layers)
+    val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+      .of[ProjectDataGetResponseADM]
+      .apply(
+        assertion = Assertion.equalTo(ProjectDataGetRequestADM(identifier, requestingUser)),
+        result = Expectation.value(ProjectDataGetResponseADM(path))
+      )
+      .toLayer
+    for {
+      _ <- projectsService.provide(actorToZioBridge)
+    } yield assertTrue(true)
+  })
 }
