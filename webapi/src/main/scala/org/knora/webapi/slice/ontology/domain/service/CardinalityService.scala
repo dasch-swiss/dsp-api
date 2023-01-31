@@ -163,7 +163,11 @@ final case class CardinalityServiceLive(
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
       a <- ontologyCheck(classIri, propertyIri, newCardinality)
-      b <- currentCardinalityIfSetIsIncludedInNewCardinality(classIri, propertyIri, newCardinality)
+      b <- checkCurrentCardinalityIsIncludedInNewCardinalityOrPersistentEntitiesAreCompatible(
+             classIri,
+             propertyIri,
+             newCardinality
+           )
     } yield joinOnLeftList(a, b)
 
   private def ontologyCheck(
@@ -224,7 +228,7 @@ final case class CardinalityServiceLive(
   private def getCardinalityForProperty(classInfo: ClassInfoContentV2, propertyIri: SmartIri): Option[Cardinality] =
     classInfo.directCardinalities.get(propertyIri).map(_.cardinality)
 
-  private def currentCardinalityIfSetIsIncludedInNewCardinality(
+  private def checkCurrentCardinalityIsIncludedInNewCardinalityOrPersistentEntitiesAreCompatible(
     classIri: InternalIri,
     propertyIri: InternalIri,
     newCardinality: Cardinality
