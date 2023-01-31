@@ -85,7 +85,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     createProjectSpec,
     deleteProjectSpec,
     updateProjectSpec,
-    getallDataSpec
+    getAllDataSpec
   )
 
   val createProjectSpec = test("create a project") {
@@ -310,19 +310,15 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val getallDataSpec = suite("get all data") {
+  val getAllDataSpec = suite("get all data") {
     test("successfully get all data") {
       val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
         .fromString("http://rdfh.ch/projects/0001")
         .getOrElse(throw new Exception("Invalid IRI"))
-      val iri  = identifier.asIriIdentifierOption.getOrElse(throw BadRequestException("Invalid project IRI"))
-      val user = KnoraSystemInstances.Users.SystemUser
-      val request = Request.get(url =
-        URL(
-          basePathProjectsIri / encode(iri) / "AllData"
-        )
-      )
-      val path = file.Paths.get("...")
+      val iri     = identifier.asIriIdentifierOption.getOrElse(throw BadRequestException("Invalid project IRI"))
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "AllData"))
+      val path    = file.Paths.get("src/test/resources/getAllDataFile.trig")
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetAllProjectData(
           assertion = Assertion.equalTo(identifier, user),

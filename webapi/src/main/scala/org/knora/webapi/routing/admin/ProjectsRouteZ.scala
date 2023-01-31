@@ -56,7 +56,6 @@ final case class ProjectsRouteZ(
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
         case InternalServerException(e)  => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
-        case _                           => ???
       }
 
   private def getProjects(): Task[Response] =
@@ -111,7 +110,7 @@ final case class ProjectsRouteZ(
       iriDecoded             <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       iriIdentifier          <- IriIdentifier.fromString(iriDecoded).toZIO
       projectDataGetResponse <- projectsService.getAllProjectData(iriIdentifier, requestingUser)
-      filePath: file.Path     = projectDataGetResponse.projectDataFile
+      filePath                = projectDataGetResponse.projectDataFile
 
       response = Response(
                    headers = Headers.contentType("application/trig"),
@@ -119,7 +118,6 @@ final case class ProjectsRouteZ(
                  )
 
       _ = ZIO.succeed(ZIO.attempt(Files.deleteIfExists(filePath)))
-
     } yield response
 
 }

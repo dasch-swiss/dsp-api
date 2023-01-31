@@ -422,8 +422,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
      */
     case class NamedGraphTrigFile(graphIri: IRI, tempDir: Path) {
       lazy val dataFile: Path = {
-        val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") +
-          ".trig"
+        val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") + ".trig"
 
         tempDir.resolve(filename)
       }
