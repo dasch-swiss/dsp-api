@@ -12,10 +12,9 @@ import zio.macros.accessible
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.twirl.queries
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.queries.sparql._
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult
@@ -66,16 +65,6 @@ trait CardinalityService {
    * '''error''' a [[Throwable]] indicating that something went wrong.
    */
   def canReplaceCardinality(classIri: InternalIri): Task[CanReplaceCardinalityCheckResult]
-
-  /**
-   * Checks if a property entity is used in resource instances. Returns `true` if
-   * it is used, and `false` if it is not used.
-   *
-   * @param classIri    the IRI of the class that is being checked for usage.
-   * @param propertyIri the IRI of the entity that is being checked for usage.
-   * @return a [[Boolean]] denoting if the property entity is used.
-   */
-  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean]
 }
 
 object ChangeCardinalityCheckResult {
@@ -144,14 +133,10 @@ object ChangeCardinalityCheckResult {
 final case class CardinalityServiceLive(
   private val stringFormatter: StringFormatter,
   private val tripleStore: TriplestoreService,
+  private val predicateRepository: PredicateRepository,
   private val ontologyRepo: OntologyRepo,
   private val iriConverter: IriConverter
 ) extends CardinalityService {
-
-  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] = {
-    val query = v2.txt.isPropertyUsed(propertyIri, classIri)
-    tripleStore.sparqlHttpAsk(query.toString).map(_.result)
-  }
 
   override def canSetCardinality(
     classIri: InternalIri,
@@ -245,13 +230,14 @@ final case class CardinalityServiceLive(
     newCardinality: Cardinality
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
-      propertySmartIri  <- iriConverter.asInternalSmartIri(propertyIri)
-      classMaybe        <- ontologyRepo.findClassBy(classIri).map(_.map(_.entityInfoContent))
-      currentCardinality = classMaybe.flatMap(getCardinalityForProperty(_, propertySmartIri)).getOrElse(Unbounded)
-      isIncluded         = currentCardinality.isIncludedIn(newCardinality)
-      isNotInUse        <- isPropertyUsedInResources(classIri, propertyIri).map(!_)
+      propertySmartIri           <- iriConverter.asInternalSmartIri(propertyIri)
+      classMaybe                 <- ontologyRepo.findClassBy(classIri).map(_.map(_.entityInfoContent))
+      currentCardinality          = classMaybe.flatMap(getCardinalityForProperty(_, propertySmartIri)).getOrElse(Unbounded)
+      isIncluded                  = currentCardinality.isIncludedIn(newCardinality)
+      numberOfTimesUsed          <- predicateRepository.getCountForPropertyUseNumberOfTimesWithClass(classIri, propertyIri)
+      isCompatibleWithPersistence = numberOfTimesUsed == 0 || newCardinality.isCountIncluded(numberOfTimesUsed)
     } yield
-      if (isNotInUse || isIncluded) {
+      if (isIncluded || isCompatibleWithPersistence) {
         Right(CanSetCardinalityCheckResult.Success)
       } else {
         Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(classIri)))
@@ -272,7 +258,7 @@ final case class CardinalityServiceLive(
     val doCheck: Task[CanReplaceCardinalityCheckResult] = {
       // ignoreKnoraConstraints: It is OK if a property refers to the class
       // via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-      val query = queries.sparql.v2.txt.isEntityUsed(classIri, ignoreKnoraConstraints = true)
+      val query = twirl.queries.sparql.v2.txt.isEntityUsed(classIri, ignoreKnoraConstraints = true)
       tripleStore
         .sparqlHttpSelect(query.toString())
         .map(_.results.bindings)
@@ -291,7 +277,7 @@ final case class CardinalityServiceLive(
 
 object CardinalityService {
   val layer: ZLayer[
-    IriConverter with OntologyRepo with StringFormatter with TriplestoreService,
+    StringFormatter with TriplestoreService with PredicateRepository with OntologyRepo with IriConverter,
     Nothing,
     CardinalityServiceLive
   ] = ZLayer.fromFunction(CardinalityServiceLive.apply _)
