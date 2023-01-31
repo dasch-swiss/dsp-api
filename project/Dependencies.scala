@@ -11,9 +11,9 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.0.11" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.5.0" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.6.3" // base image the knora-sipi image is created from
 
-  val ScalaVersion = "2.13.8"
+  val ScalaVersion = "2.13.10"
 
   val AkkaActorVersion = "2.6.20"
   val AkkaHttpVersion  = "10.2.10"
@@ -69,8 +69,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.19"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.12" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.12" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.0" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.0" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =

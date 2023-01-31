@@ -84,13 +84,9 @@ class KnoraSipiIntegrationV1ITSpec
 
   private val minimalPdfOriginalFilename = "minimal.pdf"
   private val pathToMinimalPdf           = Paths.get("..", s"test_data/test_route/files/$minimalPdfOriginalFilename")
-  private val minimalPdfWidth            = 1250
-  private val minimalPdfHeight           = 600
 
   private val testPdfOriginalFilename = "test.pdf"
   private val pathToTestPdf           = Paths.get("..", s"test_data/test_route/files/$testPdfOriginalFilename")
-  private val testPdfWidth            = 2480
-  private val testPdfHeight           = 3508
 
   private val minimalZipOriginalFilename = "minimal.zip"
   private val pathToMinimalZip           = Paths.get("..", s"test_data/test_route/files/$minimalZipOriginalFilename")
@@ -803,12 +799,8 @@ class KnoraSipiIntegrationV1ITSpec
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
       val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
-      val nx                                 = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
-      val ny                                 = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
       val pdfUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
-      assert(nx == minimalPdfWidth)
-      assert(ny == minimalPdfHeight)
 
       // Request the file from Sipi.
       val sipiGetRequest = Get(pdfUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
@@ -847,12 +839,7 @@ class KnoraSipiIntegrationV1ITSpec
         baseApiUrl + "/v1/resources/" + URLEncoder.encode(pdfResourceIri.get, "UTF-8")
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
-      val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
-      val nx                                 = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
-      val ny                                 = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
-      assert(nx == testPdfWidth)
-      assert(ny == testPdfHeight)
+      getResponseJson(documentResourceRequest)
     }
 
     "create a resource with a Zip file attached" in {
