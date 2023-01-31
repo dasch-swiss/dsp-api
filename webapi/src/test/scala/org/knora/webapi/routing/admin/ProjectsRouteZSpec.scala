@@ -33,7 +33,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRes
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
-import zio.http.model.HttpError
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 

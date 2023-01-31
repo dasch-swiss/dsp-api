@@ -16,7 +16,7 @@ import java.nio.file.Files
 import dsp.errors.BadRequestException
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
-import dsp.valueobjects.Iri
+import dsp.valueobjects.Iri._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
@@ -91,14 +91,14 @@ final case class ProjectsRouteZ(
   private def deleteProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
       iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      projectIri            <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       projectDeleteResponse <- projectsService.deleteProject(projectIri, requestingUser)
     } yield Response.json(projectDeleteResponse.toJsValue.toString())
 
   private def updateProject(iriUrlEncoded: String, request: Request, requestingUser: UserADM): Task[Response] =
     for {
       iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectIri            <- Iri.ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      projectIri            <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       body                  <- request.body.asString
       payload               <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => BadRequestException(e))
       projectChangeResponse <- projectsService.updateProject(projectIri, payload, requestingUser)
