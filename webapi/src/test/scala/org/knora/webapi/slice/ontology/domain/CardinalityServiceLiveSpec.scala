@@ -455,11 +455,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |
                                   |<http://aThing>
                                   |  a <${Anything.Class.Thing.value}> ;
-                                  |  <${Anything.Property.hasOtherThing.value}> false .
+                                  |  <${Anything.Property.hasOtherThing.value}> "theOther" ;
+                                  |  <${Anything.Property.hasOtherThing.value}> "theOtherOther" .
                                   |
                                   | <http://anotherThing>
                                   |  a <${Anything.Class.Thing.value}> ;
-                                  |  <${Anything.Property.hasOtherThing.value}> true .
+                                  |  <${Anything.Property.hasOtherThing.value}> "theOther" ;
+                                  |  <${Anything.Property.hasOtherThing.value}> "theOtherOther" .
                                   |
                                   |""".stripMargin)
       ),

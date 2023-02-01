@@ -138,6 +138,12 @@ final case class CardinalityServiceLive(
   private val iriConverter: IriConverter
 ) extends CardinalityService {
 
+  private case class CheckCardinalitySubject(
+    classIri: InternalIri,
+    propertyIri: InternalIri,
+    newCardinality: Cardinality
+  )
+
   override def canSetCardinality(
     classIri: InternalIri,
     propertyIri: InternalIri,
@@ -145,7 +151,7 @@ final case class CardinalityServiceLive(
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     ZIO.ifZIO(isPartOfKnoraOntology(classIri))(
       onTrue = ZIO.succeed(Left(List(CanSetCardinalityCheckResult.KnoraOntologyCheckFailure))),
-      onFalse = doCanSetCheck(classIri, propertyIri, newCardinality)
+      onFalse = doCanSetCheck(CheckCardinalitySubject(classIri, propertyIri, newCardinality))
     )
 
   private val knoraAdminAndBaseOntologies = Seq(
@@ -157,46 +163,38 @@ final case class CardinalityServiceLive(
     iriConverter.getOntologyIriFromClassIri(classIri).map(knoraAdminAndBaseOntologies.contains)
 
   private def doCanSetCheck(
-    classIri: InternalIri,
-    propertyIri: InternalIri,
-    newCardinality: Cardinality
+    check: CheckCardinalitySubject
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
-      a <- ontologyCheck(classIri, propertyIri, newCardinality)
-      b <- checkCurrentCardinalityIsIncludedInNewCardinalityOrPersistentEntitiesAreCompatible(
-             classIri,
-             propertyIri,
-             newCardinality
-           )
+      a <- ontologyCheck(check)
+      b <- checkCurrentCardinalityIsIncludedInNewCardinalityOrPersistentEntitiesAreCompatible(check)
     } yield joinOnLeftList(a, b)
 
   private def ontologyCheck(
-    classIri: InternalIri,
-    propertyIri: InternalIri,
-    newCardinality: Cardinality
+    check: CheckCardinalitySubject
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
-      a <- superClassCheck(classIri, propertyIri, newCardinality)
-      b <- subclassCheck(classIri, propertyIri, newCardinality)
+      a <- superClassCheck(check)
+      b <- subclassCheck(check)
     } yield joinOnLeft(a, b)
 
-  private def superClassCheck(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality) = {
-    val superClasses                = ontologyRepo.findAllSuperClassesBy(classIri)
-    val newCardinalityIsNotIncluded = (other: Cardinality) => newCardinality.isNotIncludedIn(other)
-    canSetCheckFor(superClasses, propertyIri, newCardinalityIsNotIncluded, SuperClassCheckFailure)
+  private def superClassCheck(check: CheckCardinalitySubject) = {
+    val superClasses                = ontologyRepo.findAllSuperClassesBy(check.classIri)
+    val newCardinalityIsNotIncluded = (other: Cardinality) => check.newCardinality.isNotIncludedIn(other)
+    canSetCheckFor(superClasses, check.propertyIri, newCardinalityIsNotIncluded, SuperClassCheckFailure)
   }
 
   private def toClassIris(subclasses: List[ReadClassInfoV2]): List[InternalIri] =
     subclasses.map(_.entityInfoContent.classIri.toInternalIri)
 
-  private def subclassCheck(classIri: InternalIri, propertyIri: InternalIri, newCardinality: Cardinality) = {
+  private def subclassCheck(check: CheckCardinalitySubject) = {
     val subclasses =
       for {
-        subclasses <- ontologyRepo.findAllSubclassesBy(classIri)
-        superC     <- ontologyRepo.findAllSuperClassesBy(toClassIris(subclasses))
-      } yield subclasses ::: superC
-    val subclassCardinalityIsNotIncluded = (other: Cardinality) => other.isNotIncludedIn(newCardinality)
-    canSetCheckFor(subclasses, propertyIri, subclassCardinalityIsNotIncluded, SubclassCheckFailure)
+        subclasses   <- ontologyRepo.findAllSubclassesBy(check.classIri)
+        superClasses <- ontologyRepo.findAllSuperClassesBy(toClassIris(subclasses))
+      } yield subclasses ::: superClasses
+    val subclassCardinalityIsNotIncluded = (other: Cardinality) => other.isNotIncludedIn(check.newCardinality)
+    canSetCheckFor(subclasses, check.propertyIri, subclassCardinalityIsNotIncluded, SubclassCheckFailure)
   }
 
   private def canSetCheckFor(
@@ -229,23 +227,41 @@ final case class CardinalityServiceLive(
     classInfo.directCardinalities.get(propertyIri).map(_.cardinality)
 
   private def checkCurrentCardinalityIsIncludedInNewCardinalityOrPersistentEntitiesAreCompatible(
-    classIri: InternalIri,
-    propertyIri: InternalIri,
-    newCardinality: Cardinality
+    check: CheckCardinalitySubject
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
-      propertySmartIri           <- iriConverter.asInternalSmartIri(propertyIri)
-      classMaybe                 <- ontologyRepo.findClassBy(classIri).map(_.map(_.entityInfoContent))
-      currentCardinality          = classMaybe.flatMap(getCardinalityForProperty(_, propertySmartIri)).getOrElse(Unbounded)
-      isIncluded                  = currentCardinality.isIncludedIn(newCardinality)
-      numberOfTimesUsed          <- predicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(propertyIri, classIri)
-      isCompatibleWithPersistence = numberOfTimesUsed == 0 || newCardinality.isCountIncluded(numberOfTimesUsed)
+      isIncluded                  <- checkExistingCardinalityIsCompatible(check)
+      isCompatibleWithPersistence <- checkPersistence(check)
     } yield
       if (isIncluded || isCompatibleWithPersistence) {
         Right(CanSetCardinalityCheckResult.Success)
       } else {
-        Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(classIri)))
+        Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(check.classIri)))
       }
+
+  private def checkExistingCardinalityIsCompatible(check: CheckCardinalitySubject) =
+    for {
+      propertySmartIri  <- iriConverter.asInternalSmartIri(check.propertyIri)
+      classMaybe        <- ontologyRepo.findClassBy(check.classIri).map(_.map(_.entityInfoContent))
+      currentCardinality = classMaybe.flatMap(getCardinalityForProperty(_, propertySmartIri)).getOrElse(Unbounded)
+      isIncluded         = currentCardinality.isIncludedIn(check.newCardinality)
+    } yield isIncluded
+
+  private def checkPersistence(
+    check: CheckCardinalitySubject
+  ): Task[Boolean] =
+    for {
+      subclassIris <-
+        ontologyRepo.findAllSubclassesBy(check.classIri).map(_.map(_.entityInfoContent.classIri.toInternalIri))
+      instancesAndTheirUsage <-
+        predicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
+          check.propertyIri,
+          check.classIri :: subclassIris
+        )
+      isCompatible: Boolean = instancesAndTheirUsage.forall { case (_, count) =>
+                                check.newCardinality.isCountIncluded(count)
+                              }
+    } yield isCompatible
 
   /**
    * Checks if a specific cardinality may be replaced.

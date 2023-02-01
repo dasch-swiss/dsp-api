@@ -21,11 +21,13 @@ final case class PredicateRepositoryLive(private val tripleStore: TriplestoreSer
   def getCountForPropertyUsedNumberOfTimesWithClass(
     propertyIri: InternalIri,
     classIri: InternalIri
-  ): Task[Int] = {
+  ): Task[List[(InternalIri, Int)]] = {
     val query = countPropertyUsedWithClass(propertyIri, classIri)
     tripleStore
       .sparqlHttpSelect(query.toString)
-      .map(result => result.results.bindings.headOption.map(_.rowMap("total").toInt).getOrElse(0))
+      .map(result =>
+        result.results.bindings.map(row => (InternalIri(row.rowMap("subject")), row.rowMap("count").toInt)).toList
+      )
   }
 }
 object PredicateRepositoryLive {
