@@ -324,7 +324,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetAllProjectData(
           assertion = Assertion.equalTo(identifier, user),
-          result = Expectation.value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(path))
+          result = Expectation.value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(testFile))
         )
         .toLayer
       for {
