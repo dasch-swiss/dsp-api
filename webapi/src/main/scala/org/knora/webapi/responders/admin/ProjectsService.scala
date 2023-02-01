@@ -10,6 +10,7 @@ import zio._
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ActorToZioBridge
@@ -27,6 +28,10 @@ trait ProjectsService {
     payload: ProjectUpdatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
+  def getAllProjectData(
+    iriIdentifier: IriIdentifier,
+    requestingUser: UserADM
+  ): Task[ProjectDataGetResponseADM]
 }
 
 final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
@@ -126,6 +131,13 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
               )
     response <- bridge.askAppActor[ProjectOperationResponseADM](request)
   } yield response
+
+  def getAllProjectData(
+    projectIdentifier: IriIdentifier,
+    requestingUser: UserADM
+  ): Task[ProjectDataGetResponseADM] =
+    bridge.askAppActor(ProjectDataGetRequestADM(projectIdentifier, requestingUser))
+
 }
 
 object ProjectsService {
