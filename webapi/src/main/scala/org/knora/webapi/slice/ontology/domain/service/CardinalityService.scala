@@ -256,7 +256,7 @@ final case class CardinalityServiceLive(
     for {
       subclassIris <- ontologyRepo.findAllSubclassesBy(check.classIri).map(toClassIris)
       instancesAndTheirUsage <-
-        predicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
+        predicateRepository.getCountForPropertyUsedNumberOfTimesWithClasses(
           check.propertyIri,
           check.classIri :: subclassIris
         )

@@ -1,4 +1,5 @@
 package org.knora.webapi.slice.ontology.domain.service
+
 import zio.Task
 import zio.ZIO
 import zio.macros.accessible
@@ -11,8 +12,8 @@ trait PredicateRepository {
   /**
    * Checks if a how many times a property entity is used in resource instances.
    *
-   * @param classIri    the IRI of the class that is being checked for usage.
    * @param propertyIri the IRI of the entity that is being checked for usage.
+   * @param classIri    the IRI of the class that is being checked for usage.
    * @return list of tuples containing all instance of the `classIri` with the count of
    *         how often this instance is using the property as a predicate
    */
@@ -21,11 +22,19 @@ trait PredicateRepository {
     classIri: InternalIri
   ): Task[List[(InternalIri, Int)]]
 
-  def getCountForPropertyUsedNumberOfTimesWithClass(
+  /**
+   * Checks if a how many times a property entity is used in resource instances.
+   *
+   * @param propertyIri  the IRI of the entity that is being checked for usage.
+   * @param classIris    the IRIs of the classes that are being checked for usage.
+   * @return list of tuples containing all instance of one of the `classIri`s with the count of
+   *         how often this instance is using the property as a predicate
+   */
+  def getCountForPropertyUsedNumberOfTimesWithClasses(
     propertyIri: InternalIri,
-    classIri: List[InternalIri]
+    classIris: List[InternalIri]
   ): Task[List[(InternalIri, Int)]] =
-    ZIO.foreach(classIri)(getCountForPropertyUsedNumberOfTimesWithClass(propertyIri, _)).map(_.flatten)
+    ZIO.foreach(classIris)(getCountForPropertyUsedNumberOfTimesWithClass(propertyIri, _)).map(_.flatten)
 }
 
 object PredicateRepository
