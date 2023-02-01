@@ -318,7 +318,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val iri      = identifier.asIriIdentifierOption.getOrElse(throw BadRequestException("Invalid project IRI"))
       val user     = KnoraSystemInstances.Users.SystemUser
       val request  = Request.get(url = URL(basePathProjectsIri / encode(iri) / "AllData"))
-      val path     = file.Paths.get("src/test/resources/getAllDataFile.trig")
+      val path     = file.Paths.get("getAllDataFile.trig")
       val testFile = file.Files.createFile(path)
 
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
