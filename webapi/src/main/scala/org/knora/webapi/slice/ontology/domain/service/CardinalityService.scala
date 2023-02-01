@@ -167,7 +167,7 @@ final case class CardinalityServiceLive(
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
       a <- ontologyCheck(check)
-      b <- checkCurrentCardinalityIsIncludedInNewCardinalityOrPersistentEntitiesAreCompatible(check)
+      b <- checkIsCurrentCardinalityIsIncludedOrPersistentEntitiesAreCompatible(check)
     } yield joinOnLeftList(a, b)
 
   private def ontologyCheck(
@@ -226,12 +226,12 @@ final case class CardinalityServiceLive(
   private def getCardinalityForProperty(classInfo: ClassInfoContentV2, propertyIri: SmartIri): Option[Cardinality] =
     classInfo.directCardinalities.get(propertyIri).map(_.cardinality)
 
-  private def checkCurrentCardinalityIsIncludedInNewCardinalityOrPersistentEntitiesAreCompatible(
+  private def checkIsCurrentCardinalityIsIncludedOrPersistentEntitiesAreCompatible(
     check: CheckCardinalitySubject
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
-      isIncluded                  <- checkExistingCardinalityIsCompatible(check)
-      isCompatibleWithPersistence <- checkPersistence(check)
+      isIncluded                  <- checkIsCurrentCardinalityIsIncluded(check)
+      isCompatibleWithPersistence <- checkPersistentEntitiesAreCompatible(check)
     } yield
       if (isIncluded || isCompatibleWithPersistence) {
         Right(CanSetCardinalityCheckResult.Success)
@@ -239,7 +239,7 @@ final case class CardinalityServiceLive(
         Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(check.classIri)))
       }
 
-  private def checkExistingCardinalityIsCompatible(check: CheckCardinalitySubject) =
+  private def checkIsCurrentCardinalityIsIncluded(check: CheckCardinalitySubject) =
     for {
       propertySmartIri  <- iriConverter.asInternalSmartIri(check.propertyIri)
       classMaybe        <- ontologyRepo.findClassBy(check.classIri).map(_.map(_.entityInfoContent))
@@ -247,7 +247,7 @@ final case class CardinalityServiceLive(
       isIncluded         = currentCardinality.isIncludedIn(check.newCardinality)
     } yield isIncluded
 
-  private def checkPersistence(
+  private def checkPersistentEntitiesAreCompatible(
     check: CheckCardinalitySubject
   ): Task[Boolean] =
     for {
