@@ -9,8 +9,8 @@ import zio._
 import zio.http._
 import zio.http.model._
 import zio.json._
+import zio.stream.ZStream
 
-import java.io.File
 import java.nio.file.Files
 
 import dsp.errors.BadRequestException
@@ -110,11 +110,18 @@ final case class ProjectsRouteZ(
       iriIdentifier          <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       projectDataGetResponse <- projectsService.getAllProjectData(iriIdentifier, requestingUser)
       filePath                = projectDataGetResponse.projectDataFile
+      fileStream = ZStream
+                     .fromPath(filePath)
+                     .ensuring(
+                       ZIO
+                         .attempt(Files.deleteIfExists(filePath))
+                         .orDie
+                         .logError(s"File couldn't be deleted: ${filePath.toString()}")
+                     )
       response = Response(
                    headers = Headers.contentType("application/trig"),
-                   body = Body.fromFile(new File(filePath.toString()))
+                   body = Body.fromStream(fileStream)
                  )
-      _ = ZIO.succeed(ZIO.attempt(Files.deleteIfExists(filePath)))
     } yield response
 
 }
