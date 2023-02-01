@@ -60,7 +60,7 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val jacksonDatabind    = "com.fasterxml.jackson.core"  % "jackson-databind"     % "2.14.0" // the logging implementation
+  val jacksonDatabind    = "com.fasterxml.jackson.core"  % "jackson-databind"     % "2.14.2" // the logging implementation
   val logbackClassic     = "ch.qos.logback"              % "logback-classic"      % "1.4.5"  // the logging implementation
   val logbackJackson     = "ch.qos.logback.contrib"      % "logback-jackson"      % "0.1.5"  // the logging implementation
   val logbackJsonClassic = "ch.qos.logback.contrib"      % "logback-json-classic" % "0.1.5"  // the logging implementation
