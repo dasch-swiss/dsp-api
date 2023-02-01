@@ -230,10 +230,13 @@ final case class CardinalityServiceLive(
     check: CheckCardinalitySubject
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
-      isIncluded                  <- checkIsCurrentCardinalityIsIncluded(check)
-      isCompatibleWithPersistence <- checkPersistentEntitiesAreCompatible(check)
+      checkIsSuccessful <-
+        ZIO.ifZIO(checkIsCurrentCardinalityIsIncluded(check))(
+          onTrue = ZIO.succeed(true),
+          onFalse = checkPersistentEntitiesAreCompatible(check)
+        )
     } yield
-      if (isIncluded || isCompatibleWithPersistence) {
+      if (checkIsSuccessful) {
         Right(CanSetCardinalityCheckResult.Success)
       } else {
         Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(check.classIri)))

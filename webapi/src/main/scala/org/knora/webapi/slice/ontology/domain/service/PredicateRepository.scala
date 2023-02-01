@@ -1,7 +1,7 @@
 package org.knora.webapi.slice.ontology.domain.service
 import zio.Task
-import zio.macros.accessible
 import zio.ZIO
+import zio.macros.accessible
 
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -21,7 +21,10 @@ trait PredicateRepository {
     classIri: InternalIri
   ): Task[List[(InternalIri, Int)]]
 
-  def getCountForPropertyUsedNumberOfTimesWithClass(propertyIri: InternalIri, classIri: List[InternalIri]): Task[List[(InternalIri, Int)]] =
+  def getCountForPropertyUsedNumberOfTimesWithClass(
+    propertyIri: InternalIri,
+    classIri: List[InternalIri]
+  ): Task[List[(InternalIri, Int)]] =
     ZIO.foreach(classIri)(getCountForPropertyUsedNumberOfTimesWithClass(propertyIri, _)).map(_.flatten)
 }
 
