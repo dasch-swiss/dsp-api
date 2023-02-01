@@ -20,4 +20,4 @@ trait PredicateRepository {
   ): Task[Int]
 }
 
-object PredicateRepository {}
+object PredicateRepository
