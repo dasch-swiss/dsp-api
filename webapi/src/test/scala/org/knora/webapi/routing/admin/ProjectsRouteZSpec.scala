@@ -198,13 +198,11 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.post(url = URL(basePathProjects), body = body)
       val user    = KnoraSystemInstances.Users.SystemUser
 
-      val projectIri  = TestDataFactory.projectIri("http://rdfh.ch/projects/0001")
       val shortname   = TestDataFactory.projectShortName("newproject")
       val shortcode   = TestDataFactory.projectShortCode("3333")
       val longname    = TestDataFactory.projectName("project longname")
       val description = TestDataFactory.projectDescription(Seq(V2.StringLiteralV2("project description", Some("en"))))
       val keywords    = TestDataFactory.projectKeywords(Seq("test project"))
-      val logo        = None
       val status      = TestDataFactory.projectStatus(true)
       val selfJoin    = TestDataFactory.projectSelfJoin(false)
 
@@ -215,7 +213,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         longname = Some(longname),
         description = description,
         keywords = keywords,
-        logo = logo,
+        logo = None,
         status = status,
         selfjoin = selfJoin
       )
