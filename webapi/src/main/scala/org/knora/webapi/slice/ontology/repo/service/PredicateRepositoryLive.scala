@@ -16,7 +16,8 @@ final case class PredicateRepositoryLive(private val tripleStore: TriplestoreSer
    *
    * @param classIri    the IRI of the class that is being checked for usage.
    * @param propertyIri the IRI of the entity that is being checked for usage.
-   * @return [[Int]] denoting number of times used the property is used a predicate with instances of the the class
+   * @return list of tuples containing all instance of the `classIri` with the count of
+   *         how often this instance is using the property as a predicate
    */
   def getCountForPropertyUsedNumberOfTimesWithClass(
     propertyIri: InternalIri,
