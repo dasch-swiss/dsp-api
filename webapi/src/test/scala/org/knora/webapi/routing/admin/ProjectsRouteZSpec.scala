@@ -315,14 +315,16 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
         .fromString("http://rdfh.ch/projects/0001")
         .getOrElse(throw BadRequestException("Invalid project IRI"))
-      val iri     = identifier.asIriIdentifierOption.getOrElse(throw BadRequestException("Invalid project IRI"))
-      val user    = KnoraSystemInstances.Users.SystemUser
-      val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "AllData"))
-      val path    = file.Paths.get("src/test/resources/getAllDataFile.trig")
+      val iri      = identifier.asIriIdentifierOption.getOrElse(throw BadRequestException("Invalid project IRI"))
+      val user     = KnoraSystemInstances.Users.SystemUser
+      val request  = Request.get(url = URL(basePathProjectsIri / encode(iri) / "AllData"))
+      val path     = file.Paths.get("getAllDataFile.trig")
+      val testFile = file.Files.createFile(path)
+
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetAllProjectData(
           assertion = Assertion.equalTo(identifier, user),
-          result = Expectation.value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(path))
+          result = Expectation.value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(testFile))
         )
         .toLayer
       for {
@@ -334,7 +336,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val iri     = "http://rdfh.ch/project/0001"
       val user    = KnoraSystemInstances.Users.SystemUser
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "AllData"))
-      val path    = file.Paths.get("src/test/resources/getAllDataFile.trig")
+      val path    = file.Paths.get("...")
 
       for {
         response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
