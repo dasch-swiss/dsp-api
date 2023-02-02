@@ -114,6 +114,30 @@ object CardinalitySpec extends ZIOSpecDefault {
       test("`1` => ExactlyOne") {
         assertTrue(Cardinality.fromString("1").contains(ExactlyOne))
       }
+    ),
+    suite("isCountIncluded")(
+      test(s"AtLeastOne ($AtLeastOne) does not include 0") {
+        assertTrue(!AtLeastOne.isCountIncluded(0))
+      },
+      test(s"AtLeastOne ($AtLeastOne) includes lower bound 1") {
+        assertTrue(AtLeastOne.isCountIncluded(1))
+      },
+      test(s"AtLeastOne ($AtLeastOne) includes Int.MaxValue") {
+        assertTrue(AtLeastOne.isCountIncluded(Int.MaxValue))
+      },
+      test(s"ZeroOrOne ($ZeroOrOne) includes upper bound 1") {
+        assertTrue(ExactlyOne.isCountIncluded(1))
+      },
+      test("Int.MinValue is never included") {
+        check(cardinalitiesGen()) { cardinality =>
+          assertTrue(!cardinality.isCountIncluded(Int.MinValue))
+        }
+      },
+      test("-1 is never included") {
+        check(cardinalitiesGen()) { cardinality =>
+          assertTrue(!cardinality.isCountIncluded(-1))
+        }
+      }
     )
   )
 }
