@@ -88,47 +88,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     getAllDataSpec
   )
 
-  val createProjectSpec = test("create a project") {
-    val projectCreatePayloadString =
-      """|{
-         |  "shortname": "newproject",
-         |  "shortcode": "3333",
-         |  "longname": "project longname",
-         |  "description": [{"value": "project description", "language": "en"}],
-         |  "keywords": ["test project"],
-         |  "status": true,
-         |  "selfjoin": false
-         |}
-         |""".stripMargin
-    val body    = Body.fromString(projectCreatePayloadString)
-    val request = Request.post(url = URL(basePathProjects), body = body)
-    val user    = KnoraSystemInstances.Users.SystemUser
-    val projectCreatePayload: ProjectCreatePayloadADM =
-      Validation
-        .validateWith(
-          ProjectIri.make(None),
-          ShortName.make("newproject"),
-          ShortCode.make("3333"),
-          Name.make(Some("project longname")),
-          ProjectDescription.make(Seq(StringLiteralV2("project description", Some("en")))),
-          Keywords.make(Seq("test project")),
-          Logo.make(None),
-          ProjectStatus.make(true),
-          ProjectSelfJoin.make(false)
-        )(ProjectCreatePayloadADM.apply)
-        .getOrElse(throw BadRequestException("Invalid Payload"))
-    val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
-    val mockService = ProjectsServiceMock
-      .CreateProject(
-        assertion = Assertion.equalTo((projectCreatePayload, user)),
-        result = expectedResult
-      )
-      .toLayer
-    for {
-      _ <- applyRoutes(request).provide(mockService)
-    } yield assertTrue(true)
-  }
-
   val getProjectsSpec = test("get all projects") {
     val request        = Request.get(url = URL(basePathProjects))
     val expectedResult = Expectation.value[ProjectsGetResponseADM](ProjectsGetResponseADM(Seq(getProjectADM())))
@@ -159,24 +118,16 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         body     <- response.body.asString
       } yield assertTrue(body.contains(iri))
     },
-    test("get a project by shortcode") {
-      val shortcode = "0001"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
-        .fromString(shortcode)
-        .getOrElse(throw BadRequestException("Invalid Shortcode"))
-      val request = Request.get(url = URL(basePathProjectsShortcode / shortcode))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
-        .GetSingleProject(
-          assertion = Assertion.equalTo(identifier),
-          result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
-          )
-        )
-        .toLayer
+    test("return a BadRequest Exception if project IRI is invalid") {
+      val iri     = "http://rdfh.ch/project/0001"
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url = URL(basePathProjectsIri / encode(iri)))
+
       for {
-        response <- applyRoutes(request).provide(mockService)
-        body     <- response.body.asString
-      } yield assertTrue(body.contains(shortcode))
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
     },
     test("get a project by shortname") {
       val shortname = "someProject"
@@ -196,25 +147,164 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
       } yield assertTrue(body.contains(shortname))
+    },
+    test("return a BadRequest Exception if shortname is invalid") {
+      val shortname = "short name"
+      val user      = KnoraSystemInstances.Users.SystemUser
+      val request   = Request.get(url = URL(basePathProjectsShortname / shortname))
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortname is invalid: short name"}""")
+    },
+    test("get a project by shortcode") {
+      val shortcode = "0001"
+      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
+        .fromString(shortcode)
+        .getOrElse(throw BadRequestException("Invalid Shortcode"))
+      val request = Request.get(url = URL(basePathProjectsShortcode / shortcode))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .GetSingleProject(
+          assertion = Assertion.equalTo(identifier),
+          result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
+            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+          )
+        )
+        .toLayer
+      for {
+        response <- applyRoutes(request).provide(mockService)
+        body     <- response.body.asString
+      } yield assertTrue(body.contains(shortcode))
+    },
+    test("return a BadRequest Exception if shortcode is invalid") {
+      val shortcode = "XY"
+      val user      = KnoraSystemInstances.Users.SystemUser
+      val request   = Request.get(url = URL(basePathProjectsShortcode / shortcode))
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
     }
   )
 
-  val deleteProjectSpec = test("delete a project by IRI") {
-    val projectIri =
-      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid project IRI"))
-    val request        = Request.delete(url = URL(basePathProjectsIri / encode(projectIri.value)))
-    val user           = KnoraSystemInstances.Users.SystemUser
-    val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
-    val mockService: ULayer[ProjectsService] = ProjectsServiceMock
-      .DeleteProject(
-        assertion = Assertion.equalTo(projectIri, user),
-        result = expectedResult
-      )
-      .toLayer
-    for {
-      _ <- applyRoutes(request).provide(mockService)
-    } yield assertTrue(true)
-  }
+  val createProjectSpec = suite("create a project")(
+    test("successfully create a project") {
+      val projectCreatePayloadString =
+        """|{
+           |  "shortname": "newproject",
+           |  "shortcode": "3333",
+           |  "longname": "project longname",
+           |  "description": [{"value": "project description", "language": "en"}],
+           |  "keywords": ["test project"],
+           |  "status": true,
+           |  "selfjoin": false
+           |}
+           |""".stripMargin
+      val body    = Body.fromString(projectCreatePayloadString)
+      val request = Request.post(url = URL(basePathProjects), body = body)
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val projectCreatePayload: ProjectCreatePayloadADM =
+        Validation
+          .validateWith(
+            ProjectIri.make(None),
+            ShortName.make("newproject"),
+            ShortCode.make("3333"),
+            Name.make(Some("project longname")),
+            ProjectDescription.make(Seq(StringLiteralV2("project description", Some("en")))),
+            Keywords.make(Seq("test project")),
+            Logo.make(None),
+            ProjectStatus.make(true),
+            ProjectSelfJoin.make(false)
+          )(ProjectCreatePayloadADM.apply)
+          .getOrElse(throw BadRequestException("Invalid Payload"))
+      val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
+      val mockService = ProjectsServiceMock
+        .CreateProject(
+          assertion = Assertion.equalTo((projectCreatePayload, user)),
+          result = expectedResult
+        )
+        .toLayer
+      for {
+        _ <- applyRoutes(request).provide(mockService)
+      } yield assertTrue(true)
+    },
+    test("return a BadRequest Exception if input (payload) is invalid (wrong attribute)") {
+      val projectCreatePayloadString =
+        """|{
+           |  "shortname": "new project",
+           |  "shortcode": "3333",
+           |  "longname": "project longname",
+           |  "description": [{"value": "project description", "language": "en"}],
+           |  "keywords": ["test project"],
+           |  "status": true,
+           |  "selfjoin": false
+           |}
+           |""".stripMargin
+      val body    = Body.fromString(projectCreatePayloadString)
+      val request = Request.post(url = URL(basePathProjects), body = body)
+      val user    = KnoraSystemInstances.Users.SystemUser
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(
+          bodyAsString == """{"error":"dsp.errors.BadRequestException: .shortname(Shortname is invalid: new project)"}"""
+        )
+    },
+    test("return a BadRequest Exception if input (syntax) is invalid") {
+      val projectCreatePayloadString =
+        """|{
+           |  "shortname": "newproject",
+           |  "shortcode": "3333"
+           |  "longname": "project longname",
+           |  "description": [{"value": "project description", "language": "en"}],
+           |  "keywords": ["test project"],
+           |  "status": true,
+           |  "selfjoin": false
+           |}
+           |""".stripMargin
+      val body    = Body.fromString(projectCreatePayloadString)
+      val request = Request.post(url = URL(basePathProjects), body = body)
+      val user    = KnoraSystemInstances.Users.SystemUser
+      for {
+        response <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+      } yield assertTrue(response.status == Status.BadRequest)
+    }
+  )
+
+  val deleteProjectSpec = suite("delete a project")(
+    test("successfully delete a project by IRI") {
+      val projectIri =
+        ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid project IRI"))
+      val request        = Request.delete(url = URL(basePathProjectsIri / encode(projectIri.value)))
+      val user           = KnoraSystemInstances.Users.SystemUser
+      val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .DeleteProject(
+          assertion = Assertion.equalTo(projectIri, user),
+          result = expectedResult
+        )
+        .toLayer
+      for {
+        _ <- applyRoutes(request).provide(mockService)
+      } yield assertTrue(true)
+    },
+    test("return a BadRequest Exception if project IRI is invalid") {
+      val iri     = "http://rdfh.ch/project/0001"
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.delete(url = URL(basePathProjectsIri / encode(iri)))
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
+    }
+  )
 
   val updateProjectSpec = suite("update a project")(
     test("successfully update a project") {
@@ -281,7 +371,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(
-          bodyAsString == "{\"error\":\"dsp.errors.BadRequestException: .shortname(Shortname is invalid: invalid shortname)\"}"
+          bodyAsString == """{"error":"dsp.errors.BadRequestException: .shortname(Shortname is invalid: invalid shortname)"}"""
         )
     },
     test("return a BadRequest Exception if input (syntax) is invalid") {
@@ -306,7 +396,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
-        assertTrue(bodyAsString == "{\"error\":\"dsp.errors.BadRequestException: Project IRI is invalid.\"}")
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
     }
   )
 
@@ -342,7 +432,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
-        assertTrue(bodyAsString == "{\"error\":\"dsp.errors.BadRequestException: Project IRI is invalid.\"}")
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
     }
   )
 }
