@@ -27,6 +27,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateP
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
@@ -100,11 +101,9 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
   val getSingleProjectSpec = suite("get a single project by identifier")(
     test("get a project by IRI") {
-      val iri = "http://rdfh.ch/projects/0001"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
-        .fromString(iri)
-        .getOrElse(throw BadRequestException("Invalid IRI"))
-      val request = Request.get(url = URL(basePathProjectsIri / encode(iri)))
+      val iri        = "http://rdfh.ch/projects/0001"
+      val identifier = IriIdentifier.fromString(iri).getOrElse(throw BadRequestException("Invalid IRI"))
+      val request    = Request.get(url = URL(basePathProjectsIri / encode(iri)))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
@@ -131,9 +130,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     },
     test("get a project by shortname") {
       val shortname = "someProject"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortnameIdentifier
-        .fromString(shortname)
-        .getOrElse(throw BadRequestException("Invalid Shortname"))
+      val identifier =
+        ShortnameIdentifier.fromString(shortname).getOrElse(throw BadRequestException("Invalid Shortname"))
       val request = Request.get(url = URL(basePathProjectsShortname / shortname))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetSingleProject(
@@ -161,9 +159,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     },
     test("get a project by shortcode") {
       val shortcode = "0001"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
-        .fromString(shortcode)
-        .getOrElse(throw BadRequestException("Invalid Shortcode"))
+      val identifier =
+        ShortcodeIdentifier.fromString(shortcode).getOrElse(throw BadRequestException("Invalid Shortcode"))
       val request = Request.get(url = URL(basePathProjectsShortcode / shortcode))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetSingleProject(
@@ -402,7 +399,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
   val getAllDataSpec = suite("get all data")(
     test("successfully get all data") {
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
+      val identifier = ProjectIdentifierADM.IriIdentifier
         .fromString("http://rdfh.ch/projects/0001")
         .getOrElse(throw BadRequestException("Invalid project IRI"))
       val iri      = identifier.asIriIdentifierOption.getOrElse(throw BadRequestException("Invalid project IRI"))
