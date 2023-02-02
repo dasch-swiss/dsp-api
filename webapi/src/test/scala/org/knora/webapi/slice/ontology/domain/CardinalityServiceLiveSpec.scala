@@ -417,11 +417,12 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
         )
       ).provide(commonLayers, emptyDataSet),
       suite("canSetCardinality with property in use twice")(
-        test(s"""
+          test(s"""
                 |Given the previous cardinality on the class/property
-                |and property is in use
                 |does not include the new cardinality to be set
-                |then this is NOT possible
+                |and given the property is in use
+                |then this is NOT possible because the new cardinality does violate the
+                |number of times the property is used on each instance
           """.stripMargin) {
           val propertyCardinality =
             OntologyCacheDataBuilder.cardinalitiesMap(Anything.Property.hasOtherThing, Unbounded)
@@ -468,9 +469,10 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       suite("canSetCardinality with property in use once")(
         test(s"""
                 |Given the previous cardinality on the class/property
-                |and property is in use
                 |does not include the new cardinality to be set
+                |and given the property is in use
                 |then this is possible because the new cardinality does not violate the
+                |number of times the property is used on the instance
           """.stripMargin) {
           val propertyCardinality =
             OntologyCacheDataBuilder.cardinalitiesMap(Anything.Property.hasOtherThing, Unbounded)
