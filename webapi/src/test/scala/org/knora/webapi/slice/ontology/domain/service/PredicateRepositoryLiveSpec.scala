@@ -48,7 +48,7 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
   )
 
   val spec: Spec[Any, Throwable] = suite("PredicateRepositoryLive")(
-    suite("getCountForPropertyUseNumberOfTimesWithClass given not use")(
+    suite("getCountForPropertyUseNumberOfTimesWithClass given not used")(
       test("given a property is not used by any instance of the class then return empty List") {
         for {
           result <-
