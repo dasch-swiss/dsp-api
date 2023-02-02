@@ -22,6 +22,7 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
+import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants._
@@ -30,34 +31,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 
-  private object IsPropertyUsedInResourcesTestData {
-
-    val ontologyAnything = "http://www.knora.org/ontology/0001/anything"
-    val ontologyBooks    = "http://www.knora.org/ontology/0001/books"
-
-    val classThing: InternalIri    = InternalIri(s"$ontologyAnything#Thing")
-    val classBook: InternalIri     = InternalIri(s"$ontologyBooks#Book")
-    val classTextBook: InternalIri = InternalIri(s"$ontologyBooks#Textbook")
-    val turtle: String =
-      s"""
-         |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-         |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
-         |
-         |<http://aThing>
-         |  a <${classThing.value}> ;
-         |  <${KnoraBase.Property.isDeleted.value}> false .
-         |
-         |<http://aBook> a <${classBook.value}> .
-         |
-         |<${classTextBook.value}> rdfs:subClassOf <${classBook.value}> .
-         |
-         |<http://aTextBook>
-         |  a <${classTextBook.value}> ;
-         |  <${KnoraBase.Property.isEditable.value}> true .
-         |""".stripMargin
-  }
-
-  private object CanWidenCardinalityTestData {
+  private object CanSetCardinalityTestData {
     object Gens {
       case class TestIris(
         ontologyIri: InternalIri,
@@ -196,47 +170,18 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     IriConverter.layer,
     OntologyCacheFake.emptyCache,
     OntologyRepoLive.layer,
+    PredicateRepositoryLive.layer,
     StringFormatter.test,
     TriplestoreServiceFake.layer
   )
 
   override def spec: Spec[Any, Throwable] =
     suite("CardinalityServiceLive")(
-      suite("isPropertyUsedInResources should")(
-        test("given a property is in use by the class => return true") {
-          val classIri    = IsPropertyUsedInResourcesTestData.classThing
-          val propertyIri = KnoraBase.Property.isDeleted
-          for {
-            result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
-          } yield assertTrue(result)
-        },
-        test("given a property is not used by the class but in a different class => return false") {
-          val classIri    = IsPropertyUsedInResourcesTestData.classBook
-          val propertyIri = KnoraBase.Property.isDeleted
-          for {
-            result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
-          } yield assertTrue(!result)
-        },
-        test("given a property is never used => return false") {
-          val classIri    = IsPropertyUsedInResourcesTestData.classThing
-          val propertyIri = KnoraBase.Property.isMainResource
-          for {
-            result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
-          } yield assertTrue(!result)
-        },
-        test("given a property is in use in a subclass => return true") {
-          val classIri    = IsPropertyUsedInResourcesTestData.classTextBook
-          val propertyIri = KnoraBase.Property.isEditable
-          for {
-            result <- CardinalityService.isPropertyUsedInResources(classIri, propertyIri)
-          } yield assertTrue(result)
-        }
-      ).provide(commonLayers, datasetLayerFromTurtle(IsPropertyUsedInResourcesTestData.turtle)),
       suite("canSetCardinality")(
         test("Any class/property of the Knora admin or base ontologies may never be changed") {
-          check(CanWidenCardinalityTestData.Gens.knoraOntologiesGen) { iris =>
+          check(CanSetCardinalityTestData.Gens.knoraOntologiesGen) { iris =>
             check(cardinalitiesGen()) { cardinality =>
-              val d = CanWidenCardinalityTestData.createOntologyWithSuperClassCardinality(
+              val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(
                 cardinality,
                 iris.ontologyIri,
                 iris.classIri,
@@ -251,12 +196,12 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           }
         },
         test("Given no super-class or subclass exists then setting a cardinality is possible") {
-          val classIri    = CanWidenCardinalityTestData.thingSmartIri
-          val propertyIri = CanWidenCardinalityTestData.hasValueSmartIri
+          val classIri    = CanSetCardinalityTestData.thingSmartIri
+          val propertyIri = CanSetCardinalityTestData.hasValueSmartIri
           val data = OntologyCacheDataBuilder.builder
             .addOntology(
               ReadOntologyV2Builder
-                .builder(CanWidenCardinalityTestData.anythingOntologySmartIri)
+                .builder(CanSetCardinalityTestData.anythingOntologySmartIri)
                 .addClassInfo(
                   ReadClassInfoV2Builder
                     .builder(classIri)
@@ -281,7 +226,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                  |then this is NOT possible""".stripMargin
             ) {
               check(cardinalitiesGen(AtLeastOne, Unbounded, ZeroOrOne)) { newCardinality =>
-                val d = CanWidenCardinalityTestData.createOntologyWithSuperClassCardinality(ExactlyOne)
+                val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ExactlyOne)
                 for {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality)
@@ -293,7 +238,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                  |when checking new cardinality 'ExactlyOne $ExactlyOne'
                  |then this is possible""".stripMargin
             ) {
-              val d = CanWidenCardinalityTestData.createOntologyWithSuperClassCardinality(ExactlyOne)
+              val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ExactlyOne)
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, ExactlyOne)
@@ -307,7 +252,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                  |then this is NOT possible""".stripMargin
             ) {
               check(cardinalitiesGen(Unbounded, ZeroOrOne)) { newCardinality =>
-                val d = CanWidenCardinalityTestData.createOntologyWithSuperClassCardinality(AtLeastOne)
+                val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(AtLeastOne)
                 for {
                   _ <- OntologyCacheFake.set(d.data)
                   actual <-
@@ -321,7 +266,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                  |then this is possible""".stripMargin
             ) {
               check(cardinalitiesGen(AtLeastOne, ExactlyOne)) { newCardinality =>
-                val d = CanWidenCardinalityTestData.createOntologyWithSuperClassCardinality(AtLeastOne)
+                val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(AtLeastOne)
                 for {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality)
@@ -336,7 +281,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                  |then this is NOT possible""".stripMargin
             ) {
               check(cardinalitiesGen(AtLeastOne, Unbounded)) { newCardinality =>
-                val d = CanWidenCardinalityTestData.createOntologyWithSuperClassCardinality(ZeroOrOne)
+                val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ZeroOrOne)
                 for {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality)
@@ -349,7 +294,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                  |then this is possible""".stripMargin
             ) {
               check(cardinalitiesGen(ExactlyOne, ZeroOrOne)) { newCardinality =>
-                val d = CanWidenCardinalityTestData.createOntologyWithSuperClassCardinality(ZeroOrOne)
+                val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ZeroOrOne)
                 for {
                   _      <- OntologyCacheFake.set(d.data)
                   actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality)
@@ -364,7 +309,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                |then this is always possible""".stripMargin
           ) {
             check(cardinalitiesGen()) { newCardinality =>
-              val d = CanWidenCardinalityTestData.createOntologyWithSuperClassCardinality(Unbounded)
+              val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(Unbounded)
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality)
@@ -379,7 +324,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                |when checking $Unbounded cardinality
                |then this is possible""".stripMargin
           ) {
-            val d = CanWidenCardinalityTestData.createOntologyWithSubClassCardinality(Unbounded)
+            val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(Unbounded)
             for {
               _      <- OntologyCacheFake.set(d.data)
               actual <- CardinalityService.canSetCardinality(d.classIri, d.propertyIri, Unbounded)
@@ -391,7 +336,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                |when checking cardinalities $AtLeastOne, $ExactlyOne, $ZeroOrOne
                |then this is NOT possible""".stripMargin
           ) {
-            val d = CanWidenCardinalityTestData.createOntologyWithSubClassCardinality(Unbounded)
+            val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(Unbounded)
             check(cardinalitiesGen(AtLeastOne, ExactlyOne, ZeroOrOne)) { newCardinality =>
               for {
                 _      <- OntologyCacheFake.set(d.data)
@@ -405,7 +350,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                |when checking cardinalities
                |then this is always possible""".stripMargin
           ) {
-            val d = CanWidenCardinalityTestData.createOntologyWithSubClassCardinality(ExactlyOne)
+            val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ExactlyOne)
             check(cardinalitiesGen()) { newCardinality =>
               for {
                 _      <- OntologyCacheFake.set(d.data)
@@ -419,7 +364,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                |when checking cardinalities $Unbounded, $AtLeastOne
                |then this is possible""".stripMargin
           ) {
-            val d = CanWidenCardinalityTestData.createOntologyWithSubClassCardinality(AtLeastOne)
+            val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(AtLeastOne)
             check(cardinalitiesGen(Unbounded, AtLeastOne)) { newCardinality =>
               for {
                 _      <- OntologyCacheFake.set(d.data)
@@ -433,7 +378,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                |when checking cardinalities $ExactlyOne, $ZeroOrOne
                |then this is NOT possible""".stripMargin
           ) {
-            val d = CanWidenCardinalityTestData.createOntologyWithSubClassCardinality(AtLeastOne)
+            val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(AtLeastOne)
             check(cardinalitiesGen(ExactlyOne, ZeroOrOne)) { newCardinality =>
               for {
                 _      <- OntologyCacheFake.set(d.data)
@@ -447,7 +392,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                |when checking cardinalities $ZeroOrOne, $Unbounded
                |then this is possible""".stripMargin
           ) {
-            val d = CanWidenCardinalityTestData.createOntologyWithSubClassCardinality(ZeroOrOne)
+            val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ZeroOrOne)
             check(cardinalitiesGen(ZeroOrOne, Unbounded)) { newCardinality =>
               for {
                 _      <- OntologyCacheFake.set(d.data)
@@ -461,7 +406,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                |when checking cardinalities $ExactlyOne, $AtLeastOne
                |then this is NOT possible""".stripMargin
           ) {
-            val d = CanWidenCardinalityTestData.createOntologyWithSubClassCardinality(ZeroOrOne)
+            val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ZeroOrOne)
             check(cardinalitiesGen(ExactlyOne, AtLeastOne)) { newCardinality =>
               for {
                 _      <- OntologyCacheFake.set(d.data)
@@ -471,12 +416,63 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
           }
         )
       ).provide(commonLayers, emptyDataSet),
-      suite("canSetCardinality with property in use")(
+      suite("canSetCardinality with property in use twice")(
         test(s"""
                 |Given the previous cardinality on the class/property
-                |and property is in use
                 |does not include the new cardinality to be set
-                |then this is NOT possible
+                |and given the property is in use
+                |then this is NOT possible because the new cardinality does violate the
+                |number of times the property is used on each instance
+          """.stripMargin) {
+          val propertyCardinality =
+            OntologyCacheDataBuilder.cardinalitiesMap(Anything.Property.hasOtherThing, Unbounded)
+          val data = OntologyCacheDataBuilder.builder
+            .addOntology(
+              ReadOntologyV2Builder
+                .builder(Anything.Ontology)
+                .addClassInfo(
+                  ReadClassInfoV2Builder
+                    .builder(Anything.Class.Thing)
+                    .setDirectCardinalities(propertyCardinality)
+                )
+            )
+          check(cardinalitiesGen(ZeroOrOne, ExactlyOne)) { newCardinality =>
+            for {
+              _ <- OntologyCacheFake.set(data.build)
+              actual <-
+                CardinalityService.canSetCardinality(
+                  Anything.Class.Thing,
+                  Anything.Property.hasOtherThing,
+                  newCardinality
+                )
+            } yield assertTrue(actual == Left(List(CurrentClassFailure(Anything.Class.Thing))))
+          }
+        }
+      ).provide(
+        commonLayers,
+        datasetLayerFromTurtle(s"""
+                                  |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                                  |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+                                  |
+                                  |<http://aThing>
+                                  |  a <${Anything.Class.Thing.value}> ;
+                                  |  <${Anything.Property.hasOtherThing.value}> "theOther" ;
+                                  |  <${Anything.Property.hasOtherThing.value}> "theOtherOther" .
+                                  |
+                                  | <http://anotherThing>
+                                  |  a <${Anything.Class.Thing.value}> ;
+                                  |  <${Anything.Property.hasOtherThing.value}> "theOther" ;
+                                  |  <${Anything.Property.hasOtherThing.value}> "theOtherOther" .
+                                  |
+                                  |""".stripMargin)
+      ),
+      suite("canSetCardinality with property in use once")(
+        test(s"""
+                |Given the previous cardinality on the class/property
+                |does not include the new cardinality to be set
+                |and given the property is in use
+                |then this is possible because the new cardinality does not violate the
+                |number of times the property is used on the instance
           """.stripMargin) {
           val propertyCardinality =
             OntologyCacheDataBuilder.cardinalitiesMap(Anything.Property.hasOtherThing, Unbounded)
@@ -499,7 +495,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   Anything.Property.hasOtherThing,
                   newCardinality
                 )
-            } yield assertTrue(actual == Left(List(CurrentClassFailure(Anything.Class.Thing))))
+            } yield assertTrue(actual.isRight)
           }
         }
       ).provide(
@@ -511,7 +507,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |<http://aThing>
                                   |  a <${Anything.Class.Thing.value}> ;
                                   |  <${Anything.Property.hasOtherThing.value}> false .
-                                  |  
+                                  |
                                   |""".stripMargin)
       )
     )
