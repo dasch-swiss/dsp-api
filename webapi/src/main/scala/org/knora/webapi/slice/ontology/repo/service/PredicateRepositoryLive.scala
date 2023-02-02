@@ -12,7 +12,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 final case class PredicateRepositoryLive(private val tripleStore: TriplestoreService) extends PredicateRepository {
 
   /**
-   * Checks if a how many times a property entity is used in resource instances.
+   * Checks how many times a property entity is used in resource instances.
    *
    * @param classIri    the IRI of the class that is being checked for usage.
    * @param propertyIri the IRI of the entity that is being checked for usage.
