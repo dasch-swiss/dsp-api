@@ -10,7 +10,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 trait PredicateRepository {
 
   /**
-   * Checks if a how many times a property entity is used in resource instances.
+   * Checks how many times a property entity is used in resource instances.
    *
    * @param propertyIri the IRI of the entity that is being checked for usage.
    * @param classIri    the IRI of the class that is being checked for usage.
