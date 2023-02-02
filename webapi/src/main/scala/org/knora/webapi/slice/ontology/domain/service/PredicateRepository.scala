@@ -23,7 +23,7 @@ trait PredicateRepository {
   ): Task[List[(InternalIri, Int)]]
 
   /**
-   * Checks if a how many times a property entity is used in resource instances.
+   * Checks how many times a property entity is used in resource instances.
    *
    * @param propertyIri  the IRI of the entity that is being checked for usage.
    * @param classIris    the IRIs of the classes that are being checked for usage.
