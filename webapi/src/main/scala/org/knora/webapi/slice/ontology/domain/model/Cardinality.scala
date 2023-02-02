@@ -45,7 +45,7 @@ sealed trait Cardinality {
   def isNotIncludedIn(other: Cardinality): Boolean = !isIncludedIn(other)
 
   /**
-   * Checks whether a `count` is in included in the range of the [[Cardinality]].
+   * Checks whether a `count` is included in the range of the [[Cardinality]].
    *
    * @param count  The quantity to check.
    * @return `true` if the count is a valid value for the given [[Cardinality]].
