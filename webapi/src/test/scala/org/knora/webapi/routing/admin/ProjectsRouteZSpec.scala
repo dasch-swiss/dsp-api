@@ -28,7 +28,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRes
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
-import org.knora.webapi.routing.TestDataFactory
+import org.knora.webapi.TestDataFactory
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 

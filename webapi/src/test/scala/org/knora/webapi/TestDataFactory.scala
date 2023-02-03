@@ -1,4 +1,4 @@
-package org.knora.webapi.routing
+package org.knora.webapi
 
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project._
