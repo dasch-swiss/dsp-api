@@ -48,9 +48,23 @@ final case class ProjectsRouteZ(
           deleteProject(iriUrlEncoded, requestingUser)
         case (request @ Method.PUT -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, requestingUser) =>
           updateProject(iriUrlEncoded, request, requestingUser)
-
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
+        case (
+              request @ Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "admin-members",
+              requestingUser
+            ) =>
+          getProjectAdminsByIri(iriUrlEncoded, requestingUser)
+        case (
+              request @ Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "admin-members",
+              requestingUser
+            ) =>
+          getProjectAdminsByShortname(shortname, requestingUser)
+        case request @ (
+              Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "admin-members",
+              requestingUser
+            ) =>
+          getProjectAdminsByShortcode(shortcode, requestingUser)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -124,6 +138,24 @@ final case class ProjectsRouteZ(
                  )
     } yield response
 
+  private def getProjectAdminsByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
+    for {
+      iriDecoded         <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iri                <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      projectGetResponse <- projectsService.getProjectAdmins(iri, requestingUser)
+    } yield Response.json(projectGetResponse.toJsValue.toString)
+
+  private def getProjectAdminsByShortname(shortname: String, requestingUser: UserADM): Task[Response] =
+    for {
+      shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
+      projectGetResponse  <- projectsService.getProjectAdmins(shortnameIdentifier, requestingUser)
+    } yield Response.json(projectGetResponse.toJsValue.toString)
+
+  private def getProjectAdminsByShortcode(shortcode: String, requestingUser: UserADM): Task[Response] =
+    for {
+      shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
+      projectGetResponse  <- projectsService.getProjectAdmins(shortcodeIdentifier, requestingUser)
+    } yield Response.json(projectGetResponse.toJsValue.toString())
 }
 
 object ProjectsRouteZ {
