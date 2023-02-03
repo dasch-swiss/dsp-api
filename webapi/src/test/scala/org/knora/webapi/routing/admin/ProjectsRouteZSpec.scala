@@ -33,6 +33,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRes
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
@@ -345,4 +347,68 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         assertTrue(bodyAsString == "{\"error\":\"dsp.errors.BadRequestException: Project IRI is invalid.\"}")
     }
   )
+
+  val getProjectMembersSpec = suite("get all members of a project")(
+    test("get all members by project IRI") {
+      val iri = "http://rdfh.ch/projects/0001"
+      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
+        .fromString(iri)
+        .getOrElse(throw BadRequestException("Invalid IRI"))
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "members"))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .GetProjectMembers(
+          assertion = Assertion.equalTo((identifier, user)),
+          result = Expectation.value[ProjectMembersGetResponseADM](
+            ProjectMembersGetResponseADM(Seq.empty[UserADM])
+          )
+        )
+        .toLayer
+      for {
+        response <- applyRoutes(request).provide(mockService)
+        body     <- response.body.asString
+      } yield assertTrue(body.contains(iri))
+    },
+    test("get all members by project shortcode") {
+      val shortcode = "0001"
+      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
+        .fromString(shortcode)
+        .getOrElse(throw BadRequestException("Invalid Shortcode"))
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url = URL(basePathProjectsShortcode / shortcode / "members"))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .GetProjectMembers(
+          assertion = Assertion.equalTo((identifier, user)),
+          result = Expectation.value[ProjectMembersGetResponseADM](
+            ProjectMembersGetResponseADM(Seq.empty[UserADM])
+          )
+        )
+        .toLayer
+      for {
+        response <- applyRoutes(request).provide(mockService)
+        body     <- response.body.asString
+      } yield assertTrue(body.contains(shortcode))
+    },
+    test("get all members by project shortname") {
+      val shortname = "someProject"
+      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortnameIdentifier
+        .fromString(shortname)
+        .getOrElse(throw BadRequestException("Invalid Shortname"))
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url = URL(basePathProjectsShortname / shortname / "members"))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .GetProjectMembers(
+          assertion = Assertion.equalTo((identifier, user)),
+          result = Expectation.value[ProjectMembersGetResponseADM](
+            ProjectMembersGetResponseADM(Seq.empty[UserADM])
+          )
+        )
+        .toLayer
+      for {
+        response <- applyRoutes(request).provide(mockService)
+        body     <- response.body.asString
+      } yield assertTrue(body.contains(shortname))
+    }
+  )
+
 }
