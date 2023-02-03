@@ -15,6 +15,7 @@ import java.net.URLEncoder
 import java.nio.file
 
 import dsp.valueobjects.V2
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -28,7 +29,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRes
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
-import org.knora.webapi.TestDataFactory
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
