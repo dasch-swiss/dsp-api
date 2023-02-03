@@ -17,8 +17,11 @@ import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project.ShortCode
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2._
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangeRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequestADM
@@ -31,14 +34,11 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperati
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.ActorToZioBridgeMock
 import org.knora.webapi.responders.admin.ProjectsService
-import org.knora.webapi.TestDataFactory
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetRequestADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 

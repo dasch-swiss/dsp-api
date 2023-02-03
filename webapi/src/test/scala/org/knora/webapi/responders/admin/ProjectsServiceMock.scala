@@ -10,6 +10,7 @@ import zio._
 import zio.mock._
 
 import dsp.valueobjects.Iri._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
@@ -18,7 +19,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperati
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
 
 object ProjectsServiceMock extends Mock[ProjectsService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
