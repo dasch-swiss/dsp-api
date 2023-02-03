@@ -45,7 +45,6 @@ object InstrumentationServer {
               IndexApp.layer,
               HealthRouteZ.layer,
               PrometheusApp.layer,
-
               // Metrics dependencies
               prometheus.publisherLayer,
               ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
