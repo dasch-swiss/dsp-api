@@ -448,6 +448,17 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         body     <- response.body.asString
       } yield assertTrue(body == """{"members":[]}""")
     },
+    test("return a BadRequest Exception if project IRI is invalid") {
+      val iri     = "http://rdfh.ch/project/0001"
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "members"))
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
+    },
     test("get all members by project shortcode") {
       val shortcode  = "0001"
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
@@ -466,6 +477,17 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         body     <- response.body.asString
       } yield assertTrue(body == """{"members":[]}""")
     },
+    test("return a BadRequest Exception if shortcode is invalid") {
+      val shortcode = "XY"
+      val user      = KnoraSystemInstances.Users.SystemUser
+      val request   = Request.get(url = URL(basePathProjectsShortcode / shortcode / "members"))
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
+    },
     test("get all members by project shortname") {
       val shortname  = "someProject"
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
@@ -483,6 +505,17 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
       } yield assertTrue(body == """{"members":[]}""")
+    },
+    test("return a BadRequest Exception if shortname is invalid") {
+      val shortname = "short name"
+      val user      = KnoraSystemInstances.Users.SystemUser
+      val request   = Request.get(url = URL(basePathProjectsShortname / shortname / "members"))
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortname is invalid: short name"}""")
     }
   )
 
