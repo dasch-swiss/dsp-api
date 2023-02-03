@@ -144,16 +144,17 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def getProjectKeywords(): Route =
     path(projectsBasePath / "iri" / Segment / "Keywords") { value =>
       get { requestContext =>
-        val checkedProjectIri =
-          stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-
+        val projectIri =
+          ProjectIri
+            .make(value)
+            .getOrElse(throw BadRequestException(s"Invalid project IRI $value"))
         val requestMessage: Future[ProjectKeywordsGetRequestADM] = for {
           requestingUser <- getUserADM(
                               requestContext = requestContext,
                               routeData.appConfig
                             )
         } yield ProjectKeywordsGetRequestADM(
-          projectIri = checkedProjectIri,
+          projectIri = projectIri,
           requestingUser = requestingUser
         )
 

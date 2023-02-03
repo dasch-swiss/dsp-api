@@ -218,7 +218,7 @@ case class ProjectsKeywordsGetRequestADM() extends ProjectsResponderRequestADM
  * @param requestingUser       the user making the request.
  */
 case class ProjectKeywordsGetRequestADM(
-  projectIri: IRI,
+  projectIri: ProjectIri,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 

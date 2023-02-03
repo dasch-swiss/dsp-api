@@ -48,9 +48,10 @@ final case class ProjectsRouteZ(
           deleteProject(iriUrlEncoded, requestingUser)
         case (request @ Method.PUT -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, requestingUser) =>
           updateProject(iriUrlEncoded, request, requestingUser)
-
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
+        case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "Keywords", requestingUser) =>
+          getKeywordsByProjectIri(iriUrlEncoded, requestingUser)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -123,6 +124,13 @@ final case class ProjectsRouteZ(
                    body = Body.fromStream(fileStream)
                  )
     } yield response
+
+  private def getKeywordsByProjectIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
+    for {
+      iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      projectIri <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      r          <- projectsService.getKeywordsByProjectIri(projectIri, requestingUser)
+    } yield Response.json(r.toJsValue.toString)
 
 }
 

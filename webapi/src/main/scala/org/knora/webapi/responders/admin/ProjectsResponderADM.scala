@@ -392,19 +392,19 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
    */
   private def projectKeywordsGetRequestADM(
-    projectIri: IRI,
+    projectIri: Iri.ProjectIri,
     requestingUser: UserADM
   ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
                         identifier = IriIdentifier
-                          .fromString(projectIri)
+                          .fromString(projectIri.value)
                           .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                       )
 
       keywords: Seq[String] = maybeProject match {
                                 case Some(p) => p.keywords
-                                case None    => throw NotFoundException(s"Project '$projectIri' not found.")
+                                case None    => throw NotFoundException(s"Project '${projectIri.value}' not found.")
                               }
 
     } yield ProjectKeywordsGetResponseADM(keywords = keywords)

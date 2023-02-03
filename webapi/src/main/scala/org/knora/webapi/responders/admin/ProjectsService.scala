@@ -32,6 +32,10 @@ trait ProjectsService {
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
+  def getKeywordsByProjectIri(
+    projectIri: ProjectIri,
+    requestingUser: UserADM
+  ): Task[ProjectKeywordsGetResponseADM]
 }
 
 final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
@@ -138,6 +142,11 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
   ): Task[ProjectDataGetResponseADM] =
     bridge.askAppActor(ProjectDataGetRequestADM(projectIdentifier, requestingUser))
 
+  def getKeywordsByProjectIri(
+    projectIri: ProjectIri,
+    requestingUser: UserADM
+  ): Task[ProjectKeywordsGetResponseADM] =
+    bridge.askAppActor(ProjectKeywordsGetRequestADM(projectIri, requestingUser))
 }
 
 object ProjectsService {
