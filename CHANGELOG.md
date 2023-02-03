@@ -1,5 +1,34 @@
 # Changelog
 
+## [26.2.0](https://github.com/dasch-swiss/dsp-api/compare/v26.1.0...v26.2.0) (2023-02-02)
+
+
+### Bug Fixes
+
+* Search by label returns an Error when searching with a slash (DEV-1656) ([#2406](https://github.com/dasch-swiss/dsp-api/issues/2406)) ([bb02464](https://github.com/dasch-swiss/dsp-api/commit/bb0246468b43e2d42d33a95cd3d7405610aa9b33))
+* Test file issue ([#2418](https://github.com/dasch-swiss/dsp-api/issues/2418)) ([78612e0](https://github.com/dasch-swiss/dsp-api/commit/78612e05fa2f43d007eb23f50a08bfb8a2502a3c))
+
+
+### Maintenance
+
+* cleanup Cache class, ie. scaladoc, renaming, code improvements ([#2411](https://github.com/dasch-swiss/dsp-api/issues/2411)) ([5efa7ac](https://github.com/dasch-swiss/dsp-api/commit/5efa7ac23747385ffbe159e34e3d127bec16be96))
+* **deps:** change schedule of dependency updates check ([#2414](https://github.com/dasch-swiss/dsp-api/issues/2414)) ([a5c7a38](https://github.com/dasch-swiss/dsp-api/commit/a5c7a38449e3814a93281c93dd754bcddc87a2f2))
+* **deps:** update scalafmt-core, kamon-core, kamon-scala-future ([#2412](https://github.com/dasch-swiss/dsp-api/issues/2412)) ([a02408a](https://github.com/dasch-swiss/dsp-api/commit/a02408a5a6eb45ae5dd353c7d6b9be48e176f331))
+* enable publishing docker image in both arm64 and amd64 architectures (DEV-1684) ([#2410](https://github.com/dasch-swiss/dsp-api/issues/2410)) ([f224b24](https://github.com/dasch-swiss/dsp-api/commit/f224b24c768fb82cd050457085ffc798e513e276))
+* rename ReplaceCardinalitiesRequestV2, remove old code, simplify and extract methods in OntologyResponder ([#2389](https://github.com/dasch-swiss/dsp-api/issues/2389)) ([5a4f4b6](https://github.com/dasch-swiss/dsp-api/commit/5a4f4b66e73d7655af52a269b341ea394cb6cfca))
+* Replace Cardinality isStricterThan with isIncludedIn ([#2405](https://github.com/dasch-swiss/dsp-api/issues/2405)) ([229b362](https://github.com/dasch-swiss/dsp-api/commit/229b362f021c477a66cd6c7e63074195e4853ac0))
+* update Scala to 2.13.10 ([#2415](https://github.com/dasch-swiss/dsp-api/issues/2415)) ([d501f59](https://github.com/dasch-swiss/dsp-api/commit/d501f59b59c62bee5016f0da7e1136e76b163959))
+* upgrade dependencies ([#2404](https://github.com/dasch-swiss/dsp-api/issues/2404)) ([0d78030](https://github.com/dasch-swiss/dsp-api/commit/0d780304904e00cb4eeaf711f5872daf464a8eef))
+
+
+### Enhancements
+
+* add CORS to ZIO-HTTP routes (DEV-1619) ([#2390](https://github.com/dasch-swiss/dsp-api/issues/2390)) ([8dad4b2](https://github.com/dasch-swiss/dsp-api/commit/8dad4b2dd1dac41dd8a2c14e1ba609ac707f6e4e))
+* allow setting a cardinality given the count in the persisted data is compatible  DEV-1563 ([#2416](https://github.com/dasch-swiss/dsp-api/issues/2416)) ([789bdd1](https://github.com/dasch-swiss/dsp-api/commit/789bdd1ffe0996feb0a3f6023173e9bb29c689ac))
+* Allow setting new Cardinalities if they are more restrictive than the respective Cardinalities of a possibly existing super class ([#2397](https://github.com/dasch-swiss/dsp-api/issues/2397)) ([dbde740](https://github.com/dasch-swiss/dsp-api/commit/dbde740314dfedfc4fa7e6d52d02d31a80ecdc35))
+* expose GET /admin/projects/iri/{project_iri}/allData as ZIO HTTP route (DEV-1587)  ([#2413](https://github.com/dasch-swiss/dsp-api/issues/2413)) ([eefaf62](https://github.com/dasch-swiss/dsp-api/commit/eefaf62eeb32aff4632bb7395f0a4b25f8fbf2b2))
+* expose PUT /admin/projects/iri/{project_iri} as ZIO HTTP route (DEV-1587) ([#2394](https://github.com/dasch-swiss/dsp-api/issues/2394)) ([a832868](https://github.com/dasch-swiss/dsp-api/commit/a832868ef6d142878baa9f3848594235fed399c4))
+
 ## [26.1.0](https://github.com/dasch-swiss/dsp-api/compare/v26.0.0...v26.1.0) (2023-01-19)
 
 
