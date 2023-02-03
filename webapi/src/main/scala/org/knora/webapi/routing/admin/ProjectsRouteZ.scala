@@ -48,9 +48,9 @@ final case class ProjectsRouteZ(
           deleteProject(iriUrlEncoded, requestingUser)
         case (request @ Method.PUT -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, requestingUser) =>
           updateProject(iriUrlEncoded, request, requestingUser)
-
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
+        case (Method.GET -> !! / "admin" / "projects" / "Keywords", _) => getKeywords()
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -123,6 +123,11 @@ final case class ProjectsRouteZ(
                    body = Body.fromStream(fileStream)
                  )
     } yield response
+
+  private def getKeywords(): Task[Response] =
+    for {
+      r <- projectsService.getKeywords()
+    } yield Response.json(r.toJsValue.toString)
 
 }
 
