@@ -83,7 +83,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     createProjectSpec,
     deleteProjectSpec,
     updateProjectSpec,
-    getAllDataSpec
+    getAllDataSpec,
+    getProjectMembersSpec
   )
 
   val getProjectsSpec = test("get all projects") {
@@ -445,7 +446,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       for {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
-      } yield assertTrue(body.contains(iri))
+      } yield assertTrue(body == """{"members":[]}""")
     },
     test("get all members by project shortcode") {
       val shortcode  = "0001"
@@ -463,7 +464,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       for {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
-      } yield assertTrue(body.contains(shortcode))
+      } yield assertTrue(body == """{"members":[]}""")
     },
     test("get all members by project shortname") {
       val shortname  = "someProject"
@@ -481,7 +482,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       for {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
-      } yield assertTrue(body.contains(shortname))
+      } yield assertTrue(body == """{"members":[]}""")
     }
   )
 
