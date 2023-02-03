@@ -31,6 +31,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperati
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.ActorToZioBridgeMock
@@ -66,7 +68,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       createProjectSpec,
       deleteProjectSpec,
       updateProjectSpec,
-      getAllProjectDataSpec
+      getAllProjectDataSpec,
+      getKeywordsSpec
     ).provide(StringFormatter.test)
 
   val getAllProjectsSpec = test("get all projects") {
@@ -262,5 +265,22 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     for {
       _ <- projectsService.provide(actorToZioBridge)
     } yield assertTrue(true)
+  }
+
+  val getKeywordsSpec = test("get keywords of all projects") {
+    val projectsService =
+      ZIO
+        .serviceWithZIO[ProjectsService](_.getKeywords())
+        .provideSome[ActorToZioBridge](layers)
+    val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+      .of[ProjectsKeywordsGetResponseADM]
+      .apply(
+        assertion = Assertion.equalTo(ProjectsKeywordsGetRequestADM()),
+        result = Expectation.value(ProjectsKeywordsGetResponseADM(Seq.empty[String]))
+      )
+      .toLayer
+    for {
+      _ <- projectsService.provide(actorToZioBridge)
+    } yield assertCompletes
   }
 }

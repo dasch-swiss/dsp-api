@@ -26,6 +26,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
@@ -81,7 +82,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     createProjectSpec,
     deleteProjectSpec,
     updateProjectSpec,
-    getAllDataSpec
+    getAllDataSpec,
+    getKeywordsSpec
   )
 
   val getProjectsSpec = test("get all projects") {
@@ -425,4 +427,15 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
     }
   )
+
+  val getKeywordsSpec = test("get keywords of all projects") {
+    val request = Request.get(url = URL(basePathProjects / "Keywords"))
+    val expectedResult =
+      Expectation.value[ProjectsKeywordsGetResponseADM](ProjectsKeywordsGetResponseADM(Seq.empty[String]))
+    val mockService = ProjectsServiceMock.GetKeywords(expectedResult).toLayer
+    for {
+      response <- applyRoutes(request).provide(mockService)
+      body     <- response.body.asString
+    } yield assertCompletes
+  }
 }
