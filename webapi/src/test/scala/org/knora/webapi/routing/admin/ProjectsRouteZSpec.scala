@@ -430,12 +430,10 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
   val getProjectMembersSpec = suite("get all members of a project")(
     test("get all members by project IRI") {
-      val iri = "http://rdfh.ch/projects/0001"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.IriIdentifier
-        .fromString(iri)
-        .getOrElse(throw BadRequestException("Invalid IRI"))
-      val user    = KnoraSystemInstances.Users.SystemUser
-      val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "members"))
+      val iri        = "http://rdfh.ch/projects/0001"
+      val identifier = TestDataFactory.projectIriIdentifier(iri)
+      val user       = KnoraSystemInstances.Users.SystemUser
+      val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "members"))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
@@ -450,12 +448,10 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       } yield assertTrue(body.contains(iri))
     },
     test("get all members by project shortcode") {
-      val shortcode = "0001"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortcodeIdentifier
-        .fromString(shortcode)
-        .getOrElse(throw BadRequestException("Invalid Shortcode"))
-      val user    = KnoraSystemInstances.Users.SystemUser
-      val request = Request.get(url = URL(basePathProjectsShortcode / shortcode / "members"))
+      val shortcode  = "0001"
+      val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
+      val user       = KnoraSystemInstances.Users.SystemUser
+      val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode / "members"))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
@@ -470,12 +466,10 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       } yield assertTrue(body.contains(shortcode))
     },
     test("get all members by project shortname") {
-      val shortname = "someProject"
-      val identifier: ProjectIdentifierADM = ProjectIdentifierADM.ShortnameIdentifier
-        .fromString(shortname)
-        .getOrElse(throw BadRequestException("Invalid Shortname"))
-      val user    = KnoraSystemInstances.Users.SystemUser
-      val request = Request.get(url = URL(basePathProjectsShortname / shortname / "members"))
+      val shortname  = "someProject"
+      val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
+      val user       = KnoraSystemInstances.Users.SystemUser
+      val request    = Request.get(url = URL(basePathProjectsShortname / shortname / "members"))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
