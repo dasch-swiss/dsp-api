@@ -67,7 +67,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       .toLayer
     for {
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   val getProjectByIdSpec = suite("get project by identifier")(
@@ -87,7 +87,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     },
     test("get project by shortname") {
       val shortname  = "someProject"
@@ -105,7 +105,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     },
     test("get project by IRI") {
       val iri        = "http://rdfh.ch/projects/0001"
@@ -123,7 +123,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     }
   )
 
@@ -158,7 +158,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           )
           .toLayer
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   // needs to have the StringFormatter in the environment because ChangeProjectApiRequestADM needs it
@@ -184,7 +184,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           )
           .toLayer
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   val updateProjectSpec = test("update a project") {
@@ -217,7 +217,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           )
           .toLayer
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   val getAllProjectDataSpec = test("get all project data") {
@@ -238,7 +238,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       .toLayer
     for {
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   val getProjectMembers = suite("get all members of a project")(
@@ -259,7 +259,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     },
     test("get members by project shortname") {
       val shortname      = "shortname"
@@ -278,7 +278,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     },
     test("get members by project IRI") {
       val iri            = "http://rdfh.ch/projects/0001"
@@ -297,7 +297,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     }
   )
 
