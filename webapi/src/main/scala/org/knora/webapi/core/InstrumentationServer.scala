@@ -18,49 +18,41 @@ import org.knora.webapi.instrumentation.prometheus.PrometheusApp
 
 object InstrumentationServer {
 
-  private val routes =
+  private val run =
     for {
       index      <- ZIO.service[IndexApp].map(_.route)
       health     <- ZIO.service[HealthRouteZ].map(_.route)
       prometheus <- ZIO.service[PrometheusApp].map(_.route)
-    } yield index ++ health ++ prometheus
-
-  private val run =
-    for {
-      config      <- ZIO.service[AppConfig]
-      r           <- routes
-      serverConfig = ZLayer.succeed(ServerConfig.default.port(config.instrumentationServerConfig.port))
-      _ <- Server
-             .serve(r)
-             .provideSome[State with prometheus.PrometheusPublisher](Server.live, serverConfig)
-             .forkDaemon
-      _ <- ZIO.logInfo(s"Starting instrumentation http server on port: ${config.instrumentationServerConfig.port}")
+      app         = index ++ health ++ prometheus
+      _          <- Server.serve(app)
     } yield ()
 
-  val make: ZIO[AppConfig with State, Throwable, Unit] =
+  val make: ZIO[State with AppConfig, Throwable, Fiber.Runtime[Throwable, Unit]] =
     ZIO
       .service[AppConfig]
-      .flatMap(config =>
-        run
-          .provideSome[AppConfig with State](
-            // HttpApp implementation layers
-            IndexApp.layer,
-            HealthRouteZ.layer,
-            PrometheusApp.layer,
+      .flatMap { config =>
+        val port          = config.instrumentationServerConfig.port
+        val serverConfig  = ServerConfig.default.port(port)
+        val interval      = config.instrumentationServerConfig.interval
+        val metricsConfig = MetricsConfig(interval)
+        ZIO.logInfo(s"Starting instrumentation http server on port: $port") *>
+          ZIO.debug(s"$serverConfig, $metricsConfig") *>
+          run
+            .provideSome[State](
+              // HTTP Server
+              ZLayer.succeed(serverConfig) >>> Server.live,
+              // HTTP routes
+              IndexApp.layer,
+              HealthRouteZ.layer,
+              PrometheusApp.layer,
 
-            // Metrics config
-            ZLayer.succeed(MetricsConfig(config.instrumentationServerConfig.interval)),
-
-            // The prometheus reporting layer
-            prometheus.publisherLayer,
-            prometheus.prometheusLayer,
-
-            // Enable the ZIO internal metrics and the default JVM metricsConfig
-            // Do NOT forget the .unit for the JVM metrics layer
-            Runtime.enableRuntimeMetrics,
-            Runtime.enableFiberRoots,
-            DefaultJvmMetrics.live.unit
-          )
-      )
-
+              // Metrics dependencies
+              prometheus.publisherLayer,
+              ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
+              Runtime.enableRuntimeMetrics,
+              Runtime.enableFiberRoots,
+              DefaultJvmMetrics.live.unit
+            )
+            .forkDaemon
+      }
 }
