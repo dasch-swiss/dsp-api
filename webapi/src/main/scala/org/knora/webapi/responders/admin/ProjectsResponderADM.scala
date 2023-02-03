@@ -73,8 +73,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
       projectAdminMembersGetRequestADM(identifier, requestingUser)
     case ProjectsKeywordsGetRequestADM() => projectsKeywordsGetRequestADM()
-    case ProjectKeywordsGetRequestADM(projectIri, requestingUser) =>
-      projectKeywordsGetRequestADM(projectIri, requestingUser)
+    case ProjectKeywordsGetRequestADM(projectIri) =>
+      projectKeywordsGetRequestADM(projectIri)
     case ProjectRestrictedViewSettingsGetADM(identifier, requestingUser) =>
       projectRestrictedViewSettingsGetADM(identifier, requestingUser)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier, requestingUser) =>
@@ -388,12 +388,10 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
    *
    * @param projectIri           the IRI of the project.
-   * @param requestingUser       the user making the request.
    * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
    */
   private def projectKeywordsGetRequestADM(
-    projectIri: Iri.ProjectIri,
-    requestingUser: UserADM
+    projectIri: Iri.ProjectIri
   ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(

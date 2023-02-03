@@ -154,8 +154,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                               routeData.appConfig
                             )
         } yield ProjectKeywordsGetRequestADM(
-          projectIri = projectIri,
-          requestingUser = requestingUser
+          projectIri = projectIri
         )
 
         RouteUtilADM.runJsonRoute(
