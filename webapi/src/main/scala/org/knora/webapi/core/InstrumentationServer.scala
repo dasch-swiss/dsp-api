@@ -16,7 +16,7 @@ import org.knora.webapi.instrumentation.health.HealthRouteZ
 import org.knora.webapi.instrumentation.index.IndexApp
 import org.knora.webapi.instrumentation.prometheus.PrometheusApp
 
-object InstrumentationHttpServer {
+object InstrumentationServer {
 
   private val routes =
     for {

@@ -23,17 +23,12 @@ object Main extends ZIOApp {
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  override def bootstrap: ZLayer[
-    ZIOAppArgs,
-    Any,
-    Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ LayersLive.dspLayersLive
+  override def bootstrap: ZLayer[ZIOAppArgs, Any, Environment] =
+    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ LayersLive.dspLayersLive
 
-  /* Here we start our Application */
-  override def run = for {
-    f <- ZIO.never.forkDaemon
-    _ <- InstrumentationHttpServer.make
-    _ <- AppServer.live
-    _ <- f.join
-  } yield ()
+  /**
+   *  Entrypoint of our Application
+   */
+  override def run: ZIO[Environment with ZIOAppArgs with Scope, Any, Any] =
+    InstrumentationServer.make *> AppServer.make *> ZIO.never
 }

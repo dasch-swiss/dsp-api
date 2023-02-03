@@ -181,7 +181,7 @@ object AppServer {
   /**
    * The live AppServer
    */
-  val live: ZIO[AppServerEnvironment, Nothing, Unit] =
+  val make: ZIO[AppServerEnvironment, Nothing, Unit] =
     for {
       appServer <- AppServer.init()
       _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true).orDie
