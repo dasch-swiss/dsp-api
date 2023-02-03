@@ -432,11 +432,10 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     test("successfully get keywords") {
       val iri        = "http://rdfh.ch/projects/0001"
       val projectIri = TestDataFactory.projectIri(iri)
-      val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "Keywords"))
       val mockService: ULayer[ProjectsService] = ProjectsServiceMock
         .GetKeywordsByProjectIri(
-          assertion = Assertion.equalTo(projectIri, user),
+          assertion = Assertion.equalTo(projectIri),
           result = Expectation.value[ProjectKeywordsGetResponseADM](
             ProjectKeywordsGetResponseADM(Seq.empty[String])
           )
@@ -449,7 +448,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     },
     test("return a BadRequest Exception if project IRI is invalid") {
       val iri     = "http://rdfh.ch/project/0001"
-      val user    = KnoraSystemInstances.Users.SystemUser
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "Keywords"))
 
       for {

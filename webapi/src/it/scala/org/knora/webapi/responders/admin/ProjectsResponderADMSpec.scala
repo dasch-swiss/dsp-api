@@ -668,8 +668,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           .make(SharedTestDataADM.incunabulaProject.id)
           .getOrElse(throw new IllegalArgumentException("Invalid project IRI"))
         appActor ! ProjectKeywordsGetRequestADM(
-          projectIri = iri,
-          requestingUser = SharedTestDataADM.rootUser
+          projectIri = iri
         )
         val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
         received.keywords should be(SharedTestDataADM.incunabulaProject.keywords)
@@ -677,11 +676,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return empty list for a project without keywords" in {
         val iri = Iri.ProjectIri
-          .make(SharedTestDataADM.incunabulaProject.id)
+          .make(SharedTestDataADM.dokubibProject.id)
           .getOrElse(throw new IllegalArgumentException("Invalid project IRI"))
         appActor ! ProjectKeywordsGetRequestADM(
-          projectIri = iri,
-          requestingUser = SharedTestDataADM.rootUser
+          projectIri = iri
         )
         val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
         received.keywords should be(Seq.empty[String])
@@ -692,8 +690,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           .make(notExistingProjectButValidProjectIri)
           .getOrElse(throw new IllegalArgumentException("Invalid project IRI"))
         appActor ! ProjectKeywordsGetRequestADM(
-          projectIri = iri,
-          SharedTestDataADM.rootUser
+          projectIri = iri
         )
 
         expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))

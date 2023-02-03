@@ -269,17 +269,16 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   }
 
   val getKeywordsByProjectIri = test("get keywords by project IRI") {
-    val iri            = "http://rdfh.ch/projects/0001"
-    val projectIri     = TestDataFactory.projectIri(iri)
-    val requestingUser = KnoraSystemInstances.Users.SystemUser
+    val iri        = "http://rdfh.ch/projects/0001"
+    val projectIri = TestDataFactory.projectIri(iri)
     val projectsService =
       ZIO
-        .serviceWithZIO[ProjectsService](_.getKeywordsByProjectIri(projectIri, requestingUser))
+        .serviceWithZIO[ProjectsService](_.getKeywordsByProjectIri(projectIri))
         .provideSome[ActorToZioBridge](layers)
     val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
       .of[ProjectKeywordsGetResponseADM]
       .apply(
-        assertion = Assertion.equalTo(ProjectKeywordsGetRequestADM(projectIri, requestingUser)),
+        assertion = Assertion.equalTo(ProjectKeywordsGetRequestADM(projectIri)),
         result = Expectation.value(ProjectKeywordsGetResponseADM(Seq.empty[String]))
       )
       .toLayer

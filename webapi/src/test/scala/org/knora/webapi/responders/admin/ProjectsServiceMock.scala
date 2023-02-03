@@ -29,7 +29,7 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
       extends Effect[(ProjectIri, ProjectUpdatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
   object GetAllProjectData
       extends Effect[(ProjectIdentifierADM.IriIdentifier, UserADM), Throwable, ProjectDataGetResponseADM]
-  object GetKeywordsByProjectIri extends Effect[(ProjectIri, UserADM), Throwable, ProjectKeywordsGetResponseADM]
+  object GetKeywordsByProjectIri extends Effect[ProjectIri, Throwable, ProjectKeywordsGetResponseADM]
 
   override val compose: URLayer[Proxy, ProjectsService] =
     ZLayer {
@@ -66,10 +66,9 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
           proxy(GetAllProjectData, (iri, requestingUser))
 
         def getKeywordsByProjectIri(
-          projectIri: ProjectIri,
-          requestingUser: UserADM
+          projectIri: ProjectIri
         ): Task[ProjectKeywordsGetResponseADM] =
-          proxy(GetKeywordsByProjectIri, (projectIri, requestingUser))
+          proxy(GetKeywordsByProjectIri, projectIri)
 
       }
     }
