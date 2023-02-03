@@ -18,7 +18,7 @@ import org.knora.webapi.instrumentation.prometheus.PrometheusApp
 
 object InstrumentationServer {
 
-  private val run =
+  private val instrumentationServer =
     for {
       index      <- ZIO.service[IndexApp].map(_.route)
       health     <- ZIO.service[HealthRouteZ].map(_.route)
@@ -37,7 +37,7 @@ object InstrumentationServer {
         val metricsConfig = MetricsConfig(interval)
         ZIO.logInfo(s"Starting instrumentation http server on port: $port") *>
           ZIO.debug(s"$serverConfig, $metricsConfig") *>
-          run
+          instrumentationServer
             .provideSome[State](
               // HTTP Server
               ZLayer.succeed(serverConfig) >>> Server.live,
