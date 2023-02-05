@@ -198,6 +198,18 @@ abstract class ITKnoraLiveSpec
         .getOrThrow()
     }
 
+  protected def uploadWithoutTranscodingToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): UploadResponse =
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.uploadToSipi(loginToken, filesToUpload)
+          } yield result
+        )
+        .getOrThrow()
+    }
+
   protected def responseToString(httpResponse: HttpResponse): String = {
     val responseBodyFuture: Future[String] =
       httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
