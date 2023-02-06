@@ -78,6 +78,7 @@ final case class ProjectsRouteZ(
               requestingUser
             ) =>
           getProjectAdminsByShortcode(shortcode, requestingUser)
+        case (Method.GET -> !! / "admin" / "projects" / "Keywords", _) => getKeywords()
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -188,6 +189,11 @@ final case class ProjectsRouteZ(
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
       projectGetResponse  <- projectsService.getProjectAdmins(shortcodeIdentifier, requestingUser)
     } yield Response.json(projectGetResponse.toJsValue.toString())
+  private def getKeywords(): Task[Response] =
+    for {
+      r <- projectsService.getKeywords()
+    } yield Response.json(r.toJsValue.toString)
+
 }
 
 object ProjectsRouteZ {

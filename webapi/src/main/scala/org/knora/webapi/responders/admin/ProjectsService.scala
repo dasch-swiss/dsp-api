@@ -40,6 +40,7 @@ trait ProjectsService {
     projectIdentifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Task[ProjectAdminMembersGetResponseADM]
+  def getKeywords(): Task[ProjectsKeywordsGetResponseADM]
 }
 
 final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
@@ -156,6 +157,18 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
     requestingUser: UserADM
   ): Task[ProjectAdminMembersGetResponseADM] =
     bridge.askAppActor(ProjectAdminMembersGetRequestADM(projectIdentifier, requestingUser))
+
+  /**
+   * Returns all keywords of all projects as a [[ProjectsKeywordsGetResponseADM]].
+   *
+   * @return
+   *     '''success''': list of all keywords as a [[ProjectsKeywordsGetResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
+   */
+  def getKeywords(): Task[ProjectsKeywordsGetResponseADM] =
+    bridge.askAppActor(ProjectsKeywordsGetRequestADM())
+
 }
 
 object ProjectsService {
