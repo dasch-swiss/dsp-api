@@ -82,7 +82,11 @@ final case class ProjectsRouteZ(
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "Keywords", _) =>
           getKeywordsByProjectIri(iriUrlEncoded)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "RestrictedViewSettings", _) =>
-          getProjectRestrictedViewSettings(iriUrlEncoded)
+          getRestrictedViewSettingsByProjectIri(iriUrlEncoded)
+        case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "RestrictedViewSettings", _) =>
+          getRestrictedViewSettingsByShortname(shortname)
+        case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "RestrictedViewSettings", _) =>
+          getRestrictedViewSettingsByShortcode(shortcode)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -205,11 +209,23 @@ final case class ProjectsRouteZ(
       r          <- projectsService.getKeywordsByProjectIri(projectIri)
     } yield Response.json(r.toJsValue.toString)
 
-  private def getProjectRestrictedViewSettings(iriUrlEncoded: String): Task[Response] =
+  private def getRestrictedViewSettingsByProjectIri(iriUrlEncoded: String): Task[Response] =
     for {
       iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       iri        <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       r          <- projectsService.getProjectRestrictedViewSettings(iri)
+    } yield Response.json(r.toJsValue.toString)
+
+  private def getRestrictedViewSettingsByShortname(shortname: String): Task[Response] =
+    for {
+      shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
+      r                   <- projectsService.getProjectRestrictedViewSettings(shortnameIdentifier)
+    } yield Response.json(r.toJsValue.toString)
+
+  private def getRestrictedViewSettingsByShortcode(shortcode: String): Task[Response] =
+    for {
+      shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
+      r                   <- projectsService.getProjectRestrictedViewSettings(shortcodeIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
 }
