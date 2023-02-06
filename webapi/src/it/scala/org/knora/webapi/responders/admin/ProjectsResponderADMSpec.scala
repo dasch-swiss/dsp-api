@@ -108,8 +108,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectRestrictedViewSettingsGetADM(
           identifier = IriIdentifier
             .fromString(SharedTestDataADM.imagesProject.id)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
         expectMsg(Some(expectedResult))
       }
@@ -118,8 +117,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectRestrictedViewSettingsGetADM(
           identifier = ShortnameIdentifier
             .fromString(SharedTestDataADM.imagesProject.shortname)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
         expectMsg(Some(expectedResult))
       }
@@ -128,8 +126,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectRestrictedViewSettingsGetADM(
           identifier = ShortcodeIdentifier
             .fromString(SharedTestDataADM.imagesProject.shortcode)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
         expectMsg(Some(expectedResult))
       }
@@ -138,8 +135,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectRestrictedViewSettingsGetRequestADM(
           identifier = IriIdentifier
             .fromString(notExistingProjectButValidProjectIri)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
         expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
       }
@@ -148,8 +144,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectRestrictedViewSettingsGetRequestADM(
           identifier = ShortcodeIdentifier
             .fromString("9999")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
       }
@@ -158,8 +153,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectRestrictedViewSettingsGetRequestADM(
           identifier = ShortnameIdentifier
             .fromString("wrongshortname")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
       }
