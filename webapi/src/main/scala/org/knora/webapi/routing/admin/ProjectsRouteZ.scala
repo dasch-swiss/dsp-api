@@ -51,6 +51,19 @@ final case class ProjectsRouteZ(
 
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
+
+        case (request @ Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
+          getProjectMembersByIri(iriUrlEncoded, requestingUser)
+        case (
+              request @ Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "members",
+              requestingUser
+            ) =>
+          getProjectMembersByShortname(shortname, requestingUser)
+        case request @ (
+              Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "members",
+              requestingUser
+            ) =>
+          getProjectMembersByShortcode(shortcode, requestingUser)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -123,6 +136,25 @@ final case class ProjectsRouteZ(
                    body = Body.fromStream(fileStream)
                  )
     } yield response
+
+  private def getProjectMembersByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
+    for {
+      iriDecoded         <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iri                <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      projectGetResponse <- projectsService.getProjectMembers(iri, requestingUser)
+    } yield Response.json(projectGetResponse.toJsValue.toString)
+
+  private def getProjectMembersByShortname(shortname: String, requestingUser: UserADM): Task[Response] =
+    for {
+      shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
+      projectGetResponse  <- projectsService.getProjectMembers(shortnameIdentifier, requestingUser)
+    } yield Response.json(projectGetResponse.toJsValue.toString)
+
+  private def getProjectMembersByShortcode(shortcode: String, requestingUser: UserADM): Task[Response] =
+    for {
+      shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
+      projectGetResponse  <- projectsService.getProjectMembers(shortcodeIdentifier, requestingUser)
+    } yield Response.json(projectGetResponse.toJsValue.toString())
 
 }
 
