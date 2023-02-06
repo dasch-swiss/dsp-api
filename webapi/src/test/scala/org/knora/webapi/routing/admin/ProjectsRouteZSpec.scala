@@ -18,6 +18,7 @@ import dsp.valueobjects.V2
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -77,7 +78,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     updateProjectSpec,
     getAllDataSpec,
     getProjectMembersSpec,
-    getProjectAdminsSpec
+    getProjectAdminsSpec,
+    getKeywordsSpec
   )
 
   val getProjectsSpec = test("get all projects") {
@@ -601,4 +603,15 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortname is invalid: short name"}""")
     }
   )
+
+  val getKeywordsSpec = test("get keywords of all projects") {
+    val request = Request.get(url = URL(basePathProjects / "Keywords"))
+    val expectedResult =
+      Expectation.value[ProjectsKeywordsGetResponseADM](ProjectsKeywordsGetResponseADM(Seq.empty[String]))
+    val mockService = ProjectsServiceMock.GetKeywords(expectedResult).toLayer
+    for {
+      response <- applyRoutes(request).provide(mockService)
+      body     <- response.body.asString
+    } yield assertCompletes
+  }
 }
