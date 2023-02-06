@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.triplestore.api
 import zio.test._
+import zio.test.Assertion.hasSameElements
 
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
@@ -118,7 +119,9 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
                          |""".stripMargin
           for {
             result <- TriplestoreService.sparqlHttpSelect(query)
-          } yield assertTrue(result.results.bindings.size == 1)
+          } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
+            hasSameElements(List("http://anArticle"))
+          )
         },
         test("should find all subclasses (rdfs:subClassOf*)") {
           val query = s"""
@@ -134,7 +137,9 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
                          |""".stripMargin
           for {
             result <- TriplestoreService.sparqlHttpSelect(query)
-          } yield assertTrue(result.results.bindings.size == 2)
+          } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
+            hasSameElements(List("http://anArticle", "http://aJournalArticle"))
+          )
         }
       )
     ).provide(TriplestoreServiceFake.layer, datasetLayerFromTurtle(testDataSet))
