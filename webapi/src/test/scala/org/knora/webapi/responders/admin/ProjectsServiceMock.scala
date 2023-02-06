@@ -14,7 +14,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateP
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
@@ -29,6 +28,9 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
       extends Effect[(ProjectIri, ProjectUpdatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
   object GetAllProjectData
       extends Effect[(ProjectIdentifierADM.IriIdentifier, UserADM), Throwable, ProjectDataGetResponseADM]
+  object GetProjectMembers       extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectMembersGetResponseADM]
+  object GetProjectAdmins        extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectAdminMembersGetResponseADM]
+  object GetKeywords             extends Effect[Unit, Throwable, ProjectsKeywordsGetResponseADM]
   object GetKeywordsByProjectIri extends Effect[ProjectIri, Throwable, ProjectKeywordsGetResponseADM]
 
   override val compose: URLayer[Proxy, ProjectsService] =
@@ -64,6 +66,21 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
           requestingUser: UserADM
         ): Task[ProjectDataGetResponseADM] =
           proxy(GetAllProjectData, (iri, requestingUser))
+
+        def getProjectMembers(
+          identifier: ProjectIdentifierADM,
+          requestingUser: UserADM
+        ): Task[ProjectMembersGetResponseADM] =
+          proxy(GetProjectMembers, (identifier, requestingUser))
+
+        def getProjectAdmins(
+          identifier: ProjectIdentifierADM,
+          requestingUser: UserADM
+        ): Task[ProjectAdminMembersGetResponseADM] =
+          proxy(GetProjectAdmins, (identifier, requestingUser))
+
+        def getKeywords(): Task[ProjectsKeywordsGetResponseADM] =
+          proxy(GetKeywords)
 
         def getKeywordsByProjectIri(
           projectIri: ProjectIri

@@ -32,6 +32,15 @@ trait ProjectsService {
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
+  def getProjectMembers(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectMembersGetResponseADM]
+  def getProjectAdmins(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectAdminMembersGetResponseADM]
+  def getKeywords(): Task[ProjectsKeywordsGetResponseADM]
   def getKeywordsByProjectIri(
     projectIri: ProjectIri
   ): Task[ProjectKeywordsGetResponseADM]
@@ -140,6 +149,28 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM] =
     bridge.askAppActor(ProjectDataGetRequestADM(projectIdentifier, requestingUser))
+
+  def getProjectMembers(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectMembersGetResponseADM] =
+    bridge.askAppActor(ProjectMembersGetRequestADM(projectIdentifier, requestingUser))
+  def getProjectAdmins(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectAdminMembersGetResponseADM] =
+    bridge.askAppActor(ProjectAdminMembersGetRequestADM(projectIdentifier, requestingUser))
+
+  /**
+   * Returns all keywords of all projects as a [[ProjectsKeywordsGetResponseADM]].
+   *
+   * @return
+   *     '''success''': list of all keywords as a [[ProjectsKeywordsGetResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
+   */
+  def getKeywords(): Task[ProjectsKeywordsGetResponseADM] =
+    bridge.askAppActor(ProjectsKeywordsGetRequestADM())
 
   def getKeywordsByProjectIri(
     projectIri: ProjectIri
