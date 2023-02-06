@@ -665,7 +665,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       for {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
-        _         = println(body)
       } yield assertTrue(body.contains("!512,512"))
     },
     test("return a BadRequest Exception if project IRI is invalid") {
@@ -695,7 +694,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       for {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
-        _         = println(body)
       } yield assertTrue(body.contains("!512,512"))
     },
     test("return a BadRequest Exception if shortname is invalid") {
@@ -725,7 +723,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       for {
         response <- applyRoutes(request).provide(mockService)
         body     <- response.body.asString
-        _         = println(body)
       } yield assertTrue(body.contains("!512,512"))
     },
     test("return a BadRequest Exception if shortcode is invalid") {
