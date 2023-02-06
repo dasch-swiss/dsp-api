@@ -5,7 +5,7 @@
 ```mermaid
 erDiagram
     IRI
-
+    LangString
 ```
 
 ## Admin
@@ -53,14 +53,29 @@ erDiagram
     }
     ObjectAccessPermission {
         string hasPermission "the RV, V, M, D, CR string"
+        IRI project
+        IRI group
     }
-    DefaultObjectAccessPermission
-    AdministrativePermission
+    DefaultObjectAccessPermission {
+        string hasPermission "the RV, V, M, D, CR string"
+        IRI project
+        IRI group
+        IRI property
+        IRI resourceClass
+    }
+    AdministrativePermission {
+        string hasPermission "a different string representation"
+        IRI project
+        IRI group
+    }
 
     User }|--|{ Project: "is member/admin of"
     User }|--|{ Group: "is member of"
     List }o--|| Project: "belongs to"
-    
+    Project ||--|{ DefaultObjectAccessPermission: defines
+    Group }o--o{ AdministrativePermission: "is granted"
+    Group }o--o{ ObjectAccessPermission: "is granted"
+    DefaultObjectAccessPermission ||--|| ObjectAccessPermission: "is realized as"
 ```
 
 ## V2
@@ -87,7 +102,7 @@ erDiagram
     Property ||--o{ Value: "can be instantiated as"
     Resource ||--o{ Value: contains
 
-    Resource ||--|| ObjectAccessPermission: grants
     Value ||--|| ObjectAccessPermission: grants
+    Resource ||--|| ObjectAccessPermission: grants
     ObjectAccessPermission }o--o{ Group: "to"
 ```
