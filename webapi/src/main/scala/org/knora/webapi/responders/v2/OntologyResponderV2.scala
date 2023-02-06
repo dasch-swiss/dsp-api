@@ -107,8 +107,7 @@ final case class OntologyResponderV2(
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
     case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>
       addCardinalitiesToClass(addCardinalitiesToClassRequest)
-    case replaceCardinalityRequest: ReplaceCardinalitiesRequestV2 =>
-      replaceClassCardinalities(replaceCardinalityRequest)
+    case r: ReplaceClassCardinalitiesRequestV2 => replaceClassCardinalities(r)
     case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
       canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
     case deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
@@ -1473,12 +1472,14 @@ final case class OntologyResponderV2(
   }
 
   /**
-   * Replaces a class's cardinalities with new ones.
+   * Replace cardinalities of a particular class.
    *
-   * @param request the [[ReplaceCardinalitiesRequestV2]] defining the cardinalities.
+   * Fails if any of the new cardinalities is not consistent with the ontology or if persistent data is not compatible.
+   *
+   * @param request the [[ReplaceClassCardinalitiesRequestV2]] defining the cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  def replaceClassCardinalities(request: ReplaceCardinalitiesRequestV2): Future[ReadOntologyV2] = {
+  private def replaceClassCardinalities(request: ReplaceClassCardinalitiesRequestV2): Future[ReadOntologyV2] = {
     val taskFuture: () => Future[ReadOntologyV2] = () =>
       for {
         newModel   <- makeUpdatedClassModel(request)
@@ -1501,7 +1502,7 @@ final case class OntologyResponderV2(
   // Make an updated class definition.
   // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
   // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-  private def makeUpdatedClassModel(request: ReplaceCardinalitiesRequestV2): Future[ReadClassInfoV2] = {
+  private def makeUpdatedClassModel(request: ReplaceClassCardinalitiesRequestV2): Future[ReadClassInfoV2] = {
     val newClassInfo        = checkRdfTypeOfClassIsClass(request.classInfoContent.toOntologySchema(InternalSchema))
     val classIriExternal    = newClassInfo.classIri
     val classIri            = classIriExternal.toOntologySchema(InternalSchema)
@@ -1577,7 +1578,7 @@ final case class OntologyResponderV2(
   }
 
   private def checkLastModificationDateAndCanCardinalitiesBeSet(
-    request: ReplaceCardinalitiesRequestV2,
+    request: ReplaceClassCardinalitiesRequestV2,
     newModel: ReadClassInfoV2
   ): Future[ReadClassInfoV2] = {
     val classIriExternal     = request.classInfoContent.classIri
@@ -1612,7 +1613,7 @@ final case class OntologyResponderV2(
   }
 
   private def replaceClassCardinalitiesInPersistence(
-    request: ReplaceCardinalitiesRequestV2,
+    request: ReplaceClassCardinalitiesRequestV2,
     newReadClassInfo: ReadClassInfoV2
   ): Future[ReadOntologyV2] = {
     val timeOfUpdate = Instant.now()
@@ -1630,7 +1631,7 @@ final case class OntologyResponderV2(
   }
 
   private def replaceClassCardinalitiesInTripleStore(
-    request: ReplaceCardinalitiesRequestV2,
+    request: ReplaceClassCardinalitiesRequestV2,
     newReadClassInfo: ReadClassInfoV2,
     timeOfUpdate: Instant
   ): Future[Unit] = {
@@ -1663,7 +1664,7 @@ final case class OntologyResponderV2(
   }
 
   private def replaceClassCardinalitiesInOntologyCache(
-    request: ReplaceCardinalitiesRequestV2,
+    request: ReplaceClassCardinalitiesRequestV2,
     newReadClassInfo: ReadClassInfoV2,
     timeOfUpdate: Instant
   ): Future[Unit] = {
