@@ -73,8 +73,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
       projectAdminMembersGetRequestADM(identifier, requestingUser)
     case ProjectsKeywordsGetRequestADM() => projectsKeywordsGetRequestADM()
-    case ProjectKeywordsGetRequestADM(projectIri, requestingUser) =>
-      projectKeywordsGetRequestADM(projectIri, requestingUser)
+    case ProjectKeywordsGetRequestADM(projectIri) =>
+      projectKeywordsGetRequestADM(projectIri)
     case ProjectRestrictedViewSettingsGetADM(identifier) =>
       projectRestrictedViewSettingsGetADM(identifier)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
@@ -388,23 +388,21 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
    *
    * @param projectIri           the IRI of the project.
-   * @param requestingUser       the user making the request.
    * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
    */
   private def projectKeywordsGetRequestADM(
-    projectIri: IRI,
-    requestingUser: UserADM
+    projectIri: Iri.ProjectIri
   ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
                         identifier = IriIdentifier
-                          .fromString(projectIri)
+                          .fromString(projectIri.value)
                           .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                       )
 
       keywords: Seq[String] = maybeProject match {
                                 case Some(p) => p.keywords
-                                case None    => throw NotFoundException(s"Project '$projectIri' not found.")
+                                case None    => throw NotFoundException(s"Project '${projectIri.value}' not found.")
                               }
 
     } yield ProjectKeywordsGetResponseADM(keywords = keywords)

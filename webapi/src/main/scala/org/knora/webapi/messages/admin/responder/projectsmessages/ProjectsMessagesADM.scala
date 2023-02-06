@@ -215,11 +215,9 @@ case class ProjectsKeywordsGetRequestADM() extends ProjectsResponderRequestADM
  * Returns all keywords for a project identified through IRI.
  *
  * @param projectIri           the IRI of the project.
- * @param requestingUser       the user making the request.
  */
 case class ProjectKeywordsGetRequestADM(
-  projectIri: IRI,
-  requestingUser: UserADM
+  projectIri: ProjectIri
 ) extends ProjectsResponderRequestADM
 
 /**
