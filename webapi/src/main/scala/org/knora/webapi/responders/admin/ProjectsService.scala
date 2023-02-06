@@ -32,6 +32,14 @@ trait ProjectsService {
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
+  def getProjectMembers(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectMembersGetResponseADM]
+  def getProjectAdmins(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectAdminMembersGetResponseADM]
   def getKeywords(): Task[ProjectsKeywordsGetResponseADM]
 }
 
@@ -138,6 +146,17 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM] =
     bridge.askAppActor(ProjectDataGetRequestADM(projectIdentifier, requestingUser))
+
+  def getProjectMembers(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectMembersGetResponseADM] =
+    bridge.askAppActor(ProjectMembersGetRequestADM(projectIdentifier, requestingUser))
+  def getProjectAdmins(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectAdminMembersGetResponseADM] =
+    bridge.askAppActor(ProjectAdminMembersGetRequestADM(projectIdentifier, requestingUser))
 
   /**
    * Returns all keywords of all projects as a [[ProjectsKeywordsGetResponseADM]].

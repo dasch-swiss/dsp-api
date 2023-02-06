@@ -7,30 +7,15 @@ package org.knora.webapi.responders.admin
 
 import zio._
 import zio.mock._
-import zio.prelude.Validation
 import zio.test._
 
 import java.nio.file
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri._
-import dsp.valueobjects.Project.ShortCode
-import dsp.valueobjects.Project._
 import dsp.valueobjects.V2._
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectChangeRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -69,6 +54,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       deleteProjectSpec,
       updateProjectSpec,
       getAllProjectDataSpec,
+      getProjectMembers,
+      getProjectAdmins,
       getKeywordsSpec
     ).provide(StringFormatter.test)
 
@@ -84,14 +71,13 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       .toLayer
     for {
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   val getProjectByIdSpec = suite("get project by identifier")(
     test("get project by shortcode") {
-      val identifier = ProjectIdentifierADM.ShortcodeIdentifier
-        .fromString("0001")
-        .getOrElse(throw BadRequestException("invalid shortcode"))
+      val shortcode  = "0001"
+      val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val projectsService =
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
@@ -105,12 +91,11 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     },
     test("get project by shortname") {
-      val identifier = ProjectIdentifierADM.ShortnameIdentifier
-        .fromString("someProject")
-        .getOrElse(throw BadRequestException("invalid shortname"))
+      val shortname  = "someProject"
+      val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val projectsService =
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
@@ -124,12 +109,11 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     },
     test("get project by IRI") {
-      val identifier = ProjectIdentifierADM.IriIdentifier
-        .fromString("http://rdfh.ch/projects/0001")
-        .getOrElse(throw BadRequestException("invalid IRI"))
+      val iri        = "http://rdfh.ch/projects/0001"
+      val identifier = TestDataFactory.projectIriIdentifier(iri)
       val projectsService =
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
@@ -143,25 +127,23 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         .toLayer
       for {
         _ <- projectsService.provide(actorToZioBridge)
-      } yield assertTrue(true)
+      } yield assertCompletes
     }
   )
 
   val createProjectSpec = test("create a project") {
-    val payload: ProjectCreatePayloadADM =
-      Validation
-        .validateWith(
-          ProjectIri.make(None),
-          ShortName.make("newproject"),
-          ShortCode.make("3333"),
-          Name.make(Some("project longname")),
-          ProjectDescription.make(Seq(StringLiteralV2("project description", Some("en")))),
-          Keywords.make(Seq("test project")),
-          Logo.make(None),
-          ProjectStatus.make(true),
-          ProjectSelfJoin.make(false)
-        )(ProjectCreatePayloadADM.apply)
-        .getOrElse(throw BadRequestException("Invalid Payload"))
+    val payload = ProjectCreatePayloadADM(
+      None,
+      TestDataFactory.projectShortName("newproject"),
+      TestDataFactory.projectShortCode("3333"),
+      Some(TestDataFactory.projectName("project longname")),
+      TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en")))),
+      TestDataFactory.projectKeywords(Seq("test", "kewords")),
+      None,
+      TestDataFactory.projectStatus(true),
+      TestDataFactory.projectSelfJoin(true)
+    )
+
     val requestingUser = KnoraSystemInstances.Users.SystemUser
     val projectsService =
       ZIO
@@ -180,14 +162,14 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           )
           .toLayer
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   // needs to have the StringFormatter in the environment because ChangeProjectApiRequestADM needs it
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
-    val projectIri: ProjectIri =
-      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid project IRI"))
-    val projectStatus        = Some(ProjectStatus.make(false).getOrElse(throw BadRequestException("Invalid project status")))
+    val iri                  = "http://rdfh.ch/projects/0001"
+    val projectIri           = TestDataFactory.projectIri(iri)
+    val projectStatus        = Some(TestDataFactory.projectStatus(false))
     val projectUpdatePayload = ProjectUpdatePayloadADM(status = projectStatus)
     val requestingUser       = KnoraSystemInstances.Users.SystemUser
     val projectsService = ZIO
@@ -206,24 +188,21 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           )
           .toLayer
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   val updateProjectSpec = test("update a project") {
-    val projectIri =
-      ProjectIri.make("http://rdfh.ch/projects/0001").getOrElse(throw BadRequestException("Invalid Project IRI"))
-    val projectUpdatePayload: ProjectUpdatePayloadADM =
-      Validation
-        .validateWith(
-          ShortName.make(Some("usn")),
-          Name.make(Some("updated project longname")),
-          ProjectDescription.make(Some(Seq(StringLiteralV2("updated project description", Some("en"))))),
-          Keywords.make(Some(Seq("updated", "project"))),
-          Logo.make(Some("../logo.png")),
-          ProjectStatus.make(Some(true)),
-          ProjectSelfJoin.make(Some(true))
-        )(ProjectUpdatePayloadADM.apply)
-        .getOrElse(throw BadRequestException("Invalid Payload"))
+    val iri        = "http://rdfh.ch/projects/0001"
+    val projectIri = TestDataFactory.projectIri(iri)
+    val projectUpdatePayload = ProjectUpdatePayloadADM(
+      Some(TestDataFactory.projectShortName("usn")),
+      Some(TestDataFactory.projectName("updated project longname")),
+      Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
+      Some(TestDataFactory.projectKeywords(Seq("updated", "kewords"))),
+      Some(TestDataFactory.projectLogo("../updatedlogo.png")),
+      Some(TestDataFactory.projectStatus(true)),
+      Some(TestDataFactory.projectSelfJoin(true))
+    )
     val requestingUser = KnoraSystemInstances.Users.SystemUser
     val projectsService =
       ZIO
@@ -242,13 +221,12 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           )
           .toLayer
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
 
   val getAllProjectDataSpec = test("get all project data") {
-    val identifier = ProjectIdentifierADM.IriIdentifier
-      .fromString("http://rdfh.ch/projects/0001")
-      .getOrElse(throw BadRequestException("Invalid project IRI"))
+    val iri            = "http://rdfh.ch/projects/0001"
+    val identifier     = TestDataFactory.projectIriIdentifier(iri)
     val requestingUser = KnoraSystemInstances.Users.SystemUser
     val path           = file.Paths.get("...")
     val projectsService =
@@ -264,8 +242,128 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       .toLayer
     for {
       _ <- projectsService.provide(actorToZioBridge)
-    } yield assertTrue(true)
+    } yield assertCompletes
   }
+
+  val getProjectMembers = suite("get all members of a project")(
+    test("get members by project shortcode") {
+      val shortcode      = "0001"
+      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectMembers(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    },
+    test("get members by project shortname") {
+      val shortname      = "shortname"
+      val identifier     = TestDataFactory.projectShortnameIdentifier(shortname)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectMembers(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    },
+    test("get members by project IRI") {
+      val iri            = "http://rdfh.ch/projects/0001"
+      val identifier     = TestDataFactory.projectIriIdentifier(iri)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectMembers(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    }
+  )
+
+  val getProjectAdmins = suite("get all project admins of a project")(
+    test("get project admins by project shortcode") {
+      val shortcode      = "0001"
+      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectAdminMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectAdminMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    },
+    test("get project admins by project shortname") {
+      val shortname      = "shortname"
+      val identifier     = TestDataFactory.projectShortnameIdentifier(shortname)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectAdminMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectAdminMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    },
+    test("get project admins by project IRI") {
+      val iri            = "http://rdfh.ch/projects/0001"
+      val identifier     = TestDataFactory.projectIriIdentifier(iri)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectAdminMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectAdminMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    }
+  )
 
   val getKeywordsSpec = test("get keywords of all projects") {
     val projectsService =
