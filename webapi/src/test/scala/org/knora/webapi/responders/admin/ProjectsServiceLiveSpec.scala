@@ -52,7 +52,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       deleteProjectSpec,
       updateProjectSpec,
       getAllProjectDataSpec,
-      getProjectMembers
+      getProjectMembers,
+      getProjectAdmins
     ).provide(StringFormatter.test)
 
   val getAllProjectsSpec = test("get all projects") {
@@ -301,4 +302,63 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     }
   )
 
+  val getProjectAdmins = suite("get all project admins of a project")(
+    test("get project admins by project shortcode") {
+      val shortcode      = "0001"
+      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectAdminMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectAdminMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    },
+    test("get project admins by project shortname") {
+      val shortname      = "shortname"
+      val identifier     = TestDataFactory.projectShortnameIdentifier(shortname)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectAdminMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectAdminMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    },
+    test("get project admins by project IRI") {
+      val iri            = "http://rdfh.ch/projects/0001"
+      val identifier     = TestDataFactory.projectIriIdentifier(iri)
+      val requestingUser = KnoraSystemInstances.Users.SystemUser
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectAdminMembersGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectAdminMembersGetRequestADM(identifier, requestingUser)),
+          result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    }
+  )
 }
