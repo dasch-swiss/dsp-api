@@ -18,6 +18,7 @@ import dsp.valueobjects.V2
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -79,7 +80,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     getAllDataSpec,
     getProjectMembersSpec,
     getProjectAdminsSpec,
-    getKeywordsSpec
+    getKeywordsSpec,
+    getKeywordsByProjectSpec
   )
 
   val getProjectsSpec = test("get all projects") {
@@ -614,4 +616,35 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       body     <- response.body.asString
     } yield assertCompletes
   }
+
+  val getKeywordsByProjectSpec = suite("get all keywords of a specific project")(
+    test("successfully get keywords") {
+      val iri        = "http://rdfh.ch/projects/0001"
+      val projectIri = TestDataFactory.projectIri(iri)
+      val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "Keywords"))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .GetKeywordsByProjectIri(
+          assertion = Assertion.equalTo(projectIri),
+          result = Expectation.value[ProjectKeywordsGetResponseADM](
+            ProjectKeywordsGetResponseADM(Seq.empty[String])
+          )
+        )
+        .toLayer
+      for {
+        response <- applyRoutes(request).provide(mockService)
+        body     <- response.body.asString
+      } yield assertTrue(body == """{"keywords":[]}""")
+    },
+    test("return a BadRequest Exception if project IRI is invalid") {
+      val iri     = "http://rdfh.ch/project/0001"
+      val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "Keywords"))
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
+    }
+  )
+
 }
