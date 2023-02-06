@@ -453,8 +453,6 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
       }
     }
 
-  // Replaces all cardinalities with what was sent. Deleting means send empty
-  // replace request.
   private def replaceCardinalities(): Route =
     path(ontologiesBasePath / "cardinalities") {
       put {
@@ -463,7 +461,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
             val messageF = for {
               user    <- getUserADM(requestContext, appConfig)
               document = JsonLDUtil.parseJsonLD(reqBody)
-              msg     <- ReplaceCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
+              msg     <- ReplaceClassCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
             } yield msg
             val options = RouteUtilV2.getSchemaOptions(requestContext)
             RouteUtilV2.runRdfRouteWithFuture(messageF, requestContext, appConfig, appActor, log, ApiV2Complex, options)

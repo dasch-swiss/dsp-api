@@ -1644,13 +1644,21 @@ definition (but not any of the other entities in the ontology).
 
 ### Replacing the Cardinalities of a Class
 
-This removes all the cardinalities from the class and replaces them with
-the submitted cardinalities. If no cardinalities are submitted (i.e. the
-request contains no `rdfs:subClassOf`), the class is left with no
-cardinalities.
+It is possible to replace all cardinalities on properties used by a class.  
+If it succeeds the request will effectively replace all direct cardinalities of the class as specified.
+That is, it removes all the cardinalities from the class and replaces them with the submitted cardinalities. 
+Meaning that, if no cardinalities are submitted (i.e. the request contains no `rdfs:subClassOf`), the class is left with no cardinalities.
 
-This operation is not permitted if the class is used in data, or if it
-has a subclass.
+The request will fail if any of the "Pre-Update Checks" fails. 
+A partial update of the ontology will not be performed.
+
+#### Pre-Update Checks
+
+* _Ontology Check_
+    * Any given cardinality on a property must be included in any of the existing cardinalities for the same property of the super-classes.
+    * Any given cardinality on a property must include the effective cardinalities for the same property of all subclasses, taking into account the respective inherited cardinalities from the class hierarchy of the subclasses.
+* _Consistency Check with existing data_
+    * Given that instances of the class or any of its subclasses exist then these instances are checked if they conform to the given cardinality.
 
 ```
 HTTP PUT to http://host/v2/ontologies/cardinalities
@@ -1694,15 +1702,45 @@ When a cardinality on a link property is submitted, an identical cardinality
 on the corresponding link value property is automatically added (see
 [Links Between Resources](../../02-dsp-ontologies/knora-base.md#links-between-resources)).
 
-A successful response will be a JSON-LD document providing the new class
-definition (but not any of the other entities in the ontology).
+A successful response will be a JSON-LD document providing the new class definition (but not any of the other entities in the ontology).
+If any of the "Pre-Update Checks" fail the endpoint will respond with a _400 Bad Request_ containing the reasons why the update failed.
 
-To check whether a class's cardinalities can be replaced:
+The "Pre-Update Checks" are available on a dedicated endpoint.
+For a check whether a particular cardinality can be set on a class/property combination, use the following request:
 
+```
+HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI?propertyIri=PROPERTY_IRI&newCardinality=[0-1|1|1-n|0-n]
+```
+
+The response will look like this:
+
+Failure:
+```json
+{
+    "knora-api:canDo": false,
+    "knora-api:cannotDoReason": "An explanation, understandable to humans, why the update cannot be carried out.",
+    "@context": {
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    } 
+}
+```
+
+Success:
+```json
+{
+    "knora-api:canDo": true,
+    "@context": {
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    } 
+}
+```
+
+_Note_: The following check is still available but deprecated - use the more detailed check above.
+
+To check whether all class's cardinalities can be replaced:
 ```
 HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI
 ```
-
 The response will look like this:
 
 ```json
@@ -1713,6 +1751,8 @@ The response will look like this:
     }
 }
 ```
+
+The `ontologies/canreplacecardinalities/CLASS_IRI` request is only checking if the class is in use. 
 
 
 ### Delete a single cardinality from a class
