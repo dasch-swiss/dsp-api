@@ -4647,7 +4647,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex
       )
 
-      appActor ! ReplaceCardinalitiesRequestV2(
+      appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -4749,7 +4749,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex
       )
 
-      appActor ! ReplaceCardinalitiesRequestV2(
+      appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -4852,7 +4852,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex
       )
 
-      appActor ! ReplaceCardinalitiesRequestV2(
+      appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -4879,7 +4879,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex
       )
 
-      appActor ! ReplaceCardinalitiesRequestV2(
+      appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -5801,7 +5801,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Remove the link value cardinality from the class.
 
-      appActor ! ReplaceCardinalitiesRequestV2(
+      appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = ClassInfoContentV2(
           predicates = Map(
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
@@ -6402,7 +6402,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex
       )
 
-      appActor ! ReplaceCardinalitiesRequestV2(
+      appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classChangeInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
