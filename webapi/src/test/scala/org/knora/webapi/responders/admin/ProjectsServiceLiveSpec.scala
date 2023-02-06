@@ -59,7 +59,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       getProjectMembers,
       getProjectAdmins,
       getKeywordsSpec,
-      getKeywordsByProjectIri
+      getKeywordsByProjectIri,
+      getProjectRestrictedViewSettings
     ).provide(StringFormatter.test)
 
   val getAllProjectsSpec = test("get all projects") {
@@ -404,4 +405,23 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertCompletes
   }
 
+  val getProjectRestrictedViewSettings = test("get the restricted view settings of a project") {
+    val iri        = "http://rdfh.ch/projects/0001"
+    val identifier = TestDataFactory.projectIriIdentifier(iri)
+    val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
+    val projectsService =
+      ZIO
+        .serviceWithZIO[ProjectsService](_.getProjectRestrictedViewSettings(identifier))
+        .provideSome[ActorToZioBridge](layers)
+    val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+      .of[ProjectRestrictedViewSettingsGetResponseADM]
+      .apply(
+        assertion = Assertion.equalTo(ProjectRestrictedViewSettingsGetRequestADM(identifier)),
+        result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
+      )
+      .toLayer
+    for {
+      _ <- projectsService.provide(actorToZioBridge)
+    } yield assertCompletes
+  }
 }

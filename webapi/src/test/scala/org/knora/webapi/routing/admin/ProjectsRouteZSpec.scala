@@ -81,7 +81,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     getProjectMembersSpec,
     getProjectAdminsSpec,
     getKeywordsSpec,
-    getKeywordsByProjectSpec
+    getKeywordsByProjectSpec,
+    getProjectRestrictedViewSettings
   )
 
   val getProjectsSpec = test("get all projects") {
@@ -647,4 +648,36 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
+  val getProjectRestrictedViewSettings = suite("get the restricted view settings of a project")(
+    test("successfully get the restricted view settings of a project") {
+      val iri        = "http://rdfh.ch/projects/0001"
+      val identifier = TestDataFactory.projectIriIdentifier(iri)
+      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
+      val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "RestrictedViewSettings"))
+      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+        .GetRestrictedViewSettings(
+          assertion = Assertion.equalTo(identifier),
+          result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
+            ProjectRestrictedViewSettingsGetResponseADM(settings)
+          )
+        )
+        .toLayer
+      for {
+        response <- applyRoutes(request).provide(mockService)
+        body     <- response.body.asString
+        _         = println(body)
+      } yield assertTrue(body.contains("!512,512"))
+    },
+    test("return a BadRequest Exception if project IRI is invalid") {
+      val iri     = "http://rdfh.ch/project/0001"
+      val user    = KnoraSystemInstances.Users.SystemUser
+      val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "RestrictedViewSettings"))
+
+      for {
+        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        bodyAsString <- response.body.asString
+      } yield assertTrue(response.status == Status.BadRequest) &&
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
+    }
+  )
 }
