@@ -25,6 +25,8 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
   object GetProjectMembers extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectMembersGetResponseADM]
   object GetProjectAdmins  extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectAdminMembersGetResponseADM]
   object GetKeywords       extends Effect[Unit, Throwable, ProjectsKeywordsGetResponseADM]
+  object GetRestrictedViewSettings
+      extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsGetResponseADM]
 
   override val compose: URLayer[Proxy, ProjectsService] =
     ZLayer {
@@ -74,6 +76,11 @@ object ProjectsServiceMock extends Mock[ProjectsService] {
 
         def getKeywords(): Task[ProjectsKeywordsGetResponseADM] =
           proxy(GetKeywords)
+
+        def getProjectRestrictedViewSettings(
+          identifier: ProjectIdentifierADM
+        ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+          proxy(GetRestrictedViewSettings, identifier)
 
       }
     }

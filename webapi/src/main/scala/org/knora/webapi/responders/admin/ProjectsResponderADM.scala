@@ -75,10 +75,10 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     case ProjectsKeywordsGetRequestADM() => projectsKeywordsGetRequestADM()
     case ProjectKeywordsGetRequestADM(projectIri, requestingUser) =>
       projectKeywordsGetRequestADM(projectIri, requestingUser)
-    case ProjectRestrictedViewSettingsGetADM(identifier, requestingUser) =>
-      projectRestrictedViewSettingsGetADM(identifier, requestingUser)
-    case ProjectRestrictedViewSettingsGetRequestADM(identifier, requestingUser) =>
-      projectRestrictedViewSettingsGetRequestADM(identifier, requestingUser)
+    case ProjectRestrictedViewSettingsGetADM(identifier) =>
+      projectRestrictedViewSettingsGetADM(identifier)
+    case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
+      projectRestrictedViewSettingsGetRequestADM(identifier)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -603,14 +603,12 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   /**
    * Get project's restricted view settings.
    *
-   * @param identifier           the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param identifier  the project's identifier (IRI / shortcode / shortname / UUID)
    *
-   * @param requestingUser       the user making the request.
    * @return [[ProjectRestrictedViewSettingsADM]]
    */
   private def projectRestrictedViewSettingsGetADM(
-    identifier: ProjectIdentifierADM,
-    requestingUser: UserADM
+    identifier: ProjectIdentifierADM
   ): Future[Option[ProjectRestrictedViewSettingsADM]] =
     // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestrictedViewSettings resource. How to send the client the correct NotFound reply?
     for {
@@ -654,30 +652,16 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   /**
    * Get project's restricted view settings.
    *
-   * @param identifier     the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param identifier  the project's identifier (IRI / shortcode / shortname / UUID)
    *
-   * @param requestingUser the user making the request.
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   private def projectRestrictedViewSettingsGetRequestADM(
-    identifier: ProjectIdentifierADM,
-    requestingUser: UserADM
+    identifier: ProjectIdentifierADM
   ): Future[ProjectRestrictedViewSettingsGetResponseADM] =
     for {
-      maybeSettings: Option[ProjectRestrictedViewSettingsADM] <-
-        projectRestrictedViewSettingsGetADM(
-          identifier = identifier,
-          requestingUser = requestingUser
-        )
-
-      settings = maybeSettings match {
-                   case Some(s) => s
-                   case None =>
-                     throw NotFoundException(
-                       s"Project '${getId(identifier)}' not found."
-                     )
-                 }
-
+      maybeSettings <- projectRestrictedViewSettingsGetADM(identifier)
+      settings       = maybeSettings.getOrElse(throw NotFoundException(s"Project '${getId(identifier)}' not found."))
     } yield ProjectRestrictedViewSettingsGetResponseADM(settings)
 
   /**

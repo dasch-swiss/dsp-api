@@ -485,17 +485,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def getProjectRestrictedViewSettingsByIri(): Route =
     path(projectsBasePath / "iri" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>
-        val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-
-        } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = IriIdentifier
-            .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = requestingUser
+        val requestMessage = FastFuture.successful(
+          ProjectRestrictedViewSettingsGetRequestADM(
+            identifier = IriIdentifier
+              .fromString(value)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
         )
 
         RouteUtilADM.runJsonRoute(
@@ -513,17 +508,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def getProjectRestrictedViewSettingsByShortname(): Route =
     path(projectsBasePath / "shortname" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>
-        val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-
-        } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ShortnameIdentifier
-            .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = requestingUser
+        val requestMessage = FastFuture.successful(
+          ProjectRestrictedViewSettingsGetRequestADM(
+            identifier = ShortnameIdentifier
+              .fromString(value)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
         )
 
         RouteUtilADM.runJsonRoute(
@@ -541,17 +531,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def getProjectRestrictedViewSettingsByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>
-        val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-
-        } yield ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ShortcodeIdentifier
-            .fromString(value)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = requestingUser
+        val requestMessage = FastFuture.successful(
+          ProjectRestrictedViewSettingsGetRequestADM(
+            identifier = ShortcodeIdentifier
+              .fromString(value)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
         )
 
         RouteUtilADM.runJsonRoute(

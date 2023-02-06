@@ -226,22 +226,18 @@ case class ProjectKeywordsGetRequestADM(
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
  *
  * @param identifier           the identifier of the project.
- * @param requestingUser       the user making the request.
  */
 case class ProjectRestrictedViewSettingsGetADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
+  identifier: ProjectIdentifierADM
 ) extends ProjectsResponderRequestADM
 
 /**
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
  *
  * @param identifier           the identifier of the project.
- * @param requestingUser       the user making the request.
  */
 case class ProjectRestrictedViewSettingsGetRequestADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
+  identifier: ProjectIdentifierADM
 ) extends ProjectsResponderRequestADM
 
 /**
