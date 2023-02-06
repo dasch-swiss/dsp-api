@@ -176,6 +176,7 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
  */
 final case class CanDoResponseV2(canDo: Boolean, cannotDoReason: Option[String] = None) extends KnoraJsonLDResponseV2 {
   require((cannotDoReason.nonEmpty && !canDo) || cannotDoReason.isEmpty)
+
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
@@ -199,6 +200,11 @@ final case class CanDoResponseV2(canDo: Boolean, cannotDoReason: Option[String] 
       )
     )
   }
+}
+object CanDoResponseV2 {
+  val yes: CanDoResponseV2                = CanDoResponseV2(canDo = true)
+  val no: CanDoResponseV2                 = CanDoResponseV2(canDo = false)
+  def no(reason: String): CanDoResponseV2 = CanDoResponseV2(canDo = false, Some(reason))
 }
 
 /**

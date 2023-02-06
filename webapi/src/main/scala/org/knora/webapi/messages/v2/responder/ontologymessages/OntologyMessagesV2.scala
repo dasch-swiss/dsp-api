@@ -617,7 +617,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
  * @param apiRequestID         the ID of the API request.
  * @param requestingUser       the user making the request.
  */
-case class ReplaceCardinalitiesRequestV2(
+case class ReplaceClassCardinalitiesRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
@@ -625,19 +625,19 @@ case class ReplaceCardinalitiesRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[ReplaceCardinalitiesRequestV2]] based on JSON-LD input.
+ * Constructs instances of [[ReplaceClassCardinalitiesRequestV2]] based on JSON-LD input.
  */
-object ReplaceCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ReplaceCardinalitiesRequestV2] {
+object ReplaceClassCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ReplaceClassCardinalitiesRequestV2] {
 
   /**
-   * Converts JSON-LD input into a [[ReplaceCardinalitiesRequestV2]].
+   * Converts JSON-LD input into a [[ReplaceClassCardinalitiesRequestV2]].
    *
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
    * @param appActor       a reference to the application actor.
    * @param log            a logging adapter.
-   * @return a [[ReplaceCardinalitiesRequestV2]] representing the input.
+   * @return a [[ReplaceClassCardinalitiesRequestV2]] representing the input.
    */
   override def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
@@ -645,7 +645,7 @@ object ReplaceCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ReplaceC
     requestingUser: UserADM,
     appActor: ActorRef,
     log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReplaceCardinalitiesRequestV2] =
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReplaceClassCardinalitiesRequestV2] =
     Future {
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
@@ -658,13 +658,13 @@ object ReplaceCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ReplaceC
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
-  ): ReplaceCardinalitiesRequestV2 = {
+  ): ReplaceClassCardinalitiesRequestV2 = {
     val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
     val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
-    ReplaceCardinalitiesRequestV2(
+    ReplaceClassCardinalitiesRequestV2(
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
@@ -2554,7 +2554,7 @@ sealed trait ReadEntityInfoV2 {
  * Represents an OWL class definition as returned in an API response.
  *
  * @param entityInfoContent       a [[ReadClassInfoV2]] providing information about the class.
- * @param allBaseClasses          a seq of the IRIs of all the base classes of the class.
+ * @param allBaseClasses          a seq of the IRIs of all the super-classes of this class.
  * @param isResourceClass         `true` if this is a subclass of `knora-base:Resource`.
  * @param isStandoffClass         `true` if this is a subclass of `knora-base:StandoffTag`.
  * @param isValueClass            `true` if the class is a Knora value class.

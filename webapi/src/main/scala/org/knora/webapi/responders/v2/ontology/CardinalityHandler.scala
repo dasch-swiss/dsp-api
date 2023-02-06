@@ -21,13 +21,13 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.queries.sparql.v2
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /**
@@ -150,7 +150,7 @@ object CardinalityHandler {
 
       allBaseClassIrisWithoutInternal: Seq[SmartIri] =
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
-          cacheData.subClassOfRelations.getOrElse(
+          cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
             Seq.empty[SmartIri]
           )
@@ -310,7 +310,7 @@ object CardinalityHandler {
 
       allBaseClassIrisWithoutInternal: Seq[SmartIri] =
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
-          cacheData.subClassOfRelations.getOrElse(
+          cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
             Seq.empty[SmartIri]
           )
@@ -450,7 +450,7 @@ object CardinalityHandler {
     ec: ExecutionContext,
     timeout: Timeout
   ): Future[Boolean] = {
-    val request = new SparqlAskRequest(v2.txt.isPropertyUsed(propertyIri, classIri))
+    val request = new SparqlAskRequest(twirl.queries.sparql.v2.txt.isPropertyUsed(propertyIri, classIri))
     appActor.ask(request).mapTo[SparqlAskResponse].map(_.result)
   }
 

@@ -2029,27 +2029,6 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:documentFileValueHasDimX"
-                    },
-                    "owl:maxCardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:documentFileValueHasDimY"
-                    },
-                    "owl:maxCardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:documentFileValueHasPageCount"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
                         "@id": "knora-api:fileValueAsUrl"
                     },
                     "owl:cardinality": 1,
@@ -2078,6 +2057,13 @@
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:pageCount"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -6997,51 +6983,6 @@
             "rdfs:comment": "Indicates who deleted a resource or value"
         },
         {
-            "rdfs:label": "Document file value has X dimension",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:documentFileValueHasDimX",
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The horizontal dimension of a document file value."
-        },
-        {
-            "rdfs:label": "Document file value has Y dimension",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:documentFileValueHasDimY",
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The vertical dimension of a document file value."
-        },
-        {
-            "rdfs:label": "Document file value has page count",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:documentFileValueHasPageCount",
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The page count of a document file value."
-        },
-        {
             "rdfs:label": "error",
             "rdfs:comment": "Provides an error message",
             "@type": "owl:DatatypeProperty",
@@ -7921,6 +7862,19 @@
                 "@id": "xsd:string"
             },
             "@id": "knora-api:ontologyName"
+        },
+        {
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "knora-api:subjectType": {
+                "@id": "knora-api:FileValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:integer"
+            },
+            "@id": "knora-api:pageCount"
         },
         {
             "@id": "knora-api:resourceIcon",

@@ -981,21 +981,17 @@ only if the value's class has some cardinality for that property.
 
 Knora supports, and attempts to enforce, the following cardinality constraints:
 
-`owl:cardinality 1`
+* `owl:cardinality 1`
+  : _Exactly One `1`_ - A resource of this class must have exactly one instance of the specified property.
 
-:   A resource of this class must have exactly one instance of the specified property.
+* `owl:minCardinality 1`
+  : _At Least One `1-n`_ - A resource of this class must have at least one instance of the specified property.
 
-`owl:minCardinality 1`
+* `owl:maxCardinality 1`
+  : _Zero Or One `0-1`_ - A resource of this class must have either zero or one instance of the specified property.
 
-:   A resource of this class must have at least one instance of the specified property.
-
-`owl:maxCardinality 1`
-
-:   A resource of this class may have zero or one instance of the specified property.
-
-`owl:minCardinality 0`
-
-:   A resource of this class may have zero or more instances of the specified property.
+* `owl:minCardinality 0`
+  : _Unbounded `0-n`_ - A resource of this class may have zero or more instances of the specified property.
 
 Knora requires cardinalities to be defined using blank nodes, as in the following example from `knora-base`:
 

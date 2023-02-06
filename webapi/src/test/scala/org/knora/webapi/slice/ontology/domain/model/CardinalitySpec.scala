@@ -11,13 +11,23 @@ import zio.test._
 
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
+import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 
 object CardinalitySpec extends ZIOSpecDefault {
-  val cardinalityGen: Gen[Any, Cardinality] = {
-    val list = Array(AtLeastOne, ExactlyOne, ZeroOrOne, Unbounded)
-    Gen.fromZIO(for {
-      random <- Random.nextIntBetween(0, list.length)
-    } yield list(random))
+  object Generator {
+    def cardinalitiesGen(cardinalities: Cardinality*): Gen[Any, Cardinality] = Gen.fromZIO {
+      val candidates: Array[Cardinality] = if (cardinalities != Nil) {
+        cardinalities.toArray
+      } else {
+        allCardinalities
+      }
+      val length = candidates.length
+      if (length == 0) {
+        throw new IllegalArgumentException("The parameter cardinalities may not be an empty Array.")
+      } else {
+        Random.nextIntBetween(0, length).map(candidates(_))
+      }
+    }
   }
 
   val spec: Spec[TestEnvironment with Scope, Nothing] = suite("CardinalitySpec")(
@@ -32,50 +42,30 @@ object CardinalitySpec extends ZIOSpecDefault {
         assertTrue(ExactlyOne.toString == "1")
       }
     ),
-    suite("Cardinality isStricterThan")(
-      test("Same cardinality is never stricter") {
-        check(cardinalityGen)(c => assertTrue(!c.isStricterThan(c)))
+    suite("Cardinality isIncludedIn")(
+      test("Same cardinality is always included in itself") {
+        check(cardinalitiesGen())(c => assertTrue(c.isIncludedIn(c)))
       },
-      suite(s"Unbounded $Unbounded")(
-        test(s"'$AtLeastOne' is stricter than $Unbounded") {
-          assertTrue(AtLeastOne.isStricterThan(Unbounded))
-        },
-        test(s"'$ExactlyOne is stricter than $Unbounded") {
-          assertTrue(ExactlyOne.isStricterThan(Unbounded))
-        },
-        test(s"'$ZeroOrOne' is stricter than $Unbounded") {
-          assertTrue(ZeroOrOne.isStricterThan(Unbounded))
-        },
-        test(s"'$Unbounded' is NOT stricter than any other") {
-          check(cardinalityGen) { other =>
-            assertTrue(!Unbounded.isStricterThan(other))
-          }
+      test(s"All cardinalities are included in Unbounded '$Unbounded'") {
+        check(cardinalitiesGen()) { other =>
+          assertTrue(other.isIncludedIn(Unbounded))
         }
-      ),
-      suite(s"AtLeastOne $AtLeastOne")(
-        test(s"'$AtLeastOne' is NOT stricter than $ExactlyOne") {
-          assertTrue(!AtLeastOne.isStricterThan(ExactlyOne))
-        },
-        test(s"'$AtLeastOne' is stricter than $ZeroOrOne") {
-          assertTrue(AtLeastOne.isStricterThan(ZeroOrOne))
+      },
+      test(s"AtLeastOne '$AtLeastOne' is NOT included in: ZeroOrOne '$ZeroOrOne', ExactlyOne '$ExactlyOne'") {
+        check(cardinalitiesGen(ZeroOrOne, ExactlyOne)) { other =>
+          assertTrue(AtLeastOne.isNotIncludedIn(other))
         }
-      ),
-      suite(s"ExactlyOne $ExactlyOne")(
-        test(s"'$ExactlyOne' is stricter than $AtLeastOne") {
-          assertTrue(ExactlyOne.isStricterThan(AtLeastOne))
-        },
-        test(s"'$ExactlyOne' is stricter than $ZeroOrOne") {
-          assertTrue(ExactlyOne.isStricterThan(ZeroOrOne))
+      },
+      test(s"ZeroOrOne '$ZeroOrOne' is NOT included in: AtLeastOne '$AtLeastOne', ExactlyOne '$ExactlyOne''") {
+        check(cardinalitiesGen(AtLeastOne, ExactlyOne)) { other =>
+          assertTrue(ZeroOrOne.isNotIncludedIn(other))
         }
-      ),
-      suite(s"ZeroOrOne $ZeroOrOne")(
-        test(s"'$ZeroOrOne' is stricter than $AtLeastOne") {
-          assertTrue(ZeroOrOne.isStricterThan(AtLeastOne))
-        },
-        test(s"'$ZeroOrOne' is NOT stricter than $ExactlyOne") {
-          assertTrue(!ZeroOrOne.isStricterThan(ExactlyOne))
+      },
+      test(s"ExactlyOne '$ExactlyOne' is included in all other Cardinalities") {
+        check(cardinalitiesGen()) { other =>
+          assertTrue(ExactlyOne.isIncludedIn(other))
         }
-      )
+      }
     ),
     suite("toOwl")(
       test(s"AtLeastOne $AtLeastOne") {
@@ -123,6 +113,30 @@ object CardinalitySpec extends ZIOSpecDefault {
       },
       test("`1` => ExactlyOne") {
         assertTrue(Cardinality.fromString("1").contains(ExactlyOne))
+      }
+    ),
+    suite("isCountIncluded")(
+      test(s"AtLeastOne ($AtLeastOne) does not include 0") {
+        assertTrue(!AtLeastOne.isCountIncluded(0))
+      },
+      test(s"AtLeastOne ($AtLeastOne) includes lower bound 1") {
+        assertTrue(AtLeastOne.isCountIncluded(1))
+      },
+      test(s"AtLeastOne ($AtLeastOne) includes Int.MaxValue") {
+        assertTrue(AtLeastOne.isCountIncluded(Int.MaxValue))
+      },
+      test(s"ZeroOrOne ($ZeroOrOne) includes upper bound 1") {
+        assertTrue(ExactlyOne.isCountIncluded(1))
+      },
+      test("Int.MinValue is never included") {
+        check(cardinalitiesGen()) { cardinality =>
+          assertTrue(!cardinality.isCountIncluded(Int.MinValue))
+        }
+      },
+      test("-1 is never included") {
+        check(cardinalitiesGen()) { cardinality =>
+          assertTrue(!cardinality.isCountIncluded(-1))
+        }
       }
     )
   )

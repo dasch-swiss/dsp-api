@@ -12,6 +12,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
+import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
@@ -43,6 +44,7 @@ object LayersTest {
     with AppRouter
     with CacheService
     with CacheServiceManager
+    with CardinalityService
     with HttpServer
     with IIIFServiceManager
     with IriConverter
@@ -68,6 +70,7 @@ object LayersTest {
       IriConverter.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      PredicateRepositoryLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,

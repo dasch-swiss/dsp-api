@@ -22,6 +22,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
+import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -84,6 +85,7 @@ object LayersLive {
       JWTService.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      PredicateRepositoryLive.layer,
       ProjectsRouteZ.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
