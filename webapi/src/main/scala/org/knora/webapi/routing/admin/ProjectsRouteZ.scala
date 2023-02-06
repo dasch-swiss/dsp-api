@@ -79,6 +79,8 @@ final case class ProjectsRouteZ(
             ) =>
           getProjectAdminsByShortcode(shortcode, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "Keywords", _) => getKeywords()
+        case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "Keywords", _) =>
+          getKeywordsByProjectIri(iriUrlEncoded)
       }
       .catchAll {
         case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
@@ -192,6 +194,13 @@ final case class ProjectsRouteZ(
   private def getKeywords(): Task[Response] =
     for {
       r <- projectsService.getKeywords()
+    } yield Response.json(r.toJsValue.toString)
+
+  private def getKeywordsByProjectIri(iriUrlEncoded: String): Task[Response] =
+    for {
+      iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      projectIri <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      r          <- projectsService.getKeywordsByProjectIri(projectIri)
     } yield Response.json(r.toJsValue.toString)
 
 }
