@@ -18,7 +18,6 @@ import zio.Scope
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
-
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.nio.file.Path
@@ -53,11 +52,12 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
 import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.errors.TriplestoreException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
-final case class TriplestoreServiceFake(datasetRef: Ref[Dataset]) extends TriplestoreService {
+final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter) extends TriplestoreService {
 
   override def doSimulateTimeout(): UIO[SparqlSelectResult] = ???
 
@@ -178,7 +178,14 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset]) extends Triple
 
   override def sparqlHttpExtendedConstruct(
     request: SparqlExtendedConstructRequest
-  ): UIO[SparqlExtendedConstructResponse] = ???
+  ): UIO[SparqlExtendedConstructResponse] =
+    ZIO.scoped {
+      for {
+        model    <- execConstruct(request.sparql)
+        turtle   <- modelToTurtle(model)
+        response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtle)
+      } yield response
+    }.orDie
 
   override def sparqlHttpConstructFile(
     sparql: String,
@@ -222,5 +229,5 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset]) extends Triple
 }
 
 object TriplestoreServiceFake {
-  val layer: ZLayer[Ref[Dataset], Nothing, TriplestoreService] = ZLayer.fromFunction(TriplestoreServiceFake.apply _)
+  val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TriplestoreService] = ZLayer.fromFunction(TriplestoreServiceFake.apply _)
 }

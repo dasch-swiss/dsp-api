@@ -6,13 +6,19 @@
 package org.knora.webapi.store.triplestore.api
 import zio.test.Assertion.hasSameElements
 import zio.test._
+import zio.ZIO
 
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
-
+import org.knora.webapi.messages.IriConversions._
 object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
 
   private val testDataSet =
@@ -38,7 +44,7 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Throwable] =
     suite("TriplestoreServiceFake")(
       suite("CONSTRUCT")(
-        test("should return some values") {
+        test("sparqlHttpConstruct should return some values") {
           val query =
             s"""
                |CONSTRUCT {
@@ -59,6 +65,33 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
                   (
                     "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
                     "http://www.knora.org/ontology/0801/biblio#Article"
+                  )
+                )
+              )
+            )
+          )
+        },
+        test("sparqlHttpExtendedConstruct should return some values") {
+          val query =
+            s"""
+               |CONSTRUCT {
+               |  ?s ?p ?o
+               |}
+               |WHERE {
+               |  ?s ?p ?o ;
+               |     a  <${Biblio.Class.Article.value}> .
+               |}
+               |""".stripMargin
+          val request = SparqlExtendedConstructRequest(query)
+          for {
+            stringFormatter <- ZIO.service[StringFormatter]
+            response        <- TriplestoreService.sparqlHttpExtendedConstruct(request)
+          } yield assertTrue(
+            response == SparqlExtendedConstructResponse(
+              statements = Map(
+                IriSubjectV2(value = "http://anArticle") -> Map(
+                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri(stringFormatter) -> List(
+                    IriLiteralV2(value = "http://www.knora.org/ontology/0801/biblio#Article")
                   )
                 )
               )
@@ -173,5 +206,5 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
           )
         }
       )
-    ).provide(TriplestoreServiceFake.layer, datasetLayerFromTurtle(testDataSet))
+    ).provide(TriplestoreServiceFake.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
 }

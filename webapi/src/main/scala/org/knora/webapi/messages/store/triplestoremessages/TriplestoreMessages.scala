@@ -10,13 +10,12 @@ import org.apache.commons.lang3.StringUtils
 import play.twirl.api.TxtFormat
 import spray.json._
 import zio._
-
 import java.nio.file.Path
 import java.time.Instant
 import scala.collection.mutable
-
 import dsp.errors._
 import dsp.valueobjects.V2
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -108,13 +107,12 @@ object SparqlExtendedConstructResponse {
    */
   def parseTurtleResponse(
     turtleStr: String
-  ): IO[DataConversionException, SparqlExtendedConstructResponse] = {
+  )(implicit stringFormatter: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] = {
 
     val rdfFormatUtil: RdfFormatUtil =
       RdfFeatureFactory.getRdfFormatUtil()
 
     ZIO.attemptBlocking {
-      implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
       val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
       val rdfModel: RdfModel                                              = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
@@ -191,8 +189,8 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      _ =>
-        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter") *>
+      e =>
+        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter : ${e.getMessage}") *>
           ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
       ZIO.succeed(_)
     )

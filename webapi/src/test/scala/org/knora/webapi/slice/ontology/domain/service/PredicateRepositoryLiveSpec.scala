@@ -10,6 +10,7 @@ import zio.ZLayer
 import zio.test.Assertion._
 import zio.test._
 
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
@@ -49,7 +50,8 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], PredicateRepositoryLive](
     PredicateRepositoryLive.layer,
-    TriplestoreServiceFake.layer
+    TriplestoreServiceFake.layer,
+    StringFormatter.test
   )
 
   val spec: Spec[Any, Throwable] = suite("PredicateRepositoryLive")(
