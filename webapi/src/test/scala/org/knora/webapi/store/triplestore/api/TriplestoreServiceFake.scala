@@ -60,6 +60,7 @@ import org.knora.webapi.messages.util.rdf.RdfStringSource
 import org.knora.webapi.store.triplestore.errors.TriplestoreException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
+import org.knora.webapi.store.triplestore.TestDatasetBuilder
 
 final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
@@ -93,10 +94,10 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   private def getQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
     def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
     def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
-    getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
+    getDataset(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
   }
 
-  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
+  private def getDataset(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
     val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
     def release(ds: Dataset) =
       ZIO.attempt {
@@ -225,7 +226,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
       processor.execute()
     }
     ZIO.scoped {
-      getDataSetWithTransaction(ReadWrite.WRITE).flatMap(doUpdate(_).as(SparqlUpdateResponse()))
+      getDataset(ReadWrite.WRITE).flatMap(doUpdate(_).as(SparqlUpdateResponse()))
     }.orDie
   }
 
@@ -242,9 +243,13 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     prependDefaults: Boolean
   ): UIO[ResetRepositoryContentACK] = ???
 
-  override def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] = ???
+  private val setEmptyDataSetRef: UIO[Unit] = TestDatasetBuilder.createEmptyDataset.flatMap(ds => datasetRef.set(ds))
 
-  override def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK] = ???
+  override def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] =
+    setEmptyDataSetRef.as(DropAllRepositoryContentACK())
+
+  override def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK] =
+    setEmptyDataSetRef.as(DropDataGraphByGraphACK())
 
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],

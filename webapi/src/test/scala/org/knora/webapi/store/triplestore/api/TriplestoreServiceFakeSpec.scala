@@ -43,6 +43,34 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Throwable] =
     suite("TriplestoreServiceFake")(
+      suite("DROP")(
+        test("dropAllTriplestoreContent") {
+          for {
+            _ <- TriplestoreService.dropAllTriplestoreContent()
+            result <-
+              TriplestoreService.sparqlHttpAsk(s"""
+                                                  |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                                  |                          
+                                                  |ASK WHERE {
+                                                  |  <http://anArticle> a <${Biblio.Class.Article.value}> .
+                                                  |}
+                                                  |""".stripMargin)
+          } yield assertTrue(!result.result)
+        },
+        test("dropDataGraphByGraph") {
+          for {
+            _ <- TriplestoreService.dropDataGraphByGraph()
+            result <-
+              TriplestoreService.sparqlHttpAsk(s"""
+                                                  |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                                  |                          
+                                                  |ASK WHERE {
+                                                  |  <http://anArticle> a <${Biblio.Class.Article.value}> .
+                                                  |}
+                                                  |""".stripMargin)
+          } yield assertTrue(!result.result)
+        }
+      ),
       suite("CONSTRUCT")(
         test("sparqlHttpConstruct should return some values") {
           val query =

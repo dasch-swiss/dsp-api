@@ -13,12 +13,13 @@ import zio.Ref
 import zio.Task
 import zio.TaskLayer
 import zio.UIO
+import zio.ULayer
 import zio.ZIO
 import zio.ZLayer
-
 import java.io.StringReader
 
 object TestDatasetBuilder {
+  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
 
   private def readToModel(turtle: String)(model: Model): Model = model.read(new StringReader(turtle), null, "TTL")
 
@@ -33,14 +34,12 @@ object TestDatasetBuilder {
     ds
   }
 
-  private val createTxnMemDataset: UIO[Dataset] =
-    ZIO.succeed(TDB2Factory.createDataset())
-
   private def datasetFromTurtle(turtle: String): Task[Dataset] =
-    createTxnMemDataset.flatMap(transactionalWrite(readToModel(turtle)))
+    createEmptyDataset.flatMap(transactionalWrite(readToModel(turtle)))
 
   private def asLayer(ds: Task[Dataset]): TaskLayer[Ref[Dataset]] = ZLayer.fromZIO(ds.flatMap(Ref.make[Dataset](_)))
 
   def datasetLayerFromTurtle(turtle: String): TaskLayer[Ref[Dataset]] = asLayer(datasetFromTurtle(turtle))
-  val emptyDataSet: TaskLayer[Ref[Dataset]]                           = datasetLayerFromTurtle("")
+
+  val emptyDataSet: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 }
