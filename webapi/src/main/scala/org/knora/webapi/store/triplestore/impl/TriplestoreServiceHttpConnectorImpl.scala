@@ -360,26 +360,6 @@ case class TriplestoreServiceHttpConnectorImpl(
   }
 
   /**
-   * Gets all graphs stored in the triplestore.
-   *
-   * @return All graphs stored in the triplestore as a [[Seq[String]]
-   */
-  def getAllGraphs(): UIO[Seq[String]] = {
-    val sparqlQuery =
-      """|
-         | SELECT DISTINCT ?graph 
-         | WHERE {
-         |  GRAPH ?graph { ?s ?p ?o }
-         | }""".stripMargin
-
-    for {
-      res      <- sparqlHttpSelect(sparqlQuery)
-      bindings <- ZIO.succeed(res.results.bindings)
-      graphs    = bindings.map(_.rowMap("graph"))
-    } yield graphs
-  }
-
-  /**
    * Drops all triplestore data graph by graph using "DROP GRAPH" SPARQL query.
    * This method is useful in cases with large amount of data (over 10 million statements),
    * where the method [[dropAllTriplestoreContent()]] could create timeout issues.
@@ -396,6 +376,26 @@ case class TriplestoreServiceHttpConnectorImpl(
            )
       _ <- ZIO.logInfo("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
+  }
+
+  /**
+   * Gets all graphs stored in the triplestore.
+   *
+   * @return All graphs stored in the triplestore as a [[Seq[String]]
+   */
+  private def getAllGraphs(): UIO[Seq[String]] = {
+    val sparqlQuery =
+      """|
+         | SELECT DISTINCT ?graph 
+         | WHERE {
+         |  GRAPH ?graph { ?s ?p ?o }
+         | }""".stripMargin
+
+    for {
+      res      <- sparqlHttpSelect(sparqlQuery)
+      bindings <- ZIO.succeed(res.results.bindings)
+      graphs    = bindings.map(_.rowMap("graph"))
+    } yield graphs
   }
 
   /**
