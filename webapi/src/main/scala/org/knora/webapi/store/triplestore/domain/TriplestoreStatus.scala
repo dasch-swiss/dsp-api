@@ -17,5 +17,7 @@ sealed trait TriplestoreStatus {
 object TriplestoreStatus {
   final case class Unavailable(msg: String)    extends TriplestoreStatus
   final case class NotInitialized(msg: String) extends TriplestoreStatus
-  final case class Available(msg: String)      extends TriplestoreStatus
+  final case object Available extends TriplestoreStatus {
+    val msg = "Triplestore is available."
+  }
 }

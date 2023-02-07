@@ -256,7 +256,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     prependDefaults: Boolean
   ): UIO[InsertTriplestoreContentACK] = ???
 
-  override def checkTriplestore(): UIO[CheckTriplestoreResponse] = ???
+  override def checkTriplestore(): UIO[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
 
   override def downloadRepository(outputFile: Path): UIO[FileWrittenResponse] = ???
 

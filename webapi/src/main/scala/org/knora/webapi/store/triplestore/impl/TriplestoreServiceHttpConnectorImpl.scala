@@ -484,12 +484,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    */
   def checkTriplestore(): UIO[CheckTriplestoreResponse] = {
 
-    val triplestoreAvailableResponse =
-      ZIO.succeed(
-        CheckTriplestoreResponse(
-          triplestoreStatus = TriplestoreStatus.Available("Triplestore is available.")
-        )
-      )
+    val triplestoreAvailableResponse = ZIO.succeed(CheckTriplestoreResponse.Available)
 
     val triplestoreNotInitializedResponse =
       ZIO.succeed(
