@@ -6,9 +6,9 @@
 package org.knora.webapi.store.triplestore
 
 import org.apache.jena.query.Dataset
-import org.apache.jena.query.DatasetFactory
 import org.apache.jena.query.ReadWrite
 import org.apache.jena.rdf.model.Model
+import org.apache.jena.tdb2.TDB2Factory
 import zio.Ref
 import zio.Task
 import zio.TaskLayer
@@ -33,7 +33,8 @@ object TestDatasetBuilder {
     ds
   }
 
-  private val createTxnMemDataset: UIO[Dataset] = ZIO.succeed(DatasetFactory.createTxnMem())
+  private val createTxnMemDataset: UIO[Dataset] =
+    ZIO.succeed(TDB2Factory.createDataset())
 
   private def datasetFromTurtle(turtle: String): Task[Dataset] =
     createTxnMemDataset.flatMap(transactionalWrite(readToModel(turtle)))

@@ -104,8 +104,6 @@ object SparqlExtendedConstructResponse {
    * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
    *
    * @param turtleStr     the Turtle document.
-   * @param rdfFormatUtil an [[RdfFormatUtil]].
-   * @param log           a [[Logger]].
    * @return a [[SparqlExtendedConstructResponse]] representing the document.
    */
   def parseTurtleResponse(

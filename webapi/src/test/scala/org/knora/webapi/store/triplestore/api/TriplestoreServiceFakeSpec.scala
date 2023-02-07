@@ -4,9 +4,11 @@
  */
 
 package org.knora.webapi.store.triplestore.api
-import zio.test._
 import zio.test.Assertion.hasSameElements
+import zio.test._
 
+import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
@@ -35,6 +37,35 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Throwable] =
     suite("TriplestoreServiceFake")(
+      suite("CONSTRUCT")(
+        test("should return some values") {
+          val query =
+            s"""
+               |CONSTRUCT {
+               |  ?s ?p ?o
+               |}
+               |WHERE {
+               |  ?s ?p ?o ;
+               |     a  <${Biblio.Class.Article.value}> .
+               |}
+               |""".stripMargin
+          val request = SparqlConstructRequest(query)
+          for {
+            response <- TriplestoreService.sparqlHttpConstruct(request)
+          } yield assertTrue(
+            response == SparqlConstructResponse(
+              Map(
+                "http://anArticle" -> Seq(
+                  (
+                    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                    "http://www.knora.org/ontology/0801/biblio#Article"
+                  )
+                )
+              )
+            )
+          )
+        }
+      ),
       suite("sparqlHttpAsk")(
         test("should return true if anArticle exists") {
           val query = s"""
