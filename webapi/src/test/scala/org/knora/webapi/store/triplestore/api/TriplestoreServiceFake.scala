@@ -241,7 +241,10 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   override def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): UIO[ResetRepositoryContentACK] = ???
+  ): UIO[ResetRepositoryContentACK] = for {
+    _ <- dropDataGraphByGraph()
+    _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
+  } yield ResetRepositoryContentACK()
 
   private val setEmptyDataSetRef: UIO[Unit] = TestDatasetBuilder.createEmptyDataset.flatMap(ds => datasetRef.set(ds))
 
