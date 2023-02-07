@@ -82,31 +82,19 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   private def execSelect(query: String): ZIO[Any with Scope, Throwable, ResultSet] = {
     def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execSelect)
     def closeResultSet(rs: ResultSet)       = ZIO.succeed(rs.close())
-    getQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeResultSet))
+    getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeResultSet))
   }
 
-  private def execConstruct(query: String): ZIO[Any with Scope, Throwable, Model] = {
-    def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))
-    def closeModel(model: Model)            = ZIO.succeed(model.close())
-    getQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeModel))
-  }
 
-  private def getQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
+  private def getReadTransactionQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
     def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
     def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
-    getDataset(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
+    getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
   }
 
-  private def getDataset(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
-    val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
-    def release(ds: Dataset) =
-      ZIO.attempt {
-        try {
-          if (readWrite == ReadWrite.WRITE) { ds.commit() }
-        } finally {
-          ds.close()
-        }
-      }.orDie
+  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
+    val acquire              = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
+    def release(ds: Dataset) = ZIO.succeed(ds.commit())
     ZIO.acquireRelease(acquire)(release)
   }
 
@@ -134,7 +122,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   }
 
   override def sparqlHttpAsk(query: String): UIO[SparqlAskResponse] =
-    ZIO.scoped(getQueryExecution(query).map(_.execAsk())).map(SparqlAskResponse).orDie
+    ZIO.scoped(getReadTransactionQueryExecution(query).map(_.execAsk())).map(SparqlAskResponse).orDie
 
   override def sparqlHttpConstruct(request: SparqlConstructRequest): UIO[SparqlConstructResponse] = {
     def parseTurtleResponse(
@@ -171,6 +159,12 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
         response <- parseTurtleResponse(turtle)
       } yield response
     }.orDie
+  }
+
+  private def execConstruct(query: String): ZIO[Any with Scope, Throwable, Model] = {
+    def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))
+    def closeModel(model: Model)            = ZIO.succeed(model.close())
+    getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeModel))
   }
 
   private val byteArrayOutputStream: ZIO[Any with Scope, Throwable, ByteArrayOutputStream] = {
@@ -226,7 +220,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
       processor.execute()
     }
     ZIO.scoped {
-      getDataset(ReadWrite.WRITE).flatMap(doUpdate(_).as(SparqlUpdateResponse()))
+      getDataSetWithTransaction(ReadWrite.WRITE).flatMap(doUpdate(_).as(SparqlUpdateResponse()))
     }.orDie
   }
 

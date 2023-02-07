@@ -19,6 +19,7 @@ import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.messages.IriConversions._
+
 object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
 
   private val testDataSet =
