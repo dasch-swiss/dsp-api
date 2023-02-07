@@ -12,10 +12,13 @@ import org.apache.jena.query.ReadWrite
 import org.apache.jena.query.ResultSet
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.update.UpdateExecutionFactory
+import org.apache.jena.update.UpdateFactory
 import zio.IO
 import zio.Ref
 import zio.Scope
 import zio.UIO
+import zio.URIO
 import zio.ZIO
 import zio.ZLayer
 import java.io.ByteArrayOutputStream
@@ -53,11 +56,14 @@ import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.RdfStringSource
 import org.knora.webapi.store.triplestore.errors.TriplestoreException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
-final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter) extends TriplestoreService {
+final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
+    extends TriplestoreService {
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
   override def doSimulateTimeout(): UIO[SparqlSelectResult] = ???
 
@@ -85,19 +91,22 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   }
 
   private def getQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
-    def acquire(query: String, ds: Dataset) = ZIO.attempt {
-      ds.begin(ReadWrite.WRITE)
-      (QueryExecutionFactory.create(query, ds), ds)
-    }
+    def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
+    def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
+    getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
+  }
 
-    def release(qExec: (QueryExecution, Dataset)): ZIO[Any, Nothing, Unit] =
-      ZIO.succeed(qExec._1.close()) *>
-        // TODO: For a CONSTRUCT query the ds complains that it is not in a transaction
-        //       instead of .ignore this case should be handled properly
-        ZIO.attempt(qExec._2.commit()).ignore *>
-        ZIO.succeed(qExec._2.close())
-
-    datasetRef.get.flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release)).map(_._1)
+  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
+    val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
+    def release(ds: Dataset) =
+      ZIO.attempt {
+        try {
+          if (readWrite == ReadWrite.WRITE) { ds.commit() }
+        } finally {
+          ds.close()
+        }
+      }.orDie
+    ZIO.acquireRelease(acquire)(release)
   }
 
   private def toSparqlSelectResult(resultSet: ResultSet): SparqlSelectResult = {
@@ -192,9 +201,33 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): UIO[FileWrittenResponse] = ???
+  ): UIO[FileWrittenResponse] = ZIO.scoped {
+    for {
+      model  <- execConstruct(sparql)
+      turtle <- modelToTurtle(model)
+      _ <- ZIO
+             .attempt(
+               rdfFormatUtil
+                 .turtleToQuadsFile(
+                   rdfSource = RdfStringSource(turtle),
+                   graphIri = graphIri,
+                   outputFile = outputFile,
+                   outputFormat = outputFormat
+                 )
+             )
+    } yield FileWrittenResponse()
+  }.orDie
 
-  override def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse] = ???
+  override def sparqlHttpUpdate(query: String): UIO[SparqlUpdateResponse] = {
+    def doUpdate(ds: Dataset) = ZIO.attempt {
+      val update    = UpdateFactory.create(query);
+      val processor = UpdateExecutionFactory.create(update, ds)
+      processor.execute()
+    }
+    ZIO.scoped {
+      getDataSetWithTransaction(ReadWrite.WRITE).flatMap(doUpdate(_).as(SparqlUpdateResponse()))
+    }.orDie
+  }
 
   override def sparqlHttpGraphFile(
     graphIri: IRI,
@@ -229,5 +262,6 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
 }
 
 object TriplestoreServiceFake {
-  val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TriplestoreService] = ZLayer.fromFunction(TriplestoreServiceFake.apply _)
+  val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TriplestoreService] =
+    ZLayer.fromFunction(TriplestoreServiceFake.apply _)
 }

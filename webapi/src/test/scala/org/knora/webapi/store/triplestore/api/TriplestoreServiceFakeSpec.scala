@@ -99,6 +99,24 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
           )
         }
       ),
+      suite("UPDATE")(test("update") {
+        for {
+          _ <- TriplestoreService.sparqlHttpUpdate(s"""
+                                                      |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                                      |
+                                                      |INSERT { <http://aNewArticle> a <${Biblio.Class.Article.value}> }
+                                                      |WHERE { ?s ?p ?o }
+                                                      |""".stripMargin)
+          result <-
+            TriplestoreService.sparqlHttpAsk(s"""
+                                                |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                                |
+                                                |ASK WHERE {
+                                                |  <http://aNewArticle> a <${Biblio.Class.Article.value}> .
+                                                |}
+                                                |""".stripMargin)
+        } yield assertTrue(result.result)
+      }),
       suite("sparqlHttpAsk")(
         test("should return true if anArticle exists") {
           val query = s"""
