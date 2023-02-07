@@ -7,10 +7,10 @@ package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -84,7 +84,10 @@ object KnoraCredentialsV2 {
  *
  * @param token is the returned json web token.
  */
-case class LoginResponse(token: String)
+case class LoginResponse(token: String) {
+  implicit lazy val encLoginResponse: JsonEncoder[LoginResponse] = DeriveJsonEncoder.gen[LoginResponse]
+  implicit lazy val decLoginResponse: JsonDecoder[LoginResponse] = DeriveJsonDecoder.gen[LoginResponse]
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
