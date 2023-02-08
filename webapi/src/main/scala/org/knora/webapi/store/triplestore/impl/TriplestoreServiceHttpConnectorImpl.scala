@@ -65,10 +65,10 @@ import org.knora.webapi.util.FileUtil
  */
 case class TriplestoreServiceHttpConnectorImpl(
   config: AppConfig,
-  httpClient: CloseableHttpClient
+  httpClient: CloseableHttpClient,
+  implicit val stringFormatter: StringFormatter
 ) extends TriplestoreService {
 
-  private implicit val stringFormatter = StringFormatter.getGeneralInstance
   // MIME type constants.
   private val mimeTypeApplicationJson              = "application/json"
   private val mimeTypeApplicationSparqlResultsJson = "application/sparql-results+json"
@@ -1093,12 +1093,12 @@ object TriplestoreServiceHttpConnectorImpl {
       httpClient.close()
     }.tap(_ => ZIO.logInfo(">>> Release Triplestore Service Http Connector <<<")).orDie
 
-  val layer: ZLayer[AppConfig, Nothing, TriplestoreService] =
+  val layer: ZLayer[AppConfig with StringFormatter, Nothing, TriplestoreService] =
     ZLayer.scoped {
       for {
+        sf         <- ZIO.service[StringFormatter]
         config     <- ZIO.service[AppConfig]
-        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
-      } yield TriplestoreServiceHttpConnectorImpl(config, httpClient)
+        httpClient <- ZIO.acquireRelease(acquire(config))(release)
+      } yield TriplestoreServiceHttpConnectorImpl(config, httpClient, sf)
     }
-
 }
