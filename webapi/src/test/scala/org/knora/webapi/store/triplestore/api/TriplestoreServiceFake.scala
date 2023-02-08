@@ -85,7 +85,6 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeResultSet))
   }
 
-
   private def getReadTransactionQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
     def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
     def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
@@ -152,13 +151,10 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
       )
     }
 
-    ZIO.scoped {
-      for {
-        model    <- execConstruct(request.sparql)
-        turtle   <- modelToTurtle(model)
-        response <- parseTurtleResponse(turtle)
-      } yield response
-    }.orDie
+    for {
+      turtle   <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle)).orDie
+      response <- parseTurtleResponse(turtle).orDie
+    } yield response
   }
 
   private def execConstruct(query: String): ZIO[Any with Scope, Throwable, Model] = {
@@ -183,13 +179,10 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   override def sparqlHttpExtendedConstruct(
     request: SparqlExtendedConstructRequest
   ): UIO[SparqlExtendedConstructResponse] =
-    ZIO.scoped {
-      for {
-        model    <- execConstruct(request.sparql)
-        turtle   <- modelToTurtle(model)
-        response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtle)
-      } yield response
-    }.orDie
+    for {
+      turtle   <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle)).orDie
+      response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtle).orDie
+    } yield response
 
   override def sparqlHttpConstructFile(
     sparql: String,
