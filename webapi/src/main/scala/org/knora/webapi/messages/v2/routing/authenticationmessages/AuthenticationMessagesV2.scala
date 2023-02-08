@@ -84,7 +84,7 @@ object KnoraCredentialsV2 {
  *
  * @param token is the returned json web token.
  */
-case class LoginResponse(token: String) {
+final case class LoginResponse(token: String) {
   implicit lazy val encLoginResponse: JsonEncoder[LoginResponse] = DeriveJsonEncoder.gen[LoginResponse]
   implicit lazy val decLoginResponse: JsonDecoder[LoginResponse] = DeriveJsonDecoder.gen[LoginResponse]
 }

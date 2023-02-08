@@ -75,7 +75,9 @@ class SipiUploadWithoutTranscodingITSpec
       } yield ()
 
       Unsafe.unsafe { implicit u =>
-        Runtime.default.unsafe.run(program.provide(Client.default))
+        Runtime.default.unsafe
+          .run(program.provide(Client.default, Scope.default))
+          .getOrThrow()
       }
 
       val params =
