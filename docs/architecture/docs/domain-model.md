@@ -105,6 +105,8 @@ Confusions:
 
 ## V2
 
+### Overview
+
 ```mermaid
 erDiagram
     %% Ontology
@@ -130,4 +132,41 @@ erDiagram
     Value ||--|| ObjectAccessPermission: grants
     Resource ||--|| ObjectAccessPermission: grants
     ObjectAccessPermission }o--o{ Group: "to"
+```
+
+
+## System Instances
+
+```mermaid
+---
+title: User Groups
+---
+erDiagram
+    UserGroup ||--|| UnknownUser: ""
+    UserGroup ||--|| KnownUser: ""
+    UserGroup ||--|| Creator: ""
+    UserGroup ||--|| ProjectMember: ""
+    UserGroup ||--|| ProjectAdmin: ""
+    UserGroup ||--|| SystemAdmin: ""
+
+```
+
+```mermaid
+---
+title: Built-in Users
+---
+erDiagram
+    User ||--o{ AnonymousUser: ""
+    User ||--o{ SystemUser: ""
+
+```
+
+```mermaid
+---
+title: Built-in Projects
+---
+erDiagram
+    Project ||--|| SystemProject: ""
+    Project ||--|| DefaultSharedOntologiesProject: ""
+
 ```
