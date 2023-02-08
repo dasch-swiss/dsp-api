@@ -287,7 +287,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   }
 
   private def insert(elem: RdfDataObject): ZIO[Any, Throwable, Unit] = {
-    val inputFile = Paths.get( elem.path)
+    val inputFile = Paths.get(elem.path)
     ZIO.scoped {
       for {
         graphName <- checkGraphName(elem)
@@ -298,6 +298,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
       } yield ()
     }
   }
+
   private def checkGraphName(elem: RdfDataObject): Task[String] = {
     val graphName = elem.name
     if (graphName == "default") {
@@ -306,6 +307,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
       ZIO.succeed(graphName)
     }
   }
+  
   override def checkTriplestore(): UIO[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
 
   override def downloadRepository(outputFile: Path): UIO[FileWrittenResponse] = ???
