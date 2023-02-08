@@ -11,14 +11,6 @@ Note:
   as the distinction in the RESTful API does not fully align with the distinction in the ontologies.
 
 
-## General
-
-```mermaid
-erDiagram
-    IRI
-    LangString
-```
-
 ## Admin
 
 ```mermaid
@@ -109,29 +101,56 @@ Confusions:
 
 ```mermaid
 erDiagram
-    %% Ontology
-    Ontology
-    ResourceClass
-    Property
-    Cardinality {
-        IRI owl_property "the property this cardinality refers to"
-        owl_cardinality cardinality "1, 0-1, 0-n, 1-n"
-    }
     Ontology ||--o{ ResourceClass: "consists of"
     Ontology ||--o{ Property: "consists of (?)"
     ResourceClass ||--o{ Cardinality: defines
     Cardinality ||--|| Property: specifies
-    
-    %% Data
-    Resource
     ResourceClass ||--o{ Resource: "can be instantiated as"
-    Value
     Property ||--o{ Value: "can be instantiated as"
     Resource ||--o{ Value: contains
-
     Value ||--|| ObjectAccessPermission: grants
     Resource ||--|| ObjectAccessPermission: grants
     ObjectAccessPermission }o--o{ Group: "to"
+```
+
+### Ontology
+
+```mermaid
+erDiagram
+    Ontology {
+        foo bar "what does the ontology consist of?"
+    }
+    Cardinality {
+        IRI owl_property "the property this cardinality refers to"
+        owl_cardinality cardinality "1, 0-1, 0-n, 1-n"
+    }
+    Ontology ||--o{ Resource: "consists of"
+    Ontology ||--o{ Property: "consists of (?)"
+    Resource ||--o{ Cardinality: defines
+    Cardinality ||--|| Property: specifies
+```
+
+Confusions:
+- do we even define ontology at all? or just refer to the concept of `owl:Ontology`?
+- how do ontology, class, property and cardinality really relate to each other?
+
+
+### Data
+
+```mermaid
+erDiagram
+    Resource ||--o{ Value: contains
+    Value ||--|| ObjectAccessPermission: grants
+    Resource ||--|| ObjectAccessPermission: grants
+    ObjectAccessPermission }o--o{ Group: "to"
+```
+
+## General
+
+```mermaid
+erDiagram
+    IRI
+    LangString
 ```
 
 
