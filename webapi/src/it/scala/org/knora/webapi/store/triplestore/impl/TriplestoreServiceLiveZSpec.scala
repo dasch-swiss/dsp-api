@@ -18,13 +18,13 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 /**
  * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive]].
  */
-object TriplestoreServiceLiveZSpec$ extends ZIOSpecDefault {
+object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
 
   /**
    * Defines a layer which encompases all dependencies that are needed for
    * running the tests. `bootstrap` overrides the base layer of ZIOApp.
    */
-  val testLayer =
+  val testLayer: ULayer[TriplestoreService] =
     ZLayer.make[TriplestoreService](
       TriplestoreServiceLive.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
