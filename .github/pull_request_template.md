@@ -4,7 +4,7 @@
 
 ### Task Description/Number
 
-<!-- Please add either the ticket number or, in case of unscheduled work, a short description of the task at hand -->
+<!-- Please add either the issue number or, in case of unscheduled work, a short description of the task at hand -->
 
 Issue Number: DEV-
 
