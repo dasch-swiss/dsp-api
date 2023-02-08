@@ -22,16 +22,11 @@ import zio.UIO
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
-import java.io.ByteArrayOutputStream
-import java.io.OutputStream
 import java.nio.file.Path
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
-import java.io.BufferedInputStream
-import java.io.InputStream
 import java.io.StringReader
-import java.nio.file.Files
 import java.nio.file.Paths
 
 import org.knora.webapi.IRI
@@ -62,6 +57,7 @@ import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.RdfInputStreamSource
 import org.knora.webapi.messages.util.rdf.RdfStringSource
 import org.knora.webapi.store.triplestore.errors.TriplestoreException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
@@ -69,11 +65,14 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.store.triplestore.TestDatasetBuilder
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
+import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
+import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
+import org.knora.webapi.util.ZScopedJavaIoStreams.outToIn
 
 final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
+  private val TURTLE: String               = Turtle.toString.toUpperCase
   override def doSimulateTimeout(): UIO[SparqlSelectResult] = ZIO.die(
     TriplestoreTimeoutException(
       "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
@@ -139,8 +138,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   override def sparqlHttpConstruct(request: SparqlConstructRequest): UIO[SparqlConstructResponse] = {
     def parseTurtleResponse(
       turtleStr: String
-    ): IO[TriplestoreException, SparqlConstructResponse] = {
-      val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
+    ): IO[TriplestoreException, SparqlConstructResponse] =
       ZIO.attemptBlocking {
         val rdfModel: RdfModel                                 = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
         val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
@@ -162,7 +160,6 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
           },
         ZIO.succeed(_)
       )
-    }
 
     for {
       turtle   <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle)).orDie
@@ -176,31 +173,13 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeModel))
   }
 
-  private val byteArrayOutputStream: ZIO[Any with Scope, Throwable, ByteArrayOutputStream] = {
-    def acquire                   = ZIO.attempt(new ByteArrayOutputStream())
-    def release(os: OutputStream) = ZIO.succeed(os.close())
-    ZIO.acquireRelease(acquire)(release)
-  }
-
-  private def fileInputStream(path: Path): ZIO[Any with Scope, Throwable, InputStream] = {
-    def acquire = ZIO.attempt(Files.newInputStream(path))
-    if (!Files.exists(path)) {
-      ZIO.fail(new IllegalArgumentException(s"File ${path.toAbsolutePath} does not exist"))
-    } else {
-      ZIO.acquireRelease(acquire)(release).flatMap(bufferedInputStream)
-    }
-  }
-  private def release(in: InputStream): UIO[Unit] =
-    ZIO.attempt(in.close()).logError("Unable to close InputStream.").ignore
-  private def bufferedInputStream(in: InputStream): ZIO[Any with Scope, Throwable, InputStream] = {
-    def acquire = ZIO.attempt(new BufferedInputStream(in))
-    ZIO.acquireRelease(acquire)(release)
-  }
+  private def release(in: AutoCloseable): UIO[Unit] =
+    ZIO.attempt(in.close()).logError("Unable to close AutoCloseable.").ignore
 
   private def modelToTurtle(model: Model): ZIO[Any with Scope, Throwable, String] =
     for {
-      os    <- byteArrayOutputStream
-      _      = model.write(os, Turtle.toString.toUpperCase)
+      os    <- byteArrayOutputStream()
+      _      = model.write(os, TURTLE)
       turtle = new String(os.toByteArray)
     } yield turtle
 
@@ -252,7 +231,26 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): UIO[FileWrittenResponse] = ???
+  ): UIO[FileWrittenResponse] = {
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
+    ZIO.scoped {
+      for {
+        ds    <- getDataSetWithTransaction(ReadWrite.READ)
+        inOut <- outToIn().orDie
+        source = RdfInputStreamSource(inOut._1)
+        inFork <- ZIO.attempt {
+                    val runnable: Runnable = () => ds.getNamedModel(graphIri).write(inOut._2, TURTLE)
+                    runnable.run()
+                  }.fork
+        _  = rdfFormatUtil.turtleToQuadsFile(source, graphIri, outputFile, outputFormat)
+        _ <- inFork.join.orDie
+
+//        _      = inOut._2.flush()
+      } yield FileWrittenResponse()
+    }
+  }
+  private def foo() =
+    byteArrayOutputStream
 
   override def sparqlHttpGraphData(graphIri: IRI): UIO[NamedGraphDataResponse] = ???
 
@@ -302,7 +300,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
         in        <- fileInputStream(inputFile)
         ds        <- getDataSetWithTransaction(ReadWrite.WRITE)
         model      = ds.getNamedModel(graphName)
-        _          = model.read(in, null, "TTL")
+        _          = model.read(in, null, TURTLE)
       } yield ()
     }
   }
@@ -329,8 +327,8 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     ZIO.scoped {
       for {
         name <- checkGraphName(graphName)
-        ds <- getDataSetWithTransaction(ReadWrite.WRITE)
-        _   = ds.getNamedModel(name).read(new StringReader(turtle), null, "TTL")
+        ds   <- getDataSetWithTransaction(ReadWrite.WRITE)
+        _     = ds.getNamedModel(name).read(new StringReader(turtle), null, TURTLE)
       } yield InsertGraphDataContentResponse()
     }.orDie
 }

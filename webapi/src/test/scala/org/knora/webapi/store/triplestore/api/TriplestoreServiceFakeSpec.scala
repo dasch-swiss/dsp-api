@@ -10,6 +10,8 @@ import zio.test.Assertion.hasSameElements
 import zio.test._
 import zio.Ref
 import zio.ZIO
+import java.nio.file.Files
+import java.util.UUID
 
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
@@ -282,7 +284,25 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
             doesNotContainBase = !namedModelExists(ds, "http://www.knora.org/ontology/knora-base")
           } yield assertTrue(containsAdmin && doesNotContainBase)
         }
-      )
+      ),
+      suite("sparqlHttpGraphFile")(test("sparqlHttpGraphFile should create the file") {
+        val tempDir = Files.createTempDirectory(UUID.randomUUID().toString)
+        tempDir.toFile.deleteOnExit()
+        val testFile = tempDir.toAbsolutePath.resolve("test.ttl")
+        for {
+          _ <- TriplestoreService.insertDataIntoTriplestore(
+                 List(
+                   RdfDataObject(
+                     path = "knora-ontologies/knora-base.ttl",
+                     name = "http://www.knora.org/ontology/knora-base"
+                   )
+                 ),
+                 prependDefaults = false
+               )
+//          _ <- TriplestoreService.sparqlHttpGraphFile("http://www.knora.org/ontology/knora-base", testFile, TriG)
+//        } yield assertTrue({ val foo = Files.exists(testFile); foo })
+        } yield assertCompletes
+      })
     ).provide(TriplestoreServiceFake.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
 
   private def namedModelExists(ds: Dataset, name: String) = {
