@@ -18,6 +18,10 @@ import zio.ZIO
 import zio.ZLayer
 import java.io.StringReader
 
+/*
+ * Currently does not (yet) support Lucene indexing.
+ * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
+ */
 object TestDatasetBuilder {
   val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
 
