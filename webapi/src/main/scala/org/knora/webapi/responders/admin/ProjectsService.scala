@@ -7,7 +7,6 @@ package org.knora.webapi.responders.admin
 
 import zio._
 
-import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -44,6 +43,9 @@ trait ProjectsService {
   def getKeywordsByProjectIri(
     projectIri: ProjectIri
   ): Task[ProjectKeywordsGetResponseADM]
+  def getProjectRestrictedViewSettings(
+    identifier: ProjectIdentifierADM
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 }
 
 final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsService {
@@ -66,19 +68,22 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
    * @return
    *     '''success''': information about the project as a [[ProjectGetResponseADM]]
    *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
    */
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
     bridge.askAppActor(ProjectGetRequestADM(identifier))
 
   /**
-   * Creates a project
+   * Creates a project from the given payload.
    *
-   * @param payload   a [[CreateProjectPayload]] instance
+   * @param payload         the [[ProjectCreatePayloadADM]] from which to create the project
+   * @param requestingUser  the [[UserADM]] making the request
    * @return
-   *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
+   *     '''success''': information about the created project as a [[ProjectOperationResponseADM]]
    *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]]
+   *                    can be found, if one was provided with the [[ProjectCreatePayloadADM]]
+   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def createProjectADMRequest(
     payload: ProjectCreatePayloadADM,
@@ -91,18 +96,19 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
   } yield response
 
   /**
-   * Deletes the project by its [[IRI]].
+   * Deletes the project by its [[ProjectIri]].
    *
-   * @param projectIri           the [[IRI]] of the project
-   * @param requestingUser       the user making the request.
+   * @param projectIri           the [[ProjectIri]] of the project
+   * @param requestingUser       the [[UserADM]] making the request
    * @return
    *     '''success''': a [[ProjectOperationResponseADM]]
    *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
-   *                    [[dsp.errors.ForbiddenException]] when the user is not allowed to perform the operation
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
+   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def deleteProject(projectIri: ProjectIri, requestingUser: UserADM): Task[ProjectOperationResponseADM] = {
-    val projectStatus = Project.ProjectStatus.make(false).getOrElse(throw BadRequestException("Invalid project status"))
+    val projectStatus =
+      Project.ProjectStatus.make(false).getOrElse(throw new IllegalArgumentException("Invalid project status"))
     for {
       random      <- ZIO.random
       requestUuid <- random.nextUUID
@@ -118,15 +124,16 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
   }
 
   /**
-   * Updates a project
+   * Updates a project, identified by its [[ProjectIri]].
    *
-   * @param projectIri           the [[IRI]] of the project
-   * @param payload              a [[ProjectUpdatePayloadADM]] instance
-   * @param requestingUser       the user making the request.
+   * @param projectIri           the [[ProjectIri]] of the project
+   * @param payload              the [[ProjectUpdatePayloadADM]]
+   * @param requestingUser       the [[UserADM]] making the request
    * @return
    *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
    *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given IRI can be found
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
+   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def updateProject(
     projectIri: ProjectIri,
@@ -144,17 +151,51 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
     response <- bridge.askAppActor[ProjectOperationResponseADM](request)
   } yield response
 
+  /**
+   * Returns all data of a specific project, identified by its [[ProjectIri]].
+   *
+   * @param projectIdentifier    the [[IriIdentifier]] of the project
+   * @param requestingUser       the [[UserADM]] making the request
+   * @return
+   *     '''success''': data of the project as [[ProjectDataGetResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[IriIdentifier]] can be found
+   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
+   */
   def getAllProjectData(
     projectIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM] =
     bridge.askAppActor(ProjectDataGetRequestADM(projectIdentifier, requestingUser))
 
+  /**
+   * Returns all project members of a specific project, identified by its [[ProjectIdentifierADM]].
+   *
+   * @param projectIdentifier    the [[ProjectIdentifierADM]] of the project
+   * @param requestingUser       the [[UserADM]] making the request
+   * @return
+   *     '''success''': list of project members as [[ProjectMembersGetResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
+   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
+   */
   def getProjectMembers(
     projectIdentifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Task[ProjectMembersGetResponseADM] =
     bridge.askAppActor(ProjectMembersGetRequestADM(projectIdentifier, requestingUser))
+
+  /**
+   * Returns all project admins of a specific project, identified by its [[ProjectIdentifierADM]].
+   *
+   * @param projectIdentifier    the [[ProjectIdentifierADM]] of the project
+   * @param requestingUser       the [[UserADM]] making the request
+   * @return
+   *     '''success''': list of project admins as [[ProjectAdminMembersGetResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
+   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
+   */
   def getProjectAdmins(
     projectIdentifier: ProjectIdentifierADM,
     requestingUser: UserADM
@@ -162,7 +203,7 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
     bridge.askAppActor(ProjectAdminMembersGetRequestADM(projectIdentifier, requestingUser))
 
   /**
-   * Returns all keywords of all projects as a [[ProjectsKeywordsGetResponseADM]].
+   * Returns all keywords of all projects.
    *
    * @return
    *     '''success''': list of all keywords as a [[ProjectsKeywordsGetResponseADM]]
@@ -172,10 +213,34 @@ final case class ProjectsServiceLive(bridge: ActorToZioBridge) extends ProjectsS
   def getKeywords(): Task[ProjectsKeywordsGetResponseADM] =
     bridge.askAppActor(ProjectsKeywordsGetRequestADM())
 
+  /**
+   * Returns all keywords of a specific project, identified by its [[ProjectIri]].
+   *
+   * @param projectIri      the [[ProjectIri]] of the project
+   * @return
+   *     '''success''': ist of all keywords as a [[ProjectKeywordsGetResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
+   */
   def getKeywordsByProjectIri(
     projectIri: ProjectIri
   ): Task[ProjectKeywordsGetResponseADM] =
     bridge.askAppActor(ProjectKeywordsGetRequestADM(projectIri))
+
+  /**
+   * Returns the restricted view settings of a specific project, identified by its [[ProjectIri]].
+   *
+   * @param projectIri      the [[ProjectIri]] of the project
+   * @return
+   *     '''success''': the restricted view settings as [[ProjectRestrictedViewSettingsGetResponseADM]]
+   *
+   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
+   */
+  def getProjectRestrictedViewSettings(
+    identifier: ProjectIdentifierADM
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+    bridge.askAppActor(ProjectRestrictedViewSettingsGetRequestADM(identifier))
+
 }
 
 object ProjectsService {

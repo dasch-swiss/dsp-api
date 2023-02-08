@@ -27,12 +27,12 @@ import org.knora.webapi.responders.admin.ProjectsService
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
-  private val expectNoInteraction = ActorToZioBridgeMock.empty
+  val expectNoInteraction = ActorToZioBridgeMock.empty
 
   val layers = ZLayer.makeSome[ActorToZioBridge, ProjectsService](ProjectsService.live)
 
   /**
-   * Creates a [[ProjectADM]] with empty content or optionally with a given ID.
+   * Represents a [[ProjectADM]] with empty content
    */
   val projectADM =
     ProjectADM(
@@ -59,7 +59,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       getProjectMembers,
       getProjectAdmins,
       getKeywordsSpec,
-      getKeywordsByProjectIri
+      getKeywordsByProjectIri,
+      getProjectRestrictedViewSettings
     ).provide(StringFormatter.test)
 
   val getAllProjectsSpec = test("get all projects") {
@@ -77,10 +78,10 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertCompletes
   }
 
-  val getProjectByIdSpec = suite("get project by identifier")(
-    test("get project by shortcode") {
-      val shortcode  = "0001"
-      val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
+  val getProjectByIdSpec = suite("get single project by identifier")(
+    test("get project by IRI") {
+      val iri        = "http://rdfh.ch/projects/0001"
+      val identifier = TestDataFactory.projectIriIdentifier(iri)
       val projectsService =
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
@@ -114,9 +115,9 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         _ <- projectsService.provide(actorToZioBridge)
       } yield assertCompletes
     },
-    test("get project by IRI") {
-      val iri        = "http://rdfh.ch/projects/0001"
-      val identifier = TestDataFactory.projectIriIdentifier(iri)
+    test("get project by shortcode") {
+      val shortcode  = "0001"
+      val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val projectsService =
         ZIO
           .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
@@ -168,7 +169,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertCompletes
   }
 
-  // needs to have the StringFormatter in the environment because ChangeProjectApiRequestADM needs it
+  // needs to have the StringFormatter in the environment because the [[ChangeProjectApiRequestADM]] needs it
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
     val iri                  = "http://rdfh.ch/projects/0001"
     val projectIri           = TestDataFactory.projectIri(iri)
@@ -249,9 +250,9 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   }
 
   val getProjectMembers = suite("get all members of a project")(
-    test("get members by project shortcode") {
-      val shortcode      = "0001"
-      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
+    test("get members by project IRI") {
+      val iri            = "http://rdfh.ch/projects/0001"
+      val identifier     = TestDataFactory.projectIriIdentifier(iri)
       val requestingUser = KnoraSystemInstances.Users.SystemUser
       val projectsService =
         ZIO
@@ -287,9 +288,9 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         _ <- projectsService.provide(actorToZioBridge)
       } yield assertCompletes
     },
-    test("get members by project IRI") {
-      val iri            = "http://rdfh.ch/projects/0001"
-      val identifier     = TestDataFactory.projectIriIdentifier(iri)
+    test("get members by project shortcode") {
+      val shortcode      = "0001"
+      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val requestingUser = KnoraSystemInstances.Users.SystemUser
       val projectsService =
         ZIO
@@ -309,9 +310,9 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   )
 
   val getProjectAdmins = suite("get all project admins of a project")(
-    test("get project admins by project shortcode") {
-      val shortcode      = "0001"
-      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
+    test("get project admins by project IRI") {
+      val iri            = "http://rdfh.ch/projects/0001"
+      val identifier     = TestDataFactory.projectIriIdentifier(iri)
       val requestingUser = KnoraSystemInstances.Users.SystemUser
       val projectsService =
         ZIO
@@ -347,9 +348,9 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         _ <- projectsService.provide(actorToZioBridge)
       } yield assertCompletes
     },
-    test("get project admins by project IRI") {
-      val iri            = "http://rdfh.ch/projects/0001"
-      val identifier     = TestDataFactory.projectIriIdentifier(iri)
+    test("get project admins by project shortcode") {
+      val shortcode      = "0001"
+      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val requestingUser = KnoraSystemInstances.Users.SystemUser
       val projectsService =
         ZIO
@@ -385,7 +386,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertCompletes
   }
 
-  val getKeywordsByProjectIri = test("get keywords by project IRI") {
+  val getKeywordsByProjectIri = test("get keywords of a single project by project IRI") {
     val iri        = "http://rdfh.ch/projects/0001"
     val projectIri = TestDataFactory.projectIri(iri)
     val projectsService =
@@ -404,4 +405,63 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     } yield assertCompletes
   }
 
+  val getProjectRestrictedViewSettings = suite("get the restricted view settings of a project")(
+    test("get settings by project IRI") {
+      val iri        = "http://rdfh.ch/projects/0001"
+      val identifier = TestDataFactory.projectIriIdentifier(iri)
+      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectRestrictedViewSettings(identifier))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectRestrictedViewSettingsGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectRestrictedViewSettingsGetRequestADM(identifier)),
+          result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    },
+    test("get settings by project shortname") {
+      val shortname  = "someProject"
+      val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
+      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectRestrictedViewSettings(identifier))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectRestrictedViewSettingsGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectRestrictedViewSettingsGetRequestADM(identifier)),
+          result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    },
+    test("get settings by project shortcode") {
+      val shortcode  = "0001"
+      val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
+      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
+      val projectsService =
+        ZIO
+          .serviceWithZIO[ProjectsService](_.getProjectRestrictedViewSettings(identifier))
+          .provideSome[ActorToZioBridge](layers)
+      val actorToZioBridge = ActorToZioBridgeMock.AskAppActor
+        .of[ProjectRestrictedViewSettingsGetResponseADM]
+        .apply(
+          assertion = Assertion.equalTo(ProjectRestrictedViewSettingsGetRequestADM(identifier)),
+          result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
+        )
+        .toLayer
+      for {
+        _ <- projectsService.provide(actorToZioBridge)
+      } yield assertCompletes
+    }
+  )
 }
