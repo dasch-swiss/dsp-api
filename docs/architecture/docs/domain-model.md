@@ -1,5 +1,16 @@
 # Domain Model
 
+Note:
+
+- The listing of Entities in this document are not exhaustive, 
+  instead they represent the most relevant entities.
+- The naming of attributes is not consistent: 
+  It sometimes follows the request payload and sometimes the ontologies. 
+  Plural/Singular is not a reliably representing cardinalities, but can serve as an indication.
+- The split between Admin and V2 is somewhat arbitrary, 
+  as the distinction in the RESTful API does not fully align with the distinction in the ontologies.
+
+
 ## General
 
 ```mermaid
@@ -14,14 +25,16 @@ erDiagram
 erDiagram
     User {
         IRI id
+        string userName "unique"
         string email "unique"
         string givenName
         string familyName
-        string userName "unique"
         string password
-        boolean status
         string language "2 character ISO language code"
+        boolean status
         boolean systemAdmin
+        IRI isInProject
+        IRI isInProjectAdminGroup
     }
 
     Project {
@@ -34,6 +47,8 @@ erDiagram
         boolean status
         boolean selfjoin
         string logo "optional"
+        string restrictedViewSize
+        string restrictedViewWatermark
     }
 
     Group {
@@ -45,11 +60,16 @@ erDiagram
         boolean selfjoin
     }
 
-    List {
+    ListNode {
         IRI id
-        IRI projectIri
+        IRI projectIri "only for root node"
         langstring labels
-        listnode childNodes
+        langstring comments
+        string name
+        boolean isRootNode
+        IRI hasSublistNode
+        IRI hasRootNode
+        integer listNodePosition
     }
     ObjectAccessPermission {
         string hasPermission "the RV, V, M, D, CR string"
@@ -71,12 +91,17 @@ erDiagram
 
     User }|--|{ Project: "is member/admin of"
     User }|--|{ Group: "is member of"
-    List }o--|| Project: "belongs to"
+    ListNode }o--|| Project: "belongs to"
     Project ||--|{ DefaultObjectAccessPermission: defines
     Group }o--o{ AdministrativePermission: "is granted"
     Group }o--o{ ObjectAccessPermission: "is granted"
     DefaultObjectAccessPermission ||--|| ObjectAccessPermission: "is realized as"
 ```
+
+Confusions:
+- User.phone?
+- Institution? (name, description, website, phone, address, email)
+- Project.belongsToInstitution?
 
 ## V2
 
