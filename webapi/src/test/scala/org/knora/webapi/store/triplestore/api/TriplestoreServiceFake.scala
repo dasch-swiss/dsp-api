@@ -278,7 +278,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   ): UIO[InsertTriplestoreContentACK] =
     for {
       objects <- getListToInsert(rdfDataObjects, prependDefaults)
-      _       <- ZIO.foreachDiscard(objects)(insert).orDie
+      _       <- ZIO.foreachDiscard(objects)(insertRdfDataObject).orDie
     } yield InsertTriplestoreContentACK()
 
   private def getListToInsert(
@@ -294,7 +294,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     }
   }
 
-  private def insert(elem: RdfDataObject): ZIO[Any, Throwable, Unit] = {
+  private def insertRdfDataObject(elem: RdfDataObject): ZIO[Any, Throwable, Unit] = {
     val inputFile = Paths.get(elem.path)
     ZIO.scoped {
       for {
@@ -307,14 +307,15 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     }
   }
 
-  private def checkGraphName(elem: RdfDataObject): Task[String] = {
-    val graphName = elem.name
+  private def checkGraphName(elem: RdfDataObject): Task[String] =
+    checkGraphName(elem.name)
+
+  private def checkGraphName(graphName: IRI) =
     if (graphName == "default") {
       ZIO.fail(new TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported"))
     } else {
       ZIO.succeed(graphName)
     }
-  }
 
   override def checkTriplestore(): UIO[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
 
@@ -327,10 +328,11 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   override def insertDataGraphRequest(turtle: String, graphName: String): UIO[InsertGraphDataContentResponse] =
     ZIO.scoped {
       for {
+        _  <- checkGraphName(graphName)
         ds <- getDataSetWithTransaction(ReadWrite.WRITE)
         _   = ds.getNamedModel(graphName).read(new StringReader(turtle), null, "TTL")
       } yield InsertGraphDataContentResponse()
-    }
+    }.orDie
 }
 
 object TriplestoreServiceFake {
