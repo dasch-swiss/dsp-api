@@ -17,6 +17,7 @@ import org.apache.jena.update.UpdateFactory
 import zio.IO
 import zio.Ref
 import zio.Scope
+import zio.Task
 import zio.UIO
 import zio.URIO
 import zio.ZIO
@@ -27,6 +28,10 @@ import java.nio.file.Path
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
+import java.io.BufferedInputStream
+import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.Paths
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
@@ -61,6 +66,8 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.store.triplestore.TestDatasetBuilder
+import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
+import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
 
 final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
@@ -92,8 +99,9 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   }
 
   private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
-    val acquire              = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
-    def release(ds: Dataset) = ZIO.succeed(ds.commit())
+    val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
+    def release(ds: Dataset) = ZIO.succeed(try { ds.commit() }
+    finally { ds.end() })
     ZIO.acquireRelease(acquire)(release)
   }
 
@@ -169,6 +177,21 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     ZIO.acquireRelease(acquire)(release)
   }
 
+  private def fileInputStream(path: Path): ZIO[Any with Scope, Throwable, InputStream] = {
+    def acquire = ZIO.attempt(Files.newInputStream(path))
+    if (!Files.exists(path)) {
+      ZIO.fail(new IllegalArgumentException(s"File ${path.toAbsolutePath} does not exist"))
+    } else {
+      ZIO.acquireRelease(acquire)(release).flatMap(bufferedInputStream)
+    }
+  }
+  private def release(in: InputStream): UIO[Unit] =
+    ZIO.attempt(in.close()).logError("Unable to close InputStream.").ignore
+  private def bufferedInputStream(in: InputStream): ZIO[Any with Scope, Throwable, InputStream] = {
+    def acquire = ZIO.attempt(new BufferedInputStream(in))
+    ZIO.acquireRelease(acquire)(release)
+  }
+
   private def modelToTurtle(model: Model): ZIO[Any with Scope, Throwable, String] =
     for {
       os    <- byteArrayOutputStream
@@ -208,7 +231,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
 
   override def sparqlHttpUpdate(query: String): UIO[SparqlUpdateResponse] = {
     def doUpdate(ds: Dataset) = ZIO.attempt {
-      val update    = UpdateFactory.create(query);
+      val update    = UpdateFactory.create(query)
       val processor = UpdateExecutionFactory.create(update, ds)
       processor.execute()
     }
@@ -244,8 +267,45 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): UIO[InsertTriplestoreContentACK] = ???
+  ): UIO[InsertTriplestoreContentACK] =
+    for {
+      objects <- getListToInsert(rdfDataObjects, prependDefaults)
+      _       <- ZIO.foreachDiscard(objects)(insert).orDie
+    } yield InsertTriplestoreContentACK()
 
+  private def getListToInsert(
+    rdfDataObjects: List[RdfDataObject],
+    prependDefaults: Boolean
+  ): UIO[List[RdfDataObject]] = {
+    val listToInsert = if (prependDefaults) { DefaultRdfData.data.toList ::: rdfDataObjects }
+    else { rdfDataObjects }
+    if (listToInsert.isEmpty) {
+      ZIO.die(new IllegalArgumentException("List to insert is empty."))
+    } else {
+      ZIO.succeed(listToInsert)
+    }
+  }
+
+  private def insert(elem: RdfDataObject): ZIO[Any, Throwable, Unit] = {
+    val inputFile = Paths.get( elem.path)
+    ZIO.scoped {
+      for {
+        graphName <- checkGraphName(elem)
+        in        <- fileInputStream(inputFile)
+        ds        <- getDataSetWithTransaction(ReadWrite.WRITE)
+        model      = ds.getNamedModel(graphName)
+        _          = model.read(in, null, "TTL")
+      } yield ()
+    }
+  }
+  private def checkGraphName(elem: RdfDataObject): Task[String] = {
+    val graphName = elem.name
+    if (graphName == "default") {
+      ZIO.fail(new TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported"))
+    } else {
+      ZIO.succeed(graphName)
+    }
+  }
   override def checkTriplestore(): UIO[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
 
   override def downloadRepository(outputFile: Path): UIO[FileWrittenResponse] = ???

@@ -4,8 +4,11 @@
  */
 
 package org.knora.webapi.store.triplestore.api
+import org.apache.jena.query.Dataset
+import org.apache.jena.query.ReadWrite
 import zio.test.Assertion.hasSameElements
 import zio.test._
+import zio.Ref
 import zio.ZIO
 
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
@@ -19,6 +22,8 @@ import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
 object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
 
@@ -146,7 +151,7 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
                                                 |""".stripMargin)
         } yield assertTrue(result.result)
       }),
-      suite("sparqlHttpAsk")(
+      suite("ASK")(
         test("should return true if anArticle exists") {
           val query = s"""
                          |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -173,7 +178,7 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
           } yield assertTrue(!result.result)
         }
       ),
-      suite("sparqlHttpSelect")(
+      suite("SELECT")(
         test("not find non-existing thing") {
           val query = """
                         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -252,6 +257,40 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
             hasSameElements(List("http://anArticle", "http://aJournalArticle"))
           )
         }
+      ),
+      suite("insertDataIntoTriplestore")(
+        test("given an empty list insertDataIntoTriplestore will insert the defauls") {
+          for {
+            _       <- TriplestoreService.insertDataIntoTriplestore(List.empty, prependDefaults = true)
+            ds      <- ZIO.serviceWithZIO[Ref[Dataset]](_.get)
+            contains = DefaultRdfData.data.map(_.name).map(namedModelExists(ds, _)).forall(_ == true)
+          } yield assertTrue(contains)
+        },
+        test("given an empty list insertDataIntoTriplestore will insert the defauls") {
+          for {
+            _ <- TriplestoreService.insertDataIntoTriplestore(
+                   List(
+                     RdfDataObject(
+                       path = "knora-ontologies/knora-base.ttl",
+                       name = "http://www.knora.org/ontology/knora-admin"
+                     )
+                   ),
+                   prependDefaults = false
+                 )
+            ds                <- ZIO.serviceWithZIO[Ref[Dataset]](_.get)
+            containsAdmin      = namedModelExists(ds, "http://www.knora.org/ontology/knora-admin")
+            doesNotContainBase = !namedModelExists(ds, "http://www.knora.org/ontology/knora-base")
+          } yield assertTrue(containsAdmin && doesNotContainBase)
+        }
       )
     ).provide(TriplestoreServiceFake.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
+
+  private def namedModelExists(ds: Dataset, name: String) = {
+    ds.begin(ReadWrite.READ)
+    try {
+      ds.containsNamedModel(name)
+    } finally {
+      ds.end()
+    }
+  }
 }
