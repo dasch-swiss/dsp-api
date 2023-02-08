@@ -241,7 +241,10 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
       processor.execute()
     }
     ZIO.scoped {
-      getDataSetWithTransaction(ReadWrite.WRITE).flatMap(doUpdate(_).as(SparqlUpdateResponse()))
+      for {
+        ds <- getDataSetWithTransaction(ReadWrite.WRITE)
+        _  <- doUpdate(ds)
+      } yield SparqlUpdateResponse()
     }.orDie
   }
 
