@@ -328,9 +328,9 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   override def insertDataGraphRequest(turtle: String, graphName: String): UIO[InsertGraphDataContentResponse] =
     ZIO.scoped {
       for {
-        _  <- checkGraphName(graphName)
+        name <- checkGraphName(graphName)
         ds <- getDataSetWithTransaction(ReadWrite.WRITE)
-        _   = ds.getNamedModel(graphName).read(new StringReader(turtle), null, "TTL")
+        _   = ds.getNamedModel(name).read(new StringReader(turtle), null, "TTL")
       } yield InsertGraphDataContentResponse()
     }.orDie
 }
