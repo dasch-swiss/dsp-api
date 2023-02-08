@@ -239,7 +239,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     setEmptyDataSetRef.as(DropAllRepositoryContentACK())
 
   override def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK] =
-    dropAllTriplestoreContent.as(DropDataGraphByGraphACK())
+    dropAllTriplestoreContent().as(DropDataGraphByGraphACK())
 
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
