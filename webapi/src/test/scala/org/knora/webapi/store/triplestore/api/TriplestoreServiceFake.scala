@@ -73,7 +73,11 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
-  override def doSimulateTimeout(): UIO[SparqlSelectResult] = ???
+  override def doSimulateTimeout(): UIO[SparqlSelectResult] = ZIO.die(
+    TriplestoreTimeoutException(
+      "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
+    )
+  )
 
   override def sparqlHttpSelect(
     sparql: String,
@@ -307,7 +311,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
       ZIO.succeed(graphName)
     }
   }
-  
+
   override def checkTriplestore(): UIO[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
 
   override def downloadRepository(outputFile: Path): UIO[FileWrittenResponse] = ???
