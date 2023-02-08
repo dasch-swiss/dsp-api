@@ -229,7 +229,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
   ): UIO[ResetRepositoryContentACK] = for {
-    _ <- dropDataGraphByGraph()
+    _ <- dropAllTriplestoreContent()
     _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
   } yield ResetRepositoryContentACK()
 
@@ -239,7 +239,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     setEmptyDataSetRef.as(DropAllRepositoryContentACK())
 
   override def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK] =
-    setEmptyDataSetRef.as(DropDataGraphByGraphACK())
+    dropAllTriplestoreContent.as(DropDataGraphByGraphACK())
 
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
