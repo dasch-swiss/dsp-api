@@ -50,33 +50,17 @@ final case class ProjectsRouteZ(
           updateProject(iriUrlEncoded, request, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
-
-        case (request @ Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
+        case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
           getProjectMembersByIri(iriUrlEncoded, requestingUser)
-        case (
-              request @ Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "members",
-              requestingUser
-            ) =>
+        case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "members", requestingUser) =>
           getProjectMembersByShortname(shortname, requestingUser)
-        case request @ (
-              Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "members",
-              requestingUser
-            ) =>
+        case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "members", requestingUser) =>
           getProjectMembersByShortcode(shortcode, requestingUser)
-        case (
-              request @ Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "admin-members",
-              requestingUser
-            ) =>
+        case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "admin-members", requestingUser) =>
           getProjectAdminsByIri(iriUrlEncoded, requestingUser)
-        case (
-              request @ Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "admin-members",
-              requestingUser
-            ) =>
+        case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "admin-members", requestingUser) =>
           getProjectAdminsByShortname(shortname, requestingUser)
-        case request @ (
-              Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "admin-members",
-              requestingUser
-            ) =>
+        case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "admin-members", requestingUser) =>
           getProjectAdminsByShortcode(shortcode, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "Keywords", _) => getKeywords()
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "Keywords", _) =>
@@ -95,50 +79,50 @@ final case class ProjectsRouteZ(
 
   private def getProjects(): Task[Response] =
     for {
-      projectGetResponse <- projectsService.getProjectsADMRequest()
-    } yield Response.json(projectGetResponse.toJsValue.toString)
+      r <- projectsService.getProjectsADMRequest()
+    } yield Response.json(r.toJsValue.toString)
 
   private def getProjectByIri(iriUrlEncoded: String): Task[Response] =
     for {
-      iriDecoded         <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      iri                <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse <- projectsService.getSingleProjectADMRequest(identifier = iri)
-    } yield Response.json(projectGetResponse.toJsValue.toString)
+      iriDecoded    <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iriIdentifier <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      r             <- projectsService.getSingleProjectADMRequest(iriIdentifier)
+    } yield Response.json(r.toJsValue.toString)
 
   private def getProjectByShortname(shortname: String): Task[Response] =
     for {
       shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse  <- projectsService.getSingleProjectADMRequest(identifier = shortnameIdentifier)
-    } yield Response.json(projectGetResponse.toJsValue.toString)
+      r                   <- projectsService.getSingleProjectADMRequest(shortnameIdentifier)
+    } yield Response.json(r.toJsValue.toString)
 
   private def getProjectByShortcode(shortcode: String): Task[Response] =
     for {
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse  <- projectsService.getSingleProjectADMRequest(identifier = shortcodeIdentifier)
-    } yield Response.json(projectGetResponse.toJsValue.toString())
+      r                   <- projectsService.getSingleProjectADMRequest(shortcodeIdentifier)
+    } yield Response.json(r.toJsValue.toString())
 
   private def createProject(request: Request, requestingUser: UserADM): Task[Response] =
     for {
-      body                  <- request.body.asString
-      payload               <- ZIO.fromEither(body.fromJson[ProjectCreatePayloadADM]).mapError(e => BadRequestException(e))
-      projectCreateResponse <- projectsService.createProjectADMRequest(payload, requestingUser)
-    } yield Response.json(projectCreateResponse.toJsValue.toString)
+      body    <- request.body.asString
+      payload <- ZIO.fromEither(body.fromJson[ProjectCreatePayloadADM]).mapError(e => BadRequestException(e))
+      r       <- projectsService.createProjectADMRequest(payload, requestingUser)
+    } yield Response.json(r.toJsValue.toString)
 
   private def deleteProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
-      iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectIri            <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      projectDeleteResponse <- projectsService.deleteProject(projectIri, requestingUser)
-    } yield Response.json(projectDeleteResponse.toJsValue.toString())
+      iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      projectIri <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      r          <- projectsService.deleteProject(projectIri, requestingUser)
+    } yield Response.json(r.toJsValue.toString())
 
   private def updateProject(iriUrlEncoded: String, request: Request, requestingUser: UserADM): Task[Response] =
     for {
-      iriDecoded            <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectIri            <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      body                  <- request.body.asString
-      payload               <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => BadRequestException(e))
-      projectChangeResponse <- projectsService.updateProject(projectIri, payload, requestingUser)
-    } yield Response.json(projectChangeResponse.toJsValue.toString)
+      iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      projectIri <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      body       <- request.body.asString
+      payload    <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => BadRequestException(e))
+      r          <- projectsService.updateProject(projectIri, payload, requestingUser)
+    } yield Response.json(r.toJsValue.toString)
 
   private def getAllProjectData(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
@@ -154,49 +138,50 @@ final case class ProjectsRouteZ(
                          .orDie
                          .logError(s"File couldn't be deleted: ${filePath.toString()}")
                      )
-      response = Response(
-                   headers = Headers.contentType("application/trig"),
-                   body = Body.fromStream(fileStream)
-                 )
-    } yield response
+      r = Response(
+            headers = Headers.contentType("application/trig"),
+            body = Body.fromStream(fileStream)
+          )
+    } yield r
 
   private def getProjectMembersByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
-      iriDecoded         <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      iri                <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse <- projectsService.getProjectMembers(iri, requestingUser)
-    } yield Response.json(projectGetResponse.toJsValue.toString)
+      iriDecoded    <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iriIdentifier <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      r             <- projectsService.getProjectMembers(iriIdentifier, requestingUser)
+    } yield Response.json(r.toJsValue.toString)
 
   private def getProjectMembersByShortname(shortname: String, requestingUser: UserADM): Task[Response] =
     for {
       shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse  <- projectsService.getProjectMembers(shortnameIdentifier, requestingUser)
-    } yield Response.json(projectGetResponse.toJsValue.toString)
+      r                   <- projectsService.getProjectMembers(shortnameIdentifier, requestingUser)
+    } yield Response.json(r.toJsValue.toString)
 
   private def getProjectMembersByShortcode(shortcode: String, requestingUser: UserADM): Task[Response] =
     for {
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse  <- projectsService.getProjectMembers(shortcodeIdentifier, requestingUser)
-    } yield Response.json(projectGetResponse.toJsValue.toString())
+      r                   <- projectsService.getProjectMembers(shortcodeIdentifier, requestingUser)
+    } yield Response.json(r.toJsValue.toString())
 
   private def getProjectAdminsByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
-      iriDecoded         <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      iri                <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse <- projectsService.getProjectAdmins(iri, requestingUser)
-    } yield Response.json(projectGetResponse.toJsValue.toString)
+      iriDecoded    <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iriIdentifier <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      r             <- projectsService.getProjectAdmins(iriIdentifier, requestingUser)
+    } yield Response.json(r.toJsValue.toString)
 
   private def getProjectAdminsByShortname(shortname: String, requestingUser: UserADM): Task[Response] =
     for {
       shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse  <- projectsService.getProjectAdmins(shortnameIdentifier, requestingUser)
-    } yield Response.json(projectGetResponse.toJsValue.toString)
+      r                   <- projectsService.getProjectAdmins(shortnameIdentifier, requestingUser)
+    } yield Response.json(r.toJsValue.toString)
 
   private def getProjectAdminsByShortcode(shortcode: String, requestingUser: UserADM): Task[Response] =
     for {
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
-      projectGetResponse  <- projectsService.getProjectAdmins(shortcodeIdentifier, requestingUser)
-    } yield Response.json(projectGetResponse.toJsValue.toString())
+      r                   <- projectsService.getProjectAdmins(shortcodeIdentifier, requestingUser)
+    } yield Response.json(r.toJsValue.toString())
+
   private def getKeywords(): Task[Response] =
     for {
       r <- projectsService.getKeywords()
@@ -211,9 +196,9 @@ final case class ProjectsRouteZ(
 
   private def getRestrictedViewSettingsByProjectIri(iriUrlEncoded: String): Task[Response] =
     for {
-      iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      iri        <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      r          <- projectsService.getProjectRestrictedViewSettings(iri)
+      iriDecoded    <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
+      iriIdentifier <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      r             <- projectsService.getProjectRestrictedViewSettings(iriIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getRestrictedViewSettingsByShortname(shortname: String): Task[Response] =
