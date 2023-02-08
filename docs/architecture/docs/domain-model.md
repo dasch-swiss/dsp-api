@@ -123,6 +123,7 @@ erDiagram
 ```mermaid
 erDiagram
     Ontology {
+        IRI id
         string ontologyName
         IRI attachedToProject
         string label
@@ -130,14 +131,31 @@ erDiagram
         boolean isShared
         date lastModificationDate
     }
-    Property {}
-    Cardinality {
-        IRI owl_property "the property this cardinality refers to"
-        owl_cardinality cardinality "1, 0-1, 0-n, 1-n"
+    ResourceClass {
+        IRI id
+        langstring label
+        langstring comment
+        IRI subClassOf
+        Cardinality cardinalities
     }
-    Ontology ||--o{ Resource: "consists of"
+    Property {
+        IRI id
+        IRI subjectType
+        IRI objectType
+        langstring label
+        langstring comment
+        IRI subPropertyOf
+        IRI guiElement
+        string guiAttribute
+    }
+    Cardinality {
+        IRI property "the property this cardinality refers to"
+        owl_cardinality cardinality "1, 0-1, 0-n, 1-n"
+        integer guiOrder
+    }
+    Ontology ||--o{ ResourceClass: "consists of"
     Ontology ||--o{ Property: "consists of (?)"
-    Resource ||--o{ Cardinality: defines
+    ResourceClass ||--o{ Cardinality: defines
     Cardinality ||--|| Property: specifies
 ```
 
