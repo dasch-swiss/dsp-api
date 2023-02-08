@@ -60,10 +60,9 @@ import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
 
 /**
- * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
- * `application.conf`.
+ * Implementation of the the [[TriplestoreService]] for accessing Fuseki over HTTP.
  */
-case class TriplestoreServiceHttpConnectorImpl(
+case class TriplestoreServiceLive(
   config: AppConfig,
   httpClient: CloseableHttpClient,
   implicit val stringFormatter: StringFormatter
@@ -386,7 +385,7 @@ case class TriplestoreServiceHttpConnectorImpl(
   private def getAllGraphs(): UIO[Seq[String]] = {
     val sparqlQuery =
       """|
-         | SELECT DISTINCT ?graph 
+         | SELECT DISTINCT ?graph
          | WHERE {
          |  GRAPH ?graph { ?s ?p ?o }
          | }""".stripMargin
@@ -1036,7 +1035,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
 }
 
-object TriplestoreServiceHttpConnectorImpl {
+object TriplestoreServiceLive {
 
   /**
    * Acquires a configured httpClient, backed by a connection pool,
@@ -1099,6 +1098,6 @@ object TriplestoreServiceHttpConnectorImpl {
         sf         <- ZIO.service[StringFormatter]
         config     <- ZIO.service[AppConfig]
         httpClient <- ZIO.acquireRelease(acquire(config))(release)
-      } yield TriplestoreServiceHttpConnectorImpl(config, httpClient, sf)
+      } yield TriplestoreServiceLive(config, httpClient, sf)
     }
 }

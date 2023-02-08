@@ -15,9 +15,9 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
- * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl]].
+ * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive]].
  */
-object TriplestoreServiceHttpConnectorImplZSpec extends ZIOSpecDefault {
+object TriplestoreServiceLiveZSpec$ extends ZIOSpecDefault {
 
   /**
    * Defines a layer which encompases all dependencies that are needed for
@@ -25,7 +25,7 @@ object TriplestoreServiceHttpConnectorImplZSpec extends ZIOSpecDefault {
    */
   val testLayer =
     ZLayer.make[TriplestoreService](
-      TriplestoreServiceHttpConnectorImpl.layer,
+      TriplestoreServiceLive.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer
     )
