@@ -166,6 +166,7 @@ erDiagram
 ```mermaid
 erDiagram
     Resource {
+        IRI id
         string label
         boolean isDeleted
         IRI hasStandoffLinkTo "+Value"
@@ -173,20 +174,30 @@ erDiagram
         IRI attachedToProject
         string hasPermission
         date creationDate
+        date lastModificationDate
+        date deleteDate
+        IRI deletedBy
+        string deleteComment
     }
-    %% resource not yet finished
+    Value {
+        IRI id
+        date valueCreationDate
+        IRI attachedToUser
+        string hasPermission
+        integer valueHasOrder
+        langstring valueHasComment
+        boolean isDeleted
+        date deleteDate
+        IRI deletedBy
+        langstring deleteComment
+        IRI previousValue
+        string valueHasString
+        UUID valueHasUUID
+    }
     Resource ||--o{ Value: contains
-    Value ||--|| ObjectAccessPermission: grants
-    Resource ||--|| ObjectAccessPermission: grants
-    ObjectAccessPermission }o--o{ Group: "to"
-```
-
-### General
-
-```mermaid
-erDiagram
-    IRI
-    LangString
+    Value ||--|| ValueLiteral: "is represented by"
+    Value }o--o{ OtherResource: "links to"
+    Value }o--o{ ListNode: "links to"
 ```
 
 
@@ -272,10 +283,10 @@ erDiagram
     - to external resources
   - Annotating/Commenting on Resources
   - [x] Deleting Resources
-- Data Archiving
-  - Publish the existing data  
+- [ ] Data Archiving
+  - [ ] Publish the existing data  
     Only possible through changing permissions (which App doesn't allow)
-  - Archive it as a fixed, stable version  
+  - [ ] Archive it as a fixed, stable version  
     Currently not possible
 - Data Reuse
   - Browsing
@@ -283,9 +294,9 @@ erDiagram
     - [x] Browse Project Metadata
     - Inspect a projects datamodel(s)
     - Browse a projects data
-      - all data
+      - [ ] all data
       - [x] by resource class
-      - matching filters/facettes
+      - [ ] matching filters/facettes
   - [x] Searching  
     With the caveat that certain searches that are possible may not be good, fast or intuitive
     - [x] Search for projects covering a certain topic
@@ -294,6 +305,6 @@ erDiagram
     - [x] Search for data matching criteria within a project
     - [x] Search for data matching criteria across projects
   - Programmatic reuse
-    - download datasets/corpora as a dump (ideally in diverse formats)
+    - [ ] download datasets/corpora as a dump (ideally in diverse formats)
     - [x] retrieve data matching certain search/filter criteria
     - [x] retrieve single resources/values by identifiers
