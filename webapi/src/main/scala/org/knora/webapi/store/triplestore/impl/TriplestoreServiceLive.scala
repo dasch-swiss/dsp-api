@@ -36,6 +36,7 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json._
 import zio._
+
 import java.io.BufferedInputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets
@@ -45,14 +46,14 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
 import scala.collection.mutable
-import dsp.errors._
 
+import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus

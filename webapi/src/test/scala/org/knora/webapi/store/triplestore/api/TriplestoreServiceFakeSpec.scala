@@ -6,25 +6,26 @@
 package org.knora.webapi.store.triplestore.api
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.ReadWrite
-import zio.test.Assertion.hasSameElements
-import zio.test._
 import zio.Ref
 import zio.ZIO
+import zio.test.Assertion.hasSameElements
+import zio.test._
+
 import java.nio.file.Files
 import java.util.UUID
 
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
 object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
