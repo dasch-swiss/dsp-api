@@ -268,7 +268,7 @@ erDiagram
       - all data
       - [x] by resource class
       - matching filters/facettes
-  - Searching  
+  - [x] Searching  
     With the caveat that certain searches that are possible may not be good, fast or intuitive
     - [x] Search for projects covering a certain topic
     - [x] Search for a project of which one knows it already exists
