@@ -35,13 +35,8 @@ object ZScopedJavaIoStreams {
   }
 
   /**
-   * Creates a {@code PipedInputStream} so
-   * that it is connected to the piped output
-   * stream {@code src}. Data bytes written
-   * to {@code src} will then be  available
-   * as input from this stream.
-   *
-   * @param      out the stream to connect to.
+   * Creates a [[PipedInputStream]] so  that it is connected to the piped output stream `out`.
+   * @param out
    */
   def pipedInputStream(out: PipedOutputStream): ZIO[Any with Scope, Throwable, PipedInputStream] = {
     def acquire = ZIO.attempt(new PipedInputStream(out))

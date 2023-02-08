@@ -235,22 +235,33 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
     ZIO.scoped {
       for {
-        ds    <- getDataSetWithTransaction(ReadWrite.READ)
         inOut <- outToIn().orDie
-        source = RdfInputStreamSource(inOut._1)
-        inFork <- ZIO.attempt {
-                    val runnable: Runnable = () => ds.getNamedModel(graphIri).write(inOut._2, TURTLE)
-                    runnable.run()
-                  }.fork
-        _  = rdfFormatUtil.turtleToQuadsFile(source, graphIri, outputFile, outputFormat)
-        _ <- inFork.join.orDie
-
-//        _      = inOut._2.flush()
+        in     = inOut._1
+        out    = inOut._2
+        ds    <- datasetRef.get
+        _ <- ZIO.attemptBlocking {
+               val t1 = new Thread {
+                 override def run {
+                   ds.begin()
+                   try {
+                     ds.getNamedModel(graphIri).write(out, TURTLE)
+                   } finally {
+                     ds.end()
+                   }
+                 }
+               }
+               val t2 = new Thread {
+                 override def run(): Unit =
+                   rdfFormatUtil.turtleToQuadsFile(RdfInputStreamSource(in), graphIri, outputFile, outputFormat)
+               }
+               t1.start()
+               t2.start()
+               t1.join()
+               t2.join()
+             }.orDie
       } yield FileWrittenResponse()
     }
   }
-  private def foo() =
-    byteArrayOutputStream
 
   override def sparqlHttpGraphData(graphIri: IRI): UIO[NamedGraphDataResponse] = ???
 

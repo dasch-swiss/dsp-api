@@ -289,19 +289,20 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
         val tempDir = Files.createTempDirectory(UUID.randomUUID().toString)
         tempDir.toFile.deleteOnExit()
         val testFile = tempDir.toAbsolutePath.resolve("test.ttl")
-        for {
-          _ <- TriplestoreService.insertDataIntoTriplestore(
-                 List(
-                   RdfDataObject(
-                     path = "knora-ontologies/knora-base.ttl",
-                     name = "http://www.knora.org/ontology/knora-base"
-                   )
-                 ),
-                 prependDefaults = false
-               )
-//          _ <- TriplestoreService.sparqlHttpGraphFile("http://www.knora.org/ontology/knora-base", testFile, TriG)
-//        } yield assertTrue({ val foo = Files.exists(testFile); foo })
-        } yield assertCompletes
+        ZIO.scoped {
+          for {
+            _ <- TriplestoreService.insertDataIntoTriplestore(
+                   List(
+                     RdfDataObject(
+                       path = "knora-ontologies/knora-base.ttl",
+                       name = "http://www.knora.org/ontology/knora-base"
+                     )
+                   ),
+                   prependDefaults = false
+                 )
+            _ <- TriplestoreService.sparqlHttpGraphFile("http://www.knora.org/ontology/knora-base", testFile, TriG)
+          } yield assertTrue({ val fileExists = Files.exists(testFile); fileExists })
+        }
       })
     ).provide(TriplestoreServiceFake.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
 
