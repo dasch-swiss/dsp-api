@@ -364,18 +364,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE a project" in {
-        val iri = Iri.ProjectIri.make(newProjectIri.get).getOrElse(throw BadRequestException("Invalid project IRI"))
-        val updatedLongname =
-          Name.make("updated project longname").getOrElse(throw BadRequestException("Invalid longname"))
-        val updatedDescription = ProjectDescription
-          .make(Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en"))))
-          .getOrElse(throw BadRequestException("Invalid project description"))
-        val updatedKeywords =
-          Keywords.make(Seq("updated", "keywords")).getOrElse(throw BadRequestException("Invalid keywords"))
-        val updatedLogo =
-          Logo.make("/fu/bar/baz-updated.jpg").getOrElse(throw BadRequestException("Invalid value for logo"))
-        val projectStatus = ProjectStatus.make(true).getOrElse(throw BadRequestException("Invalid project status"))
-        val selfJoin      = ProjectSelfJoin.make(true).getOrElse(throw BadRequestException("Invalid value for self join"))
+        val iri             = TestDataFactory.projectIri(newProjectIri.get)
+        val updatedLongname = TestDataFactory.projectName("updated project longname")
+        val updatedDescription = TestDataFactory.projectDescription(
+          Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en")))
+        )
+        val updatedKeywords = TestDataFactory.projectKeywords(Seq("updated", "keywords"))
+        val updatedLogo     = TestDataFactory.projectLogo("/fu/bar/baz-updated.jpg")
+        val projectStatus   = TestDataFactory.projectStatus(true)
+        val selfJoin        = TestDataFactory.projectSelfJoin(true)
 
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
@@ -410,10 +407,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
-        val longname = Name.make("longname").getOrElse(throw BadRequestException("Invalid longname"))
-        val iri = Iri.ProjectIri
-          .make(notExistingProjectButValidProjectIri)
-          .getOrElse(throw BadRequestException("Invalid project IRI"))
+        val longname = TestDataFactory.projectName("longname")
+        val iri      = TestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
           projectUpdatePayload = ProjectUpdatePayloadADM(longname = Some(longname)),
@@ -658,9 +653,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return all keywords for a single project" in {
-        val iri = Iri.ProjectIri
-          .make(SharedTestDataADM.incunabulaProject.id)
-          .getOrElse(throw new IllegalArgumentException("Invalid project IRI"))
+        val iri = TestDataFactory.projectIri(SharedTestDataADM.incunabulaProject.id)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )
@@ -669,9 +662,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return empty list for a project without keywords" in {
-        val iri = Iri.ProjectIri
-          .make(SharedTestDataADM.dokubibProject.id)
-          .getOrElse(throw new IllegalArgumentException("Invalid project IRI"))
+        val iri = TestDataFactory.projectIri(SharedTestDataADM.dokubibProject.id)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )
@@ -680,9 +671,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
-        val iri = Iri.ProjectIri
-          .make(notExistingProjectButValidProjectIri)
-          .getOrElse(throw new IllegalArgumentException("Invalid project IRI"))
+        val iri = TestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )
