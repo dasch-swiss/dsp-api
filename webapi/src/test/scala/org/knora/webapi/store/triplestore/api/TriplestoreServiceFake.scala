@@ -30,6 +30,7 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import java.io.BufferedInputStream
 import java.io.InputStream
+import java.io.StringReader
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -314,12 +315,19 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
 
   override def checkTriplestore(): UIO[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
 
-  override def downloadRepository(outputFile: Path): UIO[FileWrittenResponse] = ???
+  override def downloadRepository(outputFile: Path): UIO[FileWrittenResponse] =
+    ZIO.die(new UnsupportedOperationException("Not implemented in fake"))
 
-  override def uploadRepository(inputFile: Path): UIO[RepositoryUploadedResponse] = ???
+  override def uploadRepository(inputFile: Path): UIO[RepositoryUploadedResponse] =
+    ZIO.die(new UnsupportedOperationException("Not implemented in fake"))
 
-  override def insertDataGraphRequest(graphContent: String, graphName: String): UIO[InsertGraphDataContentResponse] =
-    ???
+  override def insertDataGraphRequest(turtle: String, graphName: String): UIO[InsertGraphDataContentResponse] =
+    ZIO.scoped {
+      for {
+        ds <- getDataSetWithTransaction(ReadWrite.WRITE)
+        _   = ds.getNamedModel(graphName).read(new StringReader(turtle), null, "TTL")
+      } yield InsertGraphDataContentResponse()
+    }
 }
 
 object TriplestoreServiceFake {
