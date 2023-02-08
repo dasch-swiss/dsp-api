@@ -56,6 +56,6 @@ object ZScopedJavaIoStreams {
   /**
    * Creates a piped output stream that is connected to a piped input stream.
    */
-  def outToIn(): ZIO[Any with Scope, Throwable, (PipedInputStream, PipedOutputStream)] =
+  def outputStreamPipedToInputStream(): ZIO[Any with Scope, Throwable, (PipedInputStream, PipedOutputStream)] =
     pipedOutStream().flatMap(out => pipedInputStream(out).map((_, out)))
 }

@@ -24,6 +24,7 @@ import zio.ZIO
 import zio.ZLayer
 import java.nio.file.Path
 import scala.collection.mutable
+import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import java.io.StringReader
@@ -67,7 +68,7 @@ import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
 import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
-import org.knora.webapi.util.ZScopedJavaIoStreams.outToIn
+import org.knora.webapi.util.ZScopedJavaIoStreams.outputStreamPipedToInputStream
 
 final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
@@ -235,14 +236,14 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
     ZIO.scoped {
       for {
-        inOut <- outToIn().orDie
+        inOut <- outputStreamPipedToInputStream().orDie
         in     = inOut._1
         out    = inOut._2
         ds    <- datasetRef.get
         _ <- ZIO.attemptBlocking {
-               val t1 = new Thread {
-                 override def run {
-                   ds.begin()
+               val readFromModel = new Thread {
+                 override def run(): Unit = {
+                   ds.begin(ReadWrite.READ)
                    try {
                      ds.getNamedModel(graphIri).write(out, TURTLE)
                    } finally {
@@ -250,14 +251,15 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
                    }
                  }
                }
-               val t2 = new Thread {
+               val writeToFile = new Thread {
                  override def run(): Unit =
                    rdfFormatUtil.turtleToQuadsFile(RdfInputStreamSource(in), graphIri, outputFile, outputFormat)
                }
-               t1.start()
-               t2.start()
-               t1.join()
-               t2.join()
+               readFromModel.start()
+               writeToFile.start()
+               val timeout = 10.minutes
+               readFromModel.join(timeout.toMillis)
+               writeToFile.join(timeout.toMillis)
              }.orDie
       } yield FileWrittenResponse()
     }
