@@ -1,21 +1,32 @@
 # Domain Model
 
+In the context of [DEV-1415: Domain Model](https://linear.app/dasch/project/domain-model-e39ceb242242)
+we attempted to gain a clear overview over the DSP's domain,
+as implicitly modelled by the ontologies, code, validations and documentation of the DSP-API.
+
+The following document aims to give a higher level overview of said domain.
+
+!!! Note
+    - As a high level overview, this document does not aim for exhaustivity.
+    - Naming is tried to be kept as simple as possible, 
+      while trying to consolidate different naming schemes
+      (ontologies, code, API),
+      which in result means that no naming scheme is strictly followed.
+    - The split between V2 and Admin is arbitrary as those are intertwined within the system.
+      It merely serves the purpose of organizing the presented entities.
+
 ## Domain Entities
 
-Note:
+The following Entity-Relationship-Diagrams visualize the top level entities present in the DSP. 
+The attributes of these entities should be exhaustive; 
+cardinalities or validation constraints are normally not depicted. 
+The indicated relationships are of conceptual nature and are more complicated in the actual system.
 
-- The listing of Entities in this document are not exhaustive, 
-  instead they represent the most relevant entities.
-- The naming of attributes is not consistent: 
-  It sometimes follows the request payload and sometimes the ontologies. 
-  Plural/Singular is not a reliably representing cardinalities, but can serve as an indication.
-- The split between Admin and V2 is somewhat arbitrary, 
-  as the distinction in the RESTful API does not fully align with the distinction in the ontologies.
-
-
-### Admin
 
 ```mermaid
+---
+title: Admin
+---
 erDiagram
     User {
         IRI id
@@ -92,16 +103,16 @@ erDiagram
     DefaultObjectAccessPermission ||--|| ObjectAccessPermission: "is realized as"
 ```
 
-Confusions:
-- User.phone?
-- Institution? (name, description, website, phone, address, email)
-- Project.belongsToInstitution?
+!!! danger "Unclear/Unexpected Stuff"
+    - User.phone?
+    - Institution? (name, description, website, phone, address, email)
+    - Project.belongsToInstitution?
 
-### V2
-
-#### Overview
 
 ```mermaid
+---
+title: Overview V2
+---
 erDiagram
     Ontology ||--o{ ResourceClass: "consists of"
     Ontology ||--o{ Cardinality: "consists of"
@@ -118,9 +129,11 @@ erDiagram
     Resource }o--|| Project: "attached to"
 ```
 
-#### Ontology
 
 ```mermaid
+---
+title: Ontology
+---
 erDiagram
     Ontology {
         IRI id
@@ -160,10 +173,10 @@ erDiagram
 ```
 
 
-
-#### Data
-
 ```mermaid
+---
+title: Data
+---
 erDiagram
     Resource {
         IRI id
@@ -201,7 +214,55 @@ erDiagram
 ```
 
 
-#### Class Types
+
+## System Instances of Classes
+
+Apart from class and property definitions, 
+`knora-base` and `knora-admin` also provide a small number of class instances 
+that should be present in any running DSP stack:
+
+```mermaid
+---
+title: User Groups
+---
+erDiagram
+    UserGroup ||--|| UnknownUser: ""
+    UserGroup ||--|| KnownUser: ""
+    UserGroup ||--|| Creator: ""
+    UserGroup ||--|| ProjectMember: ""
+    UserGroup ||--|| ProjectAdmin: ""
+    UserGroup ||--|| SystemAdmin: ""
+
+```
+
+```mermaid
+---
+title: Built-in Users
+---
+erDiagram
+    User ||--o{ AnonymousUser: ""
+    User ||--o{ SystemUser: ""
+
+```
+
+```mermaid
+---
+title: Built-in Projects
+---
+erDiagram
+    Project ||--|| SystemProject: ""
+    Project ||--|| DefaultSharedOntologiesProject: ""
+
+```
+
+
+## Class Hierarchy
+
+While `knora-admin` and `salsah-gui` have relatively flat class hierarchies, 
+in `knora-base` there are very complicated - yet highly relevant - inheritance structures. 
+The following class diagrams try to model these structures. 
+For the sake of comprehensibility, it was necessary to split the ontology into multiple diagrams,
+even though this obliterates the evident connections between those diagrams.
 
 ```mermaid
 ---
@@ -419,44 +480,6 @@ classDiagram
   FileValue <|-- StillImageFileValue
   FileValue <|-- TextFileValue
 ```
-
-
-### System Instances
-
-```mermaid
----
-title: User Groups
----
-erDiagram
-    UserGroup ||--|| UnknownUser: ""
-    UserGroup ||--|| KnownUser: ""
-    UserGroup ||--|| Creator: ""
-    UserGroup ||--|| ProjectMember: ""
-    UserGroup ||--|| ProjectAdmin: ""
-    UserGroup ||--|| SystemAdmin: ""
-
-```
-
-```mermaid
----
-title: Built-in Users
----
-erDiagram
-    User ||--o{ AnonymousUser: ""
-    User ||--o{ SystemUser: ""
-
-```
-
-```mermaid
----
-title: Built-in Projects
----
-erDiagram
-    Project ||--|| SystemProject: ""
-    Project ||--|| DefaultSharedOntologiesProject: ""
-
-```
-
 
 ## Domain User Stories
 
