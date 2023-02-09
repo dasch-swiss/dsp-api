@@ -311,7 +311,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   }
 
   private def insertRdfDataObject(elem: RdfDataObject): ZIO[Any, Throwable, Unit] = {
-    val inputFile = Paths.get(elem.path)
+    val inputFile = Paths.get("..", elem.path)
     ZIO.scoped {
       for {
         graphName <- checkGraphName(elem)
