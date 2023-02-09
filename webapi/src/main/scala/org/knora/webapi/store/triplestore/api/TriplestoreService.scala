@@ -19,11 +19,6 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 trait TriplestoreService {
 
   /**
-   * Simulates a read timeout.
-   */
-  def doSimulateTimeout(): UIO[SparqlSelectResult]
-
-  /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
    * @param sparql          the SPARQL SELECT query string.

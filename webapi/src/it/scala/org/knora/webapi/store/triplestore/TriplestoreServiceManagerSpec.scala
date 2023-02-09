@@ -6,7 +6,6 @@
 package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
-
 import scala.concurrent.duration._
 
 import org.knora.webapi.CoreSpec
@@ -19,12 +18,10 @@ import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataRespons
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
-import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
 
@@ -234,17 +231,6 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
       appActor ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
       val response = expectMsgType[NamedGraphDataResponse](1.second)
       response.turtle.length should be > 0
-    }
-
-    "report a connection timeout with an appropriate error message" in {
-      appActor ! SimulateTimeoutRequest()
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[TriplestoreTimeoutException])
-        assert(
-          msg.cause.getMessage == "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-        )
-      }
     }
   }
 }

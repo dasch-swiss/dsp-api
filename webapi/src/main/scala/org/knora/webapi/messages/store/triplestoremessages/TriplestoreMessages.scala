@@ -352,11 +352,6 @@ object CheckTriplestoreResponse {
 }
 
 /**
- * Simulates a triplestore timeout. Used only in testing.
- */
-case class SimulateTimeoutRequest() extends TriplestoreRequest
-
-/**
  * Requests that the repository is updated to be compatible with the running version of Knora.
  */
 case class UpdateRepositoryRequest() extends TriplestoreRequest

@@ -12,7 +12,6 @@ import zio.test._
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
@@ -34,15 +33,6 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
 
   def spec =
     suite("TriplestoreServiceHttpConnectorImplSpec")(
-      test("successfully simulate a timeout") {
-        for {
-          result <- TriplestoreService.doSimulateTimeout().exit
-        } yield assertTrue(
-          result.is(_.die) == TriplestoreTimeoutException(
-            "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-          )
-        )
-      } +
         test("successfully call a request that triggers a TriplestoreResponseException") {
 
           val searchStringOfDeath =

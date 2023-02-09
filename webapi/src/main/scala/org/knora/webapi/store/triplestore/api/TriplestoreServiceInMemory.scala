@@ -76,11 +76,6 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.outputStreamPipedToInputStream
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-  override def doSimulateTimeout(): UIO[SparqlSelectResult] = ZIO.die(
-    TriplestoreTimeoutException(
-      "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-    )
-  )
 
   override def sparqlHttpSelect(
     sparql: String,

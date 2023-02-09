@@ -115,19 +115,6 @@ case class TriplestoreServiceLive(
   private val logDelimiter           = "\n" + StringUtils.repeat('=', 80) + "\n"
 
   /**
-   * Simulates a read timeout.
-   */
-  def doSimulateTimeout(): UIO[SparqlSelectResult] = {
-    val sparql = """SELECT ?foo WHERE {
-                   |    BIND("foo" AS ?foo)
-                   |}""".stripMargin
-
-    for {
-      result <- sparqlHttpSelect(sparql = sparql, simulateTimeout = true)
-    } yield result
-  }
-
-  /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
    * @param sparql          the SPARQL SELECT query string.
