@@ -22,7 +22,6 @@ import zio.UIO
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
-
 import java.io.StringReader
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -30,6 +29,7 @@ import scala.collection.mutable
 import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
+import java.nio.charset.StandardCharsets
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
@@ -175,14 +175,11 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeModel))
   }
 
-  private def release(in: AutoCloseable): UIO[Unit] =
-    ZIO.attempt(in.close()).logError("Unable to close AutoCloseable.").ignore
-
   private def modelToTurtle(model: Model): ZIO[Any with Scope, Throwable, String] =
     for {
       os    <- byteArrayOutputStream()
       _      = model.write(os, TURTLE)
-      turtle = new String(os.toByteArray)
+      turtle = os.toString(StandardCharsets.UTF_8)
     } yield turtle
 
   override def sparqlHttpExtendedConstruct(
@@ -266,7 +263,14 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     }
   }
 
-  override def sparqlHttpGraphData(graphIri: IRI): UIO[NamedGraphDataResponse] = ???
+  override def sparqlHttpGraphData(graphIri: IRI): UIO[NamedGraphDataResponse] = ZIO.scoped {
+    for {
+      ds <- getDataSetWithTransaction(ReadWrite.READ)
+      model <- ZIO.fromOption(Option(ds.getNamedModel(graphIri))) orElse
+                 ZIO.die(TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri"))
+      turtle <- modelToTurtle(model).orDie
+    } yield NamedGraphDataResponse(turtle)
+  }
 
   override def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
