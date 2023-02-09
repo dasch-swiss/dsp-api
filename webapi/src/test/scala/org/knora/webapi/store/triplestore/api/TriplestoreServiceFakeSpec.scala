@@ -10,7 +10,6 @@ import zio.Ref
 import zio.ZIO
 import zio.test.Assertion.hasSameElements
 import zio.test._
-
 import java.nio.file.Files
 import java.util.UUID
 
@@ -182,6 +181,44 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
         }
       ),
       suite("SELECT")(
+        suite("subclass relation querying")(
+          test("should find direct subclass (rdfs:subClassOf)") {
+            val query = s"""
+                           |PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                           |PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+                           |PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+                           |
+                           |SELECT ?entity
+                           |WHERE {
+                           |  ?entity    rdf:type          ?type .
+                           |  ?type      rdfs:subClassOf  <${Biblio.Class.Publication.value}> .
+                           |}
+                           |""".stripMargin
+            for {
+              result <- TriplestoreService.sparqlHttpSelect(query)
+            } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
+              hasSameElements(List("http://anArticle"))
+            )
+          },
+          test("should find all subclasses (rdfs:subClassOf*)") {
+            val query = s"""
+                           |PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                           |PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+                           |PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+                           |
+                           |SELECT ?entity
+                           |WHERE {
+                           |  ?entity    rdf:type          ?type .
+                           |  ?type      rdfs:subClassOf*  <${Biblio.Class.Publication.value}> .
+                           |}
+                           |""".stripMargin
+            for {
+              result <- TriplestoreService.sparqlHttpSelect(query)
+            } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
+              hasSameElements(List("http://anArticle", "http://aJournalArticle"))
+            )
+          }
+        ),
         test("not find non-existing thing") {
           val query = """
                         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -220,44 +257,6 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
                 )
               )
             )
-          )
-        }
-      ),
-      suite("subclass relation querying")(
-        test("should find direct subclass (rdfs:subClassOf)") {
-          val query = s"""
-                         |PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                         |PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
-                         |PREFIX owl:    <http://www.w3.org/2002/07/owl#>
-                         |
-                         |SELECT ?entity
-                         |WHERE {
-                         |  ?entity    rdf:type          ?type .
-                         |  ?type      rdfs:subClassOf  <${Biblio.Class.Publication.value}> .
-                         |}
-                         |""".stripMargin
-          for {
-            result <- TriplestoreService.sparqlHttpSelect(query)
-          } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
-            hasSameElements(List("http://anArticle"))
-          )
-        },
-        test("should find all subclasses (rdfs:subClassOf*)") {
-          val query = s"""
-                         |PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                         |PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
-                         |PREFIX owl:    <http://www.w3.org/2002/07/owl#>
-                         |
-                         |SELECT ?entity
-                         |WHERE {
-                         |  ?entity    rdf:type          ?type .
-                         |  ?type      rdfs:subClassOf*  <${Biblio.Class.Publication.value}> .
-                         |}
-                         |""".stripMargin
-          for {
-            result <- TriplestoreService.sparqlHttpSelect(query)
-          } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
-            hasSameElements(List("http://anArticle", "http://aJournalArticle"))
           )
         }
       ),
