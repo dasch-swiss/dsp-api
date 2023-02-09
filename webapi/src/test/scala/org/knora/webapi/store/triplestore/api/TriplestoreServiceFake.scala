@@ -22,7 +22,6 @@ import zio.UIO
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
-
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -236,15 +235,13 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     ZIO.scoped {
       for {
         inOut <- outputStreamPipedToInputStream().orDie
-        in     = inOut._1
-        out    = inOut._2
         ds    <- datasetRef.get
         _ <- ZIO.attemptBlocking {
                val readFromModel = new Thread {
                  override def run(): Unit = {
                    ds.begin(ReadWrite.READ)
                    try {
-                     ds.getNamedModel(graphIri).write(out, TURTLE)
+                     ds.getNamedModel(graphIri).write(inOut._2, TURTLE)
                    } finally {
                      ds.end()
                    }
@@ -252,7 +249,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
                }
                val writeToFile = new Thread {
                  override def run(): Unit =
-                   rdfFormatUtil.turtleToQuadsFile(RdfInputStreamSource(in), graphIri, outputFile, outputFormat)
+                   rdfFormatUtil.turtleToQuadsFile(RdfInputStreamSource(inOut._1), graphIri, outputFile, outputFormat)
                }
                readFromModel.start()
                writeToFile.start()
