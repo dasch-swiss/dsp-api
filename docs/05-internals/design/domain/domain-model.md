@@ -268,6 +268,19 @@ classDiagram
     TextFileValue hasTextFileValue
   }
 
+  class AudioFileValue {
+    decimal duration
+  }
+  class DocumentFileValue {
+    integer pageCount
+    integer dimX
+    integer dimY
+  }
+  class StillImageFileValue {
+    integer dimX
+    integer dimY
+  }
+
   %% Relationships
   Resource <|-- Annotation
   Resource <|-- Representation
@@ -283,6 +296,128 @@ classDiagram
   Representation <|-- StillImageRepresentation
   Representation <|-- TextRepresentation
   TextRepresentation <|-- XSLTransformation
+```
+
+```mermaid
+---
+title: Values
+---
+classDiagram
+  %% Classes
+  class Value {
+    date valueCreationDate
+    User attachedToUser
+    string hasPermissions
+    integer valueHasOrder
+    string valueHasComment
+    boolean isDeleted
+    date deleteDate
+    User deletedBy
+    string deleteComment
+    Value previousValue
+    string valueHasString
+    string valueHasUUID
+  }
+  class ColorBase {
+    string valueHasColor
+  }
+  class DateBase {
+    string valueHasCalendar
+    string valueHasEndPrecision
+    integer valueHasEndJDN
+    string valueHasStartPrecision
+    integer valueHasStartJDN
+  }
+  class IntBase {
+    integer valueHasInteger
+  }
+  class BooleanBase {
+    boolean valueHasBoolean
+  }
+  class DecimalBase {
+    decimal valueHasDecimal
+  }
+  class UriBase {
+    URI valueHasUri
+  }
+  class IntervalBase {
+    decimal valueHasIntervalStart
+    decimal valueHasIntervalEnd
+  }
+  class TimeBase {
+    date valueHasTimeStamp
+  }
+  class ListValue {
+    ListNode valueHasListNode
+  }
+  class TextValue {
+    StandoffTag valueHasStandoff
+    integer valueHasMaxStandoffStartIndex
+    string valueHasLanguage
+    XSLToStandoffMApping valueHasMapping
+  }
+  class LinkValue {
+    integer valueHasRefCount
+  }
+  class GeomValue {
+    string valueHasGeometry
+  }
+  class GeonameValue {
+    string valueHasGeonameCode
+  }
+  class ExternalResValue {
+    string extResId
+    string extResProvider
+    string extResAccessInfo
+  }
+  class FileValue {
+    string internalFileName
+    string internalMimeType
+    string originalFileName
+    string originalMimeType
+  }
+
+  %% Relationships
+  ValueBase <|-- Value
+  ValueBase <|-- ColorBase
+  ValueBase <|-- DateBase
+  ValueBase <|-- IntBase
+  ValueBase <|-- BooleanBase
+  ValueBase <|-- DecimalBase
+  ValueBase <|-- UriBase
+  ValueBase <|-- IntervalBase
+  ValueBase <|-- TimeBase
+  Value <|-- ListValue
+  Value <|-- TextValue
+  Value <|-- LinkValue
+  Value <|-- GeomValue
+  Value <|-- GeonameValue
+  Value <|-- ExternalResValue
+  Value <|-- FileValue
+  Value <|-- DeletedValue
+  Value <|-- ColorValue
+  ColorBase <|-- ColorValue
+  Value <|-- DateValue
+  DateBase <|-- DateValue
+  Value <|-- IntValue
+  IntBase <|-- IntValue
+  Value <|-- BooleanValue
+  BooleanBase <|-- BooleanValue
+  Value <|-- DecimalValue
+  DecimalBase <|-- DecimalValue
+  Value <|-- UriValue
+  UriBase <|-- UriValue
+  Value <|-- IntervalValue
+  IntervalBase <|-- IntervalValue
+  Value <|-- TimeValue
+  TimeBase <|-- TimeValue
+  FileValue <|-- ArchiveFileValue
+  FileValue <|-- AudioFileValue
+  FileValue <|-- DDDFileValue
+  FileValue <|-- DocumentFileValue
+  FileValue <|-- MovingImageFileValue
+  FileValue <|-- StillImageFileValue
+  FileValue <|-- TextFileValue
 ```
 
 
