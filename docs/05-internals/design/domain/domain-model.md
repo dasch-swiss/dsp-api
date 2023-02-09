@@ -201,6 +201,55 @@ erDiagram
 ```
 
 
+#### Class Types
+
+```mermaid
+---
+title: Resources
+---
+classDiagram
+  %% Classes
+  class Resource {
+    string label
+    boolean isDeleted
+    Resource hasStandoffLinkTo
+    LinkValue hasStandoffLinkToValue
+    User attachedToUser
+    Project attachedToProject
+    string hasPermissions
+    date creationDate
+    date lastModificationDate
+    date deleteDate
+    User deletedBy
+    string deleteComment
+  }
+  class Annotation {
+    TextValue hasComment
+    Resource isAnnotationOf
+    LinkValue isAnnotationOfValue
+  }
+  class Representation {
+    FileValue hasFileValue
+  }
+  class LinkObj{
+    TextValue hasComment
+    Resource hasLinkTo
+    LinkValue hasLinkToValue
+  }
+  class ExternalResource {
+    ExternalResValue hasExternalResValue
+  }
+
+  %% Relationships
+  Resource <|-- Annotation
+  Resource <|-- Representation
+  Resource <|-- LinkObj
+  Resource <|-- ExternalResource
+  Resource <|-- DeletedResource
+  Representation <|-- ArchiveRepresentation
+```
+
+
 ### System Instances
 
 ```mermaid
@@ -236,6 +285,7 @@ erDiagram
     Project ||--|| DefaultSharedOntologiesProject: ""
 
 ```
+
 
 ## Domain User Stories
 
