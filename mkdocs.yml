@@ -1,10 +1,5 @@
 site_name: DSP-API
 
-repo_url: https://github.com/dasch-swiss/dsp-api
-repo_name: dasch-swiss/dsp-api
-edit_uri: blob/main/docs/
-copyright: "Copyright © 2021 - 2023 <a href='https://dasch.swiss' target='_blank'>Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.</a>"
-
 nav:
   - Introduction:
       - What is DSP?: 01-introduction/what-is-dsp.md
@@ -69,6 +64,7 @@ nav:
               - 0003 Change IIIF Service Manager and Sipi implementation to zlayer: 05-internals/design/adr/ADR-0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer.md
               - 0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer: 05-internals/design/adr/ADR-0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer.md
               - 0005 Change ResponderManager to a simple case class: 05-internals/design/adr/ADR-0005-change-respondermanager-to-a-simple-case-class.md
+              - 0006 Gradually Replace AKKA-HTTP with ZIO-HTTP: 05-internals/design/adr/ADR-0006-use-zio-http.md
           - DSP-API Design Principles:
               - Design Overview: 05-internals/design/principles/design-overview.md
               - Futures with Akka: 05-internals/design/principles/futures-with-akka.md
@@ -125,19 +121,9 @@ plugins:
 
 theme:
   name: material
-  logo: "assets/icons/dasch-icon-white.svg"
-  favicon: "assets/icons/dasch-favicon.ico"
-  icon:
-    repo: fontawesome/brands/github
-  palette:
-    primary: "deep purple"
-    accent: "deep purple"
   features:
     - navigation.tabs
     - navigation.sections
-
-extra_css:
-  - "assets/style/theme.css"
 
 markdown_extensions:
   - pymdownx.superfences:
