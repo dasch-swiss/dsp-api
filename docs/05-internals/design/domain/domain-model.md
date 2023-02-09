@@ -7,6 +7,7 @@ as implicitly modelled by the ontologies, code, validations and documentation of
 The following document aims to give a higher level overview of said domain.
 
 !!! Note
+
     - As a high level overview, this document does not aim for exhaustivity.
     - Naming is tried to be kept as simple as possible, 
       while trying to consolidate different naming schemes
@@ -104,6 +105,7 @@ erDiagram
 ```
 
 !!! danger "Unclear/Unexpected Stuff"
+
     - User.phone?
     - Institution? (name, description, website, phone, address, email)
     - Project.belongsToInstitution?
@@ -487,6 +489,7 @@ The following section provides a list of use cases / user stories.
 They should ideally cover all cases of what a user may want to do when they interact with the DSP.
 
 !!! info "Legend"
+
     The different bullet points mean:
 
     - [ ] Not yet possible
