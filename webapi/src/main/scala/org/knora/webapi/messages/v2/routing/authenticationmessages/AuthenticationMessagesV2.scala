@@ -84,10 +84,7 @@ object KnoraCredentialsV2 {
  *
  * @param token is the returned json web token.
  */
-final case class LoginResponse(token: String) {
-  implicit lazy val encLoginResponse: JsonEncoder[LoginResponse] = DeriveJsonEncoder.gen[LoginResponse]
-  implicit lazy val decLoginResponse: JsonDecoder[LoginResponse] = DeriveJsonDecoder.gen[LoginResponse]
-}
+final case class LoginResponse(token: String)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -99,4 +96,9 @@ trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions 
   implicit val loginApiRequestPayloadV2Format: RootJsonFormat[LoginApiRequestPayloadV2] =
     jsonFormat(LoginApiRequestPayloadV2, "iri", "email", "username", "password")
   implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] = jsonFormat1(LoginResponse.apply)
+}
+
+trait AuthenticationV2Serialization {
+  implicit lazy val encLoginResponse: JsonEncoder[LoginResponse] = DeriveJsonEncoder.gen[LoginResponse]
+  implicit lazy val decLoginResponse: JsonDecoder[LoginResponse] = DeriveJsonDecoder.gen[LoginResponse]
 }

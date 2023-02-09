@@ -5,38 +5,37 @@
 
 package org.knora.webapi.it.sipi
 
-import akka.http.scaladsl.model._
 import org.knora.webapi._
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2Serialization, LoginResponse}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import zio._
-import zio.http.Client
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.http.model.{Headers, Method}
+import zio.http.{Body, Client, Path}
+import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.stream.ZStream
 
 import java.nio.file.{Files, Paths}
+import java.io.File
 
 /**
  * Tests uploading files to Sipi through the /upload_without_transcoding route.
  */
 class SipiUploadWithoutTranscodingITSpec
     extends ITKnoraLiveSpec
-    with AuthenticationV2JsonProtocol
+    with AuthenticationV2Serialization
     with TriplestoreJsonProtocol {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val anythingUserEmail   = SharedTestDataADM.anythingAdminUser.email
-  private val incunabulaUserEmail = SharedTestDataADM.incunabulaMemberUser.email
-  private val password            = SharedTestDataADM.testPass
+  private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
+  private val password          = SharedTestDataADM.testPass
 
-  private val rosettaBaseFilename = "1hAvLiMH5Tr-Ds74NVS69Gv"
+  private val rosettaBaseFilename = "1234567890"
   private val pathToRosettaOriginal =
-    Paths.get("..", s"test_data/test_route/sipi/SipiUploadWithoutTranscodingITSpec/$rosettaBaseFilename.png.org")
+    Paths.get("..", s"test_data/sipi/SipiUploadWithoutTranscodingITSpec/$rosettaBaseFilename.png.orig")
   private val pathToRosettaDerivative =
-    Paths.get("..", s"test_data/test_route/sipi/SipiUploadWithoutTranscodingITSpec/$rosettaBaseFilename.jp2")
+    Paths.get("..", s"test_data/sipi/SipiUploadWithoutTranscodingITSpec/$rosettaBaseFilename.jp2")
   private val pathToRosettaSidecar =
-    Paths.get("..", s"test_data/test_route/sipi/SipiUploadWithoutTranscodingITSpec/$rosettaBaseFilename.info")
+    Paths.get("..", s"test_data/sipi/SipiUploadWithoutTranscodingITSpec/$rosettaBaseFilename.info")
 
   /**
    * Represents the information that Sipi returns about a file that was uploaded.
@@ -56,7 +55,7 @@ class SipiUploadWithoutTranscodingITSpec
    * Represents the information that Sipi is returning after the /upload_without_transcoding
    * route is called. The tuple contains the uploaded filename and checksum.
    */
-  case class UploadResponse(files: Seq[UploadedFile])
+  final case class UploadResponse(files: Seq[UploadedFile])
 
   implicit lazy val encUploadedFiles: JsonEncoder[UploadResponse] = DeriveJsonEncoder.gen[UploadResponse]
   implicit lazy val decUploadedFiles: JsonDecoder[UploadResponse] = DeriveJsonDecoder.gen[UploadResponse]
@@ -66,20 +65,6 @@ class SipiUploadWithoutTranscodingITSpec
 
     "log in" in {
 
-      val url = s"$baseApiUrl/v2/authentication"
-
-      val program = for {
-        res  <- Client.request(url)
-        data <- res.body.asString
-        _    <- Console.printLine(data)
-      } yield ()
-
-      Unsafe.unsafe { implicit u =>
-        Runtime.default.unsafe
-          .run(program.provide(Client.default, Scope.default))
-          .getOrThrow()
-      }
-
       val params =
         s"""
            |{
@@ -87,11 +72,26 @@ class SipiUploadWithoutTranscodingITSpec
            |    "password": "$password"
            |}
                 """.stripMargin
+      val url = s"$baseApiUrl/v2/authentication"
+      val request =
+        Client.request(url, Method.POST, Headers.Header("Content-Type", "application/json"), Body.fromString(params))
 
-      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK)
+      val login = for {
+        res          <- request
+        tokenOrError <- res.body.asString.map(_.fromJson[LoginResponse].map(_.token))
+        token <- tokenOrError match {
+                   case Left(error)  => ZIO.dieMessage(error)
+                   case Right(token) => ZIO.succeed(token)
+                 }
+      } yield token
 
+      loginToken = Unsafe.unsafe { implicit u =>
+        Runtime.default.unsafe
+          .run(login.provide(Client.default, Scope.default))
+          .getOrThrow()
+      }
+
+      assert(loginToken.nonEmpty)
     }
 
     "upload set of files to sipi" in {
@@ -101,6 +101,36 @@ class SipiUploadWithoutTranscodingITSpec
       assert(Files.exists(pathToRosettaDerivative), s"File $pathToRosettaDerivative does not exist")
       assert(Files.exists(pathToRosettaSidecar), s"File $pathToRosettaSidecar does not exist")
 
+      val url = s"$baseInternalSipiUrl/upload_without_transcoding?token=$loginToken"
+      val request =
+        Client.request(
+          url,
+          Method.POST,
+          Headers.Header("Content-Type", "application/json"),
+          Body.fromStream(ZStream.fromPath(pathToRosettaSidecar))
+        )
+
+      val upload = for {
+        res             <- request
+        responseOrError <- res.body.asString.map(_.fromJson[UploadResponse])
+        lr <- responseOrError match {
+                case Left(error) =>
+                  Console.printLineError(res) *>
+                    Console.printLineError(error) *>
+                    ZIO.dieMessage(
+                      "JSON deserialization error: " + error
+                    )
+                case Right(response) => ZIO.succeed(response)
+              }
+      } yield lr
+
+      val loginResponse = Unsafe.unsafe { implicit u =>
+        Runtime.default.unsafe
+          .run(upload.provide(Client.default, Scope.default))
+          .getOrThrow()
+      }
+
+      assert(loginResponse.files.nonEmpty)
     }
   }
 }
