@@ -56,27 +56,27 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         test("dropAllTriplestoreContent") {
           for {
             _ <- TriplestoreService.dropAllTriplestoreContent()
-            result <-
-              TriplestoreService.sparqlHttpAsk(s"""
-                                                  |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                                  |                          
-                                                  |ASK WHERE {
-                                                  |  <http://anArticle> a <${Biblio.Class.Article.value}> .
-                                                  |}
-                                                  |""".stripMargin)
+            query = s"""
+                       |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                       |
+                       |ASK WHERE {
+                       |  <http://anArticle> a <${Biblio.Class.Article.value}> .
+                       |}
+                       |""".stripMargin
+            result <- TriplestoreService.sparqlHttpAsk(query)
           } yield assertTrue(!result.result)
         },
         test("dropDataGraphByGraph") {
           for {
             _ <- TriplestoreService.dropDataGraphByGraph()
-            result <-
-              TriplestoreService.sparqlHttpAsk(s"""
-                                                  |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                                  |                          
-                                                  |ASK WHERE {
-                                                  |  <http://anArticle> a <${Biblio.Class.Article.value}> .
-                                                  |}
-                                                  |""".stripMargin)
+            query = s"""
+                       |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                       |                          
+                       |ASK WHERE {
+                       |  <http://anArticle> a <${Biblio.Class.Article.value}> .
+                       |}
+                       |""".stripMargin
+            result <- TriplestoreService.sparqlHttpAsk(query)
           } yield assertTrue(!result.result)
         }
       ),
@@ -137,21 +137,22 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         }
       ),
       suite("UPDATE")(test("update") {
+        val updateQuery = s"""
+                             |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                             |
+                             |INSERT { <http://aNewArticle> a <${Biblio.Class.Article.value}> }
+                             |WHERE { ?s ?p ?o }
+                             |""".stripMargin
+        val askQuery = s"""
+                          |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                          |
+                          |ASK WHERE {
+                          |  <http://aNewArticle> a <${Biblio.Class.Article.value}> .
+                          |}
+                          |""".stripMargin
         for {
-          _ <- TriplestoreService.sparqlHttpUpdate(s"""
-                                                      |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                                      |
-                                                      |INSERT { <http://aNewArticle> a <${Biblio.Class.Article.value}> }
-                                                      |WHERE { ?s ?p ?o }
-                                                      |""".stripMargin)
-          result <-
-            TriplestoreService.sparqlHttpAsk(s"""
-                                                |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                                |
-                                                |ASK WHERE {
-                                                |  <http://aNewArticle> a <${Biblio.Class.Article.value}> .
-                                                |}
-                                                |""".stripMargin)
+          _      <- TriplestoreService.sparqlHttpUpdate(updateQuery)
+          result <- TriplestoreService.sparqlHttpAsk(askQuery)
         } yield assertTrue(result.result)
       }),
       suite("ASK")(
