@@ -74,7 +74,7 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.outputStreamPipedToInputStream
 final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-  private val TURTLE: String               = Turtle.toString.toUpperCase
+  private val turtle: String               = Turtle.toString.toUpperCase
   override def doSimulateTimeout(): UIO[SparqlSelectResult] = ZIO.die(
     TriplestoreTimeoutException(
       "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
@@ -178,7 +178,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   private def modelToTurtle(model: Model): ZIO[Any with Scope, Throwable, String] =
     for {
       os    <- byteArrayOutputStream()
-      _      = model.write(os, TURTLE)
+      _      = model.write(os, turtle)
       turtle = os.toString(StandardCharsets.UTF_8)
     } yield turtle
 
@@ -241,7 +241,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
                  override def run(): Unit = {
                    ds.begin(ReadWrite.READ)
                    try {
-                     ds.getNamedModel(graphIri).write(inOut._2, TURTLE)
+                     ds.getNamedModel(graphIri).write(inOut._2, turtle)
                    } finally {
                      ds.end()
                    }
@@ -316,7 +316,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
         in        <- fileInputStream(inputFile)
         ds        <- getDataSetWithTransaction(ReadWrite.WRITE)
         model      = ds.getNamedModel(graphName)
-        _          = model.read(in, null, TURTLE)
+        _          = model.read(in, null, turtle)
       } yield ()
     }
   }
@@ -344,7 +344,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
       for {
         name <- checkGraphName(graphName)
         ds   <- getDataSetWithTransaction(ReadWrite.WRITE)
-        _     = ds.getNamedModel(name).read(new StringReader(turtle), null, TURTLE)
+        _     = ds.getNamedModel(name).read(new StringReader(turtle), null, turtle)
       } yield InsertGraphDataContentResponse()
     }.orDie
 }
