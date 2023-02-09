@@ -28,7 +28,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
-object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
+object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
 
   private val testDataSet =
     s"""
@@ -305,7 +305,7 @@ object TriplestoreServiceFakeSpec extends ZIOSpecDefault {
           } yield assertTrue({ val fileExists = Files.exists(testFile); fileExists })
         }
       })
-    ).provide(TriplestoreServiceFake.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
+    ).provide(TriplestoreServiceInMemory.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
 
   private def namedModelExists(ds: Dataset, name: String) = {
     ds.begin(ReadWrite.READ)

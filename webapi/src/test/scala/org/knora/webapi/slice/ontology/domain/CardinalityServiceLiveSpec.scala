@@ -27,7 +27,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants._
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
-import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 
@@ -172,7 +172,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     OntologyRepoLive.layer,
     PredicateRepositoryLive.layer,
     StringFormatter.test,
-    TriplestoreServiceFake.layer
+    TriplestoreServiceInMemory.layer
   )
 
   override def spec: Spec[Any, Throwable] =

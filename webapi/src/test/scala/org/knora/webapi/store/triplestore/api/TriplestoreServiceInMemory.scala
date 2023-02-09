@@ -71,10 +71,9 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.outputStreamPipedToInputStream
 
-final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
+final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-  private val turtle: String               = Turtle.toString.toUpperCase
   override def doSimulateTimeout(): UIO[SparqlSelectResult] = ZIO.die(
     TriplestoreTimeoutException(
       "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
@@ -178,7 +177,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
   private def modelToTurtle(model: Model): ZIO[Any with Scope, Throwable, String] =
     for {
       os    <- byteArrayOutputStream()
-      _      = model.write(os, turtle)
+      _      = model.write(os, "TURTLE")
       turtle = os.toString(StandardCharsets.UTF_8)
     } yield turtle
 
@@ -241,7 +240,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
                  override def run(): Unit = {
                    ds.begin(ReadWrite.READ)
                    try {
-                     ds.getNamedModel(graphIri).write(inOut._2, turtle)
+                     ds.getNamedModel(graphIri).write(inOut._2, "TURTLE")
                    } finally {
                      ds.end()
                    }
@@ -316,7 +315,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
         in        <- fileInputStream(inputFile)
         ds        <- getDataSetWithTransaction(ReadWrite.WRITE)
         model      = ds.getNamedModel(graphName)
-        _          = model.read(in, null, turtle)
+        _          = model.read(in, null, "TURTLE")
       } yield ()
     }
   }
@@ -349,7 +348,7 @@ final case class TriplestoreServiceFake(datasetRef: Ref[Dataset], implicit val s
     }.orDie
 }
 
-object TriplestoreServiceFake {
+object TriplestoreServiceInMemory {
   val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TriplestoreService] =
-    ZLayer.fromFunction(TriplestoreServiceFake.apply _)
+    ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
 }
