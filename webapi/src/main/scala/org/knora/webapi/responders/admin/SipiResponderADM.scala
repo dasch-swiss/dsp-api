@@ -24,7 +24,6 @@ import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.ResponderData
@@ -124,8 +123,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                               ProjectRestrictedViewSettingsGetADM(
                                 identifier = ShortcodeIdentifier
                                   .fromString(request.projectID)
-                                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                               )
                             )
                             .mapTo[Option[ProjectRestrictedViewSettingsADM]]
