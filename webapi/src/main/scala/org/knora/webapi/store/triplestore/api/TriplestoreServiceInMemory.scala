@@ -20,10 +20,10 @@ import zio.Ref
 import zio.Scope
 import zio.Task
 import zio.UIO
+import zio.ULayer
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
-
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -88,8 +88,6 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     isGravsearch: Boolean
   ): UIO[SparqlSelectResult] = {
     require(!simulateTimeout, "`simulateTimeout` parameter is not supported by fake implementation yet")
-    require(!isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
-
     ZIO.scoped(execSelect(sparql).map(toSparqlSelectResult)).orDie
   }
 
@@ -357,6 +355,8 @@ object TriplestoreServiceInMemory {
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
   val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
+
+  val emptyDatasetLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
   val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TriplestoreService] =
     ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)

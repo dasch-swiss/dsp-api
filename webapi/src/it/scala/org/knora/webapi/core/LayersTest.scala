@@ -25,7 +25,7 @@ import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -78,7 +78,8 @@ object LayersTest {
       State.layer,
       StringFormatter.test,
       TestClientService.layer,
-      TriplestoreServiceLive.layer,
+      TriplestoreServiceInMemory.layer,
+      TriplestoreServiceInMemory.emptyDatasetLayer,
       TriplestoreServiceManager.layer
     )
 
