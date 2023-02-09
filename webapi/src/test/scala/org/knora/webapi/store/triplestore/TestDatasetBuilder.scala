@@ -8,23 +8,17 @@ package org.knora.webapi.store.triplestore
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.ReadWrite
 import org.apache.jena.rdf.model.Model
-import org.apache.jena.tdb2.TDB2Factory
 import zio.Ref
 import zio.Task
 import zio.TaskLayer
-import zio.UIO
 import zio.ULayer
 import zio.ZIO
 import zio.ZLayer
-
 import java.io.StringReader
 
-/*
- * Currently does not (yet) support Lucene indexing.
- * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
- */
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
+
 object TestDatasetBuilder {
-  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
 
   private def readToModel(turtle: String)(model: Model): Model = model.read(new StringReader(turtle), null, "TTL")
 
@@ -46,5 +40,5 @@ object TestDatasetBuilder {
 
   def datasetLayerFromTurtle(turtle: String): TaskLayer[Ref[Dataset]] = asLayer(datasetFromTurtle(turtle))
 
-  val emptyDataSet: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
+  val emptyDataset: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 }

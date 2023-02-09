@@ -12,6 +12,7 @@ import org.apache.jena.query.ReadWrite
 import org.apache.jena.query.ResultSet
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
 import zio.IO
@@ -61,7 +62,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
 import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.store.triplestore.TestDatasetBuilder
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
@@ -277,10 +278,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
   } yield ResetRepositoryContentACK()
 
-  private val setEmptyDataSetRef: UIO[Unit] = TestDatasetBuilder.createEmptyDataset.flatMap(ds => datasetRef.set(ds))
-
   override def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] =
-    setEmptyDataSetRef.as(DropAllRepositoryContentACK())
+    createEmptyDataset.flatMap(ds => datasetRef.set(ds)).as(DropAllRepositoryContentACK())
 
   override def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK] =
     dropAllTriplestoreContent().as(DropDataGraphByGraphACK())
@@ -349,6 +348,15 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 }
 
 object TriplestoreServiceInMemory {
+
+  /**
+   * Create an empty TBD2 [[Dataset]]
+   *
+   * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
+   * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
+   */
+  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
+
   val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TriplestoreService] =
     ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
 }

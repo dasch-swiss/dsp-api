@@ -15,7 +15,7 @@ import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataSet
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
@@ -65,7 +65,7 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
             )
         } yield assertTrue(result == List.empty)
       }
-    ).provide(commonLayers, emptyDataSet),
+    ).provide(commonLayers, emptyDataset),
     suite("getCountForPropertyUseNumberOfTimesWithClass given used once")(
       test("given a property is in use by a single instance of the class return this instance with a count of one") {
         for {

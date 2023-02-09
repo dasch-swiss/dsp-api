@@ -415,7 +415,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             }
           }
         )
-      ).provide(commonLayers, emptyDataSet),
+      ).provide(commonLayers, emptyDataset),
       suite("canSetCardinality with property in use twice")(
         test(s"""
                 |Given the previous cardinality on the class/property
