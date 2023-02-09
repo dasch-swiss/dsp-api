@@ -228,16 +228,44 @@ classDiagram
     Resource isAnnotationOf
     LinkValue isAnnotationOfValue
   }
-  class Representation {
-    FileValue hasFileValue
-  }
   class LinkObj{
     TextValue hasComment
     Resource hasLinkTo
     LinkValue hasLinkToValue
   }
+  class Representation {
+    FileValue hasFileValue
+  }
   class ExternalResource {
     ExternalResValue hasExternalResValue
+  }
+  class Region {
+    ColorValue hasColor
+    Representation isRegionOf
+    GeomValue hasGemoetry
+    LinkValue isRegionOfValue
+    TextValue hasComment
+  }
+  class ArchiveRepresentation {
+    ArchiveFileValue hasArchiveFileValue
+  }
+  class AudioRepresentation {
+    AudioFileValue hasAudioFileValue
+  }
+  class DDDRepresentation {
+    DDDFileValue hasDDDFileValue
+  }
+  class DocumentRepresentation {
+    DocumentFileValue hasDocumentFileValue
+  }
+  class MovingImageRepresentation {
+    MovingImageFileValue hasMovingImageFileValue
+  }
+  class StillImageRepresentation {
+    StillImageFileValue hasStillImageFileValue
+  }
+  class TextRepresentation {
+    TextFileValue hasTextFileValue
   }
 
   %% Relationships
@@ -246,7 +274,15 @@ classDiagram
   Resource <|-- LinkObj
   Resource <|-- ExternalResource
   Resource <|-- DeletedResource
+  Resource <|-- Region
   Representation <|-- ArchiveRepresentation
+  Representation <|-- AudioRepresentation
+  Representation <|-- DDDRepresentation
+  Representation <|-- DocumentRepresentation
+  Representation <|-- MovingImageRepresentation
+  Representation <|-- StillImageRepresentation
+  Representation <|-- TextRepresentation
+  TextRepresentation <|-- XSLTransformation
 ```
 
 
