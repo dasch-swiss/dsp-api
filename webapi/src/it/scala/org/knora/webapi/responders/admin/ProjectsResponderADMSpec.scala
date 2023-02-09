@@ -363,15 +363,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE a project" in {
-        val iri             = TestDataFactory.projectIri(newProjectIri.get)
-        val updatedLongname = TestDataFactory.projectName("updated project longname")
-        val updatedDescription = TestDataFactory.projectDescription(
+        val iri             = ITestDataFactory.projectIri(newProjectIri.get)
+        val updatedLongname = ITestDataFactory.projectName("updated project longname")
+        val updatedDescription = ITestDataFactory.projectDescription(
           Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en")))
         )
-        val updatedKeywords = TestDataFactory.projectKeywords(Seq("updated", "keywords"))
-        val updatedLogo     = TestDataFactory.projectLogo("/fu/bar/baz-updated.jpg")
-        val projectStatus   = TestDataFactory.projectStatus(true)
-        val selfJoin        = TestDataFactory.projectSelfJoin(true)
+        val updatedKeywords = ITestDataFactory.projectKeywords(Seq("updated", "keywords"))
+        val updatedLogo     = ITestDataFactory.projectLogo("/fu/bar/baz-updated.jpg")
+        val projectStatus   = ITestDataFactory.projectStatus(true)
+        val selfJoin        = ITestDataFactory.projectSelfJoin(true)
 
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
@@ -406,8 +406,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
-        val longname = TestDataFactory.projectName("longname")
-        val iri      = TestDataFactory.projectIri(notExistingProjectButValidProjectIri)
+        val longname = ITestDataFactory.projectName("longname")
+        val iri      = ITestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
           projectUpdatePayload = ProjectUpdatePayloadADM(longname = Some(longname)),
@@ -652,7 +652,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return all keywords for a single project" in {
-        val iri = TestDataFactory.projectIri(SharedTestDataADM.incunabulaProject.id)
+        val iri = ITestDataFactory.projectIri(SharedTestDataADM.incunabulaProject.id)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )
@@ -661,7 +661,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return empty list for a project without keywords" in {
-        val iri = TestDataFactory.projectIri(SharedTestDataADM.dokubibProject.id)
+        val iri = ITestDataFactory.projectIri(SharedTestDataADM.dokubibProject.id)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )
@@ -670,7 +670,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
-        val iri = TestDataFactory.projectIri(notExistingProjectButValidProjectIri)
+        val iri = ITestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )
