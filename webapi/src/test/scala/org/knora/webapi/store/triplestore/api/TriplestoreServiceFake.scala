@@ -22,14 +22,15 @@ import zio.UIO
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
+
 import java.io.StringReader
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
 import scala.collection.mutable
 import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
-import java.nio.charset.StandardCharsets
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
