@@ -99,7 +99,16 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   }
 
   private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
-    val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
+    val acquire = datasetRef.get.tap(ds =>
+      ZIO.succeed {
+        ds.begin(ReadWrite.WRITE)
+        val unionModel = ds.getUnionModel
+        ds.setDefaultModel(unionModel)
+        ds.commit()
+        ds.end()
+        ds.begin(readWrite)
+      }
+    )
     def release(ds: Dataset) = ZIO.succeed(try { ds.commit() }
     finally { ds.end() })
     ZIO.acquireRelease(acquire)(release)
@@ -349,7 +358,14 @@ object TriplestoreServiceInMemory {
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
-  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
+  val createEmptyDataset: UIO[Dataset] = ZIO.succeed({
+    val ds = TDB2Factory.createDataset()
+    ds.begin()
+    val unionModel = ds.getUnionModel
+    ds.setDefaultModel(unionModel)
+    ds.end()
+    ds
+  })
 
   val emptyDatasetLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
