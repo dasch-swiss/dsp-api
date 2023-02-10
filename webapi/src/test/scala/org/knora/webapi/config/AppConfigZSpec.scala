@@ -29,6 +29,6 @@ object AppConfigZSpec extends ZIOSpecDefault {
           appConfig.instrumentationServerConfig.interval == java.time.Duration.ofSeconds(5)
         )
       }
-    }.provideLayer(AppConfig.live)
+    }.provideLayer(AppConfig.layer)
   )
 }

@@ -59,10 +59,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       }
     }
 
-    private val sf: StringFormatter = {
-      StringFormatter.initForTest()
-      StringFormatter.getGeneralInstance
-    }
+    private val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
     val anythingOntologySmartIri: SmartIri = sf.toSmartIri("http://www.knora.org/ontology/0001/anything")
     val thingSmartIri: SmartIri            = anythingOntologySmartIri.makeEntityIri("Thing")

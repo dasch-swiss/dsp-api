@@ -6,6 +6,7 @@
 package org.knora.webapi.store.cache.impl
 
 import dsp.errors.BadRequestException
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -22,8 +23,7 @@ import zio.test._
  */
 object CacheInMemImplZSpec extends ZIOSpecDefault {
 
-  StringFormatter.initForTest()
-  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  implicit val stringFormatter: StringFormatter = StringFormatter.getInitializedTestInstance
 
   val user: UserADM = SharedTestDataADM.imagesUser01
   val userWithApostrophe = UserADM(

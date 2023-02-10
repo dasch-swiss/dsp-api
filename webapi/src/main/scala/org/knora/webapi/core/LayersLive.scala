@@ -70,7 +70,7 @@ object LayersLive {
       ActorSystem.layer,
       ActorToZioBridge.live,
       ApiRoutes.layer,
-      AppConfig.live,
+      AppConfig.layer,
       AppRouter.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,

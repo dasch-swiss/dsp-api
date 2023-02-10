@@ -21,7 +21,6 @@ import scala.util.Success
 import scala.util.Try
 
 import dsp.errors.FileWriteException
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
@@ -52,7 +51,6 @@ final case class AppConfig(
   gui: Gui,
   routesToReject: List[String],
   triplestore: Triplestore,
-  shacl: Shacl,
   cacheService: CacheService,
   clientTestDataService: ClientTestDataService,
   instrumentationServerConfig: InstrumentationServerConfig,
@@ -218,12 +216,6 @@ final case class Fuseki(
   password: String
 )
 
-final case class Shacl(
-  shapesDir: String
-) {
-  val shapesDirPath = Paths.get(shapesDir)
-}
-
 final case class CacheService(
   enabled: Boolean
 )
@@ -248,7 +240,7 @@ final case class HttpServer(
 object AppConfig {
 
   /**
-   * Reads in the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading
+   * Reads in the application configuration using ZIO-Config. ZIO-Config is capable of loading
    * the Typesafe-Config format. Reads the 'app' configuration from 'application.conf'.
    */
   private val source: ConfigSource =
@@ -262,25 +254,7 @@ object AppConfig {
   )
 
   /**
-   * Application configuration from application.conf
+   * Application configuration layer from application.conf
    */
-  val live: ZLayer[Any, Nothing, AppConfig] =
-    ZLayer {
-      for {
-        c <- configFromSource.orDie
-        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
-      } yield c
-    }.tap(_ => ZIO.logInfo(">>> AppConfig Live Initialized <<<"))
-
-  /**
-   * Application configuration from test.conf for testing
-   */
-  val test: ZLayer[Any, Nothing, AppConfig] =
-    ZLayer {
-      for {
-        c <- configFromSource.orDie
-        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
-      } yield c
-    }.tap(_ => ZIO.logInfo(">>> AppConfig Test Initialized <<<"))
-
+  val layer: ULayer[AppConfig] = ZLayer(configFromSource.orDie).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
 }
