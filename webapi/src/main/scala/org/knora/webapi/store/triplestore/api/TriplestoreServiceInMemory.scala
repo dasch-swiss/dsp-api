@@ -159,7 +159,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
           if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
             ZIO.fail(TriplestoreTimeoutException("Triplestore timed out."))
           } else {
-            ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
+            ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore."))
           },
         ZIO.succeed(_)
       )
