@@ -266,7 +266,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     for {
       ds <- getDataSetWithTransaction(ReadWrite.READ)
       model <- ZIO.fromOption(Option(ds.getNamedModel(graphIri))) orElse
-                 ZIO.die(TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri"))
+                 ZIO.die(TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri."))
       turtle <- modelToTurtle(model).orDie
     } yield NamedGraphDataResponse(turtle)
   }
