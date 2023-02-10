@@ -325,7 +325,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   private def checkGraphName(graphName: IRI) =
     if (graphName == "default") {
-      ZIO.fail(new TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported"))
+      ZIO.fail(new TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported."))
     } else {
       ZIO.succeed(graphName)
     }
