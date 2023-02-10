@@ -336,7 +336,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     ZIO.die(new UnsupportedOperationException("Not implemented in fake"))
 
   override def uploadRepository(inputFile: Path): UIO[RepositoryUploadedResponse] =
-    ZIO.die(new UnsupportedOperationException("Not implemented in fake"))
+    ZIO.die(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
 
   override def insertDataGraphRequest(turtle: String, graphName: String): UIO[InsertGraphDataContentResponse] =
     ZIO.scoped {
