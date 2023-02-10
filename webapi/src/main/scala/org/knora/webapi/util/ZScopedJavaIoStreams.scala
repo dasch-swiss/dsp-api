@@ -36,7 +36,7 @@ object ZScopedJavaIoStreams {
   }
 
   /**
-   * Creates a [[PipedInputStream]] so  that it is connected to the piped output stream `out`.
+   * Creates a [[PipedInputStream]] so that it is connected to the piped output stream `out`.
    * @param out
    */
   def pipedInputStream(out: PipedOutputStream): ZIO[Any with Scope, Throwable, PipedInputStream] = {
