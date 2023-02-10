@@ -24,7 +24,6 @@ import zio.ULayer
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
-
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -99,20 +98,31 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
   }
 
+  private def getWriteTransactionQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
+    def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
+    def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
+    getDataSetWithTransaction(ReadWrite.WRITE).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
+  }
+
   private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
-    val acquire = datasetRef.get.tap(ds =>
-      ZIO.succeed {
-        ds.begin(ReadWrite.WRITE)
-        val unionModel = ds.getUnionModel
-        ds.setDefaultModel(unionModel)
-        ds.commit()
-        ds.end()
-        ds.begin(readWrite)
+    val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
+    def release(ds: Dataset) = ZIO.succeed {
+      try { ds.commit() }
+      finally { ds.end() }
+      // The Fuseki setup configures the union graph as the default graph (tdb2:unionDefaultGraph).
+      // This means for the in-memory implementation that for each write transaction we have to ensure
+      // that we copy the statements from the union model into the default graph of the dataset.
+      if (readWrite == ReadWrite.WRITE) {
+        ensureUnionModel(ds)
       }
-    )
-    def release(ds: Dataset) = ZIO.succeed(try { ds.commit() }
-    finally { ds.end() })
+    }
     ZIO.acquireRelease(acquire)(release)
+  }
+
+  private def ensureUnionModel(ds: Dataset): Unit = {
+    ds.begin(ReadWrite.WRITE)
+    try { ds.setDefaultModel(ds.getUnionModel); ds.commit() }
+    finally { ds.end() }
   }
 
   private def toSparqlSelectResult(resultSet: ResultSet): SparqlSelectResult = {

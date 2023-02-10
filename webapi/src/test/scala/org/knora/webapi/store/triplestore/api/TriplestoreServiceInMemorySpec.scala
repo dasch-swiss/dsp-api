@@ -10,7 +10,6 @@ import zio.Ref
 import zio.ZIO
 import zio.test.Assertion.hasSameElements
 import zio.test._
-
 import java.nio.file.Files
 import java.util.UUID
 
@@ -136,11 +135,15 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
           )
         }
       ),
-      suite("UPDATE")(test("update") {
+      suite("INSERT")(test("sparqlHttpUpdate when inserting a triple into the named graph then it should exist") {
         val updateQuery = s"""
                              |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                              |
-                             |INSERT { <http://aNewArticle> a <${Biblio.Class.Article.value}> }
+                             |INSERT {
+                             |  GRAPH <http://named/graph/for/tests> {
+                             |    <http://aNewArticle> a <${Biblio.Class.Article.value}>
+                             |  }
+                             |}
                              |WHERE { ?s ?p ?o }
                              |""".stripMargin
         val askQuery = s"""
