@@ -50,6 +50,7 @@ import scala.collection.mutable
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
@@ -60,12 +61,12 @@ import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
 
 /**
- * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
- * `application.conf`.
+ * Implementation of the the [[TriplestoreService]] for accessing Fuseki over HTTP.
  */
-case class TriplestoreServiceHttpConnectorImpl(
+case class TriplestoreServiceLive(
   config: AppConfig,
-  httpClient: CloseableHttpClient
+  httpClient: CloseableHttpClient,
+  implicit val stringFormatter: StringFormatter
 ) extends TriplestoreService {
 
   // MIME type constants.
@@ -359,26 +360,6 @@ case class TriplestoreServiceHttpConnectorImpl(
   }
 
   /**
-   * Gets all graphs stored in the triplestore.
-   *
-   * @return All graphs stored in the triplestore as a [[Seq[String]]
-   */
-  def getAllGraphs(): UIO[Seq[String]] = {
-    val sparqlQuery =
-      """|
-         | SELECT DISTINCT ?graph 
-         | WHERE {
-         |  GRAPH ?graph { ?s ?p ?o }
-         | }""".stripMargin
-
-    for {
-      res      <- sparqlHttpSelect(sparqlQuery)
-      bindings <- ZIO.succeed(res.results.bindings)
-      graphs    = bindings.map(_.rowMap("graph"))
-    } yield graphs
-  }
-
-  /**
    * Drops all triplestore data graph by graph using "DROP GRAPH" SPARQL query.
    * This method is useful in cases with large amount of data (over 10 million statements),
    * where the method [[dropAllTriplestoreContent()]] could create timeout issues.
@@ -395,6 +376,26 @@ case class TriplestoreServiceHttpConnectorImpl(
            )
       _ <- ZIO.logInfo("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
+  }
+
+  /**
+   * Gets all graphs stored in the triplestore.
+   *
+   * @return All graphs stored in the triplestore as a [[Seq[String]]
+   */
+  private def getAllGraphs(): UIO[Seq[String]] = {
+    val sparqlQuery =
+      """|
+         | SELECT DISTINCT ?graph
+         | WHERE {
+         |  GRAPH ?graph { ?s ?p ?o }
+         | }""".stripMargin
+
+    for {
+      res      <- sparqlHttpSelect(sparqlQuery)
+      bindings <- ZIO.succeed(res.results.bindings)
+      graphs    = bindings.map(_.rowMap("graph"))
+    } yield graphs
   }
 
   /**
@@ -483,12 +484,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    */
   def checkTriplestore(): UIO[CheckTriplestoreResponse] = {
 
-    val triplestoreAvailableResponse =
-      ZIO.succeed(
-        CheckTriplestoreResponse(
-          triplestoreStatus = TriplestoreStatus.Available("Triplestore is available.")
-        )
-      )
+    val triplestoreAvailableResponse = ZIO.succeed(CheckTriplestoreResponse.Available)
 
     val triplestoreNotInitializedResponse =
       ZIO.succeed(
@@ -1040,7 +1036,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
 }
 
-object TriplestoreServiceHttpConnectorImpl {
+object TriplestoreServiceLive {
 
   /**
    * Acquires a configured httpClient, backed by a connection pool,
@@ -1097,12 +1093,12 @@ object TriplestoreServiceHttpConnectorImpl {
       httpClient.close()
     }.tap(_ => ZIO.logInfo(">>> Release Triplestore Service Http Connector <<<")).orDie
 
-  val layer: ZLayer[AppConfig, Nothing, TriplestoreService] =
+  val layer: ZLayer[AppConfig with StringFormatter, Nothing, TriplestoreService] =
     ZLayer.scoped {
       for {
+        sf         <- ZIO.service[StringFormatter]
         config     <- ZIO.service[AppConfig]
-        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
-      } yield TriplestoreServiceHttpConnectorImpl(config, httpClient)
+        httpClient <- ZIO.acquireRelease(acquire(config))(release)
+      } yield TriplestoreServiceLive(config, httpClient, sf)
     }
-
 }
