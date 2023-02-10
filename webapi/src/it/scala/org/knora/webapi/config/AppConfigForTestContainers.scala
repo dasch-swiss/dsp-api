@@ -23,16 +23,16 @@ object AppConfigForTestContainers {
   }
 
   /**
-   * Reads in the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading
+   * Reads in the application configuration using ZIO-Config. ZIO-Config is capable of loading
    * the Typesafe-Config format. Reads the 'app' configuration from 'application.conf'.
    */
   private val source: ConfigSource =
     TypesafeConfigSource.fromTypesafeConfig(ZIO.attempt(ConfigFactory.load().getConfig("app").resolve))
 
   /**
-   * Intantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
+   * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
    */
-  private val config: UIO[AppConfig] = (read(descriptor[AppConfig].mapKey(toKebabCase) from source)).orDie
+  private val config: UIO[AppConfig] = read(descriptor[AppConfig].mapKey(toKebabCase) from source).orDie
 
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
