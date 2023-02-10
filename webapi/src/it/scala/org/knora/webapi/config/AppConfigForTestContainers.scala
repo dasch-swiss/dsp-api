@@ -13,13 +13,12 @@ import zio.config.magnolia._
  */
 object AppConfigForTestContainers {
 
-  private def alterFusekiAndSipiPort(
+  private def createConfigWithSipiPort(
     oldConfig: AppConfig,
     sipiContainer: SipiTestContainer
-  ): UIO[AppConfig] = {
-    val newSipiConfig        = oldConfig.sipi.copy(internalPort = sipiContainer.container.getFirstMappedPort())
-    val newConfig: AppConfig = oldConfig.copy(allowReloadOverHttp = true, sipi = newSipiConfig)
-    ZIO.succeed(newConfig)
+  ): AppConfig = {
+    val newSipiConfig = oldConfig.sipi.copy(internalPort = sipiContainer.container.getFirstMappedPort())
+    oldConfig.copy(allowReloadOverHttp = true, sipi = newSipiConfig)
   }
 
   /**
@@ -42,7 +41,6 @@ object AppConfigForTestContainers {
       for {
         appConfig     <- config
         sipiContainer <- ZIO.service[SipiTestContainer]
-        alteredConfig <- alterFusekiAndSipiPort(appConfig, sipiContainer)
-      } yield alteredConfig
+      } yield createConfigWithSipiPort(appConfig, sipiContainer)
     }.tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<"))
 }
