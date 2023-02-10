@@ -5,7 +5,6 @@ import zio._
 import zio.config._
 import zio.config.typesafe.TypesafeConfigSource
 
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import zio.config.magnolia._
 
@@ -16,37 +15,10 @@ object AppConfigForTestContainers {
 
   private def alterFusekiAndSipiPort(
     oldConfig: AppConfig,
-    fusekiContainer: FusekiTestContainer,
     sipiContainer: SipiTestContainer
   ): UIO[AppConfig] = {
-
-    val newFusekiPort = fusekiContainer.container.getFirstMappedPort()
-    val newSipiPort   = sipiContainer.container.getFirstMappedPort()
-
-    val alteredFuseki = oldConfig.triplestore.fuseki.copy(port = newFusekiPort)
-
-    val alteredTriplestore = oldConfig.triplestore.copy(fuseki = alteredFuseki)
-    val alteredSipi        = oldConfig.sipi.copy(internalPort = newSipiPort)
-
-    val newConfig: AppConfig =
-      oldConfig.copy(allowReloadOverHttp = true, triplestore = alteredTriplestore, sipi = alteredSipi)
-
-    ZIO.succeed(newConfig)
-  }
-
-  private def alterFusekiPort(
-    oldConfig: AppConfig,
-    fusekiContainer: FusekiTestContainer
-  ): UIO[AppConfig] = {
-
-    val newFusekiPort = fusekiContainer.container.getFirstMappedPort()
-
-    val alteredFuseki = oldConfig.triplestore.fuseki.copy(port = newFusekiPort)
-
-    val alteredTriplestore = oldConfig.triplestore.copy(fuseki = alteredFuseki)
-
-    val newConfig: AppConfig = oldConfig.copy(triplestore = alteredTriplestore)
-
+    val newSipiConfig        = oldConfig.sipi.copy(internalPort = sipiContainer.container.getFirstMappedPort())
+    val newConfig: AppConfig = oldConfig.copy(allowReloadOverHttp = true, sipi = newSipiConfig)
     ZIO.succeed(newConfig)
   }
 
@@ -65,25 +37,12 @@ object AppConfigForTestContainers {
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
    */
-  val testcontainers: ZLayer[FusekiTestContainer & SipiTestContainer, Nothing, AppConfig] =
+  val testcontainers: ZLayer[SipiTestContainer, Nothing, AppConfig] =
     ZLayer {
       for {
-        appConfig       <- config
-        fusekiContainer <- ZIO.service[FusekiTestContainer]
-        sipiContainer   <- ZIO.service[SipiTestContainer]
-        alteredConfig   <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer)
+        appConfig     <- config
+        sipiContainer <- ZIO.service[SipiTestContainer]
+        alteredConfig <- alterFusekiAndSipiPort(appConfig, sipiContainer)
       } yield alteredConfig
     }.tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<"))
-
-  /**
-   * Altered AppConfig with ports from TestContainers for Fuseki.
-   */
-  val fusekiOnlyTestcontainer: ZLayer[FusekiTestContainer, Nothing, AppConfig] =
-    ZLayer {
-      for {
-        appConfig       <- config
-        fusekiContainer <- ZIO.service[FusekiTestContainer]
-        alteredConfig   <- alterFusekiPort(appConfig, fusekiContainer)
-      } yield alteredConfig
-    }.tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki only Testcontainers Initialized <<<"))
 }

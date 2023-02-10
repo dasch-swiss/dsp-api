@@ -9,10 +9,9 @@ import zio._
 import zio.test.Assertion._
 import zio.test._
 
-import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
  * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive]].
@@ -26,8 +25,7 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
   val testLayer: ULayer[TriplestoreService] =
     ZLayer.make[TriplestoreService](
       TriplestoreServiceLive.layer,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      FusekiTestContainer.layer,
+      AppConfig.layer,
       StringFormatter.test
     )
 

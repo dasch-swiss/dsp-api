@@ -24,7 +24,6 @@ import zio.ULayer
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
-
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -65,6 +64,7 @@ import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.ensureUnionModel
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
@@ -118,12 +118,6 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       }
     }
     ZIO.acquireRelease(acquire)(release)
-  }
-
-  private def ensureUnionModel(ds: Dataset): Unit = {
-    ds.begin(ReadWrite.WRITE)
-    try { ds.setDefaultModel(ds.getUnionModel); ds.commit() }
-    finally { ds.end() }
   }
 
   private def toSparqlSelectResult(resultSet: ResultSet): SparqlSelectResult = {
@@ -372,12 +366,15 @@ object TriplestoreServiceInMemory {
    */
   val createEmptyDataset: UIO[Dataset] = ZIO.succeed({
     val ds = TDB2Factory.createDataset()
-    ds.begin()
-    val unionModel = ds.getUnionModel
-    ds.setDefaultModel(unionModel)
-    ds.end()
+    ensureUnionModel(ds)
     ds
   })
+
+  def ensureUnionModel(ds: Dataset): Unit = {
+    ds.begin(ReadWrite.WRITE)
+    try { ds.setDefaultModel(ds.getUnionModel); ds.commit() }
+    finally { ds.end() }
+  }
 
   val emptyDatasetLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
