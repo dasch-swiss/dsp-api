@@ -27,7 +27,6 @@ import org.knora.webapi.util.cache.CacheUtil
  * Represents the configuration as defined in application.conf.
  */
 final case class AppConfig(
-  testing: Boolean = false,
   printExtendedConfig: Boolean,
   defaultTimeout: String,
   dumpMessages: Boolean,
