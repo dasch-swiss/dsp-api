@@ -333,7 +333,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def checkTriplestore(): UIO[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
 
   override def downloadRepository(outputFile: Path): UIO[FileWrittenResponse] =
-    ZIO.die(new UnsupportedOperationException("Not implemented in fake"))
+    ZIO.die(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
 
   override def uploadRepository(inputFile: Path): UIO[RepositoryUploadedResponse] =
     ZIO.die(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
