@@ -305,7 +305,82 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
             _ <- TriplestoreService.sparqlHttpGraphFile("http://www.knora.org/ontology/knora-base", testFile, TriG)
           } yield assertTrue({ val fileExists = Files.exists(testFile); fileExists })
         }
-      })
+      }),
+      test("foo") {
+        val insert = """
+                       |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                       |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                       |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+                       |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+                       |
+                       |INSERT {
+                       |    GRAPH ?adminNamedGraphIri {
+                       |        ?projectIri rdf:type ?projectClassIri ;
+                       |                    knora-admin:projectShortname "newproject"^^xsd:string ;
+                       |                    knora-admin:projectShortcode "111C"^^xsd:string ;
+                       |                    knora-admin:projectLongname "project longname"^^xsd:string ;
+                       |                    knora-admin:projectDescription "project description"@en ;
+                       |                    knora-admin:projectKeyword "keywords"^^xsd:string ;
+                       |                    knora-admin:projectLogo "/fu/bar/baz.jpg"^^xsd:string ;
+                       |                    knora-admin:status "true"^^xsd:boolean ;
+                       |                    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
+                       |    }
+                       |}
+                       |WHERE {
+                       |    BIND(IRI("http://www.knora.org/data/admin") AS ?adminNamedGraphIri)
+                       |    BIND(IRI("http://rdfh.ch/projects/gnUZ3Yl2SYCPSdN6NavK6g") AS ?projectIri)
+                       |    BIND(IRI("http://www.knora.org/ontology/knora-admin#knoraProject") AS ?projectClassIri)
+                       |}
+                       |""".stripMargin
+        val construct =
+          """
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+            |
+            |CONSTRUCT { ?s ?p ?o . }
+            |
+            |WHERE {
+            |    BIND(IRI("http://rdfh.ch/projects/OlDoTzvDSdqUcYTTBBqo1g") as ?s)
+            |    
+            |    ?s rdf:type knora-admin:knoraProject .
+            |    ?s ?p ?o .
+            |}
+            |""".stripMargin
+        for {
+          _ <- TriplestoreService.sparqlHttpUpdate(insert)
+          c <- TriplestoreService.sparqlHttpExtendedConstruct(SparqlExtendedConstructRequest(construct))
+          a <-
+            TriplestoreService
+              .sparqlHttpAsk(
+                s"""
+                   |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                   |
+                   |ASK WHERE {
+                   |  <http://rdfh.ch/projects/gnUZ3Yl2SYCPSdN6NavK6g> a <http://www.knora.org/ontology/knora-admin#knoraProject> .
+                   |}
+                   |""".stripMargin
+              )
+              .map(_.result)
+          b <-
+            TriplestoreService
+              .sparqlHttpAsk(
+                s"""
+                   |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                   |
+                   |ASK
+                   |WHERE {
+                   |  GRAPH <http://www.knora.org/data/admin> {
+                   |    <http://rdfh.ch/projects/gnUZ3Yl2SYCPSdN6NavK6g> a <http://www.knora.org/ontology/knora-admin#knoraProject> .
+                   |  }
+                   |}
+                   |""".stripMargin
+              )
+              .map(_.result)
+        } yield assertTrue(a && b)
+      }
     ).provide(TriplestoreServiceInMemory.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
 
   private def namedModelExists(ds: Dataset, name: String) = {

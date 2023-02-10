@@ -1135,24 +1135,17 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    */
   private def getProjectFromTriplestore(
     identifier: ProjectIdentifierADM
-  ): Future[Option[ProjectADM]] =
+  ): Future[Option[ProjectADM]] = {
+    val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+      .getProjects(
+        maybeIri = identifier.asIriIdentifierOption,
+        maybeShortname = identifier.asShortnameIdentifierOption,
+        maybeShortcode = identifier.asShortcodeIdentifierOption
+      )
+      .toString()
     for {
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getProjects(
-                           maybeIri = identifier.asIriIdentifierOption,
-                           maybeShortname = identifier.asShortnameIdentifierOption,
-                           maybeShortcode = identifier.asShortcodeIdentifierOption
-                         )
-                         .toString()
-                     )
-
       projectResponse <- appActor
-                           .ask(
-                             SparqlExtendedConstructRequest(
-                               sparql = sparqlQuery
-                             )
-                           )
+                           .ask(SparqlExtendedConstructRequest(sparqlQuery))
                            .mapTo[SparqlExtendedConstructResponse]
 
       projectIris = projectResponse.statements.keySet.map(_.toString)
@@ -1174,6 +1167,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
           None
         }
     } yield maybeProjectADM
+  }
 
   /**
    * Helper method that turns SPARQL result rows into a [[ProjectADM]].

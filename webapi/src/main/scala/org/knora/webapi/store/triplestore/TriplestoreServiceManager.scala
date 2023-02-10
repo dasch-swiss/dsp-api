@@ -7,9 +7,10 @@ package org.knora.webapi.store.triplestore
 
 import zio._
 import zio.macros.accessible
-import java.nio.file.Path
-import dsp.errors.UnexpectedMessageException
 
+import java.nio.file.Path
+
+import dsp.errors.UnexpectedMessageException
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreRequest
 import org.knora.webapi.messages.store.triplestoremessages.DownloadRepositoryRequest
