@@ -234,8 +234,7 @@ final case class HttpServer(
 )
 
 /**
- * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading
- * the Typesafe-Config format.
+ * Loads the application configuration using ZIO-Config from a Typesafe-Config format in `application.conf`.
  */
 object AppConfig {
 
