@@ -29,7 +29,7 @@ object ZScopedJavaIoStreams {
   def fileInputStream(path: Path): ZIO[Any with Scope, Throwable, InputStream] = {
     def acquire = ZIO.attempt(Files.newInputStream(path))
     if (!Files.exists(path)) {
-      ZIO.fail(new IllegalArgumentException(s"File ${path.toAbsolutePath} does not exist"))
+      ZIO.fail(new IllegalArgumentException(s"File ${path.toAbsolutePath} does not exist."))
     } else {
       ZIO.acquireRelease(acquire)(release).flatMap(bufferedInputStream)
     }
