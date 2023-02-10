@@ -351,7 +351,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 object TriplestoreServiceInMemory {
 
   /**
-   * Create an empty TBD2 [[Dataset]]
+   * Creates an empty TBD2 [[Dataset]].
    *
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
