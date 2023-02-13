@@ -252,10 +252,11 @@ class GroupsResponderADM(responderData: ResponderData)
           groupIri = groupIri
         )
 
-      result = maybeGroupADM match {
-                 case Some(group) => GroupGetResponseADM(group = group)
-                 case None        => throw NotFoundException(s"Group <$groupIri> not found")
-               }
+      result =
+        maybeGroupADM match {
+          case Some(group) => GroupGetResponseADM(group = group)
+          case None        => throw NotFoundException(s"Group <$groupIri> not found.")
+        }
     } yield result
 
   /**
