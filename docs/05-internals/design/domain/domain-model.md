@@ -481,5 +481,6 @@ classDiagram
   FileValue <|-- MovingImageFileValue
   FileValue <|-- StillImageFileValue
   FileValue <|-- TextFileValue
+  ValueBase .. StandoffInternalReferenceTag
 ```
 
