@@ -552,40 +552,43 @@ classDiagram
 ---
 title: Standoff ontology
 ---
-classDiagram
+flowchart BT
   %% Classes
-  class StandoffRootTag {
-    string standoffRootTagHasDocumentType
-  }
-  class StandoffHyperlinkTag {
-    string standoffHyperlinkTagHasTarget
-  }
+  %% class StandoffRootTag {
+  %%   string standoffRootTagHasDocumentType
+  %% }
+  %% class StandoffHyperlinkTag {
+  %%   string standoffHyperlinkTagHasTarget
+  %% }
   %% Relationships
-  StandoffTag .. StandoffVisualTag
-  StandoffTag .. StandoffStructuralTag
-  StandoffTag .. StandoffRootTag
-  StandoffTag .. StandoffHyperlinkTag
-  StandoffVisualTag <|-- StandoffItalicTag
-  StandoffVisualTag <|-- StandoffBoldTag
-  StandoffVisualTag <|-- StandoffCiteTag
-  StandoffVisualTag <|-- StandoffUnderlineTag
-  StandoffVisualTag <|-- StandoffStrikethroughTag
-  StandoffVisualTag <|-- StandoffSuperscriptTag
-  StandoffVisualTag <|-- StandoffSubscriptTag
-  StandoffVisualTag <|-- StandoffLineTag
-  StandoffVisualTag <|-- StandoffPreTag
-  StandoffStructuralTag <|-- StandoffBlockquoteTag
-  StandoffStructuralTag <|-- StandoffCodeTag
-  StandoffStructuralTag <|-- StandoffParagraphTag
-  StandoffStructuralTag <|-- StandoffHeader_1_to_6_Tag
-  StandoffStructuralTag <|-- StandoffOrderedListTag
-  StandoffStructuralTag <|-- StandoffUnorderedListTag
-  StandoffStructuralTag <|-- StandoffListElementTag
-  StandoffStructuralTag <|-- StandoffTableBodyTag
-  StandoffStructuralTag <|-- StandoffTableTag
-  StandoffStructuralTag <|-- StandoffTableRowTag
-  StandoffStructuralTag <|-- StandoffTableCellTag
-  StandoffStructuralTag <|-- StandoffBrTag
+  StandoffRootTag["StandoffRootTag \n ----- \n string standoffRootTagHasDocumentType"]
+  StandoffHyperlinkTag["StandoffHyperlinkTag \n ----- \n string standoffHyperlinkTagHasTarget"]
+  StandoffVisualTag -..-> StandoffTag 
+  StandoffRootTag -.-> StandoffTag 
+  StandoffHyperlinkTag -.-> StandoffTag 
+  StandoffStructuralTag -....-> StandoffTag 
+
+  StandoffItalicTag --> StandoffVisualTag 
+  StandoffBoldTag --> StandoffVisualTag 
+  StandoffCiteTag --> StandoffVisualTag 
+  StandoffUnderlineTag --> StandoffVisualTag 
+  StandoffStrikethroughTag --> StandoffVisualTag 
+  StandoffSuperscriptTag --> StandoffVisualTag 
+  StandoffSubscriptTag --> StandoffVisualTag 
+  StandoffLineTag --> StandoffVisualTag 
+  StandoffPreTag --> StandoffVisualTag 
+  StandoffBlockquoteTag --> StandoffStructuralTag 
+  StandoffCodeTag --> StandoffStructuralTag 
+  StandoffParagraphTag --> StandoffStructuralTag 
+  StandoffHeader_1_to_6_Tag --> StandoffStructuralTag 
+  StandoffOrderedListTag --> StandoffStructuralTag 
+  StandoffUnorderedListTag --> StandoffStructuralTag 
+  StandoffListElementTag --> StandoffStructuralTag 
+  StandoffTableBodyTag --> StandoffStructuralTag 
+  StandoffTableTag --> StandoffStructuralTag 
+  StandoffTableRowTag --> StandoffStructuralTag 
+  StandoffTableCellTag --> StandoffStructuralTag 
+  StandoffBrTag --> StandoffStructuralTag 
 ```
 
 
@@ -593,6 +596,9 @@ classDiagram
 ## Property Hierarchy
 
 ```mermaid
+---
+title: resource properties
+---
 flowchart BT
   hasValue ---> resourceProperty
   hasLinkTo --> resourceProperty
