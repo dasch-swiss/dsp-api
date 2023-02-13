@@ -492,3 +492,52 @@ classDiagram
   TimeBase .. StandoffTimeTag
 ```
 
+```mermaid
+---
+title: Standoff in knora-base
+---
+classDiagram
+  %% Classes
+  class StandoffTag {
+    integer standoffHasStartTag
+    integer standoffHasEndTag
+    string standoffHasUUID
+    string standoffHasOriginalXMLID
+    integer standoffHasStartIndex
+    integer standoffHasEndIndex
+    StandoffTag standoffTagHasStartParent
+    StandoffTag standoffTagHasEndParent
+    ??? standoffParentClassConstraint
+  }
+  class StandoffInternalReferenceTag {
+    StandoffTag standoffHasInternalReference
+  }
+
+  %% Relationships
+  StandoffTag <|-- StandoffDataTypeTag
+  ValueBase .. ColorBase
+  ValueBase .. DateBase
+  ValueBase .. IntBase
+  ValueBase .. BooleanBase
+  ValueBase .. DecimalBase
+  ValueBase .. UriBase
+  ValueBase .. IntervalBase
+  ValueBase .. TimeBase
+  ValueBase .. StandoffInternalReferenceTag
+  ColorBase .. StandoffColorTag
+  StandoffDataTypeTag .. StandoffColorTag
+  DateBase .. StandoffDateTag
+  StandoffDataTypeTag .. StandoffDateTag
+  IntBase .. StandoffIntegerTag
+  StandoffDataTypeTag .. StandoffIntegerTag
+  BooleanBase .. StandoffBooleanTag
+  StandoffDataTypeTag .. StandoffBooleanTag
+  DecimalBase .. StandoffDecimalTag
+  StandoffDataTypeTag .. StandoffDecimalTag
+  UriBase .. StandoffUriTag
+  StandoffDataTypeTag .. StandoffUriTag
+  IntervalBase .. StandoffIntervalTag
+  StandoffDataTypeTag .. StandoffIntervalTag
+  TimeBase .. StandoffTimeTag
+  StandoffDataTypeTag .. StandoffTimeTag
+```
