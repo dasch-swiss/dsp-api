@@ -7,17 +7,20 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.errors._
 import dsp.valueobjects.Group.GroupStatus
+import zio.ZIO
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.groupsmessages._
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -26,21 +29,33 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 
 /**
  * Returns information about groups.
  */
-class GroupsResponderADM(responderData: ResponderData)
+class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
     extends Responder(responderData.actorDeps)
+    with MessageHandler
     with GroupsADMJsonProtocol {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[GroupsResponderRequestADM]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: GroupsResponderRequestADM => true
+    case _                            => false
+  }
 
   // Global lock IRI used for group creation and updating
   private val GROUPS_GLOBAL_LOCK_IRI: IRI = "http://rdfh.ch/groups"
 
   /**
-   * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
+   * Receives a message extending [[GroupsResponderRequestADM]], and returns an appropriate response message
    */
   def receive(msg: GroupsResponderRequestADM) = msg match {
     case GroupsGetADM()                         => groupsGetADM

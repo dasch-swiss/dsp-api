@@ -6,24 +6,39 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-
 import scala.annotation.tailrec
 import scala.concurrent.Future
-
 import dsp.errors.NotFoundException
+import zio.ZIO
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class ListsResponderV1(responderData: ResponderData, messageRelay: MessageRelay)
+  extends Responder(responderData.actorDeps)
+    with MessageHandler {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[ListsResponderRequestV1]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: ListsResponderRequestV1 => true
+    case _                           => false
+  }
 
   /**
    * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.

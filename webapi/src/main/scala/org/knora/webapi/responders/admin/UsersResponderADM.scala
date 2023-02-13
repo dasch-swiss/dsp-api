@@ -8,15 +8,17 @@ package org.knora.webapi.responders.admin
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
 import dsp.valueobjects.User._
+import zio.ZIO
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -37,15 +39,27 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderADM(responderData: ResponderData)
+class UsersResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
     extends Responder(responderData.actorDeps)
+    with MessageHandler
     with InstrumentationSupport {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[UsersResponderRequestADM]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: UsersResponderRequestADM => true
+    case _                           => false
+  }
 
   // The IRI used to lock user creation and update
   private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"

@@ -7,14 +7,16 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.errors.ApplicationCacheException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+import zio.ZIO
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -27,13 +29,26 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByIRIGe
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class UsersResponderV1(responderData: ResponderData, messageRelay: MessageRelay)
+    extends Responder(responderData.actorDeps)
+    with MessageHandler {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[UsersResponderRequestV1]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: UsersResponderRequestV1 => true
+    case _                          => false
+  }
 
   // The IRI used to lock user creation and update
   val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"

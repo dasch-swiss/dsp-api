@@ -6,10 +6,12 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-
+import zio.ZIO
 import scala.concurrent.Future
 
 import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
@@ -17,12 +19,25 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeInfoGetRe
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.listsmessages._
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 
 /**
  * Responds to requests relating to lists and nodes.
  */
-class ListsResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class ListsResponderV2(responderData: ResponderData, messageRelay: MessageRelay)
+    extends Responder(responderData.actorDeps)
+    with MessageHandler {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[ListsResponderRequestV2]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: ListsResponderRequestV2 => true
+    case _                          => false
+  }
 
   /**
    * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.

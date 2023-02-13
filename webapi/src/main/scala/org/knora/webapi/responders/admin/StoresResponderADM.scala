@@ -7,10 +7,12 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-
 import scala.concurrent.Future
-
 import dsp.errors.ForbiddenException
+import zio.ZIO
+
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
@@ -22,13 +24,26 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 
 /**
  * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
  * 'Store Module'
  */
-class StoresResponderADM(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class StoresResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
+  extends Responder(responderData.actorDeps)
+    with MessageHandler {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[StoreResponderRequestADM]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: StoreResponderRequestADM => true
+    case _                           => false
+  }
 
   /**
    * A user representing the Knora API server, used in those cases where a user is required.

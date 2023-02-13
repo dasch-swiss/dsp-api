@@ -78,7 +78,7 @@ final case class OntologyResponderV2(
   override def handle(message: ResponderRequest): zio.Task[Any] =
     ZIO.fromFuture(_ => receive(message.asInstanceOf[OntologiesResponderRequestV2]))
 
-  override def isReponsibleFor(message: ResponderRequest): Boolean = message match {
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
     case _: OntologiesResponderRequestV2 => true
     case _                               => false
   }

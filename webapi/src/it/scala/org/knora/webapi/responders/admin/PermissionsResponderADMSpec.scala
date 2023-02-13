@@ -7,18 +7,18 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-
 import java.util.UUID
 import scala.collection.Map
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
@@ -149,7 +149,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
 
-        val permissionsResponder = new PermissionsResponderADM(responderData)
+        implicit val runtime: zio.Runtime[Any] = zio.Runtime.default;
+        val permissionsResponder = new PermissionsResponderADM(responderData, MessageRelayLive.empty)
 
         val f: Future[Map[IRI, Set[PermissionADM]]] =
           permissionsResponder.userAdministrativePermissionsGetADM(

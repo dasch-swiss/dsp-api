@@ -6,7 +6,6 @@
 package org.knora.webapi.routing
 
 import zio._
-
 import scala.concurrent.Future
 
 object UnsafeZioRun {
@@ -20,6 +19,9 @@ object UnsafeZioRun {
    */
   def run[R, E, A](effect: ZIO[R, E, A])(implicit r: Runtime[R]): Exit[E, A] =
     Unsafe.unsafe(implicit u => r.unsafe.run(effect))
+
+  def runOrThrow[R, E, A](effect: ZIO[R, E, A])(implicit r: Runtime[R]): A =
+    Unsafe.unsafe(implicit u => r.unsafe.run(effect).getOrThrowFiberFailure())
 
   /**
    * Executes the effect synchronously and returns its result as a

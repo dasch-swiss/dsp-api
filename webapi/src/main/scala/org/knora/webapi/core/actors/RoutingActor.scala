@@ -84,32 +84,34 @@ final case class RoutingActor(
   private implicit val executionContext: ExecutionContext = actorDeps.executionContext
 
   // V1 responders
-  private val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
-  private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
-  private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
-  private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
-  private val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
-  private val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData)
-  private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
-  private val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
-  private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps)
+  private val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData, messageRelay)
+  private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData, messageRelay)
+  private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData, messageRelay)
+  private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData, messageRelay)
+  private val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData, messageRelay)
+  private val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData, messageRelay)
+  private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData, messageRelay)
+  private val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData, messageRelay)
+  private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps, messageRelay)
 
   // V2 responders
   private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, messageRelay, runtime)
-  private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData)
-  private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
-  private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)
-  private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData)
-  private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
+  private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData, messageRelay)
+  private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData, messageRelay)
+  private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData, messageRelay)
+  private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData, messageRelay)
+  private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData, messageRelay)
 
   // Admin responders
-  private val groupsResponderADM: GroupsResponderADM           = new GroupsResponderADM(responderData)
-  private val listsResponderADM: ListsResponderADM             = new ListsResponderADM(responderData)
-  private val permissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
-  private val projectsResponderADM: ProjectsResponderADM       = ProjectsResponderADM(actorDeps, cacheServiceSettings)
-  private val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData)
-  private val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData)
-  private val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
+  private val groupsResponderADM: GroupsResponderADM = new GroupsResponderADM(responderData, messageRelay)
+  private val listsResponderADM: ListsResponderADM   = new ListsResponderADM(responderData, messageRelay)
+  private val permissionsResponderADM: PermissionsResponderADM =
+    new PermissionsResponderADM(responderData, messageRelay)
+  private val projectsResponderADM: ProjectsResponderADM =
+    ProjectsResponderADM(actorDeps, cacheServiceSettings, messageRelay)
+  private val storeResponderADM: StoresResponderADM = new StoresResponderADM(responderData, messageRelay)
+  private val usersResponderADM: UsersResponderADM  = new UsersResponderADM(responderData, messageRelay)
+  private val sipiRouterADM: SipiResponderADM       = new SipiResponderADM(responderData, messageRelay)
 
   def receive: Receive = {
 

@@ -6,13 +6,15 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-
 import scala.concurrent.Future
-
 import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
+import zio.ZIO
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -26,6 +28,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversi
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 
 /**
@@ -34,7 +37,19 @@ import org.knora.webapi.responders.Responder
  * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
  * the application.
  */
-class OntologyResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class OntologyResponderV1(responderData: ResponderData, messageRelay: MessageRelay)
+  extends Responder(responderData.actorDeps)
+    with MessageHandler {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[OntologyResponderRequestV1]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: OntologyResponderRequestV1 => true
+    case _                           => false
+  }
 
   private val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
 

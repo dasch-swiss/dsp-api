@@ -7,12 +7,14 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-
 import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
+import zio.ZIO
+
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
@@ -27,13 +29,26 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
  * ADM format.
  */
-class SipiResponderADM(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class SipiResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
+    extends Responder(responderData.actorDeps)
+    with MessageHandler {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[SipiResponderRequestADM]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: SipiResponderRequestADM => true
+    case _                          => false
+  }
 
   /**
    * Receives a message of type [[SipiResponderRequestADM]], and returns an appropriate response message, or

@@ -7,14 +7,16 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
-
 import dsp.errors._
+import zio.ZIO
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -33,6 +35,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.cache.CacheUtil
@@ -40,7 +43,19 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Provides information about permissions to other responders.
  */
-class PermissionsResponderADM(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class PermissionsResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
+    extends Responder(responderData.actorDeps)
+    with MessageHandler {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[PermissionsResponderRequestADM]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: PermissionsResponderRequestADM => true
+    case _                                 => false
+  }
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
   /* Entity types used to more clearly distinguish what kind of entity is meant */

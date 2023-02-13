@@ -7,7 +7,6 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.Files
@@ -17,12 +16,15 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors.NotFoundException
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
+import zio.ZIO
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -43,6 +45,7 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
@@ -51,9 +54,23 @@ import org.knora.webapi.store.cache.settings.CacheServiceSettings
 /**
  * Returns information about projects.
  */
-final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings: CacheServiceSettings)
-    extends Responder(actorDeps)
+final case class ProjectsResponderADM(
+  actorDeps: ActorDeps,
+  cacheServiceSettings: CacheServiceSettings,
+  messageRelay: MessageRelay
+) extends Responder(actorDeps)
+    with MessageHandler
     with InstrumentationSupport {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[ProjectsResponderRequestADM]))
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: ProjectsResponderRequestADM => true
+    case _                              => false
+  }
 
   // Global lock IRI used for project creation and update
   private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
