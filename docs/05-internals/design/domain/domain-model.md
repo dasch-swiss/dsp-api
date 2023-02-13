@@ -553,7 +553,6 @@ classDiagram
 title: Standoff ontology
 ---
 flowchart BT
-
   StandoffRootTag["StandoffRootTag \n ----- \n string standoffRootTagHasDocumentType"]
   StandoffHyperlinkTag["StandoffHyperlinkTag \n ----- \n string standoffHyperlinkTagHasTarget"]
   StandoffVisualTag -..-> StandoffTag 
@@ -590,7 +589,7 @@ flowchart BT
 
 ```mermaid
 ---
-title: resource properties
+title: resource properties - values
 ---
 flowchart BT
   hasValue ---> resourceProperty
@@ -626,4 +625,61 @@ flowchart BT
   hasStandoffLinkTo ---> hasLinkTo
   isSequenceOf ---> hasLinkTo
   isRegionOf ---> hasLinkTo
+```
+
+
+
+```mermaid
+---
+title: resource properties - resource metadata(?)
+---
+flowchart BT
+  valueHasLanguage
+  objectCannotBeMarkedAsDeleted --> creationDate
+  
+  objectCannotBeMarkedAsDeleted --> deleteDate
+  objectCannotBeMarkedAsDeleted ---> isDeleted
+  objectCannotBeMarkedAsDeleted --> deletedBy
+  objectCannotBeMarkedAsDeleted ---> standoffTagHasEnd
+  objectCannotBeMarkedAsDeleted --> hasSubListNode
+  objectCannotBeMarkedAsDeleted ---> valueHas
+  objectCannotBeMarkedAsDeleted --> standoffTagHasInternalReference 
+  objectCannotBeMarkedAsDeleted ---> standoffTagHasStartAncestor 
+  objectCannotBeMarkedAsDeleted --> standoffTagHasStartParent
+  standoffTagHasStartAncestor ---> standoffTagHasStartParent
+  objectCannotBeMarkedAsDeleted ---> standoffTagHasLink 
+  objectCannotBeMarkedAsDeleted --> standoffTagHasStart 
+  objectCannotBeMarkedAsDeleted ---> standoffTagHasStartIndex
+  objectCannotBeMarkedAsDeleted --> standoffTagHasEndIndex
+  objectCannotBeMarkedAsDeleted ---> standoffTagHasUuid
+  objectCannotBeMarkedAsDeleted --> standoffTagHasEndParent
+  objectCannotBeMarkedAsDeleted ---> standoffTagHasOriginalXMLID
+  objectCannotBeMarkedAsDeleted --> targetHasOriginalXMLID
+  objectCannotBeMarkedAsDeleted ---> hasMappingElement
+  objectCannotBeMarkedAsDeleted --> mappingHasXMLTagname
+  objectCannotBeMarkedAsDeleted ---> mappingHasXMLNamespace
+  objectCannotBeMarkedAsDeleted --> mappingHasXMLClass
+  objectCannotBeMarkedAsDeleted ---> mappingHasStandoffClass
+  objectCannotBeMarkedAsDeleted --> mappingHasXMLAttribute
+  objectCannotBeMarkedAsDeleted ---> mappingHasXMLAttributename
+  objectCannotBeMarkedAsDeleted --> mappingHasStandoffProperty
+  objectCannotBeMarkedAsDeleted ---> mappingHasStandoffDataTypeClass
+  objectCannotBeMarkedAsDeleted --> mappingElementRequiresSeparator
+  objectCannotBeMarkedAsDeleted ---> mappingHasDefaultXSLTransformation
+  objectCannotBeMarkedAsDeleted --> mappingHasDefaultXSLTransformation
+
+  valueHas --> duration
+  valueHas ---> pageCount
+  valueHas --> dimY
+  valueHas ---> dimX
+  valueHas --> valueHasStandoff
+  valueHas ---> valueHasMaxStandoffStartIndex
+  valueHas --> previousValue
+  valueHas ---> ValueHasMapping
+  valueHas --> extResAccessInfo
+  valueHas ---> extResId
+  valueHas --> extResProvider
+  valueHas ---> fps
+  valueHas --> internalFilename
+  valueHas ---> internalMimeType
 ```
