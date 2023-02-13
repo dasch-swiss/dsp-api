@@ -60,7 +60,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   private def applyRoutes(request: Request): ZIO[ProjectsService, Option[Nothing], Response] = ZIO
     .serviceWithZIO[ProjectsRouteZ](_.route.apply(request))
     .provideSome[ProjectsService](
-      AppConfig.test,
+      AppConfig.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.mock(Some(KnoraSystemInstances.Users.SystemUser)),
       ProjectsRouteZ.layer

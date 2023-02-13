@@ -113,16 +113,6 @@ object OntologyConstants {
     val DateTimeStamp: IRI = XsdPrefixExpansion + "dateTimeStamp"
   }
 
-  object Shacl {
-    val ShaclPrefixExpansion: IRI = "http://www.w3.org/ns/shacl#"
-
-    val Conforms: IRI                    = ShaclPrefixExpansion + "conforms"
-    val Result: IRI                      = ShaclPrefixExpansion + "result"
-    val SourceConstraintComponent: IRI   = ShaclPrefixExpansion + "sourceConstraintComponent"
-    val DatatypeConstraintComponent: IRI = ShaclPrefixExpansion + "DatatypeConstraintComponent"
-    val MaxCountConstraintComponent: IRI = ShaclPrefixExpansion + "MaxCountConstraintComponent"
-  }
-
   /**
    * http://schema.org
    */

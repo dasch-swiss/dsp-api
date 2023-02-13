@@ -29,7 +29,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
-import dsp.valueobjects.Iri
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.

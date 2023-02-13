@@ -27,7 +27,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants._
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
-import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 
@@ -59,10 +59,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       }
     }
 
-    private val sf: StringFormatter = {
-      StringFormatter.initForTest()
-      StringFormatter.getGeneralInstance
-    }
+    private val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
     val anythingOntologySmartIri: SmartIri = sf.toSmartIri("http://www.knora.org/ontology/0001/anything")
     val thingSmartIri: SmartIri            = anythingOntologySmartIri.makeEntityIri("Thing")
@@ -172,7 +169,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     OntologyRepoLive.layer,
     PredicateRepositoryLive.layer,
     StringFormatter.test,
-    TriplestoreServiceFake.layer
+    TriplestoreServiceInMemory.layer
   )
 
   override def spec: Spec[Any, Throwable] =
@@ -415,7 +412,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             }
           }
         )
-      ).provide(commonLayers, emptyDataSet),
+      ).provide(commonLayers, emptyDataset),
       suite("canSetCardinality with property in use twice")(
         test(s"""
                 |Given the previous cardinality on the class/property

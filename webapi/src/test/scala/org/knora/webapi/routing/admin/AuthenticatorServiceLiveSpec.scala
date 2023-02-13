@@ -19,7 +19,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
 
   private val cookieName = "cookieName"
 
-  private implicit val sf: StringFormatter = { StringFormatter.initForTest(); StringFormatter.getGeneralInstance }
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   val headerInvalidSuite = suite("given invalid header authentication")(
     test("should fail to extract user email (basic auth)") {
