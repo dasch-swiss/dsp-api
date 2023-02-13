@@ -483,12 +483,12 @@ classDiagram
   FileValue <|-- TextFileValue
   ValueBase .. StandoffInternalReferenceTag
   ColorBase .. StandoffColorTag
-  ColorBase .. StandoffDateTag
-  ColorBase .. StandoffIntegerTag
-  ColorBase .. StandoffBooleanTag
-  ColorBase .. StandoffDecimalTag
-  ColorBase .. StandoffUriTag
-  ColorBase .. StandoffIntervalTag
-  ColorBase .. StandoffTimeTag
+  DateBase .. StandoffDateTag
+  IntegerBase .. StandoffIntegerTag
+  BooleanBase .. StandoffBooleanTag
+  DecimalBase .. StandoffDecimalTag
+  UriBase .. StandoffUriTag
+  IntervalBase .. StandoffIntervalTag
+  TimeBase .. StandoffTimeTag
 ```
 
