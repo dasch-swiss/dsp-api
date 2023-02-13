@@ -484,7 +484,7 @@ classDiagram
   ValueBase .. StandoffInternalReferenceTag
   ColorBase .. StandoffColorTag
   DateBase .. StandoffDateTag
-  IntegerBase .. StandoffIntegerTag
+  IntBase .. StandoffIntegerTag
   BooleanBase .. StandoffBooleanTag
   DecimalBase .. StandoffDecimalTag
   UriBase .. StandoffUriTag
