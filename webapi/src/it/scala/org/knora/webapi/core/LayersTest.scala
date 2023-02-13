@@ -7,6 +7,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.admin.SipiResponderADM
+import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -53,6 +55,7 @@ object LayersTest {
     with RestCardinalityService
     with RestResourceInfoService
     with State
+    with SipiResponderADM
     with StringFormatter
     with TestClientService
     with TriplestoreService
@@ -76,6 +79,7 @@ object LayersTest {
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
+      SipiResponderADMLive.layer,
       State.layer,
       StringFormatter.test,
       TestClientService.layer,
@@ -87,6 +91,7 @@ object LayersTest {
     ZLayer.make[FusekiTestContainer with SipiTestContainer with AppConfig with JWTService with IIIFService](
       AppConfigForTestContainers.testcontainers,
       FusekiTestContainer.layer,
+      SipiResponderADMLive.layer,
       SipiTestContainer.layer,
       IIIFServiceSipiImpl.layer,
       JWTService.layer

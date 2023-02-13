@@ -12,11 +12,12 @@ import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
 import dsp.errors._
+import zio.Task
+import zio.ZIO
+
 import org.knora.webapi.messages.StringFormatter
 
 /**
@@ -42,9 +43,14 @@ abstract class Responder(actorDeps: ActorDeps) extends LazyLogging {
    * @param who     the responder receiving the message.
    */
   protected def handleUnexpectedMessage(message: Any, log: Logger, who: String): Future[Nothing] =
-    FastFuture.failed(
-      UnexpectedMessageException(
-        s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}"
-      )
-    )
+    Responder.handleUnexpectedMessageFuture(message, who)
+}
+object Responder {
+  private def unexpectedException(message: Any, who: String) = UnexpectedMessageException(
+    s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}"
+  )
+  private def handleUnexpectedMessageFuture(message: Any, who: String): Future[Nothing] =
+    FastFuture.failed(unexpectedException(message, who))
+  def handleUnexpectedMessageTask(message: Any, who: String): Task[Nothing] =
+    ZIO.fail(unexpectedException(message, who))
 }

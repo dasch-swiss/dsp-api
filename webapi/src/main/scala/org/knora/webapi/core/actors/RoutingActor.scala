@@ -16,7 +16,6 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderR
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
@@ -44,7 +43,6 @@ import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.v1.CkanResponderV1
@@ -113,7 +111,6 @@ final case class RoutingActor(
     ProjectsResponderADM(actorDeps, cacheServiceSettings, messageRelay)
   private val storeResponderADM: StoresResponderADM = new StoresResponderADM(responderData, messageRelay)
   private val usersResponderADM: UsersResponderADM  = new UsersResponderADM(responderData, messageRelay)
-  private val sipiRouterADM: SipiResponderADM       = new SipiResponderADM(responderData, messageRelay)
 
   def receive: Receive = {
 
@@ -164,8 +161,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), storeResponderADM.receive(storeResponderRequestADM), log)
     case usersResponderRequestADM: UsersResponderRequestADM =>
       ActorUtil.future2Message(sender(), usersResponderADM.receive(usersResponderRequestADM), log)
-    case sipiResponderRequestADM: SipiResponderRequestADM =>
-      ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
     case msg: CacheServiceRequest =>
       ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), log, runtime)
     case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, runtime)

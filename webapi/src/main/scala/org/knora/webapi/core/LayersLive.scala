@@ -15,6 +15,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.admin.ProjectsService
+import org.knora.webapi.responders.admin.SipiResponderADM
+import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -58,6 +60,7 @@ object LayersLive {
       with RestResourceInfoService
       with RestCardinalityService
       with State
+      with SipiResponderADM
       with TriplestoreServiceManager
       with TriplestoreService
 
@@ -94,6 +97,7 @@ object LayersLive {
       ResourceInfoRoute.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
+      SipiResponderADMLive.layer,
       State.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,

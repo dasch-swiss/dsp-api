@@ -5,13 +5,10 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
-import scala.concurrent.Future
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
-import zio.ZIO
+import zio._
 
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -28,22 +25,21 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.responders.Responder
+
+trait SipiResponderADM {
+  def getFileInfoForSipiADM(request: SipiFileInfoGetRequestADM): Task[SipiFileInfoGetResponseADM]
+
+}
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
  * ADM format.
  */
-class SipiResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
-    extends Responder(responderData.actorDeps)
-    with MessageHandler {
+case class SipiResponderADMLive(messageRelay: MessageRelay) extends MessageHandler with SipiResponderADM {
 
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[SipiResponderRequestADM]))
+  override def handle(message: ResponderRequest): Task[Any] =
+    this.receive(message.asInstanceOf[SipiResponderRequestADM])
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
     case _: SipiResponderRequestADM => true
@@ -55,9 +51,8 @@ class SipiResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
    * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
    * method first returns `Failure` to the sender, then throws an exception.
    */
-  def receive(msg: SipiResponderRequestADM) = msg match {
+  def receive(msg: SipiResponderRequestADM): Task[Any] = msg match {
     case sipiFileInfoGetRequestADM: SipiFileInfoGetRequestADM => getFileInfoForSipiADM(sipiFileInfoGetRequestADM)
-    case other                                                => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,28 +64,19 @@ class SipiResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
    * @param request the request.
    * @return a [[SipiFileInfoGetResponseADM]].
    */
-  private def getFileInfoForSipiADM(request: SipiFileInfoGetRequestADM): Future[SipiFileInfoGetResponseADM] = {
-
-    log.debug(
-      s"SipiResponderADM - getFileInfoForSipiADM: projectID: ${request.projectID}, filename: ${request.filename}, user: ${request.requestingUser.username}"
-    )
-
+  def getFileInfoForSipiADM(request: SipiFileInfoGetRequestADM): Task[SipiFileInfoGetResponseADM] =
     for {
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getFileValue(
-                           filename = request.filename
-                         )
-                         .toString()
-                     )
-
-      queryResponse: SparqlExtendedConstructResponse <- appActor
-                                                          .ask(
-                                                            SparqlExtendedConstructRequest(
-                                                              sparql = sparqlQuery
-                                                            )
-                                                          )
-                                                          .mapTo[SparqlExtendedConstructResponse]
+      _ <-
+        ZIO.logDebug(
+          s"SipiResponderADM - getFileInfoForSipiADM: projectID: ${request.projectID}, filename: ${request.filename}, user: ${request.requestingUser.username}"
+        )
+      query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                .getFileValue(request.filename)
+                .toString()
+      queryResponse <-
+        messageRelay
+          .ask(SparqlExtendedConstructRequest(query))
+          .map(any => any.asInstanceOf[SparqlExtendedConstructResponse])
 
       _ = if (queryResponse.statements.isEmpty)
             throw NotFoundException(s"No file value was found for filename ${request.filename}")
@@ -120,8 +106,8 @@ class SipiResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
                                                           requestingUser = request.requestingUser
                                                         )
 
-      _ =
-        log.debug(
+      _ <-
+        ZIO.logDebug(
           s"SipiResponderADM - getFileInfoForSipiADM - maybePermissionCode: $maybeEntityPermission, requestingUser: ${request.requestingUser.username}"
         )
 
@@ -133,7 +119,7 @@ class SipiResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
                     case 1 =>
                       for {
                         maybeRVSettings <-
-                          appActor
+                          messageRelay
                             .ask(
                               ProjectRestrictedViewSettingsGetADM(
                                 identifier = ShortcodeIdentifier
@@ -141,16 +127,22 @@ class SipiResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
                                   .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                               )
                             )
-                            .mapTo[Option[ProjectRestrictedViewSettingsADM]]
+                            .map(any => any.asInstanceOf[Option[ProjectRestrictedViewSettingsADM]])
                       } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
 
-                    case _ =>
-                      FastFuture.successful(
-                        SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None)
-                      )
+                    case _ => ZIO.succeed(SipiFileInfoGetResponseADM(permissionCode, None))
                   }
 
-      _ = log.info(s"filename ${request.filename}, permission code: $permissionCode")
+      _ <- ZIO.logInfo(s"filename ${request.filename}, permission code: $permissionCode")
     } yield response
+}
+
+object SipiResponderADMLive {
+  val layer: URLayer[MessageRelay, SipiResponderADM] = ZLayer.fromZIO {
+    for {
+      relay    <- ZIO.service[MessageRelay]
+      responder = SipiResponderADMLive(relay)
+      _         = relay.subscribe(responder)
+    } yield responder
   }
 }
