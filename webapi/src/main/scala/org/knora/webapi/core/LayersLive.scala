@@ -83,6 +83,7 @@ object LayersLive {
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       JWTService.layer,
+      MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,
