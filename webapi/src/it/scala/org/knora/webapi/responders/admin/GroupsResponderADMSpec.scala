@@ -238,7 +238,6 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
 
         val statusChangeResponse = expectMsgType[GroupOperationResponseADM](timeout)
-
         statusChangeResponse.group.status shouldBe false
 
         appActor ! GroupMembersGetRequestADM(

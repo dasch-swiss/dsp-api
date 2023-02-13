@@ -375,8 +375,12 @@ class GroupsResponderADM(responderData: ResponderData)
           requestingUser = requestingUser
         )
 
-      members = maybeMembersListToReturn
-    } yield GroupMembersGetResponseADM(members)
+      result =
+        maybeMembersListToReturn match {
+          case members: Seq[UserADM] if members.nonEmpty => GroupMembersGetResponseADM(members = members)
+          case _                                         => throw NotFoundException(s"No members found.")
+        }
+    } yield result
   }
 
   /**
