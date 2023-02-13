@@ -38,6 +38,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponde
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADM
@@ -61,6 +62,7 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
@@ -74,7 +76,7 @@ final case class RoutingActor(
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  runtime: zio.Runtime[CardinalityService]
+  implicit val runtime: zio.Runtime[CardinalityService]
 ) extends Actor {
 
   private val log: Logger                                 = Logger(this.getClass)
@@ -169,6 +171,7 @@ final case class RoutingActor(
     case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, runtime)
     case msg: TriplestoreRequest =>
       ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), log, runtime)
+    case req: ResponderRequest => UnsafeZioRun.runOrThrow(messageRelay.ask(req))
 
     case other =>
       throw UnexpectedMessageException(
