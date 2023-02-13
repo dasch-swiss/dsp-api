@@ -12,7 +12,6 @@ import dsp.errors.UnexpectedMessageException
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
@@ -39,7 +38,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponder
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
@@ -103,7 +101,6 @@ final case class RoutingActor(
   private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData, messageRelay)
 
   // Admin responders
-  private val groupsResponderADM: GroupsResponderADM = new GroupsResponderADM(responderData, messageRelay)
   private val listsResponderADM: ListsResponderADM   = new ListsResponderADM(responderData, messageRelay)
   private val permissionsResponderADM: PermissionsResponderADM =
     new PermissionsResponderADM(responderData, messageRelay)
@@ -149,8 +146,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
     // Admin request messages
-    case groupsResponderRequestADM: GroupsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), groupsResponderADM.receive(groupsResponderRequestADM), log)
     case listsResponderRequest: ListsResponderRequestADM =>
       ActorUtil.future2Message(sender(), listsResponderADM.receive(listsResponderRequest), log)
     case permissionsResponderRequestADM: PermissionsResponderRequestADM =>

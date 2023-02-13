@@ -9,12 +9,13 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import zio.ZLayer
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import zio.Task
+import zio.ZIO
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -106,6 +107,9 @@ final case class EntityAndClassIriService(
     val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isClassUsedInData(classIri = classIri).toString()
     appActor.ask(SparqlSelectRequest(query)).mapTo[SparqlSelectResult].map(_.results.bindings.nonEmpty)
   }
+
+  def checkOrCreateEntityIriTask(entityIri: Option[SmartIri], iriFormatter: => IRI): Task[IRI] =
+    ZIO.fromFuture(implicit ec => checkOrCreateEntityIri(entityIri, iriFormatter))
 
   /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.

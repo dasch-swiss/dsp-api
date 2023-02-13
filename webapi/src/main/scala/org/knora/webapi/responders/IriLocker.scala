@@ -10,8 +10,10 @@ import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
 import dsp.errors.ApplicationLockException
+import zio.Task
+import zio.ZIO
+
 import org.knora.webapi.IRI
 import org.knora.webapi.util.JavaUtil
 
@@ -82,6 +84,12 @@ object IriLocker {
         decrementOrReleaseLock(iri, apiRequestID)
       }
     }
+
+  def runWithIriLockZio[T](apiRequestID: UUID, iri: IRI, task: Task[T]): Task[T] = {
+    val acquire: Task[Unit]    = ZIO.attemptBlocking(acquireOrIncrementLock(iri, apiRequestID, MAX_LOCK_RETRIES))
+    def release(ignored: Unit) = ZIO.succeed(decrementOrReleaseLock(iri, apiRequestID))
+    ZIO.scoped(ZIO.acquireRelease(acquire)(release).zipRight(task))
+  }
 
   /**
    * Tries to acquire an update lock for an API request on an IRI. If the API request already

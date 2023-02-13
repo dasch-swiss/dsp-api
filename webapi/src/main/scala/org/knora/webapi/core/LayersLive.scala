@@ -14,9 +14,12 @@ import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
+import org.knora.webapi.responders.EntityAndClassIriService
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -52,6 +55,7 @@ object LayersLive {
       with AppRouter
       with CacheServiceManager
       with CacheService
+      with GroupsResponderADM
       with HttpServer
       with IIIFServiceManager
       with IIIFService
@@ -80,6 +84,8 @@ object LayersLive {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      EntityAndClassIriService.layer,
+      GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,

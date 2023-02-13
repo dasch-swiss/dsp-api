@@ -7,8 +7,12 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
+import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.EntityAndClassIriService
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -48,6 +52,7 @@ object LayersTest {
     with CacheServiceManager
     with CardinalityService
     with HttpServer
+    with GroupsResponderADM
     with IIIFServiceManager
     with IriConverter
     with RepositoryUpdater
@@ -68,6 +73,9 @@ object LayersTest {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      ActorDeps.layer,
+      EntityAndClassIriService.layer,
+      GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,

@@ -5,13 +5,14 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
+import com.typesafe.scalalogging.LazyLogging
 import java.util.UUID
-import scala.concurrent.Future
 import dsp.errors._
 import dsp.valueobjects.Group.GroupStatus
+import zio.Task
+import zio.URLayer
 import zio.ZIO
+import zio.ZLayer
 
 import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
@@ -20,31 +21,57 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.EntityAndClassIriService
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Returns information about groups.
  */
-class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
-    extends Responder(responderData.actorDeps)
+trait GroupsResponderADM {
+  def changeGroupBasicInformationRequestADM(
+    groupIri: IRI,
+    changeGroupRequest: GroupUpdatePayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[GroupOperationResponseADM]
+  def changeGroupStatusRequestADM(
+    groupIri: IRI,
+    changeGroupRequest: ChangeGroupApiRequestADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[GroupOperationResponseADM]
+  def createGroupADM(
+    createRequest: GroupCreatePayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[GroupOperationResponseADM]
+  def groupGetADM(groupIri: IRI): Task[Option[GroupADM]]
+  def groupGetRequestADM(groupIri: IRI): Task[GroupGetResponseADM]
+  def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Task[GroupMembersGetResponseADM]
+  def groupsGetADM: Task[Seq[GroupADM]]
+  def groupsGetRequestADM: Task[GroupsGetResponseADM]
+  def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]]
+}
+
+case class GroupsResponderADMLive(
+  messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService,
+  iriService: EntityAndClassIriService,
+  implicit val sf: StringFormatter
+) extends GroupsResponderADM
     with MessageHandler
-    with GroupsADMJsonProtocol {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[GroupsResponderRequestADM]))
+    with GroupsADMJsonProtocol
+    with LazyLogging {
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
     case _: GroupsResponderRequestADM => true
@@ -57,31 +84,20 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
   /**
    * Receives a message extending [[GroupsResponderRequestADM]], and returns an appropriate response message
    */
-  def receive(msg: GroupsResponderRequestADM) = msg match {
-    case GroupsGetADM()                         => groupsGetADM
-    case GroupsGetRequestADM()                  => groupsGetRequestADM
-    case GroupGetADM(groupIri)                  => groupGetADM(groupIri)
-    case MultipleGroupsGetRequestADM(groupIris) => multipleGroupsGetRequestADM(groupIris)
-    case GroupGetRequestADM(groupIri)           => groupGetRequestADM(groupIri)
-    case GroupMembersGetRequestADM(groupIri, requestingUser) =>
-      groupMembersGetRequestADM(groupIri, requestingUser)
+  override def handle(message: ResponderRequest): Task[Any] = message match {
+    case GroupChangeRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID) =>
+      changeGroupBasicInformationRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID)
+    case GroupChangeStatusRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID) =>
+      changeGroupStatusRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID)
     case GroupCreateRequestADM(newGroupInfo, requestingUser, apiRequestID) =>
       createGroupADM(newGroupInfo, requestingUser, apiRequestID)
-    case GroupChangeRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID) =>
-      changeGroupBasicInformationRequestADM(
-        groupIri,
-        changeGroupRequest,
-        requestingUser,
-        apiRequestID
-      )
-    case GroupChangeStatusRequestADM(
-          groupIri,
-          changeGroupRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changeGroupStatusRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID)
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case GroupGetADM(groupIri)                               => groupGetADM(groupIri)
+    case GroupGetRequestADM(groupIri)                        => groupGetRequestADM(groupIri)
+    case GroupMembersGetRequestADM(groupIri, requestingUser) => groupMembersGetRequestADM(groupIri, requestingUser)
+    case GroupsGetADM()                                      => groupsGetADM
+    case GroupsGetRequestADM()                               => groupsGetRequestADM
+    case MultipleGroupsGetRequestADM(groupIris)              => multipleGroupsGetRequestADM(groupIris)
+    case other                                               => Responder.handleUnexpectedMessageTask(other, this.getClass.getName)
   }
 
   /**
@@ -89,30 +105,19 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    *
    * @return all the groups as a sequence of [[GroupADM]].
    */
-  private def groupsGetADM: Future[Seq[GroupADM]] = {
-
-    log.debug("groupsGetADM")
-
+  override def groupsGetADM: Task[Seq[GroupADM]] =
     for {
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getGroups(
-                           maybeIri = None
-                         )
-                         .toString()
-                     )
+      _ <- ZIO.logDebug("groupsGetADM")
+      sparqlQuery =
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .getGroups(None)
+          .toString()
 
-      groupsResponse <- appActor
-                          .ask(
-                            SparqlExtendedConstructRequest(
-                              sparql = sparqlQuery
-                            )
-                          )
-                          .mapTo[SparqlExtendedConstructResponse]
+      groupsResponse <- triplestoreService.sparqlHttpExtendedConstruct(SparqlExtendedConstructRequest(sparqlQuery))
 
       statements = groupsResponse.statements
 
-      groups: Seq[Future[GroupADM]] =
+      groups: Seq[Task[GroupADM]] =
         statements.map { case (groupIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
           val projectIri: IRI = propsMap
             .getOrElse(
@@ -127,7 +132,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
 
           for {
             maybeProjectADM <-
-              appActor
+              messageRelay
                 .ask(
                   ProjectGetADM(
                     identifier = IriIdentifier
@@ -135,7 +140,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
                       .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                   )
                 )
-                .mapTo[Option[ProjectADM]]
+                .map(any => any.asInstanceOf[Option[ProjectADM]])
 
             projectADM =
               maybeProjectADM match {
@@ -198,16 +203,22 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
 
           } yield group
         }.toSeq
-      result: Seq[GroupADM] <- Future.sequence(groups)
+      result <- sequence(groups)
+
     } yield result.sorted
-  }
+
+  private def sequence[A](x: Seq[Task[A]]): Task[List[A]] =
+    x.map(a => a.map(x => List(x))).fold(ZIO.succeed(List[A]()))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
+
+  private def sequence[A](x: Set[Task[A]]): Task[Set[A]] =
+    x.map(a => a.map(x => Set(x))).fold(ZIO.succeed(Set[A]()))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
 
   /**
    * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
    *
    * @return all the groups as a [[GroupsGetResponseADM]].
    */
-  private def groupsGetRequestADM: Future[GroupsGetResponseADM] =
+  override def groupsGetRequestADM: Task[GroupsGetResponseADM] =
     for {
       maybeGroupsListToReturn <-
         groupsGetADM
@@ -224,39 +235,21 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    * @param groupIri       the IRI of the group requested.
    * @return information about the group as a [[GroupADM]]
    */
-  private def groupGetADM(
-    groupIri: IRI
-  ): Future[Option[GroupADM]] =
+  override def groupGetADM(groupIri: IRI): Task[Option[GroupADM]] = {
+    val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+      .getGroups(Some(groupIri))
+      .toString()
     for {
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getGroups(
-                           maybeIri = Some(groupIri)
-                         )
-                         .toString()
-                     )
-
-      groupResponse <-
-        appActor
-          .ask(
-            SparqlExtendedConstructRequest(
-              sparql = sparqlQuery
-            )
-          )
-          .mapTo[SparqlExtendedConstructResponse]
-
-      maybeGroup: Option[GroupADM] <-
+      groupResponse <- triplestoreService.sparqlHttpExtendedConstruct(SparqlExtendedConstructRequest(sparqlQuery))
+      maybeGroup <-
         if (groupResponse.statements.isEmpty) {
-          FastFuture.successful(None)
+          ZIO.succeed(None)
         } else {
-          statements2GroupADM(
-            statements = groupResponse.statements.head
-          )
+          statements2GroupADM(groupResponse.statements.head)
         }
-
-      _ = log.debug("groupGetADM - result: {}", maybeGroup)
-
+      _ <- ZIO.logDebug(s"groupGetADM - result: $maybeGroup")
     } yield maybeGroup
+  }
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
@@ -264,14 +257,9 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    * @param groupIri             the IRI of the group requested.
    * @return information about the group as a [[GroupGetResponseADM]].
    */
-  private def groupGetRequestADM(
-    groupIri: IRI
-  ): Future[GroupGetResponseADM] =
+  override def groupGetRequestADM(groupIri: IRI): Task[GroupGetResponseADM] =
     for {
-      maybeGroupADM <-
-        groupGetADM(
-          groupIri = groupIri
-        )
+      maybeGroupADM <- groupGetADM(groupIri)
 
       result = maybeGroupADM match {
                  case Some(group) => GroupGetResponseADM(group = group)
@@ -285,17 +273,8 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    * @param groupIris      the IRIs of the groups being requested
    * @return information about the group as a set of [[GroupGetResponseADM]] objects.
    */
-  private def multipleGroupsGetRequestADM(
-    groupIris: Set[IRI]
-  ): Future[Set[GroupGetResponseADM]] = {
-    val groupResponseFutures: Set[Future[GroupGetResponseADM]] = groupIris.map { groupIri =>
-      groupGetRequestADM(
-        groupIri = groupIri
-      )
-    }
-
-    Future.sequence(groupResponseFutures)
-  }
+  override def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
+    sequence(groupIris.map(groupGetRequestADM)).map(_.toSet)
 
   /**
    * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
@@ -307,15 +286,10 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
   private def groupMembersGetADM(
     groupIri: IRI,
     requestingUser: UserADM
-  ): Future[Seq[UserADM]] = {
-
-    log.debug("groupMembersGetADM - groupIri: {}", groupIri)
-
+  ): Task[Seq[UserADM]] =
     for {
-      maybeGroupADM <-
-        groupGetADM(
-          groupIri = groupIri
-        )
+      _             <- ZIO.logDebug(s"groupMembersGetADM - groupIri: $groupIri")
+      maybeGroupADM <- groupGetADM(groupIri)
 
       _ = maybeGroupADM match {
             case Some(group) =>
@@ -332,17 +306,11 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
               throw NotFoundException(s"Group <$groupIri> not found")
           }
 
-      sparqlQueryString <- Future(
-                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                               .getGroupMembersByIri(
-                                 groupIri
-                               )
-                               .toString()
-                           )
-      // _ = log.debug(s"groupMembersByIRIGetRequestV1 - query: $sparqlQueryString")
-
-      groupMembersResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      // _ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
+      sparqlQueryString =
+        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+          .getGroupMembersByIri(groupIri)
+          .toString()
+      groupMembersResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
       // get project member IRI from results rows
       groupMemberIris =
@@ -352,11 +320,11 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
           Seq.empty[IRI]
         }
 
-      _ = log.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
+      _ <- ZIO.logDebug(s"groupMembersGetRequestADM - groupMemberIris: $groupMemberIris")
 
-      maybeUsersFutures: Seq[Future[Option[UserADM]]] =
+      maybeUsersFutures: Seq[Task[Option[UserADM]]] =
         groupMemberIris.map { userIri =>
-          appActor
+          messageRelay
             .ask(
               UserGetADM(
                 UserIdentifierADM(maybeIri = Some(userIri)),
@@ -364,15 +332,15 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
                 requestingUser = KnoraSystemInstances.Users.SystemUser
               )
             )
-            .mapTo[Option[UserADM]]
+            .map(any => any.asInstanceOf[Option[UserADM]])
         }
-      maybeUsers         <- Future.sequence(maybeUsersFutures)
+
+      maybeUsers         <- sequence(maybeUsersFutures)
       users: Seq[UserADM] = maybeUsers.flatten
 
-      _ = log.debug("groupMembersGetRequestADM - users: {}", users)
+      _ <- ZIO.logDebug(s"groupMembersGetRequestADM - users: $users")
 
     } yield users
-  }
 
   /**
    * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
@@ -382,12 +350,12 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    * @param requestingUser       the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  private def groupMembersGetRequestADM(
+  override def groupMembersGetRequestADM(
     groupIri: IRI,
     requestingUser: UserADM
-  ): Future[GroupMembersGetResponseADM] = {
+  ): Task[GroupMembersGetResponseADM] = {
 
-    log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
+    logger.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
 
     for {
       maybeMembersListToReturn <-
@@ -411,22 +379,21 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]]
    */
-  private def createGroupADM(
+  override def createGroupADM(
     createRequest: GroupCreatePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Future[GroupOperationResponseADM] = {
+  ): Task[GroupOperationResponseADM] = {
 
-    log.debug("createGroupADM - createRequest: {}", createRequest)
+    logger.debug("createGroupADM - createRequest: {}", createRequest)
 
     def createGroupTask(
       createRequest: GroupCreatePayloadADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
-    ): Future[GroupOperationResponseADM] =
+      requestingUser: UserADM
+    ): Task[GroupOperationResponseADM] =
       for {
         /* check if the requesting user is allowed to create group */
-        _ <- Future(
+        _ <- ZIO.attempt {
                if (
                  !requestingUser.permissions
                    .isProjectAdmin(createRequest.project.value) && !requestingUser.permissions.isSystemAdmin
@@ -434,7 +401,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
                  // not a project admin and not a system admin
                  throw ForbiddenException("A new group can only be created by a project or system admin.")
                }
-             )
+             }
 
         iri = createRequest.project.value
         nameExists <- groupByNameAndProjectExists(
@@ -446,7 +413,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
             }
 
         maybeProjectADM <-
-          appActor
+          messageRelay
             .ask(
               ProjectGetADM(
                 identifier = IriIdentifier
@@ -454,7 +421,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
                   .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
-            .mapTo[Option[ProjectADM]]
+            .map(any => any.asInstanceOf[Option[ProjectADM]])
 
         projectADM: ProjectADM =
           maybeProjectADM match {
@@ -467,10 +434,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
 
         // check the custom IRI; if not given, create an unused IRI
         customGroupIri: Option[SmartIri] = createRequest.id.map(_.value).map(iri => iri.toSmartIri)
-        groupIri: IRI <- iriService.checkOrCreateEntityIri(
-                           customGroupIri,
-                           stringFormatter.makeRandomGroupIri(projectADM.shortcode)
-                         )
+        groupIri                        <- iriService.checkOrCreateEntityIriTask(customGroupIri, sf.makeRandomGroupIri(projectADM.shortcode))
 
         /* create the group */
         createNewGroupSparqlString =
@@ -487,9 +451,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
             )
             .toString
 
-        _ <- appActor
-               .ask(SparqlUpdateRequest(createNewGroupSparqlString))
-               .mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(createNewGroupSparqlString)
 
         /* Verify that the group was created and updated  */
         maybeCreatedGroup <-
@@ -504,14 +466,12 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
 
       } yield GroupOperationResponseADM(group = createdGroup)
 
-    for {
-      // run user creation with an global IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-                      apiRequestID,
-                      GROUPS_GLOBAL_LOCK_IRI,
-                      () => createGroupTask(createRequest, requestingUser, apiRequestID)
-                    )
-    } yield taskResult
+    IriLocker
+      .runWithIriLockZio(
+        apiRequestID,
+        GROUPS_GLOBAL_LOCK_IRI,
+        createGroupTask(createRequest, requestingUser)
+      )
   }
 
   /**
@@ -523,12 +483,12 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]].
    */
-  private def changeGroupBasicInformationRequestADM(
+  override def changeGroupBasicInformationRequestADM(
     groupIri: IRI,
     changeGroupRequest: GroupUpdatePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Future[GroupOperationResponseADM] = {
+  ): Task[GroupOperationResponseADM] = {
 
     /**
      * The actual change group task run with an IRI lock.
@@ -537,10 +497,10 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
       groupIri: IRI,
       changeGroupRequest: GroupUpdatePayloadADM,
       requestingUser: UserADM
-    ): Future[GroupOperationResponseADM] =
+    ): Task[GroupOperationResponseADM] =
       for {
 
-        _ <- Future(
+        _ <- ZIO.attempt(
                // check if necessary information is present
                if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
              )
@@ -580,15 +540,11 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
 
       } yield result
 
-    for {
-      // run the change status task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-                      apiRequestID,
-                      groupIri,
-                      () => changeGroupTask(groupIri, changeGroupRequest, requestingUser)
-                    )
-    } yield taskResult
-
+    IriLocker.runWithIriLockZio(
+      apiRequestID,
+      groupIri,
+      changeGroupTask(groupIri, changeGroupRequest, requestingUser)
+    )
   }
 
   /**
@@ -600,12 +556,12 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]].
    */
-  private def changeGroupStatusRequestADM(
+  override def changeGroupStatusRequestADM(
     groupIri: IRI,
     changeGroupRequest: ChangeGroupApiRequestADM,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Future[GroupOperationResponseADM] = {
+  ): Task[GroupOperationResponseADM] = {
 
     /**
      * The actual change group task run with an IRI lock.
@@ -614,10 +570,10 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
       groupIri: IRI,
       changeGroupRequest: ChangeGroupApiRequestADM,
       requestingUser: UserADM
-    ): Future[GroupOperationResponseADM] =
+    ): Task[GroupOperationResponseADM] =
       for {
 
-        _ <- Future(
+        _ <- ZIO.attempt(
                // check if necessary information is present
                if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
              )
@@ -653,12 +609,11 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
                              )
 
         // update group status
-        updateGroupResult: GroupOperationResponseADM <-
-          updateGroupADM(
-            groupIri = groupIri,
-            groupUpdatePayload = groupUpdatePayload,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
+        updateGroupResult <- updateGroupADM(
+                               groupIri = groupIri,
+                               groupUpdatePayload = groupUpdatePayload,
+                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                             )
 
         // remove all members from group if status is false
         operationResponse <-
@@ -668,16 +623,11 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
           )
 
       } yield operationResponse
-
-    for {
-      // run the change status task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-                      apiRequestID,
-                      groupIri,
-                      () => changeGroupStatusTask(groupIri, changeGroupRequest, requestingUser)
-                    )
-    } yield taskResult
-
+    IriLocker.runWithIriLockZio(
+      apiRequestID,
+      groupIri,
+      changeGroupStatusTask(groupIri, changeGroupRequest, requestingUser)
+    )
   }
 
   /**
@@ -692,9 +642,9 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
     groupIri: IRI,
     groupUpdatePayload: GroupUpdatePayloadADM,
     requestingUser: UserADM
-  ): Future[GroupOperationResponseADM] = {
+  ): Task[GroupOperationResponseADM] = {
 
-    log.debug("updateGroupADM - groupIri: {}, groupUpdatePayload: {}", groupIri, groupUpdatePayload)
+    logger.debug("updateGroupADM - groupIri: {}, groupUpdatePayload: {}", groupIri, groupUpdatePayload)
 
     val parametersCount: Int = List(
       groupUpdatePayload.name,
@@ -723,32 +673,28 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
           val newName = groupUpdatePayload.name.get
           groupByNameAndProjectExists(newName.value, groupADM.project.id)
         } else {
-          FastFuture.successful(false)
+          ZIO.succeed(false)
         }
 
       _ = if (groupByNameAlreadyExists) {
-            log.debug("updateGroupADM - about to throw an exception. Group with that name already exists.")
+            logger.debug("updateGroupADM - about to throw an exception. Group with that name already exists.")
             throw BadRequestException(s"Group with the name '${groupUpdatePayload.name.get}' already exists.")
           }
 
       /* Update group */
-      updateGroupSparqlString <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .updateGroup(
-              adminNamedGraphIri = "http://www.knora.org/data/admin",
-              groupIri,
-              maybeName = groupUpdatePayload.name.map(_.value),
-              maybeDescriptions = groupUpdatePayload.descriptions.map(_.value),
-              maybeProject = None, // maybe later we want to allow moving of a group to another project
-              maybeStatus = groupUpdatePayload.status.map(_.value),
-              maybeSelfjoin = groupUpdatePayload.selfjoin.map(_.value)
-            )
-            .toString
-        )
-      // _ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
-
-      _ <- appActor.ask(SparqlUpdateRequest(updateGroupSparqlString)).mapTo[SparqlUpdateResponse]
+      query =
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .updateGroup(
+            adminNamedGraphIri = "http://www.knora.org/data/admin",
+            groupIri,
+            maybeName = groupUpdatePayload.name.map(_.value),
+            maybeDescriptions = groupUpdatePayload.descriptions.map(_.value),
+            maybeProject = None, // maybe later we want to allow moving of a group to another project
+            maybeStatus = groupUpdatePayload.status.map(_.value),
+            maybeSelfjoin = groupUpdatePayload.selfjoin.map(_.value)
+          )
+          .toString
+      _ <- triplestoreService.sparqlHttpUpdate(query)
 
       /* Verify that the project was updated. */
       maybeUpdatedGroup <-
@@ -760,9 +706,6 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
         maybeUpdatedGroup.getOrElse(
           throw UpdateNotPerformedException("Group was not updated. Please report this as a possible bug.")
         )
-
-      // _ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
-
     } yield GroupOperationResponseADM(group = updatedGroup)
 
   }
@@ -779,27 +722,27 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    */
   private def statements2GroupADM(
     statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]])
-  ): Future[Option[GroupADM]] = {
+  ): Task[Option[GroupADM]] = {
 
-    log.debug("statements2GroupADM - statements: {}", statements)
+    logger.debug("statements2GroupADM - statements: {}", statements)
 
     val groupIri: IRI                           = statements._1.toString
     val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
 
-    log.debug("statements2GroupADM - groupIri: {}", groupIri)
+    logger.debug("statements2GroupADM - groupIri: {}", groupIri)
 
     val maybeProjectIri = propsMap.get(OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri)
-    val projectIriFuture: Future[IRI] = maybeProjectIri match {
-      case Some(iri) => FastFuture.successful(iri.head.asInstanceOf[IriLiteralV2].value)
+    val projectIriZio: Task[IRI] = maybeProjectIri match {
+      case Some(iri) => ZIO.succeed(iri.head.asInstanceOf[IriLiteralV2].value)
       case None =>
-        FastFuture.failed(throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached"))
+        ZIO.fail(InconsistentRepositoryDataException(s"Group $groupIri has no project attached"))
     }
 
     if (propsMap.nonEmpty) {
       for {
-        projectIri <- projectIriFuture
+        projectIri <- projectIriZio
         maybeProject <-
-          appActor
+          messageRelay
             .ask(
               ProjectGetADM(
                 identifier = IriIdentifier
@@ -807,7 +750,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
                   .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
               )
             )
-            .mapTo[Option[ProjectADM]]
+            .map(any => any.asInstanceOf[Option[ProjectADM]])
 
         project = maybeProject.getOrElse(
                     throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached.")
@@ -862,7 +805,7 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
           )
       } yield Some(groupADM)
     } else {
-      FastFuture.successful(None)
+      ZIO.succeed(None)
     }
   }
 
@@ -873,20 +816,18 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
    * @param projectIri the IRI of the project.
    * @return a [[Boolean]].
    */
-  private def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] =
+  private def groupByNameAndProjectExists(name: String, projectIri: IRI): Task[Boolean] = {
+    val query =
+      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        .checkGroupExistsByName(projectIri, name)
+        .toString
     for {
-      askString <- Future(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkGroupExistsByName(projectIri, name)
-                       .toString
-                   )
-      // _ = log.debug("groupExists - query: {}", askString)
-
-      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(query)
       result                   = checkUserExistsResponse.result
 
-      _ = log.debug("groupByNameAndProjectExists - name: {}, projectIri: {}, result: {}", name, projectIri, result)
+      _ = logger.debug("groupByNameAndProjectExists - name: {}, projectIri: {}, result: {}", name, projectIri, result)
     } yield result
+  }
 
   /**
    * In the case that the group was deactivated (status = false), the
@@ -899,14 +840,14 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
   private def removeGroupMembersIfNecessary(
     changedGroup: GroupADM,
     apiRequestID: UUID
-  ): Future[GroupOperationResponseADM] =
+  ): Task[GroupOperationResponseADM] =
     if (changedGroup.status) {
       // group active. no need to remove members.
-      log.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")
-      FastFuture.successful(GroupOperationResponseADM(changedGroup))
+      logger.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")
+      ZIO.succeed(GroupOperationResponseADM(changedGroup))
     } else {
       // group deactivated. need to remove members.
-      log.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
+      logger.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
       for {
         members <-
           groupMembersGetADM(
@@ -914,9 +855,9 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
             requestingUser = KnoraSystemInstances.Users.SystemUser
           )
 
-        seqOfFutures: Seq[Future[UserOperationResponseADM]] =
+        seqOfFutures: Seq[Task[UserOperationResponseADM]] =
           members.map { user: UserADM =>
-            appActor
+            messageRelay
               .ask(
                 UserGroupMembershipRemoveRequestADM(
                   userIri = user.id,
@@ -925,11 +866,27 @@ class GroupsResponderADM(responderData: ResponderData, messageRelay: MessageRela
                   apiRequestID = apiRequestID
                 )
               )
-              .mapTo[UserOperationResponseADM]
+              .map(any => any.asInstanceOf[UserOperationResponseADM])
           }
 
-        _: Seq[UserOperationResponseADM] <- Future.sequence(seqOfFutures)
+        _ <- sequence(seqOfFutures)
 
       } yield GroupOperationResponseADM(group = changedGroup)
     }
+}
+
+object GroupsResponderADMLive {
+  val layer: URLayer[
+    StringFormatter with EntityAndClassIriService with TriplestoreService with MessageRelay,
+    GroupsResponderADM
+  ] = ZLayer.fromZIO {
+    for {
+      relay      <- ZIO.service[MessageRelay]
+      ts         <- ZIO.service[TriplestoreService]
+      iriService <- ZIO.service[EntityAndClassIriService]
+      sf         <- ZIO.service[StringFormatter]
+      responder   = GroupsResponderADMLive(relay, ts, iriService, sf)
+      _          <- relay.subscribe(responder)
+    } yield responder
+  }
 }
