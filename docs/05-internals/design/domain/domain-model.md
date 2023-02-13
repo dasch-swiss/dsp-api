@@ -755,22 +755,123 @@ flowchart LR
   MappingElement --> mappingElementRequiresSeparator --> boolean1
 ```
 
+```mermaid
+---
+title: Resource
+---
+flowchart LR
+  LinkValue(LinkValue)
+  GeomValue(GeomValue)
+  ColorValue(ColorValue)
+  ExternalResValue(ExternalResValue)
+
+  date([xsd:dateTime])
+  string([xsd:string])
+  _Representation{{Representation}}
+  _Representation2{{Representation}}
+  _TextValue{{TextValue}}
+  _Value{{Value}}
+  _Resource{{Resource}}
+
+  subgraph Resources
+    Resource(Resource)
+    Annotation(Annotation)
+    Region(Region)
+    ExternalResource(ExternalResource)
+    Representation(Representation)
+    StillImageRepresentation("StillImageRepresentation etc.")
+  end
+
+  subgraph Links
+    hasLinkTo
+    isSequenceOf
+    hasStandoffLinkTo
+    %% hasRepresentation %% missing???
+    isPartOf
+  end
+
+  subgraph LinkValues
+    hasLinkToValue
+    isSequenceOfValue
+    hasStandoffLinkToValue
+    hasRepresentationValue
+    isPartOfValue
+  end
+
+  subgraph FileValues
+    direction LR
+    hasFileValue
+    FileValue(FileValue)
+    hasStillImageRepresentation["hasStillImageRepresentation etc."]
+    StillImageFileValue("StillImageFileValue etc.")
+  end
+
+  Resource --> creationDate --> date
+  Resource --> hasRepresentation --> _Representation
+  Resource --> hasComment --> _TextValue
+  Resource --> hasValue --> _Value
+
+  Resource --> hasLinkTo --> _Resource
+  Resource --> isSequenceOf --> _Resource
+  Resource --> hasStandoffLinkTo --> _Resource
+  %% Resource --> hasRepresentation --> _Resource
+  Resource --> isPartOf --> _Resource
+
+  Resource --> hasLinkToValue --> LinkValue
+  Resource --> isSequenceOfValue --> LinkValue
+  Resource --> hasStandoffLinkToValue --> LinkValue
+  Resource --> hasRepresentationValue --> LinkValue
+  Resource --> isPartOfValue --> LinkValue
+
+  Annotation --> isAnnotationOfValue --> LinkValue
+  Annotation --> hasAnnotation --> _Resource
+
+  Region --> isRegionOfValue --> LinkValue
+  Region --> isRegionOf --> _Representation2
+  Region --> hasGeometry --> GeomValue
+  Region --> hasColorValue --> ColorValue
+
+  ExternalResource --> hasExtResValue --> ExternalResValue
+  ExternalResValue --> extResId --> string
+  ExternalResValue --> extResAccessInfo --> string
+  ExternalResValue --> extResProvider --> string
+
+  Representation --> hasFileValue --> FileValue
+  StillImageRepresentation --> hasStillImageRepresentation --> StillImageFileValue
+```
+
 
 ```mermaid
 ---
-title: value
+title: others
 ---
 flowchart LR
+  na[[no subject class constraint defined]]
+
   %% Classes
   Value(Value)
+  ListNode(ListNode)
+  User(admin:User)
+  IntValue(IntValue)
+  IntervalValue(IntervalValue)
 
   %% Duplicates
   _Value{{Value}}
+  _ListNode{{ListNode}}
 
   %% Values
-  integer1([xsd:integer])
+  integer([xsd:integer])
+  date([xsd:dateTime])
+  boolean([xsd:boolean])
 
   %% Relations
   Value --> previousValue --> _Value
-  Value --> valueHasMaxStandoffStartIndex --> integer1
+  Value --> valueHasMaxStandoffStartIndex --> integer
+  ListNode --> hasSubListNode --> _ListNode
+
+  na --> deletedBy --> User
+  na --> seqnum --> IntValue
+  na --> hasSequenceBounds --> IntervalValue
+  na --> deleteDate --> date
+  na --> isDeleted --> boolean
 ```
