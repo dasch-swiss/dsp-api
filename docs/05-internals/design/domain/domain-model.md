@@ -636,18 +636,15 @@ title: resource properties - resource metadata(?)
 flowchart BT
   valueHasLanguage
 
-  creationDate --> objectCannotBeMarkedAsDeleted
+  creationDate ---> objectCannotBeMarkedAsDeleted
   deleteDate --> objectCannotBeMarkedAsDeleted
   isDeleted ---> objectCannotBeMarkedAsDeleted
   deletedBy --> objectCannotBeMarkedAsDeleted
-  standoffTagHasEnd ---> objectCannotBeMarkedAsDeleted
-  hasSubListNode --> objectCannotBeMarkedAsDeleted
-  valueHas ---> objectCannotBeMarkedAsDeleted
-  standoffTagHasInternalReference --> objectCannotBeMarkedAsDeleted 
-  standoffTagHasStartAncestor ---> objectCannotBeMarkedAsDeleted 
-  standoffTagHasStartParent --> objectCannotBeMarkedAsDeleted
-  standoffTagHasStartParent ---> standoffTagHasStartAncestor
   standoffTagHasLink ---> objectCannotBeMarkedAsDeleted 
+  hasSubListNode --> objectCannotBeMarkedAsDeleted
+  standoffTagHasEnd ---> objectCannotBeMarkedAsDeleted
+  standoffTagHasInternalReference --> objectCannotBeMarkedAsDeleted 
+  valueHas ----> objectCannotBeMarkedAsDeleted
   standoffTagHasStart --> objectCannotBeMarkedAsDeleted 
   standoffTagHasStartIndex ---> objectCannotBeMarkedAsDeleted
   standoffTagHasEndIndex --> objectCannotBeMarkedAsDeleted
@@ -655,6 +652,9 @@ flowchart BT
   standoffTagHasEndParent --> objectCannotBeMarkedAsDeleted
   standoffTagHasOriginalXMLID ---> objectCannotBeMarkedAsDeleted
   targetHasOriginalXMLID --> objectCannotBeMarkedAsDeleted
+  standoffTagHasStartAncestor ----> objectCannotBeMarkedAsDeleted 
+  standoffTagHasStartParent --> objectCannotBeMarkedAsDeleted
+  standoffTagHasStartParent --> standoffTagHasStartAncestor
   hasMappingElement ---> objectCannotBeMarkedAsDeleted
   mappingHasXMLTagname --> objectCannotBeMarkedAsDeleted
   mappingHasXMLNamespace ---> objectCannotBeMarkedAsDeleted
