@@ -512,9 +512,21 @@ classDiagram
   class StandoffInternalReferenceTag {
     StandoffTag standoffHasInternalReference
   }
+  class StandoffLinkTag {
+    Resource standoffHasLink
+  }
 
   %% Relationships
   StandoffTag <|-- StandoffDataTypeTag
+  StandoffTag <|-- StandoffLinkTag
+  StandoffDataTypeTag <|-- StandoffColorTag
+  StandoffDataTypeTag <|-- StandoffDateTag
+  StandoffDataTypeTag <|-- StandoffIntegerTag
+  StandoffDataTypeTag <|-- StandoffBooleanTag
+  StandoffDataTypeTag <|-- StandoffDecimalTag
+  StandoffDataTypeTag <|-- StandoffUriTag
+  StandoffDataTypeTag <|-- StandoffIntervalTag
+  StandoffDataTypeTag <|-- StandoffTimeTag
   ValueBase .. ColorBase
   ValueBase .. DateBase
   ValueBase .. IntBase
@@ -525,19 +537,11 @@ classDiagram
   ValueBase .. TimeBase
   ValueBase .. StandoffInternalReferenceTag
   ColorBase .. StandoffColorTag
-  StandoffDataTypeTag .. StandoffColorTag
   DateBase .. StandoffDateTag
-  StandoffDataTypeTag .. StandoffDateTag
   IntBase .. StandoffIntegerTag
-  StandoffDataTypeTag .. StandoffIntegerTag
   BooleanBase .. StandoffBooleanTag
-  StandoffDataTypeTag .. StandoffBooleanTag
   DecimalBase .. StandoffDecimalTag
-  StandoffDataTypeTag .. StandoffDecimalTag
   UriBase .. StandoffUriTag
-  StandoffDataTypeTag .. StandoffUriTag
   IntervalBase .. StandoffIntervalTag
-  StandoffDataTypeTag .. StandoffIntervalTag
   TimeBase .. StandoffTimeTag
-  StandoffDataTypeTag .. StandoffTimeTag
 ```
