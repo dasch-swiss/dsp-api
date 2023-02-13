@@ -685,10 +685,9 @@ flowchart BT
 
 ### Property triple structure
 
-
 ```mermaid
 ---
-title: mapping
+title: Text related triples
 ---
 flowchart LR
   %% Classes
@@ -696,17 +695,14 @@ flowchart LR
   MappingElement(MappingElement)
   MappingXMLAttribute(MappingXMLAttribute)
   MappingStandoffDataTypeClass(MappingStandoffDataTypeClass)
-  Value(Value)
   TextValue(TextValue)
   XMLToStandoffMapping(XMLToStandoffMapping)
   XSLTransformation(XSLTransformation)
   StandoffTag(StandoffTag)
   StandoffInternalReferenceTag(StandoffInternalReferenceTag)
+  Resource(Resource)
 
   %% Duplicates
-  _MappingElement{{MappingElement}}
-  _Value{{Value}}
-  _Resource{{Resource}}
   _StandoffTag{{StandoffTag}}
 
   %% Values
@@ -715,11 +711,10 @@ flowchart LR
   string3([xsd:string])
   boolean1([xsd:boolean])
   integer1([xsd:integer])
-  integer2([xsd:integer])
 
   %% Relations
   TextValue --> valueHasMapping --> XMLToStandoffMapping
-  XMLToStandoffMapping --> hasMappingElement --> _MappingElement
+  XMLToStandoffMapping --> hasMappingElement --> MappingElement
   XMLToStandoffMapping --> mappingHasDefaultXSLTransformation --> XSLTransformation
   TextValue --> valueHasStandoff --> StandoffTag
   subgraph standoffProperties
@@ -740,7 +735,7 @@ flowchart LR
   StandoffTag --> standoffTagHasStartIndex --> integer1
   StandoffTag --> standoffTagHasEnd --> integer1
   StandoffTag --> standoffTagHasStart --> integer1
-  StandoffTag --> standoffTagHasLink --> _Resource
+  StandoffTag --> standoffTagHasLink --> Resource
   StandoffTag --> standoffTagHasOriginalXMLID --> string2
   StandoffTag --> targetHasOriginalXMLID --> string2
   StandoffTag --> standoffTagHasUuid --> string2
@@ -758,7 +753,24 @@ flowchart LR
   MappingElement --> mappingHasXMLAttribute --> MappingXMLAttribute --> mappingHasStandoffProperty
   MappingElement --> mappingHasStandoffDataTypeClass --> MappingStandoffDataTypeClass
   MappingElement --> mappingElementRequiresSeparator --> boolean1
-  
+```
+
+
+```mermaid
+---
+title: value
+---
+flowchart LR
+  %% Classes
+  Value(Value)
+
+  %% Duplicates
+  _Value{{Value}}
+
+  %% Values
+  integer1([xsd:integer])
+
+  %% Relations
   Value --> previousValue --> _Value
-  Value --> valueHasMaxStandoffStartIndex --> integer2
+  Value --> valueHasMaxStandoffStartIndex --> integer1
 ```
