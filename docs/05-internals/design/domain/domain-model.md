@@ -588,3 +588,43 @@ classDiagram
   StandoffStructuralTag <|-- StandoffBrTag
 ```
 
+
+
+## Property Hierarchy
+
+```mermaid
+flowchart BT
+  hasValue ---> resourceProperty
+  hasLinkTo --> resourceProperty
+
+  hasFileValue ----> hasValue
+  hasColor ---> hasValue
+  hasGeometry ---> hasValue
+  hasComment ---> hasValue
+  hasSequenceBounds ---> hasValue 
+  seqnum ---> hasValue
+  hasExtResValue ---> hasValue
+  hasLinkToValue ----> hasValue 
+
+  hasArchiveFileValue ---> hasFileValue
+  hasDocumentFileValue ---> hasFileValue
+  hasTextFileValue ---> hasFileValue
+  hasStillImageFileValue ---> hasFileValue
+  hasMovingImageFileValue ---> hasFileValue
+  hasAudioFileValue ---> hasFileValue
+  hasDDDFileValue ---> hasFileValue
+
+  isPartOfValue ---> hasLinkToValue
+  hasAnnotationOfValue ---> hasLinkToValue
+  hasRepresentationValue ---> hasLinkToValue
+  hasStandoffLinkToValue ---> hasLinkToValue
+  isSequenceOfValue ---> hasLinkToValue
+  isRegionOfValue ---> hasLinkToValue
+
+  isPartOf ---> hasLinkTo
+  isAnnotationOf ---> hasLinkTo
+  hasRepresentation ---> hasLinkTo
+  hasStandoffLinkTo ---> hasLinkTo
+  isSequenceOf ---> hasLinkTo
+  isRegionOf ---> hasLinkTo
+```
