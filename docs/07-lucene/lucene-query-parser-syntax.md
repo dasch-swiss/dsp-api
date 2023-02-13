@@ -1,11 +1,10 @@
 # Lucene
 
-The Lucene full-text index provided by the triplestore is used to perform full-text searches in Knora. 
-The exact behavior can be different depending on the triplestore.
+The Lucene full-text index provided by the triplestore is used to perform full-text searches in DSP.
 
 ## Lucene Query Parser Syntax
 
-Full-text searches in Knora are based on Lucene. 
+Full-text searches in DSP are based on Lucene. 
 Therefore, full-text searches support the 
 [Lucene Query Parser Syntax](https://lucene.apache.org/core/7_7_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html).
 
