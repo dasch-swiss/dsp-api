@@ -696,12 +696,60 @@ flowchart LR
   MappingElement(MappingElement)
   MappingXMLAttribute(MappingXMLAttribute)
   MappingStandoffDataTypeClass(MappingStandoffDataTypeClass)
+  Value(Value)
+  TextValue(TextValue)
+  XMLToStandoffMapping(XMLToStandoffMapping)
+  XSLTransformation(XSLTransformation)
+  StandoffTag(StandoffTag)
+  StandoffInternalReferenceTag(StandoffInternalReferenceTag)
+
+  %% Duplicates
+  _MappingElement{{MappingElement}}
+  _Value{{Value}}
+  _Resource{{Resource}}
+  _StandoffTag{{StandoffTag}}
 
   %% Values
   string1([xsd:string])
+  string2([xsd:string])
+  string3([xsd:string])
   boolean1([xsd:boolean])
+  integer1([xsd:integer])
+  integer2([xsd:integer])
 
   %% Relations
+  TextValue --> valueHasMapping --> XMLToStandoffMapping
+  XMLToStandoffMapping --> hasMappingElement --> _MappingElement
+  XMLToStandoffMapping --> mappingHasDefaultXSLTransformation --> XSLTransformation
+  TextValue --> valueHasStandoff --> StandoffTag
+  subgraph standoffProperties
+    standoffTagHasEndIndex
+    standoffTagHasStartIndex
+    standoffTagHasEnd
+    standoffTagHasStart
+    standoffTagHasLink
+    standoffTagHasOriginalXMLID
+    targetHasOriginalXMLID
+    standoffTagHasUuid
+    standoffTagHasEndParent
+    standoffTagHasStartAncestor
+    standoffTagHasStartParent
+    standoffTagHasInternalReference
+  end
+  StandoffTag --> standoffTagHasEndIndex --> integer1
+  StandoffTag --> standoffTagHasStartIndex --> integer1
+  StandoffTag --> standoffTagHasEnd --> integer1
+  StandoffTag --> standoffTagHasStart --> integer1
+  StandoffTag --> standoffTagHasLink --> _Resource
+  StandoffTag --> standoffTagHasOriginalXMLID --> string2
+  StandoffTag --> targetHasOriginalXMLID --> string2
+  StandoffTag --> standoffTagHasUuid --> string2
+  StandoffTag --> standoffTagHasEndParent --> _StandoffTag
+  StandoffTag --> standoffTagHasStartAncestor --> _StandoffTag
+  StandoffTag --> standoffTagHasStartParent --> _StandoffTag
+  StandoffInternalReferenceTag --> standoffTagHasInternalReference --> _StandoffTag
+  TextValue --> valueHasLanguage --> string3
+
   MappingComponent --> mappingHasXMLAttributename --> string1
   MappingComponent --> mappingHasStandoffClass --> string1
   MappingComponent --> mappingHasXMLNamespace --> string1
@@ -710,4 +758,7 @@ flowchart LR
   MappingElement --> mappingHasXMLAttribute --> MappingXMLAttribute --> mappingHasStandoffProperty
   MappingElement --> mappingHasStandoffDataTypeClass --> MappingStandoffDataTypeClass
   MappingElement --> mappingElementRequiresSeparator --> boolean1
+  
+  Value --> previousValue --> _Value
+  Value --> valueHasMaxStandoffStartIndex --> integer2
 ```
