@@ -194,14 +194,8 @@ class GroupsResponderADM(responderData: ResponderData)
    */
   private def groupsGetRequestADM: Future[GroupsGetResponseADM] =
     for {
-      maybeGroupsListToReturn <-
-        groupsGetADM
-
-      result = maybeGroupsListToReturn match {
-                 case groups: Seq[GroupADM] if groups.nonEmpty => GroupsGetResponseADM(groups = groups)
-                 case _                                        => throw NotFoundException(s"No groups found")
-               }
-    } yield result
+      groups <- groupsGetADM
+    } yield GroupsGetResponseADM(groups)
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
@@ -381,11 +375,8 @@ class GroupsResponderADM(responderData: ResponderData)
           requestingUser = requestingUser
         )
 
-      result = maybeMembersListToReturn match {
-                 case members: Seq[UserADM] if members.nonEmpty => GroupMembersGetResponseADM(members = members)
-                 case _                                         => throw NotFoundException(s"No members found.")
-               }
-    } yield result
+      members = maybeMembersListToReturn
+    } yield GroupMembersGetResponseADM(members)
   }
 
   /**
