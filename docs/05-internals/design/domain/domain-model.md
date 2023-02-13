@@ -682,3 +682,32 @@ flowchart BT
 
   valueHasLanguage
 ```
+
+### Property triple structure
+
+
+```mermaid
+---
+title: mapping
+---
+flowchart LR
+  %% Classes
+  MappingComponent(MappingComponent)
+  MappingElement(MappingElement)
+  MappingXMLAttribute(MappingXMLAttribute)
+  MappingStandoffDataTypeClass(MappingStandoffDataTypeClass)
+
+  %% Values
+  string1([xsd:string])
+  boolean1([xsd:boolean])
+
+  %% Relations
+  MappingComponent --> mappingHasXMLAttributename --> string1
+  MappingComponent --> mappingHasStandoffClass --> string1
+  MappingComponent --> mappingHasXMLNamespace --> string1
+  MappingElement --> mappingHasXMLClass --> string1
+  MappingElement --> mappingHasXMLTagname --> string1
+  MappingElement --> mappingHasXMLAttribute --> MappingXMLAttribute --> mappingHasStandoffProperty
+  MappingElement --> mappingHasStandoffDataTypeClass --> MappingStandoffDataTypeClass
+  MappingElement --> mappingElementRequiresSeparator --> boolean1
+```
