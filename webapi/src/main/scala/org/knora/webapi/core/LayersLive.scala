@@ -20,6 +20,8 @@ import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.EntityAndClassIriService
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -60,6 +62,7 @@ object LayersLive {
       with IIIFServiceManager
       with IIIFService
       with JWTService
+      with ListsResponderADM
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
@@ -92,6 +95,7 @@ object LayersLive {
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       JWTService.layer,
+      ListsResponderADMLive.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,

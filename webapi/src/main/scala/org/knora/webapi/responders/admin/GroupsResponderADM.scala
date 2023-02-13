@@ -33,6 +33,7 @@ import org.knora.webapi.responders.EntityAndClassIriService
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util.ZioHelper.sequence
 
 /**
  * Returns information about groups.
@@ -206,12 +207,6 @@ case class GroupsResponderADMLive(
       result <- sequence(groups)
 
     } yield result.sorted
-
-  private def sequence[A](x: Seq[Task[A]]): Task[List[A]] =
-    x.map(a => a.map(x => List(x))).fold(ZIO.succeed(List[A]()))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
-
-  private def sequence[A](x: Set[Task[A]]): Task[Set[A]] =
-    x.map(a => a.map(x => Set(x))).fold(ZIO.succeed(Set[A]()))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
 
   /**
    * Gets all the groups and returns them as a [[GroupsGetResponseADM]].

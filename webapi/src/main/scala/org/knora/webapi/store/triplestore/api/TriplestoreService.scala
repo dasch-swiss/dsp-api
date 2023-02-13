@@ -7,7 +7,6 @@ package org.knora.webapi.store.triplestore.api
 
 import zio._
 import zio.macros.accessible
-
 import java.nio.file.Path
 
 import org.knora.webapi._
@@ -48,9 +47,20 @@ trait TriplestoreService {
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
    *
+   * @param query the request message.
+   * @return a [[SparqlExtendedConstructResponse]]
+   */
+  def sparqlHttpExtendedConstruct(query: String): UIO[SparqlExtendedConstructResponse] = sparqlHttpExtendedConstruct(
+    SparqlExtendedConstructRequest(query)
+  )
+
+  /**
+   * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
+   *
    * @param sparqlExtendedConstructRequest the request message.
    * @return a [[SparqlExtendedConstructResponse]]
    */
+
   def sparqlHttpExtendedConstruct(
     sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
   ): UIO[SparqlExtendedConstructResponse]
