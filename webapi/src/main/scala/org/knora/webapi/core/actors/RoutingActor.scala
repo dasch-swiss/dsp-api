@@ -7,11 +7,11 @@ package org.knora.webapi.core.actors
 
 import akka.actor.Actor
 import com.typesafe.scalalogging.Logger
-
 import scala.concurrent.ExecutionContext
-
 import dsp.errors.UnexpectedMessageException
+
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -73,6 +73,7 @@ final case class RoutingActor(
   iiifServiceManager: IIIFServiceManager,
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
+  messageRelay: MessageRelay,
   runtime: zio.Runtime[CardinalityService]
 ) extends Actor {
 
@@ -94,7 +95,7 @@ final case class RoutingActor(
   private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps)
 
   // V2 responders
-  private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, runtime)
+  private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, messageRelay, runtime)
   private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData)
   private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
   private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)

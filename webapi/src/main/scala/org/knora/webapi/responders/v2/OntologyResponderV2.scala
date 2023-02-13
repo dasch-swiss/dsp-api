@@ -9,13 +9,14 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import zio.RIO
 import zio.ZIO
-
 import java.time.Instant
 import scala.concurrent.Future
-
 import dsp.constants.SalsahGui
 import dsp.errors._
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
@@ -32,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.Cache
@@ -66,8 +68,20 @@ import org.knora.webapi.util._
  */
 final case class OntologyResponderV2(
   responderData: ResponderData,
+  messageRelay: MessageRelay,
   implicit val runtime: zio.Runtime[CardinalityService]
-) extends Responder(responderData.actorDeps) {
+) extends Responder(responderData.actorDeps)
+    with MessageHandler {
+
+  messageRelay.subscribe(this)
+
+  override def handle(message: ResponderRequest): zio.Task[Any] =
+    ZIO.fromFuture(_ => receive(message.asInstanceOf[OntologiesResponderRequestV2]))
+
+  override def isReponsibleFor(message: ResponderRequest): Boolean = message match {
+    case _: OntologiesResponderRequestV2 => true
+    case _                               => false
+  }
 
   /**
    * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
@@ -3416,5 +3430,4 @@ final case class OntologyResponderV2(
         }
     } yield taskResult
   }
-
 }

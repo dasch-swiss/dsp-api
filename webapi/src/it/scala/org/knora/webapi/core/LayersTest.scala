@@ -68,6 +68,7 @@ object LayersTest {
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
+      MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,
@@ -101,7 +102,7 @@ object LayersTest {
 
   /**
    * Provides a layer for integration tests which depend on Fuseki as Testcontainers.
-   * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl.l]]
+   * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl]]
    * @param system An optional [[akka.actor.ActorSystem]] for use with Akka's [[akka.testkit.TestKit]]
    * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
    */
