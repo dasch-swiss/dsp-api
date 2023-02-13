@@ -553,14 +553,7 @@ classDiagram
 title: Standoff ontology
 ---
 flowchart BT
-  %% Classes
-  %% class StandoffRootTag {
-  %%   string standoffRootTagHasDocumentType
-  %% }
-  %% class StandoffHyperlinkTag {
-  %%   string standoffHyperlinkTagHasTarget
-  %% }
-  %% Relationships
+
   StandoffRootTag["StandoffRootTag \n ----- \n string standoffRootTagHasDocumentType"]
   StandoffHyperlinkTag["StandoffHyperlinkTag \n ----- \n string standoffHyperlinkTagHasTarget"]
   StandoffVisualTag -..-> StandoffTag 
