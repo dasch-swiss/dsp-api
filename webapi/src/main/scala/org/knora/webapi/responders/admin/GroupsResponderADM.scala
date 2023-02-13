@@ -6,20 +6,23 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import java.util.UUID
-import dsp.errors._
-import dsp.valueobjects.Group.GroupStatus
 import zio.Task
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
+import java.util.UUID
+
+import dsp.errors._
+import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
@@ -27,8 +30,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.EntityAndClassIriService
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder

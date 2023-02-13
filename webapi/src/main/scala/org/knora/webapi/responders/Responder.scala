@@ -12,12 +12,13 @@ import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import dsp.errors._
 import zio.Task
 import zio.ZIO
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import dsp.errors._
 import org.knora.webapi.messages.StringFormatter
 
 /**

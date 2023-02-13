@@ -8,14 +8,15 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import zio.ZLayer
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
 import zio.Task
 import zio.ZIO
+import zio.ZLayer
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

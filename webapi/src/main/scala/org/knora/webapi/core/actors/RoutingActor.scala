@@ -7,11 +7,13 @@ package org.knora.webapi.core.actors
 
 import akka.actor.Actor
 import com.typesafe.scalalogging.Logger
-import scala.concurrent.ExecutionContext
-import dsp.errors.UnexpectedMessageException
 
+import scala.concurrent.ExecutionContext
+
+import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
@@ -35,7 +37,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponde
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM

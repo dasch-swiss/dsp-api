@@ -7,12 +7,14 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import scala.concurrent.Future
-import dsp.errors.ForbiddenException
 import zio.ZIO
 
+import scala.concurrent.Future
+
+import dsp.errors.ForbiddenException
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
@@ -24,7 +26,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 
 /**
@@ -32,7 +33,7 @@ import org.knora.webapi.responders.Responder
  * 'Store Module'
  */
 class StoresResponderADM(responderData: ResponderData, messageRelay: MessageRelay)
-  extends Responder(responderData.actorDeps)
+    extends Responder(responderData.actorDeps)
     with MessageHandler {
 
   messageRelay.subscribe(this)

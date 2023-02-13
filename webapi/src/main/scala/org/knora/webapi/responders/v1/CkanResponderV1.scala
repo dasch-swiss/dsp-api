@@ -9,6 +9,7 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import zio.ZIO
+
 import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.Future
@@ -18,6 +19,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -35,7 +37,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.HierarchicalListValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 
 /**
@@ -53,7 +54,7 @@ class CkanResponderV1(responderData: ResponderData, messageRelay: MessageRelay)
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
     case _: CkanResponderRequestV1 => true
-    case _                           => false
+    case _                         => false
   }
 
   /**

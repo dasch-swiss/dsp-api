@@ -9,11 +9,12 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import zio.RIO
 import zio.ZIO
+
 import java.time.Instant
 import scala.concurrent.Future
+
 import dsp.constants.SalsahGui
 import dsp.errors._
-
 import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -31,9 +32,9 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.Cache

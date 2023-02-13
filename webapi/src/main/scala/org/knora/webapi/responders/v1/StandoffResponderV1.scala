@@ -6,15 +6,17 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import java.util.UUID
-import scala.concurrent.Future
-import dsp.errors.NotFoundException
 import zio.ZIO
 
+import java.util.UUID
+import scala.concurrent.Future
+
+import dsp.errors.NotFoundException
 import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
@@ -22,7 +24,6 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.ConvertOntologyCl
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.iiif.errors.SipiException
 
@@ -30,7 +31,7 @@ import org.knora.webapi.store.iiif.errors.SipiException
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
 class StandoffResponderV1(responderData: ResponderData, messageRelay: MessageRelay)
-  extends Responder(responderData.actorDeps)
+    extends Responder(responderData.actorDeps)
     with MessageHandler {
 
   messageRelay.subscribe(this)
@@ -40,7 +41,7 @@ class StandoffResponderV1(responderData: ResponderData, messageRelay: MessageRel
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
     case _: StandoffResponderRequestV1 => true
-    case _                           => false
+    case _                             => false
   }
 
   /**

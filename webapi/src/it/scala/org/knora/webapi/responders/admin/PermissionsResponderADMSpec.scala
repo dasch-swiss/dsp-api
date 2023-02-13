@@ -150,7 +150,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return user's administrative permissions (helper method used in queries before)" in {
 
         implicit val runtime: zio.Runtime[Any] = zio.Runtime.default;
-        val permissionsResponder = new PermissionsResponderADM(responderData, MessageRelayLive.empty)
+        val permissionsResponder               = new PermissionsResponderADM(responderData, MessageRelayLive.empty)
 
         val f: Future[Map[IRI, Set[PermissionADM]]] =
           permissionsResponder.userAdministrativePermissionsGetADM(
