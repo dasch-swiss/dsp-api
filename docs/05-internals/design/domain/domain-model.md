@@ -545,3 +545,46 @@ classDiagram
   IntervalBase .. StandoffIntervalTag
   TimeBase .. StandoffTimeTag
 ```
+
+
+
+```mermaid
+---
+title: Standoff ontology
+---
+classDiagram
+  %% Classes
+  class StandoffRootTag {
+    string standoffRootTagHasDocumentType
+  }
+  class StandoffHyperlinkTag {
+    string standoffHyperlinkTagHasTarget
+  }
+  %% Relationships
+  StandoffTag .. StandoffVisualTag
+  StandoffTag .. StandoffStructuralTag
+  StandoffTag .. StandoffRootTag
+  StandoffTag .. StandoffHyperlinkTag
+  StandoffVisualTag <|-- StandoffItalicTag
+  StandoffVisualTag <|-- StandoffBoldTag
+  StandoffVisualTag <|-- StandoffCiteTag
+  StandoffVisualTag <|-- StandoffUnderlineTag
+  StandoffVisualTag <|-- StandoffStrikethroughTag
+  StandoffVisualTag <|-- StandoffSuperscriptTag
+  StandoffVisualTag <|-- StandoffSubscriptTag
+  StandoffVisualTag <|-- StandoffLineTag
+  StandoffVisualTag <|-- StandoffPreTag
+  StandoffStructuralTag <|-- StandoffBlockquoteTag
+  StandoffStructuralTag <|-- StandoffCodeTag
+  StandoffStructuralTag <|-- StandoffParagraphTag
+  StandoffStructuralTag <|-- StandoffHeader_1_to_6_Tag
+  StandoffStructuralTag <|-- StandoffOrderedListTag
+  StandoffStructuralTag <|-- StandoffUnorderedListTag
+  StandoffStructuralTag <|-- StandoffListElementTag
+  StandoffStructuralTag <|-- StandoffTableBodyTag
+  StandoffStructuralTag <|-- StandoffTableTag
+  StandoffStructuralTag <|-- StandoffTableRowTag
+  StandoffStructuralTag <|-- StandoffTableCellTag
+  StandoffStructuralTag <|-- StandoffBrTag
+```
+
