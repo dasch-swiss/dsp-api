@@ -634,8 +634,6 @@ flowchart BT
 title: resource properties - resource metadata(?)
 ---
 flowchart BT
-  valueHasLanguage
-
   creationDate ---> objectCannotBeMarkedAsDeleted
   deleteDate --> objectCannotBeMarkedAsDeleted
   isDeleted ---> objectCannotBeMarkedAsDeleted
@@ -666,7 +664,6 @@ flowchart BT
   mappingHasStandoffDataTypeClass ---> objectCannotBeMarkedAsDeleted
   mappingElementRequiresSeparator --> objectCannotBeMarkedAsDeleted
   mappingHasDefaultXSLTransformation ---> objectCannotBeMarkedAsDeleted
-  mappingHasDefaultXSLTransformation --> objectCannotBeMarkedAsDeleted
 
   duration --> valueHas
   pageCount ---> valueHas
@@ -682,4 +679,6 @@ flowchart BT
   fps ---> valueHas
   internalFilename --> valueHas
   internalMimeType ---> valueHas
+
+  valueHasLanguage
 ```
