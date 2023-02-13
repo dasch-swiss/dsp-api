@@ -93,7 +93,8 @@ nav:
           - Admin API Design:
               - Administration: 05-internals/design/api-admin/administration.md
           - DSP Domain:
-              - Domain Entities and Usecases: 05-internals/design/domain/domain-model.md
+              - Domain Entities: 05-internals/design/domain/domain-model.md
+              - Domain User Stories: 05-internals/design/domain/domain-user-stories.md
       - Development:
           - Overview: 05-internals/development/overview.md
           - Build and Running: 05-internals/development/building-and-running.md
