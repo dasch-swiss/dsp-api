@@ -15,15 +15,9 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.EntityAndClassIriService
-import org.knora.webapi.responders.admin.GroupsResponderADM
-import org.knora.webapi.responders.admin.GroupsResponderADMLive
-import org.knora.webapi.responders.admin.ListsResponderADM
-import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsService
-import org.knora.webapi.responders.admin.SipiResponderADM
-import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -61,18 +55,15 @@ object LayersLive {
       with AppRouterRelayingMessageHandler
       with CacheServiceManager
       with CacheService
-      with GroupsResponderADM
       with HttpServer
       with IIIFServiceManager
       with IIIFService
       with JWTService
-      with ListsResponderADM
       with PermissionsResponderADM
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
       with State
-      with SipiResponderADM
       with TriplestoreServiceManager
       with TriplestoreService
 
@@ -94,14 +85,12 @@ object LayersLive {
       CacheServiceManager.layer,
       CardinalityService.layer,
       EntityAndClassIriService.layer,
-      GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       JWTService.layer,
-      ListsResponderADMLive.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
@@ -114,7 +103,6 @@ object LayersLive {
       ResourceInfoRoute.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
-      SipiResponderADMLive.layer,
       State.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,

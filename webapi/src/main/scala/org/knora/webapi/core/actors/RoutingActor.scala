@@ -13,7 +13,10 @@ import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
@@ -36,7 +39,10 @@ import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequ
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
+import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.v1.CkanResponderV1
@@ -96,9 +102,12 @@ final case class RoutingActor(
   private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
 
   // Admin responders
+  private val groupsResponderADM: GroupsResponderADM     = new GroupsResponderADM(responderData)
+  private val listsResponderADM: ListsResponderADM       = new ListsResponderADM(responderData)
   private val projectsResponderADM: ProjectsResponderADM = ProjectsResponderADM(actorDeps, cacheServiceSettings)
   private val storeResponderADM: StoresResponderADM      = new StoresResponderADM(responderData)
   private val usersResponderADM: UsersResponderADM       = new UsersResponderADM(responderData)
+  private val sipiRouterADM: SipiResponderADM            = new SipiResponderADM(responderData)
 
   def receive: Receive = {
 
@@ -137,12 +146,18 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
     // Admin request messages
+    case groupsResponderRequestADM: GroupsResponderRequestADM =>
+      ActorUtil.future2Message(sender(), groupsResponderADM.receive(groupsResponderRequestADM), log)
+    case listsResponderRequest: ListsResponderRequestADM =>
+      ActorUtil.future2Message(sender(), listsResponderADM.receive(listsResponderRequest), log)
     case projectsResponderRequestADM: ProjectsResponderRequestADM =>
       ActorUtil.future2Message(sender(), projectsResponderADM.receive(projectsResponderRequestADM), log)
     case storeResponderRequestADM: StoreResponderRequestADM =>
       ActorUtil.future2Message(sender(), storeResponderADM.receive(storeResponderRequestADM), log)
     case usersResponderRequestADM: UsersResponderRequestADM =>
       ActorUtil.future2Message(sender(), usersResponderADM.receive(usersResponderRequestADM), log)
+    case sipiResponderRequestADM: SipiResponderRequestADM =>
+      ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
     case msg: CacheServiceRequest =>
       ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), log, runtime)
     case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, runtime)

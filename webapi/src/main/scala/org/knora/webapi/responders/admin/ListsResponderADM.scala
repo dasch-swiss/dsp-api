@@ -5,24 +5,21 @@
 
 package org.knora.webapi.responders.admin
 
-import zio._
+import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
 
 import java.util.UUID
 import scala.annotation.tailrec
+import scala.concurrent.Future
 
 import dsp.errors._
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List.ListName
 import dsp.valueobjects.ListErrorMessages
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
@@ -32,214 +29,15 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.responders.EntityAndClassIriService
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.util.ZioHelper.sequence
 
 /**
  * A responder that returns information about lists.
  */
-trait ListsResponderADM {
-
-  /**
-   * Gets all lists and returns them as a [[ListsGetResponseADM]]. For performance reasons
-   * (as lists can be very large), we only return the head of the list, i.e. the root node without
-   * any children.
-   *
-   * @param projectIri           the IRI of the project the list belongs to.
-   * @param requestingUser       the user making the request.
-   * @return a [[ListsGetResponseADM]].
-   */
-  def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Task[ListsGetResponseADM]
-
-  /**
-   * Retrieves a complete node (root or child) with all children from the triplestore and returns it as a [[ListItemGetResponseADM]].
-   * If an IRI of a root node is given, the response is a list with root node info and all chilren of the list.
-   * If an IRI of a child node is given, the response is a node with its information and all children of the sublist.
-   *
-   * @param nodeIri        the Iri if the required node.
-   * @param requestingUser the user making the request.
-   * @return a [[ListItemGetResponseADM]].
-   */
-  def listGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Task[ListItemGetResponseADM]
-
-  /**
-   * Retrieves information about a single node (without information about children). The single node can be a
-   * root node or child node
-   *
-   * @param nodeIri              the IRI of the list node to be queried.
-   * @param requestingUser       the user making the request.
-   * @return a [[ChildNodeInfoGetResponseADM]].
-   */
-  def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Task[NodeInfoGetResponseADM]
-
-  /**
-   * Provides the path to a particular hierarchical list node.
-   *
-   * @param queryNodeIri   the IRI of the node whose path is to be queried.
-   * @param requestingUser the user making the request.
-   */
-  def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: UserADM): Task[NodePathGetResponseADM]
-
-  /**
-   * Creates a list.
-   *
-   * @param request    the new list's information.
-   * @param apiRequestID         the unique api request ID.
-   * @return a [[RootNodeInfoGetResponseADM]]
-   */
-  def listCreateRequestADM(request: ListRootNodeCreatePayloadADM, apiRequestID: UUID): Task[ListGetResponseADM]
-
-  /**
-   * Creates a new child node and appends it to an existing list node.
-   *
-   * @param request the new list node's information.
-   * @param apiRequestID           the unique api request ID.
-   * @return a [[ChildNodeInfoGetResponseADM]]
-   */
-  def listChildNodeCreateRequestADM(
-    request: ListChildNodeCreatePayloadADM,
-    apiRequestID: UUID
-  ): Task[ChildNodeInfoGetResponseADM]
-
-  /**
-   * Changes basic node information stored (root or child)
-   *
-   * @param nodeIri              the list's IRI.
-   * @param changeNodeRequest    the new node information.
-   * @param apiRequestID         the unique api request ID.
-   * @return a [[NodeInfoGetResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[BadRequestException]]         in the case when the list IRI given in the path does not match with the one given in the payload.
-   *
-   *         [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
-   */
-  def nodeInfoChangeRequest(
-    nodeIri: IRI,
-    changeNodeRequest: ListNodeChangePayloadADM,
-    apiRequestID: UUID
-  ): Task[NodeInfoGetResponseADM]
-
-  /**
-   * Changes name of the node (root or child)
-   *
-   * @param nodeIri               the node's IRI.
-   * @param changeNodeNameRequest the new node name.
-   * @param apiRequestID          the unique api request ID.
-   * @return a [[NodeInfoGetResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
-   */
-  def nodeNameChangeRequest(
-    nodeIri: IRI,
-    changeNodeNameRequest: NodeNameChangePayloadADM,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[NodeInfoGetResponseADM]
-
-  /**
-   * Changes labels of the node (root or child)
-   *
-   * @param nodeIri                 the node's IRI.
-   * @param changeNodeLabelsRequest the new node labels.
-   * @param requestingUser          the requesting user.
-   * @param apiRequestID            the unique api request ID.
-   * @return a [[NodeInfoGetResponseADM]]
-   *
-   *        [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *        [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
-   */
-  def nodeLabelsChangeRequest(
-    nodeIri: IRI,
-    changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[NodeInfoGetResponseADM]
-
-  /**
-   * Changes comments of the node (root or child)
-   *
-   * @param nodeIri                   the node's IRI.
-   * @param changeNodeCommentsRequest the new node comments.
-   * @param requestingUser            the requesting user.
-   * @param apiRequestID              the unique api request ID.
-   * @return a [[NodeInfoGetResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
-   */
-  def nodeCommentsChangeRequest(
-    nodeIri: IRI,
-    changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[NodeInfoGetResponseADM]
-
-  /**
-   * Changes position of the node
-   *
-   * @param nodeIri                   the node's IRI.
-   * @param changeNodePositionRequest the new node comments.
-   * @param requestingUser            the requesting user.
-   * @param apiRequestID              the unique api request ID.
-   * @return a [[NodePositionChangeResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
-   */
-  def nodePositionChangeRequest(
-    nodeIri: IRI,
-    changeNodePositionRequest: ChangeNodePositionApiRequestADM,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[NodePositionChangeResponseADM]
-
-  /**
-   * Delete a node (root or child). If a root node is given, check for its usage in data and ontology. If not used,
-   * delete the list and return a confirmation message.
-   *
-   * @param nodeIri              the node's IRI.
-   * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
-   * @return a [[NodeInfoGetResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[UpdateNotPerformedException]] in the case the node is in use and cannot be deleted.
-   */
-  def deleteListItemRequestADM(
-    nodeIri: IRI,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[ListItemDeleteResponseADM]
-}
-
-case class ListsResponderADMLive(
-  appConfig: AppConfig,
-  iriService: EntityAndClassIriService,
-  messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
-  implicit val stringFormatter: StringFormatter
-) extends MessageHandler
-    with ListsResponderADM {
-
-  override def handle(message: ResponderRequest): Task[Any] =
-    this.receive(message.asInstanceOf[ListsResponderRequestADM])
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: ListsResponderRequestADM => true
-    case _                           => false
-  }
+class ListsResponderADM(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   // The IRI used to lock user creation and update
   private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
@@ -247,11 +45,15 @@ case class ListsResponderADMLive(
   /**
    * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
    */
-  def receive(msg: ListsResponderRequestADM): Task[Any] = msg match {
-    case ListsGetRequestADM(projectIri, requestingUser)     => listsGetRequestADM(projectIri, requestingUser)
-    case ListGetRequestADM(listIri, requestingUser)         => listGetRequestADM(listIri, requestingUser)
-    case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri, requestingUser)
-    case NodePathGetRequestADM(iri, requestingUser)         => nodePathGetAdminRequest(iri, requestingUser)
+  def receive(msg: ListsResponderRequestADM) = msg match {
+    case ListsGetRequestADM(projectIri, requestingUser) =>
+      listsGetRequestADM(projectIri, requestingUser)
+    case ListGetRequestADM(listIri, requestingUser) =>
+      listGetRequestADM(listIri, requestingUser)
+    case ListNodeInfoGetRequestADM(listIri, requestingUser) =>
+      listNodeInfoGetRequestADM(listIri, requestingUser)
+    case NodePathGetRequestADM(iri, requestingUser) =>
+      nodePathGetAdminRequest(iri, requestingUser)
     case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
@@ -260,17 +62,34 @@ case class ListsResponderADMLive(
       nodeInfoChangeRequest(nodeIri, changeNodeRequest, apiRequestID)
     case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID) =>
       nodeNameChangeRequest(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
-    case NodeLabelsChangeRequestADM(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID) =>
+    case NodeLabelsChangeRequestADM(
+          nodeIri,
+          changeNodeLabelsRequest,
+          requestingUser,
+          apiRequestID
+        ) =>
       nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID)
-    case NodeCommentsChangeRequestADM(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID) =>
+    case NodeCommentsChangeRequestADM(
+          nodeIri,
+          changeNodeCommentsRequest,
+          requestingUser,
+          apiRequestID
+        ) =>
       nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID)
-    case NodePositionChangeRequestADM(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID) =>
+    case NodePositionChangeRequestADM(
+          nodeIri,
+          changeNodePositionRequest,
+          requestingUser,
+          apiRequestID
+        ) =>
       nodePositionChangeRequest(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID)
     case ListItemDeleteRequestADM(nodeIri, requestingUser, apiRequestID) =>
       deleteListItemRequestADM(nodeIri, requestingUser, apiRequestID)
-    case CanDeleteListRequestADM(iri, _)          => canDeleteListRequestADM(iri)
-    case ListNodeCommentsDeleteRequestADM(iri, _) => deleteListNodeCommentsADM(iri)
-    case other                                    => Responder.handleUnexpectedMessageTask(other, this.getClass.getName)
+    case CanDeleteListRequestADM(iri, _) =>
+      canDeleteListRequestADM(iri)
+    case ListNodeCommentsDeleteRequestADM(iri, requestingUser) =>
+      deleteListNodeCommentsADM(iri, requestingUser)
+    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
@@ -282,13 +101,35 @@ case class ListsResponderADMLive(
    * @param requestingUser       the user making the request.
    * @return a [[ListsGetResponseADM]].
    */
-  override def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Task[ListsGetResponseADM] = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-      .getLists(projectIri)
-      .toString()
+  private def listsGetRequestADM(
+    projectIri: Option[IRI],
+    requestingUser: UserADM
+  ): Future[ListsGetResponseADM] =
+    // log.debug("listsGetRequestV2")
     for {
-      listsResponse <- triplestoreService.sparqlHttpExtendedConstruct(query)
-      statements     = listsResponse.statements.toList
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getLists(
+              maybeProjectIri = projectIri
+            )
+            .toString()
+        )
+
+      listsResponse <-
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = sparqlQuery
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
+
+      // _ = log.debug("listsGetAdminRequest - listsResponse: {}", listsResponse )
+
+      // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
+      statements = listsResponse.statements.toList
+
       lists: Seq[ListNodeInfoADM] =
         statements.map { case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
           val name: Option[String] = propsMap
@@ -324,8 +165,10 @@ case class ListsResponderADMLive(
             comments = StringLiteralSequenceV2(comments.toVector)
           ).unescape
         }
+
+      // _ = log.debug("listsGetAdminRequest - items: {}", items)
+
     } yield ListsGetResponseADM(lists = lists)
-  }
 
   /**
    * Retrieves a complete list (root and all children) from the triplestore and returns it as a optional [[ListADM]].
@@ -337,20 +180,23 @@ case class ListsResponderADMLive(
   private def listGetADM(
     rootNodeIri: IRI,
     requestingUser: UserADM
-  ): Task[Option[ListADM]] =
+  ): Future[Option[ListADM]] =
     for {
       // this query will give us only the information about the root node.
       exists <- rootNodeByIriExists(rootNodeIri)
 
-      maybeList <-
+      // _ = log.debug(s"listGetADM - exists: {}", exists)
+
+      maybeList: Option[ListADM] <-
         if (exists) {
           for {
             // here we know that the list exists and it is fine if children is an empty list
-            children <- getChildren(
-                          ofNodeIri = rootNodeIri,
-                          shallow = false,
-                          KnoraSystemInstances.Users.SystemUser
-                        )
+            children: Seq[ListChildNodeADM] <-
+              getChildren(
+                ofNodeIri = rootNodeIri,
+                shallow = false,
+                KnoraSystemInstances.Users.SystemUser
+              )
 
             maybeRootNodeInfo <-
               listNodeInfoGetADM(
@@ -358,8 +204,10 @@ case class ListsResponderADMLive(
                 requestingUser = KnoraSystemInstances.Users.SystemUser
               )
 
+            // _ = log.debug(s"listGetADM - maybeRootNodeInfo: {}", maybeRootNodeInfo)
+
             rootNodeInfo = maybeRootNodeInfo match {
-                             case Some(info: ListRootNodeInfoADM) => info
+                             case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
                              case Some(_: ListChildNodeInfoADM) =>
                                throw InconsistentRepositoryDataException(
                                  "A child node info was found, although we are expecting a root node info. Please report this as a possible bug."
@@ -373,7 +221,7 @@ case class ListsResponderADMLive(
             list = ListADM(listinfo = rootNodeInfo, children = children)
           } yield Some(list)
         } else {
-          ZIO.succeed(None)
+          FastFuture.successful(None)
         }
 
     } yield maybeList
@@ -387,10 +235,14 @@ case class ListsResponderADMLive(
    * @param requestingUser the user making the request.
    * @return a [[ListItemGetResponseADM]].
    */
-  override def listGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Task[ListItemGetResponseADM] = {
+  private def listGetRequestADM(
+    nodeIri: IRI,
+    requestingUser: UserADM
+  ): Future[ListItemGetResponseADM] = {
+
     def getNodeADM(
       childNode: ListChildNodeADM
-    ): Task[ListNodeGetResponseADM] =
+    ): Future[ListNodeGetResponseADM] =
       for {
         maybeNodeInfo <- listNodeInfoGetADM(
                            nodeIri = nodeIri,
@@ -462,13 +314,29 @@ case class ListsResponderADMLive(
   private def listNodeInfoGetADM(
     nodeIri: IRI,
     requestingUser: UserADM
-  ): Task[Option[ListNodeInfoADM]] = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-      .getListNode(nodeIri)
-      .toString()
+  ): Future[Option[ListNodeInfoADM]] = {
     for {
-      listNodeResponse                                         <- triplestoreService.sparqlHttpExtendedConstruct(query)
+      sparqlQuery <- Future(
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .getListNode(
+                           nodeIri = nodeIri
+                         )
+                         .toString()
+                     )
+
+      // _ = log.debug("listNodeInfoGetADM - sparqlQuery: {}", sparqlQuery)
+
+      listNodeResponse <- appActor
+                            .ask(
+                              SparqlExtendedConstructRequest(
+                                sparql = sparqlQuery
+                              )
+                            )
+                            .mapTo[SparqlExtendedConstructResponse]
+
       statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
+
+      // _ = log.debug(s"listNodeInfoGetADM - statements: {}", statements)
 
       maybeListNodeInfo =
         if (statements.nonEmpty) {
@@ -568,6 +436,8 @@ case class ListsResponderADMLive(
           None
         }
 
+      // _ = log.debug(s"listNodeInfoGetADM - maybeListNodeInfo: {}", maybeListNodeInfo)
+
     } yield maybeListNodeInfo
 
   }
@@ -580,9 +450,16 @@ case class ListsResponderADMLive(
    * @param requestingUser       the user making the request.
    * @return a [[ChildNodeInfoGetResponseADM]].
    */
-  override def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Task[NodeInfoGetResponseADM] =
+  private def listNodeInfoGetRequestADM(
+    nodeIri: IRI,
+    requestingUser: UserADM
+  ): Future[NodeInfoGetResponseADM] =
     for {
-      maybeListNodeInfoADM <- listNodeInfoGetADM(nodeIri, requestingUser)
+      maybeListNodeInfoADM <- listNodeInfoGetADM(
+                                nodeIri = nodeIri,
+                                requestingUser = requestingUser
+                              )
+
       result = maybeListNodeInfoADM match {
                  case Some(childInfo: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(childInfo)
                  case Some(rootInfo: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(rootInfo)
@@ -602,24 +479,43 @@ case class ListsResponderADMLive(
     nodeIri: IRI,
     shallow: Boolean,
     requestingUser: UserADM
-  ): Task[Option[ListNodeADM]] = {
-    // this query will give us only the information about the root node.
-    val query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-      .getListNode(nodeIri)
-      .toString()
+  ): Future[Option[ListNodeADM]] = {
     for {
-      listInfoResponse <- triplestoreService.sparqlHttpExtendedConstruct(query)
-      maybeListNode <-
+      // this query will give us only the information about the root node.
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getListNode(
+              nodeIri = nodeIri
+            )
+            .toString()
+        )
+
+      listInfoResponse <-
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = sparqlQuery
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
+
+      // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
+
+      maybeListNode: Option[ListNodeADM] <-
         if (listInfoResponse.statements.nonEmpty) {
           for {
             // here we know that the list exists and it is fine if children is an empty list
-            children <-
+            children: Seq[ListChildNodeADM] <-
               getChildren(
                 ofNodeIri = nodeIri,
                 shallow = shallow,
                 requestingUser = requestingUser
               )
 
+            // _ = log.debug(s"listGetADM - children count: {}", children.size)
+
+            // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
             statements = listInfoResponse.statements
 
             node: ListNodeADM = statements.head match {
@@ -716,9 +612,10 @@ case class ListsResponderADMLive(
                                     }
                                 }
 
+            // _ = log.debug(s"listGetADM - list: {}", MessageUtil.toSource(list))
           } yield Some(node)
         } else {
-          ZIO.succeed(None)
+          FastFuture.successful(None)
         }
 
     } yield maybeListNode
@@ -737,7 +634,7 @@ case class ListsResponderADMLive(
     ofNodeIri: IRI,
     shallow: Boolean,
     requestingUser: UserADM
-  ): Task[Seq[ListChildNodeADM]] = {
+  ): Future[Seq[ListChildNodeADM]] = {
 
     /**
      * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListChildNodeADM]].
@@ -801,11 +698,24 @@ case class ListsResponderADMLive(
         hasRootNode = hasRootNode
       ).unescape
     }
-    val query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-      .getListNodeWithChildren(ofNodeIri)
-      .toString()
+
     for {
-      nodeWithChildrenResponse                                   <- triplestoreService.sparqlHttpExtendedConstruct(query)
+      nodeChildrenQuery <- Future {
+                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                               .getListNodeWithChildren(
+                                 startNodeIri = ofNodeIri
+                               )
+                               .toString()
+                           }
+
+      nodeWithChildrenResponse <- appActor
+                                    .ask(
+                                      SparqlExtendedConstructRequest(
+                                        sparql = nodeChildrenQuery
+                                      )
+                                    )
+                                    .mapTo[SparqlExtendedConstructResponse]
+
       statements: Seq[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = nodeWithChildrenResponse.statements.toList
 
       startNodePropsMap: Map[SmartIri, Seq[LiteralV2]] = statements.filter(_._1 == IriSubjectV2(ofNodeIri)).head._2
@@ -832,7 +742,7 @@ case class ListsResponderADMLive(
    * @param queryNodeIri   the IRI of the node whose path is to be queried.
    * @param requestingUser the user making the request.
    */
-  override def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: UserADM): Task[NodePathGetResponseADM] = {
+  private def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: UserADM): Future[NodePathGetResponseADM] = {
 
     /**
      * Recursively constructs the path to a node.
@@ -880,16 +790,22 @@ case class ListsResponderADMLive(
       }
     }
 
-    val query =
-      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-        .getNodePath(
-          queryNodeIri = queryNodeIri,
-          preferredLanguage = requestingUser.lang,
-          fallbackLanguage = appConfig.fallbackLanguage
-        )
-        .toString()
+    // TODO: Rewrite using a construct sparql query
     for {
-      nodePathResponse <- triplestoreService.sparqlHttpSelect(query)
+      nodePathQuery <- Future {
+                         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                           .getNodePath(
+                             queryNodeIri = queryNodeIri,
+                             preferredLanguage = requestingUser.lang,
+                             fallbackLanguage = responderData.appConfig.fallbackLanguage
+                           )
+                           .toString()
+                       }
+
+      nodePathResponse: SparqlSelectResult <- appActor
+                                                .ask(SparqlSelectRequest(nodePathQuery))
+                                                .mapTo[SparqlSelectResult]
+
       /*
 
             If we request the path to the node <http://rdfh.ch/lists/c7f07a3fc1> ("Heidi Film"), the response has the following format:
@@ -927,7 +843,8 @@ case class ListsResponderADMLive(
    */
   private def createNode(
     createNodeRequest: ListNodeCreatePayloadADM
-  ): Task[IRI] = {
+  ): Future[IRI] = {
+//    TODO-mpro: it's quickfix, refactor
     val parentNode: Option[ListIri] = createNodeRequest match {
       case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
       case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
@@ -965,7 +882,7 @@ case class ListsResponderADMLive(
     def getRootNodeAndPositionOfNewChild(
       parentNodeIri: IRI,
       dataNamedGraph: IRI
-    ): Task[(Some[Int], Some[IRI])] =
+    ): Future[(Some[Int], Some[IRI])] =
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         maybeParentListNode <- listNodeGetADM(
@@ -977,12 +894,12 @@ case class ListsResponderADMLive(
         (parentListNode: ListNodeADM, children: Seq[ListChildNodeADM]) = maybeParentListNode match {
                                                                            case Some(node: ListRootNodeADM) =>
                                                                              (
-                                                                               node,
+                                                                               node.asInstanceOf[ListRootNodeADM],
                                                                                node.children
                                                                              )
                                                                            case Some(node: ListChildNodeADM) =>
                                                                              (
-                                                                               node,
+                                                                               node.asInstanceOf[ListChildNodeADM],
                                                                                node.children
                                                                              )
                                                                            case Some(_) | None =>
@@ -1010,7 +927,7 @@ case class ListsResponderADMLive(
             } yield updatedSiblings
           } else {
             // No. new node will be appended to the end, no shifting is necessary.
-            ZIO.succeed(children)
+            Future.successful(children)
           }
 
         /* get the root node, depending on the type of the parent */
@@ -1021,7 +938,7 @@ case class ListsResponderADMLive(
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
       maybeProject <-
-        messageRelay
+        appActor
           .ask(
             ProjectGetADM(
               identifier = IriIdentifier
@@ -1029,11 +946,11 @@ case class ListsResponderADMLive(
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
-          .map(any => any.asInstanceOf[Option[ProjectADM]])
+          .mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project
-                              case None                      => throw BadRequestException(s"Project '$projectIri' not found.")
+                              case None                      => throw BadRequestException(s"Project '${projectIri}' not found.")
                             }
 
       /* verify that the list node name is unique for the project */
@@ -1045,7 +962,7 @@ case class ListsResponderADMLive(
             val escapedName   = name.get.value
             val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
             throw BadRequestException(
-              s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}."
+              s"The node name ${unescapedName} is already used by a list inside the project ${projectIri.value}."
             )
           }
 
@@ -1053,23 +970,21 @@ case class ListsResponderADMLive(
       dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
 
       // if parent node is known, find the root node of the list and the position of the new child node
-      t <-
+      (newPosition: Option[Int], rootNodeIri: Option[IRI]) <-
         if (parentNode.nonEmpty) {
           getRootNodeAndPositionOfNewChild(
             parentNodeIri = parentNode.get.value,
             dataNamedGraph = dataNamedGraph
           )
         } else {
-          ZIO.succeed(None, None)
+          Future(None, None)
         }
-      newPosition: Option[Int] = t._1
-      rootNodeIri: Option[IRI] = t._2
 
       // check the custom IRI; if not given, create an unused IRI
       customListIri: Option[SmartIri] = id.map(_.value).map(_.toSmartIri)
       maybeShortcode: String          = project.shortcode
-      newListNodeIri <-
-        iriService.checkOrCreateEntityIriTask(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
+      newListNodeIri: IRI <-
+        iriService.checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
       // Create the new list node depending on type
       createNewListSparqlString: String = createNodeRequest match {
@@ -1119,7 +1034,7 @@ case class ListsResponderADMLive(
                                                 .toString
                                           }
 
-      _ <- triplestoreService.sparqlHttpUpdate(createNewListSparqlString)
+      _ <- appActor.ask(SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
     } yield newListNodeIri
   }
 
@@ -1130,17 +1045,20 @@ case class ListsResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return a [[RootNodeInfoGetResponseADM]]
    */
-  override def listCreateRequestADM(
+  private def listCreateRequestADM(
     createRootRequest: ListRootNodeCreatePayloadADM,
     apiRequestID: UUID
-  ): Task[ListGetResponseADM] = {
+  ): Future[ListGetResponseADM] = {
+
+//    println("XXXXX-listCreateRequestADM")
 
     /**
      * The actual task run with an IRI lock.
      */
     def listCreateTask(
-      createRootRequest: ListRootNodeCreatePayloadADM
-    ): Task[ListGetResponseADM] =
+      createRootRequest: ListRootNodeCreatePayloadADM,
+      apiRequestID: UUID
+    ): Future[ListGetResponseADM] =
       for {
         listRootIri <- createNode(createRootRequest)
 
@@ -1156,13 +1074,18 @@ case class ListsResponderADMLive(
                        )
                      )
 
+        // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")
+
       } yield ListGetResponseADM(newListADM)
 
-    IriLocker.runWithIriLockZio(
-      apiRequestID,
-      LISTS_GLOBAL_LOCK_IRI,
-      listCreateTask(createRootRequest)
-    )
+    for {
+      // run list creation with an global IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+                      apiRequestID,
+                      LISTS_GLOBAL_LOCK_IRI,
+                      () => listCreateTask(createRootRequest, apiRequestID)
+                    )
+    } yield taskResult
   }
 
   /**
@@ -1172,32 +1095,36 @@ case class ListsResponderADMLive(
    * @param changeNodeRequest    the new node information.
    * @param apiRequestID         the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   *         ForbiddenException          in the case that the user is not allowed to perform the operation.
-   *         BadRequestException         in the case when the list IRI given in the path does not match with the one given in the payload.
-   *         UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * @throws BadRequestException         in the case when the list IRI given in the path does not match with the one given in the payload.
+   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
-  override def nodeInfoChangeRequest(
+  private def nodeInfoChangeRequest(
     nodeIri: IRI,
     changeNodeRequest: ListNodeChangePayloadADM,
     apiRequestID: UUID
-  ): Task[NodeInfoGetResponseADM] = {
+  ): Future[NodeInfoGetResponseADM] = {
 
     /**
      * The actual task run with an IRI lock.
      */
     def nodeInfoChangeTask(
       nodeIri: IRI,
-      changeNodeRequest: ListNodeChangePayloadADM
-    ): Task[NodeInfoGetResponseADM] =
+      changeNodeRequest: ListNodeChangePayloadADM,
+      apiRequestID: UUID
+    ): Future[NodeInfoGetResponseADM] =
       for {
+//        _ <- Future(println("77777", nodeIri, changeNodeRequest.listIri))
         // check if nodeIRI in path and payload match
-        _ <- ZIO.attempt(
+        _ <- Future(
                if (!nodeIri.equals(changeNodeRequest.listIri.value))
                  throw BadRequestException("IRI in path and payload don't match.")
              )
 
         changeNodeInfoSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
-        _                          <- triplestoreService.sparqlHttpUpdate(changeNodeInfoSparqlString)
+        changeResourceResponse <- appActor
+                                    .ask(SparqlUpdateRequest(changeNodeInfoSparqlString))
+                                    .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1218,11 +1145,14 @@ case class ListsResponderADMLive(
 
       } yield response
 
-    IriLocker.runWithIriLockZio(
-      apiRequestID,
-      nodeIri,
-      nodeInfoChangeTask(nodeIri, changeNodeRequest)
-    )
+    for {
+      // run list info update with an local IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+                      apiRequestID,
+                      nodeIri,
+                      () => nodeInfoChangeTask(nodeIri, changeNodeRequest, apiRequestID)
+                    )
+    } yield taskResult
   }
 
   /**
@@ -1232,17 +1162,18 @@ case class ListsResponderADMLive(
    * @param apiRequestID           the unique api request ID.
    * @return a [[ChildNodeInfoGetResponseADM]]
    */
-  override def listChildNodeCreateRequestADM(
+  private def listChildNodeCreateRequestADM(
     createChildNodeRequest: ListChildNodeCreatePayloadADM,
     apiRequestID: UUID
-  ): Task[ChildNodeInfoGetResponseADM] = {
+  ): Future[ChildNodeInfoGetResponseADM] = {
 
     /**
      * The actual task run with an IRI lock.
      */
     def listChildNodeCreateTask(
-      createChildNodeRequest: ListChildNodeCreatePayloadADM
-    ): Task[ChildNodeInfoGetResponseADM] =
+      createChildNodeRequest: ListChildNodeCreatePayloadADM,
+      apiRequestID: UUID
+    ): Future[ChildNodeInfoGetResponseADM] =
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
         // Verify that the list node was created.
@@ -1264,11 +1195,15 @@ case class ListsResponderADMLive(
 
       } yield ChildNodeInfoGetResponseADM(nodeinfo = newListNode)
 
-    IriLocker.runWithIriLockZio(
-      apiRequestID,
-      LISTS_GLOBAL_LOCK_IRI,
-      listChildNodeCreateTask(createChildNodeRequest)
-    )
+    for {
+      // run list node creation with an global IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+                      apiRequestID,
+                      LISTS_GLOBAL_LOCK_IRI,
+                      () => listChildNodeCreateTask(createChildNodeRequest, apiRequestID)
+                    )
+    } yield taskResult
+
   }
 
   /**
@@ -1278,17 +1213,15 @@ case class ListsResponderADMLive(
    * @param changeNodeNameRequest the new node name.
    * @param apiRequestID          the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
+   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
-  override def nodeNameChangeRequest(
+  private def nodeNameChangeRequest(
     nodeIri: IRI,
     changeNodeNameRequest: NodeNameChangePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Task[NodeInfoGetResponseADM] = {
+  ): Future[NodeInfoGetResponseADM] = {
 
     /**
      * The actual task run with an IRI lock.
@@ -1296,8 +1229,9 @@ case class ListsResponderADMLive(
     def nodeNameChangeTask(
       nodeIri: IRI,
       changeNodeNameRequest: NodeNameChangePayloadADM,
-      requestingUser: UserADM
-    ): Task[NodeInfoGetResponseADM] =
+      requestingUser: UserADM,
+      apiRequestID: UUID
+    ): Future[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
         // check if the requesting user is allowed to perform operation
@@ -1314,7 +1248,10 @@ case class ListsResponderADMLive(
               name = Some(changeNodeNameRequest.name)
             )
           )
-        _ <- triplestoreService.sparqlHttpUpdate(changeNodeNameSparqlString)
+
+        changeResourceResponse <- appActor
+                                    .ask(SparqlUpdateRequest(changeNodeNameSparqlString))
+                                    .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1332,11 +1269,15 @@ case class ListsResponderADMLive(
                    }
       } yield response
 
-    IriLocker.runWithIriLockZio(
-      apiRequestID,
-      nodeIri,
-      nodeNameChangeTask(nodeIri, changeNodeNameRequest, requestingUser)
-    )
+    for {
+      // run list info update with an local IRI lock
+      taskResult <-
+        IriLocker.runWithIriLock(
+          apiRequestID,
+          nodeIri,
+          () => nodeNameChangeTask(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
+        )
+    } yield taskResult
   }
 
   /**
@@ -1347,17 +1288,15 @@ case class ListsResponderADMLive(
    * @param requestingUser          the requesting user.
    * @param apiRequestID            the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   *
-   *        [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *        [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
+   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
-  override def nodeLabelsChangeRequest(
+  private def nodeLabelsChangeRequest(
     nodeIri: IRI,
     changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Task[NodeInfoGetResponseADM] = {
+  ): Future[NodeInfoGetResponseADM] = {
 
     /**
      * The actual task run with an IRI lock.
@@ -1365,8 +1304,9 @@ case class ListsResponderADMLive(
     def nodeLabelsChangeTask(
       nodeIri: IRI,
       changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
-      requestingUser: UserADM
-    ): Task[NodeInfoGetResponseADM] =
+      requestingUser: UserADM,
+      apiRequestID: UUID
+    ): Future[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
 
@@ -1382,7 +1322,9 @@ case class ListsResponderADMLive(
                                             labels = Some(changeNodeLabelsRequest.labels)
                                           )
                                         )
-        _ <- triplestoreService.sparqlHttpUpdate(changeNodeLabelsSparqlString)
+        changeResourceResponse <- appActor
+                                    .ask(SparqlUpdateRequest(changeNodeLabelsSparqlString))
+                                    .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1400,11 +1342,15 @@ case class ListsResponderADMLive(
                    }
       } yield response
 
-    IriLocker.runWithIriLockZio(
-      apiRequestID,
-      nodeIri,
-      nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, requestingUser)
-    )
+    for {
+      // run list info update with an local IRI lock
+      taskResult <-
+        IriLocker.runWithIriLock(
+          apiRequestID,
+          nodeIri,
+          () => nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID)
+        )
+    } yield taskResult
   }
 
   /**
@@ -1415,17 +1361,15 @@ case class ListsResponderADMLive(
    * @param requestingUser            the requesting user.
    * @param apiRequestID              the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
+   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
-  override def nodeCommentsChangeRequest(
+  private def nodeCommentsChangeRequest(
     nodeIri: IRI,
     changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Task[NodeInfoGetResponseADM] = {
+  ): Future[NodeInfoGetResponseADM] = {
 
     /**
      * The actual task run with an IRI lock.
@@ -1433,8 +1377,9 @@ case class ListsResponderADMLive(
     def nodeCommentsChangeTask(
       nodeIri: IRI,
       changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
-      requestingUser: UserADM
-    ): Task[NodeInfoGetResponseADM] =
+      requestingUser: UserADM,
+      apiRequestID: UUID
+    ): Future[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
 
@@ -1451,7 +1396,7 @@ case class ListsResponderADMLive(
                                               comments = Some(changeNodeCommentsRequest.comments)
                                             )
                                           )
-        _ <- triplestoreService.sparqlHttpUpdate(changeNodeCommentsSparqlString)
+        _ <- appActor.ask(SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1469,11 +1414,20 @@ case class ListsResponderADMLive(
                    }
       } yield response
 
-    IriLocker.runWithIriLockZio(
-      apiRequestID,
-      nodeIri,
-      nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, requestingUser)
-    )
+    for {
+      // run list info update with an local IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+                      apiRequestID,
+                      nodeIri,
+                      () =>
+                        nodeCommentsChangeTask(
+                          nodeIri,
+                          changeNodeCommentsRequest,
+                          requestingUser,
+                          apiRequestID
+                        )
+                    )
+    } yield taskResult
   }
 
   /**
@@ -1484,17 +1438,15 @@ case class ListsResponderADMLive(
    * @param requestingUser            the requesting user.
    * @param apiRequestID              the unique api request ID.
    * @return a [[NodePositionChangeResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
+   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
-  override def nodePositionChangeRequest(
+  private def nodePositionChangeRequest(
     nodeIri: IRI,
     changeNodePositionRequest: ChangeNodePositionApiRequestADM,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Task[NodePositionChangeResponseADM] = {
+  ): Future[NodePositionChangeResponseADM] = {
 
     /**
      * Checks if the given position is in range.
@@ -1503,8 +1455,8 @@ case class ListsResponderADMLive(
      *
      * @param parentNode  the parent to which the node should belong.
      * @param isNewParent identifier that node is added to another parent or not.
+     * @throws BadRequestException if given position is out of range.
      */
-    @throws[BadRequestException]("if given position is out of range.")
     def isNewPositionValid(parentNode: ListNodeADM, isNewParent: Boolean): Unit = {
       val numberOfChildren = parentNode.getChildren.size
       // If the node must be added to a new parent, highest valid position is numberOfChildre.
@@ -1535,9 +1487,9 @@ case class ListsResponderADMLive(
      *
      * @param newPosition the new position of the node.
      * @return the updated parent node with all its children as [[ListNodeADM]]
-     *         UpdateNotPerformedException if some thing has gone wrong during the update.
+     * @throws UpdateNotPerformedException if some thing has gone wrong during the update.
      */
-    def verifyParentChildrenUpdate(newPosition: Int): Task[ListNodeADM] =
+    def verifyParentChildrenUpdate(newPosition: Int): Future[ListNodeADM] =
       for {
         maybeParentNode <- listNodeGetADM(
                              nodeIri = changeNodePositionRequest.parentIri,
@@ -1580,14 +1532,14 @@ case class ListsResponderADMLive(
      * @param givenPosition  the new node position.
      * @param dataNamedGraph the new node position.
      * @return the new position of the node [[Int]]
-     *         UpdateNotPerformedException in the case the given new position is the same as current position.
+     * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
      */
     def updatePositionWithinSameParent(
       node: ListChildNodeADM,
       parentIri: IRI,
       givenPosition: Int,
       dataNamedGraph: IRI
-    ): Task[Int] =
+    ): Future[Int] =
       for {
         // get parent node with its immediate children
         maybeParentNode <- listNodeGetADM(
@@ -1597,9 +1549,9 @@ case class ListsResponderADMLive(
                            )
         parentNode =
           maybeParentNode.getOrElse(
-            throw BadRequestException(s"The parent node $parentIri could node be found, report this as a bug.")
+            throw BadRequestException(s"The parent node ${parentIri} could node be found, report this as a bug.")
           )
-        _              = isNewPositionValid(parentNode, isNewParent = false)
+        _              = isNewPositionValid(parentNode, false)
         parentChildren = parentNode.getChildren
         currPosition   = node.position
 
@@ -1655,7 +1607,7 @@ case class ListsResponderADMLive(
      * @param givenPosition  the new node position.
      * @param dataNamedGraph the new node position.
      * @return the new position of the node [[Int]]
-     *         UpdateNotPerformedException in the case the given new position is the same as current position.
+     * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
      */
     def updateParentAndPosition(
       node: ListChildNodeADM,
@@ -1663,7 +1615,7 @@ case class ListsResponderADMLive(
       currParentIri: IRI,
       givenPosition: Int,
       dataNamedGraph: IRI
-    ): Task[Int] =
+    ): Future[Int] =
       for {
         // get current parent node with its immediate children
         maybeCurrentParentNode <- listNodeGetADM(
@@ -1679,7 +1631,7 @@ case class ListsResponderADMLive(
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                               )
         newParent   = maybeNewParentNode.get
-        _           = isNewPositionValid(newParent, isNewParent = true)
+        _           = isNewPositionValid(newParent, true)
         newSiblings = newParent.getChildren
 
         currentNodePosition = node.position
@@ -1710,7 +1662,7 @@ case class ListsResponderADMLive(
         _ <-
           if (givenPosition == -1 || givenPosition == newSiblings.size) {
             // Yes. New siblings should not be shifted
-            ZIO.attempt(newSiblings)
+            Future(newSiblings)
           } else {
             // No. Shift new siblings with the same and higher position
             // to right, as if the node is inserted in the given position
@@ -1741,8 +1693,9 @@ case class ListsResponderADMLive(
     def nodePositionChangeTask(
       nodeIri: IRI,
       changeNodePositionRequest: ChangeNodePositionApiRequestADM,
-      requestingUser: UserADM
-    ): Task[NodePositionChangeResponseADM] =
+      requestingUser: UserADM,
+      apiRequestID: UUID
+    ): Future[NodePositionChangeResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
 
@@ -1768,7 +1721,7 @@ case class ListsResponderADMLive(
                }
 
         // get node's current parent
-        currentParentNodeIri <- getParentNodeIRI(nodeIri)
+        currentParentNodeIri: IRI <- getParentNodeIRI(nodeIri)
         newPosition <-
           if (currentParentNodeIri == changeNodePositionRequest.parentIri) {
             updatePositionWithinSameParent(
@@ -1790,11 +1743,20 @@ case class ListsResponderADMLive(
         parentNode <- verifyParentChildrenUpdate(newPosition)
       } yield NodePositionChangeResponseADM(node = parentNode)
 
-    IriLocker.runWithIriLockZio(
-      apiRequestID,
-      nodeIri,
-      nodePositionChangeTask(nodeIri, changeNodePositionRequest, requestingUser)
-    )
+    for {
+      // run list info update with an local IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+                      apiRequestID,
+                      nodeIri,
+                      () =>
+                        nodePositionChangeTask(
+                          nodeIri,
+                          changeNodePositionRequest,
+                          requestingUser,
+                          apiRequestID
+                        )
+                    )
+    } yield taskResult
   }
 
   /**
@@ -1802,14 +1764,19 @@ case class ListsResponderADMLive(
    */
   private def canDeleteListRequestADM(
     iri: IRI
-  ): Task[CanDeleteListResponseADM] =
+  ): Future[CanDeleteListResponseADM] =
     for {
-      sparqlQuery <- ZIO.attempt(
+      sparqlQuery <- Future(
                        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .canDeleteList(iri)
+                         .canDeleteList(
+                           listIri = iri
+                         )
                          .toString()
                      )
-      response <- triplestoreService.sparqlHttpSelect(sparqlQuery)
+
+      response: SparqlSelectResult <- appActor
+                                        .ask(SparqlSelectRequest(sparqlQuery))
+                                        .mapTo[SparqlSelectResult]
 
       canDelete =
         if (response.results.bindings.isEmpty) true
@@ -1821,15 +1788,16 @@ case class ListsResponderADMLive(
    * Deletes all comments from requested list node (only child).
    */
   private def deleteListNodeCommentsADM(
-    iri: IRI
-  ): Task[ListNodeCommentsDeleteResponseADM] =
+    iri: IRI,
+    requestingUser: UserADM
+  ): Future[ListNodeCommentsDeleteResponseADM] =
     for {
       node <- listNodeInfoGetADM(
                 nodeIri = iri,
                 requestingUser = KnoraSystemInstances.Users.SystemUser
               )
 
-      doesNodeHaveComments = node.get.getComments.stringLiterals.nonEmpty
+      doesNodeHaveComments = node.get.getComments.stringLiterals.length > 0
 
       _ = if (!doesNodeHaveComments) {
             throw BadRequestException(s"Nothing to delete. Node $iri does not have comments.")
@@ -1850,7 +1818,7 @@ case class ListsResponderADMLive(
       namedGraph <- getDataNamedGraph(projectIri)
 
       sparqlQuery <-
-        ZIO.attempt(
+        Future(
           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
             .deleteListNodeComments(
               namedGraph = namedGraph,
@@ -1859,7 +1827,11 @@ case class ListsResponderADMLive(
             )
             .toString()
         )
-      _ <- triplestoreService.sparqlHttpUpdate(sparqlQuery)
+
+      _: SparqlUpdateResponse <- appActor
+                                   .ask(SparqlUpdateRequest(sparqlQuery))
+                                   .mapTo[SparqlUpdateResponse]
+
     } yield ListNodeCommentsDeleteResponseADM(iri, !isRootNode)
 
   /**
@@ -1870,28 +1842,23 @@ case class ListsResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   *
-   *         [[ForbiddenException]]          in the case that the user is not allowed to perform the operation.
-   *
-   *         [[UpdateNotPerformedException]] in the case the node is in use and cannot be deleted.
+   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * @throws UpdateNotPerformedException in the case the node is in use and cannot be deleted.
    */
-  override def deleteListItemRequestADM(
+  private def deleteListItemRequestADM(
     nodeIri: IRI,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Task[ListItemDeleteResponseADM] = {
+  ): Future[ListItemDeleteResponseADM] = {
 
     /**
      * Checks if node itself or any of its children is in use.
      *
      * @param nodeIri      the node's IRI.
      * @param nodeChildren the children of the node.
-     *
-     * @return [[Unit]] if it is not in use.
-     *
-     *          [[BadRequestException]] in case a node or one of its children is in use.
+     * @throws BadRequestException in case a node or one of its children is in use.
      */
-    def isNodeOrItsChildrenUsed(nodeIri: IRI, nodeChildren: Seq[ListChildNodeADM]): Task[Unit] =
+    def isNodeOrItsChildrenUsed(nodeIri: IRI, nodeChildren: Seq[ListChildNodeADM]): Future[Unit] =
       for {
         // Is node itself in use?
         _ <- isNodeUsed(
@@ -1899,16 +1866,16 @@ case class ListsResponderADMLive(
                errorFun = throw BadRequestException(s"Node $nodeIri cannot be deleted, because it is in use.")
              )
 
-        errorCheckFutures: Seq[Task[Unit]] = nodeChildren.map { child =>
-                                               isNodeUsed(
-                                                 nodeIri = child.id,
-                                                 errorFun = throw BadRequestException(
-                                                   s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use."
+        errorCheckFutures: Seq[Future[Unit]] = nodeChildren.map { child =>
+                                                 isNodeUsed(
+                                                   nodeIri = child.id,
+                                                   errorFun = throw BadRequestException(
+                                                     s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use."
+                                                   )
                                                  )
-                                               )
-                                             }
+                                               }
 
-        _ <- sequence(errorCheckFutures)
+        _ <- Future.sequence(errorCheckFutures)
 
       } yield ()
 
@@ -1921,22 +1888,22 @@ case class ListsResponderADMLive(
      * @param children   the children of the node.
      * @param isRootNode the flag to determine the type of the node, root or child.
      * @return a [[IRI]]
-     *         UpdateNotPerformedException in case a node is in use.
+     * @throws UpdateNotPerformedException in case a node is in use.
      */
     def deleteListItem(
       nodeIri: IRI,
       projectIri: IRI,
       children: Seq[ListChildNodeADM],
       isRootNode: Boolean
-    ): Task[IRI] =
+    ): Future[IRI] =
       for {
         // get the data graph of the project.
         dataNamedGraph <- getDataNamedGraph(projectIri)
 
         // delete the children
-        errorCheckFutures: Seq[Task[Unit]] =
+        errorCheckFutures: Seq[Future[Unit]] =
           children.map(child => deleteNode(dataNamedGraph, child.id, isRootNode = false))
-        _ <- sequence(errorCheckFutures)
+        _ <- Future.sequence(errorCheckFutures)
 
         // delete the node itself
         _ <- deleteNode(dataNamedGraph, nodeIri, isRootNode)
@@ -1952,14 +1919,14 @@ case class ListsResponderADMLive(
      * @param parentNodeIri         the IRI of the deleted node's parent.
      * @param dataNamedGraph        the data named graph.
      * @return a [[ListNodeADM]]
-     *         UpdateNotPerformedException if the node that had to be deleted is still in the list of parent's children.
+     * @throws UpdateNotPerformedException if the node that had to be deleted is still in the list of parent's children.
      */
     def updateParentNode(
       deletedNodeIri: IRI,
       positionOfDeletedNode: Int,
       parentNodeIri: IRI,
       dataNamedGraph: IRI
-    ): Task[ListNodeADM] =
+    ): Future[ListNodeADM] =
       for {
         maybeNode <- listNodeGetADM(
                        nodeIri = parentNodeIri,
@@ -1980,7 +1947,7 @@ case class ListsResponderADMLive(
 
         // shift the siblings that were positioned after the deleted node, one place to left.
         updatedChildren <-
-          if (remainingChildren.nonEmpty) {
+          if (remainingChildren.size > 0) {
             for {
               shiftedChildren <- shiftNodes(
                                    startPos = positionOfDeletedNode + 1,
@@ -1991,7 +1958,7 @@ case class ListsResponderADMLive(
                                  )
             } yield shiftedChildren
           } else {
-            ZIO.succeed(remainingChildren)
+            Future.successful(remainingChildren)
           }
 
         // return updated parent node with shifted children.
@@ -2024,8 +1991,9 @@ case class ListsResponderADMLive(
      */
     def nodeDeleteTask(
       nodeIri: IRI,
-      requestingUser: UserADM
-    ): Task[ListItemDeleteResponseADM] =
+      requestingUser: UserADM,
+      apiRequestID: UUID
+    ): Future[ListItemDeleteResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
 
@@ -2035,59 +2003,65 @@ case class ListsResponderADMLive(
               throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
-        maybeNode <-
-          listNodeGetADM(nodeIri = nodeIri, shallow = false, requestingUser = KnoraSystemInstances.Users.SystemUser)
+        maybeNode: Option[ListNodeADM] <- listNodeGetADM(
+                                            nodeIri = nodeIri,
+                                            shallow = false,
+                                            requestingUser = KnoraSystemInstances.Users.SystemUser
+                                          )
 
-        response <- maybeNode match {
-                      case Some(rootNode: ListRootNodeADM) =>
-                        for {
-                          _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
+        response: ListItemDeleteResponseADM <- maybeNode match {
+                                                 case Some(rootNode: ListRootNodeADM) =>
+                                                   for {
+                                                     _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
 
-                          _ <- deleteListItem(
-                                 nodeIri = rootNode.id,
-                                 projectIri = projectIri,
-                                 children = rootNode.children,
-                                 isRootNode = true
-                               )
-                        } yield ListDeleteResponseADM(rootNode.id, deleted = true)
+                                                     _ <- deleteListItem(
+                                                            nodeIri = rootNode.id,
+                                                            projectIri = projectIri,
+                                                            children = rootNode.children,
+                                                            isRootNode = true
+                                                          )
+                                                   } yield ListDeleteResponseADM(rootNode.id, deleted = true)
 
-                      case Some(childNode: ListChildNodeADM) =>
-                        for {
-                          _ <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
+                                                 case Some(childNode: ListChildNodeADM) =>
+                                                   for {
+                                                     _ <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
 
-                          // get parent node IRI before deleting the node
-                          parentNodeIri <- getParentNodeIRI(nodeIri)
+                                                     // get parent node IRI before deleting the node
+                                                     parentNodeIri <- getParentNodeIRI(nodeIri)
 
-                          // delete the node
-                          dataNamedGraph <- deleteListItem(
-                                              nodeIri = childNode.id,
-                                              projectIri = projectIri,
-                                              children = childNode.children,
-                                              isRootNode = false
-                                            )
+                                                     // delete the node
+                                                     dataNamedGraph <- deleteListItem(
+                                                                         nodeIri = childNode.id,
+                                                                         projectIri = projectIri,
+                                                                         children = childNode.children,
+                                                                         isRootNode = false
+                                                                       )
 
-                          // update the parent node
-                          updatedParentNode <- updateParentNode(
-                                                 deletedNodeIri = nodeIri,
-                                                 positionOfDeletedNode = childNode.position,
-                                                 parentNodeIri = parentNodeIri,
-                                                 dataNamedGraph = dataNamedGraph
-                                               )
+                                                     // update the parent node
+                                                     updatedParentNode <- updateParentNode(
+                                                                            deletedNodeIri = nodeIri,
+                                                                            positionOfDeletedNode = childNode.position,
+                                                                            parentNodeIri = parentNodeIri,
+                                                                            dataNamedGraph = dataNamedGraph
+                                                                          )
 
-                        } yield ChildNodeDeleteResponseADM(node = updatedParentNode)
+                                                   } yield ChildNodeDeleteResponseADM(node = updatedParentNode)
 
-                      case _ =>
-                        throw BadRequestException(
-                          s"Node $nodeIri was not found. Please verify the given IRI."
-                        )
-                    }
+                                                 case _ =>
+                                                   throw BadRequestException(
+                                                     s"Node $nodeIri was not found. Please verify the given IRI."
+                                                   )
+                                               }
       } yield response
 
-    IriLocker.runWithIriLockZio(
-      apiRequestID,
-      nodeIri,
-      nodeDeleteTask(nodeIri, requestingUser)
-    )
+    for {
+      // run list info update with an local IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+                      apiRequestID,
+                      nodeIri,
+                      () => nodeDeleteTask(nodeIri, requestingUser, apiRequestID)
+                    )
+    } yield taskResult
   }
 
   ////////////////////
@@ -2100,11 +2074,18 @@ case class ListsResponderADMLive(
    * @param rootNodeIri the IRI of the project.
    * @return a [[Boolean]].
    */
-  private def rootNodeByIriExists(rootNodeIri: IRI): UIO[Boolean] = {
-    val query =
-      org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri).toString
-    triplestoreService.sparqlHttpAsk(query).map(_.result)
-  }
+  private def rootNodeByIriExists(rootNodeIri: IRI): Future[Boolean] =
+    for {
+      askString <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri).toString
+        )
+      // _ = log.debug("rootNodeByIriExists - query: {}", askString)
+
+      askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      result       = askResponse.result
+
+    } yield result
 
   /**
    * Helper method for checking if a node identified by IRI exists.
@@ -2112,10 +2093,17 @@ case class ListsResponderADMLive(
    * @param nodeIri the IRI of the project.
    * @return a [[Boolean]].
    */
-  private def nodeByIriExists(nodeIri: IRI): Task[Boolean] = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(nodeIri).toString
-    triplestoreService.sparqlHttpAsk(query).map(_.result)
-  }
+  private def nodeByIriExists(nodeIri: IRI): Future[Boolean] =
+    for {
+      askString <- Future(
+                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(nodeIri).toString
+                   )
+      // _ = log.debug("rootNodeByIriExists - query: {}", askString)
+
+      askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      result       = askResponse.result
+
+    } yield result
 
   /**
    * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
@@ -2125,13 +2113,27 @@ case class ListsResponderADMLive(
    * @param listNodeName the list node name.
    * @return a [[Boolean]].
    */
-  private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[ListName]): Task[Boolean] =
-    listNodeName.map { name =>
-      val query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-        .checkListNodeNameIsProjectUnique(projectIri, name.value)
-        .toString
-      triplestoreService.sparqlHttpAsk(query).map(_.result)
-    }.getOrElse(ZIO.succeed(true))
+  private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[ListName]): Future[Boolean] =
+    listNodeName match {
+      case Some(name) =>
+        for {
+          askString <- Future(
+                         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                           .checkListNodeNameIsProjectUnique(
+                             projectIri,
+                             listNodeName = name.value
+                           )
+                           .toString
+                       )
+          // _ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
+
+          askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+          result       = askResponse.result
+
+        } yield !result
+
+      case None => FastFuture.successful(true)
+    }
 
   /**
    * Helper method to generate a sparql statement for updating node information.
@@ -2141,16 +2143,16 @@ case class ListsResponderADMLive(
    */
   private def getUpdateNodeInfoSparqlStatement(
     changeNodeInfoRequest: ListNodeChangePayloadADM
-  ): Task[String] =
+  ): Future[String] =
     for {
       // get the data graph of the project.
       dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri.value)
 
       /* verify that the list name is unique for the project */
-      nodeNameUnique <- listNodeNameIsProjectUnique(
-                          changeNodeInfoRequest.projectIri.value,
-                          changeNodeInfoRequest.name
-                        )
+      nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(
+                                   changeNodeInfoRequest.projectIri.value,
+                                   changeNodeInfoRequest.name
+                                 )
       _ = if (!nodeNameUnique) {
             throw DuplicateValueException(
               s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}."
@@ -2198,7 +2200,7 @@ case class ListsResponderADMLive(
    * @param nodeIri              the IRI of the node.
    * @return a [[IRI]].
    */
-  private def getProjectIriFromNode(nodeIri: IRI): Task[IRI] =
+  private def getProjectIriFromNode(nodeIri: IRI): Future[IRI] =
     for {
       maybeNode <- listNodeGetADM(
                      nodeIri = nodeIri,
@@ -2207,7 +2209,7 @@ case class ListsResponderADMLive(
                    )
 
       projectIri <- maybeNode match {
-                      case Some(rootNode: ListRootNodeADM) => ZIO.attempt(rootNode.projectIri)
+                      case Some(rootNode: ListRootNodeADM) => Future(rootNode.projectIri)
 
                       case Some(childNode: ListChildNodeADM) =>
                         for {
@@ -2236,16 +2238,25 @@ case class ListsResponderADMLive(
    * @param errorFun a function that throws an exception. It will be called if the node is used.
    * @return a [[Boolean]].
    */
-  private def isNodeUsed(nodeIri: IRI, errorFun: => Nothing): Task[Unit] = {
-    val query =
-      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-        .isNodeUsed(nodeIri)
-        .toString()
+  protected def isNodeUsed(nodeIri: IRI, errorFun: => Nothing): Future[Unit] =
     for {
-      isNodeUsedResponse <- triplestoreService.sparqlHttpSelect(query)
-      _                   = if (isNodeUsedResponse.results.bindings.nonEmpty) { errorFun }
+      isNodeUsedSparql <- Future(
+                            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                              .isNodeUsed(
+                                nodeIri = nodeIri
+                              )
+                              .toString()
+                          )
+
+      isNodeUsedResponse: SparqlSelectResult <-
+        appActor
+          .ask(SparqlSelectRequest(isNodeUsedSparql))
+          .mapTo[SparqlSelectResult]
+
+      _ = if (isNodeUsedResponse.results.bindings.nonEmpty) {
+            errorFun
+          }
     } yield ()
-  }
 
   /**
    * Helper method to get the data named graph of a project.
@@ -2253,11 +2264,11 @@ case class ListsResponderADMLive(
    * @param projectIri           the IRI of the project.
    * @return an [[IRI]].
    */
-  private def getDataNamedGraph(projectIri: IRI): Task[IRI] =
+  protected def getDataNamedGraph(projectIri: IRI): Future[IRI] =
     for {
       /* Get the project information */
       maybeProject <-
-        messageRelay
+        appActor
           .ask(
             ProjectGetADM(
               IriIdentifier
@@ -2265,7 +2276,7 @@ case class ListsResponderADMLive(
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
-          .map(any => any.asInstanceOf[Option[ProjectADM]])
+          .mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project
@@ -2282,19 +2293,31 @@ case class ListsResponderADMLive(
    * @param nodeIri              the IRI of the node.
    * @return a [[ListNodeADM]].
    */
-  private def getParentNodeIRI(nodeIri: IRI): Task[IRI] = {
-    val query =
-      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-        .getParentNode(nodeIri)
-        .toString
+  protected def getParentNodeIRI(nodeIri: IRI): Future[IRI] =
     for {
-      parentNodeResponse <- triplestoreService.sparqlHttpExtendedConstruct(query)
+      // query statement
+      getParentNodeSparqlString: String <- Future(
+                                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                               .getParentNode(
+                                                 nodeIri = nodeIri
+                                               )
+                                               .toString
+                                           )
+
+      parentNodeResponse <- appActor
+                              .ask(
+                                SparqlExtendedConstructRequest(
+                                  sparql = getParentNodeSparqlString
+                                )
+                              )
+                              .mapTo[SparqlExtendedConstructResponse]
+
       parentStatements = parentNodeResponse.statements.headOption.getOrElse(
                            throw BadRequestException(s"The parent node for $nodeIri not found, report this as a bug.")
                          )
+
       parentNodeIri = parentStatements._1.toString
     } yield parentNodeIri
-  }
 
   /**
    * Helper method to delete a node.
@@ -2302,30 +2325,33 @@ case class ListsResponderADMLive(
    * @param dataNamedGraph the data named graph of the project.
    * @param nodeIri        the IRI of the node.
    * @param isRootNode     is the node to be deleted a root node?
-   *         UpdateNotPerformedException if the node could not be deleted.
+   * @throws UpdateNotPerformedException if the node could not be deleted.
    * @return a [[ListNodeADM]].
    */
-  private def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean): Task[Unit] = {
-    val query =
-      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-        .deleteNode(
-          dataNamedGraph = dataNamedGraph,
-          nodeIri = nodeIri,
-          isRootNode = isRootNode
-        )
-        .toString()
+  protected def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean): Future[Unit] =
     for {
+      // Generate SPARQL for erasing a node.
+      sparqlDeleteNode: String <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .deleteNode(
+              dataNamedGraph = dataNamedGraph,
+              nodeIri = nodeIri,
+              isRootNode = isRootNode
+            )
+            .toString()
+        )
+
       // Do the update.
-      _ <- triplestoreService.sparqlHttpUpdate(query)
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlDeleteNode)).mapTo[SparqlUpdateResponse]
 
       // Verify that the node was deleted correctly.
-      nodeStillExists <- nodeByIriExists(nodeIri)
+      nodeStillExists: Boolean <- nodeByIriExists(nodeIri)
 
       _ = if (nodeStillExists) {
             throw UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug.")
           }
     } yield ()
-  }
 
   /**
    * Helper method to update position of a node without changing its parent.
@@ -2333,24 +2359,28 @@ case class ListsResponderADMLive(
    * @param nodeIri              the IRI of the node that must be shifted.
    * @param newPosition          the new position of the child node.
    * @param dataNamedGraph       the data named graph of the project.
-   *         UpdateNotPerformedException if the position of the node could not be updated.
+   * @throws UpdateNotPerformedException if the position of the node could not be updated.
    * @return a [[ListChildNodeADM]].
    */
-  private def updatePositionOfNode(
+  protected def updatePositionOfNode(
     nodeIri: IRI,
     newPosition: Int,
     dataNamedGraph: IRI
-  ): Task[ListChildNodeADM] = {
-    val query =
-      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-        .updateNodePosition(
-          dataNamedGraph = dataNamedGraph,
-          nodeIri = nodeIri,
-          newPosition = newPosition
-        )
-        .toString()
+  ): Future[ListChildNodeADM] =
     for {
-      _ <- triplestoreService.sparqlHttpUpdate(query)
+      // Generate SPARQL for erasing a node.
+      sparqlUpdateNodePosition: String <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .updateNodePosition(
+              dataNamedGraph = dataNamedGraph,
+              nodeIri = nodeIri,
+              newPosition = newPosition
+            )
+            .toString()
+        )
+
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdateNodePosition)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the node info was updated */
       maybeNode <- listNodeGetADM(
@@ -2371,7 +2401,6 @@ case class ListsResponderADMLive(
           }
 
     } yield childNode
-  }
 
   /**
    * Helper method to shift nodes between positions startPos and endPos to the left if 'shiftToLeft' is true,
@@ -2382,35 +2411,37 @@ case class ListsResponderADMLive(
    * @param nodes                the list of all nodes.
    * @param shiftToLeft          shift nodes to left if true, otherwise to right.
    * @param dataNamedGraph       the data named graph of the project.
-   *         UpdateNotPerformedException if the position of a node could not be updated.
+   * @throws UpdateNotPerformedException if the position of a node could not be updated.
    * @return a sequence of [[ListChildNodeADM]].
    */
-  private def shiftNodes(
+  protected def shiftNodes(
     startPos: Int,
     endPos: Int,
     nodes: Seq[ListChildNodeADM],
     shiftToLeft: Boolean,
     dataNamedGraph: IRI
-  ): Task[Seq[ListChildNodeADM]] = {
-    val nodesTobeUpdated = nodes.filter(node => node.position >= startPos && node.position <= endPos)
-    val staticStartNodes = nodes.filter(node => node.position < startPos)
-    val staticEndNotes   = nodes.filter(node => node.position > endPos)
-    val updatePositionZios = nodesTobeUpdated.map { child =>
-      val currPos = child.position
-      val newPos = if (shiftToLeft) {
-        currPos - 1
-      } else currPos + 1
-
-      updatePositionOfNode(
-        nodeIri = child.id,
-        newPosition = newPos,
-        dataNamedGraph = dataNamedGraph
-      )
-    }
+  ): Future[Seq[ListChildNodeADM]] =
     for {
-      updatedNodes <- ZioHelper.sequence(updatePositionZios)
+      nodesTobeUpdated: Seq[ListChildNodeADM] <-
+        Future(
+          nodes.filter(node => node.position >= startPos && node.position <= endPos)
+        )
+      staticStartNodes = nodes.filter(node => node.position < startPos)
+      staticEndNotes   = nodes.filter(node => node.position > endPos)
+      updatePositionFutures = nodesTobeUpdated.map { child =>
+                                val currPos = child.position
+                                val newPos = if (shiftToLeft) {
+                                  currPos - 1
+                                } else currPos + 1
+
+                                updatePositionOfNode(
+                                  nodeIri = child.id,
+                                  newPosition = newPos,
+                                  dataNamedGraph = dataNamedGraph
+                                )
+                              }
+      updatedNodes: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
     } yield staticStartNodes ++ updatedNodes ++ staticEndNotes
-  }
 
   /**
    * Helper method to change parent node of a node.
@@ -2419,25 +2450,29 @@ case class ListsResponderADMLive(
    * @param oldParentIri         the IRI of the current parent node.
    * @param newParentIri         the IRI of the new parent node.
    * @param dataNamedGraph       the data named graph of the project.
-   *         UpdateNotPerformedException if the parent of a node could not be updated.
+   * @throws UpdateNotPerformedException if the parent of a node could not be updated.
    */
-  private def changeParentNode(
+  protected def changeParentNode(
     nodeIri: IRI,
     oldParentIri: IRI,
     newParentIri: IRI,
     dataNamedGraph: IRI
-  ): Task[Unit] = {
-    val query =
-      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-        .changeParentNode(
-          dataNamedGraph = dataNamedGraph,
-          nodeIri = nodeIri,
-          currentParentIri = oldParentIri,
-          newParentIri = newParentIri
-        )
-        .toString()
+  ): Future[Unit] =
     for {
-      _ <- triplestoreService.sparqlHttpUpdate(query)
+      // Generate SPARQL for changing the parent node of the node.
+      sparqlChangeParentNode: String <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .changeParentNode(
+              dataNamedGraph = dataNamedGraph,
+              nodeIri = nodeIri,
+              currentParentIri = oldParentIri,
+              newParentIri = newParentIri
+            )
+            .toString()
+        )
+
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlChangeParentNode)).mapTo[SparqlUpdateResponse]
 
       /* verify that parents were updated */
       // get old parent node with its immediate children
@@ -2449,7 +2484,7 @@ case class ListsResponderADMLive(
       childrenOfOldParent = maybeOldParent.get.getChildren
       _ = if (childrenOfOldParent.exists(node => node.id == nodeIri)) {
             throw UpdateNotPerformedException(
-              s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug."
+              s"Node ${nodeIri} is still a child of ${oldParentIri}. Report this as a bug."
             )
           }
       // get new parent node with its immediate children
@@ -2460,25 +2495,8 @@ case class ListsResponderADMLive(
                             )
       childrenOfNewParent = maybeNewParentNode.get.getChildren
       _ = if (!childrenOfNewParent.exists(node => node.id == nodeIri)) {
-            throw UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. ")
+            throw UpdateNotPerformedException(s"Node ${nodeIri} is not added to parent node ${newParentIri}. ")
           }
 
     } yield ()
-  }
-}
-object ListsResponderADMLive {
-  val layer: URLayer[
-    EntityAndClassIriService with AppConfig with MessageRelay with StringFormatter with TriplestoreService,
-    ListsResponderADMLive
-  ] = ZLayer.fromZIO {
-    for {
-      ts         <- ZIO.service[TriplestoreService]
-      sf         <- ZIO.service[StringFormatter]
-      mr         <- ZIO.service[MessageRelay]
-      appConfig  <- ZIO.service[AppConfig]
-      iriService <- ZIO.service[EntityAndClassIriService]
-      responder   = ListsResponderADMLive(appConfig, iriService, mr, ts, sf)
-      _          <- mr.subscribe(responder)
-    } yield responder
-  }
 }

@@ -7,14 +7,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.responders.admin.GroupsResponderADM
-import org.knora.webapi.responders.admin.GroupsResponderADMLive
-import org.knora.webapi.responders.admin.SipiResponderADM
-import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.EntityAndClassIriService
-import org.knora.webapi.responders.admin.ListsResponderADM
-import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.ActorToZioBridge
@@ -60,17 +54,14 @@ object LayersTest {
     with CardinalityService
     with EntityAndClassIriService
     with HttpServer
-    with GroupsResponderADM
     with IIIFServiceManager
     with IriConverter
-    with ListsResponderADM
     with PermissionsResponderADM
     with RepositoryUpdater
     with ResourceInfoRepo
     with RestCardinalityService
     with RestResourceInfoService
     with State
-    with SipiResponderADM
     with StringFormatter
     with TestClientService
     with TriplestoreService
@@ -87,11 +78,9 @@ object LayersTest {
       CardinalityService.layer,
       ActorDeps.layer,
       EntityAndClassIriService.layer,
-      GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
-      ListsResponderADMLive.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
@@ -101,7 +90,6 @@ object LayersTest {
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
-      SipiResponderADMLive.layer,
       State.layer,
       StringFormatter.test,
       TestClientService.layer,

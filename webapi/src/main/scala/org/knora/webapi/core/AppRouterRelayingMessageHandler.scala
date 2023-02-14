@@ -2,7 +2,10 @@ package org.knora.webapi.core
 import zio._
 
 import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
@@ -57,9 +60,12 @@ case class AppRouterRelayingMessageHandler(zioBridge: ActorToZioBridge) extends 
     case _: ListsResponderRequestV2      => true
 
     // Admin request messages
+    case _: GroupsResponderRequestADM   => true
+    case _: ListsResponderRequestADM    => true
     case _: ProjectsResponderRequestADM => true
     case _: StoreResponderRequestADM    => true
     case _: UsersResponderRequestADM    => true
+    case _: SipiResponderRequestADM     => true
     case _: CacheServiceRequest         => true
     case _: IIIFRequest                 => true
     case _: TriplestoreRequest          => true
