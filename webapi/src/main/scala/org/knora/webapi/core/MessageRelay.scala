@@ -27,7 +27,7 @@ case class MessageRelayLive(handlersRef: Ref[List[MessageHandler]]) extends Mess
         ZIO
           .fromOption(handlers.find(_.isResponsibleFor(message)))
           .orDieWith(_ => new IllegalStateException(s"Handler not registered for class '${message.getClass}''"))
-          .map(_.handle(message))
+          .flatMap(_.handle(message))
       )
   override def subscribe(handler: MessageHandler): UIO[Unit] =
     handlersRef.update(handler :: _) <* ZIO.logInfo(s"Subscribed ${handler.getClass}")
@@ -36,5 +36,5 @@ case class MessageRelayLive(handlersRef: Ref[List[MessageHandler]]) extends Mess
 object MessageRelayLive {
   private val make: UIO[MessageRelay]               = Ref.make(List.empty[MessageHandler]).map(MessageRelayLive(_))
   def empty(implicit r: Runtime[Any]): MessageRelay = UnsafeZioRun.runOrThrow(make)
-  val layer: ULayer[MessageRelay]                   = ZLayer.fromZIO(make)
+  val layer: ULayer[MessageRelay]                   = ZLayer.fromZIO(Ref.make(List.empty[MessageHandler]).map(MessageRelayLive(_)))
 }
