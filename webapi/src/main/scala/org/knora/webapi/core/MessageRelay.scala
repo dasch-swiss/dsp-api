@@ -32,5 +32,5 @@ case class MessageRelayLive(handlersRef: Ref[List[MessageHandler]]) extends Mess
 }
 
 object MessageRelayLive {
-  val layer: ULayer[MessageRelay]                   = ZLayer.fromZIO(Ref.make(List.empty[MessageHandler]).map(MessageRelayLive(_)))
+  val layer: ULayer[MessageRelay] = ZLayer.fromZIO(Ref.make(List.empty[MessageHandler]).map(MessageRelayLive(_)))
 }

@@ -7,9 +7,10 @@ package org.knora.webapi.core.actors
 
 import akka.actor.Actor
 import com.typesafe.scalalogging.Logger
-import scala.concurrent.ExecutionContext
-import dsp.errors.UnexpectedMessageException
 
+import scala.concurrent.ExecutionContext
+
+import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
