@@ -664,6 +664,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     if (CacheUtil.get(USER_PROFILE_CACHE_NAME, email).isEmpty) {
       throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
     }
+
     true
   }
+
 }
