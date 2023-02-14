@@ -39,22 +39,11 @@
                         text:directory                      "/fuseki/lucene/@REPOSITORY@" ;
                         text:entityMap                      :entMap ;
                         text:storeValues                    true ;
+                        text:analyzer                       [ a text:ConfigurableAnalyzer ;
+                                                               text:tokenizer text:WhitespaceTokenizer ;
+                                                               text:filters ( :asciiff text:LowerCaseFilter)
+                                                            ] ;
                         text:defineAnalyzers                (
-                                                               [ text:defineAnalyzer :configuredAnalyzer ;
-                                                                  text:analyzer [
-                                                                        a text:ConfigurableAnalyzer ;
-                                                                        text:tokenizer :ngram ;
-                                                                        text:filters ( :asciiff text:LowerCaseFilter ) ] ]
-                                                               [ text:defineTokenizer :ngram ;
-                                                                  text:tokenizer [
-                                                                        a text:GenericTokenizer ;
-                                                                        text:class "org.apache.lucene.analysis.ngram.NGramTokenizer" ;
-                                                                        text:params (
-                                                                           [ text:paramName "minGram" ;
-                                                                              text:paramValue 2 ]
-                                                                           [ text:paramName "maxGram" ;
-                                                                              text:paramValue 3 ]
-                                                                           ) ] ]
                                                                [ text:defineFilter :asciiff ;
                                                                   text:filter [
                                                                         a text:GenericFilter ;
