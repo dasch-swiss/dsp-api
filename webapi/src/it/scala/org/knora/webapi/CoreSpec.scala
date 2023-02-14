@@ -61,7 +61,7 @@ abstract class CoreSpec
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // create a configured runtime
-  implicit val runtime: Runtime[Environment] = Unsafe.unsafe { implicit u =>
+  implicit val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe { implicit u =>
     Runtime.unsafe.fromLayer(bootstrap)
   }
   // helper method to extract a particular service from the runtime
@@ -109,4 +109,12 @@ abstract class CoreSpec
         )
         .getOrThrow()
     }
+
+  final override def afterAll(): Unit = {
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
+    system.terminate()
+  }
 }

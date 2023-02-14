@@ -17,6 +17,7 @@ import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
+import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -50,8 +51,10 @@ object LayersTest {
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
   type CommonR0 = ActorSystem with IIIFService with AppConfig
-  type CommonR = ApiRoutes
+  type CommonR = ActorToZioBridge
+    with ApiRoutes
     with AppRouter
+    with AppRouterRelayingMessageHandler
     with CacheService
     with CacheServiceManager
     with CardinalityService
@@ -75,8 +78,10 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
+      ActorToZioBridge.live,
       ApiRoutes.layer,
       AppRouter.layer,
+      AppRouterRelayingMessageHandler.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
@@ -108,7 +113,6 @@ object LayersTest {
     ZLayer.make[FusekiTestContainer with SipiTestContainer with AppConfig with JWTService with IIIFService](
       AppConfigForTestContainers.testcontainers,
       FusekiTestContainer.layer,
-      SipiResponderADMLive.layer,
       SipiTestContainer.layer,
       IIIFServiceSipiImpl.layer,
       JWTService.layer

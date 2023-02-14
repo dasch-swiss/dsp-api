@@ -54,9 +54,11 @@ object LayersLive {
    */
   type DspEnvironmentLive =
     ActorSystem
+      with ActorToZioBridge
       with ApiRoutes
       with AppConfig
       with AppRouter
+      with AppRouterRelayingMessageHandler
       with CacheServiceManager
       with CacheService
       with GroupsResponderADM
@@ -85,6 +87,7 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
+      AppRouterRelayingMessageHandler.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
