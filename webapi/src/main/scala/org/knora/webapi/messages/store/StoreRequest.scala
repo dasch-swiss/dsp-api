@@ -4,6 +4,5 @@
  */
 
 package org.knora.webapi.messages.store
-import org.knora.webapi.messages.ResponderRequest
 
-trait StoreRequest extends ResponderRequest
+trait StoreRequest

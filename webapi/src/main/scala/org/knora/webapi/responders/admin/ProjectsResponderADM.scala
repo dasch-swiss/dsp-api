@@ -51,10 +51,8 @@ import org.knora.webapi.store.cache.settings.CacheServiceSettings
 /**
  * Returns information about projects.
  */
-final case class ProjectsResponderADM(
-  actorDeps: ActorDeps,
-  cacheServiceSettings: CacheServiceSettings
-) extends Responder(actorDeps)
+final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings: CacheServiceSettings)
+    extends Responder(actorDeps)
     with InstrumentationSupport {
 
   // Global lock IRI used for project creation and update

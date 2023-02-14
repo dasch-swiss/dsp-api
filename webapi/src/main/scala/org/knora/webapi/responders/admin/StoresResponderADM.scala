@@ -90,4 +90,5 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
 
     } yield result
   }
+
 }
