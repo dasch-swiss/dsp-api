@@ -12,6 +12,7 @@ import zio.http.middleware.Cors
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
+import zio.http.model.Method
 
 object HttpServerZ {
 
@@ -21,6 +22,8 @@ object HttpServerZ {
       corsConfig =
         Cors.CorsConfig(
           anyOrigin = false,
+          anyMethod = false,
+          allowedMethods = Some(Set(Method.GET, Method.PUT, Method.DELETE, Method.POST)),
           allowedOrigins = { origin =>
             config.httpServer.corsAllowedOrigins.contains(origin)
           }
