@@ -26,8 +26,8 @@ case class MessageRelayLive(handlersRef: Ref[List[MessageHandler]]) extends Mess
       .flatMap(handlers =>
         ZIO
           .fromOption(handlers.find(_.isResponsibleFor(message)))
-          .orDieWith(_ => new IllegalStateException(s"Handler not registered for class '${message.getClass}''"))
           .flatMap(_.handle(message))
+          .orDieWith(_ => new IllegalStateException(s"Handler not registered for class '${message.getClass}''"))
       )
   override def subscribe(handler: MessageHandler): UIO[Unit] =
     handlersRef.update(handler :: _) <* ZIO.logInfo(s"Subscribed ${handler.getClass}")
