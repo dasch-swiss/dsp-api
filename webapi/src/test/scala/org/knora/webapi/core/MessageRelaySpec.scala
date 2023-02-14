@@ -29,14 +29,14 @@ object MessageRelaySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("MessageRelay")(
-      test("should die with UnknownTestMessage") {
+      test("when asked with an UnknownTestMessage then it should die with an IllegalStateException") {
         for {
           _      <- ZIO.service[TestHandler]
           mr     <- ZIO.service[MessageRelay]
           actual <- mr.ask(UnknownTestMessage()).exit
         } yield assert(actual)(dies(isSubtype[IllegalStateException](anything)))
       },
-      test("should relay HandledTestMessage to registered TestHandler") {
+      test("when asked with a HandledTestMessage then it should relay it to the registered TestHandler") {
         for {
           _      <- ZIO.service[TestHandler]
           mr     <- ZIO.service[MessageRelay]
