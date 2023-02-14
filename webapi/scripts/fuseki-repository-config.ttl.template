@@ -38,21 +38,10 @@
 :indexLucene            a                                   text:TextIndexLucene ;
                         text:directory                      "/fuseki/lucene/@REPOSITORY@" ;
                         text:entityMap                      :entMap ;
-                        text:storeValues                    true ;
                         text:analyzer                       [ a text:ConfigurableAnalyzer ;
                                                                text:tokenizer text:WhitespaceTokenizer ;
-                                                               text:filters ( :asciiff text:LowerCaseFilter)
+                                                               text:filters ( text:ASCIIFoldingFilter text:LowerCaseFilter)
                                                             ] ;
-                        text:defineAnalyzers                (
-                                                               [ text:defineFilter :asciiff ;
-                                                                  text:filter [
-                                                                        a text:GenericFilter ;
-                                                                        text:class "org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilter" ;
-                                                                        text:params (
-                                                                           [ text:paramName "preserveOriginal" ;
-                                                                              text:paramValue true ]
-                                                                           ) ] ]
-                                                            ) ;
                         text:queryParser                    text:AnalyzingQueryParser .
 
 # Mapping in the index
