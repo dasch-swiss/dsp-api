@@ -1,10 +1,10 @@
 package org.knora.webapi.core
 
-import zio.test._
 import zio._
 import zio.test.Assertion.anything
 import zio.test.Assertion.dies
 import zio.test.Assertion.isSubtype
+import zio.test._
 
 import org.knora.webapi.messages.ResponderRequest
 
@@ -46,5 +46,4 @@ object MessageRelaySpec extends ZIOSpecDefault {
         } yield assertTrue(actual == "handled")
       }
     ).provide(MessageRelayLive.layer, TestHandler.layer)
-
 }

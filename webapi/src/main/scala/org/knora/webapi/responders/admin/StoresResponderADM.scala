@@ -7,9 +7,10 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import scala.concurrent.Future
-import dsp.errors.ForbiddenException
 
+import scala.concurrent.Future
+
+import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM

@@ -8,13 +8,14 @@ package org.knora.webapi.responders.admin
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+
 import java.util.UUID
 import scala.concurrent.Future
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
 import dsp.valueobjects.User._
-
 import org.knora.webapi._
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._

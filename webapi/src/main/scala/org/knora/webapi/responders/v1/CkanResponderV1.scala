@@ -8,6 +8,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
+
 import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.Future

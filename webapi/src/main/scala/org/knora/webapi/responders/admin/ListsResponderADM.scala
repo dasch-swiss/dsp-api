@@ -6,13 +6,14 @@
 package org.knora.webapi.responders.admin
 
 import zio._
+
 import java.util.UUID
 import scala.annotation.tailrec
+
 import dsp.errors._
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List.ListName
 import dsp.valueobjects.ListErrorMessages
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler

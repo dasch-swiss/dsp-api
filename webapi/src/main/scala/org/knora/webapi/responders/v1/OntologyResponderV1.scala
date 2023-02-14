@@ -6,11 +6,12 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
+
 import scala.concurrent.Future
+
 import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
-
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

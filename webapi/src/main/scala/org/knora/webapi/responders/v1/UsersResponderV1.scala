@@ -7,12 +7,13 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+
 import java.util.UUID
 import scala.concurrent.Future
+
 import dsp.errors.ApplicationCacheException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM

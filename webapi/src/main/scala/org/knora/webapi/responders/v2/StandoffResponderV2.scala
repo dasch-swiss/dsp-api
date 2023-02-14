@@ -8,6 +8,7 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import akka.util.Timeout
 import org.xml.sax.SAXException
+
 import java.io._
 import java.util.UUID
 import javax.xml.XMLConstants
@@ -21,8 +22,8 @@ import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
-import dsp.errors._
 
+import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

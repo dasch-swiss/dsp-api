@@ -7,15 +7,16 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
