@@ -8,13 +8,12 @@ package org.knora.webapi.responders.admin
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import zio.ZIO
-
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
-
 import dsp.errors._
+
 import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -66,21 +65,15 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
   /**
    * Receives a message extending [[PermissionsResponderRequestADM]], and returns an appropriate response message.
    */
-  def receive(msg: PermissionsResponderRequestADM) = msg match {
+  def receive(msg: PermissionsResponderRequestADM): Future[Any] = msg match {
     case PermissionDataGetADM(
           projectIris,
           groupIris,
           isInProjectAdminGroup,
           isInSystemAdminGroup,
-          requestingUser
+          _
         ) =>
-      permissionsDataGetADM(
-        projectIris,
-        groupIris,
-        isInProjectAdminGroup,
-        isInSystemAdminGroup,
-        requestingUser
-      )
+      permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup)
     case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) =>
       administrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID)
     case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID) =>
@@ -116,9 +109,9 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
           groupIri,
           resourceClassIri,
           propertyIri,
-          requestingUser
+          _
         ) =>
-      defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser)
+      defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri)
     case DefaultObjectAccessPermissionsStringForResourceClassGetADM(
           projectIri,
           resourceClassIri,
@@ -150,12 +143,11 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
       )
     case DefaultObjectAccessPermissionCreateRequestADM(
           createRequest,
-          requestingUser,
+          _,
           apiRequestID
         ) =>
       defaultObjectAccessPermissionCreateRequestADM(
         createRequest.prepareHasPermissions,
-        requestingUser,
         apiRequestID
       )
     case PermissionsForProjectGetRequestADM(projectIri, groupIri, requestingUser) =>
@@ -217,8 +209,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
     projectIris: Seq[IRI],
     groupIris: Seq[IRI],
     isInProjectAdminGroups: Seq[IRI],
-    isInSystemAdminGroup: Boolean,
-    requestingUser: UserADM
+    isInSystemAdminGroup: Boolean
   ): Future[PermissionsDataADM] = {
     // find out which project each group belongs to
 
@@ -1112,19 +1103,13 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
    * properties can carry default object access permissions. Note that default access permissions defined for a system
    * property inside the 'SystemProject' can be overridden by defining them for its own project.
    *
-   * @param projectIri
-   * @param groupIri
-   * @param resourceClassIri
-   * @param propertyIri
-   * @param requestingUser
    * @return a [[DefaultObjectAccessPermissionGetResponseADM]]
    */
   private def defaultObjectAccessPermissionGetRequestADM(
     projectIri: IRI,
     groupIri: Option[IRI],
     resourceClassIri: Option[IRI],
-    propertyIri: Option[IRI],
-    requestingUser: UserADM
+    propertyIri: Option[IRI]
   ): Future[DefaultObjectAccessPermissionGetResponseADM] = {
     val projectIriInternal = projectIri.toSmartIri.toOntologySchema(InternalSchema).toString
     defaultObjectAccessPermissionGetADM(projectIriInternal, groupIri, resourceClassIri, propertyIri)
@@ -1568,7 +1553,6 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
 
   private def defaultObjectAccessPermissionCreateRequestADM(
     createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
 
@@ -1576,8 +1560,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
      * The actual change project task run with an IRI lock.
      */
     def createPermissionTask(
-      createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-      requestingUser: UserADM
+      createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM
     ): Future[DefaultObjectAccessPermissionCreateResponseADM] =
       for {
         checkResult <- defaultObjectAccessPermissionGetADM(
@@ -1706,7 +1689,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
       taskResult <- IriLocker.runWithIriLock(
                       apiRequestID,
                       PERMISSIONS_GLOBAL_LOCK_IRI,
-                      () => createPermissionTask(createRequest, requestingUser)
+                      () => createPermissionTask(createRequest)
                     )
     } yield taskResult
   }
@@ -1769,7 +1752,8 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
    * @param requestingUser               the [[UserADM]] of the requesting user.
    * @param apiRequestID                 the API request ID.
    * @return [[PermissionGetResponseADM]].
-   * @throws UpdateNotPerformedException if something has gone wrong.
+   *
+   *         [[UpdateNotPerformedException]] if something has gone wrong.
    */
   private def permissionGroupChangeRequestADM(
     permissionIri: IRI,
@@ -1861,7 +1845,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
    * @param requestingUser              the [[UserADM]] of the requesting user.
    * @param apiRequestID                the API request ID.
    * @return [[PermissionGetResponseADM]].
-   * @throws UpdateNotPerformedException if something has gone wrong.
+   *         [[UpdateNotPerformedException]] if something has gone wrong.
    */
   private def permissionHasPermissionsChangeRequestADM(
     permissionIri: IRI,
@@ -1965,7 +1949,8 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
    * @param requestingUser                the [[UserADM]] of the requesting user.
    * @param apiRequestID                  the API request ID.
    * @return [[PermissionGetResponseADM]].
-   * @throws UpdateNotPerformedException if something has gone wrong.
+   *
+   *         [[UpdateNotPerformedException]] if something has gone wrong.
    */
   private def permissionResourceClassChangeRequestADM(
     permissionIri: IRI,
@@ -2055,7 +2040,8 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
    * @param requestingUser                  the [[UserADM]] of the requesting user.
    * @param apiRequestID                    the API request ID.
    * @return [[PermissionGetResponseADM]].
-   * @throws UpdateNotPerformedException if something has gone wrong.
+   *
+   *         [[UpdateNotPerformedException]] if something has gone wrong.
    */
   private def permissionPropertyChangeRequestADM(
     permissionIri: IRI,
@@ -2143,8 +2129,10 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
    * @param requestingUser                  the [[UserADM]] of the requesting user.
    * @param apiRequestID                    the API request ID.
    * @return [[PermissionDeleteResponseADM]].
-   * @throws UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
-   * @throws NotFoundException if no permission is found for the given IRI.
+   *
+   *         [[UpdateNotPerformedException]] if permission was in use and could not be deleted or something else went wrong.
+   *
+   *         [[NotFoundException]] if no permission is found for the given IRI.
    */
   private def permissionDeleteRequestADM(
     permissionIri: IRI,
@@ -2168,7 +2156,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
         sf          = StringFormatter.getGeneralInstance
         iriExternal = sf.toSmartIri(permissionIri).toOntologySchema(ApiV2Complex).toString
 
-      } yield PermissionDeleteResponseADM(iriExternal, true)
+      } yield PermissionDeleteResponseADM(iriExternal, deleted = true)
 
     for {
       // run list info update with a local IRI lock
@@ -2190,12 +2178,12 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
   /**
    * Checks that requesting user has right for the permission operation
    *
-   * @param requestingUser the [[UserADM]] of the requesting user.
+   * @param requestingUser  the [[UserADM]] of the requesting user.
    * @param projectIri      the IRI of the project the permission is attached to.
-   * @param permissionIri the IRI of the permission.
-   * @throw ForbiddenException if the user is not a project or system admin
+   * @param permissionIri   the IRI of the permission.
    */
-  def verifyUsersRightForOperation(requestingUser: UserADM, projectIri: IRI, permissionIri: IRI): Unit =
+  @throws[ForbiddenException]("if the user is not a project or system admin")
+  private def verifyUsersRightForOperation(requestingUser: UserADM, projectIri: IRI, permissionIri: IRI): Unit =
     if (!requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
 
       throw ForbiddenException(
@@ -2307,7 +2295,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
    * @param maybeResourceClass  the new resource class IRI of a doap permission.
    * @param maybeProperty       the new property IRI of a doap permission.
    */
-  def updatePermission(
+  private def updatePermission(
     permissionIri: IRI,
     maybeGroup: Option[IRI] = None,
     maybeHasPermissions: Option[String] = None,
@@ -2374,7 +2362,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
    * @param errorFun a function that throws an exception. It will be called if the permission is used.
    * @return a [[Boolean]].
    */
-  protected def isPermissionUsed(permissionIri: IRI, errorFun: => Nothing): Future[Unit] =
+  private def isPermissionUsed(permissionIri: IRI, errorFun: => Nothing): Future[Unit] =
     for {
       isPermissionUsedSparql <- Future(
                                   org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -2393,7 +2381,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
           }
     } yield ()
 
-  def getProjectOfEntity(entityIri: IRI): Future[IRI] =
+  private def getProjectOfEntity(entityIri: IRI): Future[IRI] =
     for {
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -2405,7 +2393,7 @@ class PermissionsResponderADM(responderData: ResponderData, messageRelay: Messag
       response                     <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
       projectIri =
-        if (rows.size == 0) {
+        if (rows.isEmpty) {
           throw BadRequestException(
             s"<$entityIri> is not attached to a project, please verify that IRI is of a knora entity."
           )
