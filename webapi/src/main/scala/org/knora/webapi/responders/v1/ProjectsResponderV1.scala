@@ -35,6 +35,8 @@ import org.knora.webapi.responders.Responder
  */
 final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(actorDeps) {
 
+  // Global lock IRI used for project creation and update
+
   /**
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
    */
