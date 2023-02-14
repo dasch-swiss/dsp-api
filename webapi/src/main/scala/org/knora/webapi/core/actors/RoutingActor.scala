@@ -7,10 +7,9 @@ package org.knora.webapi.core.actors
 
 import akka.actor.Actor
 import com.typesafe.scalalogging.Logger
-
 import scala.concurrent.ExecutionContext
-
 import dsp.errors.UnexpectedMessageException
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
@@ -55,7 +54,6 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
@@ -150,7 +148,7 @@ final case class RoutingActor(
     case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, runtime)
     case msg: TriplestoreRequest =>
       ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), log, runtime)
-    case req: ResponderRequest => UnsafeZioRun.runOrThrow(messageRelay.ask(req))
+    case req: ResponderRequest => ActorUtil.zio2Message(sender(), messageRelay.ask(req), log, runtime)
 
     case other =>
       throw UnexpectedMessageException(
