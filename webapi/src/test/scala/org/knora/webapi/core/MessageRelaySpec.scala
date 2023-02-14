@@ -31,6 +31,7 @@ object MessageRelaySpec extends ZIOSpecDefault {
     suite("MessageRelay")(
       test("when asked with an UnknownTestMessage then it should die with an IllegalStateException") {
         for {
+          // need to include the TestHandler in the test otherwise the layer and hence its subscription is ignored
           _      <- ZIO.service[TestHandler]
           mr     <- ZIO.service[MessageRelay]
           actual <- mr.ask(UnknownTestMessage()).exit
@@ -38,6 +39,7 @@ object MessageRelaySpec extends ZIOSpecDefault {
       },
       test("when asked with a HandledTestMessage then it should relay it to the registered TestHandler") {
         for {
+          // need to include the TestHandler in the test otherwise the layer and hence its subscription is ignored
           _      <- ZIO.service[TestHandler]
           mr     <- ZIO.service[MessageRelay]
           actual <- mr.ask(HandledTestMessage())
