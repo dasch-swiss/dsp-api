@@ -1,7 +1,7 @@
 package org.knora.webapi.util
 
-import zio.test._
 import zio._
+import zio.test._
 
 object ZioHelperSpec extends ZIOSpecDefault {
 
