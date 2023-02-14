@@ -112,10 +112,11 @@ abstract class CoreSpec
     }
 
   final override def afterAll(): Unit = {
+    import scala.concurrent.duration._
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.shutdown()
-    }
-    Await.result(system.terminate(), scala.concurrent.duration.Duration.Inf)
+    Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
+
+    /* Stop the Akka ActorSystem release resources (e.g., http server) */
+    Await.result(system.terminate(), Duration(5, SECONDS))
   }
 }
