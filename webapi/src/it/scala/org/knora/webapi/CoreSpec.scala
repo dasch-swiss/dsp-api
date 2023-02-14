@@ -6,6 +6,7 @@
 package org.knora.webapi
 
 import akka.actor
+import akka.actor.ActorRef
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKitBase
 import com.typesafe.scalalogging.Logger
@@ -24,7 +25,9 @@ import zio._
 import zio.logging.backend.SLF4J
 import scala.concurrent.ExecutionContext
 
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
 import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.routing.UnsafeZioRun
 
 abstract class CoreSpec
     extends AnyWordSpec
@@ -42,9 +45,10 @@ abstract class CoreSpec
 
   /**
    * The effect layers from which the App is built.
-   * Can be overriden in specs that need other implementations.
+   * Can be overridden in specs that need other implementations.
    */
-  lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
+  lazy val effectLayers: ULayer[DefaultTestEnvironmentWithoutSipi] =
+    core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
@@ -57,10 +61,11 @@ abstract class CoreSpec
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // create a configured runtime
-  val runtime = Unsafe.unsafe { implicit u =>
-    Runtime.unsafe
-      .fromLayer(bootstrap)
+  implicit val runtime: Runtime[Environment] = Unsafe.unsafe { implicit u =>
+    Runtime.unsafe.fromLayer(bootstrap)
   }
+  // helper method to extract a particular service from the runtime
+  def getService[R: Tag](implicit r: Runtime[R]): R = UnsafeZioRun.runOrThrow(ZIO.service[R])
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
@@ -84,31 +89,24 @@ abstract class CoreSpec
   implicit lazy val system: actor.ActorSystem          = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass())
-  val appActor                                         = router.ref
+  val log: Logger                                      = Logger(this.getClass)
+  val appActor: ActorRef                               = router.ref
 
   // needed by some tests
-  val appConfig     = config
-  val responderData = ResponderData(ActorDeps(system, appActor, appConfig.defaultTimeoutAsDuration), appConfig)
+  val appConfig: AppConfig = config
+  val responderData: ResponderData =
+    ResponderData(ActorDeps(system, appActor, appConfig.defaultTimeoutAsDuration), appConfig)
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          (for {
+          for {
             _ <- AppServer.testWithoutSipi
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ())
+          } yield ()
         )
         .getOrThrow()
-
     }
-
-  final override def afterAll(): Unit =
-    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.shutdown()
-    }
-
 }

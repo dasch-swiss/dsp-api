@@ -9,16 +9,12 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import java.util.UUID
 import scala.collection.Map
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 
 import org.knora.webapi._
-import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
@@ -26,6 +22,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -45,7 +42,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
   private val projectMember = OntologyConstants.KnoraAdmin.ProjectMember
   private val creator       = OntologyConstants.KnoraAdmin.Creator
 
-  override lazy val rdfDataObjects = List(
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl",
       name = "http://www.knora.org/data/permissions"
@@ -148,15 +145,10 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     }
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
-
-        implicit val runtime: zio.Runtime[Any] = zio.Runtime.default;
-        val permissionsResponder               = new PermissionsResponderADM(responderData, MessageRelayLive.empty)
-
-        val f: Future[Map[IRI, Set[PermissionADM]]] =
-          permissionsResponder.userAdministrativePermissionsGetADM(
-            multiuserUser.permissions.groupsPerProject
-          )
-        val result: Map[IRI, Set[PermissionADM]] = Await.result(f, 1.seconds)
+        val f = getService[PermissionsResponderADM].userAdministrativePermissionsGetADM(
+          multiuserUser.permissions.groupsPerProject
+        )
+        val result: Map[IRI, Set[PermissionADM]] = UnsafeZioRun.runOrThrow(f)
         result should equal(multiuserUser.permissions.administrativePermissionsPerProject)
       }
     }
@@ -651,7 +643,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forGroup == Some(unknownUser))
+        assert(received.defaultObjectAccessPermission.forGroup.contains(unknownUser))
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.imagesProjectIri)
         assert(
           received.defaultObjectAccessPermission.hasPermissions
@@ -686,7 +678,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.imagesProjectIri)
-        assert(received.defaultObjectAccessPermission.forGroup == Some(projectAdmin))
+        assert(received.defaultObjectAccessPermission.forGroup.contains(projectAdmin))
         assert(received.defaultObjectAccessPermission.hasPermissions.equals(expectedPermissions))
       }
     }
@@ -962,7 +954,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forGroup == Some(newGroupIri))
+        assert(doap.forGroup.contains(newGroupIri))
       }
 
       "update group of a default object access permission, resource class must be deleted" in {
@@ -979,7 +971,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forGroup == Some(projectMember))
+        assert(doap.forGroup.contains(projectMember))
         assert(doap.forResourceClass.isEmpty)
       }
 
@@ -997,7 +989,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forGroup == Some(projectMember))
+        assert(doap.forGroup.contains(projectMember))
         assert(doap.forProperty.isEmpty)
       }
     }
@@ -1308,7 +1300,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forResourceClass == Some(resourceClassIri))
+        assert(doap.forResourceClass.contains(resourceClassIri))
       }
 
       "update resource class of a default object access permission, and delete group" in {
@@ -1327,7 +1319,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forResourceClass == Some(resourceClassIri))
+        assert(doap.forResourceClass.contains(resourceClassIri))
         assert(doap.forGroup.isEmpty)
       }
 
@@ -1411,7 +1403,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forProperty == Some(propertyIri))
+        assert(doap.forProperty.contains(propertyIri))
       }
 
       "update property of a default object access permission, delete group" in {
@@ -1430,7 +1422,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
         val doap = received.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
-        assert(doap.forProperty == Some(propertyIri))
+        assert(doap.forProperty.contains(propertyIri))
         assert(doap.forGroup.isEmpty)
       }
     }
@@ -1470,7 +1462,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID()
         )
         val received: PermissionDeleteResponseADM = expectMsgType[PermissionDeleteResponseADM]
-        assert(received.deleted == true)
+        assert(received.deleted)
       }
     }
   }

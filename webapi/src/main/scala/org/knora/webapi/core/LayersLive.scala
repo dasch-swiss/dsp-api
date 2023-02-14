@@ -19,6 +19,8 @@ import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADMLive
+import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
@@ -63,6 +65,7 @@ object LayersLive {
       with IIIFService
       with JWTService
       with ListsResponderADM
+      with PermissionsResponderADM
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
@@ -99,6 +102,7 @@ object LayersLive {
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsRouteZ.layer,
       ProjectsService.live,

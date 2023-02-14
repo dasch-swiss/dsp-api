@@ -14,7 +14,6 @@ import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
@@ -38,7 +37,6 @@ import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequ
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADM
@@ -100,8 +98,6 @@ final case class RoutingActor(
   private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData, messageRelay)
 
   // Admin responders
-  private val permissionsResponderADM: PermissionsResponderADM =
-    new PermissionsResponderADM(responderData, messageRelay)
   private val projectsResponderADM: ProjectsResponderADM =
     ProjectsResponderADM(actorDeps, cacheServiceSettings, messageRelay)
   private val storeResponderADM: StoresResponderADM = new StoresResponderADM(responderData, messageRelay)
@@ -144,8 +140,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
     // Admin request messages
-    case permissionsResponderRequestADM: PermissionsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), permissionsResponderADM.receive(permissionsResponderRequestADM), log)
     case projectsResponderRequestADM: ProjectsResponderRequestADM =>
       ActorUtil.future2Message(sender(), projectsResponderADM.receive(projectsResponderRequestADM), log)
     case storeResponderRequestADM: StoreResponderRequestADM =>

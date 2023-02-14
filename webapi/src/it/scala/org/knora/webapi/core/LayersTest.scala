@@ -13,6 +13,10 @@ import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.EntityAndClassIriService
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
+import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -51,10 +55,13 @@ object LayersTest {
     with CacheService
     with CacheServiceManager
     with CardinalityService
+    with EntityAndClassIriService
     with HttpServer
     with GroupsResponderADM
     with IIIFServiceManager
     with IriConverter
+    with ListsResponderADM
+    with PermissionsResponderADM
     with RepositoryUpdater
     with ResourceInfoRepo
     with RestCardinalityService
@@ -79,9 +86,11 @@ object LayersTest {
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
+      ListsResponderADMLive.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
