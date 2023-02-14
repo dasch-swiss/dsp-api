@@ -8,11 +8,11 @@ package org.knora.webapi.core
 import zio._
 import zio.http._
 import zio.http.middleware.Cors
+import zio.http.model.Method
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
-import zio.http.model.Method
 
 object HttpServerZ {
 
