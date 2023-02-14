@@ -19,7 +19,6 @@ import zio.ZIO
 import zio.ZLayer
 import zio._
 import zio.logging.backend.SLF4J
-
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -29,6 +28,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import dsp.errors.FileWriteException
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
@@ -128,11 +128,13 @@ abstract class E2ESpec
         .getOrThrow()
     }
 
-  final override def afterAll(): Unit =
+  final override def afterAll(): Unit = {
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
     }
+    Await.result(system.terminate(), scala.concurrent.duration.Duration.Inf)
+  }
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 30.seconds): HttpResponse =
     Unsafe.unsafe { implicit u =>

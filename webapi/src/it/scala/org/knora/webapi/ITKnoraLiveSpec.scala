@@ -16,12 +16,12 @@ import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
 import zio._
 import zio.logging.backend.SLF4J
-
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
@@ -120,11 +120,13 @@ abstract class ITKnoraLiveSpec
         .getOrThrow()
     }
 
-  final override def afterAll(): Unit =
+  final override def afterAll(): Unit = {
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
     }
+    Await.result(system.terminate(), scala.concurrent.duration.Duration.Inf)
+  }
 
   protected def getResponseStringOrThrow(request: HttpRequest): String =
     Unsafe.unsafe { implicit u =>

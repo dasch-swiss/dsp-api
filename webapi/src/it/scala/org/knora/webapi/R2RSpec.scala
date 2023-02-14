@@ -114,7 +114,7 @@ abstract class R2RSpec
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
     }
-    system.terminate()
+    Await.result(system.terminate(), scala.concurrent.duration.Duration.Inf)
   }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {

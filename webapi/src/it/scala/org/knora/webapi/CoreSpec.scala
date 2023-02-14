@@ -23,6 +23,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
 import zio.logging.backend.SLF4J
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
@@ -115,6 +116,6 @@ abstract class CoreSpec
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
     }
-    system.terminate()
+    Await.result(system.terminate(), scala.concurrent.duration.Duration.Inf)
   }
 }
