@@ -5,9 +5,11 @@ import zio.ZIO
 object ZioHelper {
 
   def sequence[A](x: Seq[Task[A]]): Task[List[A]] =
-    x.map(a => a.map(x => List(x))).fold(ZIO.succeed(List[A]()))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
+    x.map(_.map(x => List[A](x)))
+      .fold(ZIO.succeed(List.empty[A]))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
 
   def sequence[A](x: Set[Task[A]]): Task[Set[A]] =
-    x.map(a => a.map(x => Set(x))).fold(ZIO.succeed(Set[A]()))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
+    x.map(_.map(x => Set[A](x)))
+      .fold(ZIO.succeed(Set.empty[A]))((x, y) => x.flatMap(a => y.map(b => a ++ b)))
 
 }
