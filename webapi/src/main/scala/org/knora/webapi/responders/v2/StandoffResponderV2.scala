@@ -8,8 +8,6 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import akka.util.Timeout
 import org.xml.sax.SAXException
-import zio.ZIO
-
 import java.io._
 import java.util.UUID
 import javax.xml.XMLConstants
@@ -23,14 +21,11 @@ import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
-
 import dsp.errors._
+
 import org.knora.webapi._
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -65,19 +60,7 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData, messageRelay: MessageRelay)
-    extends Responder(responderData.actorDeps)
-    with MessageHandler {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[StandoffResponderRequestV2]))
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: StandoffResponderRequestV2 => true
-    case _                             => false
-  }
+class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   private def xmlMimeTypes = Set(
     "text/xml",

@@ -7,17 +7,12 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import zio.ZIO
-
 import scala.concurrent.Future
-
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
+
 import org.knora.webapi._
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
@@ -37,21 +32,7 @@ import org.knora.webapi.responders.Responder
 /**
  * Returns information about Knora projects.
  */
-final case class ProjectsResponderV1(actorDeps: ActorDeps, messageRelay: MessageRelay)
-    extends Responder(actorDeps)
-    with MessageHandler {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[ProjectsResponderRequestV1]))
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: ProjectsResponderRequestV1 => true
-    case _                             => false
-  }
-
-  // Global lock IRI used for project creation and update
+final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(actorDeps) {
 
   /**
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.

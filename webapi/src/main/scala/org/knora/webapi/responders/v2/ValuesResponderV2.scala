@@ -7,19 +7,14 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import zio.ZIO
-
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.errors._
+
 import org.knora.webapi._
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
@@ -48,19 +43,7 @@ import org.knora.webapi.util.ActorUtil
 /**
  * Handles requests to read and write Knora values.
  */
-class ValuesResponderV2(responderData: ResponderData, messageRelay: MessageRelay)
-    extends Responder(responderData.actorDeps)
-    with MessageHandler {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[ValuesResponderRequestV2]))
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: ValuesResponderRequestV2 => true
-    case _                           => false
-  }
+class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * The IRI and content of a new value or value version whose existence in the triplestore has been verified.

@@ -6,14 +6,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import zio.ZIO
-
 import scala.concurrent.Future
 
 import org.knora.webapi.IRI
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
@@ -26,19 +21,7 @@ import org.knora.webapi.responders.Responder
 /**
  * Responds to requests relating to lists and nodes.
  */
-class ListsResponderV2(responderData: ResponderData, messageRelay: MessageRelay)
-    extends Responder(responderData.actorDeps)
-    with MessageHandler {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[ListsResponderRequestV2]))
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: ListsResponderRequestV2 => true
-    case _                          => false
-  }
+class ListsResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.

@@ -7,24 +7,19 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import zio.ZIO
-
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -53,19 +48,7 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport._
 
-class SearchResponderV2(responderData: ResponderData, messageRelay: MessageRelay)
-    extends ResponderWithStandoffV2(responderData)
-    with MessageHandler {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[SearchResponderRequestV2]))
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: SearchResponderRequestV2 => true
-    case _                           => false
-  }
+class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
   // A Gravsearch type inspection runner.
   private val gravsearchTypeInspectionRunner =

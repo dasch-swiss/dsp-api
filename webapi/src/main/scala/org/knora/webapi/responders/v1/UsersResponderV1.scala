@@ -7,19 +7,14 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import zio.ZIO
-
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.errors.ApplicationCacheException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+
 import org.knora.webapi._
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -37,19 +32,7 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderV1(responderData: ResponderData, messageRelay: MessageRelay)
-    extends Responder(responderData.actorDeps)
-    with MessageHandler {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[UsersResponderRequestV1]))
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: UsersResponderRequestV1 => true
-    case _                          => false
-  }
+class UsersResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   // The IRI used to lock user creation and update
   val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -680,8 +663,6 @@ class UsersResponderV1(responderData: ResponderData, messageRelay: MessageRelay)
     if (CacheUtil.get(USER_PROFILE_CACHE_NAME, email).isEmpty) {
       throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
     }
-
     true
   }
-
 }

@@ -6,18 +6,13 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import zio.ZIO
-
 import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+
 import org.knora.webapi._
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.twirl.SearchCriterion
 import org.knora.webapi.messages.util.DateUtilV1
@@ -38,19 +33,7 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  * Responds to requests for user search queries and returns responses in Knora API
  * v1 format.
  */
-class SearchResponderV1(responderData: ResponderData, messageRelay: MessageRelay)
-    extends Responder(responderData.actorDeps)
-    with MessageHandler {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[SearchResponderRequestV1]))
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: SearchResponderRequestV1 => true
-    case _                           => false
-  }
+class SearchResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   // Valid combinations of value types and comparison operators, for determining whether a requested search
   // criterion is valid. The valid comparison operators for search criteria involving link properties can be

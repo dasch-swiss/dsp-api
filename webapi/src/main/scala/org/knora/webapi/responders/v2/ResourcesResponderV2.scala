@@ -7,21 +7,16 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import zio.ZIO
-
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
-
 import dsp.errors._
+
 import org.knora.webapi._
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
@@ -69,19 +64,8 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
-class ResourcesResponderV2(responderData: ResponderData, messageRelay: MessageRelay)
-    extends ResponderWithStandoffV2(responderData)
-    with MessageHandler {
-
-  messageRelay.subscribe(this)
-
-  override def handle(message: ResponderRequest): zio.Task[Any] =
-    ZIO.fromFuture(_ => this.receive(message.asInstanceOf[ResourcesResponderRequestV2]))
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message match {
-    case _: ResourcesResponderRequestV2 => true
-    case _                              => false
-  }
+class ResourcesResponderV2(responderData: ResponderData)
+    extends ResponderWithStandoffV2(responderData) {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
