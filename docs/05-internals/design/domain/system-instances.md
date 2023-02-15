@@ -1,4 +1,4 @@
-# System Instances of Classes
+# System Instances
 
 Apart from class and property definitions, 
 `knora-base` and `knora-admin` provide a small number of class instances 

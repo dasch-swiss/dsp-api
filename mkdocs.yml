@@ -94,7 +94,7 @@ nav:
               - Administration: 05-internals/design/api-admin/administration.md
           - DSP Domain:
               - Domain Entities and Relations: 05-internals/design/domain/domain-entities-and-relations.md
-              - Built-in Entities: 05-internals/design/domain/system-instances.md
+              - System Instances: 05-internals/design/domain/system-instances.md
               - Class and Property Hierarchies: 05-internals/design/domain/class-and-property-hierarchies.md
               - Domain User Stories: 05-internals/design/domain/domain-user-stories.md
       - Development:
