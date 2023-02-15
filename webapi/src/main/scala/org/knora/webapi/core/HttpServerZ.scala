@@ -31,12 +31,10 @@ object HttpServerZ {
         )
     } yield Middleware.cors(corsConfig)
 
-  private val apiRoutes: URIO[ProjectsRouteZ with ResourceInfoRoute, HttpApp[Any, Nothing]] = for {
-    projectsRoute <- ZIO.service[ProjectsRouteZ].map(_.route)
-    riRoute       <- ZIO.service[ResourceInfoRoute].map(_.route)
-  } yield projectsRoute ++ riRoute
-
-  private def pathLabelMapper(): PartialFunction[Request, String] = { case r: Request =>
+  private def metricsMiddleware() = {
+    // in order to avoid extensive amounts of labels, we should use the `pathLabelMapper`
+    // which maps paths containing slug values (`/project/iri/SOME-IRI`)
+    // to paths with a slug inserted instead (`/projects/iri/:iri`).
     val slugs = Set(
       "iri",
       "shortcode",
@@ -49,18 +47,18 @@ object HttpServerZ {
         case head :: next                                      => step(next, acc / head.text)
         case Nil                                               => acc
       }
-    // TODO: have to check if the assumption holds that a path with max. 4 segments doesn't contain any slugs
-    if (r.path.segments.size <= 4) r.path.toString()
-    else step(r.path.segments.toList, Path.empty).toString()
-  }
-
-  private def metricsMiddleware() =
     Middleware.metrics(
-      pathLabelMapper = pathLabelMapper(),
+      pathLabelMapper = { case request: Request => step(request.path.segments.toList, Path.empty).toString },
       concurrentRequestsName = "zio_http_concurrent_requests_total",
       totalRequestsName = "zio_http_requests_total",
       requestDurationName = "zio_http_request_duration_seconds"
     )
+  }
+
+  private val apiRoutes: URIO[ProjectsRouteZ with ResourceInfoRoute, HttpApp[Any, Nothing]] = for {
+    projectsRoute <- ZIO.service[ProjectsRouteZ].map(_.route)
+    riRoute       <- ZIO.service[ResourceInfoRoute].map(_.route)
+  } yield projectsRoute ++ riRoute
 
   val layer: ZLayer[ResourceInfoRoute with ProjectsRouteZ with AppConfig, Nothing, Unit] = ZLayer {
     for {
