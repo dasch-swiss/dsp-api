@@ -8,7 +8,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 /**
  * Helps in creating value objects for tests.
  */
-object TestDataFactory {
+object ITTestDataFactory {
   def projectShortcodeIdentifier(shortcode: String): ShortcodeIdentifier =
     ShortcodeIdentifier
       .fromString(shortcode)
