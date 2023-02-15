@@ -1,262 +1,4 @@
-# Domain Model
-
-In the context of [DEV-1415: Domain Model](https://linear.app/dasch/project/domain-model-e39ceb242242)
-we attempted to gain a clear overview over the DSP's domain,
-as implicitly modelled by the ontologies, code, validations and documentation of the DSP-API.
-
-The following document aims to give a higher level overview of said domain.
-
-!!! Note
-
-    - As a high level overview, this document does not aim for exhaustivity.
-    - Naming is tried to be kept as simple as possible, 
-      while trying to consolidate different naming schemes
-      (ontologies, code, API),
-      which in result means that no naming scheme is strictly followed.
-    - The split between V2 and Admin is arbitrary as those are intertwined within the system.
-      It merely serves the purpose of organizing the presented entities.
-
-## Domain Entities
-
-The following Entity-Relationship-Diagrams visualize the top level entities present in the DSP. 
-The attributes of these entities should be exhaustive; 
-cardinalities or validation constraints are normally not depicted. 
-The indicated relationships are of conceptual nature and are more complicated in the actual system.
-
-
-```mermaid
----
-title: Admin
----
-erDiagram
-    User {
-        IRI id
-        string userName "unique"
-        string email "unique"
-        string givenName
-        string familyName
-        string password
-        string language "2 character ISO language code"
-        boolean status
-        boolean systemAdmin
-        IRI isInProject
-        IRI isInProjectAdminGroup
-    }
-
-    Project {
-        IRI id
-        string shortcode "4 character hex"
-        string shortname "xsd:NCNAME"
-        string longname "optional"
-        langstring description
-        string keywords
-        boolean status
-        boolean selfjoin
-        string logo "optional"
-        string restrictedViewSize
-        string restrictedViewWatermark
-    }
-
-    Group {
-        IRI id
-        string name
-        langstring description
-        IRI project
-        boolean status
-        boolean selfjoin
-    }
-
-    ListNode {
-        IRI id
-        IRI projectIri "only for root node"
-        langstring labels
-        langstring comments
-        string name
-        boolean isRootNode
-        IRI hasSublistNode
-        IRI hasRootNode
-        integer listNodePosition
-    }
-    ObjectAccessPermission {
-        string hasPermission "the RV, V, M, D, CR string"
-        IRI project
-        IRI group
-    }
-    DefaultObjectAccessPermission {
-        string hasPermission "the RV, V, M, D, CR string"
-        IRI project
-        IRI group
-        IRI property
-        IRI resourceClass
-    }
-    AdministrativePermission {
-        string hasPermission "a different string representation"
-        IRI project
-        IRI group
-    }
-
-    User }|--|{ Project: "is member/admin of"
-    User }|--|{ Group: "is member of"
-    ListNode }o--|| Project: "belongs to"
-    Project ||--|{ DefaultObjectAccessPermission: defines
-    Group }o--o{ AdministrativePermission: "is granted"
-    Group }o--o{ ObjectAccessPermission: "is granted"
-    DefaultObjectAccessPermission ||--|| ObjectAccessPermission: "is realized as"
-```
-
-!!! danger "Unclear/Unexpected Stuff"
-
-    - User.phone?
-    - Institution? (name, description, website, phone, address, email)
-    - Project.belongsToInstitution?
-
-
-```mermaid
----
-title: Overview V2
----
-erDiagram
-    Ontology ||--o{ ResourceClass: "consists of"
-    Ontology ||--o{ Cardinality: "consists of"
-    ResourceClass ||--o{ Cardinality: defines
-    Cardinality ||--|| Property: specifies
-    ResourceClass ||--o{ Property: has
-    ResourceClass ||--o{ Resource: "can be instantiated as"
-    Property ||--o{ Value: "can be instantiated as"
-    Resource ||--o{ Value: contains
-    Value ||--|| ObjectAccessPermission: grants
-    Resource ||--|| ObjectAccessPermission: grants
-    ObjectAccessPermission }o--o{ Group: "to"
-    Resource }o--|| User: "attached to"
-    Resource }o--|| Project: "attached to"
-```
-
-
-```mermaid
----
-title: Ontology
----
-erDiagram
-    Ontology {
-        IRI id
-        string ontologyName
-        IRI attachedToProject
-        string label
-        string comment "optional"
-        boolean isShared
-        date lastModificationDate
-    }
-    ResourceClass {
-        IRI id
-        langstring label
-        langstring comment
-        IRI subClassOf
-        Cardinality cardinalities
-    }
-    Property {
-        IRI id
-        IRI subjectType
-        IRI objectType
-        langstring label
-        langstring comment
-        IRI subPropertyOf
-        IRI guiElement
-        string guiAttribute
-    }
-    Cardinality {
-        IRI property "the property this cardinality refers to"
-        owl_cardinality cardinality "1, 0-1, 0-n, 1-n"
-        integer guiOrder
-    }
-    Ontology ||--o{ ResourceClass: "consists of"
-    Ontology ||--o{ Property: "consists of (?)"
-    ResourceClass ||--o{ Cardinality: defines
-    Cardinality ||--|| Property: specifies
-```
-
-
-```mermaid
----
-title: Data
----
-erDiagram
-    Resource {
-        IRI id
-        string label
-        boolean isDeleted
-        IRI hasStandoffLinkTo "+Value"
-        IRI attachedToUser
-        IRI attachedToProject
-        string hasPermission
-        date creationDate
-        date lastModificationDate
-        date deleteDate
-        IRI deletedBy
-        string deleteComment
-    }
-    Value {
-        IRI id
-        date valueCreationDate
-        IRI attachedToUser
-        string hasPermission
-        integer valueHasOrder
-        langstring valueHasComment
-        boolean isDeleted
-        date deleteDate
-        IRI deletedBy
-        langstring deleteComment
-        IRI previousValue
-        string valueHasString
-        UUID valueHasUUID
-    }
-    Resource ||--o{ Value: contains
-    Value ||--|| ValueLiteral: "is represented by"
-    Value }o--o{ OtherResource: "links to"
-    Value }o--o{ ListNode: "links to"
-```
-
-
-
-## System Instances of Classes
-
-Apart from class and property definitions, 
-`knora-base` and `knora-admin` also provide a small number of class instances 
-that should be present in any running DSP stack:
-
-```mermaid
----
-title: User Groups
----
-erDiagram
-    UserGroup ||--|| UnknownUser: ""
-    UserGroup ||--|| KnownUser: ""
-    UserGroup ||--|| Creator: ""
-    UserGroup ||--|| ProjectMember: ""
-    UserGroup ||--|| ProjectAdmin: ""
-    UserGroup ||--|| SystemAdmin: ""
-
-```
-
-```mermaid
----
-title: Built-in Users
----
-erDiagram
-    User ||--o{ AnonymousUser: ""
-    User ||--o{ SystemUser: ""
-
-```
-
-```mermaid
----
-title: Built-in Projects
----
-erDiagram
-    Project ||--|| SystemProject: ""
-    Project ||--|| DefaultSharedOntologiesProject: ""
-
-```
-
+# Class and Property Hierarchies
 
 ## Class Hierarchy
 
@@ -266,10 +8,8 @@ The following class diagrams try to model these structures.
 For the sake of comprehensibility, it was necessary to split the ontology into multiple diagrams,
 even though this obliterates the evident connections between those diagrams.
 
+### Resources
 ```mermaid
----
-title: Resources
----
 classDiagram
   %% Classes
   class Resource {
@@ -331,19 +71,6 @@ classDiagram
     TextFileValue hasTextFileValue
   }
 
-  class AudioFileValue {
-    decimal duration
-  }
-  class DocumentFileValue {
-    integer pageCount
-    integer dimX
-    integer dimY
-  }
-  class StillImageFileValue {
-    integer dimX
-    integer dimY
-  }
-
   %% Relationships
   Resource <|-- Annotation
   Resource <|-- Representation
@@ -361,10 +88,13 @@ classDiagram
   TextRepresentation <|-- XSLTransformation
 ```
 
+### Values
+!!! Note "Legend"
+
+    - doted lines: the boxes are copies from another diagram.
+
+
 ```mermaid
----
-title: Values
----
 classDiagram
   %% Classes
   class Value {
@@ -439,6 +169,25 @@ classDiagram
     string originalFileName
     string originalMimeType
   }
+  class ArchiveFileValue {
+
+  }
+  class AudioFileValue {
+    decimal duration
+  }
+  class DDDFileValue
+  class DocumentFileValue {
+    integer pageCount
+    integer dimX
+    integer dimY
+  }
+  class MovingImageFileValue
+  class StillImageFileValue {
+    integer dimX
+    integer dimY
+  }
+  class TextFileValue
+
 
   %% Relationships
   ValueBase <|-- Value
@@ -492,10 +241,8 @@ classDiagram
   TimeBase .. StandoffTimeTag
 ```
 
+### Standoff in knora-base
 ```mermaid
----
-title: Standoff in knora-base
----
 classDiagram
   %% Classes
   class StandoffTag {
@@ -515,6 +262,7 @@ classDiagram
   class StandoffLinkTag {
     Resource standoffHasLink
   }
+  
 
   %% Relationships
   StandoffTag <|-- StandoffDataTypeTag
@@ -546,12 +294,8 @@ classDiagram
   TimeBase .. StandoffTimeTag
 ```
 
-
-
+### Standoff Ontology
 ```mermaid
----
-title: Standoff ontology
----
 flowchart BT
   StandoffRootTag["StandoffRootTag \n ----- \n string standoffRootTagHasDocumentType"]
   StandoffHyperlinkTag["StandoffHyperlinkTag \n ----- \n string standoffHyperlinkTagHasTarget"]
@@ -583,14 +327,9 @@ flowchart BT
   StandoffBrTag --> StandoffStructuralTag 
 ```
 
-
-
 ## Property Hierarchy
-
+### Properties and Values
 ```mermaid
----
-title: resource properties - values
----
 flowchart BT
   hasValue ---> resourceProperty
   hasLinkTo --> resourceProperty
@@ -627,16 +366,19 @@ flowchart BT
   isRegionOf ---> hasLinkTo
 ```
 
-
-
+### Resource Metadata
 ```mermaid
----
-title: resource properties - resource metadata(?)
----
 flowchart BT
   creationDate ---> objectCannotBeMarkedAsDeleted
   deleteDate --> objectCannotBeMarkedAsDeleted
   isDeleted ---> objectCannotBeMarkedAsDeleted
+  isRootNode ---> objectCannotBeMarkedAsDeleted
+  hasRootNode ---> objectCannotBeMarkedAsDeleted
+  lastModificationDate ---> objectCannotBeMarkedAsDeleted
+  listNodePosition ---> objectCannotBeMarkedAsDeleted
+  listNodeName ---> objectCannotBeMarkedAsDeleted
+  deleteComment ---> objectCannotBeMarkedAsDeleted
+  hasPermissions ---> objectCannotBeMarkedAsDeleted
   deletedBy --> objectCannotBeMarkedAsDeleted
   standoffTagHasLink ---> objectCannotBeMarkedAsDeleted 
   hasSubListNode --> objectCannotBeMarkedAsDeleted
@@ -679,16 +421,37 @@ flowchart BT
   fps ---> valueHas
   internalFilename --> valueHas
   internalMimeType ---> valueHas
+  originalFilename ---> valueHas
+  originalMimeType ---> valueHas
+  valueHasComment ---> valueHas
+  valueCreationDate ---> valueHas
+  valueHasUUID ---> valueHas
+  valueHasCalendar ---> valueHas
+  valueHasColor ---> valueHas
+  valueHasEndJDN ---> valueHas
+  valueHasEndPrecision ---> valueHas
+  valueHasDecimal ---> valueHas
+  valueHasGeometry ---> valueHas
+  valueHasGeonameCode ---> valueHas
+  valueHasInteger ---> valueHas
+  valueHasBoolean ---> valueHas
+  valueHasUri ---> valueHas
+  valueHasIntervalEnd ---> valueHas
+  valueHasIntervalStart ---> valueHas
+  valueHasTimeStamp ---> valueHas
+  valueHasListNode ---> valueHas
+  valueHasOrder ---> valueHas
+  valueHasRefCount ---> valueHas
+  valueHasStartJDN ---> valueHas
+  valueHasStartPrecision ---> valueHas
+  valueHasString ---> valueHas
 
   valueHasLanguage
 ```
 
-### Property triple structure
-
+## Property Triple Structure
+### Text Related Triples
 ```mermaid
----
-title: Text related triples
----
 flowchart LR
   %% Classes
   MappingComponent(MappingComponent)
@@ -755,10 +518,16 @@ flowchart LR
   MappingElement --> mappingElementRequiresSeparator --> boolean1
 ```
 
+### Resource Triples Structure
+!!! Note "Legend"
+
+    - round boxes: resources
+    - square boxes: properties
+    - hexagonal boxes: resoures that are duplicated for graphical reasons
+    - oval boxes: xsd values
+    - grey squares: thematic units
+
 ```mermaid
----
-title: Resource
----
 flowchart LR
   LinkValue(LinkValue)
   GeomValue(GeomValue)
@@ -783,18 +552,18 @@ flowchart LR
   end
 
   subgraph Links
+    hasRepresentation
     hasLinkTo
     isSequenceOf
     hasStandoffLinkTo
-    %% hasRepresentation %% missing???
     isPartOf
   end
 
   subgraph LinkValues
+    hasRepresentationValue
     hasLinkToValue
     isSequenceOfValue
     hasStandoffLinkToValue
-    hasRepresentationValue
     isPartOfValue
   end
 
@@ -807,14 +576,14 @@ flowchart LR
   end
 
   Resource --> creationDate --> date
-  Resource --> hasRepresentation --> _Representation
   Resource --> hasComment --> _TextValue
   Resource --> hasValue --> _Value
+
+  Resource --> hasRepresentation --> _Representation
 
   Resource --> hasLinkTo --> _Resource
   Resource --> isSequenceOf --> _Resource
   Resource --> hasStandoffLinkTo --> _Resource
-  %% Resource --> hasRepresentation --> _Resource
   Resource --> isPartOf --> _Resource
 
   Resource --> hasLinkToValue --> LinkValue
@@ -824,7 +593,7 @@ flowchart LR
   Resource --> isPartOfValue --> LinkValue
 
   Annotation --> isAnnotationOfValue --> LinkValue
-  Annotation --> hasAnnotation --> _Resource
+  Annotation --> isAnnotationOf --> _Resource
 
   Region --> isRegionOfValue --> LinkValue
   Region --> isRegionOf --> _Representation2
@@ -840,35 +609,21 @@ flowchart LR
   StillImageRepresentation --> hasStillImageRepresentation --> StillImageFileValue
 ```
 
-
+### Properties without Subject Class Constraint
 ```mermaid
----
-title: others
----
 flowchart LR
   na[[no subject class constraint defined]]
 
   %% Classes
-  Value(Value)
-  ListNode(ListNode)
   User(admin:User)
   IntValue(IntValue)
   IntervalValue(IntervalValue)
 
-  %% Duplicates
-  _Value{{Value}}
-  _ListNode{{ListNode}}
-
   %% Values
-  integer([xsd:integer])
   date([xsd:dateTime])
   boolean([xsd:boolean])
 
   %% Relations
-  Value --> previousValue --> _Value
-  Value --> valueHasMaxStandoffStartIndex --> integer
-  ListNode --> hasSubListNode --> _ListNode
-
   na --> deletedBy --> User
   na --> seqnum --> IntValue
   na --> hasSequenceBounds --> IntervalValue
