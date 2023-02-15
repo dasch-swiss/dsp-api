@@ -10,10 +10,11 @@ import zio.http._
 import zio.http.middleware.Cors
 import zio.http.model.Method
 
+import scala.annotation.tailrec
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
-import scala.annotation.tailrec
 
 object HttpServerZ {
 
