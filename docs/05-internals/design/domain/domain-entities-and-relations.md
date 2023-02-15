@@ -18,17 +18,16 @@ The following document aims to give a higher level overview of said domain.
 
 ## Domain Entities
 
-The following Entity-Relationship-Diagrams visualize the top level entities present in the DSP. 
-The attributes of these entities should be exhaustive; 
-cardinalities or validation constraints are normally not depicted. 
+The following Diagrams visualize the top level entities present in the DSP. 
+The attributes of these entities should be exhaustive.
+Cardinalities or validation constraints are normally not depicted. 
 The indicated relationships are of conceptual nature and are more complicated in the actual system.
 
 
+### Admin
 ```mermaid
----
-title: Admin
----
 erDiagram
+    %% entities
     User {
         IRI id
         string userName "unique"
@@ -40,7 +39,6 @@ erDiagram
         boolean status
         boolean systemAdmin
     }
-
     Project {
         IRI id
         string shortcode "4 character hex"
@@ -54,7 +52,6 @@ erDiagram
         string restrictedViewSize
         string restrictedViewWatermark
     }
-
     Group {
         IRI id
         string name
@@ -62,7 +59,6 @@ erDiagram
         boolean status
         boolean selfjoin
     }
-
     ListNode {
         IRI id
         IRI projectIri "only for root node"
@@ -72,27 +68,29 @@ erDiagram
         boolean isRootNode
         integer listNodePosition
     }
-
     DefaultObjectAccessPermission {
-        string hasPermission "the RV, V, M, D, CR string"
-        IRI property
-        IRI resourceClass
+        IRI id
+        string hasPermission "the 'RV, V, M, D, CR' string"
     }
-
     AdministrativePermission {
+        IRI id
         string hasPermission "a different string representation"
-        IRI project
-        IRI group
     }
+    Property {}
+    ResourceClass {}
 
+    %% relations
     User }|--|{ Project: "is member/admin of"
     User }o--|{ Group: "is member of"
     ListNode }o--|| Project: "belongs to"
     ListNode }o--o{ ListNode: "hasSubListNode"
     ListNode |o--o| ListNode: "hasRootNode"
-    Project ||--|{ DefaultObjectAccessPermission: defines
-    Group }o--o{ AdministrativePermission: "is granted"
-    Group }o--o{ DefaultObjectAccessPermission: "is granted"
+    DefaultObjectAccessPermission |{--|| Project: "points to"
+    DefaultObjectAccessPermission |{--o{ Group: "points to"
+    DefaultObjectAccessPermission |{--o{ Property: "points to"
+    DefaultObjectAccessPermission |{--o{ ResourceClass: "points to"
+    AdministrativePermission |{--o| Project: "points to"
+    AdministrativePermission |{--|{ Group: "points to"
     Group }o--|| Project: "belongs to"
 ```
 
@@ -102,30 +100,24 @@ erDiagram
     - Institution? (name, description, website, phone, address, email)
     - Project.belongsToInstitution?
 
+### Overview V2
 ```mermaid
----
-title: Overview V2
----
 erDiagram
     Ontology ||--o{ ResourceClass: "consists of"
     Ontology ||--o{ Property: "consists of"
-    ResourceClass ||--o{ Cardinality: defines
+    ResourceClass o{--o{ Cardinality: defines
     Cardinality ||--|| Property: on
     ResourceClass ||--o{ Resource: "can be instantiated as"
     Property ||--o{ Value: "can be instantiated as"
     Resource ||--o{ Value: has
-    Value ||--|| ObjectAccessPermission: grants
-    Resource ||--|| ObjectAccessPermission: grants
-    ObjectAccessPermission }o--o{ Group: "to"
+    Value }o--|| ObjectAccessPermission: grants
+    Resource }o--|| ObjectAccessPermission: grants
     Resource }o--|| User: "attached to"
     Resource }o--|| Project: "attached to"
 ```
 
-
+### Ontology
 ```mermaid
----
-title: Ontology
----
 erDiagram
     Project {}
     Ontology {
@@ -152,24 +144,21 @@ erDiagram
         owl_cardinality cardinality "1, 0-1, 0-n, 1-n"
         integer guiOrder
     }
-    Ontology ||--|| Project: "attached to"
+    Ontology o{--|| Project: "attached to"
     Ontology ||--o{ ResourceClass: "consists of"
     Ontology ||--o{ Property: "consists of"
-    ResourceClass }|--|{ ResourceClass: subClassOf
+    ResourceClass }o--o{ ResourceClass: subClassOf
     ResourceClass ||--o{ Cardinality: defines
     Cardinality ||--|| Property: specifies
-    Property |o--o| Property: subPropertyOf
+    Property }o--o{ Property: subPropertyOf
     Property }o--o| ResourceClass: subjectType
     Property }o--o| ResourceClass: objectType
     Property }o--|| GuiElement: has
     Cardinality ||--|| Property: specifies
 ```
 
-
+### Data
 ```mermaid
----
-title: Data
----
 erDiagram
     User {}
     Project {}
@@ -201,7 +190,7 @@ erDiagram
     Resource o{--o| User: deletedBy
     Resource o{--|| Project: attachedToProject
     Value ||--|| ValueLiteral: "is represented by"
-    Value }o--o{ OtherResource: "links to"
+    Value }o--o{ Resource: "links to"
     Value }o--o{ ListNode: "links to"
     Value o{--|| User: attachedToUser
     Value o{--o| User: deletedBy
