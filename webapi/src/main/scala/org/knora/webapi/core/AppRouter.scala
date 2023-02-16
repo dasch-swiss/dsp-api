@@ -8,6 +8,7 @@ package org.knora.webapi.core
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.pattern._
+import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import zio._
 import zio.macros.accessible
@@ -64,7 +65,7 @@ object AppRouter {
               messageRelay,
               runtime
             )
-          ),
+          ).withRouter(new RoundRobinPool(10)),
           name = APPLICATION_MANAGER_ACTOR_NAME
         )
 
