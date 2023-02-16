@@ -245,7 +245,8 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           requestingUser = SharedTestDataADM.rootUser
         )
 
-        expectMsg(Failure(NotFoundException("No members found.")))
+        val noMembers: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
+        noMembers.members.size shouldBe 0
       }
 
       "return 'NotFound' when the group IRI is unknown" in {

@@ -370,18 +370,13 @@ class GroupsResponderADM(responderData: ResponderData)
     log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
 
     for {
-      maybeMembersListToReturn <-
+      members <-
         groupMembersGetADM(
           groupIri = groupIri,
           requestingUser = requestingUser
         )
 
-      result =
-        maybeMembersListToReturn match {
-          case members: Seq[UserADM] if members.nonEmpty => GroupMembersGetResponseADM(members = members)
-          case _                                         => throw NotFoundException(s"No members found.")
-        }
-    } yield result
+    } yield GroupMembersGetResponseADM(members)
   }
 
   /**
