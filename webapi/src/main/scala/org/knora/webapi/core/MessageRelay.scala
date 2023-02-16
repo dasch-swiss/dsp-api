@@ -1,8 +1,7 @@
 package org.knora.webapi.core
 
-import zio._
-
 import org.knora.webapi.messages.ResponderRequest
+import zio._
 
 /**
  * Marker trait which marks all Messages which have a corresponding [[MessageHandler]] implementation.
@@ -11,7 +10,8 @@ trait RelayedMessage extends ResponderRequest
 
 /**
  * Central component which is capable of relaying message to the subscribed [[MessageHandler]]s.
- * Should replace the [[akka.actor.ActorRef]] to our [[org.knora.webapi.core.actors.RoutingActor]] in Responders migrated to [[ZIO]].
+ * Should replace the ask pattern with the [[akka.actor.ActorRef]] to our [[org.knora.webapi.core.actors.RoutingActor]]
+ * in [[org.knora.webapi.responders.Responder]]s we are going to migrated to [[ZIO]].
  */
 trait MessageRelay {
 
@@ -21,20 +21,20 @@ trait MessageRelay {
    *
    * Will die with an [[IllegalStateException]] if no [[MessageHandler]] for the type of message was subscribed.
    *
-   * @param message the message
+   * @param message The message.
    * @return The result as type `R`, due do the untyped nature of the ask pattern it is the responsibility of the caller to ensure
-   *         that the matching type is expected. Otherwise a [[ClassCastException]] will occur during runtime.
+   *         that the matching type is expected. Otherwise, a [[ClassCastException]] will occur during runtime.
    */
   def ask[R: Tag](message: ResponderRequest): Task[R]
 
   /**
    * In order to receive Messages a [[MessageHandler]] must subscribe to the [[MessageRelay]] during the construction of its layer.
-   * For a given type only a single Handler may subscribe.
+   * For a given type only a single [[MessageHandler]] may be subscribe.
    *
-   * @param handler An instance of [[MessageHandler]] subscribing
-   * @return the subscribed instance
+   * @param handler An instance of [[MessageHandler]] subscribing.
+   * @return The subscribed instance.
    *
-   * @example Example for subscribing a handler:
+   * @example Example building a handler layer with subscribing to the [[MessageRelay]]:
    *
    * {{{
    *  val layer: URLayer[MessageRelay, TestHandler] =
