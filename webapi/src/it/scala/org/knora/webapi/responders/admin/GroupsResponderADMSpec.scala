@@ -3,14 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
- * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
- */
 package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
-import akka.testkit.ImplicitSender
 
 import java.util.UUID
 import scala.concurrent.duration._
@@ -29,9 +24,9 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
 /**
- * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
+ * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.GroupsResponderADMSpec]] actor.
  */
-class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
+class GroupsResponderADMSpec extends CoreSpec {
   private val timeout             = 5.seconds
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
