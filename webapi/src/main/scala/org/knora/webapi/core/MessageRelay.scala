@@ -1,7 +1,8 @@
 package org.knora.webapi.core
 
-import org.knora.webapi.messages.ResponderRequest
 import zio._
+
+import org.knora.webapi.messages.ResponderRequest
 
 /**
  * Marker trait which marks all Messages which have a corresponding [[MessageHandler]] implementation.
