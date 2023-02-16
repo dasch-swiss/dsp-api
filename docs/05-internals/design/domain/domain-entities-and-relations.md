@@ -83,16 +83,18 @@ erDiagram
     %% relations
     User }|--|{ Project: "is member/admin of"
     User }o--|{ Group: "is member of"
+    Group }o--|| Project: "belongs to"
     ListNode }o--|| Project: "belongs to"
     ListNode }o--o{ ListNode: "hasSubListNode"
     ListNode |o--o| ListNode: "hasRootNode"
-    DefaultObjectAccessPermission |{--|| Project: "points to"
-    DefaultObjectAccessPermission |{--o{ Group: "points to"
-    DefaultObjectAccessPermission |{--o{ Property: "points to"
-    DefaultObjectAccessPermission |{--o{ ResourceClass: "points to"
     AdministrativePermission |{--o| Project: "points to"
     AdministrativePermission |{--|{ Group: "points to"
-    Group }o--|| Project: "belongs to"
+    
+    DefaultObjectAccessPermission |{--o{ Group: "points to"
+    DefaultObjectAccessPermission |{--|| Project: "points to"
+    DefaultObjectAccessPermission |{--o{ Property: "points to"
+    DefaultObjectAccessPermission |{--o{ ResourceClass: "points to"
+    
 ```
 
 !!! danger "Unclear/Unexpected Stuff"

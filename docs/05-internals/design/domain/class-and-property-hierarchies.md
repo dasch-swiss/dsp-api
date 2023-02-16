@@ -8,6 +8,10 @@ The following class diagrams try to model these structures.
 For the sake of comprehensibility, it was necessary to split the ontology into multiple diagrams,
 even though this obliterates the evident connections between those diagrams.
 
+!!! Note "Legend"
+
+    - dotted lines: the boxes are copies from another diagram.
+
 ### Resources
 
 ```mermaid
@@ -90,11 +94,6 @@ classDiagram
 ```
 
 ### Values
-
-!!! Note "Legend"
-
-    - doted lines: the boxes are copies from another diagram.
-
 
 ```mermaid
 classDiagram
