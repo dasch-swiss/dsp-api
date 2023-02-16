@@ -18,7 +18,6 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import dsp.errors.NotFoundException
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
@@ -64,7 +63,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   /**
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
-  def receive(msg: ProjectsResponderRequestADM) = msg match {
+  def receive(msg: ProjectsResponderRequestADM): Future[Any] = msg match {
     case ProjectsGetRequestADM()          => projectsGetRequestADM()
     case ProjectGetADM(identifier)        => getSingleProjectADM(identifier)
     case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
@@ -152,7 +151,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     for {
       ontologyMetadataResponse <- appActor.ask(request).mapTo[ReadOntologyMetadataV2]
       ontologies                = ontologyMetadataResponse.ontologies.toList
-      iriPairs                  = ontologies.map(getIriPair(_))
+      iriPairs                  = ontologies.map(getIriPair)
       projectToOntologyMap      = iriPairs.groupMap { case (project, _) => project } { case (_, onto) => onto }
     } yield projectToOntologyMap
   }
@@ -161,7 +160,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * Gets all the projects and returns them as a [[ProjectADM]].
    *
    * @return all the projects as a [[ProjectADM]].
-   * @throws NotFoundException if no projects are found.
+   *
+   *         [[NotFoundException]] if no projects are found.
    */
   private def projectsGetRequestADM(): Future[ProjectsGetResponseADM] =
     for {
@@ -177,7 +177,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * @param skipCache            if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
    * @return information about the project as an optional [[ProjectADM]].
    */
-  def getSingleProjectADM(
+  private def getSingleProjectADM(
     identifier: ProjectIdentifierADM,
     skipCache: Boolean = false
   ): Future[Option[ProjectADM]] =
@@ -215,7 +215,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    *
    * @param identifier           the IRI, shortname, shortcode or UUID of the project.
    * @return information about the project as a [[ProjectGetResponseADM]].
-   * @throws NotFoundException when no project for the given IRI can be found
+   *
+   *         [[NotFoundException]] when no project for the given IRI can be found
    */
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Future[ProjectGetResponseADM] = for {
     maybeProject <- getSingleProjectADM(identifier)
@@ -670,7 +671,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique api request ID.
    * @return a [[ProjectOperationResponseADM]].
-   * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+   *
+   *         [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
    */
   private def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
@@ -722,7 +724,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    *                             be prepared in the step before this one.
    *
    * @return a [[ProjectOperationResponseADM]].
-   * @throws NotFoundException in the case that the project's IRI is not found.
+   *
+   *         [[NotFoundException]] in the case that the project's IRI is not found.
    */
   private def updateProjectADM(
     projectIri: Iri.ProjectIri,
@@ -803,7 +806,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    *
    * @param updatedProject       the updated project against which the projectUpdatePayload is compared
    * @param projectUpdatePayload the payload which defines what should have been updated
-   * @throws UpdateNotPerformedException if one of the fields was not updated
+   *
+   *        [[UpdateNotPerformedException]] if one of the fields was not updated
    */
   private def checkProjectUpdate(
     updatedProject: ProjectADM,
@@ -812,7 +816,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.shortname
         .map(_.value)
-        .map(stringFormatter.fromSparqlEncodedString(_))
+        .map(stringFormatter.fromSparqlEncodedString)
         .filter(_ == updatedProject.shortname)
         .getOrElse(
           throw UpdateNotPerformedException(
@@ -824,8 +828,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.longname
         .map(_.value)
-        .map(stringFormatter.fromSparqlEncodedString(_))
-        .filter(Some(_) == updatedProject.longname)
+        .map(stringFormatter.fromSparqlEncodedString)
+        .filter(updatedProject.longname.contains(_))
         .getOrElse(
           throw UpdateNotPerformedException(
             "Project's 'longname' was not updated. Please report this as a possible bug."
@@ -860,8 +864,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
     if (projectUpdatePayload.logo.nonEmpty) {
       projectUpdatePayload.logo
         .map(_.value)
-        .map(stringFormatter.fromSparqlEncodedString(_))
-        .filter(Some(_) == updatedProject.logo)
+        .map(stringFormatter.fromSparqlEncodedString)
+        .filter(updatedProject.logo.contains(_))
         .getOrElse(
           throw UpdateNotPerformedException(
             "Project's 'logo' was not updated. Please report this as a possible bug."
@@ -901,9 +905,12 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return a [[ProjectOperationResponseADM]].
-   * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
-   * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
-   * @throws BadRequestException     in the case when the shortcode is invalid.
+   *
+   *         [[ForbiddenException]]      in the case that the user is not allowed to perform the operation.
+   *
+   *         [[DuplicateValueException]] in the case when either the shortname or shortcode are not unique.
+   *
+   *         [[BadRequestException]]     in the case when the shortcode is invalid.
    */
   private def projectCreateRequestADM(
     createProjectRequest: ProjectCreatePayloadADM,
@@ -918,9 +925,10 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
      * 2. Permissions for project members to create, modify, view and restricted view of all new resources and values that belong to this project.
      *
      * @param projectIri the IRI of the new project.
-     * @throws BadRequestException if a permission is not created.
+     *
+     *        [[BadRequestException]] if a permission is not created.
      */
-    def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI, projectShortCode: String): Future[Unit] =
+    def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI): Future[Unit] =
       for {
         // Give the admins of the new project rights for any operation in project level, and rights to create resources.
         _ <- appActor
@@ -1077,7 +1085,7 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
                           )
                         )
         // create permissions for admins and members of the new group
-        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI, newProjectADM.shortcode)
+        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
