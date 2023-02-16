@@ -41,14 +41,14 @@ object HttpServerZ {
       "shortname"
     )
     @tailrec
-    def step(seg: List[Path.Segment], acc: Path): Path =
+    def replaceSlugs(seg: List[Path.Segment], acc: Path): Path =
       seg match {
-        case head :: slug :: next if slugs.contains(head.text) => step(next, acc / head.text / s":${head.text}")
-        case head :: next                                      => step(next, acc / head.text)
+        case head :: slug :: next if slugs.contains(head.text) => replaceSlugs(next, acc / head.text / s":${head.text}")
+        case head :: next                                      => replaceSlugs(next, acc / head.text)
         case Nil                                               => acc
       }
     Middleware.metrics(
-      pathLabelMapper = { case request: Request => step(request.path.segments.toList, Path.empty).toString },
+      pathLabelMapper = { case request: Request => replaceSlugs(request.path.segments.toList, Path.empty).toString },
       concurrentRequestsName = "zio_http_concurrent_requests_total",
       totalRequestsName = "zio_http_requests_total",
       requestDurationName = "zio_http_request_duration_seconds"
