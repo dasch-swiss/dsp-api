@@ -59,12 +59,12 @@ nav:
   - DSP Internals:
       - Design:
           - Architectural Decision Records (ADR):
-              - 0001 Record Architectural Decisions: 05-internals/design/adr/ADR-0001-record-architecture-decisions.md
-              - 0002 Change Cache Service Manager from Akka-Actor to ZLayer: 05-internals/design/adr/ADR-0002-change-cache-service-manager-from-akka-actor-to-zlayer.md
-              - 0003 Change IIIF Service Manager and Sipi implementation to zlayer: 05-internals/design/adr/ADR-0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer.md
-              - 0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer: 05-internals/design/adr/ADR-0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer.md
-              - 0005 Change ResponderManager to a simple case class: 05-internals/design/adr/ADR-0005-change-respondermanager-to-a-simple-case-class.md
-              - 0006 Gradually Replace AKKA-HTTP with ZIO-HTTP: 05-internals/design/adr/ADR-0006-use-zio-http.md
+              - 0001 Record Architectural Decisions: 05-internals/design/adr/adr-0001-record-architecture-decisions.md
+              - 0002 Change Cache Service Manager from Akka-Actor to ZLayer: 05-internals/design/adr/adr-0002-change-cache-service-manager-from-akka-actor-to-zlayer.md
+              - 0003 Change IIIF Service Manager and Sipi implementation to zlayer: 05-internals/design/adr/adr-0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer.md
+              - 0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer: 05-internals/design/adr/adr-0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer.md
+              - 0005 Change ResponderManager to a simple case class: 05-internals/design/adr/adr-0005-change-respondermanager-to-a-simple-case-class.md
+              - 0006 Gradually Replace AKKA-HTTP with ZIO-HTTP: 05-internals/design/adr/adr-0006-use-zio-http.md
           - DSP-API Design Principles:
               - Design Overview: 05-internals/design/principles/design-overview.md
               - Futures with Akka: 05-internals/design/principles/futures-with-akka.md
