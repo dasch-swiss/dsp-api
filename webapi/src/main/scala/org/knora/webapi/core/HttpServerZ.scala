@@ -33,9 +33,8 @@ object HttpServerZ {
     } yield Middleware.cors(corsConfig)
 
   private def metricsMiddleware() = {
-    // in order to avoid extensive amounts of labels, we should use the `pathLabelMapper`
-    // which maps paths containing slug values (`/project/iri/SOME-IRI`)
-    // to paths with a slug inserted instead (`/projects/iri/:iri`).
+    // in order to avoid extensive amounts of labels, we should replace path segment slugs
+    // see docs/03-endpoints/instrumentation/metrics.md
     val slugs = Set(
       "iri",
       "shortcode",
