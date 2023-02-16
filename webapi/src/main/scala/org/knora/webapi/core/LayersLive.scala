@@ -5,19 +5,28 @@
 
 package org.knora.webapi.core
 
+import zio.ULayer
+import zio.ZLayer
+
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.responders.{ActorDeps, ActorToZioBridge}
+import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.routing.admin.{AuthenticatorService, ProjectsRouteZ}
+import org.knora.webapi.routing.admin.AuthenticatorService
+import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.repo.service.{OntologyCache, OntologyRepoLive, PredicateRepositoryLive}
-import org.knora.webapi.slice.resourceinfo.api.{ResourceInfoRoute, RestResourceInfoService}
-import org.knora.webapi.slice.resourceinfo.domain.{IriConverter, ResourceInfoRepo}
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
+import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
+import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -28,7 +37,6 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import zio.{ULayer, ZLayer}
 
 object LayersLive {
 

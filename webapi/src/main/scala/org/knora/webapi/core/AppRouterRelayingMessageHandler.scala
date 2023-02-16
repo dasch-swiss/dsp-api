@@ -1,8 +1,9 @@
 package org.knora.webapi.core
 
+import zio._
+
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.ActorToZioBridge
-import zio._
 
 /**
  * Messages with the [[RelayedMessage]] trait are sent to the [[MessageRelay]] from the [[org.knora.webapi.core.actors.RoutingActor]].

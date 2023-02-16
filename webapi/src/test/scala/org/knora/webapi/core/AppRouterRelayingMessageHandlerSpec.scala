@@ -1,11 +1,13 @@
 package org.knora.webapi.core
 
-import org.knora.webapi.core.MessageRelaySpec.SomeRelayedMessage
-import org.knora.webapi.responders.{ActorToZioBridge, ActorToZioBridgeMock}
 import zio._
 import zio.mock.Expectation
 import zio.test.Spec.empty.ZSpec
 import zio.test._
+
+import org.knora.webapi.core.MessageRelaySpec.SomeRelayedMessage
+import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.responders.ActorToZioBridgeMock
 
 object AppRouterRelayingMessageHandlerSpec extends ZIOSpecDefault {
 

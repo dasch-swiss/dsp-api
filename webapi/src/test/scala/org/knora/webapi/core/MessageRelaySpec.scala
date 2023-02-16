@@ -1,9 +1,12 @@
 package org.knora.webapi.core
 
-import org.knora.webapi.messages.ResponderRequest
 import zio._
-import zio.test.Assertion.{anything, dies, isSubtype}
+import zio.test.Assertion.anything
+import zio.test.Assertion.dies
+import zio.test.Assertion.isSubtype
 import zio.test._
+
+import org.knora.webapi.messages.ResponderRequest
 
 object MessageRelaySpec extends ZIOSpecDefault {
 
