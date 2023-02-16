@@ -1,21 +1,24 @@
 package org.knora.webapi.core
 
-import org.knora.webapi.core.MessageRelaySpec.SomeRelayedMessage
-import org.knora.webapi.responders.{ActorToZioBridge, ActorToZioBridgeMock}
 import zio._
 import zio.mock.Expectation
 import zio.test.Spec.empty.ZSpec
 import zio.test._
 
+import org.knora.webapi.core.MessageRelaySpec.SomeRelayedMessage
+import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.responders.ActorToZioBridgeMock
+
 object AppRouterRelayingMessageHandlerSpec extends ZIOSpecDefault {
 
-  private val actorToZioBridgeMockExpectation: ULayer[ActorToZioBridge] = ActorToZioBridgeMock.AskAppActor
-    .of[String]
-    .apply(
-      assertion = Assertion.equalTo(MessageRelaySpec.NotARelayedMessage()),
-      result = Expectation.value("handled by zio bridge")
-    )
-    .toLayer
+  private val actorToZioBridgeExpectationForNotARelayedMessage: ULayer[ActorToZioBridge] =
+    ActorToZioBridgeMock.AskAppActor
+      .of[String]
+      .apply(
+        assertion = Assertion.equalTo(MessageRelaySpec.NotARelayedMessage()),
+        result = Expectation.value("handled by zio bridge")
+      )
+      .toLayer
 
   val spec: ZSpec[Any, Throwable, TestSuccess] = suite("AppRouterRelayingMessageHandler")(
     suite("given a message handled by a different handler")(
@@ -43,7 +46,7 @@ object AppRouterRelayingMessageHandlerSpec extends ZIOSpecDefault {
     ).provide(
       MessageRelayLive.layer,
       AppRouterRelayingMessageHandler.layer,
-      actorToZioBridgeMockExpectation,
+      actorToZioBridgeExpectationForNotARelayedMessage,
       MessageRelaySpec.TestHandler.layer
     )
   )
