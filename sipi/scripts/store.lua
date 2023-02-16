@@ -198,6 +198,7 @@ end
 -- Make sure the source file is readable.
 --
 local source_path = config.imgroot .. "/tmp/" .. hashed_filename
+local source_key_frames = source_path:match("(.+)%..+")
 local readable
 success, readable = server.fs.is_readable(source_path)
 if not success then
@@ -220,9 +221,17 @@ if not success then
 end
 
 local destination_path = storage_dir .. hashed_filename
+local destination_key_frames = destination_path:match("(.+)%..+")
 success, error_msg = server.fs.moveFile(source_path, destination_path)
 if not success then
     send_error(500, "server.fs.moveFile() failed: " .. error_msg)
+    return
+end
+
+-- In case of a movie file, move the key frames folder to the permanent storage directory 
+success_key_frames, error_msg_key_frames = os.rename(source_key_frames, destination_key_frames)
+if not success_key_frames then
+    send_error(500, "moving key frames folder failed: " .. error_msg_key_frames)
     return
 end
 
@@ -278,15 +287,6 @@ if readable then
     if not success then
         send_error(500, "server.fs.moveFile() failed: " .. error_msg)
         return
-    end
-
-    -- in case of a moving image, we have to extract the frames from video file; they will be used for preview stuff
-    if sidecar["duration"] and sidecar["fps"] then
-        success, error_msg = os.execute("./scripts/export-moving-image-frames.sh -i " .. storage_dir .. sidecar["internalFilename"])
-        if not success then
-            send_error(500, "export-moving-image-frames.sh failed: " .. error_msg)
-            return
-        end
     end
 
     server.log("store.lua: moved file " .. source_path .. " to " .. destination_path, server.loglevel.LOG_DEBUG)
