@@ -14,6 +14,8 @@ import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.responders.ProjectsMessageHandler
+import org.knora.webapi.responders.ProjectsMessageHandlerLive
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
@@ -56,6 +58,7 @@ object LayersLive {
       with IIIFService
       with JWTService
       with MessageRelay
+      with ProjectsMessageHandler
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
@@ -91,6 +94,7 @@ object LayersLive {
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsRouteZ.layer,
+      ProjectsMessageHandlerLive.layer,
       ProjectsService.live,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,

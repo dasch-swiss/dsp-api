@@ -64,7 +64,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   def receive(msg: ProjectsResponderRequestADM): Future[Any] = msg match {
-    case ProjectsGetRequestADM()          => projectsGetRequestADM()
     case ProjectGetADM(identifier)        => getSingleProjectADM(identifier)
     case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
     case ProjectMembersGetRequestADM(identifier, requestingUser) =>
@@ -98,40 +97,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
   }
 
   /**
-   * Gets all the projects and returns them as a sequence containing [[ProjectADM]].
-   *
-   * @return all the projects as a sequence containing [[ProjectADM]].
-   */
-  private def projectsGetADM(): Future[Seq[ProjectADM]] =
-    for {
-      sparqlQueryString <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .getProjects(
-              maybeIri = None,
-              maybeShortname = None,
-              maybeShortcode = None
-            )
-            .toString()
-        )
-      request                                    = SparqlExtendedConstructRequest(sparql = sparqlQueryString)
-      projectsResponse                          <- appActor.ask(request).mapTo[SparqlExtendedConstructResponse]
-      projectIris                                = projectsResponse.statements.keySet.map(_.toString)
-      ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris)
-      projects =
-        projectsResponse.statements.toList.map {
-          case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-            val projectOntologies =
-              ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
-            statements2ProjectADM(
-              statements = (projectIriSubject, propsMap),
-              ontologies = projectOntologies
-            )
-        }
-
-    } yield projects.sorted
-
-  /**
    * Given a set of project IRIs, gets the ontologies that belong to each project.
    *
    * @param projectIris    a set of project IRIs. If empty, returns the ontologies for all projects.
@@ -155,20 +120,6 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
       projectToOntologyMap      = iriPairs.groupMap { case (project, _) => project } { case (_, onto) => onto }
     } yield projectToOntologyMap
   }
-
-  /**
-   * Gets all the projects and returns them as a [[ProjectADM]].
-   *
-   * @return all the projects as a [[ProjectADM]].
-   *
-   *         [[NotFoundException]] if no projects are found.
-   */
-  private def projectsGetRequestADM(): Future[ProjectsGetResponseADM] =
-    for {
-      projects <- projectsGetADM()
-      result = if (projects.nonEmpty) { ProjectsGetResponseADM(projects = projects) }
-               else { throw NotFoundException(s"No projects found") }
-    } yield result
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
@@ -379,10 +330,8 @@ final case class ProjectsResponderADM(actorDeps: ActorDeps, cacheServiceSettings
    */
   private def projectsKeywordsGetRequestADM(): Future[ProjectsKeywordsGetResponseADM] =
     for {
-      projects <- projectsGetADM()
-
+      projects             <- appActor.ask(ProjectsGetADM()).mapTo[Seq[ProjectADM]]
       keywords: Seq[String] = projects.flatMap(_.keywords).distinct.sorted
-
     } yield ProjectsKeywordsGetResponseADM(keywords = keywords)
 
   /**

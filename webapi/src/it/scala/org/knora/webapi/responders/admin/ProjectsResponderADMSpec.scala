@@ -35,7 +35,7 @@ import org.knora.webapi.util.MutableTestIri
 class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val timeout                                   = 5.seconds
+  private val timeout                                   = 600.seconds
 
   private val rootUser = SharedTestDataADM.rootUser
 

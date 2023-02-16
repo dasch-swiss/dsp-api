@@ -23,6 +23,7 @@ import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
@@ -166,7 +167,13 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
  * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
  */
-case class ProjectsGetRequestADM() extends ProjectsResponderRequestADM
+final case class ProjectsGetRequestADM() extends ProjectsResponderRequestADM with RelayedMessage
+
+/**
+ * Get all information about all projects in form of [[Seq[ProjectADM]]].
+ * A [[NotFoundException]] is not returned but an empty list instead. Administration permission checking is performed.
+ */
+final case class ProjectsGetADM() extends ProjectsResponderRequestADM with RelayedMessage
 
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form

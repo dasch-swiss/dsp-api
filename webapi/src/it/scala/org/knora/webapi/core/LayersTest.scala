@@ -3,7 +3,7 @@ package org.knora.webapi.core
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.{AppConfig, AppConfigForTestContainers}
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.responders.{ActorDeps, ActorToZioBridge}
+import org.knora.webapi.responders.{ActorDeps, ActorToZioBridge, ProjectsMessageHandler, ProjectsMessageHandlerLive}
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -45,6 +45,7 @@ object LayersTest {
     with IIIFServiceManager
     with IriConverter
     with MessageRelay
+    with ProjectsMessageHandler
     with RepositoryUpdater
     with ResourceInfoRepo
     with RestCardinalityService
@@ -72,6 +73,7 @@ object LayersTest {
       OntologyCache.layer,
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,
+      ProjectsMessageHandlerLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,

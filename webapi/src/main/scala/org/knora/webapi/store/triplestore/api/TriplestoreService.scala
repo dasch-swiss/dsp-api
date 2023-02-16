@@ -55,6 +55,9 @@ trait TriplestoreService {
     sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
   ): UIO[SparqlExtendedConstructResponse]
 
+  def sparqlHttpExtendedConstruct(query: String): UIO[SparqlExtendedConstructResponse] =
+    sparqlHttpExtendedConstruct(SparqlExtendedConstructRequest(query))
+
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
    *
