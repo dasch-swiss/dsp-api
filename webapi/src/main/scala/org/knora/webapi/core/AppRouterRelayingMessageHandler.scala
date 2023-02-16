@@ -14,7 +14,8 @@ import org.knora.webapi.responders.ActorToZioBridge
  * @param bridge the bridge to the actor/akka world.
  */
 case class AppRouterRelayingMessageHandler(bridge: ActorToZioBridge) extends MessageHandler {
-  override def handle(message: ResponderRequest): Task[Any]         = bridge.askAppActor(message)
+  override def handle(message: ResponderRequest): Task[Any] = bridge.askAppActor(message)
+
   override def isResponsibleFor(message: ResponderRequest): Boolean = !message.isInstanceOf[RelayedMessage]
 }
 
