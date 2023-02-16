@@ -3,6 +3,7 @@ package org.knora.webapi.core
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.{AppConfig, AppConfigForTestContainers}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.{ActorDeps, ActorToZioBridge}
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -32,8 +33,11 @@ object LayersTest {
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
   type CommonR0 = ActorSystem with IIIFService with AppConfig
-  type CommonR = ApiRoutes
+  type CommonR = ActorDeps
+    with ActorToZioBridge
+    with ApiRoutes
     with AppRouter
+    with AppRouterRelayingMessageHandler
     with CacheService
     with CacheServiceManager
     with CardinalityService
@@ -53,8 +57,11 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
+      ActorDeps.layer,
+      ActorToZioBridge.live,
       ApiRoutes.layer,
       AppRouter.layer,
+      AppRouterRelayingMessageHandler.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,

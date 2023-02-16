@@ -1,18 +1,15 @@
 package org.knora.webapi.core
 
-import zio._
-import zio.test.Assertion.anything
-import zio.test.Assertion.dies
-import zio.test.Assertion.isSubtype
-import zio.test._
-
 import org.knora.webapi.messages.ResponderRequest
+import zio._
+import zio.test.Assertion.{anything, dies, isSubtype}
+import zio.test._
 
 object MessageRelaySpec extends ZIOSpecDefault {
 
   case class TestHandler() extends MessageHandler {
     override def handle(message: ResponderRequest): Task[Any]         = ZIO.succeed("handled")
-    override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[HandledTestMessage]
+    override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[SomeRelayedMessage]
   }
 
   object TestHandler {
@@ -20,8 +17,8 @@ object MessageRelaySpec extends ZIOSpecDefault {
       ZLayer.fromZIO(ZIO.serviceWithZIO[MessageRelay](_.subscribe(TestHandler())))
   }
 
-  case class HandledTestMessage() extends RelayedMessage
-  case class UnknownTestMessage() extends ResponderRequest
+  case class SomeRelayedMessage() extends RelayedMessage
+  case class NotARelayedMessage() extends ResponderRequest
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("MessageRelay")(
@@ -30,7 +27,7 @@ object MessageRelaySpec extends ZIOSpecDefault {
           // need to include the TestHandler in the test otherwise the layer and hence its subscription is ignored
           _      <- ZIO.service[TestHandler]
           mr     <- ZIO.service[MessageRelay]
-          actual <- mr.ask(UnknownTestMessage()).exit
+          actual <- mr.ask(NotARelayedMessage()).exit
         } yield assert(actual)(dies(isSubtype[IllegalStateException](anything)))
       },
       test("when asked with a HandledTestMessage then it should relay it to the registered TestHandler") {
@@ -38,7 +35,7 @@ object MessageRelaySpec extends ZIOSpecDefault {
           // need to include the TestHandler in the test otherwise the layer and hence its subscription is ignored
           _      <- ZIO.service[TestHandler]
           relay  <- ZIO.service[MessageRelay]
-          actual <- relay.ask[String](HandledTestMessage())
+          actual <- relay.ask[String](SomeRelayedMessage())
         } yield assertTrue(actual == "handled")
       }
     ).provide(MessageRelayLive.layer, TestHandler.layer)
