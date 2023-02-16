@@ -9,6 +9,7 @@ For the sake of comprehensibility, it was necessary to split the ontology into m
 even though this obliterates the evident connections between those diagrams.
 
 ### Resources
+
 ```mermaid
 classDiagram
   %% Classes
@@ -89,6 +90,7 @@ classDiagram
 ```
 
 ### Values
+
 !!! Note "Legend"
 
     - doted lines: the boxes are copies from another diagram.
@@ -242,6 +244,7 @@ classDiagram
 ```
 
 ### Standoff in knora-base
+
 ```mermaid
 classDiagram
   %% Classes
@@ -295,6 +298,7 @@ classDiagram
 ```
 
 ### Standoff Ontology
+
 ```mermaid
 flowchart BT
   StandoffRootTag["StandoffRootTag \n ----- \n string standoffRootTagHasDocumentType"]
@@ -328,7 +332,9 @@ flowchart BT
 ```
 
 ## Property Hierarchy
+
 ### Properties and Values
+
 ```mermaid
 flowchart BT
   hasValue ---> resourceProperty
@@ -367,6 +373,7 @@ flowchart BT
 ```
 
 ### Resource Metadata
+
 ```mermaid
 flowchart BT
   creationDate ---> objectCannotBeMarkedAsDeleted
@@ -450,7 +457,9 @@ flowchart BT
 ```
 
 ## Property Triple Structure
+
 ### Text Related Triples
+
 ```mermaid
 flowchart LR
   %% Classes
@@ -519,6 +528,7 @@ flowchart LR
 ```
 
 ### Resource Triples Structure
+
 !!! Note "Legend"
 
     - round boxes: resources
@@ -610,6 +620,7 @@ flowchart LR
 ```
 
 ### Properties without Subject Class Constraint
+
 ```mermaid
 flowchart LR
   na[[no subject class constraint defined]]

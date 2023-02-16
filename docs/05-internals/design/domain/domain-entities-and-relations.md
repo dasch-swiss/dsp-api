@@ -25,6 +25,7 @@ The indicated relationships are of conceptual nature and are more complicated in
 
 
 ### Admin
+
 ```mermaid
 erDiagram
     %% entities
@@ -101,6 +102,7 @@ erDiagram
     - Project.belongsToInstitution?
 
 ### Overview V2
+
 ```mermaid
 erDiagram
     Ontology ||--o{ ResourceClass: "consists of"
@@ -117,6 +119,7 @@ erDiagram
 ```
 
 ### Ontology
+
 ```mermaid
 erDiagram
     Project {}
@@ -158,6 +161,7 @@ erDiagram
 ```
 
 ### Data
+
 ```mermaid
 erDiagram
     User {}

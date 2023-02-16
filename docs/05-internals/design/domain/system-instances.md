@@ -5,6 +5,7 @@ Apart from class and property definitions,
 that should be present in any running DSP stack:
 
 ## Built-in User Groups
+
 ```mermaid
 classDiagram
 %% Classes
@@ -36,10 +37,10 @@ classDiagram
   UserGroup <|-- ProjectMember
   UserGroup <|-- ProjectAdmin
   UserGroup <|-- SystemAdmin
-
 ```
 
 ## Built-in Users
+
 ```mermaid
 classDiagram
 %% Classes
@@ -55,10 +56,10 @@ classDiagram
 %% Relationships
   User <|-- AnonymousUser
   User <|-- SystemUser
-
 ```
 
 ## Built-in Projects
+
 ```mermaid
 classDiagram
 %% Classes
@@ -74,6 +75,4 @@ classDiagram
 %% Relationships
   Project <|-- SystemProject
   Project <|-- DefaultSharedOntologiesProject
-
 ```
-
