@@ -238,6 +238,7 @@ if source_key_frames_exists then
         return
     end
 end
+
 --
 -- Move sidecarfile if it exists
 --
