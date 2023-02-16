@@ -37,6 +37,7 @@ object AppRouter {
       with CacheServiceManager
       with CardinalityService
       with IIIFServiceManager
+      with MessageRelay
       with TriplestoreServiceManager,
     Nothing,
     AppRouter
@@ -48,6 +49,7 @@ object AppRouter {
         iiifServiceManager        <- ZIO.service[IIIFServiceManager]
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
+        messageRelay              <- ZIO.service[MessageRelay]
         runtime                   <- ZIO.runtime[CardinalityService]
       } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem = as.system
@@ -59,6 +61,7 @@ object AppRouter {
               iiifServiceManager,
               triplestoreServiceManager,
               appConfig,
+              messageRelay,
               runtime
             )
           ),

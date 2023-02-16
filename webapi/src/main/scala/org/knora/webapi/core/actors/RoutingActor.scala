@@ -12,6 +12,8 @@ import scala.concurrent.ExecutionContext
 
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -39,28 +41,9 @@ import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequ
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.admin.GroupsResponderADM
-import org.knora.webapi.responders.admin.ListsResponderADM
-import org.knora.webapi.responders.admin.PermissionsResponderADM
-import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.responders.admin.SipiResponderADM
-import org.knora.webapi.responders.admin.StoresResponderADM
-import org.knora.webapi.responders.admin.UsersResponderADM
-import org.knora.webapi.responders.v1.CkanResponderV1
-import org.knora.webapi.responders.v1.ListsResponderV1
-import org.knora.webapi.responders.v1.OntologyResponderV1
-import org.knora.webapi.responders.v1.ProjectsResponderV1
-import org.knora.webapi.responders.v1.ResourcesResponderV1
-import org.knora.webapi.responders.v1.SearchResponderV1
-import org.knora.webapi.responders.v1.StandoffResponderV1
-import org.knora.webapi.responders.v1.UsersResponderV1
-import org.knora.webapi.responders.v1.ValuesResponderV1
-import org.knora.webapi.responders.v2.ListsResponderV2
-import org.knora.webapi.responders.v2.OntologyResponderV2
-import org.knora.webapi.responders.v2.ResourcesResponderV2
-import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.responders.v2.StandoffResponderV2
-import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.responders.admin._
+import org.knora.webapi.responders.v1._
+import org.knora.webapi.responders.v2._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
@@ -73,6 +56,7 @@ final case class RoutingActor(
   iiifServiceManager: IIIFServiceManager,
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
+  messageRelay: MessageRelay,
   runtime: zio.Runtime[CardinalityService]
 ) extends Actor {
 
@@ -111,6 +95,8 @@ final case class RoutingActor(
   private val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
 
   def receive: Receive = {
+    // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
+    case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg), log, runtime)
 
     // V1 request messages
     case ckanResponderRequestV1: CkanResponderRequestV1 =>

@@ -1,35 +1,27 @@
 package org.knora.webapi.core
 
-import zio.ULayer
-import zio.ZLayer
-
 import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.config.{AppConfig, AppConfigForTestContainers}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
+import org.knora.webapi.slice.ontology.repo.service.{OntologyCache, OntologyRepoLive, PredicateRepositoryLive}
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
+import org.knora.webapi.slice.resourceinfo.domain.{IriConverter, ResourceInfoRepo}
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.api.IIIFService
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.iiif.impl.{IIIFServiceMockImpl, IIIFServiceSipiImpl}
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
+import org.knora.webapi.testcontainers.{FusekiTestContainer, SipiTestContainer}
 import org.knora.webapi.testservices.TestClientService
+import zio._
 
 object LayersTest {
 
@@ -48,6 +40,7 @@ object LayersTest {
     with HttpServer
     with IIIFServiceManager
     with IriConverter
+    with MessageRelay
     with RepositoryUpdater
     with ResourceInfoRepo
     with RestCardinalityService
@@ -68,6 +61,7 @@ object LayersTest {
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
+      MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,
@@ -101,7 +95,7 @@ object LayersTest {
 
   /**
    * Provides a layer for integration tests which depend on Fuseki as Testcontainers.
-   * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl.l]]
+   * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl]]
    * @param system An optional [[akka.actor.ActorSystem]] for use with Akka's [[akka.testkit.TestKit]]
    * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
    */

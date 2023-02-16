@@ -54,6 +54,7 @@ object LayersLive {
       with IIIFServiceManager
       with IIIFService
       with JWTService
+      with MessageRelay
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
@@ -83,6 +84,7 @@ object LayersLive {
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       JWTService.layer,
+      MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,
