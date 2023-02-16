@@ -3,14 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
- * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
- */
 package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
-import akka.testkit.ImplicitSender
 
 import java.util.UUID
 import scala.concurrent.duration._
@@ -29,9 +24,9 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
 /**
- * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
+ * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.GroupsResponderADMSpec]] actor.
  */
-class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
+class GroupsResponderADMSpec extends CoreSpec {
   private val timeout             = 5.seconds
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
@@ -62,7 +57,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           groupIri = "http://rdfh.ch/groups/notexisting"
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
       }
@@ -127,7 +122,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
         }
       }
@@ -176,7 +171,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
       }
@@ -196,7 +191,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[BadRequestException] should ===(true)
         }
       }
@@ -238,7 +233,6 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
 
         val statusChangeResponse = expectMsgType[GroupOperationResponseADM](timeout)
-
         statusChangeResponse.group.status shouldBe false
 
         appActor ! GroupMembersGetRequestADM(
@@ -246,7 +240,8 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           requestingUser = SharedTestDataADM.rootUser
         )
 
-        expectMsg(Failure(NotFoundException("No members found.")))
+        val noMembers: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
+        noMembers.members.size shouldBe 0
       }
 
       "return 'NotFound' when the group IRI is unknown" in {
@@ -255,7 +250,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           requestingUser = SharedTestDataADM.rootUser
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
       }

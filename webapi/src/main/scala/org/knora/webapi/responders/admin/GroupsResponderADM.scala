@@ -194,14 +194,8 @@ class GroupsResponderADM(responderData: ResponderData)
    */
   private def groupsGetRequestADM: Future[GroupsGetResponseADM] =
     for {
-      maybeGroupsListToReturn <-
-        groupsGetADM
-
-      result = maybeGroupsListToReturn match {
-                 case groups: Seq[GroupADM] if groups.nonEmpty => GroupsGetResponseADM(groups = groups)
-                 case _                                        => throw NotFoundException(s"No groups found")
-               }
-    } yield result
+      groups <- groupsGetADM
+    } yield GroupsGetResponseADM(groups)
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
@@ -258,10 +252,11 @@ class GroupsResponderADM(responderData: ResponderData)
           groupIri = groupIri
         )
 
-      result = maybeGroupADM match {
-                 case Some(group) => GroupGetResponseADM(group = group)
-                 case None        => throw NotFoundException(s"Group <$groupIri> not found")
-               }
+      result =
+        maybeGroupADM match {
+          case Some(group) => GroupGetResponseADM(group = group)
+          case None        => throw NotFoundException(s"Group <$groupIri> not found.")
+        }
     } yield result
 
   /**
@@ -375,17 +370,13 @@ class GroupsResponderADM(responderData: ResponderData)
     log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
 
     for {
-      maybeMembersListToReturn <-
+      members <-
         groupMembersGetADM(
           groupIri = groupIri,
           requestingUser = requestingUser
         )
 
-      result = maybeMembersListToReturn match {
-                 case members: Seq[UserADM] if members.nonEmpty => GroupMembersGetResponseADM(members = members)
-                 case _                                         => throw NotFoundException(s"No members found.")
-               }
-    } yield result
+    } yield GroupMembersGetResponseADM(members)
   }
 
   /**
