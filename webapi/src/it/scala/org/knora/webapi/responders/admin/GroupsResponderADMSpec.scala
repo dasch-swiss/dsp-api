@@ -62,7 +62,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           groupIri = "http://rdfh.ch/groups/notexisting"
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
       }
@@ -127,7 +127,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
         }
       }
@@ -176,7 +176,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
       }
@@ -196,7 +196,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[BadRequestException] should ===(true)
         }
       }
@@ -255,7 +255,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
           requestingUser = SharedTestDataADM.rootUser
         )
 
-        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        expectMsgPF(timeout) { case msg: Failure =>
           msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
       }
