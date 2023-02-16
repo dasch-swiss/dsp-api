@@ -9,7 +9,7 @@ require "send_response"
 require "jwt"
 
 ----------------------------------------
--- Extract the full filename form a path
+-- Extract the full filename from a path
 ----------------------------------------
 function get_file_name(path)
     local str = path
@@ -228,13 +228,16 @@ if not success then
     return
 end
 
--- In case of a movie file, move the key frames folder to the permanent storage directory 
-success_key_frames, error_msg_key_frames = os.rename(source_key_frames, destination_key_frames)
-if not success_key_frames then
-    send_error(500, "moving key frames folder failed: " .. error_msg_key_frames)
-    return
+-- In case of a movie file, move the key frames folder to the permanent storage directory
+local source_key_frames_exists
+_, source_key_frames_exists = server.fs.exists(source_key_frames)
+if source_key_frames_exists then
+    success, error_msg = os.rename(source_key_frames, destination_key_frames)
+    if not success then
+        send_error(500, "moving key frames folder failed: " .. error_msg)
+        return
+    end
 end
-
 --
 -- Move sidecarfile if it exists
 --
