@@ -11,12 +11,11 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.{Authenticati
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import zio._
 import zio.http.model.{Headers, Method}
-import zio.http.{Body, Client, Path}
+import zio.http.{Body, Client}
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import zio.stream.ZStream
 
 import java.nio.file.{Files, Paths}
-import java.io.File
 
 /**
  * Tests uploading files to Sipi through the /upload_without_transcoding route.
@@ -101,22 +100,24 @@ class SipiUploadWithoutTranscodingITSpec
       assert(Files.exists(pathToRosettaDerivative), s"File $pathToRosettaDerivative does not exist")
       assert(Files.exists(pathToRosettaSidecar), s"File $pathToRosettaSidecar does not exist")
 
-      val url = s"$baseInternalSipiUrl/upload_without_transcoding?token=$loginToken"
+      val url  = s"$baseInternalSipiUrl/upload_without_transcoding?token=$loginToken"
+      val test = "http://127.0.0.1/post"
       val request =
         Client.request(
-          url,
+          test,
           Method.POST,
-          Headers.Header("Content-Type", "application/json"),
-          Body.fromStream(ZStream.fromPath(pathToRosettaSidecar))
+          Headers.Header("Content-Type", "multipart/form-data"),
+          Body.fromStream(ZStream.fromPath(pathToRosettaOriginal).++(ZStream.fromPath(pathToRosettaDerivative)))
         )
 
       val upload = for {
         res             <- request
+        bodyString      <- res.body.asString
         responseOrError <- res.body.asString.map(_.fromJson[UploadResponse])
         lr <- responseOrError match {
                 case Left(error) =>
                   Console.printLineError(res) *>
-                    Console.printLineError(error) *>
+                    Console.printLineError(s"body: $bodyString") *>
                     ZIO.dieMessage(
                       "JSON deserialization error: " + error
                     )

@@ -1,5 +1,5 @@
--- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
--- * SPDX-License-Identifier: Apache-2.0
+--  Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+--  SPDX-License-Identifier: Apache-2.0
 
 --
 -- Upload route for binary files that skips transcoding. Directly puts the
@@ -48,10 +48,10 @@ if not success then -- tests server.fs.exists
     return
 end
 if not exists then -- checks the response of server.fs.exists
-    -- tmp folder does not exist
-    server.log("temp folder missing: " .. tmpFolder, server.loglevel.LOG_ERR)
+    -- tmp folder does not exist, trying to create one
     success, error_msg = server.fs.mkdir(tmpFolder, 511)
     if not success then
+        server.log("temp folder missing and not able to create one: " .. tmpFolder, server.loglevel.LOG_ERR)
         send_error(500, "server.fs.mkdir() failed: " .. error_msg)
         return
     end
