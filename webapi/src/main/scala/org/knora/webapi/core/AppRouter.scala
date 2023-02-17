@@ -65,7 +65,7 @@ object AppRouter {
               messageRelay,
               runtime
             )
-          ).withRouter(new RoundRobinPool(10)),
+          ).withRouter(new RoundRobinPool(1_000)),
           name = APPLICATION_MANAGER_ACTOR_NAME
         )
 
