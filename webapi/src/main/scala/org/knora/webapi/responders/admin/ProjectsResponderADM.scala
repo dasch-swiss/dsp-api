@@ -5,6 +5,17 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
+import zio._
+
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.UUID
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
@@ -38,22 +49,149 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
-import zio._
-
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.UUID
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-trait ProjectsResponderADM {}
 
 /**
  * Returns information about projects.
  */
+trait ProjectsResponderADM {
+
+  /**
+   * Gets all the projects and returns them as a [[ProjectADM]].
+   *
+   * @return all the projects as a [[ProjectADM]].
+   *
+   *         NotFoundException if no projects are found.
+   */
+  def projectsGetRequestADM(): Task[ProjectsGetResponseADM]
+
+  /**
+   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
+   *
+   * @param identifier the IRI, shortname, shortcode or UUID of the project.
+   * @param skipCache  if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
+   * @return information about the project as an optional [[ProjectADM]].
+   */
+  def getSingleProjectADM(
+    identifier: ProjectIdentifierADM,
+    skipCache: Boolean = false
+  ): Task[Option[ProjectADM]]
+
+  /**
+   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
+   * as a [[ProjectGetResponseADM]].
+   *
+   * @param identifier the IRI, shortname, shortcode or UUID of the project.
+   * @return Information about the project as a [[ProjectGetResponseADM]].
+   *
+   *         [[NotFoundException]] When no project for the given IRI can be found.
+   */
+  def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM]
+
+  /**
+   * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
+   * if none are found.
+   *
+   * @param identifier     the IRI, shortname, shortcode or UUID of the project.
+   * @param requestingUser the user making the request.
+   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
+   */
+  def projectMembersGetRequestADM(
+    identifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectMembersGetResponseADM]
+
+  /**
+   * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
+   * if none are found
+   *
+   * @param identifier     the IRI, shortname, shortcode or UUID of the project.
+   * @param requestingUser the user making the request.
+   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
+   */
+  def projectAdminMembersGetRequestADM(
+    identifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectAdminMembersGetResponseADM]
+
+  /**
+   * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
+   *
+   * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+   */
+  def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM]
+
+  /**
+   * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
+   *
+   * @param projectIri the IRI of the project.
+   * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+   */
+  def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM]
+
+  /**
+   * Get project's restricted view settings.
+   *
+   * @param identifier the project's identifier (IRI / shortcode / shortname / UUID)
+   * @return [[ProjectRestrictedViewSettingsADM]]
+   */
+  def projectRestrictedViewSettingsGetADM(
+    identifier: ProjectIdentifierADM
+  ): Task[Option[ProjectRestrictedViewSettingsADM]]
+
+  /**
+   * Get project's restricted view settings.
+   *
+   * @param identifier the project's identifier (IRI / shortcode / shortname / UUID)
+   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
+   */
+  def projectRestrictedViewSettingsGetRequestADM(
+    identifier: ProjectIdentifierADM
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
+
+  /**
+   * Creates a project.
+   *
+   * @param createProjectRequest the new project's information.
+   * @param requestingUser       the user that is making the request.
+   * @param apiRequestID         the unique api request ID.
+   * @return A [[ProjectOperationResponseADM]].
+   *
+   *         [[ForbiddenException]]      In the case that the user is not allowed to perform the operation.
+   *
+   *         [[DuplicateValueException]] In the case when either the shortname or shortcode are not unique.
+   *
+   *         [[BadRequestException]]     In the case when the shortcode is invalid.
+   */
+  def projectCreateRequestADM(
+    createProjectRequest: ProjectCreatePayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[ProjectOperationResponseADM]
+
+  /**
+   * Update project's basic information.
+   *
+   * @param projectIri           the IRI of the project.
+   * @param projectUpdatePayload the update payload.
+   * @param requestingUser       the user making the request.
+   * @param apiRequestID         the unique api request ID.
+   * @return A [[ProjectOperationResponseADM]].
+   *
+   *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
+   */
+  def changeBasicInformationRequestADM(
+    projectIri: Iri.ProjectIri,
+    projectUpdatePayload: ProjectUpdatePayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[ProjectOperationResponseADM]
+
+  def projectDataGetRequestADM(
+    projectIdentifier: ProjectIdentifierADM,
+    requestingUser: UserADM
+  ): Task[ProjectDataGetResponseADM]
+}
+
 final case class ProjectsResponderADMLive(
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
@@ -175,7 +313,7 @@ final case class ProjectsResponderADMLive(
    *
    *         NotFoundException if no projects are found.
    */
-  private def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
+  override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
     for {
       projects <- projectsGetADM()
       result = if (projects.nonEmpty) { ProjectsGetResponseADM(projects = projects) }
@@ -189,7 +327,7 @@ final case class ProjectsResponderADMLive(
    * @param skipCache            if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
    * @return information about the project as an optional [[ProjectADM]].
    */
-  private def getSingleProjectADM(
+  override def getSingleProjectADM(
     identifier: ProjectIdentifierADM,
     skipCache: Boolean = false
   ): Task[Option[ProjectADM]] = {
@@ -220,7 +358,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
-  def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
+  override def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
     maybeProject <- getSingleProjectADM(identifier)
     project       = maybeProject.getOrElse(throw NotFoundException(s"Project '${getId(identifier)}' not found"))
   } yield ProjectGetResponseADM(project)
@@ -233,7 +371,7 @@ final case class ProjectsResponderADMLive(
    * @param requestingUser       the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
-  private def projectMembersGetRequestADM(
+  override def projectMembersGetRequestADM(
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Task[ProjectMembersGetResponseADM] =
@@ -302,7 +440,7 @@ final case class ProjectsResponderADMLive(
    * @param requestingUser       the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
-  private def projectAdminMembersGetRequestADM(
+  override def projectAdminMembersGetRequestADM(
     identifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Task[ProjectAdminMembersGetResponseADM] =
@@ -363,7 +501,7 @@ final case class ProjectsResponderADMLive(
    *
    * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
    */
-  private def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
+  override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
     for {
       projects <- projectsGetADM()
 
@@ -377,9 +515,7 @@ final case class ProjectsResponderADMLive(
    * @param projectIri           the IRI of the project.
    * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
    */
-  private def projectKeywordsGetRequestADM(
-    projectIri: Iri.ProjectIri
-  ): Task[ProjectKeywordsGetResponseADM] =
+  override def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
                         identifier = IriIdentifier
@@ -394,7 +530,7 @@ final case class ProjectsResponderADMLive(
 
     } yield ProjectKeywordsGetResponseADM(keywords = keywords)
 
-  private def projectDataGetRequestADM(
+  override def projectDataGetRequestADM(
     projectIdentifier: ProjectIdentifierADM,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM] = {
@@ -579,7 +715,7 @@ final case class ProjectsResponderADMLive(
    *
    * @return [[ProjectRestrictedViewSettingsADM]]
    */
-  private def projectRestrictedViewSettingsGetADM(
+  override def projectRestrictedViewSettingsGetADM(
     identifier: ProjectIdentifierADM
   ): Task[Option[ProjectRestrictedViewSettingsADM]] =
     // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestrictedViewSettings resource. How to send the client the correct NotFound reply?
@@ -622,7 +758,7 @@ final case class ProjectsResponderADMLive(
    *
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
-  private def projectRestrictedViewSettingsGetRequestADM(
+  override def projectRestrictedViewSettingsGetRequestADM(
     identifier: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     for {
@@ -641,7 +777,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
-  private def changeBasicInformationRequestADM(
+  override def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
     projectUpdatePayload: ProjectUpdatePayloadADM,
     requestingUser: UserADM,
@@ -855,7 +991,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
-  private def projectCreateRequestADM(
+  override def projectCreateRequestADM(
     createProjectRequest: ProjectCreatePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
