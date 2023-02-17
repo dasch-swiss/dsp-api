@@ -42,7 +42,6 @@ object SipiTestContainer {
 
     sipiContainer.withClasspathResourceMapping(
       "/sipi.docker-config.lua",
-      // "sipi/config/sipi.docker-config.lua",
       "/sipi/config/sipi.docker-config.lua",
       BindMode.READ_ONLY
     )

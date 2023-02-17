@@ -10,19 +10,14 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2Serialization, LoginResponse}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import zio._
-import zio.http.model.{Headers, Method}
-import zio.http.{Body, Client}
-import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.http.model._
+import zio.http._
+import zio.json._
 import zio.stream.ZStream
 
 import java.nio.file.{Files, Paths}
 import zio.json.JsonCodec
 import zio.json.DeriveJsonCodec
-import zio.http.Response
-import java.io.File
-import zio.http.Request
-import zio.http.Path
-import zio.http.URL
 
 /**
  * Tests uploading files to Sipi through the /upload_without_transcoding route.
@@ -111,7 +106,7 @@ class SipiUploadWithoutTranscodingITSpec
       val test = "http://127.0.0.1/post"
       val request =
         Client.request(
-          test,
+          url,
           Method.POST,
           Headers.Header("Content-Type", "multipart/form-data"),
           Body.fromStream(ZStream.fromPath(pathToRosettaOriginal).++(ZStream.fromPath(pathToRosettaDerivative)))
