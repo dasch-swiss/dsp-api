@@ -253,19 +253,15 @@ final case class ProjectsResponderADMLive(
    *
    * @return all the projects as a sequence containing [[ProjectADM]].
    */
-  private def projectsGetADM(): Task[Seq[ProjectADM]] =
+  private def projectsGetADM(): Task[Seq[ProjectADM]] = {
+    val query = twirl.queries.sparql.admin.txt
+      .getProjects(
+        maybeIri = None,
+        maybeShortname = None,
+        maybeShortcode = None
+      )
     for {
-      sparqlQueryString <-
-        ZIO.succeed(
-          twirl.queries.sparql.admin.txt
-            .getProjects(
-              maybeIri = None,
-              maybeShortname = None,
-              maybeShortcode = None
-            )
-            .toString()
-        )
-      projectsResponse      <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQueryString)
+      projectsResponse      <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
       projectIris            = projectsResponse.statements.keySet.map(_.toString)
       ontologiesForProjects <- getOntologiesForProjects(projectIris)
       projects =
@@ -280,6 +276,7 @@ final case class ProjectsResponderADMLive(
         }
 
     } yield projects.sorted
+  }
 
   /**
    * Given a set of project IRIs, gets the ontologies that belong to each project.
@@ -395,17 +392,14 @@ final case class ProjectsResponderADMLive(
           }
         }
 
-      sparqlQueryString <- ZIO.succeed(
-                             twirl.queries.sparql.admin.txt
-                               .getProjectMembers(
-                                 maybeIri = identifier.asIriIdentifierOption,
-                                 maybeShortname = identifier.asShortnameIdentifierOption,
-                                 maybeShortcode = identifier.asShortcodeIdentifierOption
-                               )
-                               .toString()
-                           )
+      query = twirl.queries.sparql.admin.txt
+                .getProjectMembers(
+                  maybeIri = identifier.asIriIdentifierOption,
+                  maybeShortname = identifier.asShortnameIdentifierOption,
+                  maybeShortcode = identifier.asShortcodeIdentifierOption
+                )
 
-      projectMembersResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQueryString)
+      projectMembersResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
       statements              = projectMembersResponse.statements.toList
 
       // get project member IRI from results rows
@@ -459,17 +453,14 @@ final case class ProjectsResponderADMLive(
           }
         }
 
-      sparqlQueryString <- ZIO.succeed(
-                             twirl.queries.sparql.admin.txt
-                               .getProjectAdminMembers(
-                                 maybeIri = identifier.asIriIdentifierOption,
-                                 maybeShortname = identifier.asShortnameIdentifierOption,
-                                 maybeShortcode = identifier.asShortcodeIdentifierOption
-                               )
-                               .toString()
-                           )
+      query = twirl.queries.sparql.admin.txt
+                .getProjectAdminMembers(
+                  maybeIri = identifier.asIriIdentifierOption,
+                  maybeShortname = identifier.asShortnameIdentifierOption,
+                  maybeShortcode = identifier.asShortcodeIdentifierOption
+                )
 
-      projectAdminMembersResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQueryString)
+      projectAdminMembersResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
 
       statements = projectAdminMembersResponse.statements.toList
 
@@ -669,14 +660,9 @@ final case class ProjectsResponderADMLive(
 
       adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = ADMIN_DATA_GRAPH, tempDir = tempDir)
 
-      adminDataSparql: String = twirl.queries.sparql.admin.txt
-                                  .getProjectAdminData(
-                                    projectIri = project.id
-                                  )
-                                  .toString()
-
+      adminDataSparql = twirl.queries.sparql.admin.txt.getProjectAdminData(project.id)
       _ <- triplestoreService.sparqlHttpConstructFile(
-             sparql = adminDataSparql,
+             sparql = adminDataSparql.toString(),
              graphIri = adminDataNamedGraphTrigFile.graphIri,
              outputFile = adminDataNamedGraphTrigFile.dataFile,
              outputFormat = TriG
@@ -686,14 +672,9 @@ final case class ProjectsResponderADMLive(
 
       permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = PERMISSIONS_DATA_GRAPH, tempDir = tempDir)
 
-      permissionDataSparql: String = twirl.queries.sparql.admin.txt
-                                       .getProjectPermissions(
-                                         projectIri = project.id
-                                       )
-                                       .toString()
-
+      permissionDataSparql = twirl.queries.sparql.admin.txt.getProjectPermissions(project.id)
       _ <- triplestoreService.sparqlHttpConstructFile(
-             sparql = permissionDataSparql,
+             sparql = permissionDataSparql.toString(),
              graphIri = permissionDataNamedGraphTrigFile.graphIri,
              outputFile = permissionDataNamedGraphTrigFile.dataFile,
              outputFormat = TriG
@@ -717,21 +698,15 @@ final case class ProjectsResponderADMLive(
    */
   override def projectRestrictedViewSettingsGetADM(
     identifier: ProjectIdentifierADM
-  ): Task[Option[ProjectRestrictedViewSettingsADM]] =
-    // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestrictedViewSettings resource. How to send the client the correct NotFound reply?
+  ): Task[Option[ProjectRestrictedViewSettingsADM]] = {
+    val query = twirl.queries.sparql.admin.txt
+      .getProjects(
+        maybeIri = identifier.asIriIdentifierOption,
+        maybeShortname = identifier.asShortnameIdentifierOption,
+        maybeShortcode = identifier.asShortcodeIdentifierOption
+      )
     for {
-      sparqlQuery <- ZIO.succeed(
-                       twirl.queries.sparql.admin.txt
-                         .getProjects(
-                           maybeIri = identifier.asIriIdentifierOption,
-                           maybeShortname = identifier.asShortnameIdentifierOption,
-                           maybeShortcode = identifier.asShortcodeIdentifierOption
-                         )
-                         .toString()
-                     )
-
-      projectResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQuery)
-
+      projectResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString)
       restrictedViewSettings =
         if (projectResponse.statements.nonEmpty) {
 
@@ -750,6 +725,7 @@ final case class ProjectsResponderADMLive(
         }
 
     } yield restrictedViewSettings
+  }
 
   /**
    * Get project's restricted view settings.
@@ -1286,18 +1262,10 @@ final case class ProjectsResponderADMLive(
    * @param shortname the shortname of the project.
    * @return a [[Boolean]].
    */
-  private def projectByShortnameExists(shortname: String): Task[Boolean] =
-    for {
-      askString <- ZIO.succeed(
-                     twirl.queries.sparql.admin.txt
-                       .checkProjectExistsByShortname(shortname = shortname)
-                       .toString
-                   )
-
-      checkProjectExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                      = checkProjectExistsResponse.result
-
-    } yield result
+  private def projectByShortnameExists(shortname: String): Task[Boolean] = {
+    val query = twirl.queries.sparql.admin.txt.checkProjectExistsByShortname(shortname)
+    triplestoreService.sparqlHttpAsk(query.toString()).map(_.result)
+  }
 
   /**
    * Helper method for checking if a project identified by shortcode exists.
@@ -1305,18 +1273,10 @@ final case class ProjectsResponderADMLive(
    * @param shortcode the shortcode of the project.
    * @return a [[Boolean]].
    */
-  private def projectByShortcodeExists(shortcode: String): Task[Boolean] =
-    for {
-      askString <- ZIO.succeed(
-                     twirl.queries.sparql.admin.txt
-                       .checkProjectExistsByShortcode(shortcode = shortcode)
-                       .toString
-                   )
-
-      checkProjectExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                      = checkProjectExistsResponse.result
-
-    } yield result
+  private def projectByShortcodeExists(shortcode: String): Task[Boolean] = {
+    val query = twirl.queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode)
+    triplestoreService.sparqlHttpAsk(query.toString()).map(_.result)
+  }
 
   private def getProjectFromCache(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     messageRelay.ask[Option[ProjectADM]](CacheServiceGetProjectADM(identifier)).map(_.map(_.unescape))
