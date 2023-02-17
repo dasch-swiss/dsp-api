@@ -5,15 +5,15 @@
 
 package org.knora.webapi.responders
 
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
-import scala.annotation.tailrec
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-
 import dsp.errors.ApplicationLockException
 import org.knora.webapi.IRI
 import org.knora.webapi.util.JavaUtil
+import zio.{Task, ZIO}
+
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import scala.annotation.tailrec
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Implements JVM-wide, reentrant, application-level update locks on data represented by IRIs, such as Knora
@@ -75,13 +75,49 @@ object IriLocker {
   ): Future[T] =
     // Try to acquire the lock in a future. If we can't acquire the lock, this future will fail without running
     // the task.
-    Future(acquireOrIncrementLock(iri, apiRequestID, MAX_LOCK_RETRIES)).flatMap { _ =>
+    Future(acquireLock(iri, apiRequestID)).flatMap { _ =>
       // Once we've acquired the lock, run the task in a future, because it might throw an exception rather than
       // returning a future. Flatten nested futures into one, then decrement or release the lock.
       Future(task()).flatten.andThen { case _ =>
         decrementOrReleaseLock(iri, apiRequestID)
       }
     }
+
+  /**
+   * Acquires an update lock on an IRI, then runs a task that updates the IRI.
+   * The lock implementation is reentrant: if the API request requesting the lock already has it, this will not cause a deadlock.
+   * The lock is released after all tasks that used it for the same API request have either completed or failed.
+   * If the lock cannot be acquired because another API request has it, this method waits and retries.
+   * (The wait duration and maximum number of retries are defined in this class.)
+   * If this method still cannot acquire the lock after the maximum number of retries, it fails with a [[ApplicationLockException]].
+   *
+   * @param apiRequestID the ID of the API request that needs the lock.
+   * @param iri          the IRI to be locked.
+   * @param task         The [[Task]] that performs the update.
+   * @return the result of the task.
+   */
+  def runWithIriLock[T](apiRequestID: UUID, iri: IRI, task: Task[T]): Task[T] = {
+    val acquireLock: Task[Unit]    = ZIO.attemptBlocking(this.acquireLock(iri, apiRequestID)).logError
+    def releaseLock(ignored: Unit) = ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
+    ZIO.scoped {
+      for {
+        _          <- ZIO.acquireRelease(acquireLock)(releaseLock)
+        taskResult <- task
+      } yield taskResult
+    }
+  }
+
+  /**
+   * Tries to acquire an update lock for an API request on an IRI. If the API request already
+   * has the lock, the lock's entry count is incremented. If another API request has the lock,
+   * waits and retries. If the lock is still unavailable after the maximum number of retries,
+   * throws [[ApplicationLockException]].
+   *
+   * @param iri          the IRI to be locked.
+   * @param apiRequestID the ID of the API request that needs the lock.
+   */
+  private def acquireLock(iri: IRI, apiRequestID: UUID): Unit =
+    acquireOrIncrementLock(iri, apiRequestID, MAX_LOCK_RETRIES)
 
   /**
    * Tries to acquire an update lock for an API request on an IRI. If the API request already
