@@ -1,5 +1,45 @@
 # Changelog
 
+## [27.0.0](https://github.com/dasch-swiss/dsp-api/compare/v26.2.0...v27.0.0) (2023-02-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* return empty list instead of an error on GET /admin/groups route (DEV-1599) ([#2439](https://github.com/dasch-swiss/dsp-api/issues/2439))
+
+### Bug Fixes
+
+* **CORS:** explicitly assign allowed CORS methods ([#2443](https://github.com/dasch-swiss/dsp-api/issues/2443)) ([99fe6fa](https://github.com/dasch-swiss/dsp-api/commit/99fe6facd7bfa3146b719a62c53aaadc80794e90))
+* fix JVM metrics and logging DEV-1639 ([#2426](https://github.com/dasch-swiss/dsp-api/issues/2426)) ([97eb0fc](https://github.com/dasch-swiss/dsp-api/commit/97eb0fcf142be7b3c8427bfe2dfd8e7c580391b1))
+* return empty list instead of an error on GET /admin/groups route (DEV-1599) ([#2439](https://github.com/dasch-swiss/dsp-api/issues/2439)) ([f966f7c](https://github.com/dasch-swiss/dsp-api/commit/f966f7c9b98ad4d04ad127dea84a8650ac2a4d6c))
+
+
+### Enhancements
+
+* expose GET /admin/projects/[ iri | shortname | shortcode ]/{iri | shortname | shortcode }/admin-members as ZIO HTTP route (DEV-1587) ([#2423](https://github.com/dasch-swiss/dsp-api/issues/2423)) ([d7c2cd6](https://github.com/dasch-swiss/dsp-api/commit/d7c2cd66615d7f657dcfea2145646fe0b61dd7c5))
+* expose GET /admin/projects/[ iri | shortname | shortcode ]/{iri | shortname | shortcode }/members as ZIO HTTP route (DEV-1587)  ([#2422](https://github.com/dasch-swiss/dsp-api/issues/2422)) ([b5300b5](https://github.com/dasch-swiss/dsp-api/commit/b5300b5cf25eea28f873a13de49228ee177383e0))
+* expose GET /admin/projects/[iri | shortname | shortcode]/{projectIri | shortname | shortcode}/RestrictedViewSettings as ZIO HTTP route (DEV-1587)  ([#2428](https://github.com/dasch-swiss/dsp-api/issues/2428)) ([8080951](https://github.com/dasch-swiss/dsp-api/commit/8080951d7f5a38cdea780d68b009ef0e96cca462))
+* expose GET /admin/projects/iri/{projectIri}/Keywords as ZIO HTTP route (DEV-1587)  ([#2425](https://github.com/dasch-swiss/dsp-api/issues/2425)) ([3b86834](https://github.com/dasch-swiss/dsp-api/commit/3b86834471af5d1e73cc75446962dc2f02bf9f28))
+* expose GET /admin/projects/Keywords as ZIO HTTP route (DEV-1587)  ([#2424](https://github.com/dasch-swiss/dsp-api/issues/2424)) ([39607a2](https://github.com/dasch-swiss/dsp-api/commit/39607a2bc52ed2de38706d3f2cbd6a0a5292a83f))
+
+
+### Documentation
+
+* fix broken links in docs and remove unused files ([#2433](https://github.com/dasch-swiss/dsp-api/issues/2433)) ([34df59d](https://github.com/dasch-swiss/dsp-api/commit/34df59dc290921fa570534e3d0ecc9e58566fec9))
+* replace/canset cardinality documentation (DEV-1564 & DEV-1563) ([#2420](https://github.com/dasch-swiss/dsp-api/issues/2420)) ([adf1a34](https://github.com/dasch-swiss/dsp-api/commit/adf1a34b99f5b6abf9a85fb840e65343fb49b79d))
+
+
+### Maintenance
+
+* add 0.0.0.0 to allowed origins in config ([#2430](https://github.com/dasch-swiss/dsp-api/issues/2430)) ([9afd7a0](https://github.com/dasch-swiss/dsp-api/commit/9afd7a0d55360feea368bbf64048231ca6ac8ac9))
+* add complete in-memory triple store implementation (DEV-628) ([#2432](https://github.com/dasch-swiss/dsp-api/issues/2432)) ([708c217](https://github.com/dasch-swiss/dsp-api/commit/708c21796a76cafab7ffe3f328af8c860fddf70b))
+* Add more tests for the ZIO HTTP routes (DEV-1695) ([#2419](https://github.com/dasch-swiss/dsp-api/issues/2419)) ([84e2ead](https://github.com/dasch-swiss/dsp-api/commit/84e2ead596e57844e0647e0a1e0d881d7fe324a2))
+* Clean-up ZIO HTTP routes and related code ([#2429](https://github.com/dasch-swiss/dsp-api/issues/2429)) ([1684718](https://github.com/dasch-swiss/dsp-api/commit/1684718149b48b889ee2e0498feb8990a664c5fd))
+* cleanup remove unused shacl and redundant StringFormatter setup ([#2438](https://github.com/dasch-swiss/dsp-api/issues/2438)) ([293f6a3](https://github.com/dasch-swiss/dsp-api/commit/293f6a368c8993a8e7ebd51141eb5af16ded9485))
+* **instrumentation:** expose ZIO-HTTP metrics (DEV-1714) ([#2452](https://github.com/dasch-swiss/dsp-api/issues/2452)) ([a76b6f9](https://github.com/dasch-swiss/dsp-api/commit/a76b6f9cd53be1b26019f35b66c1529ed54106e2))
+* Rename ITTestDataFactory ([#2440](https://github.com/dasch-swiss/dsp-api/issues/2440)) ([dc8b4b5](https://github.com/dasch-swiss/dsp-api/commit/dc8b4b5aa15177795c73870b430f99c82b4677c3))
+* update PR template and GH release action ([#2427](https://github.com/dasch-swiss/dsp-api/issues/2427)) ([65180ef](https://github.com/dasch-swiss/dsp-api/commit/65180eff2794af7101a21684fb2b67e4d168c158))
+
 ## [26.2.0](https://github.com/dasch-swiss/dsp-api/compare/v26.1.0...v26.2.0) (2023-02-02)
 
 
