@@ -5,14 +5,22 @@ import zio._
 import org.knora.webapi.messages.ResponderRequest
 
 /**
- * Marker trait which marks all Messages which have a corresponding [[MessageHandler]] implementation.
+ * Marker trait which must mark messages which have a corresponding [[MessageHandler]] implementation.
+ *
+ * The [[org.knora.webapi.core.actors.RoutingActor]] routes messages with highest precedence to the [[MessageRelay]].
  */
 trait RelayedMessage extends ResponderRequest
 
 /**
- * Central component which is capable of relaying message to the subscribed [[MessageHandler]]s.
+ * Central component which is capable of relaying message to subscribed [[MessageHandler]]s.
  * Should replace the ask pattern with the [[akka.actor.ActorRef]] to our [[org.knora.webapi.core.actors.RoutingActor]]
- * in [[org.knora.webapi.responders.Responder]]s we are going to migrated to [[ZIO]].
+ * in [[org.knora.webapi.responders.Responder]]s which are migrated to [[ZIO]].
+ *
+ * This is only meant to be replacing the [[org.knora.webapi.core.actors.RoutingActor]] short term.
+ * In the long run we will prefer to invoke methods on the respective responders/services/repos directly.
+ *
+ * However, with the current architecture there are some circular dependencies between the responders and
+ * the router such that breaking these up is a task for after the ZIO migration.
  */
 trait MessageRelay {
 
