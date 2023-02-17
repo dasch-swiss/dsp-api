@@ -10,12 +10,13 @@ import zio.ZLayer
 import zio.test.Assertion._
 import zio.test._
 
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataSet
-import org.knora.webapi.store.triplestore.api.TriplestoreServiceFake
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
   private val usedOnce: String =
@@ -49,7 +50,8 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], PredicateRepositoryLive](
     PredicateRepositoryLive.layer,
-    TriplestoreServiceFake.layer
+    StringFormatter.test,
+    TriplestoreServiceInMemory.layer
   )
 
   val spec: Spec[Any, Throwable] = suite("PredicateRepositoryLive")(
@@ -63,7 +65,7 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
             )
         } yield assertTrue(result == List.empty)
       }
-    ).provide(commonLayers, emptyDataSet),
+    ).provide(commonLayers, emptyDataset),
     suite("getCountForPropertyUseNumberOfTimesWithClass given used once")(
       test("given a property is in use by a single instance of the class return this instance with a count of one") {
         for {

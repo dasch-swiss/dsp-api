@@ -35,7 +35,7 @@ import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
 object LayersLive {
@@ -70,7 +70,7 @@ object LayersLive {
       ActorSystem.layer,
       ActorToZioBridge.live,
       ApiRoutes.layer,
-      AppConfig.live,
+      AppConfig.layer,
       AppRouter.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
@@ -87,15 +87,15 @@ object LayersLive {
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsRouteZ.layer,
+      ProjectsService.live,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
-      ProjectsService.live,
       State.layer,
       StringFormatter.live,
-      TriplestoreServiceHttpConnectorImpl.layer,
+      TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer
     )
 }

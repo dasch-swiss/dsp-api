@@ -43,7 +43,7 @@ final case class AppServer(
       _      <- state.set(AppState.WaitingForTriplestore)
       status <- ts.checkTriplestore().map(_.triplestoreStatus)
       _ <- status match {
-             case TriplestoreStatus.Available(_)        => ZIO.unit
+             case TriplestoreStatus.Available           => ZIO.unit
              case TriplestoreStatus.NotInitialized(msg) => ZIO.die(new Exception(msg))
              case TriplestoreStatus.Unavailable(msg)    => ZIO.die(new Exception(msg))
            }

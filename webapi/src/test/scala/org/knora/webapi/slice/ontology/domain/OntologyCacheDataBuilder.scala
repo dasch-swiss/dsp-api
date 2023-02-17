@@ -33,12 +33,8 @@ object SmartIriConversion {
   }
 
   implicit class TestSmartIriFromInternalIri(internalIri: InternalIri) {
-    private implicit val sf: StringFormatter = {
-      StringFormatter.initForTest()
-      StringFormatter.getGeneralInstance
-    }
-
-    def smartIri: SmartIri = sf.toSmartIri(internalIri.value, requireInternal = true)
+    private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+    def smartIri: SmartIri                   = sf.toSmartIri(internalIri.value, requireInternal = true)
   }
 }
 

@@ -11,15 +11,14 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-
 import java.util.UUID
 import scala.concurrent.duration._
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
+
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -29,7 +28,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
-import dsp.valueobjects.Iri
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
@@ -364,15 +362,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE a project" in {
-        val iri             = TestDataFactory.projectIri(newProjectIri.get)
-        val updatedLongname = TestDataFactory.projectName("updated project longname")
-        val updatedDescription = TestDataFactory.projectDescription(
+        val iri             = ITTestDataFactory.projectIri(newProjectIri.get)
+        val updatedLongname = ITTestDataFactory.projectName("updated project longname")
+        val updatedDescription = ITTestDataFactory.projectDescription(
           Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en")))
         )
-        val updatedKeywords = TestDataFactory.projectKeywords(Seq("updated", "keywords"))
-        val updatedLogo     = TestDataFactory.projectLogo("/fu/bar/baz-updated.jpg")
-        val projectStatus   = TestDataFactory.projectStatus(true)
-        val selfJoin        = TestDataFactory.projectSelfJoin(true)
+        val updatedKeywords = ITTestDataFactory.projectKeywords(Seq("updated", "keywords"))
+        val updatedLogo     = ITTestDataFactory.projectLogo("/fu/bar/baz-updated.jpg")
+        val projectStatus   = ITTestDataFactory.projectStatus(true)
+        val selfJoin        = ITTestDataFactory.projectSelfJoin(true)
 
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
@@ -407,8 +405,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
-        val longname = TestDataFactory.projectName("longname")
-        val iri      = TestDataFactory.projectIri(notExistingProjectButValidProjectIri)
+        val longname = ITTestDataFactory.projectName("longname")
+        val iri      = ITTestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
           projectUpdatePayload = ProjectUpdatePayloadADM(longname = Some(longname)),
@@ -653,7 +651,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return all keywords for a single project" in {
-        val iri = TestDataFactory.projectIri(SharedTestDataADM.incunabulaProject.id)
+        val iri = ITTestDataFactory.projectIri(SharedTestDataADM.incunabulaProject.id)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )
@@ -662,7 +660,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return empty list for a project without keywords" in {
-        val iri = TestDataFactory.projectIri(SharedTestDataADM.dokubibProject.id)
+        val iri = ITTestDataFactory.projectIri(SharedTestDataADM.dokubibProject.id)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )
@@ -671,7 +669,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
-        val iri = TestDataFactory.projectIri(notExistingProjectButValidProjectIri)
+        val iri = ITTestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectKeywordsGetRequestADM(
           projectIri = iri
         )

@@ -26,6 +26,7 @@ import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.domain
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -104,19 +105,16 @@ object SparqlExtendedConstructResponse {
    * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
    *
    * @param turtleStr     the Turtle document.
-   * @param rdfFormatUtil an [[RdfFormatUtil]].
-   * @param log           a [[Logger]].
    * @return a [[SparqlExtendedConstructResponse]] representing the document.
    */
   def parseTurtleResponse(
     turtleStr: String
-  ): IO[DataConversionException, SparqlExtendedConstructResponse] = {
+  )(implicit stringFormatter: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] = {
 
     val rdfFormatUtil: RdfFormatUtil =
       RdfFeatureFactory.getRdfFormatUtil()
 
     ZIO.attemptBlocking {
-      implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
       val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
       val rdfModel: RdfModel                                              = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
@@ -193,8 +191,8 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      _ =>
-        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter") *>
+      e =>
+        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter : ${e.getMessage}") *>
           ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
       ZIO.succeed(_)
     )
@@ -347,9 +345,11 @@ case class CheckTriplestoreRequest() extends TriplestoreRequest
  * Response indicating whether the triplestore has finished initialization and is ready for processing messages
  *
  * @param triplestoreStatus the state of the triplestore.
- * @param msg               further description.
  */
 case class CheckTriplestoreResponse(triplestoreStatus: domain.TriplestoreStatus)
+object CheckTriplestoreResponse {
+  val Available: CheckTriplestoreResponse = CheckTriplestoreResponse(TriplestoreStatus.Available)
+}
 
 /**
  * Simulates a triplestore timeout. Used only in testing.

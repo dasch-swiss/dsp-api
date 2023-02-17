@@ -10,24 +10,26 @@ import zio.test.Assertion._
 import zio.test._
 
 import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
- * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl]].
+ * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive]].
  */
-object TriplestoreServiceHttpConnectorImplZSpec extends ZIOSpecDefault {
+object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
 
   /**
    * Defines a layer which encompases all dependencies that are needed for
    * running the tests. `bootstrap` overrides the base layer of ZIOApp.
    */
-  val testLayer =
+  val testLayer: ULayer[TriplestoreService] =
     ZLayer.make[TriplestoreService](
-      TriplestoreServiceHttpConnectorImpl.layer,
+      TriplestoreServiceLive.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      StringFormatter.test
     )
 
   def spec =
