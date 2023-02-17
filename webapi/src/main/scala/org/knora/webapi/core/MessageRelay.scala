@@ -1,8 +1,7 @@
 package org.knora.webapi.core
 
-import zio._
-
 import org.knora.webapi.messages.ResponderRequest
+import zio._
 
 /**
  * Marker trait which must mark messages which have a corresponding [[MessageHandler]] implementation.
@@ -37,13 +36,14 @@ trait MessageRelay {
   def ask[R: Tag](message: ResponderRequest): Task[R]
 
   /**
-   * In order to receive Messages a [[MessageHandler]] must subscribe to the [[MessageRelay]] during the construction of its layer.
-   * For a given type only a single [[MessageHandler]] may be subscribe.
+   * In order to receive messages a [[MessageHandler]] must subscribe to the [[MessageRelay]] during the construction of its layer.
+   * For a given type only a single [[MessageHandler]] should be subscribe.
+   * The [[MessageRelay]] will route a message only to the first [[MessageHandler]] it finds.
    *
    * @param handler An instance of [[MessageHandler]] subscribing.
    * @return The subscribed instance.
    *
-   * @example Example building a handler layer with subscribing to the [[MessageRelay]]:
+   * @example Example of building a handler layer with subscribing to the [[MessageRelay]]:
    *
    * {{{
    *  val layer: URLayer[MessageRelay, TestHandler] =
@@ -59,8 +59,23 @@ trait MessageRelay {
  */
 trait MessageHandler {
 
+  /**
+   * The [[MessageRelay]] sends messages to this method.
+   *
+   * @param message The message which should be handled
+   * @return A [[Task]] containing the response to the message received.
+   *         The type `Any` is very unfortunate and the implementation must follow type convention used in the ask pattern convention.
+   */
   def handle(message: ResponderRequest): Task[Any]
 
+  /**
+   * Before the [[MessageRelay]] sends messages to the handler it will make sure that it is capable of handling the
+   * type and the relay check this using this method.
+   *
+   * @param message The actual message which should be handled.
+   * @return `true`  if the handler implementation in the handle method contains code for the type of this message.
+   *         `false` if the handler does not know how to process this message.
+   */
   def isResponsibleFor(message: ResponderRequest): Boolean
 }
 
