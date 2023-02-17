@@ -6,10 +6,12 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import dsp.errors._
-import dsp.valueobjects.{Iri, V2}
+import dsp.valueobjects.Iri
+import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.{MessageHandler, MessageRelay}
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
@@ -17,35 +19,35 @@ import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.{
-  UserADM,
-  UserGetADM,
-  UserIdentifierADM,
-  UserInformationTypeADM
-}
-import org.knora.webapi.messages.store.cacheservicemessages.{
-  CacheServiceFlushDB,
-  CacheServiceGetProjectADM,
-  CacheServicePutProjectADM
-}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserGetADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{
-  OntologyMetadataGetByProjectRequestV2,
-  OntologyMetadataV2,
-  ReadOntologyMetadataV2
-}
-import org.knora.webapi.responders.{EntityAndClassIriService, IriLocker, Responder}
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
+import org.knora.webapi.responders.EntityAndClassIriService
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 import zio._
 
-import java.io.{BufferedInputStream, BufferedOutputStream}
-import java.nio.file.{Files, Path}
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.UUID
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 trait ProjectsResponderADM {}
 
@@ -63,13 +65,13 @@ final case class ProjectsResponderADMLive(
     with LazyLogging
     with InstrumentationSupport {
 
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ProjectsResponderRequestADM]
-
   // Global lock IRI used for project creation and update
   private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
   private val ADMIN_DATA_GRAPH       = "http://www.knora.org/data/admin"
   private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ProjectsResponderRequestADM]
 
   /**
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
@@ -170,7 +172,8 @@ final case class ProjectsResponderADMLive(
    * Gets all the projects and returns them as a [[ProjectADM]].
    *
    * @return all the projects as a [[ProjectADM]].
-   * @throws NotFoundException if no projects are found.
+   *
+   *         NotFoundException if no projects are found.
    */
   private def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
     for {
@@ -213,8 +216,9 @@ final case class ProjectsResponderADMLive(
    * as a [[ProjectGetResponseADM]].
    *
    * @param identifier           the IRI, shortname, shortcode or UUID of the project.
-   * @return information about the project as a [[ProjectGetResponseADM]].
-   * @throws NotFoundException when no project for the given IRI can be found
+   * @return Information about the project as a [[ProjectGetResponseADM]].
+   *
+   *         [[NotFoundException]] When no project for the given IRI can be found.
    */
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
     maybeProject <- getSingleProjectADM(identifier)
@@ -633,8 +637,9 @@ final case class ProjectsResponderADMLive(
    * @param projectUpdatePayload the update payload.
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique api request ID.
-   * @return a [[ProjectOperationResponseADM]].
-   * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+   * @return A [[ProjectOperationResponseADM]].
+   *
+   *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   private def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
@@ -677,8 +682,9 @@ final case class ProjectsResponderADMLive(
    *                             this data. If only some parts of the data need to be changed, then this needs to
    *                             be prepared in the step before this one.
    *
-   * @return a [[ProjectOperationResponseADM]].
-   * @throws NotFoundException in the case that the project's IRI is not found.
+   * @return A [[ProjectOperationResponseADM]].
+   *
+   *         [[NotFoundException]] In the case that the project's IRI is not found.
    */
   private def updateProjectADM(
     projectIri: Iri.ProjectIri,
@@ -741,9 +747,10 @@ final case class ProjectsResponderADMLive(
    * Checks if all fields of a projectUpdatePayload are represented in the updated [[ProjectADM]]. If so, the
    * update is considered successful.
    *
-   * @param updatedProject       the updated project against which the projectUpdatePayload is compared
-   * @param projectUpdatePayload the payload which defines what should have been updated
-   * @throws UpdateNotPerformedException if one of the fields was not updated
+   * @param updatedProject       The updated project against which the projectUpdatePayload is compared.
+   * @param projectUpdatePayload The payload which defines what should have been updated.
+   *
+   *         [[UpdateNotPerformedException]] If one of the fields was not updated.
    */
   private def checkProjectUpdate(
     updatedProject: ProjectADM,
@@ -840,10 +847,13 @@ final case class ProjectsResponderADMLive(
    *
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
-   * @return a [[ProjectOperationResponseADM]].
-   * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
-   * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
-   * @throws BadRequestException     in the case when the shortcode is invalid.
+   * @return A [[ProjectOperationResponseADM]].
+   *
+   *         [[ForbiddenException]]      In the case that the user is not allowed to perform the operation.
+   *
+   *         [[DuplicateValueException]] In the case when either the shortname or shortcode are not unique.
+   *
+   *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   private def projectCreateRequestADM(
     createProjectRequest: ProjectCreatePayloadADM,
@@ -857,8 +867,9 @@ final case class ProjectsResponderADMLive(
      * view, and restricted view of all new resources and values that belong to this project.
      * 2. Permissions for project members to create, modify, view and restricted view of all new resources and values that belong to this project.
      *
-     * @param projectIri the IRI of the new project.
-     * @throws BadRequestException if a permission is not created.
+     * @param projectIri The IRI of the new project.
+     *
+     *         [[BadRequestException]] If a permission is not created.
      */
     def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI): Task[Unit] =
       for {
