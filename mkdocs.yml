@@ -96,7 +96,6 @@ nav:
               - Domain Entities and Relations: 05-internals/design/domain/domain-entities-and-relations.md
               - System Instances: 05-internals/design/domain/system-instances.md
               - Class and Property Hierarchies: 05-internals/design/domain/class-and-property-hierarchies.md
-              - Domain User Stories: 05-internals/design/domain/domain-user-stories.md
       - Development:
           - Overview: 05-internals/development/overview.md
           - Build and Running: 05-internals/development/building-and-running.md
