@@ -11,11 +11,17 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import dsp.errors.{BadRequestException, DuplicateValueException, NotFoundException}
+import java.util.UUID
+import scala.concurrent.duration._
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
+
 import org.knora.webapi._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -23,16 +29,13 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
-import java.util.UUID
-import scala.concurrent.duration._
-
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
  */
 class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val timeout                                   = 600.seconds
+  private val timeout                                   = 5.seconds
 
   private val rootUser = SharedTestDataADM.rootUser
 
@@ -413,7 +416,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             NotFoundException(
-              s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request."
+              s"Project '${notExistingProjectButValidProjectIri}' not found. Aborting update request."
             )
           )
         )
