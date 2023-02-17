@@ -1,32 +1,27 @@
 package org.knora.webapi.responders
 
-import zio._
-
-import dsp.errors.InconsistentRepositoryDataException
-import dsp.errors.NotFoundException
+import dsp.errors.{InconsistentRepositoryDataException, NotFoundException}
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.core.RelayedMessage
+import org.knora.webapi.core.{MessageHandler, MessageRelay, RelayedMessage}
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
-import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{
+  ProjectADM,
+  ProjectsGetADM,
+  ProjectsGetRequestADM,
+  ProjectsGetResponseADM
+}
+import org.knora.webapi.messages.store.triplestoremessages.{BooleanLiteralV2, LiteralV2, StringLiteralV2, SubjectV2}
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.{
+  OntologyMetadataGetByProjectRequestV2,
+  OntologyMetadataV2,
+  ReadOntologyMetadataV2
+}
+import org.knora.webapi.messages.{ResponderRequest, SmartIri, StringFormatter}
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import zio._
 
 trait ProjectsMessageHandler {
 
@@ -99,7 +94,7 @@ final case class ProjectsMessageHandlerLive(
           case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
             val projectOntologies =
               ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
-            statements2ProjectADM(
+            convertStatementsToProjectADM(
               statements = (projectIriSubject, propsMap),
               ontologies = projectOntologies
             )
@@ -115,71 +110,36 @@ final case class ProjectsMessageHandlerLive(
    * @param ontologies the ontologies in the project.
    * @return a [[ProjectADM]] representing information about project.
    */
-  private def statements2ProjectADM(
+  @throws[InconsistentRepositoryDataException]("if the statements do not contain expected keys")
+  private def convertStatementsToProjectADM(
     statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
     ontologies: Seq[IRI]
   ): ProjectADM = {
+    val projectIri: IRI = statements._1.toString
 
-    val projectIri: IRI                         = statements._1.toString
-    val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
+    def getOption[A <: LiteralV2](key: IRI): Option[Seq[A]] =
+      statements._2.get(key.toSmartIri).map(_.map(_.asInstanceOf[A]))
 
-    // transformation from StringLiteralV2 to V2.StringLiteralV2 for project description
-    val descriptionsStringLiteralV2: Seq[StringLiteralV2] = propsMap
-      .getOrElse(
-        OntologyConstants.KnoraAdmin.ProjectDescription.toSmartIri,
-        throw InconsistentRepositoryDataException(s"Project: $projectIri has no description defined.")
+    def getOrThrow[A <: LiteralV2](
+      key: IRI
+    ): Seq[A] =
+      getOption[A](key).getOrElse(
+        throw InconsistentRepositoryDataException(s"Project: $projectIri has no $key defined.")
       )
-      .map(_.asInstanceOf[StringLiteralV2])
-    val descriptionsV2StringLiteralV2: Seq[V2.StringLiteralV2] =
-      descriptionsStringLiteralV2.map(desc => V2.StringLiteralV2(desc.value, desc.language))
 
-    ProjectADM(
-      id = projectIri,
-      shortname = propsMap
-        .getOrElse(
-          OntologyConstants.KnoraAdmin.ProjectShortname.toSmartIri,
-          throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortname defined.")
-        )
-        .head
-        .asInstanceOf[StringLiteralV2]
-        .value,
-      shortcode = propsMap
-        .getOrElse(
-          OntologyConstants.KnoraAdmin.ProjectShortcode.toSmartIri,
-          throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortcode defined.")
-        )
-        .head
-        .asInstanceOf[StringLiteralV2]
-        .value,
-      longname = propsMap
-        .get(OntologyConstants.KnoraAdmin.ProjectLongname.toSmartIri)
-        .map(_.head.asInstanceOf[StringLiteralV2].value),
-      description = descriptionsV2StringLiteralV2,
-      keywords = propsMap
-        .getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword.toSmartIri, Seq.empty[String])
-        .map(_.asInstanceOf[StringLiteralV2].value)
-        .sorted,
-      logo = propsMap
-        .get(OntologyConstants.KnoraAdmin.ProjectLogo.toSmartIri)
-        .map(_.head.asInstanceOf[StringLiteralV2].value),
-      ontologies = ontologies,
-      status = propsMap
-        .getOrElse(
-          OntologyConstants.KnoraAdmin.Status.toSmartIri,
-          throw InconsistentRepositoryDataException(s"Project: $projectIri has no status defined.")
-        )
-        .head
-        .asInstanceOf[BooleanLiteralV2]
-        .value,
-      selfjoin = propsMap
-        .getOrElse(
-          OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
-          throw InconsistentRepositoryDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")
-        )
-        .head
-        .asInstanceOf[BooleanLiteralV2]
-        .value
-    ).unescape
+    val shortname = getOrThrow[StringLiteralV2](ProjectShortname).head.value
+    val shortcode = getOrThrow[StringLiteralV2](ProjectShortcode).head.value
+    val longname  = getOption[StringLiteralV2](ProjectLongname).map(_.head.value)
+    val description = getOrThrow[StringLiteralV2](ProjectDescription)
+      .map(desc => V2.StringLiteralV2(desc.value, desc.language))
+    val keywords = getOption[StringLiteralV2](ProjectKeyword).getOrElse(Seq.empty).map(_.value).sorted
+    val logo     = getOption[StringLiteralV2](ProjectLogo).map(_.head.value)
+    val status   = getOrThrow[BooleanLiteralV2](Status).head.value
+    val selfjoin = getOrThrow[BooleanLiteralV2](HasSelfJoinEnabled).head.value
+
+    val project =
+      ProjectADM(projectIri, shortname, shortcode, longname, description, keywords, logo, ontologies, status, selfjoin)
+    project.unescape
   }
 
   /**
