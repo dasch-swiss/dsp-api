@@ -16,6 +16,13 @@ import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, 
 import zio.stream.ZStream
 
 import java.nio.file.{Files, Paths}
+import zio.json.JsonCodec
+import zio.json.DeriveJsonCodec
+import zio.http.Response
+import java.io.File
+import zio.http.Request
+import zio.http.Path
+import zio.http.URL
 
 /**
  * Tests uploading files to Sipi through the /upload_without_transcoding route.
@@ -39,16 +46,17 @@ class SipiUploadWithoutTranscodingITSpec
   /**
    * Represents the information that Sipi returns about a file that was uploaded.
    *
-   * @param filename the file's filename.
-   * @param checksum the file's checksum.
+   * @param filename          the file's filename
+   * @param checksum          the file's checksum
+   * @param checksumAlgorithm the algorithm used to calculate the checksum
    */
   final case class UploadedFile(
     filename: String,
-    checksum: String
+    checksum: String,
+    checksumAlgorithm: String
   )
 
-  implicit lazy val encUploadedFile: JsonEncoder[UploadedFile] = DeriveJsonEncoder.gen[UploadedFile]
-  implicit lazy val decUploadedFile: JsonDecoder[UploadedFile] = DeriveJsonDecoder.gen[UploadedFile]
+  implicit lazy val codecUploadedFile: JsonCodec[UploadedFile] = DeriveJsonCodec.gen[UploadedFile]
 
   /**
    * Represents the information that Sipi is returning after the /upload_without_transcoding
@@ -56,10 +64,9 @@ class SipiUploadWithoutTranscodingITSpec
    */
   final case class UploadResponse(files: Seq[UploadedFile])
 
-  implicit lazy val encUploadedFiles: JsonEncoder[UploadResponse] = DeriveJsonEncoder.gen[UploadResponse]
-  implicit lazy val decUploadedFiles: JsonDecoder[UploadResponse] = DeriveJsonDecoder.gen[UploadResponse]
+  implicit lazy val codecUploadResponse: JsonCodec[UploadResponse] = DeriveJsonCodec.gen[UploadResponse]
 
-  "The Knora/Sipi integration" should {
+  "The DSP-API/Sipi integration" should {
     var loginToken: String = ""
 
     "log in" in {
@@ -125,13 +132,13 @@ class SipiUploadWithoutTranscodingITSpec
               }
       } yield lr
 
-      val loginResponse = Unsafe.unsafe { implicit u =>
+      val uploadResponse: UploadResponse = Unsafe.unsafe { implicit u =>
         Runtime.default.unsafe
           .run(upload.provide(Client.default, Scope.default))
           .getOrThrow()
       }
 
-      assert(loginResponse.files.nonEmpty)
+      assert(uploadResponse.files.nonEmpty)
     }
   }
 }
