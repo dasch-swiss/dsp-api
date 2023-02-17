@@ -197,6 +197,12 @@ for file_index, file_params in pairs(server.uploads) do
             send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
             return
         end
+        -- extract the frames from video file; they will be used for preview
+        success_key_frames, error_msg_key_frames = os.execute("./scripts/export-moving-image-frames.sh -i " .. tmp_storage_file_path)
+        if not success_key_frames then
+            send_error(500, "export-moving-image-frames.sh failed: " .. error_msg_key_frames)
+            return
+        end
         server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
 
     else
