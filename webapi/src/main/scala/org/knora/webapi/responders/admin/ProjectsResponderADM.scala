@@ -1146,7 +1146,6 @@ final case class ProjectsResponderADMLive(
                        .checkProjectExistsByShortname(shortname = shortname)
                        .toString
                    )
-      // _ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
       result                      = checkProjectExistsResponse.result
