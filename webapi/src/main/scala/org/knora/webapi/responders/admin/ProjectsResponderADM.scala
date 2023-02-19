@@ -5,6 +5,17 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
+import zio._
+
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.UUID
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
@@ -32,22 +43,12 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
-import org.knora.webapi.responders.EntityAndClassIriService
 import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
-import zio._
-
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.UUID
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 /**
  * Returns information about projects.
@@ -194,7 +195,7 @@ trait ProjectsResponderADM {
 final case class ProjectsResponderADMLive(
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
-  iriService: EntityAndClassIriService,
+  iriService: IriService,
   cacheServiceSettings: CacheServiceSettings,
   implicit val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
@@ -1283,13 +1284,13 @@ final case class ProjectsResponderADMLive(
 
 object ProjectsResponderADMLive {
   val layer: ZLayer[
-    MessageRelay with TriplestoreService with StringFormatter with EntityAndClassIriService with AppConfig,
+    MessageRelay with TriplestoreService with StringFormatter with IriService with AppConfig,
     Nothing,
     ProjectsResponderADM
   ] = ZLayer.fromZIO {
     for {
       c       <- ZIO.service[AppConfig].map(new CacheServiceSettings(_))
-      iris    <- ZIO.service[EntityAndClassIriService]
+      iris    <- ZIO.service[IriService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
       mr      <- ZIO.service[MessageRelay]

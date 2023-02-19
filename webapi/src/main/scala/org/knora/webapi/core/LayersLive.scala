@@ -15,6 +15,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.EntityAndClassIriService
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsService
@@ -58,6 +59,7 @@ object LayersLive {
       with HttpServer
       with IIIFServiceManager
       with IIIFService
+      with IriService
       with JWTService
       with MessageRelay
       with ProjectsResponderADM
@@ -91,6 +93,7 @@ object LayersLive {
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
+      IriService.layer,
       JWTService.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
