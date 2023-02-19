@@ -4,12 +4,11 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
-import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.ActorToZioBridge
-import org.knora.webapi.responders.EntityAndClassIriService
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -52,7 +51,6 @@ object LayersTest {
     with CacheService
     with CacheServiceManager
     with CardinalityService
-    with EntityAndClassIriService
     with HttpServer
     with IIIFServiceManager
     with IriConverter
@@ -79,7 +77,6 @@ object LayersTest {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
-      EntityAndClassIriService.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,

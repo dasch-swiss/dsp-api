@@ -8,11 +8,6 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.IRI
@@ -20,6 +15,9 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
@@ -115,17 +113,6 @@ final case class EntityAndClassIriService(
    * @param iriFormatter the stringFormatter method that must be used to create a random IRI.
    * @return IRI of the entity.
    */
-  def checkOrCreateEntityIriTask(entityIri: Option[SmartIri], iriFormatter: => IRI): Task[IRI] =
-    ZIO.fromFuture(ec => checkOrCreateEntityIri(entityIri, iriFormatter))
-
-  /**
-   * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
-   * If no custom IRI was given, creates a random unused IRI.
-   *
-   * @param entityIri    the optional custom IRI of the entity.
-   * @param iriFormatter the stringFormatter method that must be used to create a random IRI.
-   * @return IRI of the entity.
-   */
   def checkOrCreateEntityIri(entityIri: Option[SmartIri], iriFormatter: => IRI): Future[IRI] =
     entityIri match {
       case Some(customEntityIri: SmartIri) =>
@@ -147,9 +134,4 @@ final case class EntityAndClassIriService(
 
       case None => stringFormatter.makeUnusedIri(iriFormatter, appActor, logger)
     }
-}
-
-object EntityAndClassIriService {
-  val layer: ZLayer[ActorDeps with StringFormatter, Nothing, EntityAndClassIriService] =
-    ZLayer.fromFunction(EntityAndClassIriService.apply _)
 }
