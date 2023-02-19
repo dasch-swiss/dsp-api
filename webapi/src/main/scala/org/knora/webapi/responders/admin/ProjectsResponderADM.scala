@@ -5,17 +5,6 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.UUID
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
@@ -49,6 +38,16 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
+import zio._
+
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.UUID
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Returns information about projects.
@@ -313,8 +312,8 @@ final case class ProjectsResponderADMLive(
   override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
     for {
       projects <- projectsGetADM()
-      result = if (projects.nonEmpty) { ProjectsGetResponseADM(projects = projects) }
-               else { throw NotFoundException(s"No projects found") }
+      result <- if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
+                else { ZIO.fail(NotFoundException(s"No projects found")) }
     } yield result
 
   /**
@@ -1057,27 +1056,27 @@ final case class ProjectsResponderADMLive(
     ): Task[ProjectOperationResponseADM] =
       for {
         // check if the supplied shortname is unique
-        shortnameExists <- projectByShortnameExists(createProjectRequest.shortname.value)
-        _ = if (shortnameExists) {
-              throw DuplicateValueException(
-                s"Project with the shortname: '${createProjectRequest.shortname.value}' already exists"
-              )
-            }
+        _ <- ZIO
+               .fail(
+                 DuplicateValueException(
+                   s"Project with the shortname: '${createProjectRequest.shortname.value}' already exists"
+                 )
+               )
+               .whenZIO(projectByShortnameExists(createProjectRequest.shortname.value))
 
         // check if the optionally supplied shortcode is valid and unique
-        shortcodeExists <- projectByShortcodeExists(createProjectRequest.shortcode.value)
-
-        _ = if (shortcodeExists) {
-              throw DuplicateValueException(
-                s"Project with the shortcode: '${createProjectRequest.shortcode.value}' already exists"
-              )
-            }
+        _ <- ZIO
+               .fail(
+                 DuplicateValueException(
+                   s"Project with the shortcode: '${createProjectRequest.shortcode.value}' already exists"
+                 )
+               )
+               .whenZIO(projectByShortcodeExists(createProjectRequest.shortcode.value))
 
         // check if the requesting user is allowed to create project
-        _ = if (!requestingUser.permissions.isSystemAdmin) {
-              // not a system admin
-              throw ForbiddenException("A new project can only be created by a system admin.")
-            }
+        _ <- ZIO
+               .fail(ForbiddenException("A new project can only be created by a system admin."))
+               .when(!requestingUser.permissions.isSystemAdmin)
 
         // check the custom IRI; if not given, create an unused IRI
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(_.value).map(_.toSmartIri)
