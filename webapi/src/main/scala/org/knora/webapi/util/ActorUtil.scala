@@ -20,7 +20,6 @@ import scala.util.Success
 import scala.util.Try
 
 import dsp.errors.ExceptionUtil
-import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
 
@@ -58,24 +57,17 @@ object ActorUtil {
    * @param cause the failures and defects that need to be handled.
    * @param sender the actor that made the request in the `ask` pattern.
    */
-  def handleCause(cause: Cause[Throwable], sender: ActorRef, log: Logger): Unit =
+  private def handleCause(cause: Cause[Throwable], sender: ActorRef, log: Logger): Unit =
     cause match {
-      case Fail(value, _) =>
-        value match {
-          case notFoundEx: NotFoundException =>
-            log.info(s"This error is presumably the clients fault: $notFoundEx")
-            sender ! akka.actor.Status.Failure(notFoundEx)
+      case Fail(failCause: RequestRejectedException, _) => sender ! akka.actor.Status.Failure(failCause)
+      case Die(dieCause, _) =>
+        dieCause match {
+          case _: RequestRejectedException => sender ! akka.actor.Status.Failure(dieCause)
+          case _ =>
+            log.error(s"This error is presumably NOT the clients fault: $dieCause", dieCause)
+            sender ! akka.actor.Status.Failure(dieCause)
         }
-      case Die(value, _) =>
-        value match {
-          case rejectedEx: RequestRejectedException =>
-            log.info(s"This error is presumably the clients fault: $rejectedEx")
-            sender ! akka.actor.Status.Failure(rejectedEx)
-          case otherEx =>
-            log.error(s"This error is presumably NOT the clients fault: $otherEx")
-            sender ! akka.actor.Status.Failure(otherEx)
-        }
-      case other => log.error(s"handleCause() expects a ZIO.Die, but got $other")
+      case other => log.error(s"handleCause() expects a ZIO.Die, but got $other", other)
     }
 
   /**
