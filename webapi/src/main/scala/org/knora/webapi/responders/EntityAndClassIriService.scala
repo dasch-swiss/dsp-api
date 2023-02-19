@@ -8,6 +8,10 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.IRI
@@ -15,9 +19,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 /**
  * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
