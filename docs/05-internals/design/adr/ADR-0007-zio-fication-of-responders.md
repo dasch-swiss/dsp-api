@@ -146,7 +146,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    ZioResponder ->> TriplestoreService: "call method"
+    ZioResponder ->> TriplestoreService: "calls method"
     activate TriplestoreService
     TriplestoreService ->> ZioResponder: "returns response"
     deactivate TriplestoreService
