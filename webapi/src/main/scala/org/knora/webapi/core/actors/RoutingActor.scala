@@ -7,6 +7,9 @@ package org.knora.webapi.core.actors
 
 import akka.actor.Actor
 import com.typesafe.scalalogging.Logger
+
+import scala.concurrent.ExecutionContext
+
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -44,8 +47,6 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.util.ActorUtil
-
-import scala.concurrent.ExecutionContext
 
 final case class RoutingActor(
   cacheServiceManager: CacheServiceManager,
