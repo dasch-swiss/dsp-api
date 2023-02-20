@@ -85,7 +85,7 @@ case class MessageRelayLive(handlersRef: Ref[List[MessageHandler]]) extends Mess
     handlersRef.get.flatMap { handlers =>
       ZIO
         .fromOption(handlers.find(_.isResponsibleFor(message)))
-        .orDieWith(_ => new IllegalStateException(s"No handler defined for ${message.getClass}"))
+        .orDieWith(_ => new IllegalStateException(s"No handler defined for ${message.getClass}."))
         .flatMap(_.handle(message).map(_.asInstanceOf[R]))
     }
 
