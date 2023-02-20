@@ -16,7 +16,7 @@ too much code changed at once.
 ### Status Quo
 
 The central and only `Actor` is the `RoutingActor` which contains instances of each `Responder` as a field.
-Each of the `Responder`s needs a `ActorRef` to the `RoutingActor` and used the _Akka_ "ask pattern" for communication
+Each of the `Responder`s needs an `ActorRef` to the `RoutingActor` and used the _Akka_ "ask pattern" for communication
 with the other `Responders`.
 This means a `Responder` can only be created inside the `RoutingActor` because the `RoutingActor` must know
 every `Responder` in order to route the message but the `Responder` needs the `ActorRef` in order to communicate with
