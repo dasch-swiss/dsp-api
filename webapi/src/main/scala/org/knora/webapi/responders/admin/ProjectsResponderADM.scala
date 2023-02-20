@@ -612,7 +612,7 @@ final case class ProjectsResponderADMLive(
       // Check that the user has permission to download the data.
       _ = if (!(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(project.id))) {
             throw ForbiddenException(
-              s"You are logged in as ${user.username}, but only a system administrator or project administrator can request a project's data"
+              s"You are logged in as ${user.username}, but only a system administrator or project administrator can request a project's data."
             )
           }
 
