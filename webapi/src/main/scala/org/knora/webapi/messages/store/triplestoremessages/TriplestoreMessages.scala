@@ -20,6 +20,7 @@ import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.StoreRequest
@@ -221,6 +222,7 @@ case class NamedGraphFileRequest(
   outputFile: Path,
   outputFormat: QuadFormat
 ) extends TriplestoreRequest
+    with ResponderRequest
 
 /**
  * Requests a named graph, which will be returned as Turtle. A successful response

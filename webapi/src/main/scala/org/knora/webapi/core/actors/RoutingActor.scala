@@ -17,7 +17,6 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
@@ -46,7 +45,6 @@ import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.util.ActorUtil
@@ -57,12 +55,11 @@ final case class RoutingActor(
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  runtime: zio.Runtime[CardinalityService]
+  implicit val runtime: zio.Runtime[CardinalityService]
 ) extends Actor {
 
   private val log: Logger                                 = Logger(this.getClass)
   private val actorDeps: ActorDeps                        = ActorDeps(context.system, self, appConfig.defaultTimeoutAsDuration)
-  private val cacheServiceSettings: CacheServiceSettings  = new CacheServiceSettings(appConfig)
   private val responderData: ResponderData                = ResponderData(actorDeps, appConfig)
   private implicit val executionContext: ExecutionContext = actorDeps.executionContext
 
@@ -89,14 +86,13 @@ final case class RoutingActor(
   private val groupsResponderADM: GroupsResponderADM           = new GroupsResponderADM(responderData)
   private val listsResponderADM: ListsResponderADM             = new ListsResponderADM(responderData)
   private val permissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
-  private val projectsResponderADM: ProjectsResponderADM       = ProjectsResponderADM(actorDeps, cacheServiceSettings)
   private val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData)
   private val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData)
   private val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
 
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
-    case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg), log, runtime)
+    case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
 
     // V1 request messages
     case ckanResponderRequestV1: CkanResponderRequestV1 =>
@@ -139,19 +135,15 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderADM.receive(listsResponderRequest), log)
     case permissionsResponderRequestADM: PermissionsResponderRequestADM =>
       ActorUtil.future2Message(sender(), permissionsResponderADM.receive(permissionsResponderRequestADM), log)
-    case projectsResponderRequestADM: ProjectsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), projectsResponderADM.receive(projectsResponderRequestADM), log)
     case storeResponderRequestADM: StoreResponderRequestADM =>
       ActorUtil.future2Message(sender(), storeResponderADM.receive(storeResponderRequestADM), log)
     case usersResponderRequestADM: UsersResponderRequestADM =>
       ActorUtil.future2Message(sender(), usersResponderADM.receive(usersResponderRequestADM), log)
     case sipiResponderRequestADM: SipiResponderRequestADM =>
       ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
-    case msg: CacheServiceRequest =>
-      ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), log, runtime)
-    case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, runtime)
-    case msg: TriplestoreRequest =>
-      ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), log, runtime)
+    case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg))
+    case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg))
+    case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg))
 
     case other =>
       throw UnexpectedMessageException(

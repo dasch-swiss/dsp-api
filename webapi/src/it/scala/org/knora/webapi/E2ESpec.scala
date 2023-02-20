@@ -9,6 +9,21 @@ import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
 import akka.testkit.TestKitBase
 import com.typesafe.scalalogging._
+import dsp.errors.FileWriteException
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppRouter
+import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.TestStartupUtils
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.LogAspect
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -28,20 +43,6 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-import dsp.errors.FileWriteException
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.AppServer
-import org.knora.webapi.core.TestStartupUtils
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -80,10 +81,8 @@ abstract class E2ESpec
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // create a configured runtime
-  val runtime = Unsafe.unsafe { implicit u =>
-    Runtime.unsafe
-      .fromLayer(bootstrap)
-  }
+  implicit val runtime: Runtime.Scoped[Environment] =
+    Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
@@ -117,94 +116,31 @@ abstract class E2ESpec
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            _ <- AppServer.testWithoutSipi
-            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ()
-        )
-        .getOrThrow()
-    }
+    UnsafeZioRun.runOrThrow(
+      AppServer.testWithoutSipi *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo"))
+    )
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.shutdown()
-    }
+    Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 30.seconds): HttpResponse =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.singleAwaitingRequest(request, duration)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
-    }
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, duration)))
 
   protected def getResponseAsString(request: HttpRequest): String =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.getResponseString(request)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
-    }
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseString(request)))
 
   protected def checkResponseOK(request: HttpRequest): Unit =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.checkResponseOK(request)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
-    }
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.checkResponseOK(request)))
 
   protected def getResponseAsJson(request: HttpRequest): JsObject =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.getResponseJson(request)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
-    }
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJson(request)))
 
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.getResponseJsonLD(request)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
-    }
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(request)))
 
   protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.uploadToSipi(loginToken, filesToUpload)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
-    }
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.uploadToSipi(loginToken, filesToUpload)))
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =
