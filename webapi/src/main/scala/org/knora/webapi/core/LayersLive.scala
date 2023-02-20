@@ -48,12 +48,14 @@ object LayersLive {
       with ApiRoutes
       with AppConfig
       with AppRouter
+      with AppRouterRelayingMessageHandler
       with CacheServiceManager
       with CacheService
       with HttpServer
       with IIIFServiceManager
       with IIIFService
       with JWTService
+      with MessageRelay
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
@@ -72,6 +74,7 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
+      AppRouterRelayingMessageHandler.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
@@ -83,6 +86,7 @@ object LayersLive {
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       JWTService.layer,
+      MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,

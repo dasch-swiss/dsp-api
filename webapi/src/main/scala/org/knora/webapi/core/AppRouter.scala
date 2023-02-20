@@ -8,6 +8,7 @@ package org.knora.webapi.core
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.pattern._
+import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import zio._
 import zio.macros.accessible
@@ -37,6 +38,7 @@ object AppRouter {
       with CacheServiceManager
       with CardinalityService
       with IIIFServiceManager
+      with MessageRelay
       with TriplestoreServiceManager,
     Nothing,
     AppRouter
@@ -48,6 +50,7 @@ object AppRouter {
         iiifServiceManager        <- ZIO.service[IIIFServiceManager]
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
+        messageRelay              <- ZIO.service[MessageRelay]
         runtime                   <- ZIO.runtime[CardinalityService]
       } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem = as.system
@@ -59,9 +62,10 @@ object AppRouter {
               iiifServiceManager,
               triplestoreServiceManager,
               appConfig,
+              messageRelay,
               runtime
             )
-          ),
+          ).withRouter(new RoundRobinPool(1_000)),
           name = APPLICATION_MANAGER_ACTOR_NAME
         )
 
