@@ -44,7 +44,6 @@ function pre_flight(prefix, identifier, cookie)
     dsp_cookie_header = nil
 
     if cookie ~= '' then
-
         -- tries to extract the DSP session name and id from the cookie:
         -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
         -- returns nil if it cannot find it
@@ -56,7 +55,7 @@ function pre_flight(prefix, identifier, cookie)
         else
             dsp_cookie_header = { Cookie = session["name"] .. "=" .. session["id"] }
             log("pre_flight - dsp_cookie_header: " ..
-                dsp_cookie_header["Cookie"], server.loglevel.LOG_DEBUG)
+            dsp_cookie_header["Cookie"], server.loglevel.LOG_DEBUG)
         end
     end
 
@@ -94,7 +93,7 @@ function pre_flight(prefix, identifier, cookie)
 
     if result.status_code ~= 200 then
         log("pre_flight - DSP-API returned HTTP status code " ..
-            result.status_code, server.loglevel.LOG_ERR)
+        result.status_code, server.loglevel.LOG_ERR)
         log("result body: " .. result.body, server.loglevel.LOG_ERR)
         return 'deny'
     end
@@ -123,11 +122,11 @@ function pre_flight(prefix, identifier, cookie)
 
         if response_json.restrictedViewSettings ~= nil then
             log("pre_flight - restricted view settings - watermark: " ..
-                tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+            tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
 
             if response_json.restrictedViewSettings.size ~= nil then
                 log("pre_flight - restricted view settings - size: " ..
-                    tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
+                tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
                 restrictedViewSize = response_json.restrictedViewSettings.size
             else
                 log("pre_flight - using default restricted view size",
@@ -141,9 +140,9 @@ function pre_flight(prefix, identifier, cookie)
         end
 
         return {
-            type = 'restrict',
-            size = restrictedViewSize
-        }, filepath
+                type = 'restrict',
+                size = restrictedViewSize
+            }, filepath
     elseif response_json.permissionCode >= 2 then
         -- full view permissions on file
         return 'allow', filepath
@@ -154,3 +153,26 @@ function pre_flight(prefix, identifier, cookie)
 end
 
 -------------------------------------------------------------------------------
+-- This function is being called from sipi before the file is served.
+-- DSP-API is called to ask for the user's permissions on the file
+-- Parameters:
+--    identifier: the identifier for the file
+--    cookie: The cookie that may be present
+--
+-- Returns:
+--    permission:
+--       'allow' : currently all files are allowed
+--       'restrict:watermark=<path-to-watermark>' : Add a watermark
+--       'restrict:size=<iiif-size-string>' : reduce size/resolution
+--       'deny' : no access!
+--    filepath: server-path where the master file is located
+-------------------------------------------------------------------------------
+
+function file_pre_flight(identifier, cookie)
+    log("file_pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
+    log("file_pre_flight param idnetifier: " .. identifier, server.loglevel.LOG_DEBUG)
+
+    filepath = identifier
+
+    return 'allow', filepath
+end
