@@ -175,7 +175,6 @@ function file_pre_flight(identifier, cookie)
     segments = {}
 
     for w in string.gmatch(identifier, "[^\\/]+") do
-        log(w, server.loglevel.LOG_DEBUG)
         table.insert(segments, w)
     end
 
@@ -213,7 +212,7 @@ function file_pre_flight(identifier, cookie)
     if webapi_hostname == nil then
         webapi_hostname = config.knora_path
     end
-    log("pre_flight - webapi_hostname: " .. webapi_hostname,
+    log("file_pre_flight - webapi_hostname: " .. webapi_hostname,
         server.loglevel.LOG_DEBUG)
 
     local webapi_port = os.getenv("SIPI_WEBAPI_PORT")
