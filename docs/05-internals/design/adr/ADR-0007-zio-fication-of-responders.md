@@ -10,7 +10,7 @@ Draft
 
 In order to remove all _Akka_ dependencies, we have to migrate the existing `Responder`s to a `ZIO` based
 implementation.
-This migration should be possible to do on a per `Responder` basis so that we do not a single "big-bang" release with
+This migration should be possible to do on a per `Responder` basis so that we do not do a single "big-bang" release with
 too much code changed at once.
 
 ### Status Quo
