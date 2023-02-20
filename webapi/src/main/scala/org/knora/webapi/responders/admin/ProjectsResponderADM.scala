@@ -1229,10 +1229,11 @@ final case class ProjectsResponderADMLive(
     statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
     ontologies: Seq[IRI]
   ): ProjectADM = {
-    val projectIri: IRI = statements._1.toString
+    val projectIri: IRI                            = statements._1.toString
+    val propertiesMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
 
     def getOption[A <: LiteralV2](key: IRI): Option[Seq[A]] =
-      statements._2.get(key.toSmartIri).map(_.map(_.asInstanceOf[A]))
+      propertiesMap.get(key.toSmartIri).map(_.map(_.asInstanceOf[A]))
 
     def getOrThrow[A <: LiteralV2](
       key: IRI
