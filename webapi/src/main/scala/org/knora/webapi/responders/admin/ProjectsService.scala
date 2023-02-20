@@ -7,6 +7,7 @@ package org.knora.webapi.responders.admin
 
 import zio.Task
 import zio._
+import zio.macros.accessible
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.ProjectIri
@@ -15,6 +16,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
+@accessible
 trait ProjectsService {
   def getProjectsADMRequest(): Task[ProjectsGetResponseADM]
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM]

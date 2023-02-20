@@ -18,19 +18,14 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeyword
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
-
-  val expectNoInteraction: ULayer[ProjectsResponderADM] = ProjectsResponderADMMock.empty
-
-  val layers: URLayer[ProjectsResponderADM, ProjectsService] =
-    ZLayer.makeSome[ProjectsResponderADM, ProjectsService](ProjectsServiceLive.layer)
 
   /**
    * Represents a [[ProjectADM]] with empty content
    */
-  val projectADM: ProjectADM =
+  private val projectADM: ProjectADM =
     ProjectADM(
       id = "",
       shortname = "",
@@ -59,15 +54,14 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       getProjectRestrictedViewSettings
     ).provide(StringFormatter.test)
 
+  private def projectServiceLayer(exp: Expectation[ProjectsResponderADM]): ULayer[ProjectsService] =
+    ZLayer.make[ProjectsService](ProjectsServiceLive.layer, exp.toLayer)
+
   val getAllProjectsSpec: Spec[Any, Throwable] = test("get all projects") {
     val expectedResponse = ProjectsGetResponseADM(Seq(projectADM))
-    val projectsService =
-      ZIO
-        .serviceWithZIO[ProjectsService](_.getProjectsADMRequest())
-        .provideSome[ProjectsResponderADM](layers)
-    val mockResponder = ProjectsResponderADMMock.ProjectsGetRequestADM(Expectation.value(expectedResponse))
+    val mockResponder    = ProjectsResponderADMMock.ProjectsGetRequestADM(Expectation.value(expectedResponse))
     for {
-      _ <- projectsService.provide(mockResponder.toLayer)
+      _ <- ProjectsService.getProjectsADMRequest().provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
@@ -75,46 +69,34 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     test("get project by IRI") {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
-          .provideSome[ProjectsResponderADM](layers)
       val mockResponder = ProjectsResponderADMMock.GetSingleProjectADMRequest(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get project by shortname") {
       val shortname  = "someProject"
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
-          .provideSome[ProjectsResponderADM](layers)
       val mockResponder = ProjectsResponderADMMock.GetSingleProjectADMRequest(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get project by shortcode") {
       val shortcode  = "0001"
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getSingleProjectADMRequest(identifier))
-          .provideSome[ProjectsResponderADM](layers)
       val mockResponder = ProjectsResponderADMMock.GetSingleProjectADMRequest(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
   )
@@ -132,20 +114,15 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       TestDataFactory.projectSelfJoin(true)
     )
 
-    val requestingUser = KnoraSystemInstances.Users.SystemUser
-    val projectsService =
-      ZIO
-        .serviceWithZIO[ProjectsService](_.createProjectADMRequest(payload, requestingUser))
-        .provideSome[ProjectsResponderADM](layers)
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
       _    <- TestRandom.feedUUIDs(uuid)
       mockResponder =
         ProjectsResponderADMMock.ProjectCreateRequestADM(
-          assertion = Assertion.equalTo(payload, requestingUser, uuid),
+          assertion = Assertion.equalTo(payload, SystemUser, uuid),
           result = Expectation.value(ProjectOperationResponseADM(projectADM))
         )
-      _ <- projectsService.provide(mockResponder.toLayer)
+      _ <- ProjectsService.createProjectADMRequest(payload, SystemUser).provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
@@ -155,18 +132,14 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val projectIri           = TestDataFactory.projectIri(iri)
     val projectStatus        = Some(TestDataFactory.projectStatus(false))
     val projectUpdatePayload = ProjectUpdatePayloadADM(status = projectStatus)
-    val requestingUser       = KnoraSystemInstances.Users.SystemUser
-    val projectsService = ZIO
-      .serviceWithZIO[ProjectsService](_.deleteProject(projectIri, requestingUser))
-      .provideSome[ProjectsResponderADM](layers)
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
       _    <- TestRandom.feedUUIDs(uuid)
       mockResponder = ProjectsResponderADMMock.ChangeBasicInformationRequestADM(
-                        assertion = Assertion.equalTo(projectIri, projectUpdatePayload, requestingUser, uuid),
+                        assertion = Assertion.equalTo(projectIri, projectUpdatePayload, SystemUser, uuid),
                         result = Expectation.value(ProjectOperationResponseADM(projectADM))
                       )
-      _ <- projectsService.provide(mockResponder.toLayer)
+      _ <- ProjectsService.deleteProject(projectIri, SystemUser).provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
@@ -182,168 +155,140 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       Some(TestDataFactory.projectStatus(true)),
       Some(TestDataFactory.projectSelfJoin(true))
     )
-    val requestingUser = KnoraSystemInstances.Users.SystemUser
-    val projectsService =
-      ZIO
-        .serviceWithZIO[ProjectsService](_.updateProject(projectIri, projectUpdatePayload, requestingUser))
-        .provideSome[ProjectsResponderADM](layers)
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
       _    <- TestRandom.feedUUIDs(uuid)
       mockResponder = ProjectsResponderADMMock.ChangeBasicInformationRequestADM(
-                        assertion = Assertion.equalTo(projectIri, projectUpdatePayload, requestingUser, uuid),
+                        assertion = Assertion.equalTo(projectIri, projectUpdatePayload, SystemUser, uuid),
                         result = Expectation.value(ProjectOperationResponseADM(projectADM))
                       )
-      _ <- projectsService.provide(mockResponder.toLayer)
+      _ <- ProjectsService
+             .updateProject(projectIri, projectUpdatePayload, SystemUser)
+             .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
   val getAllProjectDataSpec: Spec[Any, Throwable] = test("get all project data") {
-    val iri            = "http://rdfh.ch/projects/0001"
-    val identifier     = TestDataFactory.projectIriIdentifier(iri)
-    val requestingUser = KnoraSystemInstances.Users.SystemUser
-    val path           = file.Paths.get("...")
-    val projectsService =
-      ZIO
-        .serviceWithZIO[ProjectsService](_.getAllProjectData(identifier, requestingUser))
-        .provideSome[ProjectsResponderADM](layers)
+    val iri        = "http://rdfh.ch/projects/0001"
+    val identifier = TestDataFactory.projectIriIdentifier(iri)
+    val path       = file.Paths.get("...")
     val mockResponder = ProjectsResponderADMMock.ProjectDataGetRequestADM(
-      assertion = Assertion.equalTo(identifier, requestingUser),
+      assertion = Assertion.equalTo(identifier, SystemUser),
       result = Expectation.value(ProjectDataGetResponseADM(path))
     )
     for {
-      _ <- projectsService.provide(mockResponder.toLayer)
+      _ <- ProjectsService
+             .getAllProjectData(identifier, SystemUser)
+             .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
   val getProjectMembers: Spec[Any, Throwable] = suite("get all members of a project")(
     test("get members by project IRI") {
-      val iri            = "http://rdfh.ch/projects/0001"
-      val identifier     = TestDataFactory.projectIriIdentifier(iri)
-      val requestingUser = KnoraSystemInstances.Users.SystemUser
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectMembers(identifier, requestingUser))
-          .provideSome[ProjectsResponderADM](layers)
+      val iri        = "http://rdfh.ch/projects/0001"
+      val identifier = TestDataFactory.projectIriIdentifier(iri)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
-        assertion = Assertion.equalTo(identifier, requestingUser),
+        assertion = Assertion.equalTo(identifier, SystemUser),
         result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectMembers(identifier, SystemUser)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get members by project shortname") {
-      val shortname      = "shortname"
-      val identifier     = TestDataFactory.projectShortnameIdentifier(shortname)
-      val requestingUser = KnoraSystemInstances.Users.SystemUser
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectMembers(identifier, requestingUser))
-          .provideSome[ProjectsResponderADM](layers)
+      val shortname  = "shortname"
+      val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
-        assertion = Assertion.equalTo(identifier, requestingUser),
+        assertion = Assertion.equalTo(identifier, SystemUser),
         result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectMembers(identifier, SystemUser)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get members by project shortcode") {
-      val shortcode      = "0001"
-      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
-      val requestingUser = KnoraSystemInstances.Users.SystemUser
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectMembers(identifier, requestingUser))
-          .provideSome[ProjectsResponderADM](layers)
+      val shortcode  = "0001"
+      val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
-        assertion = Assertion.equalTo(identifier, requestingUser),
+        assertion = Assertion.equalTo(identifier, SystemUser),
         result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectMembers(identifier, SystemUser)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
   )
 
   val getProjectAdmins: Spec[Any, Throwable] = suite("get all project admins of a project")(
     test("get project admins by project IRI") {
-      val iri            = "http://rdfh.ch/projects/0001"
-      val identifier     = TestDataFactory.projectIriIdentifier(iri)
-      val requestingUser = KnoraSystemInstances.Users.SystemUser
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
-          .provideSome[ProjectsResponderADM](layers)
+      val iri        = "http://rdfh.ch/projects/0001"
+      val identifier = TestDataFactory.projectIriIdentifier(iri)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
-        assertion = Assertion.equalTo(identifier, requestingUser),
+        assertion = Assertion.equalTo(identifier, SystemUser),
         result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectAdmins(identifier, SystemUser)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get project admins by project shortname") {
-      val shortname      = "shortname"
-      val identifier     = TestDataFactory.projectShortnameIdentifier(shortname)
-      val requestingUser = KnoraSystemInstances.Users.SystemUser
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
-          .provideSome[ProjectsResponderADM](layers)
+      val shortname  = "shortname"
+      val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
-        assertion = Assertion.equalTo(identifier, requestingUser),
+        assertion = Assertion.equalTo(identifier, SystemUser),
         result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectAdmins(identifier, SystemUser)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get project admins by project shortcode") {
-      val shortcode      = "0001"
-      val identifier     = TestDataFactory.projectShortcodeIdentifier(shortcode)
-      val requestingUser = KnoraSystemInstances.Users.SystemUser
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectAdmins(identifier, requestingUser))
-          .provideSome[ProjectsResponderADM](layers)
+      val shortcode  = "0001"
+      val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
-        assertion = Assertion.equalTo(identifier, requestingUser),
+        assertion = Assertion.equalTo(identifier, SystemUser),
         result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectAdmins(identifier, SystemUser)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
   )
 
   val getKeywordsSpec: Spec[Any, Throwable] = test("get keywords of all projects") {
-    val projectsService =
-      ZIO
-        .serviceWithZIO[ProjectsService](_.getKeywords())
-        .provideSome[ProjectsResponderADM](layers)
     val mockResponder = ProjectsResponderADMMock.ProjectsKeywordsGetRequestADM(
       Expectation.value(ProjectsKeywordsGetResponseADM(Seq.empty[String]))
     )
     for {
-      _ <- projectsService.provide(mockResponder.toLayer)
+      _ <- ProjectsService
+             .getKeywords()
+             .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
   val getKeywordsByProjectIri: Spec[Any, Throwable] = test("get keywords of a single project by project IRI") {
     val iri        = "http://rdfh.ch/projects/0001"
     val projectIri = TestDataFactory.projectIri(iri)
-    val projectsService =
-      ZIO
-        .serviceWithZIO[ProjectsService](_.getKeywordsByProjectIri(projectIri))
-        .provideSome[ProjectsResponderADM](layers)
     val mockResponder = ProjectsResponderADMMock.ProjectKeywordsGetRequestADM(
       assertion = Assertion.equalTo(projectIri),
       result = Expectation.value(ProjectKeywordsGetResponseADM(Seq.empty[String]))
     )
     for {
-      _ <- projectsService.provide(mockResponder.toLayer)
+      _ <- ProjectsService
+             .getKeywordsByProjectIri(projectIri)
+             .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
@@ -352,48 +297,42 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectRestrictedViewSettings(identifier))
-          .provideSome[ProjectsResponderADM](layers)
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectRestrictedViewSettings(identifier)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get settings by project shortname") {
       val shortname  = "someProject"
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectRestrictedViewSettings(identifier))
-          .provideSome[ProjectsResponderADM](layers)
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectRestrictedViewSettings(identifier)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get settings by project shortcode") {
       val shortcode  = "0001"
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
-      val projectsService =
-        ZIO
-          .serviceWithZIO[ProjectsService](_.getProjectRestrictedViewSettings(identifier))
-          .provideSome[ProjectsResponderADM](layers)
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
       )
       for {
-        _ <- projectsService.provide(mockResponder.toLayer)
+        _ <- ProjectsService
+               .getProjectRestrictedViewSettings(identifier)
+               .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
   )
