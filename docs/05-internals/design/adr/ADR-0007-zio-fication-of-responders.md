@@ -154,7 +154,7 @@ sequenceDiagram
 
 ## Decision
 
-In preparation of the move from `Akka` to `ZIO`, it was decided that the Responders should be ported to use return `ZIO`s and the `MessageRelay` instead of `Future`s and the `ActorRef` to the `RoutingActor`.
+In preparation of the move from `Akka` to `ZIO`, it was decided that the `Responders` should be ported to use return `ZIO`s and the `MessageRelay` instead of `Future`s and the `ActorRef` to the `RoutingActor`.
 
 ## Consequences
 
