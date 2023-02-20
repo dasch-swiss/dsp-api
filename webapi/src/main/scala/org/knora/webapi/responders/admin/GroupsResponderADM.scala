@@ -451,9 +451,10 @@ final case class GroupsResponderADMLive(
         _ <- triplestoreService.sparqlHttpUpdate(createNewGroupSparqlString.toString())
 
         /* Verify that the group was created and updated  */
+        createdGroupOpt <- groupGetADM(groupIri)
         createdGroup <-
-          groupGetADM(groupIri)
-            .flatMap(ZIO.fromOption)
+          ZIO
+            .fromOption(createdGroupOpt)
             .orElseFail(UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug."))
 
       } yield GroupOperationResponseADM(createdGroup)
@@ -493,8 +494,9 @@ final case class GroupsResponderADMLive(
              )
 
         /* Get the project IRI which also verifies that the group exists. */
-        groupADM <- groupGetADM(groupIri)
-                      .flatMap(ZIO.fromOption)
+        groupADMOpt <- groupGetADM(groupIri)
+        groupADM <- ZIO
+                      .fromOption(groupADMOpt)
                       .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
         /* check if the requesting user is allowed to perform updates */
@@ -551,7 +553,7 @@ final case class GroupsResponderADMLive(
 
         /* Get the project IRI which also verifies that the group exists. */
         groupADM <- groupGetADM(groupIri)
-                      .flatMap(ZIO.fromOption)
+                      .flatMap(it => ZIO.fromOption(it))
                       .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
         /* check if the requesting user is allowed to perform updates */
@@ -614,8 +616,10 @@ final case class GroupsResponderADMLive(
 
     for {
       /* Verify that the group exists. */
-      groupADM <- groupGetADM(groupIri)
-                    .flatMap(ZIO.fromOption)
+
+      groupADMOpt <- groupGetADM(groupIri)
+      groupADM <- ZIO
+                    .fromOption(groupADMOpt)
                     .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
       /* Verify that the potentially new name is unique */
@@ -628,7 +632,6 @@ final case class GroupsResponderADMLive(
         }
 
       _ = if (groupByNameAlreadyExists) {
-            logger.debug("updateGroupADM - about to throw an exception. Group with that name already exists.")
             throw BadRequestException(s"Group with the name '${groupUpdatePayload.name.get}' already exists.")
           }
 
