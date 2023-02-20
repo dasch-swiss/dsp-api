@@ -55,7 +55,7 @@ final case class RoutingActor(
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  runtime: zio.Runtime[CardinalityService]
+  implicit val runtime: zio.Runtime[CardinalityService]
 ) extends Actor {
 
   private val log: Logger                                 = Logger(this.getClass)
@@ -92,7 +92,7 @@ final case class RoutingActor(
 
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
-    case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg), log, runtime)
+    case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
 
     // V1 request messages
     case ckanResponderRequestV1: CkanResponderRequestV1 =>
@@ -141,11 +141,9 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), usersResponderADM.receive(usersResponderRequestADM), log)
     case sipiResponderRequestADM: SipiResponderRequestADM =>
       ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
-    case msg: CacheServiceRequest =>
-      ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), log, runtime)
-    case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, runtime)
-    case msg: TriplestoreRequest =>
-      ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), log, runtime)
+    case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg))
+    case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg))
+    case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg))
 
     case other =>
       throw UnexpectedMessageException(

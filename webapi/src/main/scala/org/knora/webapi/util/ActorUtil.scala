@@ -9,7 +9,6 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import zio.Cause._
 import zio._
 
 import scala.concurrent.ExecutionContext
@@ -19,55 +18,19 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import dsp.errors.ExceptionUtil
-import dsp.errors.RequestRejectedException
-import dsp.errors.UnexpectedMessageException
+import dsp.errors._
 
 object ActorUtil {
 
   /**
-   * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
-   * phase, to be able to return ZIO inside an Actor.
-   *
-   * It performs the same functionality as [[future2Message]] does, rewritten completely uzing ZIOs.
-   *
-   * BEST PRACTICE:
-   * Do not log in the middle, only log at the edge. Trust the ZIO error model to propagate errors losslessly.
-   *
-   * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
+   * _Unsafely_ runs a ZIO workflow and sends the result to the `sender` actor as a message or a failure.
+   * Used mainly during the refactoring phase, to be able to return ZIO inside an Actor.
    */
-  def zio2Message[A](
-    sender: ActorRef,
-    zioTask: zio.Task[A],
-    log: Logger,
-    runtime: Runtime[Any]
-  ): Unit =
+  def zio2Message[R, A](sender: ActorRef, zioTask: ZIO[R, Throwable, A])(implicit runtime: Runtime[R]): Unit =
     Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          zioTask.foldCause(cause => handleCause(cause, sender, log), success => sender ! success)
-        )
-    }
-
-  /**
-   * The "cause" handling part of `zio2Message`. It analyses the kind of failures and defects
-   * that where accumulated and sends the actor, that made the request in the `ask` pattern,
-   * the failure response.
-   *
-   * @param cause the failures and defects that need to be handled.
-   * @param sender the actor that made the request in the `ask` pattern.
-   */
-  private def handleCause(cause: Cause[Throwable], sender: ActorRef, log: Logger): Unit =
-    cause match {
-      case Fail(failCause: RequestRejectedException, _) => sender ! akka.actor.Status.Failure(failCause)
-      case Die(dieCause, _) =>
-        dieCause match {
-          case _: RequestRejectedException => sender ! akka.actor.Status.Failure(dieCause)
-          case _ =>
-            log.error(s"This error is presumably NOT the clients fault: $dieCause", dieCause)
-            sender ! akka.actor.Status.Failure(dieCause)
-        }
-      case other => log.error(s"handleCause() expects a ZIO.Die, but got $other", other)
+      runtime.unsafe.run(
+        zioTask.foldCause(cause => sender ! akka.actor.Status.Failure(cause.squash), success => sender ! success)
+      )
     }
 
   /**
