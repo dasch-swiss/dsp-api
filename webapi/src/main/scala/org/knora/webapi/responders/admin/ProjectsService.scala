@@ -102,7 +102,7 @@ final case class ProjectsServiceLive(responder: ProjectsResponderADM) extends Pr
    */
   def deleteProject(projectIri: ProjectIri, user: UserADM): Task[ProjectOperationResponseADM] =
     for {
-      projectStatus <- Project.ProjectStatus.make(false).toZIO.orElseFail(BadRequestException("Invalid project status"))
+      projectStatus <- Project.ProjectStatus.make(false).toZIO.orElseFail(BadRequestException("Invalid project status."))
       updatePayload  = ProjectUpdatePayloadADM(status = Some(projectStatus))
       response      <- changeBasicInformationRequestADM(projectIri, updatePayload, user)
     } yield response
