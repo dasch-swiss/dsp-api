@@ -113,7 +113,7 @@ sequenceDiagram
     AppRouterRelayingMessageHandler ->> RoutingActor: "sends message to"
     deactivate AppRouterRelayingMessageHandler
     activate RoutingActor
-    RoutingActor ->> AkkaResponder: "call AkkaResponder"
+    RoutingActor ->> AkkaResponder: "calls AkkaResponder"
     activate AkkaResponder
     AkkaResponder ->> RoutingActor: "returns response"
     deactivate AkkaResponder
