@@ -34,7 +34,7 @@ The `zio.Task` is a very suitable replacement for the `Future` because:
 * a `zio.Task[A]` will succeed with either a value `A` or fail with an error of type `Throwable`.
 
 Ideally all `Responders` will directly call the necessary components directly through invoking methods.
-However, this will not be possible in the beginning as there are `Responder` who call on each other creating yet another
+However, this will not be possible in the beginning as there are `Responders` who call on each other creating yet another
 circular dependency which we cannot simply recreate with `ZLayer` dependency injection.
 Hence, a _message like_ communication pattern through a central component the `MessageRelay` will be introduced which
 can replace the existing _Akka_ "ask pattern" one to one in the ziofied component.
