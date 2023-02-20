@@ -6,6 +6,11 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import zio.ZIO
+import zio._
+
+import java.util.UUID
+
 import dsp.errors._
 import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi._
@@ -29,9 +34,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
-import zio._
-
-import java.util.UUID
 
 /**
  * Returns information about groups.
@@ -290,10 +292,11 @@ final case class GroupsResponderADMLive(
    */
   override def groupGetRequestADM(groupIri: IRI): Task[GroupGetResponseADM] =
     for {
-      groupMaybe <- groupGetADM(groupIri)
-      result <- ZIO
-                  .fromOption(groupMaybe)
-                  .mapBoth(_ => NotFoundException(s"Group <$groupIri> not found."), GroupGetResponseADM)
+      result <- groupGetADM(groupIri).flatMap(
+                  ZIO
+                    .fromOption(_)
+                    .mapBoth(_ => NotFoundException(s"Group <$groupIri> not found."), GroupGetResponseADM)
+                )
     } yield result
 
   /**
@@ -324,9 +327,8 @@ final case class GroupsResponderADMLive(
             case Some(group) =>
               // check if the requesting user is allowed to access the information
               if (
-                !userPermissions.isProjectAdmin(
-                  group.project.id
-                ) && !userPermissions.isSystemAdmin && !requestingUser.isSystemUser
+                !userPermissions.isProjectAdmin(group.project.id) &&
+                !userPermissions.isSystemAdmin && !requestingUser.isSystemUser
               ) {
                 // not a project admin and not a system admin
                 throw ForbiddenException("Project members can only be retrieved by a project or system admin.")
@@ -451,12 +453,10 @@ final case class GroupsResponderADMLive(
         _ <- triplestoreService.sparqlHttpUpdate(createNewGroupSparqlString.toString())
 
         /* Verify that the group was created and updated  */
-        createdGroupOpt <- groupGetADM(groupIri)
         createdGroup <-
-          ZIO
-            .fromOption(createdGroupOpt)
+          groupGetADM(groupIri)
+            .flatMap(ZIO.fromOption(_))
             .orElseFail(UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug."))
-
       } yield GroupOperationResponseADM(createdGroup)
 
     val task = createGroupTask(createRequest, requestingUser)
@@ -553,7 +553,7 @@ final case class GroupsResponderADMLive(
 
         /* Get the project IRI which also verifies that the group exists. */
         groupADM <- groupGetADM(groupIri)
-                      .flatMap(it => ZIO.fromOption(it))
+                      .flatMap(ZIO.fromOption(_))
                       .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
         /* check if the requesting user is allowed to perform updates */
@@ -651,18 +651,11 @@ final case class GroupsResponderADMLive(
       _ <- triplestoreService.sparqlHttpUpdate(updateGroupSparqlString.toString())
 
       /* Verify that the project was updated. */
-      maybeUpdatedGroup <-
-        groupGetADM(
-          groupIri = groupIri
-        )
-
+      maybeUpdatedGroup <- groupGetADM(groupIri)
       updatedGroup: GroupADM =
         maybeUpdatedGroup.getOrElse(
           throw UpdateNotPerformedException("Group was not updated. Please report this as a possible bug.")
         )
-
-      // _ = logger.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
-
     } yield GroupOperationResponseADM(group = updatedGroup)
 
   }
