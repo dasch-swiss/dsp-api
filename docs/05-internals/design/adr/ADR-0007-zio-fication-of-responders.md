@@ -4,7 +4,7 @@ Date: 2023-02-20
 
 ## Status
 
-Draft
+Accepted
 
 ## Context
 
@@ -160,4 +160,4 @@ In preparation of the move from `Akka` to `ZIO`, it was decided that the `Respon
 
 In a first step only the `Responders` are going to be ported, one by one, to use the above pattern. The `Akka Actor System` still remains, will be used in the test and will be removed in a later step.
 Due to the added indirections and the blocking nature of `Unsafe.unsafe(implicit u => r.unsafe.run(effect))` it is necessary to spin up more `RoutingActor` instances as otherwise deadlocks will occur.
-This should not be a problem as any shared state, e.g. caches, is not held within the `RoutingActore` or one of its contained `Responder` instances.
+This should not be a problem as any shared state, e.g. caches, is not held within the `RoutingActor` or one of its contained `Responder` instances.
