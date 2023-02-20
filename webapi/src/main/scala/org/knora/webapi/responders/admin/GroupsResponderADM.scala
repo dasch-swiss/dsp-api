@@ -6,10 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import java.util.UUID
-
 import dsp.errors._
 import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi._
@@ -33,11 +29,109 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
+import zio._
+
+import java.util.UUID
 
 /**
  * Returns information about groups.
  */
-trait GroupsResponderADM {}
+trait GroupsResponderADM {
+
+  /**
+   * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
+   *
+   * @return all the groups as a sequence of [[GroupADM]].
+   */
+  def groupsGetADM: Task[Seq[GroupADM]]
+
+  /**
+   * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
+   *
+   * @return all the groups as a [[GroupsGetResponseADM]].
+   */
+  def groupsGetRequestADM: Task[GroupsGetResponseADM]
+
+  /**
+   * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
+   *
+   * @param groupIri the IRI of the group requested.
+   * @return information about the group as a [[GroupADM]]
+   */
+  def groupGetADM(groupIri: IRI): Task[Option[GroupADM]]
+
+  /**
+   * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
+   *
+   * @param groupIri the IRI of the group requested.
+   * @return information about the group as a [[GroupGetResponseADM]].
+   */
+  def groupGetRequestADM(groupIri: IRI): Task[GroupGetResponseADM]
+
+  /**
+   * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
+   *
+   * @param groupIris the IRIs of the groups being requested
+   * @return information about the group as a set of [[GroupGetResponseADM]] objects.
+   */
+  def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]]
+
+  /**
+   * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
+   * Only project and system admins are allowed to access this information.
+   *
+   * @param groupIri       the IRI of the group.
+   * @param requestingUser the user initiating the request.
+   * @return A [[GroupMembersGetResponseADM]]
+   */
+  def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Task[GroupMembersGetResponseADM]
+
+  /**
+   * Create a new group.
+   *
+   * @param createRequest  the create request information.
+   * @param requestingUser the user making the request.
+   * @param apiRequestID   the unique request ID.
+   * @return a [[GroupOperationResponseADM]]
+   */
+  def createGroupADM(
+    createRequest: GroupCreatePayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[GroupOperationResponseADM]
+
+  /**
+   * Change group's basic information.
+   *
+   * @param groupIri           the IRI of the group we want to change.
+   * @param changeGroupRequest the change request.
+   * @param requestingUser     the user making the request.
+   * @param apiRequestID       the unique request ID.
+   * @return a [[GroupOperationResponseADM]].
+   */
+  def changeGroupBasicInformationRequestADM(
+    groupIri: IRI,
+    changeGroupRequest: GroupUpdatePayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[GroupOperationResponseADM]
+
+  /**
+   * Change group's basic information.
+   *
+   * @param groupIri           the IRI of the group we want to change.
+   * @param changeGroupRequest the change request.
+   * @param requestingUser     the user making the request.
+   * @param apiRequestID       the unique request ID.
+   * @return a [[GroupOperationResponseADM]].
+   */
+  def changeGroupStatusRequestADM(
+    groupIri: IRI,
+    changeGroupRequest: ChangeGroupApiRequestADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[GroupOperationResponseADM]
+}
 
 final case class GroupsResponderADMLive(
   triplestoreService: TriplestoreService,
@@ -49,9 +143,10 @@ final case class GroupsResponderADMLive(
     with GroupsADMJsonProtocol
     with LazyLogging {
 
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[GroupsResponderRequestADM]
   // Global lock IRI used for group creation and updating
   private val GROUPS_GLOBAL_LOCK_IRI: IRI = "http://rdfh.ch/groups"
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[GroupsResponderRequestADM]
 
   /**
    * Receives a message extending [[GroupsResponderRequestADM]], and returns an appropriate response message
@@ -88,12 +183,8 @@ final case class GroupsResponderADMLive(
    *
    * @return all the groups as a sequence of [[GroupADM]].
    */
-  private def groupsGetADM: Task[Seq[GroupADM]] = {
-
-    logger.debug("groupsGetADM")
-
-    val query = twirl.queries.sparql.admin.txt
-      .getGroups(None)
+  override def groupsGetADM: Task[Seq[GroupADM]] = {
+    val query = twirl.queries.sparql.admin.txt.getGroups(None)
     for {
       groupsResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
 
@@ -190,10 +281,7 @@ final case class GroupsResponderADMLive(
    *
    * @return all the groups as a [[GroupsGetResponseADM]].
    */
-  private def groupsGetRequestADM: Task[GroupsGetResponseADM] =
-    for {
-      groups <- groupsGetADM
-    } yield GroupsGetResponseADM(groups)
+  override def groupsGetRequestADM: Task[GroupsGetResponseADM] = groupsGetADM.map(GroupsGetResponseADM)
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
@@ -201,28 +289,11 @@ final case class GroupsResponderADMLive(
    * @param groupIri       the IRI of the group requested.
    * @return information about the group as a [[GroupADM]]
    */
-  private def groupGetADM(
-    groupIri: IRI
-  ): Task[Option[GroupADM]] = {
-    val query =
-      twirl.queries.sparql.admin.txt
-        .getGroups(
-          maybeIri = Some(groupIri)
-        )
+  override def groupGetADM(groupIri: IRI): Task[Option[GroupADM]] = {
+    val query = twirl.queries.sparql.admin.txt.getGroups(maybeIri = Some(groupIri))
     for {
-      groupResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
-
-      maybeGroup <-
-        if (groupResponse.statements.isEmpty) {
-          ZIO.succeed(None)
-        } else {
-          statements2GroupADM(
-            statements = groupResponse.statements.head
-          )
-        }
-
-      _ = logger.debug("groupGetADM - result: {}", maybeGroup)
-
+      statements <- triplestoreService.sparqlHttpExtendedConstruct(query.toString()).map(_.statements)
+      maybeGroup <- statements.headOption.map(statements2GroupADM).getOrElse(ZIO.succeed(None))
     } yield maybeGroup
   }
 
@@ -232,20 +303,12 @@ final case class GroupsResponderADMLive(
    * @param groupIri             the IRI of the group requested.
    * @return information about the group as a [[GroupGetResponseADM]].
    */
-  private def groupGetRequestADM(
-    groupIri: IRI
-  ): Task[GroupGetResponseADM] =
+  override def groupGetRequestADM(groupIri: IRI): Task[GroupGetResponseADM] =
     for {
-      maybeGroupADM <-
-        groupGetADM(
-          groupIri = groupIri
-        )
-
-      result =
-        maybeGroupADM match {
-          case Some(group) => GroupGetResponseADM(group = group)
-          case None        => throw NotFoundException(s"Group <$groupIri> not found.")
-        }
+      groupMaybe <- groupGetADM(groupIri)
+      result <- ZIO
+                  .fromOption(groupMaybe)
+                  .mapBoth(_ => NotFoundException(s"Group <$groupIri> not found."), GroupGetResponseADM)
     } yield result
 
   /**
@@ -254,17 +317,8 @@ final case class GroupsResponderADMLive(
    * @param groupIris      the IRIs of the groups being requested
    * @return information about the group as a set of [[GroupGetResponseADM]] objects.
    */
-  private def multipleGroupsGetRequestADM(
-    groupIris: Set[IRI]
-  ): Task[Set[GroupGetResponseADM]] = {
-    val groupResponseFutures: Set[Task[GroupGetResponseADM]] = groupIris.map { groupIri =>
-      groupGetRequestADM(
-        groupIri = groupIri
-      )
-    }
-
-    ZioHelper.sequence(groupResponseFutures)
-  }
+  override def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
+    ZioHelper.sequence(groupIris.map(groupGetRequestADM))
 
   /**
    * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
@@ -276,10 +330,7 @@ final case class GroupsResponderADMLive(
   private def groupMembersGetADM(
     groupIri: IRI,
     requestingUser: UserADM
-  ): Task[Seq[UserADM]] = {
-
-    logger.debug("groupMembersGetADM - groupIri: {}", groupIri)
-
+  ): Task[Seq[UserADM]] =
     for {
       maybeGroupADM <- groupGetADM(groupIri)
 
@@ -298,8 +349,7 @@ final case class GroupsResponderADMLive(
               throw NotFoundException(s"Group <$groupIri> not found")
           }
 
-      query = twirl.queries.sparql.v1.txt.getGroupMembersByIri(groupIri)
-
+      query                 = twirl.queries.sparql.v1.txt.getGroupMembersByIri(groupIri)
       groupMembersResponse <- triplestoreService.sparqlHttpSelect(query.toString())
 
       // get project member IRI from results rows
@@ -310,9 +360,7 @@ final case class GroupsResponderADMLive(
           Seq.empty[IRI]
         }
 
-      _ = logger.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
-
-      maybeUsersFutures: Seq[Task[Option[UserADM]]] =
+      usersMaybeTasks: Seq[Task[Option[UserADM]]] =
         groupMemberIris.map { userIri =>
           messageRelay
             .ask[Option[UserADM]](
@@ -323,13 +371,8 @@ final case class GroupsResponderADMLive(
               )
             )
         }
-      maybeUsers         <- ZioHelper.sequence(maybeUsersFutures)
-      users: Seq[UserADM] = maybeUsers.flatten
-
-      _ = logger.debug("groupMembersGetRequestADM - users: {}", users)
-
+      users <- ZioHelper.sequence(usersMaybeTasks).map(_.flatten)
     } yield users
-  }
 
   /**
    * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
@@ -339,22 +382,8 @@ final case class GroupsResponderADMLive(
    * @param requestingUser       the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  private def groupMembersGetRequestADM(
-    groupIri: IRI,
-    requestingUser: UserADM
-  ): Task[GroupMembersGetResponseADM] = {
-
-    logger.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
-
-    for {
-      members <-
-        groupMembersGetADM(
-          groupIri = groupIri,
-          requestingUser = requestingUser
-        )
-
-    } yield GroupMembersGetResponseADM(members)
-  }
+  override def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Task[GroupMembersGetResponseADM] =
+    groupMembersGetADM(groupIri, requestingUser).map(GroupMembersGetResponseADM)
 
   /**
    * Create a new group.
@@ -364,14 +393,11 @@ final case class GroupsResponderADMLive(
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]]
    */
-  private def createGroupADM(
+  override def createGroupADM(
     createRequest: GroupCreatePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[GroupOperationResponseADM] = {
-
-    logger.debug("createGroupADM - createRequest: {}", createRequest)
-
     def createGroupTask(
       createRequest: GroupCreatePayloadADM,
       requestingUser: UserADM
@@ -438,17 +464,12 @@ final case class GroupsResponderADMLive(
         _ <- triplestoreService.sparqlHttpUpdate(createNewGroupSparqlString.toString())
 
         /* Verify that the group was created and updated  */
-        maybeCreatedGroup <-
-          groupGetADM(
-            groupIri = groupIri
-          )
+        createdGroup <-
+          groupGetADM(groupIri)
+            .flatMap(ZIO.fromOption)
+            .orElseFail(UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug."))
 
-        createdGroup: GroupADM =
-          maybeCreatedGroup.getOrElse(
-            throw UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug.")
-          )
-
-      } yield GroupOperationResponseADM(group = createdGroup)
+      } yield GroupOperationResponseADM(createdGroup)
 
     val task = createGroupTask(createRequest, requestingUser)
     IriLocker.runWithIriLock(apiRequestID, GROUPS_GLOBAL_LOCK_IRI, task)
@@ -463,7 +484,7 @@ final case class GroupsResponderADMLive(
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]].
    */
-  private def changeGroupBasicInformationRequestADM(
+  override def changeGroupBasicInformationRequestADM(
     groupIri: IRI,
     changeGroupRequest: GroupUpdatePayloadADM,
     requestingUser: UserADM,
@@ -479,30 +500,22 @@ final case class GroupsResponderADMLive(
       requestingUser: UserADM
     ): Task[GroupOperationResponseADM] =
       for {
-
         _ <- ZIO.attempt(
                // check if necessary information is present
                if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
              )
 
         /* Get the project IRI which also verifies that the group exists. */
-        maybeGroupADM <-
-          groupGetADM(
-            groupIri = groupIri
-          )
-
-        groupADM = maybeGroupADM.getOrElse(
-                     throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
-                   )
+        groupADM <- groupGetADM(groupIri)
+                      .flatMap(ZIO.fromOption)
+                      .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
         /* check if the requesting user is allowed to perform updates */
-        _ =
-          if (
-            !requestingUser.permissions.isProjectAdmin(groupADM.project.id) && !requestingUser.permissions.isSystemAdmin
-          ) {
-            // not a project admin and not a system admin
-            throw ForbiddenException("Group's information can only be changed by a project or system admin.")
-          }
+        userPermissions = requestingUser.permissions
+        _ = if (!userPermissions.isProjectAdmin(groupADM.project.id) && !userPermissions.isSystemAdmin) {
+              // not a project admin and not a system admin
+              throw ForbiddenException("Group's information can only be changed by a project or system admin.")
+            }
 
         /* create the update request */
         groupUpdatePayload = GroupUpdatePayloadADM(
@@ -511,13 +524,7 @@ final case class GroupsResponderADMLive(
                                status = changeGroupRequest.status,
                                selfjoin = changeGroupRequest.selfjoin
                              )
-
-        result <- updateGroupADM(
-                    groupIri = groupIri,
-                    groupUpdatePayload = groupUpdatePayload,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                  )
-
+        result <- updateGroupADM(groupIri, groupUpdatePayload, KnoraSystemInstances.Users.SystemUser)
       } yield result
 
     val task = changeGroupTask(groupIri, changeGroupRequest, requestingUser)
@@ -533,7 +540,7 @@ final case class GroupsResponderADMLive(
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]].
    */
-  private def changeGroupStatusRequestADM(
+  override def changeGroupStatusRequestADM(
     groupIri: IRI,
     changeGroupRequest: ChangeGroupApiRequestADM,
     requestingUser: UserADM,
@@ -556,14 +563,9 @@ final case class GroupsResponderADMLive(
              )
 
         /* Get the project IRI which also verifies that the group exists. */
-        maybeGroupADM <-
-          groupGetADM(
-            groupIri = groupIri
-          )
-
-        groupADM = maybeGroupADM.getOrElse(
-                     throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
-                   )
+        groupADM <- groupGetADM(groupIri)
+                      .flatMap(ZIO.fromOption)
+                      .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
         /* check if the requesting user is allowed to perform updates */
         _ =
@@ -581,9 +583,7 @@ final case class GroupsResponderADMLive(
                       }
 
         /* create the update request */
-        groupUpdatePayload = GroupUpdatePayloadADM(
-                               status = maybeStatus
-                             )
+        groupUpdatePayload = GroupUpdatePayloadADM(status = maybeStatus)
 
         // update group status
         updateGroupResult <- updateGroupADM(groupIri, groupUpdatePayload, KnoraSystemInstances.Users.SystemUser)
@@ -628,15 +628,9 @@ final case class GroupsResponderADMLive(
 
     for {
       /* Verify that the group exists. */
-      maybeGroupADM <-
-        groupGetADM(
-          groupIri = groupIri
-        )
-
-      groupADM: GroupADM =
-        maybeGroupADM.getOrElse(
-          throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
-        )
+      groupADM <- groupGetADM(groupIri)
+                    .flatMap(ZIO.fromOption)
+                    .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
       /* Verify that the potentially new name is unique */
       groupByNameAlreadyExists <-
@@ -786,13 +780,8 @@ final case class GroupsResponderADMLive(
    * @return a [[Boolean]].
    */
   private def groupByNameAndProjectExists(name: String, projectIri: IRI): Task[Boolean] = {
-    val query = twirl.queries.sparql.admin.txt
-      .checkGroupExistsByName(projectIri, name)
-    for {
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(query.toString())
-      result                   = checkUserExistsResponse.result
-      _                        = logger.debug("groupByNameAndProjectExists - name: {}, projectIri: {}, result: {}", name, projectIri, result)
-    } yield result
+    val query = twirl.queries.sparql.admin.txt.checkGroupExistsByName(projectIri, name)
+    triplestoreService.sparqlHttpAsk(query.toString()).map(_.result)
   }
 
   /**
