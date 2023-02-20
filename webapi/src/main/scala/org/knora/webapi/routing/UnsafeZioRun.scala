@@ -23,6 +23,16 @@ object UnsafeZioRun {
 
   /**
    * Executes the effect synchronously and returns its result as a
+   * [[A]] value or throws a [[FiberFailure]].
+   *
+   * This method is effectful and should only be used at the edges of your
+   * application.
+   */
+  def runOrThrow[R, E, A](effect: ZIO[R, E, A])(implicit r: Runtime[R]): A =
+    Unsafe.unsafe(implicit u => r.unsafe.run(effect).getOrThrowFiberFailure())
+
+  /**
+   * Executes the effect synchronously and returns its result as a
    * [[Future]].
    *
    * This method is effectful and should only be used at the edges of your

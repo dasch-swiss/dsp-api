@@ -1,12 +1,14 @@
 package org.knora.webapi.core
 
-import zio.ULayer
-import zio.ZLayer
-
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.admin.ProjectsResponderADM
+import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -30,6 +32,7 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import zio._
 
 object LayersTest {
 
@@ -40,14 +43,20 @@ object LayersTest {
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
   type CommonR0 = ActorSystem with IIIFService with AppConfig
-  type CommonR = ApiRoutes
+  type CommonR = ActorDeps
+    with ActorToZioBridge
+    with ApiRoutes
     with AppRouter
+    with AppRouterRelayingMessageHandler
     with CacheService
     with CacheServiceManager
     with CardinalityService
     with HttpServer
     with IIIFServiceManager
     with IriConverter
+    with IriService
+    with MessageRelay
+    with ProjectsResponderADM
     with RepositoryUpdater
     with ResourceInfoRepo
     with RestCardinalityService
@@ -60,16 +69,22 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
+      ActorDeps.layer,
+      ActorToZioBridge.live,
       ApiRoutes.layer,
       AppRouter.layer,
+      AppRouterRelayingMessageHandler.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
+      IriService.layer,
+      MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      ProjectsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
@@ -101,7 +116,7 @@ object LayersTest {
 
   /**
    * Provides a layer for integration tests which depend on Fuseki as Testcontainers.
-   * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl.l]]
+   * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl]]
    * @param system An optional [[akka.actor.ActorSystem]] for use with Akka's [[akka.testkit.TestKit]]
    * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
    */

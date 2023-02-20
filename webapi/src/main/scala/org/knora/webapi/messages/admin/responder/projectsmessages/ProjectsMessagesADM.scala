@@ -23,6 +23,7 @@ import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
@@ -158,7 +159,7 @@ case class ChangeProjectApiRequestADM(
 /**
  * An abstract trait representing a request message that can be sent to [[org.knora.webapi.responders.admin.ProjectsResponderADM]].
  */
-sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
+sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 // Requests
 
@@ -266,7 +267,7 @@ case class ProjectCreateRequestADM(
  * Requests updating an existing project.
  *
  * @param projectIri            the IRI of the project to be updated.
- * @param projectUpdatePayload  the [[ProjectUpdatePayload]]
+ * @param projectUpdatePayload  the [[ProjectUpdatePayloadADM]]
  * @param requestingUser        the user making the request.
  * @param apiRequestID          the ID of the API request.
  */

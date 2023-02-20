@@ -14,6 +14,9 @@ import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.admin.ProjectsResponderADM
+import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
@@ -48,12 +51,16 @@ object LayersLive {
       with ApiRoutes
       with AppConfig
       with AppRouter
+      with AppRouterRelayingMessageHandler
       with CacheServiceManager
       with CacheService
       with HttpServer
       with IIIFServiceManager
       with IIIFService
+      with IriService
       with JWTService
+      with MessageRelay
+      with ProjectsResponderADM
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
@@ -72,6 +79,7 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
+      AppRouterRelayingMessageHandler.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
@@ -82,11 +90,14 @@ object LayersLive {
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
+      IriService.layer,
       JWTService.layer,
+      MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsRouteZ.layer,
+      ProjectsResponderADMLive.layer,
       ProjectsService.live,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
