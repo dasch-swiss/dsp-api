@@ -6,22 +6,22 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json.JsValue
-import spray.json.JsonFormat
-import spray.json.RootJsonFormat
-
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import spray.json.DefaultJsonProtocol
+import spray.json.JsValue
+import spray.json.JsonFormat
+import spray.json.RootJsonFormat
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -96,7 +96,7 @@ case class ChangeGroupApiRequestADM(
 /**
  * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
  */
-sealed trait GroupsResponderRequestADM extends KnoraRequestADM
+sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
  * Get all information about all groups.      the user initiating the request.

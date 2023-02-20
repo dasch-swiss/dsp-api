@@ -7,14 +7,10 @@ package org.knora.webapi.core.actors
 
 import akka.actor.Actor
 import com.typesafe.scalalogging.Logger
-
-import scala.concurrent.ExecutionContext
-
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
@@ -48,6 +44,8 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.util.ActorUtil
+
+import scala.concurrent.ExecutionContext
 
 final case class RoutingActor(
   cacheServiceManager: CacheServiceManager,
@@ -83,7 +81,6 @@ final case class RoutingActor(
   private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
 
   // Admin responders
-  private val groupsResponderADM: GroupsResponderADM           = new GroupsResponderADM(responderData)
   private val listsResponderADM: ListsResponderADM             = new ListsResponderADM(responderData)
   private val permissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
   private val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData)
@@ -129,8 +126,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
     // Admin request messages
-    case groupsResponderRequestADM: GroupsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), groupsResponderADM.receive(groupsResponderRequestADM), log)
     case listsResponderRequest: ListsResponderRequestADM =>
       ActorUtil.future2Message(sender(), listsResponderADM.receive(listsResponderRequest), log)
     case permissionsResponderRequestADM: PermissionsResponderRequestADM =>
