@@ -152,29 +152,17 @@ final case class GroupsResponderADMLive(
    * Receives a message extending [[GroupsResponderRequestADM]], and returns an appropriate response message
    */
   def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case GroupsGetADM()                         => groupsGetADM
-    case GroupsGetRequestADM()                  => groupsGetRequestADM
-    case GroupGetADM(groupIri)                  => groupGetADM(groupIri)
-    case MultipleGroupsGetRequestADM(groupIris) => multipleGroupsGetRequestADM(groupIris)
-    case GroupGetRequestADM(groupIri)           => groupGetRequestADM(groupIri)
-    case GroupMembersGetRequestADM(groupIri, requestingUser) =>
-      groupMembersGetRequestADM(groupIri, requestingUser)
-    case GroupCreateRequestADM(newGroupInfo, requestingUser, apiRequestID) =>
-      createGroupADM(newGroupInfo, requestingUser, apiRequestID)
-    case GroupChangeRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID) =>
-      changeGroupBasicInformationRequestADM(
-        groupIri,
-        changeGroupRequest,
-        requestingUser,
-        apiRequestID
-      )
-    case GroupChangeStatusRequestADM(
-          groupIri,
-          changeGroupRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changeGroupStatusRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID)
+    case _: GroupsGetADM                => groupsGetADM
+    case _: GroupsGetRequestADM         => groupsGetRequestADM
+    case r: GroupGetADM                 => groupGetADM(r.groupIri)
+    case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
+    case r: GroupGetRequestADM          => groupGetRequestADM(r.groupIri)
+    case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
+    case r: GroupCreateRequestADM       => createGroupADM(r.createRequest, r.requestingUser, r.apiRequestID)
+    case r: GroupChangeRequestADM =>
+      changeGroupBasicInformationRequestADM(r.groupIri, r.changeGroupRequest, r.requestingUser, r.apiRequestID)
+    case r: GroupChangeStatusRequestADM =>
+      changeGroupStatusRequestADM(r.groupIri, r.changeGroupRequest, r.requestingUser, r.apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -187,11 +175,8 @@ final case class GroupsResponderADMLive(
     val query = twirl.queries.sparql.admin.txt.getGroups(None)
     for {
       groupsResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
-
-      statements = groupsResponse.statements
-
       groups: Seq[Task[GroupADM]] =
-        statements.map { case (groupIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+        groupsResponse.statements.map { case (groupIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
           val projectIri: IRI = propsMap
             .getOrElse(
               OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri,
@@ -334,13 +319,14 @@ final case class GroupsResponderADMLive(
     for {
       maybeGroupADM <- groupGetADM(groupIri)
 
+      userPermissions = requestingUser.permissions
       _ = maybeGroupADM match {
             case Some(group) =>
               // check if the requesting user is allowed to access the information
               if (
-                !requestingUser.permissions.isProjectAdmin(
+                !userPermissions.isProjectAdmin(
                   group.project.id
-                ) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser
+                ) && !userPermissions.isSystemAdmin && !requestingUser.isSystemUser
               ) {
                 // not a project admin and not a system admin
                 throw ForbiddenException("Project members can only be retrieved by a project or system admin.")
@@ -404,15 +390,16 @@ final case class GroupsResponderADMLive(
     ): Task[GroupOperationResponseADM] =
       for {
         /* check if the requesting user is allowed to create group */
-        _ <- ZIO.attempt(
+        _ <- ZIO.attempt {
+               val userPermissions = requestingUser.permissions
                if (
-                 !requestingUser.permissions
-                   .isProjectAdmin(createRequest.project.value) && !requestingUser.permissions.isSystemAdmin
+                 !userPermissions
+                   .isProjectAdmin(createRequest.project.value) && !userPermissions.isSystemAdmin
                ) {
                  // not a project admin and not a system admin
                  throw ForbiddenException("A new group can only be created by a project or system admin.")
                }
-             )
+             }
 
         iri = createRequest.project.value
         nameExists <- groupByNameAndProjectExists(
@@ -568,10 +555,9 @@ final case class GroupsResponderADMLive(
                       .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
         /* check if the requesting user is allowed to perform updates */
+        userPermissions = requestingUser.permissions
         _ =
-          if (
-            !requestingUser.permissions.isProjectAdmin(groupADM.project.id) && !requestingUser.permissions.isSystemAdmin
-          ) {
+          if (!userPermissions.isProjectAdmin(groupADM.project.id) && !userPermissions.isSystemAdmin) {
             // not a project admin and not a system admin
             throw ForbiddenException("Group's status can only be changed by a project or system admin.")
           }
