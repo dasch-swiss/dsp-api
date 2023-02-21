@@ -5,17 +5,6 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.UUID
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
@@ -49,6 +38,16 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
+import zio._
+
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.UUID
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Returns information about projects.
@@ -420,18 +419,15 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectAdminMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- getSingleProjectADM(
-                   id = id
-                 )
-
-      _ =
-        if (project.isEmpty) {
-          throw NotFoundException(s"Project '${getId(id)}' not found.")
-        } else {
-          if (!user.permissions.isSystemAdmin && !user.permissions.isProjectAdmin(project.get.id)) {
-            throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
-          }
-        }
+      project <- getSingleProjectADM(id)
+                   .flatMap(ZIO.fromOption(_))
+                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _ <- ZIO
+             .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
+             .when {
+               !user.permissions.isSystemAdmin &&
+               !user.permissions.isProjectAdmin(project.id)
+             }
 
       query = twirl.queries.sparql.admin.txt
                 .getProjectAdminMembers(
