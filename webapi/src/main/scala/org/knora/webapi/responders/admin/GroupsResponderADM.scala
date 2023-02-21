@@ -261,7 +261,7 @@ final case class GroupsResponderADMLive(
    * @return information about the group as a set of [[GroupGetResponseADM]] objects.
    */
   override def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
-    ZioHelper.sequence(groupIris.map(groupGetADM)).map(_.flatten.map(GroupGetResponseADM))
+    ZioHelper.sequence(groupIris.map(groupGetRequestADM))
 
   /**
    * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
