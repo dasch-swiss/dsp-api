@@ -32,6 +32,8 @@ object HttpServerZ {
         )
     } yield Middleware.cors(corsConfig)
 
+  private val logginMiddleware = Middleware.requestLogging()
+
   private def metricsMiddleware() = {
     // in order to avoid extensive amounts of labels, we should replace path segment slugs
     // see docs/03-endpoints/instrumentation/metrics.md
@@ -66,7 +68,7 @@ object HttpServerZ {
       routes              <- apiRoutes
       cors                <- corsMiddleware
       metrics              = metricsMiddleware()
-      routesWithMiddleware = routes @@ cors @@ metrics
+      routesWithMiddleware = routes @@ cors @@ metrics @@ logginMiddleware
       serverConfig         = ZLayer.succeed(ServerConfig.default.port(port))
       _                   <- Server.serve(routesWithMiddleware).provide(Server.live, serverConfig).forkDaemon
       _                   <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")
