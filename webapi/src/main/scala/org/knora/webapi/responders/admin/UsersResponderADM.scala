@@ -21,13 +21,12 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -173,77 +172,33 @@ final case class UsersResponderADMLive(
                !requestingUser.permissions.isProjectAdminInAnyProject() &&
                !requestingUser.isSystemUser
              }
-
-      query          = twirl.queries.sparql.admin.txt.getUsers(maybeIri = None, maybeUsername = None, maybeEmail = None)
-      usersResponse <- triplestoreService.sparqlHttpExtendedConstruct(query)
-
-      statements = usersResponse.statements.toList
-
-      users: Seq[UserADM] = statements.map { case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                              UserADM(
-                                id = userIri.toString,
-                                username = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.Username.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'username' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value,
-                                email = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.Email.toSmartIri,
-                                    throw InconsistentRepositoryDataException(s"User: $userIri has no 'email' defined.")
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value,
-                                givenName = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.GivenName.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'givenName' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value,
-                                familyName = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.FamilyName.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'familyName' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value,
-                                status = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.Status.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'status' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[BooleanLiteralV2]
-                                  .value,
-                                lang = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'preferedLanguage' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value
-                              )
-                            }
-
+      query               = twirl.queries.sparql.admin.txt.getUsers(maybeIri = None, maybeUsername = None, maybeEmail = None)
+      usersResponse      <- triplestoreService.sparqlHttpExtendedConstruct(query)
+      statements          = usersResponse.statements.toList
+      users: Seq[UserADM] = statements.map(convertStatementsToUserADM)
     } yield users.sorted
+
+  private def convertStatementsToUserADM(statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]])): UserADM = {
+    val userIri: SubjectV2                           = statements._1
+    val propertiesMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
+
+    def getOption[A <: LiteralV2](key: IRI): Option[Seq[A]] =
+      propertiesMap.get(key.toSmartIri).map(_.map(_.asInstanceOf[A]))
+
+    def getOrThrow[A <: LiteralV2](key: IRI): Seq[A] =
+      getOption[A](key).getOrElse(
+        throw InconsistentRepositoryDataException(s"User: $userIri has no $key defined.")
+      )
+    def getFirstOrThrow[A <: LiteralV2](key: IRI): A = getOrThrow(key).head
+
+    val username   = getFirstOrThrow[StringLiteralV2](KnoraAdmin.Username).value
+    val email      = getFirstOrThrow[StringLiteralV2](KnoraAdmin.Email).value
+    val givenName  = getFirstOrThrow[StringLiteralV2](KnoraAdmin.GivenName).value
+    val familyName = getFirstOrThrow[StringLiteralV2](KnoraAdmin.FamilyName).value
+    val status     = getFirstOrThrow[BooleanLiteralV2](KnoraAdmin.Status).value
+    val lang       = getFirstOrThrow[StringLiteralV2](KnoraAdmin.PreferredLanguage).value
+    UserADM(userIri.toString, username, email, givenName, familyName, status, lang)
+  }
 
   /**
    * Gets all the users and returns them as a [[UsersGetResponseADM]].
@@ -1696,152 +1651,12 @@ final case class UsersResponderADMLive(
       maybeUserADM <-
         if (userQueryResponse.statements.nonEmpty) {
           logger.debug("getUserFromTriplestore - triplestore hit for: {}", identifier)
-          statements2UserADM(
-            statements = userQueryResponse.statements.head
-          )
+          ZIO.succeed(Some(convertStatementsToUserADM(userQueryResponse.statements.head)))
         } else {
           logger.debug("getUserFromTriplestore - no triplestore hit for: {}", identifier)
           ZIO.succeed(None)
         }
     } yield maybeUserADM
-  }
-
-  /**
-   * Helper method used to create a [[UserADM]] from the [[SparqlExtendedConstructResponse]] containing user data.
-   *
-   * @param statements           result from the SPARQL query containing user data.
-   * @return a [[Option[UserADM]]]
-   */
-  private def statements2UserADM(
-    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]])
-  ): Task[Option[UserADM]] = {
-    val userIri: IRI                            = statements._1.toString
-    val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
-
-    if (propsMap.nonEmpty) {
-
-      /* the groups the user is member of (only explicit groups) */
-      val groupIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraAdmin.IsInGroup.toSmartIri) match {
-        case Some(groups) => groups.map(_.asInstanceOf[IriLiteralV2].value)
-        case None         => Seq.empty[IRI]
-      }
-
-      /* the projects the user is member of (only explicit projects) */
-      val projectIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraAdmin.IsInProject.toSmartIri) match {
-        case Some(projects) => projects.map(_.asInstanceOf[IriLiteralV2].value)
-        case None           => Seq.empty[IRI]
-      }
-
-      /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
-      val isInProjectAdminGroups: Seq[IRI] = propsMap
-        .getOrElse(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup.toSmartIri, Vector.empty[IRI])
-        .map(_.asInstanceOf[IriLiteralV2].value)
-
-      /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-      val isInSystemAdminGroup = propsMap
-        .get(OntologyConstants.KnoraAdmin.IsInSystemAdminGroup.toSmartIri)
-        .exists(p => p.head.asInstanceOf[BooleanLiteralV2].value)
-
-      for {
-        /* get the user's permission profile from the permissions responder */
-        permissionData <- messageRelay
-                            .ask[PermissionsDataADM](
-                              PermissionDataGetADM(
-                                projectIris = projectIris,
-                                groupIris = groupIris,
-                                isInProjectAdminGroups = isInProjectAdminGroups,
-                                isInSystemAdminGroup = isInSystemAdminGroup,
-                                requestingUser = KnoraSystemInstances.Users.SystemUser
-                              )
-                            )
-
-        maybeGroupFutures: Seq[Task[Option[GroupADM]]] = groupIris.map { groupIri =>
-                                                           messageRelay.ask[Option[GroupADM]](GroupGetADM(groupIri))
-                                                         }
-        maybeGroups          <- ZioHelper.sequence(maybeGroupFutures)
-        groups: Seq[GroupADM] = maybeGroups.flatten
-
-        maybeProjectFutures: Seq[Task[Option[ProjectADM]]] =
-          projectIris.map { projectIri =>
-            messageRelay
-              .ask[Option[ProjectADM]](
-                ProjectGetADM(
-                  identifier = IriIdentifier
-                    .fromString(projectIri)
-                    .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-                )
-              )
-          }
-        maybeProjects            <- ZioHelper.sequence(maybeProjectFutures)
-        projects: Seq[ProjectADM] = maybeProjects.flatten
-
-        /* construct the user profile from the different parts */
-        user = UserADM(
-                 id = userIri,
-                 username = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.Username.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'username' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 email = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.Email.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'email' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 password = propsMap
-                   .get(OntologyConstants.KnoraAdmin.Password.toSmartIri)
-                   .map(_.head.asInstanceOf[StringLiteralV2].value),
-                 token = None,
-                 givenName = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.GivenName.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'givenName' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 familyName = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.FamilyName.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'familyName' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 status = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.Status.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'status' defined.")
-                   )
-                   .head
-                   .asInstanceOf[BooleanLiteralV2]
-                   .value,
-                 lang = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'preferredLanguage' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 groups = groups,
-                 projects = projects,
-                 sessionId = None,
-                 permissions = permissionData
-               )
-
-        result: Option[UserADM] = Some(user)
-      } yield result
-
-    } else {
-      ZIO.succeed(None)
-    }
   }
 
   /**
