@@ -340,10 +340,10 @@ final case class ProjectsResponderADMLive(
    *
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
-  override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
-    maybeProject <- getSingleProjectADM(id)
-    project       = maybeProject.getOrElse(throw NotFoundException(s"Project '${getId(id)}' not found"))
-  } yield ProjectGetResponseADM(project)
+  override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
+    getSingleProjectADM(id)
+      .flatMap(ZIO.fromOption(_))
+      .mapBoth(_ => NotFoundException(s"Project '${getId(id)}' not found"), ProjectGetResponseADM)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -589,18 +589,19 @@ final case class ProjectsResponderADMLive(
 
     for {
       // Get the project info.
-      maybeProject <- getSingleProjectADM(id)
-
-      project: ProjectADM = maybeProject.getOrElse(
-                              throw NotFoundException(s"Project '${getId(id)}' not found.")
-                            )
+      project <- getSingleProjectADM(id)
+                   .flatMap(ZIO.fromOption(_))
+                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
 
       // Check that the user has permission to download the data.
-      _ = if (!(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(project.id))) {
-            throw ForbiddenException(
+      _ <-
+        ZIO
+          .fail(
+            ForbiddenException(
               s"You are logged in as ${user.username}, but only a system administrator or project administrator can request a project's data."
             )
-          }
+          )
+          .when(!(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(project.id)))
 
       // Make a temporary directory for the downloaded data.
       tempDir = Files.createTempDirectory(project.shortname)
@@ -709,10 +710,12 @@ final case class ProjectsResponderADMLive(
   override def projectRestrictedViewSettingsGetRequestADM(
     id: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    for {
-      maybeSettings <- projectRestrictedViewSettingsGetADM(id)
-      settings       = maybeSettings.getOrElse(throw NotFoundException(s"Project '${getId(id)}' not found."))
-    } yield ProjectRestrictedViewSettingsGetResponseADM(settings)
+    projectRestrictedViewSettingsGetADM(id)
+      .flatMap(ZIO.fromOption(_))
+      .mapBoth(
+        _ => NotFoundException(s"Project '${getId(id)}' not found."),
+        ProjectRestrictedViewSettingsGetResponseADM
+      )
 
   /**
    * Update project's basic information.
@@ -1091,20 +1094,15 @@ final case class ProjectsResponderADMLive(
         _ <- triplestoreService.sparqlHttpUpdate(createNewProjectSparqlString)
 
         // try to retrieve newly created project (will also add to cache)
-        maybeNewProjectADM <-
-          getSingleProjectADM(
-            id = IriIdentifier
-              .fromString(newProjectIRI)
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-            skipCache = true
-          )
-
+        id <- IriIdentifier.fromString(newProjectIRI).toZIO.mapError(e => BadRequestException(e.getMessage))
         // check to see if we could retrieve the new project
-        newProjectADM = maybeNewProjectADM.getOrElse(
-                          throw UpdateNotPerformedException(
-                            s"Project $newProjectIRI was not created. Please report this as a possible bug."
-                          )
-                        )
+        newProjectADM <- getSingleProjectADM(id, skipCache = true)
+                           .flatMap(ZIO.fromOption(_))
+                           .orElseFail(
+                             UpdateNotPerformedException(
+                               s"Project $newProjectIRI was not created. Please report this as a possible bug."
+                             )
+                           )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
 
