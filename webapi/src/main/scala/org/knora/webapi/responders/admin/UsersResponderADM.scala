@@ -8,13 +8,12 @@ package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import zio._
-
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
 import dsp.valueobjects.User._
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -44,7 +43,312 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 
-trait UserResponderADM {}
+trait UserResponderADM {
+
+  /**
+   * Gets all the users and returns them as a sequence of [[UserADM]].
+   *
+   * @param userInformationType  the extent of the information returned.
+   *
+   * @param requestingUser       the user initiating the request.
+   * @return all the users as a sequence of [[UserADM]].
+   */
+  def getAllUserADM(userInformationType: UserInformationTypeADM, requestingUser: UserADM): Task[Seq[UserADM]]
+
+  /**
+   * Gets all the users and returns them as a [[UsersGetResponseADM]].
+   *
+   * @param userInformationType  the extent of the information returned.
+   *
+   * @param requestingUser       the user initiating the request.
+   * @return all the users as a [[UsersGetResponseADM]].
+   */
+  def getAllUserADMRequest(
+    userInformationType: UserInformationTypeADM,
+    requestingUser: UserADM
+  ): Task[UsersGetResponseADM]
+
+  /**
+   * ~ CACHED ~
+   * Gets information about a Knora user, and returns it as a [[UserADM]].
+   * If possible, tries to retrieve it from the cache. If not, it retrieves
+   * it from the triplestore, and then writes it to the cache. Writes to the
+   * cache are always `UserInformationTypeADM.FULL`.
+   *
+   * @param identifier           the IRI, email, or username of the user.
+   * @param userInformationType  the type of the requested profile (restricted
+   *                             of full).
+   *
+   * @param requestingUser       the user initiating the request.
+   * @param skipCache            the flag denotes to skip the cache and instead
+   *                             get data from the triplestore
+   * @return a [[UserADM]] describing the user.
+   */
+  def getSingleUserADM(
+    identifier: UserIdentifierADM,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: UserADM,
+    skipCache: Boolean = false
+  ): Task[Option[UserADM]]
+
+  /**
+   * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
+   *
+   * @param identifier          the IRI, username, or email of the user.
+   * @param userInformationType the type of the requested profile (restricted of full).
+   * @param requestingUser      the user initiating the request.
+   * @return a [[UserResponseADM]]
+   */
+  def getSingleUserADMRequest(
+    identifier: UserIdentifierADM,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: UserADM
+  ): Task[UserResponseADM]
+
+  /**
+   * Updates an existing user. Only basic user data information (username, email, givenName, familyName, lang)
+   * can be changed. For changing the password or user status, use the separate methods.
+   *
+   * @param userIri              the IRI of the existing user that we want to update.
+   * @param userUpdateBasicInformationPayload    the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
+   *
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   *
+   *         [[BadRequestException]] if the necessary parameters are not supplied.
+   *
+   *         [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
+   */
+  def changeBasicUserInformationADM(
+    userIri: IRI,
+    userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Change the users password. The old password needs to be supplied for security purposes.
+   *
+   * @param userIri              the IRI of the existing user that we want to update.
+   * @param userUpdatePasswordPayload    the current password of the requesting user and the new password.
+   *
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   *
+   *         [[BadRequestException]] if necessary parameters are not supplied.
+   *
+   *         [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
+   *
+   *         [[ForbiddenException]]  if the supplied old password doesn't match with the user's current password.
+   *
+   *         [[NotFoundException]]   if the user is not found.
+   */
+  def changePasswordADM(
+    userIri: IRI,
+    userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Change the user's status (active / inactive).
+   *
+   * @param userIri              the IRI of the existing user that we want to update.
+   * @param status               the new status.
+   *
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   *
+   *         [[BadRequestException]] if necessary parameters are not supplied.
+   *
+   *         [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
+   */
+  def changeUserStatusADM(
+    userIri: IRI,
+    status: UserStatus,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Change the user's system admin membership status (active / inactive).
+   *
+   * @param userIri              the IRI of the existing user that we want to update.
+   * @param systemAdmin    the new status.
+   *
+   * @param requestingUser       the user profile of the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   *
+   *         [[BadRequestException]] if necessary parameters are not supplied.
+   *
+   *         [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
+   */
+  def changeUserSystemAdminMembershipStatusADM(
+    userIri: IRI,
+    systemAdmin: SystemAdmin,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
+   *
+   * @param userIri        the user's IRI.
+   * @param requestingUser the requesting user.
+   * @return a [[UserProjectMembershipsGetResponseADM]].
+   */
+  def userProjectMembershipsGetRequestADM(
+    userIri: IRI,
+    requestingUser: UserADM
+  ): Task[UserProjectMembershipsGetResponseADM]
+
+  /**
+   * Adds a user to a project.
+   *
+   * @param userIri              the user's IRI.
+   * @param projectIri           the project's IRI.
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]]
+   */
+  def userProjectMembershipAddRequestADM(
+    userIri: IRI,
+    projectIri: IRI,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Removes a user from a project.
+   *
+   * @param userIri              the user's IRI.
+   * @param projectIri           the project's IRI.
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]]
+   */
+  def userProjectMembershipRemoveRequestADM(
+    userIri: IRI,
+    projectIri: IRI,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
+   * is a member of the project admin group.
+   *
+   * @param userIri              the user's IRI.
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserProjectAdminMembershipsGetResponseADM]].
+   */
+  def userProjectAdminMembershipsGetRequestADM(
+    userIri: IRI,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserProjectAdminMembershipsGetResponseADM]
+
+  /**
+   * Adds a user to the project admin group of a project.
+   *
+   * @param userIri              the user's IRI.
+   * @param projectIri           the project's IRI.
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   */
+  def userProjectAdminMembershipAddRequestADM(
+    userIri: IRI,
+    projectIri: IRI,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Removes a user from project admin group of a project.
+   *
+   * @param userIri              the user's IRI.
+   * @param projectIri           the project's IRI.
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]]
+   */
+  def userProjectAdminMembershipRemoveRequestADM(
+    userIri: IRI,
+    projectIri: IRI,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Returns the user's group memberships as a [[UserGroupMembershipsGetResponseADM]]
+   *
+   * @param userIri              the IRI of the user.
+   *
+   * @param requestingUser       the requesting user.
+   * @return a [[UserGroupMembershipsGetResponseADM]].
+   */
+  def userGroupMembershipsGetRequestADM(
+    userIri: IRI,
+    requestingUser: UserADM
+  ): Task[UserGroupMembershipsGetResponseADM]
+
+  /**
+   * Removes a user from a group.
+   *
+   * @param userIri              the user's IRI.
+   * @param groupIri             the group IRI.
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   */
+  def userGroupMembershipRemoveRequestADM(
+    userIri: IRI,
+    groupIri: IRI,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
+   * is allowed to create a new user.
+   *
+   * Referenced Websites:
+   *                     - https://crackstation.net/hashing-security.htm
+   *                     - http://blogger.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
+   *
+   * @param userCreatePayloadADM    a [[UserCreatePayloadADM]] object containing information about the new user to be created.
+   * @param requestingUser          a [[UserADM]] object containing information about the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   */
+  def createNewUserADM(
+    userCreatePayloadADM: UserCreatePayloadADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+
+  /**
+   * Adds a user to a group.
+   *
+   * @param userIri              the user's IRI.
+   * @param groupIri             the group IRI.
+   * @param requestingUser       the requesting user.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   */
+  def userGroupMembershipAddRequestADM(
+    userIri: IRI,
+    groupIri: IRI,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
+}
 
 /**
  * Provides information about Knora users to other responders.
@@ -68,87 +372,34 @@ final case class UsersResponderADMLive(
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
   override def handle(msg: ResponderRequest): Task[Equals] = msg match {
-    case UsersGetADM(userInformationTypeADM, requestingUser) =>
-      getAllUserADM(userInformationTypeADM, requestingUser)
-    case UsersGetRequestADM(userInformationTypeADM, requestingUser) =>
-      getAllUserADMRequest(userInformationTypeADM, requestingUser)
-    case UserGetADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserADM(identifier, userInformationTypeADM, requestingUser)
-    case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserADMRequest(identifier, userInformationTypeADM, requestingUser)
-    case UserCreateRequestADM(userCreatePayloadADM, requestingUser, apiRequestID) =>
-      createNewUserADM(userCreatePayloadADM, requestingUser, apiRequestID)
-    case UserChangeBasicInformationRequestADM(
-          userIri,
-          userUpdateBasicInformationPayload,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changeBasicUserInformationADM(
-        userIri,
-        userUpdateBasicInformationPayload,
-        requestingUser,
-        apiRequestID
-      )
-    case UserChangePasswordRequestADM(
-          userIri,
-          userUpdatePasswordPayload,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changePasswordADM(userIri, userUpdatePasswordPayload, requestingUser, apiRequestID)
-    case UserChangeStatusRequestADM(userIri, status, requestingUser, apiRequestID) =>
-      changeUserStatusADM(userIri, status, requestingUser, apiRequestID)
-    case UserChangeSystemAdminMembershipStatusRequestADM(
-          userIri,
-          changeSystemAdminMembershipStatusRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changeUserSystemAdminMembershipStatusADM(
-        userIri,
-        changeSystemAdminMembershipStatusRequest,
-        requestingUser,
-        apiRequestID
-      )
-    case UserProjectMembershipsGetRequestADM(userIri, requestingUser) =>
-      userProjectMembershipsGetRequestADM(userIri, requestingUser)
-    case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserProjectMembershipRemoveRequestADM(
-          userIri,
-          projectIri,
-          requestingUser,
-          apiRequestID
-        ) =>
-      userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) =>
-      userProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipAddRequestADM(
-          userIri,
-          projectIri,
-          requestingUser,
-          apiRequestID
-        ) =>
-      userProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipRemoveRequestADM(
-          userIri,
-          projectIri,
-          requestingUser,
-          apiRequestID
-        ) =>
-      userProjectAdminMembershipRemoveRequestADM(
-        userIri,
-        projectIri,
-        requestingUser,
-        apiRequestID
-      )
-    case UserGroupMembershipsGetRequestADM(userIri, requestingUser) =>
-      userGroupMembershipsGetRequestADM(userIri, requestingUser)
-    case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+    case r: UsersGetADM          => getAllUserADM(r.userInformationTypeADM, r.requestingUser)
+    case r: UsersGetRequestADM   => getAllUserADMRequest(r.userInformationTypeADM, r.requestingUser)
+    case r: UserGetADM           => getSingleUserADM(r.identifier, r.userInformationTypeADM, r.requestingUser)
+    case r: UserGetRequestADM    => getSingleUserADMRequest(r.identifier, r.userInformationTypeADM, r.requestingUser)
+    case r: UserCreateRequestADM => createNewUserADM(r.userCreatePayloadADM, r.requestingUser, r.apiRequestID)
+    case r: UserChangeBasicInformationRequestADM =>
+      changeBasicUserInformationADM(r.userIri, r.userUpdateBasicInformationPayload, r.requestingUser, r.apiRequestID)
+    case r: UserChangePasswordRequestADM =>
+      changePasswordADM(r.userIri, r.userUpdatePasswordPayload, r.requestingUser, r.apiRequestID)
+    case r: UserChangeStatusRequestADM => changeUserStatusADM(r.userIri, r.status, r.requestingUser, r.apiRequestID)
+    case r: UserChangeSystemAdminMembershipStatusRequestADM =>
+      changeUserSystemAdminMembershipStatusADM(r.userIri, r.systemAdmin, r.requestingUser, r.apiRequestID)
+    case r: UserProjectMembershipsGetRequestADM => userProjectMembershipsGetRequestADM(r.userIri, r.requestingUser)
+    case r: UserProjectMembershipAddRequestADM =>
+      userProjectMembershipAddRequestADM(r.userIri, r.projectIri, r.requestingUser, r.apiRequestID)
+    case r: UserProjectMembershipRemoveRequestADM =>
+      userProjectMembershipRemoveRequestADM(r.userIri, r.projectIri, r.requestingUser, r.apiRequestID)
+    case r: UserProjectAdminMembershipsGetRequestADM =>
+      userProjectAdminMembershipsGetRequestADM(r.userIri, r.requestingUser, r.apiRequestID)
+    case r: UserProjectAdminMembershipAddRequestADM =>
+      userProjectAdminMembershipAddRequestADM(r.userIri, r.projectIri, r.requestingUser, r.apiRequestID)
+    case r: UserProjectAdminMembershipRemoveRequestADM =>
+      userProjectAdminMembershipRemoveRequestADM(r.userIri, r.projectIri, r.requestingUser, r.apiRequestID)
+    case r: UserGroupMembershipsGetRequestADM => userGroupMembershipsGetRequestADM(r.userIri, r.requestingUser)
+    case r: UserGroupMembershipAddRequestADM =>
+      userGroupMembershipAddRequestADM(r.userIri, r.groupIri, r.requestingUser, r.apiRequestID)
+    case r: UserGroupMembershipRemoveRequestADM =>
+      userGroupMembershipRemoveRequestADM(r.userIri, r.groupIri, r.requestingUser, r.apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -160,7 +411,7 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the user initiating the request.
    * @return all the users as a sequence of [[UserADM]].
    */
-  private def getAllUserADM(
+  override def getAllUserADM(
     userInformationType: UserInformationTypeADM,
     requestingUser: UserADM
   ): Task[Seq[UserADM]] =
@@ -208,7 +459,7 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
    */
-  private def getAllUserADMRequest(
+  override def getAllUserADMRequest(
     userInformationType: UserInformationTypeADM,
     requestingUser: UserADM
   ): Task[UsersGetResponseADM] =
@@ -242,7 +493,7 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[UserADM]] describing the user.
    */
-  private def getSingleUserADM(
+  override def getSingleUserADM(
     identifier: UserIdentifierADM,
     userInformationType: UserInformationTypeADM,
     requestingUser: UserADM,
@@ -298,7 +549,7 @@ final case class UsersResponderADMLive(
    * @param requestingUser      the user initiating the request.
    * @return a [[UserResponseADM]]
    */
-  private def getSingleUserADMRequest(
+  override def getSingleUserADMRequest(
     identifier: UserIdentifierADM,
     userInformationType: UserInformationTypeADM,
     requestingUser: UserADM
@@ -325,11 +576,13 @@ final case class UsersResponderADMLive(
    *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if the necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   * @return a [[UserOperationResponseADM]].
+   *
+   *         [[BadRequestException]] if the necessary parameters are not supplied.
+   *
+   *         [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
    */
-  private def changeBasicUserInformationADM(
+  override def changeBasicUserInformationADM(
     userIri: IRI,
     userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
     requestingUser: UserADM,
@@ -415,13 +668,17 @@ final case class UsersResponderADMLive(
    *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
-   * @throws ForbiddenException  if the supplied old password doesn't match with the user's current password.
-   * @throws NotFoundException   if the user is not found.
+   * @return a [[UserOperationResponseADM]].
+   *
+   *         [[BadRequestException]] if necessary parameters are not supplied.
+   *
+   *         [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
+   *
+   *         [[ForbiddenException]]  if the supplied old password doesn't match with the user's current password.
+   *
+   *         [[NotFoundException]]   if the user is not found.
    */
-  private def changePasswordADM(
+  override def changePasswordADM(
     userIri: IRI,
     userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
     requestingUser: UserADM,
@@ -483,11 +740,13 @@ final case class UsersResponderADMLive(
    *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   * @return a [[UserOperationResponseADM]].
+   *
+   *            [[BadRequestException]] if necessary parameters are not supplied.
+   *
+   *            [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
    */
-  private def changeUserStatusADM(
+  override def changeUserStatusADM(
     userIri: IRI,
     status: UserStatus,
     requestingUser: UserADM,
@@ -534,11 +793,13 @@ final case class UsersResponderADMLive(
    *
    * @param requestingUser       the user profile of the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   * @return a [[UserOperationResponseADM]].
+   *
+   *            [[BadRequestException]] if necessary parameters are not supplied.
+   *
+   *            [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
    */
-  private def changeUserSystemAdminMembershipStatusADM(
+  override def changeUserSystemAdminMembershipStatusADM(
     userIri: IRI,
     systemAdmin: SystemAdmin,
     requestingUser: UserADM,
@@ -606,7 +867,7 @@ final case class UsersResponderADMLive(
    * @param requestingUser the requesting user.
    * @return a [[UserProjectMembershipsGetResponseADM]].
    */
-  private def userProjectMembershipsGetRequestADM(
+  override def userProjectMembershipsGetRequestADM(
     userIri: IRI,
     requestingUser: UserADM
   ): Task[UserProjectMembershipsGetResponseADM] =
@@ -644,7 +905,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return
    */
-  private def userProjectMembershipAddRequestADM(
+  override def userProjectMembershipAddRequestADM(
     userIri: IRI,
     projectIri: IRI,
     requestingUser: UserADM,
@@ -707,7 +968,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return
    */
-  private def userProjectMembershipRemoveRequestADM(
+  override def userProjectMembershipRemoveRequestADM(
     userIri: IRI,
     projectIri: IRI,
     requestingUser: UserADM,
@@ -806,7 +1067,7 @@ final case class UsersResponderADMLive(
                                 case None           => Seq.empty[IRI]
                               }
 
-      maybeProjectFutures: Seq[Task[Option[ProjectADM]]] =
+      maybeProjectTasks: Seq[Task[Option[ProjectADM]]] =
         projectIris.map { projectIri =>
           messageRelay
             .ask[Option[ProjectADM]](
@@ -817,7 +1078,7 @@ final case class UsersResponderADMLive(
               )
             )
         }
-      projects <- ZioHelper.sequence(maybeProjectFutures).map(_.flatten)
+      projects <- ZioHelper.sequence(maybeProjectTasks).map(_.flatten)
     } yield projects
   }
 
@@ -830,7 +1091,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
-  private def userProjectAdminMembershipsGetRequestADM(
+  override def userProjectAdminMembershipsGetRequestADM(
     userIri: IRI,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -860,7 +1121,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
-  private def userProjectAdminMembershipAddRequestADM(
+  override def userProjectAdminMembershipAddRequestADM(
     userIri: IRI,
     projectIri: IRI,
     requestingUser: UserADM,
@@ -938,7 +1199,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]]
    */
-  private def userProjectAdminMembershipRemoveRequestADM(
+  override def userProjectAdminMembershipRemoveRequestADM(
     userIri: IRI,
     projectIri: IRI,
     requestingUser: UserADM,
@@ -1031,7 +1292,7 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @return a [[UserGroupMembershipsGetResponseADM]].
    */
-  private def userGroupMembershipsGetRequestADM(
+  override def userGroupMembershipsGetRequestADM(
     userIri: IRI,
     requestingUser: UserADM
   ): Task[UserGroupMembershipsGetResponseADM] =
@@ -1046,7 +1307,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
-  private def userGroupMembershipAddRequestADM(
+  override def userGroupMembershipAddRequestADM(
     userIri: IRI,
     groupIri: IRI,
     requestingUser: UserADM,
@@ -1127,7 +1388,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
-  private def userGroupMembershipRemoveRequestADM(
+  override def userGroupMembershipRemoveRequestADM(
     userIri: IRI,
     groupIri: IRI,
     requestingUser: UserADM,
@@ -1205,8 +1466,8 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
-   * @throws BadRequestException         if necessary parameters are not supplied.
-   * @throws UpdateNotPerformedException if the update was not performed.
+   *         [[BadRequestException]]         if necessary parameters are not supplied.
+   *         UpdateNotPerformedException if the update was not performed.
    */
   private def updateUserADM(
     userIri: IRI,
@@ -1417,8 +1678,8 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
-   * @throws BadRequestException         if necessary parameters are not supplied.
-   * @throws UpdateNotPerformedException if the update was not performed.
+   *         [[BadRequestException]]         if necessary parameters are not supplied.
+   *         UpdateNotPerformedException if the update was not performed.
    */
   private def updateUserPasswordADM(
     userIri: IRI,
@@ -1487,7 +1748,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
-  private def createNewUserADM(
+  override def createNewUserADM(
     userCreatePayloadADM: UserCreatePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -1758,7 +2019,7 @@ final case class UsersResponderADMLive(
    *
    * @param user a [[UserADM]].
    * @return Unit
-   * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
+   *         ApplicationCacheException when there is a problem with writing the user's profile to cache.
    */
   private def writeUserADMToCache(user: UserADM): Task[Unit] =
     messageRelay.ask(CacheServicePutUserADM(user)).unit
