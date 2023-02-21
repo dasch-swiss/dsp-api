@@ -180,14 +180,14 @@ final case class GroupsResponderADMLive(
     val query = twirl.queries.sparql.admin.txt.getGroups(None)
     for {
       groupsResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
-      groups          = groupsResponse.statements.map(convertStatementToGroupADM)
+      groups          = groupsResponse.statements.map(convertStatementsToGroupADM)
       result         <- ZioHelper.sequence(groups.toSeq)
     } yield result.sorted
   }
 
-  private def convertStatementToGroupADM(statement: (SubjectV2, ConstructPredicateObjects)): Task[GroupADM] = {
-    val groupIri: SubjectV2                      = statement._1
-    val propertiesMap: ConstructPredicateObjects = statement._2
+  private def convertStatementsToGroupADM(statements: (SubjectV2, ConstructPredicateObjects)): Task[GroupADM] = {
+    val groupIri: SubjectV2                      = statements._1
+    val propertiesMap: ConstructPredicateObjects = statements._2
     def getOption[A <: LiteralV2](key: IRI): UIO[Option[Seq[A]]] =
       ZIO.succeed(propertiesMap.get(key.toSmartIri).map(_.map(_.asInstanceOf[A])))
     def getOrFail[A <: LiteralV2](key: IRI): Task[Seq[A]] =
@@ -238,7 +238,7 @@ final case class GroupsResponderADMLive(
     val query = twirl.queries.sparql.admin.txt.getGroups(maybeIri = Some(groupIri))
     for {
       statements <- triplestoreService.sparqlHttpExtendedConstruct(query.toString()).map(_.statements.headOption)
-      maybeGroup <- statements.map(convertStatementToGroupADM).map(_.map(Some(_))).getOrElse(ZIO.succeed(None))
+      maybeGroup <- statements.map(convertStatementsToGroupADM).map(_.map(Some(_))).getOrElse(ZIO.succeed(None))
     } yield maybeGroup
   }
 
