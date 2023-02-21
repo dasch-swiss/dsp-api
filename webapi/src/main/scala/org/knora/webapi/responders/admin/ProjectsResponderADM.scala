@@ -5,17 +5,6 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.UUID
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
@@ -49,6 +38,16 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
+import zio._
+
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.UUID
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Returns information about projects.
@@ -485,18 +484,14 @@ final case class ProjectsResponderADMLive(
    */
   override def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM] =
     for {
-      maybeProject <- getSingleProjectADM(
-                        id = IriIdentifier
-                          .fromString(projectIri.value)
-                          .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-                      )
-
-      keywords: Seq[String] = maybeProject match {
-                                case Some(p) => p.keywords
-                                case None    => throw NotFoundException(s"Project '${projectIri.value}' not found.")
-                              }
-
-    } yield ProjectKeywordsGetResponseADM(keywords = keywords)
+      id <- IriIdentifier
+              .fromString(projectIri.value)
+              .toZIO
+              .mapError(e => BadRequestException(e.getMessage))
+      keywords <- getSingleProjectADM(id)
+                    .flatMap(ZIO.fromOption(_))
+                    .mapBoth(_ => NotFoundException(s"Project '${projectIri.value}' not found."), _.keywords)
+    } yield ProjectKeywordsGetResponseADM(keywords)
 
   override def projectDataGetRequestADM(
     id: ProjectIdentifierADM,
