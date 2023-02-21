@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.triplestore.api
 
+import play.twirl.api.TxtFormat
 import zio._
 import zio.macros.accessible
 
@@ -38,6 +39,14 @@ trait TriplestoreService {
   ): UIO[SparqlSelectResult]
 
   /**
+   * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
+   *
+   * @param sparql          the SPARQL SELECT query string.
+   * @return a [[SparqlSelectResult]].
+   */
+  def sparqlHttpSelect(sparql: TxtFormat.Appendable): UIO[SparqlSelectResult] = sparqlHttpSelect(sparql.toString())
+
+  /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
    *
    * @param sparqlConstructRequest the request message.
@@ -55,9 +64,24 @@ trait TriplestoreService {
     sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
   ): UIO[SparqlExtendedConstructResponse]
 
+  /**
+   * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
+   *
+   * @param query the query
+   * @return a [[SparqlExtendedConstructResponse]]
+   */
   def sparqlHttpExtendedConstruct(query: String): UIO[SparqlExtendedConstructResponse] = sparqlHttpExtendedConstruct(
     SparqlExtendedConstructRequest(query)
   )
+
+  /**
+   * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
+   *
+   * @param query the query
+   * @return a [[SparqlExtendedConstructResponse]]
+   */
+  def sparqlHttpExtendedConstruct(query: TxtFormat.Appendable): UIO[SparqlExtendedConstructResponse] =
+    sparqlHttpExtendedConstruct(query.toString())
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
@@ -81,6 +105,16 @@ trait TriplestoreService {
    * @param sparqlUpdate the SPARQL update.
    * @return a [[SparqlUpdateResponse]].
    */
+  def sparqlHttpUpdate(sparqlUpdate: TxtFormat.Appendable): UIO[SparqlUpdateResponse] = sparqlHttpUpdate(
+    sparqlUpdate.toString()
+  )
+
+  /**
+   * Performs a SPARQL update operation.
+   *
+   * @param sparqlUpdate the SPARQL update.
+   * @return a [[SparqlUpdateResponse]].
+   */
   def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse]
 
   /**
@@ -90,6 +124,14 @@ trait TriplestoreService {
    * @return a [[SparqlAskResponse]].
    */
   def sparqlHttpAsk(sparql: String): UIO[SparqlAskResponse]
+
+  /**
+   * Performs a SPARQL ASK query.
+   *
+   * @param sparql the SPARQL ASK query.
+   * @return a [[SparqlAskResponse]].
+   */
+  def sparqlHttpAsk(sparql: TxtFormat.Appendable): UIO[SparqlAskResponse] = sparqlHttpAsk(sparql.toString())
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
