@@ -8,12 +8,13 @@ package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import zio._
+
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
 import dsp.valueobjects.User._
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
