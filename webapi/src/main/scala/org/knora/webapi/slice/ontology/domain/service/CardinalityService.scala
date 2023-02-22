@@ -71,8 +71,9 @@ object ChangeCardinalityCheckResult {
 
   sealed trait ChangeCardinalityCheckResult {
     def isSuccess: Boolean
-
-    def isFailure: Boolean = !isSuccess
+    def isFailure: Boolean                     = !isSuccess
+    def failureMessageKey: Option[String]      = None
+    def failureAffectedIris: List[InternalIri] = List.empty
   }
 
   trait Success extends ChangeCardinalityCheckResult {
@@ -113,15 +114,21 @@ object ChangeCardinalityCheckResult {
 
     final case class SuperClassCheckFailure(superClasses: List[InternalIri])
         extends CanSetCardinalityCheckResult.Failure {
-      val reason: String = "The new cardinality is not included in the cardinality of a super-class."
+      val reason: String                                  = "The new cardinality is not included in the cardinality of a super-class."
+      override val failureMessageKey: Option[String]      = Some("ontology-super-class-check-failed")
+      override val failureAffectedIris: List[InternalIri] = superClasses
     }
 
     final case class SubclassCheckFailure(subClasses: List[InternalIri]) extends CanSetCardinalityCheckResult.Failure {
-      val reason: String = "The new cardinality does not include the cardinality of a subclass."
+      val reason: String                                  = "The new cardinality does not include the cardinality of a subclass."
+      override val failureMessageKey: Option[String]      = Some("ontology-subclass-check-failed")
+      override val failureAffectedIris: List[InternalIri] = subClasses
     }
 
     final case class CurrentClassFailure(currentClassIri: InternalIri) extends CanSetCardinalityCheckResult.Failure {
-      val reason: String = "The cardinality of the current class is not included in the new cardinality."
+      val reason: String                                  = "The cardinality of the current class is not included in the new cardinality."
+      override val failureMessageKey: Option[String]      = Some("persistence-check-failed")
+      override val failureAffectedIris: List[InternalIri] = List(currentClassIri)
     }
 
     final case object KnoraOntologyCheckFailure

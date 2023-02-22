@@ -7,6 +7,7 @@ package org.knora.webapi.messages.v2.responder
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple
@@ -169,13 +170,24 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
   }
 }
 
+trait CanDoResponseV2 extends KnoraJsonLDResponseV2 {
+  def canDo: Boolean
+  def cannotDoReason: Option[JsonLDString]       = None
+  def cannotDoReasonContext: Option[JsonLDArray] = None
+}
+
 /**
  * Indicates whether an operation can be performed.
  *
  * @param canDo `true` if the operation can be performed.
  */
-final case class CanDoResponseV2(canDo: Boolean, cannotDoReason: Option[String] = None) extends KnoraJsonLDResponseV2 {
+final case class SimpleCanDoResponseV2(
+  override val canDo: Boolean,
+  override val cannotDoReason: Option[JsonLDString] = None,
+  override val cannotDoReasonContext: Option[JsonLDArray] = None
+) extends CanDoResponseV2 {
   require((cannotDoReason.nonEmpty && !canDo) || cannotDoReason.isEmpty)
+  require((cannotDoReasonContext.nonEmpty && !canDo) || cannotDoReasonContext.isEmpty)
 
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
@@ -187,10 +199,15 @@ final case class CanDoResponseV2(canDo: Boolean, cannotDoReason: Option[String] 
     }
     val bodyMap: Map[IRI, JsonLDValue] = Map(OntologyConstants.KnoraApiV2Complex.CanDo -> JsonLDBoolean(canDo))
     val reasonMap: Map[IRI, JsonLDValue] = cannotDoReason
-      .map(reason => Map(OntologyConstants.KnoraApiV2Complex.CannotDoReason -> JsonLDString(reason)))
+      .filter(_.value.nonEmpty)
+      .map(reason => Map(OntologyConstants.KnoraApiV2Complex.CannotDoReason -> reason))
+      .getOrElse(Map.empty)
+    val contextMap: Map[IRI, JsonLDValue] = cannotDoReasonContext
+      .filter(_.value.nonEmpty)
+      .map(context => Map(OntologyConstants.KnoraApiV2Complex.CannotDoContext -> context))
       .getOrElse(Map.empty)
     JsonLDDocument(
-      body = JsonLDObject(bodyMap ++ reasonMap),
+      body = JsonLDObject(bodyMap ++ reasonMap ++ contextMap),
       context = JsonLDObject(
         Map(
           OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
@@ -201,10 +218,18 @@ final case class CanDoResponseV2(canDo: Boolean, cannotDoReason: Option[String] 
     )
   }
 }
+
 object CanDoResponseV2 {
-  val yes: CanDoResponseV2                = CanDoResponseV2(canDo = true)
-  val no: CanDoResponseV2                 = CanDoResponseV2(canDo = false)
-  def no(reason: String): CanDoResponseV2 = CanDoResponseV2(canDo = false, Some(reason))
+  val yes: CanDoResponseV2 = SimpleCanDoResponseV2(canDo = true)
+  val no: CanDoResponseV2  = SimpleCanDoResponseV2(canDo = false)
+  def of(boolean: Boolean): CanDoResponseV2 = boolean match {
+    case true  => yes
+    case false => no
+  }
+  def no(reason: JsonLDString): CanDoResponseV2 =
+    SimpleCanDoResponseV2(canDo = false, cannotDoReason = Some(reason), cannotDoReasonContext = None)
+  def no(reason: JsonLDString, context: JsonLDArray): CanDoResponseV2 =
+    SimpleCanDoResponseV2(canDo = false, cannotDoReason = Some(reason), cannotDoReasonContext = Some(context))
 }
 
 /**

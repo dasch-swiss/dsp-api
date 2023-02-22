@@ -16,6 +16,10 @@ import dsp.errors.BadRequestException.missingQueryParamValue
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.rdf.JsonLDArray
+import org.knora.webapi.messages.util.rdf.JsonLDObject
+import org.knora.webapi.messages.util.rdf.JsonLDString
+import org.knora.webapi.messages.util.rdf.JsonLDValue
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.classIriKey
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.newCardinalityKey
@@ -83,7 +87,7 @@ case class RestCardinalityServiceLive(
 
   private def toCanDoResponseV2(result: CanReplaceCardinalityCheckResult): CanDoResponseV2 = result match {
     case CanReplaceCardinalityCheckResult.Success          => CanDoResponseV2.yes
-    case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(failure.reason)
+    case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(JsonLDString(failure.reason))
   }
 
   private def checkUserHasWriteAccessToOntologyOfClass(user: UserADM, classIri: InternalIri): Task[Unit] = {
@@ -118,28 +122,41 @@ case class RestCardinalityServiceLive(
   private def toCanDoResponseV2(
     result: Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]
   ): Task[CanDoResponseV2] = result match {
-    case Right(_)       => ZIO.succeed(CanDoResponseV2.yes)
-    case Left(failures) => ZIO.foreach(failures)(toExternalErrorMessage).map(_.mkString(" ")).map(CanDoResponseV2.no(_))
+    case Right(_) => ZIO.succeed(CanDoResponseV2.yes)
+    case Left(failures) => {
+      for {
+        reason  <- ZIO.foreach(failures)(toExternalErrorMessage).map(_.mkString(" ")).map(JsonLDString)
+        context <- ZIO.foreach(failures)(toExternalContext)
+      } yield CanDoResponseV2.no(reason, JsonLDArray(context))
+    }
   }
 
-  private def toExternalErrorMessage(f: CanSetCardinalityCheckResult.Failure): Task[String] =
-    f match {
-      case a: CanSetCardinalityCheckResult.SubclassCheckFailure =>
-        ZIO
-          .foreach(a.subClasses)(iriConverter.asExternalIri)
-          .map(_.mkString(","))
-          .map(sc => s"${a.reason}. Please fix subclasses first: $sc.")
-      case b: CanSetCardinalityCheckResult.SuperClassCheckFailure =>
-        ZIO
-          .foreach(b.superClasses)(iriConverter.asExternalIri)
-          .map(_.mkString(","))
-          .map(sc => s"${b.reason}. Please fix super-classes first: $sc.")
-      case c: CanSetCardinalityCheckResult.CurrentClassFailure =>
-        iriConverter
-          .asExternalIri(c.currentClassIri)
-          .map(classIri => s"${c.reason} Please fix cardinalities for class $classIri first.")
-      case d => ZIO.succeed(d.reason)
+  private def toExternalErrorMessage(failure: CanSetCardinalityCheckResult.Failure): Task[String] = {
+    val externalIris = getExternalIris(failure).map(_.mkString(","))
+    failure match {
+      case _: CanSetCardinalityCheckResult.SubclassCheckFailure =>
+        externalIris.map(iris => s"${failure.reason}. Please fix subclasses first: $iris.")
+      case _: CanSetCardinalityCheckResult.SuperClassCheckFailure =>
+        externalIris.map(iris => s"${failure.reason}. Please fix super-classes first: $iris.")
+      case _: CanSetCardinalityCheckResult.CurrentClassFailure =>
+        externalIris.map(classIri => s"${failure.reason}. Please fix cardinalities for class $classIri first.")
+      case _ => externalIris.map(iris => s"${failure.reason}. Affected IRIs: $iris.")
     }
+  }
+
+  private def getExternalIris(failure: CanSetCardinalityCheckResult.Failure): Task[List[String]] =
+    ZIO.foreach(failure.failureAffectedIris)(iriConverter.asExternalIri)
+
+  private def toExternalContext(failure: CanSetCardinalityCheckResult.Failure): Task[JsonLDObject] =
+    for {
+      externalIris     <- getExternalIris(failure)
+      affectedIrisValue = JsonLDArray(externalIris.map(JsonLDString))
+    } yield JsonLDObject(
+      Map[String, JsonLDValue](
+        "messageKey"   -> failure.failureMessageKey.map(JsonLDString).getOrElse(JsonLDString("")),
+        "affectedIris" -> affectedIrisValue
+      )
+    )
 }
 
 object RestCardinalityService {
