@@ -15,6 +15,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsServiceLive
@@ -54,6 +56,7 @@ object LayersLive {
       with AppRouterRelayingMessageHandler
       with CacheServiceManager
       with CacheService
+      with GroupsResponderADM
       with HttpServer
       with IIIFServiceManager
       with IIIFService
@@ -85,6 +88,7 @@ object LayersLive {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
