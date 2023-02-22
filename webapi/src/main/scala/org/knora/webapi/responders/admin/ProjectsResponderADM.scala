@@ -67,51 +67,42 @@ trait ProjectsResponderADM {
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
    *
-   * @param identifier the IRI, shortname, shortcode or UUID of the project.
+   * @param id the IRI, shortname, shortcode or UUID of the project.
    * @param skipCache  if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
    * @return information about the project as an optional [[ProjectADM]].
    */
-  def getSingleProjectADM(
-    identifier: ProjectIdentifierADM,
-    skipCache: Boolean = false
-  ): Task[Option[ProjectADM]]
+  def getSingleProjectADM(id: ProjectIdentifierADM, skipCache: Boolean = false): Task[Option[ProjectADM]]
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
    * as a [[ProjectGetResponseADM]].
    *
-   * @param identifier the IRI, shortname, shortcode or UUID of the project.
+   * @param id the IRI, shortname, shortcode or UUID of the project.
    * @return Information about the project as a [[ProjectGetResponseADM]].
    *
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
-  def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM]
+  def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
    * if none are found.
    *
-   * @param identifier     the IRI, shortname, shortcode or UUID of the project.
-   * @param requestingUser the user making the request.
+   * @param id     the IRI, shortname, shortcode or UUID of the project.
+   * @param user the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
-  def projectMembersGetRequestADM(
-    identifier: ProjectIdentifierADM,
-    requestingUser: UserADM
-  ): Task[ProjectMembersGetResponseADM]
+  def projectMembersGetRequestADM(id: ProjectIdentifierADM, user: UserADM): Task[ProjectMembersGetResponseADM]
 
   /**
    * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
    * if none are found
    *
-   * @param identifier     the IRI, shortname, shortcode or UUID of the project.
-   * @param requestingUser the user making the request.
+   * @param id     the IRI, shortname, shortcode or UUID of the project.
+   * @param user the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
-  def projectAdminMembersGetRequestADM(
-    identifier: ProjectIdentifierADM,
-    requestingUser: UserADM
-  ): Task[ProjectAdminMembersGetResponseADM]
+  def projectAdminMembersGetRequestADM(id: ProjectIdentifierADM, user: UserADM): Task[ProjectAdminMembersGetResponseADM]
 
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
@@ -131,27 +122,25 @@ trait ProjectsResponderADM {
   /**
    * Get project's restricted view settings.
    *
-   * @param identifier the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param id the project's identifier (IRI / shortcode / shortname / UUID)
    * @return [[ProjectRestrictedViewSettingsADM]]
    */
-  def projectRestrictedViewSettingsGetADM(
-    identifier: ProjectIdentifierADM
-  ): Task[Option[ProjectRestrictedViewSettingsADM]]
+  def projectRestrictedViewSettingsGetADM(id: ProjectIdentifierADM): Task[Option[ProjectRestrictedViewSettingsADM]]
 
   /**
    * Get project's restricted view settings.
    *
-   * @param identifier the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param id the project's identifier (IRI / shortcode / shortname / UUID)
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   def projectRestrictedViewSettingsGetRequestADM(
-    identifier: ProjectIdentifierADM
+    id: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 
   /**
    * Creates a project.
    *
-   * @param createProjectRequest the new project's information.
+   * @param createPayload the new project's information.
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -163,7 +152,7 @@ trait ProjectsResponderADM {
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   def projectCreateRequestADM(
-    createProjectRequest: ProjectCreatePayloadADM,
+    createPayload: ProjectCreatePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -172,8 +161,8 @@ trait ProjectsResponderADM {
    * Update project's basic information.
    *
    * @param projectIri           the IRI of the project.
-   * @param projectUpdatePayload the update payload.
-   * @param requestingUser       the user making the request.
+   * @param updatePayload the update payload.
+   * @param user       the user making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
    *
@@ -181,15 +170,12 @@ trait ProjectsResponderADM {
    */
   def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    projectUpdatePayload: ProjectUpdatePayloadADM,
-    requestingUser: UserADM,
+    updatePayload: ProjectUpdatePayloadADM,
+    user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
 
-  def projectDataGetRequestADM(
-    projectIdentifier: ProjectIdentifierADM,
-    requestingUser: UserADM
-  ): Task[ProjectDataGetResponseADM]
+  def projectDataGetRequestADM(id: ProjectIdentifierADM, user: UserADM): Task[ProjectDataGetResponseADM]
 }
 
 final case class ProjectsResponderADMLive(
@@ -320,28 +306,28 @@ final case class ProjectsResponderADMLive(
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
    *
-   * @param identifier           the IRI, shortname, shortcode or UUID of the project.
+   * @param id           the IRI, shortname, shortcode or UUID of the project.
    * @param skipCache            if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
    * @return information about the project as an optional [[ProjectADM]].
    */
   override def getSingleProjectADM(
-    identifier: ProjectIdentifierADM,
+    id: ProjectIdentifierADM,
     skipCache: Boolean = false
   ): Task[Option[ProjectADM]] = {
 
     logger.debug(
       s"getSingleProjectADM - id: {}, skipCache: {}",
-      getId(identifier),
+      getId(id),
       skipCache
     )
 
     for {
       maybeProjectADM <-
         if (skipCache) {
-          getProjectFromTriplestore(identifier = identifier)
+          getProjectFromTriplestore(identifier = id)
         } else {
           // getting from cache or triplestore
-          getProjectFromCacheOrTriplestore(identifier = identifier)
+          getProjectFromCacheOrTriplestore(identifier = id)
         }
     } yield maybeProjectADM
   }
@@ -350,53 +336,47 @@ final case class ProjectsResponderADMLive(
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
    * as a [[ProjectGetResponseADM]].
    *
-   * @param identifier           the IRI, shortname, shortcode or UUID of the project.
+   * @param id           the IRI, shortname, shortcode or UUID of the project.
    * @return Information about the project as a [[ProjectGetResponseADM]].
    *
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
-  override def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
-    maybeProject <- getSingleProjectADM(identifier)
-    project       = maybeProject.getOrElse(throw NotFoundException(s"Project '${getId(identifier)}' not found"))
-  } yield ProjectGetResponseADM(project)
+  override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
+    getSingleProjectADM(id)
+      .flatMap(ZIO.fromOption(_))
+      .mapBoth(_ => NotFoundException(s"Project '${getId(id)}' not found"), ProjectGetResponseADM)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
    * if none are found.
    *
-   * @param identifier           the IRI, shortname, shortcode or UUID of the project.
-   * @param requestingUser       the user making the request.
+   * @param id           the IRI, shortname, shortcode or UUID of the project.
+   * @param user       the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
   override def projectMembersGetRequestADM(
-    identifier: ProjectIdentifierADM,
-    requestingUser: UserADM
+    id: ProjectIdentifierADM,
+    user: UserADM
   ): Task[ProjectMembersGetResponseADM] =
     for {
-
       /* Get project and verify permissions. */
-      project <- getSingleProjectADM(
-                   identifier = identifier
-                 )
-
-      _ =
-        if (project.isEmpty) {
-          throw NotFoundException(s"Project '${getId(identifier)}' not found.")
-        } else {
-          if (
-            !requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(
-              project.get.id
-            ) && !requestingUser.isSystemUser
-          ) {
-            throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
-          }
-        }
+      project <- getSingleProjectADM(id)
+                   .flatMap(ZIO.fromOption(_))
+                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _ <- ZIO
+             .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
+             .when {
+               val userPermissions = user.permissions
+               !userPermissions.isSystemAdmin &&
+               !userPermissions.isProjectAdmin(project.id) &&
+               !user.isSystemUser
+             }
 
       query = twirl.queries.sparql.admin.txt
                 .getProjectMembers(
-                  maybeIri = identifier.asIriIdentifierOption,
-                  maybeShortname = identifier.asShortnameIdentifierOption,
-                  maybeShortcode = identifier.asShortcodeIdentifierOption
+                  maybeIri = id.asIriIdentifierOption,
+                  maybeShortname = id.asShortnameIdentifierOption,
+                  maybeShortcode = id.asShortcodeIdentifierOption
                 )
 
       projectMembersResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
@@ -430,34 +410,31 @@ final case class ProjectsResponderADMLive(
    * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
    * if none are found
    *
-   * @param identifier           the IRI, shortname, shortcode or UUID of the project.
-   * @param requestingUser       the user making the request.
+   * @param id           the IRI, shortname, shortcode or UUID of the project.
+   * @param user       the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
   override def projectAdminMembersGetRequestADM(
-    identifier: ProjectIdentifierADM,
-    requestingUser: UserADM
+    id: ProjectIdentifierADM,
+    user: UserADM
   ): Task[ProjectAdminMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- getSingleProjectADM(
-                   identifier = identifier
-                 )
-
-      _ =
-        if (project.isEmpty) {
-          throw NotFoundException(s"Project '${getId(identifier)}' not found.")
-        } else {
-          if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id)) {
-            throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
-          }
-        }
+      project <- getSingleProjectADM(id)
+                   .flatMap(ZIO.fromOption(_))
+                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _ <- ZIO
+             .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
+             .when {
+               !user.permissions.isSystemAdmin &&
+               !user.permissions.isProjectAdmin(project.id)
+             }
 
       query = twirl.queries.sparql.admin.txt
                 .getProjectAdminMembers(
-                  maybeIri = identifier.asIriIdentifierOption,
-                  maybeShortname = identifier.asShortnameIdentifierOption,
-                  maybeShortcode = identifier.asShortcodeIdentifierOption
+                  maybeIri = id.asIriIdentifierOption,
+                  maybeShortname = id.asShortnameIdentifierOption,
+                  maybeShortcode = id.asShortcodeIdentifierOption
                 )
 
       projectAdminMembersResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
@@ -508,22 +485,18 @@ final case class ProjectsResponderADMLive(
    */
   override def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM] =
     for {
-      maybeProject <- getSingleProjectADM(
-                        identifier = IriIdentifier
-                          .fromString(projectIri.value)
-                          .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-                      )
-
-      keywords: Seq[String] = maybeProject match {
-                                case Some(p) => p.keywords
-                                case None    => throw NotFoundException(s"Project '${projectIri.value}' not found.")
-                              }
-
-    } yield ProjectKeywordsGetResponseADM(keywords = keywords)
+      id <- IriIdentifier
+              .fromString(projectIri.value)
+              .toZIO
+              .mapError(e => BadRequestException(e.getMessage))
+      keywords <- getSingleProjectADM(id)
+                    .flatMap(ZIO.fromOption(_))
+                    .mapBoth(_ => NotFoundException(s"Project '${projectIri.value}' not found."), _.keywords)
+    } yield ProjectKeywordsGetResponseADM(keywords)
 
   override def projectDataGetRequestADM(
-    projectIdentifier: ProjectIdentifierADM,
-    requestingUser: UserADM
+    id: ProjectIdentifierADM,
+    user: UserADM
   ): Task[ProjectDataGetResponseADM] = {
 
     /**
@@ -617,18 +590,19 @@ final case class ProjectsResponderADMLive(
 
     for {
       // Get the project info.
-      maybeProject <- getSingleProjectADM(projectIdentifier)
-
-      project: ProjectADM = maybeProject.getOrElse(
-                              throw NotFoundException(s"Project '${getId(projectIdentifier)}' not found.")
-                            )
+      project <- getSingleProjectADM(id)
+                   .flatMap(ZIO.fromOption(_))
+                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
 
       // Check that the user has permission to download the data.
-      _ = if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(project.id))) {
-            throw ForbiddenException(
-              s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can request a project's data"
+      _ <-
+        ZIO
+          .fail(
+            ForbiddenException(
+              s"You are logged in as ${user.username}, but only a system administrator or project administrator can request a project's data."
             )
-          }
+          )
+          .when(!(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(project.id)))
 
       // Make a temporary directory for the downloaded data.
       tempDir = Files.createTempDirectory(project.shortname)
@@ -692,18 +666,18 @@ final case class ProjectsResponderADMLive(
   /**
    * Get project's restricted view settings.
    *
-   * @param identifier  the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param id  the project's identifier (IRI / shortcode / shortname / UUID)
    *
    * @return [[ProjectRestrictedViewSettingsADM]]
    */
   override def projectRestrictedViewSettingsGetADM(
-    identifier: ProjectIdentifierADM
+    id: ProjectIdentifierADM
   ): Task[Option[ProjectRestrictedViewSettingsADM]] = {
     val query = twirl.queries.sparql.admin.txt
       .getProjects(
-        maybeIri = identifier.asIriIdentifierOption,
-        maybeShortname = identifier.asShortnameIdentifierOption,
-        maybeShortcode = identifier.asShortcodeIdentifierOption
+        maybeIri = id.asIriIdentifierOption,
+        maybeShortname = id.asShortnameIdentifierOption,
+        maybeShortcode = id.asShortcodeIdentifierOption
       )
     for {
       projectResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString)
@@ -730,24 +704,26 @@ final case class ProjectsResponderADMLive(
   /**
    * Get project's restricted view settings.
    *
-   * @param identifier  the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param id  the project's identifier (IRI / shortcode / shortname / UUID)
    *
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   override def projectRestrictedViewSettingsGetRequestADM(
-    identifier: ProjectIdentifierADM
+    id: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    for {
-      maybeSettings <- projectRestrictedViewSettingsGetADM(identifier)
-      settings       = maybeSettings.getOrElse(throw NotFoundException(s"Project '${getId(identifier)}' not found."))
-    } yield ProjectRestrictedViewSettingsGetResponseADM(settings)
+    projectRestrictedViewSettingsGetADM(id)
+      .flatMap(ZIO.fromOption(_))
+      .mapBoth(
+        _ => NotFoundException(s"Project '${getId(id)}' not found."),
+        ProjectRestrictedViewSettingsGetResponseADM
+      )
 
   /**
    * Update project's basic information.
    *
    * @param projectIri           the IRI of the project.
-   * @param projectUpdatePayload the update payload.
-   * @param requestingUser       the user making the request.
+   * @param updatePayload the update payload.
+   * @param user       the user making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
    *
@@ -755,8 +731,8 @@ final case class ProjectsResponderADMLive(
    */
   override def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    projectUpdatePayload: ProjectUpdatePayloadADM,
-    requestingUser: UserADM,
+    updatePayload: ProjectUpdatePayloadADM,
+    user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
 
@@ -782,7 +758,7 @@ final case class ProjectsResponderADMLive(
         } yield result
       }
 
-    val task = changeProjectTask(projectIri, projectUpdatePayload, requestingUser)
+    val task = changeProjectTask(projectIri, updatePayload, user)
     IriLocker.runWithIriLock(apiRequestID, projectIri.value, task)
   }
 
@@ -955,7 +931,7 @@ final case class ProjectsResponderADMLive(
   /**
    * Creates a project.
    *
-   * @param createProjectRequest the new project's information.
+   * @param createPayload the new project's information.
    *
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
@@ -968,7 +944,7 @@ final case class ProjectsResponderADMLive(
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   override def projectCreateRequestADM(
-    createProjectRequest: ProjectCreatePayloadADM,
+    createPayload: ProjectCreatePayloadADM,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -1119,26 +1095,21 @@ final case class ProjectsResponderADMLive(
         _ <- triplestoreService.sparqlHttpUpdate(createNewProjectSparqlString)
 
         // try to retrieve newly created project (will also add to cache)
-        maybeNewProjectADM <-
-          getSingleProjectADM(
-            identifier = IriIdentifier
-              .fromString(newProjectIRI)
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-            skipCache = true
-          )
-
+        id <- IriIdentifier.fromString(newProjectIRI).toZIO.mapError(e => BadRequestException(e.getMessage))
         // check to see if we could retrieve the new project
-        newProjectADM = maybeNewProjectADM.getOrElse(
-                          throw UpdateNotPerformedException(
-                            s"Project $newProjectIRI was not created. Please report this as a possible bug."
-                          )
-                        )
+        newProjectADM <- getSingleProjectADM(id, skipCache = true)
+                           .flatMap(ZIO.fromOption(_))
+                           .orElseFail(
+                             UpdateNotPerformedException(
+                               s"Project $newProjectIRI was not created. Please report this as a possible bug."
+                             )
+                           )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
-    val task = projectCreateTask(createProjectRequest, requestingUser)
+    val task = projectCreateTask(createPayload, requestingUser)
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 

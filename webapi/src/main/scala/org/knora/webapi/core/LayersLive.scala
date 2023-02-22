@@ -17,7 +17,7 @@ import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
-import org.knora.webapi.responders.admin.ProjectsService
+import org.knora.webapi.responders.admin.ProjectsServiceLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -98,7 +98,7 @@ object LayersLive {
       PredicateRepositoryLive.layer,
       ProjectsRouteZ.layer,
       ProjectsResponderADMLive.layer,
-      ProjectsService.live,
+      ProjectsServiceLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
