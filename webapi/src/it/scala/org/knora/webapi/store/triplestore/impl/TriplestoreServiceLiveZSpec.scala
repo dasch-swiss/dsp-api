@@ -45,8 +45,7 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
       },
       test("successfully call a request that triggers a TriplestoreResponseException") {
         val searchStringOfDeath =
-          """|
-             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#> 
+          """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#> 
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>   
              |
              |SELECT DISTINCT ?resource (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), ""); separator="") AS ?valueObjectConcat)  
@@ -92,8 +91,7 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
              |}
              |GROUP BY ?resource ORDER BY ?resource 
              |OFFSET 0 
-             |LIMIT 25
-             |""".stripMargin
+             |LIMIT 25""".stripMargin
 
         for {
           // TODO: Need to first load testdata. Only then this query should trigger a 500 error in Fuseki.
