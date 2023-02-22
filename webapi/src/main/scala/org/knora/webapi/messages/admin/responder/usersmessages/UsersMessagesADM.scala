@@ -15,6 +15,7 @@ import dsp.errors.DataConversionException
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
@@ -122,7 +123,7 @@ case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], ne
 /**
  * An abstract trait representing message that can be sent to `UsersResponderADM`.
  */
-sealed trait UsersResponderRequestADM extends KnoraRequestADM
+sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
  * Get all information about all users in form of a sequence of [[UserADM]]. Returns an empty sequence if
