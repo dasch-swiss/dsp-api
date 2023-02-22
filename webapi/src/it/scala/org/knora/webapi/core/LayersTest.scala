@@ -38,6 +38,8 @@ import zio._
 
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.responders.admin.SipiResponderADM
+import org.knora.webapi.responders.admin.SipiResponderADMLive
 
 object LayersTest {
 
@@ -67,6 +69,7 @@ object LayersTest {
     with ResourceInfoRepo
     with RestCardinalityService
     with RestResourceInfoService
+    with SipiResponderADM
     with State
     with StringFormatter
     with TestClientService
@@ -98,6 +101,7 @@ object LayersTest {
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
+      SipiResponderADMLive.layer,
       State.layer,
       StringFormatter.test,
       TestClientService.layer,

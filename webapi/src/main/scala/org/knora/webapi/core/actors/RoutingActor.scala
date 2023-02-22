@@ -16,7 +16,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
@@ -84,7 +83,6 @@ final case class RoutingActor(
   private val listsResponderADM: ListsResponderADM             = new ListsResponderADM(responderData)
   private val permissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
   private val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData)
-  private val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
 
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
@@ -131,8 +129,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), permissionsResponderADM.receive(permissionsResponderRequestADM), log)
     case storeResponderRequestADM: StoreResponderRequestADM =>
       ActorUtil.future2Message(sender(), storeResponderADM.receive(storeResponderRequestADM), log)
-    case sipiResponderRequestADM: SipiResponderRequestADM =>
-      ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
     case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg))
     case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg))
     case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg))
