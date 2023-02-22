@@ -7,6 +7,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
@@ -34,6 +36,9 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import zio._
 
+import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponderADMLive
+
 object LayersTest {
 
   /**
@@ -51,6 +56,7 @@ object LayersTest {
     with CacheService
     with CacheServiceManager
     with CardinalityService
+    with GroupsResponderADM
     with HttpServer
     with IIIFServiceManager
     with IriConverter
@@ -66,6 +72,7 @@ object LayersTest {
     with TestClientService
     with TriplestoreService
     with TriplestoreServiceManager
+    with UsersResponderADM
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -77,6 +84,7 @@ object LayersTest {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
@@ -94,7 +102,8 @@ object LayersTest {
       StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      TriplestoreServiceManager.layer
+      TriplestoreServiceManager.layer,
+      UsersResponderADMLive.layer
     )
 
   private val fusekiAndSipiTestcontainers =
