@@ -340,7 +340,7 @@ case class TriplestoreServiceLive(
       _ <- ZIO.logDebug("resetTripleStoreContent")
 
       // drop old content
-      _ <- dropDataGraphByGraph()
+      _ <- dropAllTriplestoreContent()
 
       // insert new content
       _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
