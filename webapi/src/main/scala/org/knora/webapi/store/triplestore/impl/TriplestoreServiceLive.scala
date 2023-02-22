@@ -383,20 +383,12 @@ case class TriplestoreServiceLive(
    *
    * @return All graphs stored in the triplestore as a [[Seq[String]]
    */
-  private def getAllGraphs(): UIO[Seq[String]] = {
-    val sparqlQuery =
-      """|
-         | SELECT DISTINCT ?graph
-         | WHERE {
-         |  GRAPH ?graph { ?s ?p ?o }
-         | }""".stripMargin
-
+  private def getAllGraphs(): UIO[Seq[String]] =
     for {
-      res      <- sparqlHttpSelect(sparqlQuery)
-      bindings <- ZIO.succeed(res.results.bindings)
-      graphs    = bindings.map(_.rowMap("graph"))
+      res     <- sparqlHttpSelect("select ?g {graph ?g {?s ?p ?o}} group by ?g")
+      bindings = res.results.bindings
+      graphs   = bindings.map(_.rowMap("g"))
     } yield graphs
-  }
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`
