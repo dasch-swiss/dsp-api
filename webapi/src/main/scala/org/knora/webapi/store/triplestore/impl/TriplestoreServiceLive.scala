@@ -347,6 +347,19 @@ case class TriplestoreServiceLive(
     } yield ResetRepositoryContentACK()
 
   /**
+   * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
+   */
+  def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] = {
+    val sparqlQuery = "DROP ALL"
+
+    for {
+      _      <- ZIO.logDebug("==>> Drop All Data Start")
+      result <- getSparqlHttpResponse(sparqlQuery, isUpdate = true)
+      _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
+    } yield DropAllRepositoryContentACK()
+  }
+
+  /**
    * Drops all triplestore data graph by graph using "DROP GRAPH" SPARQL query.
    * This method is useful in cases with large amount of data (over 10 million statements),
    * where the method [[dropAllTriplestoreContent()]] could create timeout issues.

@@ -127,6 +127,11 @@ trait TriplestoreService {
   ): UIO[ResetRepositoryContentACK]
 
   /**
+   * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
+   */
+  def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK]
+
+  /**
    * Wipes all triplestore data out using HTTP requests.
    */
   def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK]

@@ -77,7 +77,7 @@ object TriplestoreServiceManager {
           case SparqlAskRequest(sparql: String)     => ts.sparqlHttpAsk(sparql)
           case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) =>
             ts.resetTripleStoreContent(rdfDataObjects, prependDefaults)
-          case DropAllTRepositoryContent() => ts.dropDataGraphByGraph()
+          case DropAllTRepositoryContent() => ts.dropAllTriplestoreContent()
           case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
             ts.insertDataIntoTriplestore(rdfDataObjects, true)
           case CheckTriplestoreRequest()                   => ts.checkTriplestore()
