@@ -51,14 +51,7 @@ trait PermissionsResponderADM {
    * @param groupsPerProject the groups inside each project the user is member of.
    * @return a the user's resulting set of administrative permissions for each project.
    */
-  def userAdministrativePermissionsGetADM(
-    groupsPerProject: _root_.scala.collection.immutable.Map[
-      _root_.org.knora.webapi.IRI,
-      _root_.scala.collection.immutable.Seq[_root_.org.knora.webapi.IRI]
-    ]
-  ): zio.Task[_root_.scala.collection.immutable.Map[_root_.org.knora.webapi.IRI, _root_.scala.collection.immutable.Set[
-    _root_.org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-  ]]]
+  def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Task[Map[IRI, Set[PermissionADM]]]
 }
 
 final case class PermissionsResponderADMLive(
