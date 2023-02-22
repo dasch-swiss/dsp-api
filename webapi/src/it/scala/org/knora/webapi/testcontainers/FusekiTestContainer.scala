@@ -3,7 +3,6 @@ package org.knora.webapi.testcontainers
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import zio._
-import zio.logging.backend.SLF4J
 
 import org.knora.webapi.http.version.BuildInfo
 
@@ -31,7 +30,7 @@ object FusekiTestContainer {
   val layer: ZLayer[Any, Nothing, FusekiTestContainer] =
     ZLayer.scoped {
       for {
-        tc <- ZIO.acquireRelease(acquire)(release(_)).orDie @@ SLF4J.loggerName(this.getClass().getName())
+        tc <- ZIO.acquireRelease(acquire)(release(_)).orDie @@ zio.logging.loggerName(this.getClass().getName())
       } yield FusekiTestContainer(tc)
     }
 }
