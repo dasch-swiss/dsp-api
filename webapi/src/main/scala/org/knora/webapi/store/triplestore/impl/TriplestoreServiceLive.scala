@@ -340,24 +340,11 @@ case class TriplestoreServiceLive(
       _ <- ZIO.logDebug("resetTripleStoreContent")
 
       // drop old content
-      _ <- dropAllTriplestoreContent()
+      _ <- dropDataGraphByGraph()
 
       // insert new content
       _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
     } yield ResetRepositoryContentACK()
-
-  /**
-   * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
-   */
-  def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK] = {
-    val sparqlQuery = "DROP ALL"
-
-    for {
-      _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- getSparqlHttpResponse(sparqlQuery, isUpdate = true)
-      _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
-    } yield DropAllRepositoryContentACK()
-  }
 
   /**
    * Drops all triplestore data graph by graph using "DROP GRAPH" SPARQL query.
@@ -368,11 +355,15 @@ case class TriplestoreServiceLive(
     val sparqlQuery = (graph: String) => s"DROP GRAPH <$graph>"
 
     for {
-      _      <- ZIO.logInfo("==>> Drop All Data Start")
+      _      <- ZIO.logWarning("==>> Drop All Data Start")
       graphs <- getAllGraphs()
+      _      <- ZIO.logInfo(s"Found graphs: ${graphs.length}")
       _ <- ZIO.foreach(graphs)(graph =>
-             getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true)
-               .tap(result => ZIO.logDebug(s"==>> Dropped graph: $graph"))
+             for {
+               _ <- ZIO.logInfo(s"Dropping graph: $graph")
+               _ <- getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true)
+               _ <- ZIO.logInfo(s"==>> Dropped graph: $graph")
+             } yield ()
            )
       _ <- ZIO.logInfo("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
