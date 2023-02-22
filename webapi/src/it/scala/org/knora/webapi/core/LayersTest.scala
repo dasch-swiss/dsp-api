@@ -36,6 +36,9 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import zio._
 
+import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponderADMLive
+
 object LayersTest {
 
   /**
@@ -69,6 +72,7 @@ object LayersTest {
     with TestClientService
     with TriplestoreService
     with TriplestoreServiceManager
+    with UsersResponderADM
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -98,7 +102,8 @@ object LayersTest {
       StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      TriplestoreServiceManager.layer
+      TriplestoreServiceManager.layer,
+      UsersResponderADMLive.layer
     )
 
   private val fusekiAndSipiTestcontainers =
