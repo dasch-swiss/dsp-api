@@ -378,7 +378,7 @@ case class TriplestoreServiceLive(
                _ <- ZIO.logInfo(s"==>> Dropped graph: $graph")
              } yield ()
            )
-      _ <- ZIO.logInfo("==>> Drop All Data End")
+      _ <- ZIO.logWarning("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
   }
 
