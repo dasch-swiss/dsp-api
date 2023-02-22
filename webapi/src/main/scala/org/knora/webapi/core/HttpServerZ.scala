@@ -11,12 +11,12 @@ import zio.http.middleware.Cors
 import zio.http.model.Method
 import zio.logging.LogAnnotation.TraceId
 
+import java.util.UUID
 import scala.annotation.tailrec
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
-import java.util.UUID
 
 object HttpServerZ {
 
