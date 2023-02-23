@@ -195,21 +195,19 @@ final case class CanDoResponseV2(
       .filter(_.value.nonEmpty)
       .map(reason => Map(OntologyConstants.KnoraApiV2Complex.CannotDoReason -> reason))
       .getOrElse(Map.empty)
-    val contextMap: Map[IRI, JsonLDValue] = cannotDoReasonContext
+    val cannotDoContextMap: Map[IRI, JsonLDValue] = cannotDoReasonContext
       .map(context => Map(OntologyConstants.KnoraApiV2Complex.CannotDoContext -> context))
       .getOrElse(Map.empty)
 
-    val body = JsonLDObject(bodyMap ++ reasonMap ++ contextMap)
-    JsonLDDocument(
-      body,
-      context = JsonLDObject(
-        Map(
-          OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
-            OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-          )
+    val body = JsonLDObject(bodyMap ++ reasonMap ++ cannotDoContextMap)
+    val context = JsonLDObject(
+      Map(
+        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
+          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
         )
       )
     )
+    JsonLDDocument(body, context)
   }
 }
 
