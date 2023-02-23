@@ -83,7 +83,7 @@ case class RestCardinalityServiceLive(
 ) extends RestCardinalityService {
 
   private val permissionService: PermissionService = PermissionService(ontologyRepo)
-  private val canSetResponsePrefix= s"${KnoraApiV2PrefixExpansion}canSetCardinality"
+  private val canSetResponsePrefix: String         = s"${KnoraApiV2PrefixExpansion}canSetCardinality"
 
   def canReplaceCardinality(classIri: IRI, user: UserADM): Task[CanDoResponseV2] =
     for {
