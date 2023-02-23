@@ -218,10 +218,18 @@ object CanDoResponseV2 {
     case true  => yes
     case false => no
   }
-  def no(reason: JsonLDString): CanDoResponseV2 =
-    CanDoResponseV2(canDo = JsonLDBoolean.FALSE, cannotDoReason = Some(reason), cannotDoReasonContext = None)
-  def no(reason: JsonLDString, context: JsonLDObject): CanDoResponseV2 =
-    CanDoResponseV2(canDo = JsonLDBoolean.FALSE, cannotDoReason = Some(reason), cannotDoReasonContext = Some(context))
+  def no(reason: String): CanDoResponseV2 =
+    CanDoResponseV2(
+      canDo = JsonLDBoolean.FALSE,
+      cannotDoReason = Some(JsonLDString(reason)),
+      cannotDoReasonContext = None
+    )
+  def no(reason: String, context: JsonLDObject): CanDoResponseV2 =
+    CanDoResponseV2(
+      canDo = JsonLDBoolean.FALSE,
+      cannotDoReason = Some(JsonLDString(reason)),
+      cannotDoReasonContext = Some(context)
+    )
 }
 
 /**

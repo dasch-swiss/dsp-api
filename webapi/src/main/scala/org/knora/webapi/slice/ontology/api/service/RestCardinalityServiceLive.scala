@@ -94,7 +94,7 @@ case class RestCardinalityServiceLive(
 
   private def toCanDoResponseV2(result: CanReplaceCardinalityCheckResult): CanDoResponseV2 = result match {
     case CanReplaceCardinalityCheckResult.Success          => CanDoResponseV2.yes
-    case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(JsonLDString(failure.reason))
+    case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(failure.reason)
   }
 
   private def checkUserHasWriteAccessToOntologyOfClass(user: UserADM, classIri: InternalIri): Task[Unit] = {
@@ -132,7 +132,7 @@ case class RestCardinalityServiceLive(
     case Right(_) => ZIO.succeed(CanDoResponseV2.yes)
     case Left(failures) =>
       for {
-        reason  <- ZIO.foreach(failures)(toExternalErrorMessage).map(_.mkString(" ")).map(JsonLDString)
+        reason  <- ZIO.foreach(failures)(toExternalErrorMessage).map(_.mkString(" "))
         context <- ZIO.foreach(failures)(toExternalContext)
       } yield CanDoResponseV2.no(
         reason,
