@@ -10,11 +10,12 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import dsp.errors.BadRequestException.invalidQueryParamValue
 import dsp.errors.BadRequestException.missingQueryParamValue
 import dsp.errors.ForbiddenException
+
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDArray
 import org.knora.webapi.messages.util.rdf.JsonLDObject
@@ -68,6 +69,11 @@ private final case class PermissionService(ontologyRepo: OntologyRepo) {
       hasPermission   = projectIriMaybe.exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
     } yield hasPermission
   }
+}
+object RestCardinalityService {
+  val classIriKey: String       = "classIri"
+  val propertyIriKey: String    = "propertyIri"
+  val newCardinalityKey: String = "newCardinality"
 }
 
 case class RestCardinalityServiceLive(
@@ -123,12 +129,14 @@ case class RestCardinalityServiceLive(
     result: Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]
   ): Task[CanDoResponseV2] = result match {
     case Right(_) => ZIO.succeed(CanDoResponseV2.yes)
-    case Left(failures) => {
+    case Left(failures) =>
       for {
         reason  <- ZIO.foreach(failures)(toExternalErrorMessage).map(_.mkString(" ")).map(JsonLDString)
         context <- ZIO.foreach(failures)(toExternalContext)
-      } yield CanDoResponseV2.no(reason, JsonLDArray(context))
-    }
+      } yield CanDoResponseV2.no(
+        reason,
+        JsonLDObject(Map(s"${KnoraApiV2PrefixExpansion}cansetCardinalityCheckFailure" -> JsonLDArray(context)))
+      )
   }
 
   private def toExternalErrorMessage(failure: CanSetCardinalityCheckResult.Failure): Task[String] = {
@@ -149,20 +157,30 @@ case class RestCardinalityServiceLive(
 
   private def toExternalContext(failure: CanSetCardinalityCheckResult.Failure): Task[JsonLDObject] =
     for {
-      externalIris     <- getExternalIris(failure)
-      affectedIrisValue = JsonLDArray(externalIris.map(JsonLDString))
+      externalIrisValues <- getExternalIris(failure).map(iris => JsonLDArray(iris.map(iriValue)))
+      messageKey          = getMessageKeyKey(failure)
     } yield JsonLDObject(
       Map[String, JsonLDValue](
-        "messageKey"   -> failure.failureMessageKey.map(JsonLDString).getOrElse(JsonLDString("")),
-        "affectedIris" -> affectedIrisValue
+        messageKey -> externalIrisValues
       )
     )
+
+  private def getMessageKeyKey(failure: CanSetCardinalityCheckResult.Failure): String = {
+    val prefix = s"${KnoraApiV2PrefixExpansion}cansetCardinality"
+    val middle = failure match {
+      case CanSetCardinalityCheckResult.CurrentClassFailure(_)    => "Persistence"
+      case CanSetCardinalityCheckResult.KnoraOntologyCheckFailure => "KnoraOntology"
+      case CanSetCardinalityCheckResult.SubclassCheckFailure(_)   => "OntologySubclass"
+      case CanSetCardinalityCheckResult.SuperClassCheckFailure(_) => "OntologySuperclass"
+      case _                                                      => ""
+    }
+    s"$prefix${middle}CheckFailed"
+  }
+
+  private def iriValue(iri: String) = JsonLDObject(Map("@id" -> JsonLDString(iri)))
 }
 
-object RestCardinalityService {
-  val classIriKey: String       = "classIri"
-  val propertyIriKey: String    = "propertyIri"
-  val newCardinalityKey: String = "newCardinality"
+object RestCardinalityServiceLive {
   val layer: ZLayer[CardinalityService with IriConverter with OntologyRepo, Nothing, RestCardinalityService] =
     ZLayer.fromFunction(RestCardinalityServiceLive.apply _)
 }

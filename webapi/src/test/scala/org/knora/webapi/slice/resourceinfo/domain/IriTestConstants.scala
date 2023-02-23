@@ -4,8 +4,12 @@
  */
 
 package org.knora.webapi.slice.resourceinfo.domain
+import org.knora.webapi.IRI
 
 object IriTestConstants {
+  object Project {
+    val TestProject: IRI = "http://rdfh.ch/projects/0000"
+  }
   private def makeEntity(ontologyIri: InternalIri, entityName: String) =
     InternalIri(s"${ontologyIri.value}#$entityName")
 
@@ -31,6 +35,11 @@ object IriTestConstants {
       val Publication: InternalIri    = makeEntity(Biblio.Ontology, "Publication")
       val Article: InternalIri        = makeEntity(Biblio.Ontology, "Article")
       val JournalArticle: InternalIri = makeEntity(Biblio.Ontology, "JournalArticle")
+    }
+    object Instance {
+      val SomePublicationInstance: InternalIri = makeEntity(Biblio.Ontology, "somePublicationInstance")
+      val SomeArticleInstance: InternalIri = makeEntity(Biblio.Ontology, "someArticleInstance")
+      val SomeJournalArticleInstance: InternalIri = makeEntity(Biblio.Ontology, "someJournalArticleInstance")
     }
   }
 

@@ -12,7 +12,7 @@ import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
@@ -38,6 +38,7 @@ import zio._
 
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 
 object LayersTest {
 
@@ -96,7 +97,7 @@ object LayersTest {
       PredicateRepositoryLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
-      RestCardinalityService.layer,
+      RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
       State.layer,
       StringFormatter.test,

@@ -9,10 +9,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import zio.prelude.Validation
-
 import java.util.UUID.randomUUID
 import scala.concurrent.Future
-
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -21,6 +19,7 @@ import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -38,6 +37,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeZioApiV2ComplexResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.

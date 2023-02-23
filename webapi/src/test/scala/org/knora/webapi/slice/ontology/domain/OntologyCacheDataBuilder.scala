@@ -19,8 +19,10 @@ import org.knora.webapi.slice.ontology.domain.ReadClassInfoV2Builder.ClassInfoCo
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIriKeyMap
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromInternalIri
+import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromString
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.IRI
 
 object SmartIriConversion {
 
@@ -35,6 +37,11 @@ object SmartIriConversion {
   implicit class TestSmartIriFromInternalIri(internalIri: InternalIri) {
     private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
     def smartIri: SmartIri                   = sf.toSmartIri(internalIri.value, requireInternal = true)
+  }
+
+  implicit class TestSmartIriFromString(iri: IRI) {
+    private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+    def smartIri: SmartIri                   = sf.toSmartIri(iri)
   }
 }
 
@@ -75,6 +82,9 @@ object ReadOntologyV2Builder {
       copy(ro = ro.copy(classes = ro.classes + (info.entityInfoContent.classIri.internal -> info)))
 
     def addClassInfo(infoBuilder: ReadClassInfoV2Builder.Builder): Builder = addClassInfo(infoBuilder.build)
+
+    def assignToProject(projectIri: IRI): Builder =
+      copy(ro = ro.copy(ontologyMetadata = ro.ontologyMetadata.copy(projectIri = Some(projectIri.smartIri))))
 
     def build: ReadOntologyV2 = ro
   }
