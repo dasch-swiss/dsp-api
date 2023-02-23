@@ -144,11 +144,11 @@ case class RestCardinalityServiceLive(
     val externalIris = getExternalIris(failure).map(_.mkString(","))
     failure match {
       case _: CanSetCardinalityCheckResult.SubclassCheckFailure =>
-        externalIris.map(iris => s"${failure.reason}. Please fix subclasses first: $iris.")
+        externalIris.map(iris => s"${failure.reason} Please fix subclasses first: $iris.")
       case _: CanSetCardinalityCheckResult.SuperClassCheckFailure =>
-        externalIris.map(iris => s"${failure.reason}. Please fix super-classes first: $iris.")
+        externalIris.map(iris => s"${failure.reason} Please fix super-classes first: $iris.")
       case _: CanSetCardinalityCheckResult.CurrentClassFailure =>
-        externalIris.map(classIri => s"${failure.reason}. Please fix cardinalities for class $classIri first.")
+        externalIris.map(classIri => s"${failure.reason} Please fix cardinalities for class $classIri first.")
       case _ => externalIris.map(iris => s"${failure.reason}. Affected IRIs: $iris.")
     }
   }
@@ -171,7 +171,7 @@ case class RestCardinalityServiceLive(
       case CanSetCardinalityCheckResult.CurrentClassFailure(_)    => "Persistence"
       case CanSetCardinalityCheckResult.KnoraOntologyCheckFailure => "KnoraOntology"
       case CanSetCardinalityCheckResult.SubclassCheckFailure(_)   => "OntologySubclass"
-      case CanSetCardinalityCheckResult.SuperClassCheckFailure(_) => "OntologySuperclass"
+      case CanSetCardinalityCheckResult.SuperClassCheckFailure(_) => "OntologySuperClass"
       case _                                                      => ""
     }
     s"$canSetResponsePrefix${middle}CheckFailed"

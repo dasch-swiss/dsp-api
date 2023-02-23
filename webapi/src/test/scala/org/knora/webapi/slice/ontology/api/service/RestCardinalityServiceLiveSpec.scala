@@ -59,7 +59,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                      CanSetCardinalityCheckResult.SubclassCheckFailure(
                        List(IriTestConstants.Biblio.Instance.SomePublicationInstance)
                      ),
-                     CanSetCardinalityCheckResult.SubclassCheckFailure(
+                     CanSetCardinalityCheckResult.SuperClassCheckFailure(
                        List(IriTestConstants.Biblio.Instance.SomeJournalArticleInstance)
                      )
                    )
@@ -70,23 +70,26 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
             responseJson == parseJson(
               """
                 |{
-                |  "knora-api:canDo":false,
-                |  "knora-api:cannotDoReason":"The new cardinality does not include the cardinality of a subclass.. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance. The new cardinality does not include the cardinality of a subclass.. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance.",
-                |  "knora-api:cannotDoContext":
-                |  {
-                |    "knora-api:canSetCardinalityCheckFailure":
-                |    [
+                |  "knora-api:canDo": false,
+                |  "knora-api:cannotDoReason": "The new cardinality does not include the cardinality of a subclass. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance. The new cardinality is not included in the cardinality of a super-class. Please fix super-classes first: http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance.",
+                |  "knora-api:cannotDoContext": {
+                |    "knora-api:canSetCardinalityCheckFailure": [
                 |      {
-                |        "knora-api:canSetCardinalityOntologySubclassCheckFailed":
-                |          {"@id":"http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance"}
+                |        "knora-api:canSetCardinalityOntologySubclassCheckFailed": {
+                |          "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance"
+                |        }
                 |      },
                 |      {
-                |         "knora-api:canSetCardinalityOntologySubclassCheckFailed":
-                |         {"@id":"http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance"}
+                |        "knora-api:canSetCardinalityOntologySuperClassCheckFailed": {
+                |          "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance"
+                |        }
                 |      }
                 |    ]
                 |  },
-                |  "@context":{"knora-api":"http://api.knora.org/ontology/knora-api/v2#"}}
+                |  "@context": {
+                |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+                |  }
+                |}
                 |""".stripMargin
             )
           )
@@ -107,7 +110,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
               """
                 |{
                 |  "knora-api:canDo": false,
-                |  "knora-api:cannotDoReason": "The new cardinality does not include the cardinality of a subclass.. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance.",
+                |  "knora-api:cannotDoReason": "The new cardinality does not include the cardinality of a subclass. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance.",
                 |  "knora-api:cannotDoContext":
                 |  {
                 |    "knora-api:canSetCardinalityCheckFailure":
