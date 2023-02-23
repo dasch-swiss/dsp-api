@@ -1,31 +1,31 @@
 package org.knora.webapi.slice.ontology.api.service
 
-import zio.test._
 import zio._
+import zio.test._
 
+import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.replaceSuccess
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.setSuccess
-import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult._
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
-import org.knora.webapi.util.JsonHelper.renderResponseJson
 import org.knora.webapi.util.JsonHelper.StringToJson
 import org.knora.webapi.util.JsonHelper.parseJson
-import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.util.JsonHelper.renderResponseJson
 
 object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
   private val ontology = OntologyCacheDataBuilder.builder

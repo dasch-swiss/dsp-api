@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology.domain
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -22,7 +23,6 @@ import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFro
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromString
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.IRI
 
 object SmartIriConversion {
 

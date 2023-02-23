@@ -37,8 +37,8 @@ object IriTestConstants {
       val JournalArticle: InternalIri = makeEntity(Biblio.Ontology, "JournalArticle")
     }
     object Instance {
-      val SomePublicationInstance: InternalIri = makeEntity(Biblio.Ontology, "somePublicationInstance")
-      val SomeArticleInstance: InternalIri = makeEntity(Biblio.Ontology, "someArticleInstance")
+      val SomePublicationInstance: InternalIri    = makeEntity(Biblio.Ontology, "somePublicationInstance")
+      val SomeArticleInstance: InternalIri        = makeEntity(Biblio.Ontology, "someArticleInstance")
       val SomeJournalArticleInstance: InternalIri = makeEntity(Biblio.Ontology, "someJournalArticleInstance")
     }
   }
