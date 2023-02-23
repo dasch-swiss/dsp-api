@@ -40,6 +40,8 @@ import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
 
 object LayersTest {
 
@@ -58,6 +60,7 @@ object LayersTest {
     with CacheService
     with CacheServiceManager
     with CardinalityService
+    with CkanResponderV1
     with GroupsResponderADM
     with HttpServer
     with IIIFServiceManager
@@ -87,6 +90,7 @@ object LayersTest {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
