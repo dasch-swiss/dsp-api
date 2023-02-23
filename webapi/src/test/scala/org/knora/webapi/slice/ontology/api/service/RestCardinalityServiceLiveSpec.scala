@@ -29,7 +29,6 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 import org.knora.webapi.util.JsonHelper.StringToJson
-import org.knora.webapi.util.JsonHelper.parseJson
 import org.knora.webapi.util.JsonHelper.renderResponseJson
 
 object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
@@ -75,7 +74,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
             response     <- RestCardinalityService.canSetCardinality(classIri, propertyIri, "1", userWithAccess)
             responseJson <- renderResponseJson(response)
           } yield assertTrue(
-            responseJson == parseJson(
+            responseJson ==
               """
                 |{
                 |  "knora-api:canDo": false,
@@ -103,8 +102,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
                 |  }
                 |}
-                |""".stripMargin
-            )
+                |""".asJson
           )
         },
         test("should render a fail Response correctly with single Reason and Context") {
@@ -119,7 +117,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
             response     <- RestCardinalityService.canSetCardinality(classIri, propertyIri, "1", userWithAccess)
             responseJson <- renderResponseJson(response)
           } yield assertTrue(
-            responseJson == parseJson(
+            responseJson ==
               """
                 |{
                 |  "knora-api:canDo": false,
@@ -134,8 +132,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |  },
                 |  "@context":{"knora-api":"http://api.knora.org/ontology/knora-api/v2#"}
                 |}
-                |""".stripMargin
-            )
+                |""".asJson
           )
         }
       ),
