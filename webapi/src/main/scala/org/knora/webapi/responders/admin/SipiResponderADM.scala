@@ -40,9 +40,7 @@ trait SipiResponderADM {
    * @param request the request.
    * @return a [[SipiFileInfoGetResponseADM]].
    */
-  def getFileInfoForSipiADM(
-    request: _root_.org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
-  ): zio.Task[_root_.org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM]
+  def getFileInfoForSipiADM(request: SipiFileInfoGetRequestADM): Task[SipiFileInfoGetResponseADM]
 }
 
 final case class SipiResponderADMLive(
