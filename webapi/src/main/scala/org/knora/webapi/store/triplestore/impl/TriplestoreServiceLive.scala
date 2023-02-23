@@ -368,13 +368,17 @@ case class TriplestoreServiceLive(
     val sparqlQuery = (graph: String) => s"DROP GRAPH <$graph>"
 
     for {
-      _      <- ZIO.logInfo("==>> Drop All Data Start")
+      _      <- ZIO.logWarning("==>> Drop All Data Start")
       graphs <- getAllGraphs()
+      _      <- ZIO.logInfo(s"Found graphs: ${graphs.length}")
       _ <- ZIO.foreach(graphs)(graph =>
-             getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true)
-               .tap(result => ZIO.logDebug(s"==>> Dropped graph: $graph"))
+             for {
+               _ <- ZIO.logInfo(s"Dropping graph: $graph")
+               _ <- getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true)
+               _ <- ZIO.logInfo(s"==>> Dropped graph: $graph")
+             } yield ()
            )
-      _ <- ZIO.logInfo("==>> Drop All Data End")
+      _ <- ZIO.logWarning("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
   }
 
@@ -383,20 +387,12 @@ case class TriplestoreServiceLive(
    *
    * @return All graphs stored in the triplestore as a [[Seq[String]]
    */
-  private def getAllGraphs(): UIO[Seq[String]] = {
-    val sparqlQuery =
-      """|
-         | SELECT DISTINCT ?graph
-         | WHERE {
-         |  GRAPH ?graph { ?s ?p ?o }
-         | }""".stripMargin
-
+  private def getAllGraphs(): UIO[Seq[String]] =
     for {
-      res      <- sparqlHttpSelect(sparqlQuery)
-      bindings <- ZIO.succeed(res.results.bindings)
-      graphs    = bindings.map(_.rowMap("graph"))
+      res     <- sparqlHttpSelect("select ?g {graph ?g {?s ?p ?o}} group by ?g")
+      bindings = res.results.bindings
+      graphs   = bindings.map(_.rowMap("g"))
     } yield graphs
-  }
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`
