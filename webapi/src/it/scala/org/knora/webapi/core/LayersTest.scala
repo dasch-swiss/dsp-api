@@ -40,6 +40,8 @@ import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
+import org.knora.webapi.responders.admin.StoresResponderADM
+import org.knora.webapi.responders.admin.StoresResponderADMLive
 
 object LayersTest {
 
@@ -71,6 +73,7 @@ object LayersTest {
     with RestCardinalityService
     with RestResourceInfoService
     with State
+    with StoresResponderADM
     with StringFormatter
     with TestClientService
     with TriplestoreService
@@ -103,6 +106,7 @@ object LayersTest {
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
       State.layer,
+      StoresResponderADMLive.layer,
       StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceLive.layer,

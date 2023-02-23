@@ -22,6 +22,8 @@ import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsServiceLive
+import org.knora.webapi.responders.admin.StoresResponderADM
+import org.knora.webapi.responders.admin.StoresResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
@@ -73,6 +75,7 @@ object LayersLive {
       with RestResourceInfoService
       with RestCardinalityService
       with State
+      with StoresResponderADM
       with TriplestoreServiceManager
       with TriplestoreService
       with UsersResponderADM
@@ -116,6 +119,7 @@ object LayersLive {
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
       State.layer,
+      StoresResponderADMLive.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
