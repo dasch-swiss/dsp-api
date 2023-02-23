@@ -56,10 +56,13 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
           for {
             _ <- StubCardinalitiesService.setSetResponseFailure(
                    List(
-                     CanSetCardinalityCheckResult.SubclassCheckFailure(
-                       List(IriTestConstants.Biblio.Instance.SomePublicationInstance)
-                     ),
                      CanSetCardinalityCheckResult.SuperClassCheckFailure(
+                       List(
+                         IriTestConstants.Biblio.Instance.SomePublicationInstance,
+                         IriTestConstants.Biblio.Instance.SomeArticleInstance
+                       )
+                     ),
+                     CanSetCardinalityCheckResult.SubclassCheckFailure(
                        List(IriTestConstants.Biblio.Instance.SomeJournalArticleInstance)
                      )
                    )
@@ -71,16 +74,21 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
               """
                 |{
                 |  "knora-api:canDo": false,
-                |  "knora-api:cannotDoReason": "The new cardinality does not include the cardinality of a subclass. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance. The new cardinality is not included in the cardinality of a super-class. Please fix super-classes first: http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance.",
+                |  "knora-api:cannotDoReason": "The new cardinality is not included in the cardinality of a super-class. Please fix super-classes first: http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance,http://0.0.0.0:3333/ontology/0801/biblio/v2#someArticleInstance. The new cardinality does not include the cardinality of a subclass. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance.",
                 |  "knora-api:cannotDoContext": {
                 |    "knora-api:canSetCardinalityCheckFailure": [
                 |      {
-                |        "knora-api:canSetCardinalityOntologySubclassCheckFailed": {
-                |          "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance"
-                |        }
+                |        "knora-api:canSetCardinalityOntologySuperClassCheckFailed": [
+                |          {
+                |            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance"
+                |          },
+                |          {
+                |            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#someArticleInstance"
+                |          }
+                |        ]
                 |      },
                 |      {
-                |        "knora-api:canSetCardinalityOntologySuperClassCheckFailed": {
+                |        "knora-api:canSetCardinalityOntologySubclassCheckFailed": {
                 |          "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance"
                 |        }
                 |      }
