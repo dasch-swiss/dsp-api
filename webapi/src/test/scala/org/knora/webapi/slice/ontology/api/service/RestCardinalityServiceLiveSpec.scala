@@ -74,14 +74,14 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |  "knora-api:cannotDoReason":"The new cardinality does not include the cardinality of a subclass.. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance. The new cardinality does not include the cardinality of a subclass.. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance.",
                 |  "knora-api:cannotDoContext":
                 |  {
-                |    "knora-api:cansetCardinalityCheckFailure":
+                |    "knora-api:canSetCardinalityCheckFailure":
                 |    [
                 |      {
-                |        "knora-api:cansetCardinalityOntologySubclassCheckFailed":
+                |        "knora-api:canSetCardinalityOntologySubclassCheckFailed":
                 |          {"@id":"http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance"}
                 |      },
                 |      {
-                |         "knora-api:cansetCardinalityOntologySubclassCheckFailed":
+                |         "knora-api:canSetCardinalityOntologySubclassCheckFailed":
                 |         {"@id":"http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance"}
                 |      }
                 |    ]
@@ -110,9 +110,9 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |  "knora-api:cannotDoReason": "The new cardinality does not include the cardinality of a subclass.. Please fix subclasses first: http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance.",
                 |  "knora-api:cannotDoContext":
                 |  {
-                |    "knora-api:cansetCardinalityCheckFailure":
+                |    "knora-api:canSetCardinalityCheckFailure":
                 |    {
-                |      "knora-api:cansetCardinalityOntologySubclassCheckFailed":
+                |      "knora-api:canSetCardinalityOntologySubclassCheckFailed":
                 |        { "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance" }
                 |    }
                 |  },

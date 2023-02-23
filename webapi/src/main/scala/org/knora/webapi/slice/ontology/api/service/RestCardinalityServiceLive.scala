@@ -83,6 +83,7 @@ case class RestCardinalityServiceLive(
 ) extends RestCardinalityService {
 
   private val permissionService: PermissionService = PermissionService(ontologyRepo)
+  private val canSetResponsePrefix= s"${KnoraApiV2PrefixExpansion}canSetCardinality"
 
   def canReplaceCardinality(classIri: IRI, user: UserADM): Task[CanDoResponseV2] =
     for {
@@ -135,7 +136,7 @@ case class RestCardinalityServiceLive(
         context <- ZIO.foreach(failures)(toExternalContext)
       } yield CanDoResponseV2.no(
         reason,
-        JsonLDObject(Map(s"${KnoraApiV2PrefixExpansion}cansetCardinalityCheckFailure" -> JsonLDArray(context)))
+        JsonLDObject(Map(s"${canSetResponsePrefix}CheckFailure" -> JsonLDArray(context)))
       )
   }
 
@@ -166,7 +167,6 @@ case class RestCardinalityServiceLive(
     )
 
   private def getMessageKeyKey(failure: CanSetCardinalityCheckResult.Failure): String = {
-    val prefix = s"${KnoraApiV2PrefixExpansion}cansetCardinality"
     val middle = failure match {
       case CanSetCardinalityCheckResult.CurrentClassFailure(_)    => "Persistence"
       case CanSetCardinalityCheckResult.KnoraOntologyCheckFailure => "KnoraOntology"
@@ -174,7 +174,7 @@ case class RestCardinalityServiceLive(
       case CanSetCardinalityCheckResult.SuperClassCheckFailure(_) => "OntologySuperclass"
       case _                                                      => ""
     }
-    s"$prefix${middle}CheckFailed"
+    s"$canSetResponsePrefix${middle}CheckFailed"
   }
 
   private def iriValue(iri: String) = JsonLDObject(Map("@id" -> JsonLDString(iri)))
