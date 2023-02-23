@@ -7,7 +7,6 @@ package org.knora.webapi.messages.v2.responder
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple
