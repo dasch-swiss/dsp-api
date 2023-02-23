@@ -169,26 +169,20 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
   }
 }
 
-trait CanDoResponseV2 extends KnoraJsonLDResponseV2 {
-  def canDo: JsonLDBoolean
-  def cannotDoReason: Option[JsonLDString]        = None
-  def cannotDoReasonContext: Option[JsonLDObject] = None
-}
-
 /**
  * Indicates whether an operation can be performed.
  *
  * @param canDo `true` if the operation can be performed.
  */
-final case class SimpleCanDoResponseV2(
-  override val canDo: JsonLDBoolean,
-  override val cannotDoReason: Option[JsonLDString] = None,
-  override val cannotDoReasonContext: Option[JsonLDObject] = None
-) extends CanDoResponseV2 {
+final case class CanDoResponseV2(
+  canDo: JsonLDBoolean,
+  cannotDoReason: Option[JsonLDString] = None,
+  cannotDoReasonContext: Option[JsonLDObject] = None
+) extends KnoraJsonLDResponseV2 {
   require((cannotDoReason.nonEmpty && !canDo.value) || cannotDoReason.isEmpty)
   require((cannotDoReasonContext.nonEmpty && !canDo.value) || cannotDoReasonContext.isEmpty)
 
-  def toJsonLDDocument(
+  override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
@@ -220,20 +214,16 @@ final case class SimpleCanDoResponseV2(
 }
 
 object CanDoResponseV2 {
-  val yes: CanDoResponseV2 = SimpleCanDoResponseV2(JsonLDBoolean.TRUE)
-  val no: CanDoResponseV2  = SimpleCanDoResponseV2(JsonLDBoolean.FALSE)
+  val yes: CanDoResponseV2 = CanDoResponseV2(JsonLDBoolean.TRUE)
+  val no: CanDoResponseV2  = CanDoResponseV2(JsonLDBoolean.FALSE)
   def of(boolean: Boolean): CanDoResponseV2 = boolean match {
     case true  => yes
     case false => no
   }
   def no(reason: JsonLDString): CanDoResponseV2 =
-    SimpleCanDoResponseV2(canDo = JsonLDBoolean.FALSE, cannotDoReason = Some(reason), cannotDoReasonContext = None)
+    CanDoResponseV2(canDo = JsonLDBoolean.FALSE, cannotDoReason = Some(reason), cannotDoReasonContext = None)
   def no(reason: JsonLDString, context: JsonLDObject): CanDoResponseV2 =
-    SimpleCanDoResponseV2(
-      canDo = JsonLDBoolean.FALSE,
-      cannotDoReason = Some(reason),
-      cannotDoReasonContext = Some(context)
-    )
+    CanDoResponseV2(canDo = JsonLDBoolean.FALSE, cannotDoReason = Some(reason), cannotDoReasonContext = Some(context))
 }
 
 /**
