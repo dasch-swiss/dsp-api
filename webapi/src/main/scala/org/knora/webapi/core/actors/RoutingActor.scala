@@ -20,8 +20,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
-import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
@@ -60,12 +58,10 @@ final case class RoutingActor(
   private implicit val executionContext: ExecutionContext = actorDeps.executionContext
 
   // V1 responders
-  private val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
   private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
   private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
   private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
   private val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
-  private val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData)
   private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
   private val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
   private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps)
@@ -87,14 +83,10 @@ final case class RoutingActor(
     case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
 
     // V1 request messages
-    case ckanResponderRequestV1: CkanResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), ckanResponderV1.receive(ckanResponderRequestV1), log)
     case resourcesResponderRequestV1: ResourcesResponderRequestV1 =>
       ActorUtil.future2Message(sender(), resourcesResponderV1.receive(resourcesResponderRequestV1), log)
     case valuesResponderRequestV1: ValuesResponderRequestV1 =>
       ActorUtil.future2Message(sender(), valuesResponderV1.receive(valuesResponderRequestV1), log)
-    case listsResponderRequestV1: ListsResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), listsResponderV1.receive(listsResponderRequestV1), log)
     case searchResponderRequestV1: SearchResponderRequestV1 =>
       ActorUtil.future2Message(sender(), searchResponderV1.receive(searchResponderRequestV1), log)
     case ontologyResponderRequestV1: OntologyResponderRequestV1 =>

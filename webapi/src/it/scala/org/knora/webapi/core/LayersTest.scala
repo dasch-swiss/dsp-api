@@ -42,6 +42,10 @@ import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.v1.ListsResponderV1
+import org.knora.webapi.responders.v1.ListsResponderV1Live
 
 object LayersTest {
 
@@ -60,11 +64,13 @@ object LayersTest {
     with CacheService
     with CacheServiceManager
     with CardinalityService
+    with CkanResponderV1
     with GroupsResponderADM
     with HttpServer
     with IIIFServiceManager
     with IriConverter
     with IriService
+    with ListsResponderV1
     with MessageRelay
     with PermissionsResponderADM
     with ProjectsResponderADM
@@ -90,11 +96,13 @@ object LayersTest {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
       IriService.layer,
+      ListsResponderV1Live.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
