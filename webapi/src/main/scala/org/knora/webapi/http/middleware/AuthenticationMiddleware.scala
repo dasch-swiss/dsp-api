@@ -42,6 +42,7 @@ final case class AuthenticationMiddleware(authenticatorService: AuthenticatorSer
             authenticatorService
               .getUser(request)
               .orElseSucceed(KnoraSystemInstances.Users.AnonymousUser)
+              .tap(u => ZIO.logInfo(s"Authenticated as User: ${u.id} (${u.username})"))
         } yield (request, requestingUser),
       out => ZIO.succeed(out)
     )

@@ -40,6 +40,8 @@ import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
+import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 
 object LayersTest {
 
@@ -64,6 +66,7 @@ object LayersTest {
     with IriConverter
     with IriService
     with MessageRelay
+    with PermissionsResponderADM
     with ProjectsResponderADM
     with RepositoryUpdater
     with ResourceInfoRepo
@@ -95,6 +98,7 @@ object LayersTest {
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      PermissionsResponderADMLive.layer,
       ProjectsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       RepositoryUpdater.layer,
