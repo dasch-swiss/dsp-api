@@ -1,7 +1,5 @@
 package org.knora.webapi.messages.v2.responder
 import zio.ZIO
-import zio.json.DecoderOps
-import zio.json.ast.Json
 import zio.test._
 
 import org.knora.webapi.ApiV2Complex
@@ -11,10 +9,9 @@ import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.messages.util.rdf.JsonLDArray
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
+import org.knora.webapi.util.JsonHelper.parseJson
 
 object CanDoResponseV2Spec extends ZIOSpecDefault {
-
-  private def parseJson(jsonString: String) = jsonString.fromJson[Json].getOrElse(throw new IllegalStateException)
 
   val spec: Spec[Any, Nothing] = suite("CanDoResponseV2Spec")(
     test(".yes is correctly rendered") {
