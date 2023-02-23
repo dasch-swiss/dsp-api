@@ -1717,11 +1717,30 @@ The response will look like this:
 Failure:
 ```json
 {
-    "knora-api:canDo": false,
-    "knora-api:cannotDoReason": "An explanation, understandable to humans, why the update cannot be carried out.",
-    "@context": {
-        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
-    } 
+  "knora-api:canDo": false,
+  "knora-api:cannotDoReason": "An explanation, understandable to humans, why the update cannot be carried out.",
+  "knora-api:cannotDoContext": {
+    "knora-api:canSetCardinalityCheckFailure": [
+      {
+        "knora-api:canSetCardinalityOntologySuperClassCheckFailed": [
+          {
+            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance"
+          },
+          {
+            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#someArticleInstance"
+          }
+        ]
+      },
+      {
+        "knora-api:canSetCardinalityOntologySubclassCheckFailed": {
+          "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance"
+        }
+      }
+    ]
+  },
+  "@context": {
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+  }
 }
 ```
 
