@@ -7,11 +7,12 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
+
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
-
 import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
