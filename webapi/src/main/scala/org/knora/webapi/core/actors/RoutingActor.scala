@@ -14,11 +14,8 @@ import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
@@ -82,11 +79,8 @@ final case class RoutingActor(
   private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
 
   // Admin responders
-  private val groupsResponderADM: GroupsResponderADM           = new GroupsResponderADM(responderData)
-  private val permissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
-  private val storeResponderADM: StoresResponderADM            = new StoresResponderADM(responderData)
-  private val usersResponderADM: UsersResponderADM             = new UsersResponderADM(responderData)
-  private val sipiRouterADM: SipiResponderADM                  = new SipiResponderADM(responderData)
+  private val storeResponderADM: StoresResponderADM = new StoresResponderADM(responderData)
+  private val sipiRouterADM: SipiResponderADM       = new SipiResponderADM(responderData)
 
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
@@ -127,14 +121,8 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
     // Admin request messages
-    case groupsResponderRequestADM: GroupsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), groupsResponderADM.receive(groupsResponderRequestADM), log)
-    case permissionsResponderRequestADM: PermissionsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), permissionsResponderADM.receive(permissionsResponderRequestADM), log)
     case storeResponderRequestADM: StoreResponderRequestADM =>
       ActorUtil.future2Message(sender(), storeResponderADM.receive(storeResponderRequestADM), log)
-    case usersResponderRequestADM: UsersResponderRequestADM =>
-      ActorUtil.future2Message(sender(), usersResponderADM.receive(usersResponderRequestADM), log)
     case sipiResponderRequestADM: SipiResponderRequestADM =>
       ActorUtil.future2Message(sender(), sipiRouterADM.receive(sipiResponderRequestADM), log)
     case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg))

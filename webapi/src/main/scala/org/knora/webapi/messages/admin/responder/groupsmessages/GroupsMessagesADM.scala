@@ -16,6 +16,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -96,7 +97,7 @@ case class ChangeGroupApiRequestADM(
 /**
  * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
  */
-sealed trait GroupsResponderRequestADM extends KnoraRequestADM
+sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
  * Get all information about all groups.      the user initiating the request.

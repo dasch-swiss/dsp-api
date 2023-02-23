@@ -7,17 +7,13 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-
 import java.util.UUID
 import scala.collection.Map
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
@@ -26,6 +22,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -149,13 +146,13 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
 
-        val permissionsResponder = new PermissionsResponderADM(responderData)
+        val permissionsResponder = getService[PermissionsResponderADM]
 
-        val f: Future[Map[IRI, Set[PermissionADM]]] =
+        val result: Map[IRI, Set[PermissionADM]] = UnsafeZioRun.runOrThrow(
           permissionsResponder.userAdministrativePermissionsGetADM(
             multiuserUser.permissions.groupsPerProject
           )
-        val result: Map[IRI, Set[PermissionADM]] = Await.result(f, 1.seconds)
+        )
         result should equal(multiuserUser.permissions.administrativePermissionsPerProject)
       }
     }

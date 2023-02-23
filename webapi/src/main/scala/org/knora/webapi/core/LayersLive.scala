@@ -15,11 +15,17 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADMLive
+import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsServiceLive
+import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -56,6 +62,7 @@ object LayersLive {
       with AppRouterRelayingMessageHandler
       with CacheServiceManager
       with CacheService
+      with GroupsResponderADM
       with HttpServer
       with IIIFServiceManager
       with IIIFService
@@ -63,6 +70,7 @@ object LayersLive {
       with JWTService
       with ListsResponderADM
       with MessageRelay
+      with PermissionsResponderADM
       with ProjectsResponderADM
       with RepositoryUpdater
       with RestResourceInfoService
@@ -70,6 +78,7 @@ object LayersLive {
       with State
       with TriplestoreServiceManager
       with TriplestoreService
+      with UsersResponderADM
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -88,6 +97,7 @@ object LayersLive {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
@@ -99,6 +109,7 @@ object LayersLive {
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsRouteZ.layer,
       ProjectsResponderADMLive.layer,
@@ -111,6 +122,7 @@ object LayersLive {
       State.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,
-      TriplestoreServiceManager.layer
+      TriplestoreServiceManager.layer,
+      UsersResponderADMLive.layer
     )
 }
