@@ -40,6 +40,15 @@ trait TriplestoreService {
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
    *
+   * @param sparqlConstructRequest the query.
+   * @return a [[SparqlConstructResponse]]
+   */
+  def sparqlHttpConstruct(sparqlConstructRequest: String): UIO[SparqlConstructResponse] =
+    sparqlHttpConstruct(SparqlConstructRequest(sparqlConstructRequest))
+
+  /**
+   * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
+   *
    * @param sparqlConstructRequest the request message.
    * @return a [[SparqlConstructResponse]]
    */
