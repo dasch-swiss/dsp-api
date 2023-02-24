@@ -8,6 +8,7 @@ package org.knora.webapi.messages.admin.responder.storesmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -16,7 +17,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
-sealed trait StoreResponderRequestADM extends KnoraRequestADM
+sealed trait StoreResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
  * Requests to load the triplestore with data referenced inside [[RdfDataObject]]. Any data contained inside the
@@ -32,7 +33,7 @@ case class ResetTriplestoreContentRequestADM(
 ) extends StoreResponderRequestADM
 
 case class ResetTriplestoreContentResponseADM(message: String) extends KnoraResponseADM with StoresADMJsonProtocol {
-  def toJsValue = resetTriplestoreContentResponseADMFormat.write(this)
+  def toJsValue: JsValue = resetTriplestoreContentResponseADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
