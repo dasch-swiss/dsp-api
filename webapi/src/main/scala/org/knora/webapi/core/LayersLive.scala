@@ -12,6 +12,10 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.ValueUtilV1Z
+import org.knora.webapi.messages.util.ValueUtilV1ZLive
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Z
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2ZLive
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
@@ -28,6 +32,10 @@ import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.responders.v1.ResourcesResponderV1
+import org.knora.webapi.responders.v1.ResourcesResponderV1Live
+import org.knora.webapi.responders.v2.ResourceUtilV2Z
+import org.knora.webapi.responders.v2.ResourceUtilV2ZLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -62,26 +70,30 @@ object LayersLive {
       with AppConfig
       with AppRouter
       with AppRouterRelayingMessageHandler
-      with CacheServiceManager
       with CacheService
+      with CacheServiceManager
       with GroupsResponderADM
       with HttpServer
-      with IIIFServiceManager
       with IIIFService
+      with IIIFServiceManager
       with IriService
       with JWTService
       with MessageRelay
       with PermissionsResponderADM
       with ProjectsResponderADM
       with RepositoryUpdater
-      with RestResourceInfoService
+      with ResourceUtilV2Z
+      with ResourcesResponderV1
       with RestCardinalityService
+      with RestResourceInfoService
       with SipiResponderADM
+      with StandoffTagUtilV2Z
       with State
       with StoresResponderADM
-      with TriplestoreServiceManager
       with TriplestoreService
+      with TriplestoreServiceManager
       with UsersResponderADM
+      with ValueUtilV1Z
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -113,20 +125,24 @@ object LayersLive {
       OntologyRepoLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
-      ProjectsRouteZ.layer,
       ProjectsResponderADMLive.layer,
+      ProjectsRouteZ.layer,
       ProjectsServiceLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
+      ResourceUtilV2ZLive.layer,
+      ResourcesResponderV1Live.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
       SipiResponderADMLive.layer,
+      StandoffTagUtilV2ZLive.layer,
       State.layer,
       StoresResponderADMLive.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
-      UsersResponderADMLive.layer
+      UsersResponderADMLive.layer,
+      ValueUtilV1ZLive.layer
     )
 }

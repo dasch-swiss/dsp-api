@@ -36,6 +36,10 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import zio._
 
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2ZLive
+import org.knora.webapi.messages.util.ValueUtilV1ZLive
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Z
+import org.knora.webapi.messages.util.ValueUtilV1Z
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.admin.SipiResponderADM
@@ -44,6 +48,10 @@ import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADMLive
+import org.knora.webapi.responders.v1.ResourcesResponderV1
+import org.knora.webapi.responders.v1.ResourcesResponderV1Live
+import org.knora.webapi.responders.v2.ResourceUtilV2Z
+import org.knora.webapi.responders.v2.ResourceUtilV2ZLive
 
 object LayersTest {
 
@@ -72,9 +80,12 @@ object LayersTest {
     with ProjectsResponderADM
     with RepositoryUpdater
     with ResourceInfoRepo
+    with ResourceUtilV2Z
+    with ResourcesResponderV1
     with RestCardinalityService
     with RestResourceInfoService
     with SipiResponderADM
+    with StandoffTagUtilV2Z
     with State
     with StoresResponderADM
     with StringFormatter
@@ -82,6 +93,7 @@ object LayersTest {
     with TriplestoreService
     with TriplestoreServiceManager
     with UsersResponderADM
+    with ValueUtilV1Z
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -102,8 +114,8 @@ object LayersTest {
       OntologyCache.layer,
       OntologyRepoLive.layer,
       PermissionsResponderADMLive.layer,
-      ProjectsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
+      ProjectsResponderADMLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,
@@ -115,7 +127,11 @@ object LayersTest {
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
-      UsersResponderADMLive.layer
+      UsersResponderADMLive.layer,
+      ResourceUtilV2ZLive.layer,
+      ResourcesResponderV1Live.layer,
+      StandoffTagUtilV2ZLive.layer,
+      ValueUtilV1ZLive.layer
     )
 
   private val fusekiAndSipiTestcontainers =
