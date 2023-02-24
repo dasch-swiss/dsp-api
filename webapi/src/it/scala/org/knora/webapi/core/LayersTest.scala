@@ -11,6 +11,8 @@ import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
+import org.knora.webapi.responders.v1.UsersResponderV1
+import org.knora.webapi.responders.v1.UsersResponderV1Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -82,6 +84,7 @@ object LayersTest {
     with TriplestoreService
     with TriplestoreServiceManager
     with UsersResponderADM
+    with UsersResponderV1
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -115,7 +118,8 @@ object LayersTest {
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
-      UsersResponderADMLive.layer
+      UsersResponderADMLive.layer,
+      UsersResponderV1Live.layer
     )
 
   private val fusekiAndSipiTestcontainers =
