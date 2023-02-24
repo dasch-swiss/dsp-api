@@ -50,6 +50,8 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.responders.v1.UsersResponderV1
+import org.knora.webapi.responders.v1.UsersResponderV1Live
 
 object LayersLive {
 
@@ -82,6 +84,7 @@ object LayersLive {
       with TriplestoreServiceManager
       with TriplestoreService
       with UsersResponderADM
+      with UsersResponderV1
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -127,6 +130,7 @@ object LayersLive {
       StringFormatter.live,
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
-      UsersResponderADMLive.layer
+      UsersResponderADMLive.layer,
+      UsersResponderV1Live.layer
     )
 }

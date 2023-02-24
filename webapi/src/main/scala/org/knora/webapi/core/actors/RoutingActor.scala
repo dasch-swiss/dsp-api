@@ -63,7 +63,6 @@ final case class RoutingActor(
   private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
   private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
   private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
-  private val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
   private val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData)
   private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
   private val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
@@ -99,8 +98,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), ontologyResponderV1.receive(ontologyResponderRequestV1), log)
     case standoffResponderRequestV1: StandoffResponderRequestV1 =>
       ActorUtil.future2Message(sender(), standoffResponderV1.receive(standoffResponderRequestV1), log)
-    case usersResponderRequestV1: UsersResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), usersResponderV1.receive(usersResponderRequestV1), log)
     case projectsResponderRequestV1: ProjectsResponderRequestV1 =>
       ActorUtil.future2Message(sender(), projectsResponderV1.receive(projectsResponderRequestV1), log)
 

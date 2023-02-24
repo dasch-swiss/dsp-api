@@ -20,6 +20,7 @@ import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
+import org.knora.webapi.core.RelayedMessage
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -32,7 +33,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.Use
 /**
  * An abstract trait representing message that can be sent to `UsersResponderV1`.
  */
-sealed trait UsersResponderRequestV1 extends KnoraRequestV1
+sealed trait UsersResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
 
 /**
  * Get all information about all users in form of [[UsersGetResponseV1]]. The UsersGetRequestV1 returns either
