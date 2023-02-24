@@ -457,7 +457,7 @@ final case class ProjectsResponderV1Live(
 }
 object ProjectsResponderV1Live {
   val layer: URLayer[
-    StringFormatter with TriplestoreService with MessageRelay with IriService with AppConfig,
+    StringFormatter with TriplestoreService with MessageRelay,
     ProjectsResponderV1
   ] = ZLayer.fromZIO {
     for {
