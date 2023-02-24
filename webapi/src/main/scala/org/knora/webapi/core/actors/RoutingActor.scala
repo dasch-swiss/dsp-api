@@ -19,7 +19,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
@@ -59,7 +58,6 @@ final case class RoutingActor(
   private implicit val executionContext: ExecutionContext = actorDeps.executionContext
 
   // V1 responders
-  private val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
   private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
   private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
   private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
@@ -85,8 +83,6 @@ final case class RoutingActor(
     case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
 
     // V1 request messages
-    case ckanResponderRequestV1: CkanResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), ckanResponderV1.receive(ckanResponderRequestV1), log)
     case resourcesResponderRequestV1: ResourcesResponderRequestV1 =>
       ActorUtil.future2Message(sender(), resourcesResponderV1.receive(resourcesResponderRequestV1), log)
     case valuesResponderRequestV1: ValuesResponderRequestV1 =>
