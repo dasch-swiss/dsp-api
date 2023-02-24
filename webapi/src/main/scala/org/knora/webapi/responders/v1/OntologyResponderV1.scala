@@ -707,7 +707,7 @@ final case class OntologyResponderV1Live(
 
 object OntologyResponderV1Live {
   val layer: URLayer[
-    StringFormatter with TriplestoreService with MessageRelay with IriService with AppConfig,
+    StringFormatter with MessageRelay,
     OntologyResponderV1
   ] = ZLayer.fromZIO {
     for {
