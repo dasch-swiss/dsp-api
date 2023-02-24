@@ -26,6 +26,8 @@ import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.responders.v1.ProjectsResponderV1
+import org.knora.webapi.responders.v1.ProjectsResponderV1Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -71,6 +73,7 @@ object LayersLive {
       with MessageRelay
       with PermissionsResponderADM
       with ProjectsResponderADM
+      with ProjectsResponderV1
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
@@ -112,6 +115,7 @@ object LayersLive {
       PredicateRepositoryLive.layer,
       ProjectsRouteZ.layer,
       ProjectsResponderADMLive.layer,
+      ProjectsResponderV1Live.layer,
       ProjectsServiceLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,

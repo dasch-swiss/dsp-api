@@ -5,42 +5,47 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
-
-import scala.concurrent.Future
+import zio._
 
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphsGetRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphsResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Returns information about Knora projects.
  */
-final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(actorDeps) {
+trait ProjectsResponderV1 {}
 
-  // Global lock IRI used for project creation and update
+final case class ProjectsResponderV1Live(
+  messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService,
+  implicit val stringFormatter: StringFormatter
+) extends ProjectsResponderV1
+    with MessageHandler {
 
-  /**
-   * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
-   */
-  def receive(msg: ProjectsResponderRequestV1) = msg match {
+  override def isResponsibleFor(message: ResponderRequest): Boolean =
+    message.isInstanceOf[ProjectsResponderRequestV1]
+
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ProjectsGetRequestV1(userProfile) =>
       projectsGetRequestV1(userProfile)
     case ProjectsGetV1(userProfile) => projectsGetV1(userProfile)
@@ -50,7 +55,7 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
       projectInfoByIRIGetV1(iri, userProfile)
     case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) =>
       projectInfoByShortnameGetRequestV1(shortname, userProfile)
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -58,16 +63,14 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
    *
    * @param userProfile          the profile of the user that is making the request.
    * @return all the projects as a [[ProjectsResponseV1]].
-   * @throws NotFoundException if no projects are found.
+   *
+   *         [[NotFoundException]] if no projects are found.
    */
   private def projectsGetRequestV1(
     userProfile: Option[UserProfileV1]
-  ): Future[ProjectsResponseV1] =
-    // log.debug("projectsGetRequestV1")
+  ): Task[ProjectsResponseV1] =
     for {
-      projects <- projectsGetV1(
-                    userProfile = userProfile
-                  )
+      projects <- projectsGetV1(userProfile)
 
       result =
         if (projects.nonEmpty) {
@@ -88,17 +91,14 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
    */
   private def projectsGetV1(
     userProfile: Option[UserProfileV1]
-  ): Future[Seq[ProjectInfoV1]] =
+  ): Task[Seq[ProjectInfoV1]] =
     for {
-      sparqlQueryString <- Future(
+      sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getProjects()
                                .toString()
                            )
-      // _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
-
-      projectsResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      // _ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
+      projectsResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
       projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
@@ -111,7 +111,6 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
             }
           )
         }
-      // _ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
 
       ontologiesForProjects <- getOntologiesForProjects(
                                  userProfile = userProfile
@@ -181,39 +180,37 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
   private def getOntologiesForProjects(
     projectIris: Set[IRI] = Set.empty[IRI],
     userProfile: Option[UserProfileV1]
-  ): Future[Map[IRI, Seq[IRI]]] =
+  ): Task[Map[IRI, Seq[IRI]]] =
     for {
       // Get a UserADM for the UserProfileV1, because we need it to send a message to OntologyResponderV1.
-      userADM: UserADM <- userProfile match {
-                            case Some(profile) =>
-                              profile.userData.user_id match {
-                                case Some(user_iri) =>
-                                  appActor
-                                    .ask(
-                                      UserGetRequestADM(
-                                        identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
-                                        requestingUser = KnoraSystemInstances.Users.SystemUser
-                                      )
-                                    )
-                                    .mapTo[UserResponseADM]
-                                    .map(_.user)
+      userADM <- userProfile match {
+                   case Some(profile) =>
+                     profile.userData.user_id match {
+                       case Some(user_iri) =>
+                         messageRelay
+                           .ask[UserResponseADM](
+                             UserGetRequestADM(
+                               identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
+                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                             )
+                           )
+                           .map(_.user)
 
-                                case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
-                              }
+                       case None => ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser)
+                     }
 
-                            case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
-                          }
+                   case None => ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser)
+                 }
 
       // Get the ontologies per project.
 
-      namedGraphsResponse <- appActor
-                               .ask(
+      namedGraphsResponse <- messageRelay
+                               .ask[NamedGraphsResponseV1](
                                  NamedGraphsGetRequestV1(
                                    projectIris = projectIris,
                                    userADM = userADM
                                  )
                                )
-                               .mapTo[NamedGraphsResponseV1]
 
     } yield namedGraphsResponse.vocabularies.map { namedGraph: NamedGraphV1 =>
       namedGraph.project_id -> namedGraph.id
@@ -230,18 +227,18 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
    *
    * @param userProfile          the profile of user that is making the request.
    * @return information about the project as a [[ProjectInfoResponseV1]].
-   * @throws NotFoundException when no project for the given IRI can be found
+   *
+   *         [[NotFoundException]] when no project for the given IRI can be found
    */
   private def projectInfoByIRIGetRequestV1(
     projectIri: IRI,
     userProfile: Option[UserProfileV1] = None
-  ): Future[ProjectInfoResponseV1] =
-    // log.debug("projectInfoByIRIGetRequestV1 - projectIRI: {}", projectIRI)
+  ): Task[ProjectInfoResponseV1] =
     for {
-      maybeProjectInfo: Option[ProjectInfoV1] <- projectInfoByIRIGetV1(
-                                                   projectIri = projectIri,
-                                                   userProfile = userProfile
-                                                 )
+      maybeProjectInfo <- projectInfoByIRIGetV1(
+                            projectIri = projectIri,
+                            userProfile = userProfile
+                          )
 
       projectInfo = maybeProjectInfo match {
                       case Some(pi) => pi
@@ -262,10 +259,9 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
   private def projectInfoByIRIGetV1(
     projectIri: IRI,
     userProfile: Option[UserProfileV1] = None
-  ): Future[Option[ProjectInfoV1]] =
-    // log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
+  ): Task[Option[ProjectInfoV1]] =
     for {
-      sparqlQuery <- Future(
+      sparqlQuery <- ZIO.attempt(
                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                          .getProjectByIri(
                            projectIri = projectIri
@@ -273,12 +269,12 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
                          .toString()
                      )
 
-      projectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      projectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
 
-      ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(
-                                                     projectIris = Set(projectIri),
-                                                     userProfile = userProfile
-                                                   )
+      ontologiesForProjects <- getOntologiesForProjects(
+                                 projectIris = Set(projectIri),
+                                 userProfile = userProfile
+                               )
 
       projectOntologies = ontologiesForProjects.getOrElse(projectIri, Seq.empty[IRI])
 
@@ -296,8 +292,6 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
           None
         }
 
-      // _ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
-
     } yield projectInfo
 
   /**
@@ -307,25 +301,22 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
    *
    * @param userProfile          the profile of user that is making the request.
    * @return information about the project as a [[ProjectInfoResponseV1]].
-   * @throws NotFoundException in the case that no project for the given shortname can be found.
+   *
+   *         [[NotFoundException]] in the case that no project for the given shortname can be found.
    */
   private def projectInfoByShortnameGetRequestV1(
     shortName: String,
     userProfile: Option[UserProfileV1]
-  ): Future[ProjectInfoResponseV1] =
-    // log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
+  ): Task[ProjectInfoResponseV1] =
     for {
-      sparqlQueryString <- Future(
+      sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getProjectByShortname(
                                  shortname = shortName
                                )
                                .toString()
                            )
-      // _ = log.debug(s"getProjectInfoByShortnameGetRequest - query: $sparqlQueryString")
-
-      projectResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      // _ = log.debug(s"getProjectInfoByShortnameGetRequest - result: $projectResponse")
+      projectResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
       // get project IRI from results rows
       projectIri: IRI =
@@ -335,10 +326,10 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
           throw NotFoundException(s"Project '$shortName' not found")
         }
 
-      ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(
-                                                     projectIris = Set(projectIri),
-                                                     userProfile = userProfile
-                                                   )
+      ontologiesForProjects <- getOntologiesForProjects(
+                                 projectIris = Set(projectIri),
+                                 userProfile = userProfile
+                               )
 
       projectOntologies = ontologiesForProjects(projectIri)
 
@@ -371,7 +362,6 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
     ontologies: Seq[IRI],
     userProfile: Option[UserProfileV1]
   ): ProjectInfoV1 =
-    // log.debug("createProjectInfoV1 - projectResponse: {}", projectResponse)
     if (projectResponse.nonEmpty) {
 
       val projectProperties: Map[String, Seq[String]] = projectResponse.groupBy(_.rowMap("p")).map {
@@ -386,8 +376,6 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
       } else {
         None
       }
-
-      // log.debug(s"createProjectInfoV1 - projectProperties: $projectProperties")
 
       /* create and return the project info */
       ProjectInfoV1(
@@ -432,41 +420,19 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
     }
 
   /**
-   * Helper method for checking if a project identified by IRI exists.
-   *
-   * @param projectIri the IRI of the project.
-   * @return a [[Boolean]].
-   */
-  def projectByIriExists(projectIri: IRI): Future[Boolean] =
-    for {
-      askString <- Future(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkProjectExistsByIri(projectIri = projectIri)
-                       .toString
-                   )
-      // _ = log.debug("projectExists - query: {}", askString)
-
-      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result                      = checkProjectExistsResponse.result
-
-    } yield result
-
-  /**
    * Helper method for checking if a project identified by shortname exists.
    *
    * @param shortname the shortname of the project.
    * @return a [[Boolean]].
    */
-  def projectByShortnameExists(shortname: String): Future[Boolean] =
+  def projectByShortnameExists(shortname: String): Task[Boolean] =
     for {
-      askString <- Future(
+      askString <- ZIO.attempt(
                      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                        .checkProjectExistsByShortname(shortname = shortname)
                        .toString
                    )
-      // _ = log.debug("projectExists - query: {}", askString)
-
-      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkProjectExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
       result                      = checkProjectExistsResponse.result
 
     } yield result
@@ -477,17 +443,28 @@ final case class ProjectsResponderV1(actorDeps: ActorDeps) extends Responder(act
    * @param shortcode the shortcode of the project.
    * @return a [[Boolean]].
    */
-  def projectByShortcodeExists(shortcode: String): Future[Boolean] =
+  def projectByShortcodeExists(shortcode: String): Task[Boolean] =
     for {
-      askString <- Future(
+      askString <- ZIO.attempt(
                      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                        .checkProjectExistsByShortcode(shortcode = shortcode)
                        .toString
                    )
-      // _ = log.debug("projectExists - query: {}", askString)
-
-      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkProjectExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
       result                      = checkProjectExistsResponse.result
 
     } yield result
+}
+object ProjectsResponderV1Live {
+  val layer: URLayer[
+    StringFormatter with TriplestoreService with MessageRelay with IriService with AppConfig,
+    ProjectsResponderV1
+  ] = ZLayer.fromZIO {
+    for {
+      mr      <- ZIO.service[MessageRelay]
+      ts      <- ZIO.service[TriplestoreService]
+      sf      <- ZIO.service[StringFormatter]
+      handler <- mr.subscribe(ProjectsResponderV1Live(mr, ts, sf))
+    } yield handler
+  }
 }
