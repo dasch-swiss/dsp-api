@@ -30,6 +30,8 @@ import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.v1.CkanResponderV1
 import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.v1.OntologyResponderV1
+import org.knora.webapi.responders.v1.OntologyResponderV1Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -74,6 +76,7 @@ object LayersLive {
       with IriService
       with JWTService
       with MessageRelay
+      with OntologyResponderV1
       with PermissionsResponderADM
       with ProjectsResponderADM
       with RepositoryUpdater
@@ -114,6 +117,7 @@ object LayersLive {
       JWTService.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
+      OntologyResponderV1Live.layer,
       OntologyRepoLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,

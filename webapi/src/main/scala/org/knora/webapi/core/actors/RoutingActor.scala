@@ -20,7 +20,6 @@ import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
-import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
@@ -64,7 +63,6 @@ final case class RoutingActor(
   private val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
   private val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData)
   private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
-  private val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
   private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps)
 
   // V2 responders
@@ -91,8 +89,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderV1.receive(listsResponderRequestV1), log)
     case searchResponderRequestV1: SearchResponderRequestV1 =>
       ActorUtil.future2Message(sender(), searchResponderV1.receive(searchResponderRequestV1), log)
-    case ontologyResponderRequestV1: OntologyResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), ontologyResponderV1.receive(ontologyResponderRequestV1), log)
     case standoffResponderRequestV1: StandoffResponderRequestV1 =>
       ActorUtil.future2Message(sender(), standoffResponderV1.receive(standoffResponderRequestV1), log)
     case usersResponderRequestV1: UsersResponderRequestV1 =>
