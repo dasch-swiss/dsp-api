@@ -5,7 +5,14 @@
 
 package org.knora.webapi.responders.v2
 
+import zio.Task
+import zio._
+
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
@@ -13,12 +20,6 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeInfoGetRe
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.listsmessages._
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.ResponderRequest
-import zio.Task
-import zio._
 
 /**
  * Responds to requests relating to lists and nodes.
