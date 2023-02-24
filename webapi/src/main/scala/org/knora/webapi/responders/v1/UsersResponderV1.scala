@@ -5,14 +5,23 @@
 
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
+import com.typesafe.scalalogging.LazyLogging
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
 import zio._
+
+import java.util.UUID
 
 import dsp.errors.ApplicationCacheException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -23,16 +32,8 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.core.MessageHandler
-import zio.Task
-import org.knora.webapi.messages.ResponderRequest
-import zio.ZIO
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.config.AppConfig
-import com.typesafe.scalalogging.LazyLogging
-import zio.ZLayer
+import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Provides information about Knora users to other responders.
