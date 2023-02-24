@@ -5,34 +5,42 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.pattern._
-
-import scala.concurrent.Future
-
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeInfoGetRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.listsmessages._
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.ResponderRequest
+import zio.Task
+import zio._
 
 /**
  * Responds to requests relating to lists and nodes.
  */
-class ListsResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+trait ListsResponderV2 {}
+final case class ListsResponderV2Live(
+  appConfig: AppConfig,
+  messageRelay: MessageRelay
+) extends ListsResponderV2
+    with MessageHandler {
+
+  def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ListsResponderRequestV2]
 
   /**
    * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.
    */
-  def receive(msg: ListsResponderRequestV2) = msg match {
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ListGetRequestV2(listIri, requestingUser) =>
       getList(listIri, requestingUser)
     case NodeGetRequestV2(nodeIri, requestingUser) =>
       getNode(nodeIri, requestingUser)
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -45,21 +53,21 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
   private def getList(
     listIri: IRI,
     requestingUser: UserADM
-  ): Future[ListGetResponseV2] =
+  ): Task[ListGetResponseV2] =
     for {
-      listResponseADM: ListGetResponseADM <- appActor
-                                               .ask(
-                                                 ListGetRequestADM(
-                                                   iri = listIri,
-                                                   requestingUser = requestingUser
-                                                 )
-                                               )
-                                               .mapTo[ListGetResponseADM]
+      listResponseADM <-
+        messageRelay
+          .ask[ListGetResponseADM](
+            ListGetRequestADM(
+              iri = listIri,
+              requestingUser = requestingUser
+            )
+          )
 
     } yield ListGetResponseV2(
       list = listResponseADM.list,
       requestingUser.lang,
-      responderData.appConfig.fallbackLanguage
+      appConfig.fallbackLanguage
     )
 
   /**
@@ -73,20 +81,33 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
   private def getNode(
     nodeIri: IRI,
     requestingUser: UserADM
-  ): Future[NodeGetResponseV2] =
+  ): Task[NodeGetResponseV2] =
     for {
-      nodeResponse: ChildNodeInfoGetResponseADM <- appActor
-                                                     .ask(
-                                                       ListNodeInfoGetRequestADM(
-                                                         iri = nodeIri,
-                                                         requestingUser = requestingUser
-                                                       )
-                                                     )
-                                                     .mapTo[ChildNodeInfoGetResponseADM]
+      nodeResponse <-
+        messageRelay
+          .ask[ChildNodeInfoGetResponseADM](
+            ListNodeInfoGetRequestADM(
+              iri = nodeIri,
+              requestingUser = requestingUser
+            )
+          )
+
     } yield NodeGetResponseV2(
       node = nodeResponse.nodeinfo,
       requestingUser.lang,
-      responderData.appConfig.fallbackLanguage
+      appConfig.fallbackLanguage
     )
+}
 
+object ListsResponderV2Live {
+  val layer: URLayer[
+    AppConfig with MessageRelay,
+    ListsResponderV2
+  ] = ZLayer.fromZIO {
+    for {
+      ac      <- ZIO.service[AppConfig]
+      mr      <- ZIO.service[MessageRelay]
+      handler <- mr.subscribe(ListsResponderV2Live(ac, mr))
+    } yield handler
+  }
 }
