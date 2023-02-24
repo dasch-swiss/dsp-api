@@ -24,6 +24,8 @@ import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsServiceLive
+import org.knora.webapi.responders.admin.SipiResponderADM
+import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.routing.ApiRoutes
@@ -75,6 +77,7 @@ object LayersLive {
       with RepositoryUpdater
       with RestResourceInfoService
       with RestCardinalityService
+      with SipiResponderADM
       with State
       with TriplestoreServiceManager
       with TriplestoreService
@@ -119,6 +122,7 @@ object LayersLive {
       ResourceInfoRoute.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
+      SipiResponderADMLive.layer,
       State.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,

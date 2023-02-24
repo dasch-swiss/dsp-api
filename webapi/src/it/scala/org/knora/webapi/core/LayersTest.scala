@@ -40,6 +40,8 @@ import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.responders.admin.SipiResponderADM
+import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 
@@ -73,6 +75,7 @@ object LayersTest {
     with ResourceInfoRepo
     with RestCardinalityService
     with RestResourceInfoService
+    with SipiResponderADM
     with State
     with StringFormatter
     with TestClientService
@@ -106,6 +109,7 @@ object LayersTest {
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
+      SipiResponderADMLive.layer,
       State.layer,
       StringFormatter.test,
       TestClientService.layer,
