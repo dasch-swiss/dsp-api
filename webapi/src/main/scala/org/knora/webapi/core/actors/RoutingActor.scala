@@ -23,7 +23,6 @@ import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
-import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
@@ -59,15 +58,14 @@ final case class RoutingActor(
   private implicit val executionContext: ExecutionContext = actorDeps.executionContext
 
   // V1 responders
-  private val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
-  private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
-  private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
-  private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
-  private val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
-  private val listsResponderV1: ListsResponderV1         = new ListsResponderV1(responderData)
-  private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
-  private val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
-  private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps)
+  private val ckanResponderV1: CkanResponderV1         = new CkanResponderV1(responderData)
+  private val valuesResponderV1: ValuesResponderV1     = new ValuesResponderV1(responderData)
+  private val standoffResponderV1: StandoffResponderV1 = new StandoffResponderV1(responderData)
+  private val usersResponderV1: UsersResponderV1       = new UsersResponderV1(responderData)
+  private val listsResponderV1: ListsResponderV1       = new ListsResponderV1(responderData)
+  private val searchResponderV1: SearchResponderV1     = new SearchResponderV1(responderData)
+  private val ontologyResponderV1: OntologyResponderV1 = new OntologyResponderV1(responderData)
+  private val projectsResponderV1: ProjectsResponderV1 = ProjectsResponderV1(actorDeps)
 
   // V2 responders
   private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, runtime)
@@ -87,8 +85,6 @@ final case class RoutingActor(
     // V1 request messages
     case ckanResponderRequestV1: CkanResponderRequestV1 =>
       ActorUtil.future2Message(sender(), ckanResponderV1.receive(ckanResponderRequestV1), log)
-    case resourcesResponderRequestV1: ResourcesResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), resourcesResponderV1.receive(resourcesResponderRequestV1), log)
     case valuesResponderRequestV1: ValuesResponderRequestV1 =>
       ActorUtil.future2Message(sender(), valuesResponderV1.receive(valuesResponderRequestV1), log)
     case listsResponderRequestV1: ListsResponderRequestV1 =>

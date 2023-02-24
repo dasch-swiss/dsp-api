@@ -5,21 +5,21 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
+import com.typesafe.scalalogging.LazyLogging
+import zio._
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
@@ -31,7 +31,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequ
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util._
@@ -48,24 +47,38 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.responders.v2.ResourceUtilV2Z
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
-import org.knora.webapi.util.ActorUtil
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
+import org.knora.webapi.util.ZioHelper
 
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
  */
-class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+trait ResourcesResponderV1
 
-  // Converts SPARQL query results to ApiValueV1 objects.
-  private val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
+final case class ResourcesResponderV1Live(
+  appConfig: AppConfig,
+  iriService: IriService,
+  messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService,
+  valueUtilV1: ValueUtilV1Z,
+  resourceUtilV2: ResourceUtilV2Z,
+  implicit val stringFormatter: StringFormatter
+) extends ResourcesResponderV1
+    with MessageHandler
+    with LazyLogging {
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean =
+    message.isInstanceOf[ResourcesResponderRequestV1]
 
   /**
    * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
    */
-  def receive(msg: ResourcesResponderRequestV1) = msg match {
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ResourceInfoGetRequestV1(resourceIri, userProfile) =>
       getResourceInfoResponseV1(resourceIri, userProfile)
     case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) =>
@@ -117,19 +130,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile)
     case UnexpectedMessageRequest()              => makeFutureOfUnit
     case InternalServerExceptionMessageRequest() => makeInternalServerException
-    case other                                   => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other                                   => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Methods for generating complete API responses.
 
-  // TODO: move this to a test responder in the test package.
-  private def makeInternalServerException: Future[String] =
-    Future.failed(UpdateNotPerformedException("thrown inside the ResourcesResponder"))
+  private def makeInternalServerException: Task[String] =
+    ZIO.fail(UpdateNotPerformedException("thrown inside the ResourcesResponder"))
 
-  // TODO: move this to a test responder in the test package.
-  private def makeFutureOfUnit: Future[Unit] =
-    Future(())
+  private def makeFutureOfUnit: Task[Unit] = ZIO.unit
 
   /**
    * Gets a graph of resources that are reachable via links to or from a given resource.
@@ -137,7 +147,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
    * @param graphDataGetRequest a [[GraphDataGetRequestV1]] specifying the characteristics of the graph.
    * @return a [[GraphDataGetResponseV1]] representing the requested graph.
    */
-  private def getGraphDataResponseV1(graphDataGetRequest: GraphDataGetRequestV1): Future[GraphDataGetResponseV1] = {
+  private def getGraphDataResponseV1(graphDataGetRequest: GraphDataGetRequestV1): Task[GraphDataGetResponseV1] = {
     val userProfileV1 = graphDataGetRequest.userADM.asUserProfileV1
 
     /**
@@ -206,12 +216,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       outbound: Boolean,
       depth: Int,
       traversedEdges: Set[QueryResultEdge] = Set.empty[QueryResultEdge]
-    ): Future[GraphQueryResults] = {
-      if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
+    ): Task[GraphQueryResults] = {
+      if (depth < 1) ZIO.fail(AssertionException("Depth must be at least 1"))
 
       for {
         // Get the direct links from/to the start node.
-        sparql <- Future(
+        sparql <- ZIO.attempt(
                     org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                       .getGraphData(
                         startNodeIri = startNode.nodeIri,
@@ -221,16 +231,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                       .toString()
                   )
 
-        // _ = println(sparql)
-
-        response: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
-        rows                          = response.results.bindings
+        response <- triplestoreService.sparqlHttpSelect(sparql)
+        rows      = response.results.bindings
 
         // Did we get any results?
-        recursiveResults: GraphQueryResults <-
+        recursiveResults <-
           if (rows.isEmpty) {
             // No. Return  nothing.
-            Future(GraphQueryResults())
+            ZIO.attempt(GraphQueryResults())
           } else {
             // Yes. Get the nodes from the query results.
             val otherNodes: Seq[QueryResultNode] = rows.map { row =>
@@ -317,11 +325,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // Have we reached the maximum depth?
             if (depth == 1) {
               // Yes. Just return the results we have.
-              Future(results)
+              ZIO.attempt(results)
             } else {
               // No. Recursively get results for each of the nodes we found.
 
-              val lowerResultFutures: Seq[Future[GraphQueryResults]] = filteredOtherNodes.map { node =>
+              val lowerResultFutures: Seq[Task[GraphQueryResults]] = filteredOtherNodes.map { node =>
                 traverseGraph(
                   startNode = node,
                   outbound = outbound,
@@ -330,7 +338,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 )
               }
 
-              val lowerResultsFuture: Future[Seq[GraphQueryResults]] = Future.sequence(lowerResultFutures)
+              val lowerResultsFuture: Task[Seq[GraphQueryResults]] = ZioHelper.sequence(lowerResultFutures)
 
               // Return those results plus the ones we found.
 
@@ -349,7 +357,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
     for {
       // Get the start node.
-      sparql <- Future(
+      sparql <- ZIO.attempt(
                   org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                     .getGraphData(
                       startNodeIri = graphDataGetRequest.resourceIri,
@@ -358,10 +366,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     .toString()
                 )
 
-      // _ = println(sparql)
-
-      response: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
-      rows                          = response.results.bindings
+      response <- triplestoreService.sparqlHttpSelect(sparql)
+      rows      = response.results.bindings
 
       _ = if (rows.isEmpty) {
             throw NotFoundException(s"Resource ${graphDataGetRequest.resourceIri} not found (it may have been deleted)")
@@ -396,18 +402,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           }
 
       // Recursively get the graph containing outbound links.
-      outboundQueryResults: GraphQueryResults <- traverseGraph(
-                                                   startNode = startNode,
-                                                   outbound = true,
-                                                   depth = graphDataGetRequest.depth
-                                                 )
+      outboundQueryResults <- traverseGraph(
+                                startNode = startNode,
+                                outbound = true,
+                                depth = graphDataGetRequest.depth
+                              )
 
       // Recursively get the graph containing inbound links.
-      inboundQueryResults: GraphQueryResults <- traverseGraph(
-                                                  startNode = startNode,
-                                                  outbound = false,
-                                                  depth = graphDataGetRequest.depth
-                                                )
+      inboundQueryResults <- traverseGraph(
+                               startNode = startNode,
+                               outbound = false,
+                               depth = graphDataGetRequest.depth
+                             )
 
       // Combine the outbound and inbound graphs into a single graph.
       nodes: Set[QueryResultNode] = outboundQueryResults.nodes ++ inboundQueryResults.nodes + startNode
@@ -423,9 +429,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             propertyIris = propertyIris,
                             userProfile = graphDataGetRequest.userADM
                           )
-      entityInfoResponse: EntityInfoGetResponseV1 <- appActor
-                                                       .ask(entityInfoRequest)
-                                                       .mapTo[EntityInfoGetResponseV1]
+      entityInfoResponse <- messageRelay.ask[EntityInfoGetResponseV1](entityInfoRequest)
 
       // Convert each node to a GraphNodeV1 for the API response message.
       resultNodes: Vector[GraphNodeV1] = nodes.map { node =>
@@ -436,7 +440,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                predicateIri = OntologyConstants.Rdfs.Label,
                                                preferredLangs = Some(
                                                  graphDataGetRequest.userADM.lang,
-                                                 responderData.appConfig.fallbackLanguage
+                                                 appConfig.fallbackLanguage
                                                )
                                              )
                                              .getOrElse(
@@ -462,7 +466,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                predicateIri = OntologyConstants.Rdfs.Label,
                                                preferredLangs = Some(
                                                  graphDataGetRequest.userADM.lang,
-                                                 responderData.appConfig.fallbackLanguage
+                                                 appConfig.fallbackLanguage
                                                )
                                              )
                                              .getOrElse(
@@ -492,13 +496,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
   private def getResourceInfoResponseV1(
     resourceIri: IRI,
     userProfile: UserADM
-  ): Future[ResourceInfoResponseV1] =
+  ): Task[ResourceInfoResponseV1] =
     for {
-      (userPermissions, resInfo) <- getResourceInfoV1(
-                                      resourceIri = resourceIri,
-                                      userProfile = userProfile,
-                                      queryOntology = true
-                                    )
+      userPermissionsAndResInfo <- getResourceInfoV1(resourceIri, userProfile, queryOntology = true)
+      userPermissions            = userPermissionsAndResInfo._1
+      resInfo                    = userPermissionsAndResInfo._2
     } yield userPermissions match {
       case Some(_) =>
         ResourceInfoResponseV1(
@@ -522,14 +524,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     resourceIri: IRI,
     userProfile: UserADM,
     getIncoming: Boolean = true
-  ): Future[ResourceFullResponseV1] = {
+  ): Task[ResourceFullResponseV1] = {
     val userProfileV1 = userProfile.asUserProfileV1
 
     // Query resource info, resource properties, and incoming references in parallel.
     // See http://buransky.com/scala/scala-for-comprehension-with-concurrently-running-futures/
 
     // Get information about the properties that have values for this resource.
-    val groupedPropsByTypeFuture: Future[GroupedPropertiesByType] = getGroupedProperties(resourceIri)
+    val groupedPropsByTypeFuture: Task[GroupedPropertiesByType] = getGroupedProperties(resourceIri)
 
     // Get a resource info containing basic information about the resource. Do not query the ontology here, because we will query it below.
     val resourceInfoFuture = getResourceInfoV1(
@@ -539,26 +541,28 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     )
 
     // Get information about the references pointing from other resources to this resource.
-    val maybeIncomingRefsFuture: Future[Option[SparqlSelectResult]] = if (getIncoming) {
+    val maybeIncomingRefsFuture: Task[Option[SparqlSelectResult]] = if (getIncoming) {
       for {
-        incomingRefsSparql <- Future(
+        incomingRefsSparql <- ZIO.attempt(
                                 org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                   .getIncomingReferences(
                                     resourceIri = resourceIri
                                   )
                                   .toString()
                               )
-        response <- appActor.ask(SparqlSelectRequest(incomingRefsSparql)).mapTo[SparqlSelectResult]
+        response <- triplestoreService.sparqlHttpSelect(incomingRefsSparql)
       } yield Some(response)
     } else {
-      Future(None)
+      ZIO.attempt(None)
     }
 
     for {
       // Get the resource info (minus ontology-based information) and the user's permissions on it.
-      (permissions, resInfoWithoutQueryingOntology: ResourceInfoV1) <- resourceInfoFuture
+      t                                             <- resourceInfoFuture
+      permissions                                    = t._1
+      resInfoWithoutQueryingOntology: ResourceInfoV1 = t._2
 
-      groupedPropsByType: GroupedPropertiesByType <- groupedPropsByTypeFuture
+      groupedPropsByType <- groupedPropsByTypeFuture
 
       // Get the types of all the resources that this resource links to.
       linkedResourceTypes = groupedPropsByType.groupedLinkProperties.groupedProperties.foldLeft(Set.empty[IRI]) {
@@ -578,9 +582,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Group incoming reference rows by the IRI of the referring resource, and construct an IncomingV1 for each one.
 
-      maybeIncomingRefsResponse: Option[SparqlSelectResult] <- maybeIncomingRefsFuture
+      maybeIncomingRefsResponse <- maybeIncomingRefsFuture
 
-      incomingRefFutures: Vector[Future[Vector[IncomingV1]]] =
+      incomingRefFutures: Vector[Task[Vector[IncomingV1]]] =
         maybeIncomingRefsResponse match {
           case Some(incomingRefsResponse) =>
             val incomingRefsResponseRows =
@@ -610,16 +614,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 )
 
                 for {
-                  (incomingResPermission, incomingResInfo) <-
+                  t <-
                     makeResourceInfoV1(
                       resourceIri = incomingIri,
                       resInfoResponseRows = rowsForResInfo,
                       userProfile = userProfile,
                       queryOntology = false
                     )
+                  incomingResPermission = t._1
+                  incomingResInfo       = t._2
 
                   // Does the user have permission to see the referring resource?
-                  incomingV1s: Vector[IncomingV1] <-
+                  incomingV1s <-
                     incomingResPermission match {
                       case Some(_) =>
                         // Yes. For each link from the referring resource, check whether the user has permission to see the link. If so, make an IncomingV1 for the link.
@@ -645,7 +651,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                         // For each LinkValue, check whether the user has permission to see the link, and if so, make an IncomingV1.
                         val maybeIncomingV1sWithFuture: Iterable[
-                          Future[Option[IncomingV1]]
+                          Task[Option[IncomingV1]]
                         ] = groupedByLinkValue.map {
                           case (
                                 linkValueIri: IRI,
@@ -663,13 +669,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.
 
                             for {
-                              apiValueV1 <-
-                                valueUtilV1.makeValueV1(
-                                  valueProps = linkValueProps,
-                                  projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
-                                  appActor = appActor,
-                                  userProfile = userProfile
-                                )
+                              apiValueV1 <- valueUtilV1.makeValueV1(
+                                              valueProps = linkValueProps,
+                                              projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
+                                              userProfile = userProfile
+                                            )
 
                               linkValueV1: LinkValueV1 =
                                 apiValueV1 match {
@@ -717,43 +721,38 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         for {
 
                           // turn the Iterable of Futures into a Future of an Iterable
-                          maybeIncomingV1s: Iterable[
-                            Option[IncomingV1]
-                          ] <- Future.sequence(
-                                 maybeIncomingV1sWithFuture
-                               )
+                          maybeIncomingV1s <- ZioHelper.sequence(maybeIncomingV1sWithFuture.toSeq)
 
                           // Filter out the Nones, which represent incoming links that the user doesn't have permission to see.
                         } yield maybeIncomingV1s.flatten.toVector
 
                       case None =>
                         // The user doesn't have permission to see the referring resource.
-                        Future(Vector.empty[IncomingV1])
+                        ZIO.attempt(Vector.empty[IncomingV1])
                     }
                 } yield incomingV1s
 
             }.toVector
 
-          case None => Vector.empty[Future[Vector[IncomingV1]]]
+          case None => Vector.empty[Task[Vector[IncomingV1]]]
         }
 
-      incomingRefsWithoutQueryingOntology <- Future.sequence(incomingRefFutures).map(_.flatten)
+      incomingRefsWithoutQueryingOntology <- ZioHelper.sequence(incomingRefFutures).map(_.flatten)
 
       // Get the resource types of the incoming resources.
       incomingTypes: Set[IRI] = incomingRefsWithoutQueryingOntology.map(_.resinfo.restype_id).toSet
 
       // Ask the ontology responder for information about the ontology entities that we need information about.
-      entityInfoResponse: EntityInfoGetResponseV1 <- appActor
-                                                       .ask(
-                                                         EntityInfoGetRequestV1(
-                                                           resourceClassIris =
-                                                             incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id,
-                                                           propertyIris =
-                                                             groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet,
-                                                           userProfile = userProfile
-                                                         )
-                                                       )
-                                                       .mapTo[EntityInfoGetResponseV1]
+      entityInfoResponse <- messageRelay
+                              .ask[EntityInfoGetResponseV1](
+                                EntityInfoGetRequestV1(
+                                  resourceClassIris =
+                                    incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id,
+                                  propertyIris =
+                                    groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet,
+                                  userProfile = userProfile
+                                )
+                              )
 
       // Add ontology-based information to the resource info.
       resourceTypeIri        = resInfoWithoutQueryingOntology.restype_id
@@ -769,14 +768,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       resourceClassLabel = resourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Label,
-                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                            )
 
       resInfo: ResourceInfoV1 = resInfoWithoutQueryingOntology.copy(
                                   restype_label = resourceClassLabel,
                                   restype_description = resourceTypeEntityInfo.getPredicateObject(
                                     predicateIri = OntologyConstants.Rdfs.Comment,
-                                    preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                                    preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                                   ),
                                   restype_iconsrc = maybeResourceTypeIconSrc
                                 )
@@ -799,11 +798,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                          resinfo = incoming.resinfo.copy(
                            restype_label = incomingResourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Label,
-                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                            ),
                            restype_description = incomingResourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Comment,
-                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                            ),
                            restype_iconsrc = incomingResourceTypeEntityInfo.getPredicateObject(
                              OntologyConstants.KnoraBase.ResourceIcon
@@ -843,14 +842,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         propsAndCardinalities.keySet -- (groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet)
 
       // Get information from the ontology about the properties that have no data for this resource.
-      emptyPropsInfoResponse: EntityInfoGetResponseV1 <- appActor
-                                                           .ask(
-                                                             EntityInfoGetRequestV1(
-                                                               propertyIris = emptyPropsIris,
-                                                               userProfile = userProfile
-                                                             )
-                                                           )
-                                                           .mapTo[EntityInfoGetResponseV1]
+      emptyPropsInfoResponse <- messageRelay
+                                  .ask[EntityInfoGetResponseV1](
+                                    EntityInfoGetRequestV1(
+                                      propertyIris = emptyPropsIris,
+                                      userProfile = userProfile
+                                    )
+                                  )
 
       // Create a PropertyV1 for each of those properties.
       emptyProps: Set[PropertyV1] = emptyPropsIris.map { propertyIri =>
@@ -875,8 +873,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             ),
                                           label = propertyEntityInfo.getPredicateObject(
                                             predicateIri = OntologyConstants.Rdfs.Label,
-                                            preferredLangs =
-                                              Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                                            preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                                           ),
                                           occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                                           attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
@@ -907,8 +904,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             ),
                                           label = propertyEntityInfo.getPredicateObject(
                                             predicateIri = OntologyConstants.Rdfs.Label,
-                                            preferredLangs =
-                                              Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                                            preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                                           ),
                                           occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                                           attributes = propertyEntityInfo
@@ -971,7 +967,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     resourceIri: IRI,
     userProfile: UserADM,
     resinfo: Boolean
-  ): Future[ResourceContextResponseV1] = {
+  ): Task[ResourceContextResponseV1] = {
     val userProfileV1 = userProfile.asUserProfileV1
 
     /**
@@ -1093,11 +1089,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
     for {
       // Get the resource info even if the user didn't ask for it, so we can check its permissions.
-      (userPermission, resInfoV1) <- getResourceInfoV1(
-                                       resourceIri = resourceIri,
-                                       userProfile = userProfile,
-                                       queryOntology = true
-                                     )
+      userPermissionAndResInfoV1 <- getResourceInfoV1(resourceIri, userProfile, queryOntology = true)
+      userPermission              = userPermissionAndResInfoV1._1
+      resInfoV1                   = userPermissionAndResInfoV1._2
 
       _ = if (userPermission.isEmpty) {
             throw ForbiddenException(
@@ -1111,11 +1105,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 resourceIri = resourceIri
                               )
                               .toString()
-      isPartOfResponse: SparqlSelectResult <- appActor
-                                                .ask(SparqlSelectRequest(isPartOfSparqlQuery))
-                                                .mapTo[SparqlSelectResult]
+      isPartOfResponse <- triplestoreService.sparqlHttpSelect(isPartOfSparqlQuery)
 
-      (containingResourceIriOption: Option[IRI], containingResInfoV1Option: Option[ResourceInfoV1]) <-
+      t <-
         isPartOfResponse.results.bindings match {
           case rows if rows.nonEmpty =>
             val rowMap                    = rows.head.rowMap
@@ -1123,11 +1115,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             val containingResourceProject = rowMap("containingResourceProject")
 
             for {
-              (containingResourcePermissionCode, resInfoV1) <- getResourceInfoV1(
-                                                                 resourceIri = containingResourceIri,
-                                                                 userProfile = userProfile,
-                                                                 queryOntology = true
-                                                               )
+              containingResourcePermissionCodeAndResInfoV1 <-
+                getResourceInfoV1(containingResourceIri, userProfile, queryOntology = true)
+              containingResourcePermissionCode = containingResourcePermissionCodeAndResInfoV1._1
+              resInfoV1                        = containingResourcePermissionCodeAndResInfoV1._2
 
               linkValueIri         = rowMap("linkValue")
               linkValueCreator     = rowMap("linkValueCreator")
@@ -1147,14 +1138,15 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               case Some(_) => (Some(containingResourceIri), Some(resInfoV1))
               case None    => (None, None)
             }
-          case _ => Future((None, None))
+          case _ => ZIO.attempt((None, None))
         }
-
-      resourceContexts: Seq[ResourceContextItemV1] <-
+      containingResourceIriOption: Option[IRI]          = t._1
+      containingResInfoV1Option: Option[ResourceInfoV1] = t._2
+      resourceContexts <-
         if (containingResInfoV1Option.isEmpty) {
           for {
             // Otherwise, do a SPARQL query that returns resources that are part of this resource (as indicated by knora-base:isPartOf).
-            contextSparqlQuery <- Future(
+            contextSparqlQuery <- ZIO.attempt(
                                     org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                       .getContext(
                                         resourceIri = resourceIri
@@ -1162,11 +1154,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                       .toString()
                                   )
 
-            // _ = println(contextSparqlQuery)
-
-            contextQueryResponse: SparqlSelectResult <- appActor
-                                                          .ask(SparqlSelectRequest(contextSparqlQuery))
-                                                          .mapTo[SparqlSelectResult]
+            contextQueryResponse         <- triplestoreService.sparqlHttpSelect(contextSparqlQuery)
             rows: Seq[VariableResultsRow] = contextQueryResponse.results.bindings
 
             // The results consist of one row per source object.
@@ -1220,29 +1208,27 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
           } yield contextItems
         } else {
-          Future(Nil)
+          ZIO.attempt(Nil)
         }
 
-      resinfoV1WithRegionsOption: Option[ResourceInfoV1] <-
+      resinfoV1WithRegionsOption <-
         if (resinfo) {
 
           for {
             //
             // check if there are regions pointing to this resource
             //
-            regionSparqlQuery <- Future(
+            regionSparqlQuery <- ZIO.attempt(
                                    org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                      .getRegions(
                                        resourceIri = resourceIri
                                      )
                                      .toString()
                                  )
-            regionQueryResponse: SparqlSelectResult <- appActor
-                                                         .ask(SparqlSelectRequest(regionSparqlQuery))
-                                                         .mapTo[SparqlSelectResult]
-            regionRows = regionQueryResponse.results.bindings
+            regionQueryResponse <- triplestoreService.sparqlHttpSelect(regionSparqlQuery)
+            regionRows           = regionQueryResponse.results.bindings
 
-            regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] =
+            regionPropertiesSequencedFutures: Seq[Task[PropsGetForRegionV1]] =
               regionRows.filter { regionRow =>
                 val permissionCodeForRegion =
                   PermissionUtilADM
@@ -1267,12 +1253,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                 // get the properties for each region
                 for {
-                  propsV1: Seq[PropertyV1] <-
-                    getResourceProperties(
-                      resourceIri = regionIri,
-                      maybeResourceTypeIri = Some(resClass),
-                      userProfile = userProfile
-                    )
+                  propsV1 <- getResourceProperties(
+                               resourceIri = regionIri,
+                               maybeResourceTypeIri = Some(resClass),
+                               userProfile = userProfile
+                             )
 
                   propsGetV1 = propsV1.map {
                                  // convert each PropertyV1 in a PropertyGetV1
@@ -1283,15 +1268,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                }
 
                   // get the icon for this region's resource class
-                  entityInfoResponse: EntityInfoGetResponseV1 <-
-                    appActor
-                      .ask(
-                        EntityInfoGetRequestV1(
-                          resourceClassIris = Set(resClass),
-                          userProfile = userProfile
-                        )
-                      )
-                      .mapTo[EntityInfoGetResponseV1]
+                  entityInfoResponse <- messageRelay
+                                          .ask[EntityInfoGetResponseV1](
+                                            EntityInfoGetRequestV1(
+                                              resourceClassIris = Set(resClass),
+                                              userProfile = userProfile
+                                            )
+                                          )
 
                   regionInfo: ClassInfoV1 =
                     entityInfoResponse
@@ -1328,7 +1311,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               }
 
             // turn sequenced Futures into one Future of a sequence
-            regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
+            regionProperties <- ZioHelper.sequence(regionPropertiesSequencedFutures)
 
             resinfoWithRegions: Option[ResourceInfoV1] =
               if (regionProperties.nonEmpty) {
@@ -1341,7 +1324,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           } yield resinfoWithRegions
         } else {
           // resinfo is not requested
-          Future(None)
+          ZIO.attempt(None)
         }
 
       resourceContextV1 = containingResourceIriOption match {
@@ -1392,13 +1375,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
   private def getRightsResponseV1(
     resourceIri: IRI,
     userProfile: UserADM
-  ): Future[ResourceRightsResponseV1] =
+  ): Task[ResourceRightsResponseV1] =
     for {
-      (userPermission, _) <- getResourceInfoV1(
-                               resourceIri = resourceIri,
-                               userProfile = userProfile,
-                               queryOntology = false
-                             )
+      userPermission <- getResourceInfoV1(resourceIri, userProfile, queryOntology = false).map(_._1)
 
       // Construct an API response.
       rightsResponse = ResourceRightsResponseV1(rights = userPermission)
@@ -1420,13 +1399,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     numberOfProps: Int,
     limitOfResults: Int,
     userProfile: UserADM
-  ): Future[ResourceSearchResponseV1] = {
+  ): Task[ResourceSearchResponseV1] = {
     val userProfileV1 = userProfile.asUserProfileV1
     val searchPhrase  = MatchStringWhileTyping(searchString)
 
     for {
 
-      searchResourcesSparql <- Future(
+      searchResourcesSparql <- ZIO.attempt(
                                  org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                    .getResourceSearchResult(
                                      searchPhrase = searchPhrase,
@@ -1438,11 +1417,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                    .toString()
                                )
 
-      // _ = println(searchResourcesSparql)
+      searchResponse <- triplestoreService.sparqlHttpSelect(searchResourcesSparql)
 
-      searchResponse <- appActor.ask(SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResult]
-
-      resultFutures: Seq[Future[ResourceSearchResultRowV1]] =
+      resultFutures: Seq[Task[ResourceSearchResultRowV1]] =
         searchResponse.results.bindings.map { row: VariableResultsRow =>
           val resourceIri         = row.rowMap("resourceIri")
           val resourceClass       = row.rowMap("resourceClass")
@@ -1460,14 +1437,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           )
 
           for {
-            resourceClassInfoResponse <- appActor
-                                           .ask(
-                                             EntityInfoGetRequestV1(
-                                               resourceClassIris = Set(resourceClass),
-                                               userProfile = userProfile
-                                             )
+            resourceClassInfoResponse <- messageRelay.ask[EntityInfoGetResponseV1](
+                                           EntityInfoGetRequestV1(
+                                             resourceClassIris = Set(resourceClass),
+                                             userProfile = userProfile
                                            )
-                                           .mapTo[EntityInfoGetResponseV1]
+                                         )
 
             cardinalities: Map[IRI, KnoraCardinalityInfo] = resourceClassInfoResponse
                                                               .resourceClassInfoMap(resourceClass)
@@ -1520,7 +1495,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     )
 
                   case None =>
-                    log.debug("more values were asked (numberOfProps > 1), but there were none to be found")
+                    logger.debug("more values were asked (numberOfProps > 1), but there were none to be found")
                     ResourceSearchResultRowV1(
                       id = row.rowMap("resourceIri"),
                       value = Vector(firstProp),
@@ -1540,7 +1515,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         }
 
-      resources: Seq[ResourceSearchResultRowV1] <- Future.sequence(resultFutures)
+      resources <- ZioHelper.sequence(resultFutures)
       filteredResources = resources.filter(
                             _.rights.nonEmpty
                           ) // user must have permissions to see resource (must not be None)
@@ -1563,34 +1538,33 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     projectIri: IRI,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Future[MultipleResourceCreateResponseV1] = {
+  ): Task[MultipleResourceCreateResponseV1] = {
     // Convert all the image metadata in the request to FileValueContentV2 instances, so we
     // can use ResourceUtilV2.doSipiPostUpdate after updating the triplestore.
     val fileValueContentV2s: Seq[FileValueContentV2] = resourcesToCreate.flatMap { resourceToCreate =>
       resourceToCreate.file.map(_.toFileValueContentV2)
     }
 
-    val updateFuture: Future[MultipleResourceCreateResponseV1] = for {
+    val updateTask: Task[MultipleResourceCreateResponseV1] = for {
       // Get user's IRI and don't allow anonymous users to create resources.
-      userIri: IRI <- Future {
-                        if (requestingUser.isAnonymousUser) {
-                          throw ForbiddenException("Anonymous users aren't allowed to create resources")
-                        } else {
-                          requestingUser.id
-                        }
-                      }
+      userIri <- ZIO.attempt {
+                   if (requestingUser.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                   } else {
+                     requestingUser.id
+                   }
+                 }
 
       // Get information about the project in which the resources will be created.
       projectInfoResponse <-
-        appActor
-          .ask(
+        messageRelay
+          .ask[ProjectGetResponseADM](
             ProjectGetRequestADM(identifier =
               IriIdentifier
                 .fromString(projectIri)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
-          .mapTo[ProjectGetResponseADM]
 
       projectADM = projectInfoResponse.project
 
@@ -1617,7 +1591,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectADM.shortcode)
             )
             .toMap,
-          errorTemplateFun = { key =>
+          errorTemplateFun = { key: Any =>
             s"Resource $key is the target of a link, but was not provided in the request"
           },
           errorFun = { errorMsg =>
@@ -1629,7 +1603,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       clientResourceIDsToResourceClasses: Map[String, IRI] =
         new ErrorHandlingMap(
           toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> resRequest.resourceTypeIri).toMap,
-          errorTemplateFun = { key =>
+          errorTemplateFun = { key: Any =>
             s"Resource $key is the target of a link, but was not provided in the request"
           },
           errorFun = { errorMsg =>
@@ -1644,14 +1618,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // Ensure that none of the resource classes is from a non-shared ontology in another project.
 
       resourceClassOntologyIris: Set[SmartIri] = resourceClasses.map(_.toSmartIri.getOntologyFromEntity)
-      readOntologyMetadataV2: ReadOntologyMetadataV2 <- appActor
-                                                          .ask(
-                                                            OntologyMetadataGetByIriRequestV2(
-                                                              resourceClassOntologyIris,
-                                                              requestingUser
-                                                            )
-                                                          )
-                                                          .mapTo[ReadOntologyMetadataV2]
+      readOntologyMetadataV2 <- messageRelay.ask[ReadOntologyMetadataV2](
+                                  OntologyMetadataGetByIriRequestV2(resourceClassOntologyIris, requestingUser)
+                                )
 
       _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
             val ontologyProjectIri: IRI = ontologyMetadata.projectIri
@@ -1669,30 +1638,28 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             }
           }
 
-      resourceClassesEntityInfoResponse: EntityInfoGetResponseV1 <- appActor
-                                                                      .ask(
-                                                                        EntityInfoGetRequestV1(
-                                                                          resourceClassIris = resourceClasses,
-                                                                          propertyIris = Set.empty[IRI],
-                                                                          userProfile = requestingUser
-                                                                        )
-                                                                      )
-                                                                      .mapTo[EntityInfoGetResponseV1]
+      resourceClassesEntityInfoResponse <- messageRelay
+                                             .ask[EntityInfoGetResponseV1](
+                                               EntityInfoGetRequestV1(
+                                                 resourceClassIris = resourceClasses,
+                                                 propertyIris = Set.empty[IRI],
+                                                 userProfile = requestingUser
+                                               )
+                                             )
 
       allPropertyIris: Set[IRI] = resourceClassesEntityInfoResponse.resourceClassInfoMap.flatMap {
                                     case (_, resourceEntityInfo) =>
                                       resourceEntityInfo.knoraResourceCardinalities.keySet
                                   }.toSet
 
-      propertyEntityInfoResponse: EntityInfoGetResponseV1 <- appActor
-                                                               .ask(
-                                                                 EntityInfoGetRequestV1(
-                                                                   resourceClassIris = Set.empty[IRI],
-                                                                   propertyIris = allPropertyIris,
-                                                                   userProfile = requestingUser
-                                                                 )
-                                                               )
-                                                               .mapTo[EntityInfoGetResponseV1]
+      propertyEntityInfoResponse <- messageRelay
+                                      .ask[EntityInfoGetResponseV1](
+                                        EntityInfoGetRequestV1(
+                                          resourceClassIris = Set.empty[IRI],
+                                          propertyIris = allPropertyIris,
+                                          userProfile = requestingUser
+                                        )
+                                      )
 
       propertyEntityInfoMapsPerResource: Map[IRI, Map[IRI, PropertyInfoV1]] =
         resourceClassesEntityInfoResponse.resourceClassInfoMap.map { case (resourceClassIri, resourceEntityInfo) =>
@@ -1706,12 +1673,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Get the default object access permissions for all the resource classes and properties used in the request.
 
-      defaultResourceClassAccessPermissionsFutures: Vector[Future[(IRI, String)]] =
+      defaultResourceClassAccessPermissionsFutures: Vector[Task[(IRI, String)]] =
         resourceClasses.toVector.map { resourceClassIri =>
           for {
             defaultObjectAccessPermissions <-
-              appActor
-                .ask(
+              messageRelay
+                .ask[DefaultObjectAccessPermissionsStringResponseADM](
                   DefaultObjectAccessPermissionsStringForResourceClassGetADM(
                     projectIri = projectIri,
                     resourceClassIri = resourceClassIri,
@@ -1719,13 +1686,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
                 )
-                .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
           } yield (resourceClassIri, defaultObjectAccessPermissions.permissionLiteral)
         }
 
-      defaultResourceClassAccessPermissionsSeq: Vector[(IRI, String)] <- Future.sequence(
-                                                                           defaultResourceClassAccessPermissionsFutures
-                                                                         )
+      defaultResourceClassAccessPermissionsSeq <- ZioHelper.sequence(defaultResourceClassAccessPermissionsFutures)
       defaultResourceClassAccessPermissionsMap =
         new ErrorHandlingMap(
           defaultResourceClassAccessPermissionsSeq.toMap,
@@ -1734,12 +1698,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           }
         )
 
-      defaultPropertyAccessPermissionsFutures: Map[IRI, Future[Map[IRI, String]]] =
+      defaultPropertyAccessPermissionsFutures =
         propertyEntityInfoMapsPerResource.map { case (resourceClassIri, propertyInfoMap) =>
           val propertyPermissionFutures = propertyInfoMap.keys.map { propertyIri =>
             for {
-              defaultObjectAccessPermissions <- appActor
-                                                  .ask(
+              defaultObjectAccessPermissions <- messageRelay
+                                                  .ask[DefaultObjectAccessPermissionsStringResponseADM](
                                                     DefaultObjectAccessPermissionsStringForPropertyGetADM(
                                                       projectIri = projectIri,
                                                       resourceClassIri = resourceClassIri,
@@ -1748,21 +1712,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                       requestingUser = KnoraSystemInstances.Users.SystemUser
                                                     )
                                                   )
-                                                  .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+
             } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
           }
 
-          val propertyPermissionsFuture: Future[Map[IRI, String]] =
-            Future.sequence(propertyPermissionFutures).map(_.toMap)
+          val propertyPermissionsFuture: Task[Map[IRI, String]] =
+            ZioHelper.sequence(propertyPermissionFutures.toSeq).map(_.toMap)
           (resourceClassIri, propertyPermissionsFuture)
         }
 
-      defaultPropertyAccessPermissionsMapContents: Map[IRI, Map[IRI, String]] <-
-        ActorUtil.sequenceFuturesInMap(
-          defaultPropertyAccessPermissionsFutures
-        )
+      defaultPropertyAccessPermissionsMapContents <- ZioHelper.sequence(defaultPropertyAccessPermissionsFutures)
 
-      defaultPropertyAccessPermissionsMapToWrap: Map[IRI, Map[IRI, String]] =
+      defaultPropertyAccessPermissionsMapToWrap =
         defaultPropertyAccessPermissionsMapContents.map {
           case (resourceClassIri: IRI, propertyPermissions: Map[IRI, String]) =>
             resourceClassIri -> new ErrorHandlingMap(
@@ -1773,27 +1734,23 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             )
         }
 
-      defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] =
+      defaultPropertyAccessPermissionsMap =
         new ErrorHandlingMap(
-          defaultPropertyAccessPermissionsMapToWrap.toMap,
+          defaultPropertyAccessPermissionsMapToWrap,
           { key: IRI =>
             s"No default property access permissions found for resource class $key"
           }
         )
 
-      resourceCreationFutures: Seq[Future[SparqlTemplateResourceToCreate]] =
+      resourceCreationFutures =
         resourcesToCreate.map { resourceCreateRequest: OneOfMultipleResourceCreateRequestV1 =>
           val creationDate: Instant = resourceCreateRequest.creationDate.getOrElse(Instant.now)
 
           for {
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
-            defaultObjectAccessPermissions: String <-
-              FastFuture(
-                Try(defaultResourceClassAccessPermissionsMap(resourceCreateRequest.resourceTypeIri))
-              )
-
-            // _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+            defaultObjectAccessPermissions <-
+              ZIO.attempt(defaultResourceClassAccessPermissionsMap(resourceCreateRequest.resourceTypeIri))
 
             _ = if (resourceCreateRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource) {
                   throw BadRequestException(
@@ -1837,7 +1794,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               }
 
             // generate sparql for every resource
-            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <-
+            generateSparqlForValuesResponse <-
               generateSparqlForValuesOfNewResource(
                 projectIri = projectIri,
                 resourceIri = resourceIri,
@@ -1863,7 +1820,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
 
       // change sequence of futures to future of sequences
-      sparqlTemplateResourcesToCreate: Seq[SparqlTemplateResourceToCreate] <- Future.sequence(resourceCreationFutures)
+      sparqlTemplateResourcesToCreate <- ZioHelper.sequence(resourceCreationFutures)
 
       // create a sparql query for all the resources to be created
       createMultipleResourcesSparql: String = generateSparqlForNewResources(
@@ -1874,9 +1831,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                               )
 
       // Do the update.
-      createResourceResponse <- appActor
-                                  .ask(SparqlUpdateRequest(createMultipleResourcesSparql))
-                                  .mapTo[SparqlUpdateResponse]
+      createResourceResponse <- triplestoreService.sparqlHttpUpdate(createMultipleResourcesSparql)
 
       // We don't query the newly created resources to verify that they and their values were actually created,
       // because this would be too expensive. In any case, since the update is done with INSERT DATA, i.e. there is no WHERE clause,
@@ -1892,41 +1847,31 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
     } yield MultipleResourceCreateResponseV1(responses, projectADM)
 
-    doSipiPostUpdateForResources(
-      updateFuture = updateFuture,
-      fileValueContentV2s = fileValueContentV2s,
-      requestingUser = requestingUser
-    )
+    doSipiPostUpdateForResources(updateTask, fileValueContentV2s, requestingUser)
   }
 
   /**
    * Asks Sipi to to move temporary image files to permanent storage if a triplestore update was successful,
    * or to delete the temporary files if the triplestore update failed.
    *
-   * @param updateFuture        the future resulting from the triplestore update.
+   * @param updateTask        the future resulting from the triplestore update.
    * @param fileValueContentV2s the file values that were created, if any.
    * @param requestingUser      the user making the request.
    * @return `updateFuture`, or a failed future (if Sipi failed to move a file to permanent storage).
    */
   private def doSipiPostUpdateForResources[T <: UpdateResultInProject](
-    updateFuture: Future[T],
+    updateTask: Task[T],
     fileValueContentV2s: Seq[FileValueContentV2],
     requestingUser: UserADM
-  ): Future[T] = {
-    val resultFutures: Seq[Future[T]] = fileValueContentV2s.map { valueContent =>
-      ResourceUtilV2.doSipiPostUpdate(
-        updateFuture = updateFuture,
-        valueContent = valueContent,
-        requestingUser = requestingUser,
-        appActor = appActor,
-        log = log
-      )
-    }
+  ): Task[T] = {
+    val result: Seq[Task[T]] =
+      fileValueContentV2s.map { valueContent =>
+        resourceUtilV2.doSipiPostUpdate(updateTask, valueContent, requestingUser, logger)
+      }
 
-    Future.sequence(resultFutures).transformWith {
-      case Success(_) => updateFuture
-      case Failure(e) => Future.failed(e)
-    }
+    ZioHelper
+      .sequence(result)
+      .foldZIO(e => ZIO.fail(e), _ => updateTask)
   }
 
   /**
@@ -1959,94 +1904,89 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       }
     ),
     userProfile: UserADM
-  ): Future[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
+  ): Task[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
     for {
       // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
       // point to it.
-      propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
-                                                          values.foldLeft(Vector.empty[Future[Unit]]) {
-                                                            case (acc, (propertyIri, valuesWithComments)) =>
-                                                              val propertyInfo =
-                                                                propertyInfoMap.getOrElse(
-                                                                  propertyIri,
-                                                                  throw NotFoundException(
-                                                                    s"Property not found: $propertyIri"
-                                                                  )
-                                                                )
-                                                              val propertyObjectClassConstraint =
-                                                                propertyInfo
-                                                                  .getPredicateObject(
-                                                                    OntologyConstants.KnoraBase.ObjectClassConstraint
-                                                                  )
-                                                                  .getOrElse {
-                                                                    throw InconsistentRepositoryDataException(
-                                                                      s"Property $propertyIri has no knora-base:objectClassConstraint"
-                                                                    )
-                                                                  }
+      _ <- ZioHelper.sequence {
+             values.foldLeft(Vector.empty[Task[Unit]]) { case (acc, (propertyIri, valuesWithComments)) =>
+               val propertyInfo =
+                 propertyInfoMap.getOrElse(
+                   propertyIri,
+                   throw NotFoundException(
+                     s"Property not found: $propertyIri"
+                   )
+                 )
+               val propertyObjectClassConstraint =
+                 propertyInfo
+                   .getPredicateObject(
+                     OntologyConstants.KnoraBase.ObjectClassConstraint
+                   )
+                   .getOrElse {
+                     throw InconsistentRepositoryDataException(
+                       s"Property $propertyIri has no knora-base:objectClassConstraint"
+                     )
+                   }
 
-                                                              acc ++ valuesWithComments.map {
-                                                                valueV1WithComment: CreateValueV1WithComment =>
-                                                                  valueV1WithComment.updateValueV1 match {
-                                                                    case LinkToClientIDUpdateV1(targetClientID) =>
-                                                                      // We're creating a link to a resource that doesn't exist yet, because it
-                                                                      // will be created in the same transaction. Check that it will belong to a
-                                                                      // suitable class.
-                                                                      val checkSubClassRequest = CheckSubClassRequestV1(
-                                                                        subClassIri =
-                                                                          clientResourceIDsToResourceClasses(
-                                                                            targetClientID
-                                                                          ),
-                                                                        superClassIri = propertyObjectClassConstraint,
-                                                                        userProfile = userProfile
-                                                                      )
+               acc ++ valuesWithComments.map { valueV1WithComment: CreateValueV1WithComment =>
+                 valueV1WithComment.updateValueV1 match {
+                   case LinkToClientIDUpdateV1(targetClientID) =>
+                     // We're creating a link to a resource that doesn't exist yet, because it
+                     // will be created in the same transaction. Check that it will belong to a
+                     // suitable class.
+                     val checkSubClassRequest = CheckSubClassRequestV1(
+                       subClassIri = clientResourceIDsToResourceClasses(
+                         targetClientID
+                       ),
+                       superClassIri = propertyObjectClassConstraint,
+                       userProfile = userProfile
+                     )
 
-                                                                      for {
-                                                                        subClassResponse <-
-                                                                          appActor
-                                                                            .ask(checkSubClassRequest)
-                                                                            .mapTo[CheckSubClassResponseV1]
+                     for {
+                       subClassResponse <-
+                         messageRelay.ask[CheckSubClassResponseV1](
+                           checkSubClassRequest
+                         )
 
-                                                                        _ = if (!subClassResponse.isSubClass) {
-                                                                              throw OntologyConstraintException(
-                                                                                s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
-                                                                              )
-                                                                            }
-                                                                      } yield ()
+                       _ = if (!subClassResponse.isSubClass) {
+                             throw OntologyConstraintException(
+                               s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                             )
+                           }
+                     } yield ()
 
-                                                                    case linkUpdate: LinkUpdateV1 =>
-                                                                      // We're creating a link to an existing resource. Check that it belongs to a
-                                                                      // suitable class.
-                                                                      for {
-                                                                        checkTargetClassResponse <-
-                                                                          checkResourceClass(
-                                                                            resourceIri = linkUpdate.targetResourceIri,
-                                                                            owlClass = propertyObjectClassConstraint,
-                                                                            userProfile = userProfile
-                                                                          ).mapTo[ResourceCheckClassResponseV1]
+                   case linkUpdate: LinkUpdateV1 =>
+                     // We're creating a link to an existing resource. Check that it belongs to a
+                     // suitable class.
+                     for {
+                       checkTargetClassResponse <-
+                         checkResourceClass(
+                           resourceIri = linkUpdate.targetResourceIri,
+                           owlClass = propertyObjectClassConstraint,
+                           userProfile = userProfile
+                         )
 
-                                                                        _ = if (!checkTargetClassResponse.isInClass) {
-                                                                              throw OntologyConstraintException(
-                                                                                s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
-                                                                              )
-                                                                            }
-                                                                      } yield ()
+                       _ = if (!checkTargetClassResponse.isInClass) {
+                             throw OntologyConstraintException(
+                               s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                             )
+                           }
+                     } yield ()
 
-                                                                    case otherValue =>
-                                                                      // We're creating an ordinary value. Check that its type is valid for the property's
-                                                                      // knora-base:objectClassConstraint.
-                                                                      valueUtilV1
-                                                                        .checkValueTypeForPropertyObjectClassConstraint(
-                                                                          propertyIri = propertyIri,
-                                                                          propertyObjectClassConstraint =
-                                                                            propertyObjectClassConstraint,
-                                                                          valueType = otherValue.valueTypeIri,
-                                                                          appActor = appActor,
-                                                                          userProfile = userProfile
-                                                                        )
-                                                                  }
-                                                              }
-                                                          }
-                                                        }
+                   case otherValue =>
+                     // We're creating an ordinary value. Check that its type is valid for the property's
+                     // knora-base:objectClassConstraint.
+                     valueUtilV1
+                       .checkValueTypeForPropertyObjectClassConstraint(
+                         propertyIri = propertyIri,
+                         propertyObjectClassConstraint = propertyObjectClassConstraint,
+                         valueType = otherValue.valueTypeIri,
+                         userProfile = userProfile
+                       )
+                 }
+               }
+             }
+           }
 
       // Check that the resource class has a suitable cardinality for each submitted value.
 
@@ -2131,10 +2071,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     creationDate: Instant,
     userProfile: UserADM,
     apiRequestID: UUID
-  ): Future[GenerateSparqlToCreateMultipleValuesResponseV1] =
+  ): Task[GenerateSparqlToCreateMultipleValuesResponseV1] =
     for {
       // Ask the values responder for the SPARQL statements that are needed to create the values.
-      generateSparqlForValuesRequest <- Future(
+      generateSparqlForValuesRequest <- ZIO.attempt(
                                           GenerateSparqlToCreateMultipleValuesRequestV1(
                                             projectIri = projectIri,
                                             resourceIri = resourceIri,
@@ -2148,10 +2088,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                           )
                                         )
 
-      generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <-
-        appActor
-          .ask(generateSparqlForValuesRequest)
-          .mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
+      generateSparqlForValuesResponse <-
+        messageRelay.ask[GenerateSparqlToCreateMultipleValuesResponseV1](generateSparqlForValuesRequest)
+
     } yield generateSparqlForValuesResponse
 
   /**
@@ -2197,10 +2136,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
     projectADM: ProjectADM,
     userProfile: UserADM
-  ): Future[ResourceCreateResponseV1] =
+  ): Task[ResourceCreateResponseV1] =
     // Verify that the resource was created.
     for {
-      createdResourcesSparql <- Future(
+      createdResourcesSparql <- ZIO.attempt(
                                   org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                     .getCreatedResource(
                                       resourceIri = resourceIri
@@ -2208,10 +2147,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                     .toString()
                                 )
 
-      createdResourceResponse <- appActor.ask(SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResult]
+      createdResourceResponse <- triplestoreService.sparqlHttpSelect(createdResourcesSparql)
 
       _ = if (createdResourceResponse.results.bindings.isEmpty) {
-            log.error(
+            logger.error(
               s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql"
             )
             throw UpdateNotPerformedException(
@@ -2226,10 +2165,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                     userProfile = userProfile
                                   )
 
-      verifyMultipleValueCreationResponse: VerifyMultipleValueCreationResponseV1 <-
-        appActor
-          .ask(verifyCreateValuesRequest)
-          .mapTo[VerifyMultipleValueCreationResponseV1]
+      verifyMultipleValueCreationResponse <-
+        messageRelay.ask[VerifyMultipleValueCreationResponseV1](verifyCreateValuesRequest)
 
       // Convert CreateValueResponseV1 objects to ResourceCreateValueResponseV1 objects.
       resourceCreateValueResponses: Map[IRI, Seq[ResourceCreateValueResponseV1]] =
@@ -2282,57 +2219,51 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     namedGraph: IRI,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Future[ResourceCreateResponseV1] = {
+  ): Task[ResourceCreateResponseV1] = {
     val fileValueContent: Option[FileValueContentV2] = file.map(_.toFileValueContentV2)
 
-    val updateFuture = for {
+    val updateTask = for {
       // Get ontology information about the resource class and its properties.
-      resourceClassEntityInfoResponse: EntityInfoGetResponseV1 <- appActor
-                                                                    .ask(
-                                                                      EntityInfoGetRequestV1(
-                                                                        resourceClassIris = Set(resourceClassIri),
-                                                                        propertyIris = Set.empty[IRI],
-                                                                        userProfile = requestingUser
-                                                                      )
-                                                                    )
-                                                                    .mapTo[EntityInfoGetResponseV1]
+      resourceClassEntityInfoResponse <- messageRelay.ask[EntityInfoGetResponseV1](
+                                           EntityInfoGetRequestV1(
+                                             resourceClassIris = Set(resourceClassIri),
+                                             propertyIris = Set.empty[IRI],
+                                             userProfile = requestingUser
+                                           )
+                                         )
 
       resourceClassInfo = resourceClassEntityInfoResponse.resourceClassInfoMap(resourceClassIri)
 
-      propertyEntityInfoResponse: EntityInfoGetResponseV1 <-
-        appActor
-          .ask(
-            EntityInfoGetRequestV1(
-              resourceClassIris = Set.empty[IRI],
-              propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet,
-              userProfile = requestingUser
-            )
-          )
-          .mapTo[EntityInfoGetResponseV1]
+      propertyEntityInfoResponse <- messageRelay
+                                      .ask[EntityInfoGetResponseV1](
+                                        EntityInfoGetRequestV1(
+                                          resourceClassIris = Set.empty[IRI],
+                                          propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet,
+                                          userProfile = requestingUser
+                                        )
+                                      )
 
       propertyInfoMap = propertyEntityInfoResponse.propertyInfoMap
 
       // Get the default object access permissions of the resource class and its properties.
 
-      defaultResourceClassAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <-
-        appActor
-          .ask(
-            DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-              projectIri = projectADM.id,
-              resourceClassIri = resourceClassIri,
-              targetUser = requestingUser,
-              requestingUser = KnoraSystemInstances.Users.SystemUser
-            )
-          )
-          .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+      defaultResourceClassAccessPermissionsResponse <- messageRelay
+                                                         .ask[DefaultObjectAccessPermissionsStringResponseADM](
+                                                           DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+                                                             projectIri = projectADM.id,
+                                                             resourceClassIri = resourceClassIri,
+                                                             targetUser = requestingUser,
+                                                             requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                           )
+                                                         )
 
       defaultResourceClassAccessPermissions = defaultResourceClassAccessPermissionsResponse.permissionLiteral
 
-      defaultPropertyAccessPermissionsFutures: Iterable[Future[(IRI, String)]] =
+      defaultPropertyAccessPermissionsFutures: Iterable[Task[(IRI, String)]] =
         propertyEntityInfoResponse.propertyInfoMap.keys.map { propertyIri =>
           for {
-            defaultObjectAccessPermissions <- appActor
-                                                .ask(
+            defaultObjectAccessPermissions <- messageRelay
+                                                .ask[DefaultObjectAccessPermissionsStringResponseADM](
                                                   DefaultObjectAccessPermissionsStringForPropertyGetADM(
                                                     projectIri = projectADM.id,
                                                     resourceClassIri = resourceClassIri,
@@ -2341,14 +2272,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                     requestingUser = KnoraSystemInstances.Users.SystemUser
                                                   )
                                                 )
-                                                .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
           } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
         }
 
-      defaultPropertyAccessPermissionsIterable: Iterable[(IRI, String)] <- Future.sequence(
-                                                                             defaultPropertyAccessPermissionsFutures
-                                                                           )
-      defaultPropertyAccessPermissions = defaultPropertyAccessPermissionsIterable.toMap
+      defaultPropertyAccessPermissionsIterable <- ZioHelper.sequence(defaultPropertyAccessPermissionsFutures.toSeq)
+      defaultPropertyAccessPermissions          = defaultPropertyAccessPermissionsIterable.toMap
 
       fileValues <- checkResource(
                       resourceClassIri = resourceClassIri,
@@ -2364,7 +2292,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // Make a timestamp for the resource and its values.
       creationDate: Instant = Instant.now
 
-      generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <-
+      generateSparqlForValuesResponse <-
         generateSparqlForValuesOfNewResource(
           projectIri = projectADM.id,
           resourceIri = resourceIri,
@@ -2398,9 +2326,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 )
 
       // Do the update.
-      createResourceResponse <- appActor
-                                  .ask(SparqlUpdateRequest(createNewResourceSparql))
-                                  .mapTo[SparqlUpdateResponse]
+      _ <- triplestoreService.sparqlHttpUpdate(createNewResourceSparql)
 
       apiResponse <- verifyResourceCreated(
                        resourceIri = resourceIri,
@@ -2412,11 +2338,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                      )
     } yield apiResponse
 
-    doSipiPostUpdateForResources(
-      updateFuture = updateFuture,
-      fileValueContentV2s = fileValueContent.toSeq,
-      requestingUser = requestingUser
-    )
+    doSipiPostUpdateForResources(updateTask, fileValueContent.toSeq, requestingUser)
   }
 
   /**
@@ -2439,17 +2361,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     projectIri: IRI,
     userProfile: UserADM,
     apiRequestID: UUID
-  ): Future[ResourceCreateResponseV1] =
+  ): Task[ResourceCreateResponseV1] =
     for {
 
       // Get user's IRI and don't allow anonymous users to create resources.
-      userIri: IRI <- Future {
-                        if (userProfile.isAnonymousUser) {
-                          throw ForbiddenException("Anonymous users aren't allowed to create resources")
-                        } else {
-                          userProfile.id
-                        }
-                      }
+      userIri <- ZIO.attempt {
+                   if (userProfile.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                   } else {
+                     userProfile.id
+                   }
+                 }
 
       _ = if (resourceClassIri == OntologyConstants.KnoraBase.Resource) {
             throw BadRequestException(
@@ -2458,16 +2380,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           }
 
       // Get project info
-      projectResponse <-
-        appActor
-          .ask(
-            ProjectGetRequestADM(identifier =
-              IriIdentifier
-                .fromString(projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-          )
-          .mapTo[ProjectGetResponseADM]
+      projectResponse <- messageRelay
+                           .ask[ProjectGetResponseADM](
+                             ProjectGetRequestADM(identifier =
+                               IriIdentifier
+                                 .fromString(projectIri)
+                                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+                             )
+                           )
 
       // Ensure that the project isn't the system project or the shared ontologies project.
 
@@ -2483,14 +2403,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
       resourceClassOntologyIri: SmartIri = resourceClassIri.toSmartIri.getOntologyFromEntity
-      readOntologyMetadataV2: ReadOntologyMetadataV2 <- appActor
-                                                          .ask(
-                                                            OntologyMetadataGetByIriRequestV2(
-                                                              Set(resourceClassOntologyIri),
-                                                              userProfile
-                                                            )
-                                                          )
-                                                          .mapTo[ReadOntologyMetadataV2]
+      readOntologyMetadataV2 <- messageRelay.ask[ReadOntologyMetadataV2](
+                                  OntologyMetadataGetByIriRequestV2(
+                                    Set(resourceClassOntologyIri),
+                                    userProfile
+                                  )
+                                )
       ontologyMetadata: OntologyMetadataV2 =
         readOntologyMetadataV2.ontologies.headOption
           .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
@@ -2522,23 +2440,22 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           )
         }
 
-      result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
-                                            apiRequestID,
-                                            resourceIri,
-                                            () =>
-                                              createResourceAndCheck(
-                                                resourceClassIri = resourceClassIri,
-                                                projectADM = projectResponse.project,
-                                                label = label,
-                                                resourceIri = resourceIri,
-                                                values = values,
-                                                file = file,
-                                                creatorIri = userIri,
-                                                namedGraph = namedGraph,
-                                                requestingUser = userProfile,
-                                                apiRequestID = apiRequestID
-                                              )
-                                          )
+      result <- IriLocker.runWithIriLock(
+                  apiRequestID,
+                  resourceIri,
+                  createResourceAndCheck(
+                    resourceClassIri = resourceClassIri,
+                    projectADM = projectResponse.project,
+                    label = label,
+                    resourceIri = resourceIri,
+                    values = values,
+                    file = file,
+                    creatorIri = userIri,
+                    namedGraph = namedGraph,
+                    requestingUser = userProfile,
+                    apiRequestID = apiRequestID
+                  )
+                )
     } yield result
 
   /**
@@ -2547,16 +2464,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
    * @param resourceDeleteRequest a [[ResourceDeleteRequestV1]].
    * @return a [[ResourceDeleteResponseV1]].
    */
-  private def deleteResourceV1(resourceDeleteRequest: ResourceDeleteRequestV1): Future[ResourceDeleteResponseV1] = {
+  private def deleteResourceV1(resourceDeleteRequest: ResourceDeleteRequestV1): Task[ResourceDeleteResponseV1] = {
 
-    def makeTaskFuture(userIri: IRI): Future[ResourceDeleteResponseV1] =
+    def makeTaskFuture(userIri: IRI): Task[ResourceDeleteResponseV1] =
       for {
         // Check that the user has permission to delete the resource.
-        (permissionCode, resourceInfo) <- getResourceInfoV1(
-                                            resourceIri = resourceDeleteRequest.resourceIri,
-                                            userProfile = resourceDeleteRequest.userADM,
-                                            queryOntology = false
-                                          )
+        t <- getResourceInfoV1(
+               resourceIri = resourceDeleteRequest.resourceIri,
+               userProfile = resourceDeleteRequest.userADM,
+               queryOntology = false
+             )
+        permissionCode = t._1
+        resourceInfo   = t._2
 
         _ = if (
               !PermissionUtilADM.impliesPermissionCodeV1(
@@ -2569,14 +2488,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               )
             }
 
-        projectInfoResponse <- appActor
-                                 .ask(
+        projectInfoResponse <- messageRelay
+                                 .ask[ProjectInfoResponseV1](
                                    ProjectInfoByIRIGetRequestV1(
                                      iri = resourceInfo.project_id,
                                      userProfileV1 = None
                                    )
                                  )
-                                 .mapTo[ProjectInfoResponseV1]
 
         // Make a timestamp to indicate when the resource was marked as deleted.
         currentTime: String = Instant.now.toString
@@ -2594,7 +2512,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                          .toString()
 
         // Do the update.
-        sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -2602,7 +2520,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                           resourceIri = resourceDeleteRequest.resourceIri
                         )
                         .toString()
-        sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+        sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
         rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
@@ -2621,7 +2539,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
     for {
       // Don't allow anonymous users to delete resources.
-      userIri <- Future {
+      userIri <- ZIO.attempt {
                    if (resourceDeleteRequest.userADM.isAnonymousUser) {
                      throw ForbiddenException("Anonymous users aren't allowed to mark resources as deleted")
                    } else {
@@ -2633,7 +2551,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       taskResult <- IriLocker.runWithIriLock(
                       resourceDeleteRequest.apiRequestID,
                       resourceDeleteRequest.resourceIri,
-                      () => makeTaskFuture(userIri)
+                      makeTaskFuture(userIri)
                     )
     } yield taskResult
   }
@@ -2651,14 +2569,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     resourceIri: IRI,
     owlClass: IRI,
     userProfile: UserADM
-  ): Future[ResourceCheckClassResponseV1] =
+  ): Task[ResourceCheckClassResponseV1] =
     for {
       // Check that the user has permission to view the resource.
-      (permissionCode, resourceInfo) <- getResourceInfoV1(
-                                          resourceIri = resourceIri,
-                                          userProfile = userProfile,
-                                          queryOntology = false
-                                        )
+      t <- getResourceInfoV1(
+             resourceIri = resourceIri,
+             userProfile = userProfile,
+             queryOntology = false
+           )
+      permissionCode = t._1
+      resourceInfo   = t._2
 
       _ = if (
             !PermissionUtilADM.impliesPermissionCodeV1(
@@ -2675,7 +2595,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                userProfile = userProfile
                              )
 
-      subClassResponse <- appActor.ask(checkSubClassRequest).mapTo[CheckSubClassResponseV1]
+      subClassResponse <- messageRelay.ask[CheckSubClassResponseV1](checkSubClassRequest)
 
     } yield ResourceCheckClassResponseV1(isInClass = subClassResponse.isSubClass)
 
@@ -2693,16 +2613,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     label: String,
     apiRequestID: UUID,
     userProfile: UserADM
-  ): Future[ChangeResourceLabelResponseV1] = {
+  ): Task[ChangeResourceLabelResponseV1] = {
 
-    def makeTaskFuture(userIri: IRI): Future[ChangeResourceLabelResponseV1] =
+    def makeTask(userIri: IRI): Task[ChangeResourceLabelResponseV1] =
       for {
         // get the resource's permissions
-        (permissionCode, resourceInfo) <- getResourceInfoV1(
-                                            resourceIri = resourceIri,
-                                            userProfile = userProfile,
-                                            queryOntology = false
-                                          )
+        t <- getResourceInfoV1(
+               resourceIri = resourceIri,
+               userProfile = userProfile,
+               queryOntology = false
+             )
+        permissionCode = t._1
+        resourceInfo   = t._2
 
         // check if the given user may change its label
         _ = if (
@@ -2716,14 +2638,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               )
             }
 
-        projectInfoResponse <- appActor
-                                 .ask(
+        projectInfoResponse <- messageRelay
+                                 .ask[ProjectInfoResponseV1](
                                    ProjectInfoByIRIGetRequestV1(
                                      iri = resourceInfo.project_id,
                                      userProfileV1 = None
                                    )
                                  )
-                                 .mapTo[ProjectInfoResponseV1]
 
         // get the named graph the resource is contained in by the resource's project
         namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfoResponse.project_info)
@@ -2744,7 +2665,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         // _ = print(sparqlUpdate)
 
         // Do the update.
-        sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -2754,7 +2675,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         )
                         .toString()
 
-        sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+        sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
         rows                  = sparqlSelectResponse.results.bindings
 
         // we expect exactly one row to be returned if the label was updated correctly in the data.
@@ -2768,7 +2689,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
     for {
       // Don't allow anonymous users to change a resource's label.
-      userIri <- Future {
+      userIri <- ZIO.attempt {
                    if (userProfile.isAnonymousUser) {
                      throw ForbiddenException("Anonymous users aren't allowed to change a resource's label")
                    } else {
@@ -2780,7 +2701,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       taskResult <- IriLocker.runWithIriLock(
                       apiRequestID,
                       resourceIri,
-                      () => makeTaskFuture(userIri)
+                      makeTask(userIri)
                     )
     } yield taskResult
 
@@ -2804,24 +2725,24 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     resourceIri: IRI,
     userProfile: UserADM,
     queryOntology: Boolean
-  ): Future[(Option[Int], ResourceInfoV1)] =
+  ): Task[(Option[Int], ResourceInfoV1)] =
     for {
-      sparqlQuery <- Future(
+      sparqlQuery <- ZIO.attempt(
                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                          .getResourceInfo(
                            resourceIri = resourceIri
                          )
                          .toString()
                      )
-      resInfoResponse    <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      resInfoResponse    <- triplestoreService.sparqlHttpSelect(sparqlQuery)
       resInfoResponseRows = resInfoResponse.results.bindings
 
-      resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(
-                                                  resourceIri = resourceIri,
-                                                  resInfoResponseRows = resInfoResponseRows,
-                                                  userProfile = userProfile,
-                                                  queryOntology = queryOntology
-                                                )
+      resInfo <- makeResourceInfoV1(
+                   resourceIri = resourceIri,
+                   resInfoResponseRows = resInfoResponseRows,
+                   userProfile = userProfile,
+                   queryOntology = queryOntology
+                 )
     } yield resInfo
 
   /**
@@ -2835,10 +2756,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
   private def getPropertiesV1(
     resourceIri: IRI,
     userProfile: UserADM
-  ): Future[PropertiesGetResponseV1] =
+  ): Task[PropertiesGetResponseV1] =
     for {
       // get resource class of the specified resource
-      resclassSparqlQuery <- Future(
+      resclassSparqlQuery <- ZIO.attempt(
                                org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                  .getResourceClass(
                                    resourceIri = resourceIri
@@ -2846,17 +2767,15 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                  .toString()
                              )
 
-      resclassQueryResponse: SparqlSelectResult <- appActor
-                                                     .ask(SparqlSelectRequest(resclassSparqlQuery))
-                                                     .mapTo[SparqlSelectResult]
+      resclassQueryResponse <- triplestoreService.sparqlHttpSelect(resclassSparqlQuery)
       resclass = resclassQueryResponse.results.bindings.headOption
                    .getOrElse(throw InconsistentRepositoryDataException(s"No resource class given for $resourceIri"))
 
-      properties: Seq[PropertyV1] <- getResourceProperties(
-                                       resourceIri = resourceIri,
-                                       maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")),
-                                       userProfile = userProfile
-                                     )
+      properties <- getResourceProperties(
+                      resourceIri = resourceIri,
+                      maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")),
+                      userProfile = userProfile
+                    )
 
       propertiesGetV1: Seq[PropertyGetV1] = properties.map { prop =>
                                               convertPropertyV1toPropertyGetV1(prop)
@@ -2880,49 +2799,57 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     resourceIri: IRI,
     maybeResourceTypeIri: Option[IRI],
     userProfile: UserADM
-  ): Future[Seq[PropertyV1]] =
+  ): Task[Seq[PropertyV1]] = {
+
+    case class PropertiesResourceAndCardinalitiesInfo(
+      propertyInfoMap: Map[IRI, PropertyInfoV1],
+      resourceEntityInfoMap: Map[IRI, ClassInfoV1],
+      propsAndCardinalities: Map[IRI, KnoraCardinalityInfo]
+    )
+
     for {
+      groupedPropsByType <- getGroupedProperties(resourceIri)
 
-      groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
+      result <- maybeResourceTypeIri match {
+                  case Some(resourceTypeIri) =>
+                    val propertyEntityIris: Set[IRI] =
+                      groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet
+                    val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
 
-      // TODO: Should we get rid of the tuple and replace it by a case class?
-      (
-        propertyInfoMap: Map[IRI, PropertyInfoV1],
-        resourceEntityInfoMap: Map[IRI, ClassInfoV1],
-        propsAndCardinalities: Map[IRI, KnoraCardinalityInfo]
-      ) <- maybeResourceTypeIri match {
-             case Some(resourceTypeIri) =>
-               val propertyEntityIris: Set[IRI] =
-                 groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet
-               val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
+                    for {
+                      entityInfoResponse <- messageRelay
+                                              .ask[EntityInfoGetResponseV1](
+                                                EntityInfoGetRequestV1(
+                                                  resourceClassIris = resourceEntityIris,
+                                                  propertyIris = propertyEntityIris,
+                                                  userProfile = userProfile
+                                                )
+                                              )
+                      resourceEntityInfoMap: Map[IRI, ClassInfoV1] = entityInfoResponse.resourceClassInfoMap
+                      propertyInfoMap: Map[IRI, PropertyInfoV1]    = entityInfoResponse.propertyInfoMap
 
-               for {
-                 entityInfoResponse <- appActor
-                                         .ask(
-                                           EntityInfoGetRequestV1(
-                                             resourceClassIris = resourceEntityIris,
-                                             propertyIris = propertyEntityIris,
-                                             userProfile = userProfile
-                                           )
-                                         )
-                                         .mapTo[EntityInfoGetResponseV1]
-                 resourceEntityInfoMap: Map[IRI, ClassInfoV1] = entityInfoResponse.resourceClassInfoMap
-                 propertyInfoMap: Map[IRI, PropertyInfoV1]    = entityInfoResponse.propertyInfoMap
+                      resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
 
-                 resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
+                      // all properties and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects
+                      propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] =
+                        resourceTypeEntityInfo.knoraResourceCardinalities.filterNot { case (propertyIri, _) =>
+                          resourceTypeEntityInfo.linkValueProperties(propertyIri)
+                        }
+                    } yield PropertiesResourceAndCardinalitiesInfo(
+                      propertyInfoMap,
+                      resourceEntityInfoMap,
+                      propsAndCardinalities
+                    )
 
-                 // all properties and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects
-                 propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] =
-                   resourceTypeEntityInfo.knoraResourceCardinalities.filterNot { case (propertyIri, _) =>
-                     resourceTypeEntityInfo.linkValueProperties(propertyIri)
-                   }
-               } yield (propertyInfoMap, resourceEntityInfoMap, propsAndCardinalities)
-
-             case None =>
-               Future(
-                 (Map.empty[IRI, PropertyInfoV1], Map.empty[IRI, ClassInfoV1], Map.empty[IRI, KnoraCardinalityInfo])
-               )
-           }
+                  case None =>
+                    ZIO.attempt(
+                      PropertiesResourceAndCardinalitiesInfo(
+                        Map.empty[IRI, PropertyInfoV1],
+                        Map.empty[IRI, ClassInfoV1],
+                        Map.empty[IRI, KnoraCardinalityInfo]
+                      )
+                    )
+                }
 
       projectShortcode = resourceIri.toSmartIri.getProjectCode
                            .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
@@ -2931,12 +2858,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                        containingResourceIri = resourceIri,
                        projectShortcode = projectShortcode,
                        groupedPropertiesByType = groupedPropsByType,
-                       propertyInfoMap = propertyInfoMap,
-                       resourceEntityInfoMap = resourceEntityInfoMap,
-                       propsAndCardinalities = propsAndCardinalities,
+                       propertyInfoMap = result.propertyInfoMap,
+                       resourceEntityInfoMap = result.resourceEntityInfoMap,
+                       propsAndCardinalities = result.propsAndCardinalities,
                        userProfile = userProfile
                      )
     } yield queryResult
+  }
 
   /**
    * Converts a SPARQL query result into a [[ResourceInfoV1]]. Expects the query result to contain columns called `p` (predicate),
@@ -2956,17 +2884,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     resInfoResponseRows: Seq[VariableResultsRow],
     userProfile: UserADM,
     queryOntology: Boolean
-  ): Future[(Option[Int], ResourceInfoV1)] = {
+  ): Task[(Option[Int], ResourceInfoV1)] = {
     val userProfileV1 = userProfile.asUserProfileV1
 
     if (resInfoResponseRows.isEmpty) {
-      Future.failed(NotFoundException(s"Resource $resourceIri was not found (it may have been deleted)."))
+      ZIO.fail(NotFoundException(s"Resource $resourceIri was not found (it may have been deleted)."))
     } else {
       for {
 
         // Extract the permission-relevant assertions from the query results.
-        permissionRelevantAssertions: Seq[(IRI, IRI)] <-
-          Future(
+        permissionRelevantAssertions <-
+          ZIO.attempt(
             PermissionUtilADM.filterPermissionRelevantAssertions(
               resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))
             )
@@ -3027,26 +2955,25 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                           }
 
         // Convert the ValueProps objects into FileValueV1 objects
-        fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
-                                                           case (fileValueIri, fileValueProps) =>
-                                                             for {
-                                                               valueV1 <- valueUtilV1.makeValueV1(
-                                                                            valueProps = fileValueProps,
-                                                                            projectShortcode = projectShortcode,
-                                                                            appActor = appActor,
-                                                                            userProfile = userProfile
-                                                                          )
+        fileValuesWithFuture: Seq[Task[FileValueV1]] = valuePropsForFileValues.map {
+                                                         case (fileValueIri, fileValueProps) =>
+                                                           for {
+                                                             valueV1 <- valueUtilV1.makeValueV1(
+                                                                          valueProps = fileValueProps,
+                                                                          projectShortcode = projectShortcode,
+                                                                          userProfile = userProfile
+                                                                        )
 
-                                                             } yield valueV1 match {
-                                                               case fileValueV1: FileValueV1 => fileValueV1
-                                                               case otherValueV1 =>
-                                                                 throw InconsistentRepositoryDataException(
-                                                                   s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}"
-                                                                 )
-                                                             }
-                                                         }
+                                                           } yield valueV1 match {
+                                                             case fileValueV1: FileValueV1 => fileValueV1
+                                                             case otherValueV1 =>
+                                                               throw InconsistentRepositoryDataException(
+                                                                 s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}"
+                                                               )
+                                                           }
+                                                       }
 
-        fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
+        fileValues <- ZioHelper.sequence(fileValuesWithFuture)
 
         // Generate a IIIF preview URL from the full-size image.
 
@@ -3089,27 +3016,26 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                              )
 
         // Query the ontology about the resource's OWL class.
-        (restype_label, restype_description, restype_iconsrc) <-
+        t <-
           if (queryOntology) {
             val resTypeIri = groupedByPredicate(OntologyConstants.Rdf.Type).head("obj")
 
             for {
-              entityInfoResponse <- appActor
-                                      .ask(
+              entityInfoResponse <- messageRelay
+                                      .ask[EntityInfoGetResponseV1](
                                         EntityInfoGetRequestV1(
                                           resourceClassIris = Set(resTypeIri),
                                           userProfile = userProfile
                                         )
                                       )
-                                      .mapTo[EntityInfoGetResponseV1]
               entityInfo = entityInfoResponse.resourceClassInfoMap(resTypeIri)
               label = entityInfo.getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
-                        preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                        preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                       )
               description = entityInfo.getPredicateObject(
                               predicateIri = OntologyConstants.Rdfs.Comment,
-                              preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                              preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                             )
               iconsrc = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
                           case Some(resClassIcon) =>
@@ -3118,8 +3044,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         }
             } yield (label, description, iconsrc)
           } else {
-            Future(None, None, None)
+            ZIO.attempt(None, None, None)
           }
+
+        restype_label       = t._1
+        restype_description = t._2
+        restype_iconsrc     = t._3
 
         resourceInfo = ResourceInfoV1(
                          restype_id = groupedByPredicate(OntologyConstants.Rdf.Type).head("obj"),
@@ -3149,17 +3079,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
    * @param resourceIri the IRI of the resource to be queried.
    * @return a [[GroupedPropertiesByType]] containing properties that point to ordinary value properties, link value properties, and link properties.
    */
-  private def getGroupedProperties(resourceIri: IRI): Future[GroupedPropertiesByType] =
+  private def getGroupedProperties(resourceIri: IRI): Task[GroupedPropertiesByType] =
     for {
-      sparqlQuery <- Future(
+      sparqlQuery <- ZIO.attempt(
                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                          .getResourcePropertiesAndValues(
                            resourceIri = resourceIri
                          )
                          .toString()
                      )
-      // _ = println(sparqlQuery)
-      resPropsResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      resPropsResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
 
       // Partition the property result rows into rows with value properties and rows with link properties.
       (rowsWithLinks: Seq[VariableResultsRow], rowsWithValues: Seq[VariableResultsRow]) =
@@ -3199,7 +3128,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     resourceEntityInfoMap: Map[IRI, ClassInfoV1],
     propsAndCardinalities: Map[IRI, KnoraCardinalityInfo],
     userProfile: UserADM
-  ): Future[Seq[PropertyV1]] = {
+  ): Task[Seq[PropertyV1]] = {
     val userProfileV1 = userProfile.asUserProfileV1
 
     /**
@@ -3236,7 +3165,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         label = propertyEntityInfo.flatMap(
           _.getPredicateObject(
             predicateIri = OntologyConstants.Rdfs.Label,
-            preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+            preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
           )
         ),
         occurrence = propertyCardinality.map(_.cardinality.toString),
@@ -3283,10 +3212,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       )
 
     // Make a PropertyV1 for each value property that has data.
-    val valuePropertiesWithDataWithFuture: Iterable[Future[Option[PropertyV1]]] =
+    val valuePropertiesWithDataWithFuture: Iterable[Task[Option[PropertyV1]]] =
       groupedPropertiesByType.groupedOrdinaryValueProperties.groupedProperties.map {
         case (propertyIri: IRI, valueObject: ValueObjects) =>
-          val valueObjectsV1WithFuture: Iterable[Future[ValueObjectV1]] = valueObject.valueObjects.map {
+          val valueObjectsV1WithFuture: Iterable[Task[ValueObjectV1]] = valueObject.valueObjects.map {
             case (valObjIri: IRI, valueProps: ValueProps) =>
               // Make sure the value object has an rdf:type.
               valueProps.literalData.getOrElse(
@@ -3299,7 +3228,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 valueV1 <- valueUtilV1.makeValueV1(
                              valueProps = valueProps,
                              projectShortcode = projectShortcode,
-                             appActor = appActor,
                              userProfile = userProfile
                            )
 
@@ -3327,7 +3255,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           }
 
           for {
-            valueObjectsV1 <- Future.sequence(valueObjectsV1WithFuture)
+            valueObjectsV1 <- ZioHelper.sequence(valueObjectsV1WithFuture.toSeq)
 
             valueObjectsV1Sorted =
               valueObjectsV1.toVector.sortBy(
@@ -3359,18 +3287,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       }
 
     for {
-      valuePropertiesWithDataWithOption: Iterable[Option[PropertyV1]] <- Future.sequence(
-                                                                           valuePropertiesWithDataWithFuture
-                                                                         )
+      valuePropertiesWithDataWithOption <- ZioHelper.sequence(valuePropertiesWithDataWithFuture.toSeq)
 
       valuePropertiesWithData = valuePropertiesWithDataWithOption.toVector.flatten
 
       // Make a PropertyV1 for each link property with data. We have to treat links as a special case, because we
       // need information about the target resource.
-      linkPropertiesWithDataWithFuture: Iterable[Future[Option[PropertyV1]]] =
+      linkPropertiesWithDataWithFuture: Iterable[Task[Option[PropertyV1]]] =
         groupedPropertiesByType.groupedLinkProperties.groupedProperties.map {
           case (propertyIri: IRI, targetResource: ValueObjects) =>
-            val valueObjectsV1WithFuture: Vector[Future[ValueObjectV1]] = targetResource.valueObjects.map {
+            val valueObjectsV1WithFuture: Vector[Task[ValueObjectV1]] = targetResource.valueObjects.map {
               case (targetResourceIri: IRI, valueProps: ValueProps) =>
                 val predicates = valueProps.literalData
 
@@ -3384,7 +3310,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     case Some(referencedResTypeEntityInfo) =>
                       val labelOption: Option[String] = referencedResTypeEntityInfo.getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
-                        preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                        preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                       )
                       val resIconOption: Option[String] =
                         referencedResTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
@@ -3451,7 +3377,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                   apiValueV1ForLinkValue <- valueUtilV1.makeValueV1(
                                               valueProps = linkValueProps,
                                               projectShortcode = projectShortcode,
-                                              appActor = appActor,
                                               userProfile = userProfile
                                             )
 
@@ -3501,7 +3426,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             }.toVector
 
             for {
-              valueObjectsV1: Vector[ValueObjectV1] <- Future.sequence(valueObjectsV1WithFuture)
+              valueObjectsV1 <- ZioHelper.sequence(valueObjectsV1WithFuture)
 
               // get all the values the user has at least viewing permissions on
               valueObjectListFiltered = valueObjectsV1.filter(_.valuePermission.nonEmpty)
@@ -3527,9 +3452,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             }
         }
 
-      linkPropertiesWithDataWithOption: Iterable[Option[PropertyV1]] <- Future.sequence(
-                                                                          linkPropertiesWithDataWithFuture
-                                                                        )
+      linkPropertiesWithDataWithOption <- ZioHelper.sequence(linkPropertiesWithDataWithFuture.toSeq)
 
       linkPropertiesWithData: Vector[PropertyV1] = linkPropertiesWithDataWithOption.toVector.flatten
 
@@ -3618,5 +3541,28 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       dimX = previewWidth,
       dimY = previewHeight
     )
+  }
+}
+object ResourcesResponderV1Live {
+  val layer: URLayer[
+    StringFormatter
+      with ResourceUtilV2Z
+      with ValueUtilV1Z
+      with TriplestoreService
+      with MessageRelay
+      with IriService
+      with AppConfig,
+    ResourcesResponderV1Live
+  ] = ZLayer.fromZIO {
+    for {
+      config  <- ZIO.service[AppConfig]
+      iriS    <- ZIO.service[IriService]
+      mr      <- ZIO.service[MessageRelay]
+      ts      <- ZIO.service[TriplestoreService]
+      vu      <- ZIO.service[ValueUtilV1Z]
+      ru      <- ZIO.service[ResourceUtilV2Z]
+      sf      <- ZIO.service[StringFormatter]
+      handler <- mr.subscribe(ResourcesResponderV1Live(config, iriS, mr, ts, vu, ru, sf))
+    } yield handler
   }
 }
