@@ -14,7 +14,6 @@ import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
@@ -33,7 +32,6 @@ import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequ
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -73,9 +71,6 @@ final case class RoutingActor(
   private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData)
   private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
 
-  // Admin responders
-  private val listsResponderADM: ListsResponderADM = new ListsResponderADM(responderData)
-
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
     case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
@@ -111,8 +106,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
     // Admin request messages
-    case listsResponderRequest: ListsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), listsResponderADM.receive(listsResponderRequest), log)
     case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg))
     case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg))
     case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg))

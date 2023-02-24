@@ -17,6 +17,8 @@ import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
@@ -75,6 +77,7 @@ object LayersLive {
       with IIIFService
       with IriService
       with JWTService
+      with ListsResponderADM
       with MessageRelay
       with OntologyResponderV1
       with PermissionsResponderADM
@@ -115,6 +118,7 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       JWTService.layer,
+      ListsResponderADMLive.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyResponderV1Live.layer,

@@ -36,6 +36,8 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import zio._
 
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.admin.SipiResponderADM
@@ -72,6 +74,7 @@ object LayersTest {
     with IIIFServiceManager
     with IriConverter
     with IriService
+    with ListsResponderADM
     with MessageRelay
     with OntologyResponderV1
     with PermissionsResponderADM
@@ -105,6 +108,7 @@ object LayersTest {
       IIIFServiceManager.layer,
       IriConverter.layer,
       IriService.layer,
+      ListsResponderADMLive.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyResponderV1Live.layer,
