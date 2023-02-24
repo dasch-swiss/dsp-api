@@ -29,9 +29,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversi
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -706,10 +704,7 @@ final case class OntologyResponderV1Live(
 }
 
 object OntologyResponderV1Live {
-  val layer: URLayer[
-    StringFormatter with MessageRelay,
-    OntologyResponderV1
-  ] = ZLayer.fromZIO {
+  val layer: URLayer[StringFormatter with MessageRelay with AppConfig, OntologyResponderV1Live] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       mr      <- ZIO.service[MessageRelay]

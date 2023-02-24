@@ -24,8 +24,12 @@ import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsServiceLive
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
+import org.knora.webapi.responders.admin.StoresResponderADM
+import org.knora.webapi.responders.admin.StoresResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
 import org.knora.webapi.responders.v1.OntologyResponderV1
 import org.knora.webapi.responders.v1.OntologyResponderV1Live
 import org.knora.webapi.routing.ApiRoutes
@@ -64,6 +68,7 @@ object LayersLive {
       with AppRouterRelayingMessageHandler
       with CacheServiceManager
       with CacheService
+      with CkanResponderV1
       with GroupsResponderADM
       with HttpServer
       with IIIFServiceManager
@@ -79,6 +84,7 @@ object LayersLive {
       with RestCardinalityService
       with SipiResponderADM
       with State
+      with StoresResponderADM
       with TriplestoreServiceManager
       with TriplestoreService
       with UsersResponderADM
@@ -100,6 +106,7 @@ object LayersLive {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
@@ -124,6 +131,7 @@ object LayersLive {
       RestResourceInfoService.layer,
       SipiResponderADMLive.layer,
       State.layer,
+      StoresResponderADMLive.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,

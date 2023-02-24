@@ -15,12 +15,10 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
@@ -59,7 +57,6 @@ final case class RoutingActor(
   private implicit val executionContext: ExecutionContext = actorDeps.executionContext
 
   // V1 responders
-  private val ckanResponderV1: CkanResponderV1           = new CkanResponderV1(responderData)
   private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
   private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
   private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
@@ -77,16 +74,13 @@ final case class RoutingActor(
   private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
 
   // Admin responders
-  private val listsResponderADM: ListsResponderADM  = new ListsResponderADM(responderData)
-  private val storeResponderADM: StoresResponderADM = new StoresResponderADM(responderData)
+  private val listsResponderADM: ListsResponderADM = new ListsResponderADM(responderData)
 
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
     case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
 
     // V1 request messages
-    case ckanResponderRequestV1: CkanResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), ckanResponderV1.receive(ckanResponderRequestV1), log)
     case resourcesResponderRequestV1: ResourcesResponderRequestV1 =>
       ActorUtil.future2Message(sender(), resourcesResponderV1.receive(resourcesResponderRequestV1), log)
     case valuesResponderRequestV1: ValuesResponderRequestV1 =>
@@ -119,8 +113,6 @@ final case class RoutingActor(
     // Admin request messages
     case listsResponderRequest: ListsResponderRequestADM =>
       ActorUtil.future2Message(sender(), listsResponderADM.receive(listsResponderRequest), log)
-    case storeResponderRequestADM: StoreResponderRequestADM =>
-      ActorUtil.future2Message(sender(), storeResponderADM.receive(storeResponderRequestADM), log)
     case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg))
     case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg))
     case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg))

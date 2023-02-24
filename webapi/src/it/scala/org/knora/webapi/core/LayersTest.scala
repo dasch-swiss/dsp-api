@@ -44,6 +44,10 @@ import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.v1.OntologyResponderV1
 import org.knora.webapi.responders.v1.OntologyResponderV1Live
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.admin.StoresResponderADM
+import org.knora.webapi.responders.admin.StoresResponderADMLive
 
 object LayersTest {
 
@@ -62,6 +66,7 @@ object LayersTest {
     with CacheService
     with CacheServiceManager
     with CardinalityService
+    with CkanResponderV1
     with GroupsResponderADM
     with HttpServer
     with IIIFServiceManager
@@ -77,6 +82,7 @@ object LayersTest {
     with RestResourceInfoService
     with SipiResponderADM
     with State
+    with StoresResponderADM
     with StringFormatter
     with TestClientService
     with TriplestoreService
@@ -93,6 +99,7 @@ object LayersTest {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
@@ -111,6 +118,7 @@ object LayersTest {
       RestResourceInfoService.layer,
       SipiResponderADMLive.layer,
       State.layer,
+      StoresResponderADMLive.layer,
       StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
