@@ -44,6 +44,8 @@ import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
+import org.knora.webapi.responders.v1.ProjectsResponderV1
+import org.knora.webapi.responders.v1.ProjectsResponderV1Live
 import org.knora.webapi.responders.v1.OntologyResponderV1
 import org.knora.webapi.responders.v1.OntologyResponderV1Live
 import org.knora.webapi.responders.v1.CkanResponderV1
@@ -79,6 +81,7 @@ object LayersTest {
     with OntologyResponderV1
     with PermissionsResponderADM
     with ProjectsResponderADM
+    with ProjectsResponderV1
     with RepositoryUpdater
     with ResourceInfoRepo
     with RestCardinalityService
@@ -115,6 +118,7 @@ object LayersTest {
       OntologyRepoLive.layer,
       PermissionsResponderADMLive.layer,
       ProjectsResponderADMLive.layer,
+      ProjectsResponderV1Live.layer,
       PredicateRepositoryLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
