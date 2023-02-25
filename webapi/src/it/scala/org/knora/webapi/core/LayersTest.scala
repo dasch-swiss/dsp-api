@@ -44,12 +44,14 @@ import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.v1.ListsResponderV1
+import org.knora.webapi.responders.v1.ListsResponderV1Live
 import org.knora.webapi.responders.v1.ProjectsResponderV1
 import org.knora.webapi.responders.v1.ProjectsResponderV1Live
 import org.knora.webapi.responders.v1.OntologyResponderV1
 import org.knora.webapi.responders.v1.OntologyResponderV1Live
-import org.knora.webapi.responders.v1.CkanResponderV1
-import org.knora.webapi.responders.v1.CkanResponderV1Live
 import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADMLive
 
@@ -77,6 +79,7 @@ object LayersTest {
     with IriConverter
     with IriService
     with ListsResponderADM
+    with ListsResponderV1
     with MessageRelay
     with OntologyResponderV1
     with PermissionsResponderADM
@@ -112,14 +115,15 @@ object LayersTest {
       IriConverter.layer,
       IriService.layer,
       ListsResponderADMLive.layer,
+      ListsResponderV1Live.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
-      OntologyResponderV1Live.layer,
       OntologyRepoLive.layer,
+      OntologyResponderV1Live.layer,
       PermissionsResponderADMLive.layer,
+      PredicateRepositoryLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
-      PredicateRepositoryLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,
