@@ -36,6 +36,8 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import zio._
 
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.admin.SipiResponderADM
@@ -44,6 +46,12 @@ import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.v1.ProjectsResponderV1
 import org.knora.webapi.responders.v1.ProjectsResponderV1Live
+import org.knora.webapi.responders.v1.OntologyResponderV1
+import org.knora.webapi.responders.v1.OntologyResponderV1Live
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.admin.StoresResponderADM
+import org.knora.webapi.responders.admin.StoresResponderADMLive
 
 object LayersTest {
 
@@ -62,12 +70,15 @@ object LayersTest {
     with CacheService
     with CacheServiceManager
     with CardinalityService
+    with CkanResponderV1
     with GroupsResponderADM
     with HttpServer
     with IIIFServiceManager
     with IriConverter
     with IriService
+    with ListsResponderADM
     with MessageRelay
+    with OntologyResponderV1
     with PermissionsResponderADM
     with ProjectsResponderADM
     with ProjectsResponderV1
@@ -77,6 +88,7 @@ object LayersTest {
     with RestResourceInfoService
     with SipiResponderADM
     with State
+    with StoresResponderADM
     with StringFormatter
     with TestClientService
     with TriplestoreService
@@ -93,13 +105,16 @@ object LayersTest {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
       IriService.layer,
+      ListsResponderADMLive.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
+      OntologyResponderV1Live.layer,
       OntologyRepoLive.layer,
       PermissionsResponderADMLive.layer,
       ProjectsResponderADMLive.layer,
@@ -111,6 +126,7 @@ object LayersTest {
       RestResourceInfoService.layer,
       SipiResponderADMLive.layer,
       State.layer,
+      StoresResponderADMLive.layer,
       StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
