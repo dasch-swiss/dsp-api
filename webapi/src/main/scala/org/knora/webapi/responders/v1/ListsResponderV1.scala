@@ -295,7 +295,7 @@ final case class ListsResponderV1Live(
 }
 
 object ListsResponderV1Live {
-  val layer: URLayer[TriplestoreService with MessageRelay with AppConfig, ListsResponderV1Live] = ZLayer.fromZIO {
+  val layer: URLayer[TriplestoreService with MessageRelay with AppConfig, ListsResponderV1] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       mr      <- ZIO.service[MessageRelay]

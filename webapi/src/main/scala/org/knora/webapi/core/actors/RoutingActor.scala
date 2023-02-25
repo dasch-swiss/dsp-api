@@ -14,14 +14,10 @@ import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
@@ -34,7 +30,6 @@ import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequ
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -63,8 +58,6 @@ final case class RoutingActor(
   private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
   private val usersResponderV1: UsersResponderV1         = new UsersResponderV1(responderData)
   private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
-  private val ontologyResponderV1: OntologyResponderV1   = new OntologyResponderV1(responderData)
-  private val projectsResponderV1: ProjectsResponderV1   = ProjectsResponderV1(actorDeps)
 
   // V2 responders
   private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, runtime)
@@ -73,10 +66,6 @@ final case class RoutingActor(
   private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)
   private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData)
   private val listsResponderV2: ListsResponderV2         = new ListsResponderV2(responderData)
-
-  // Admin responders
-  private val listsResponderADM: ListsResponderADM  = new ListsResponderADM(responderData)
-  private val storeResponderADM: StoresResponderADM = new StoresResponderADM(responderData)
 
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
@@ -89,14 +78,10 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), valuesResponderV1.receive(valuesResponderRequestV1), log)
     case searchResponderRequestV1: SearchResponderRequestV1 =>
       ActorUtil.future2Message(sender(), searchResponderV1.receive(searchResponderRequestV1), log)
-    case ontologyResponderRequestV1: OntologyResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), ontologyResponderV1.receive(ontologyResponderRequestV1), log)
     case standoffResponderRequestV1: StandoffResponderRequestV1 =>
       ActorUtil.future2Message(sender(), standoffResponderV1.receive(standoffResponderRequestV1), log)
     case usersResponderRequestV1: UsersResponderRequestV1 =>
       ActorUtil.future2Message(sender(), usersResponderV1.receive(usersResponderRequestV1), log)
-    case projectsResponderRequestV1: ProjectsResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), projectsResponderV1.receive(projectsResponderRequestV1), log)
 
     // V2 request messages
     case ontologiesResponderRequestV2: OntologiesResponderRequestV2 =>
@@ -113,10 +98,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), listsResponderV2.receive(listsResponderRequestV2), log)
 
     // Admin request messages
-    case listsResponderRequest: ListsResponderRequestADM =>
-      ActorUtil.future2Message(sender(), listsResponderADM.receive(listsResponderRequest), log)
-    case storeResponderRequestADM: StoreResponderRequestADM =>
-      ActorUtil.future2Message(sender(), storeResponderADM.receive(storeResponderRequestADM), log)
     case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg))
     case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg))
     case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg))
