@@ -1515,6 +1515,8 @@ Values for `rdfs:label` must be submitted in at least one language,
 either as an object or as an array of objects. The submitted labels will
 replace the existing ones.
 
+To get the current labels use the [class definition](#querying-class-definition).
+
 ### Changing the Comments of a Class
 
 This operation is permitted even if the class is used in data.
@@ -1554,6 +1556,8 @@ HTTP PUT to http://host/v2/ontologies/classes
 Values for `rdfs:comment` must be submitted in at least one language,
 either as an object or as an array of objects. The submitted comments
 will replace the existing ones.
+
+To get the current comments use the [class definition](#querying-class-definition).
 
 ### Deleting the Comments of a Class
 
