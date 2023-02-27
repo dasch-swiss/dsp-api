@@ -6,10 +6,10 @@
 package org.knora.webapi.messages.util
 
 import zio._
-
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import dsp.errors.OntologyConstraintException
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -237,30 +237,30 @@ final case class ValueUtilV1ZLive(
 
     valueTypeIri match {
       case OntologyConstants.KnoraBase.TextValue     => makeTextValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.IntValue      => makeIntValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.DecimalValue  => makeDecimalValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.BooleanValue  => makeBooleanValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.UriValue      => makeUriValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.DateValue     => makeDateValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.ColorValue    => makeColorValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.GeomValue     => makeGeomValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.GeonameValue  => makeGeonameValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.ListValue     => makeListValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, userProfile)
-      case OntologyConstants.KnoraBase.TimeValue     => makeTimeValue(valueProps, userProfile)
+      case OntologyConstants.KnoraBase.IntValue      => makeIntValue(valueProps)
+      case OntologyConstants.KnoraBase.DecimalValue  => makeDecimalValue(valueProps)
+      case OntologyConstants.KnoraBase.BooleanValue  => makeBooleanValue(valueProps)
+      case OntologyConstants.KnoraBase.UriValue      => makeUriValue(valueProps)
+      case OntologyConstants.KnoraBase.DateValue     => makeDateValue(valueProps)
+      case OntologyConstants.KnoraBase.ColorValue    => makeColorValue(valueProps)
+      case OntologyConstants.KnoraBase.GeomValue     => makeGeomValue(valueProps)
+      case OntologyConstants.KnoraBase.GeonameValue  => makeGeonameValue(valueProps)
+      case OntologyConstants.KnoraBase.ListValue     => makeListValue(valueProps)
+      case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps)
+      case OntologyConstants.KnoraBase.TimeValue     => makeTimeValue(valueProps)
       case OntologyConstants.KnoraBase.StillImageFileValue =>
-        makeStillImageValue(valueProps, projectShortcode, userProfile)
+        makeStillImageValue(valueProps, projectShortcode)
       case OntologyConstants.KnoraBase.TextFileValue =>
-        makeTextFileValue(valueProps, projectShortcode, userProfile)
+        makeTextFileValue(valueProps, projectShortcode)
       case OntologyConstants.KnoraBase.AudioFileValue =>
-        makeAudioFileValue(valueProps, projectShortcode, userProfile)
+        makeAudioFileValue(valueProps, projectShortcode)
       case OntologyConstants.KnoraBase.MovingImageFileValue =>
-        makeVideoFileValue(valueProps, projectShortcode, userProfile)
+        makeVideoFileValue(valueProps, projectShortcode)
       case OntologyConstants.KnoraBase.DocumentFileValue =>
-        makeDocumentFileValue(valueProps, projectShortcode, userProfile)
+        makeDocumentFileValue(valueProps, projectShortcode)
       case OntologyConstants.KnoraBase.ArchiveFileValue =>
-        makeArchiveFileValue(valueProps, projectShortcode, userProfile)
-      case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, userProfile)
+        makeArchiveFileValue(valueProps, projectShortcode)
+      case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps)
     }
   }
 
@@ -750,7 +750,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return an [[IntegerValueV1]].
    */
-  private def makeIntValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeIntValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
     ZIO.attempt(IntegerValueV1(predicates(OntologyConstants.KnoraBase.ValueHasInteger).literals.head.toInt))
   }
@@ -761,7 +761,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[DecimalValueV1]].
    */
-  private def makeDecimalValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeDecimalValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head)))
@@ -773,7 +773,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[BooleanValueV1]].
    */
-  private def makeBooleanValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeBooleanValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean))
@@ -785,7 +785,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[UriValueV1]].
    */
-  private def makeUriValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeUriValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head))
@@ -797,7 +797,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[DateValueV1]].
    */
-  private def makeDateValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeDateValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     val julianDayNumberValueV1 = JulianDayNumberValueV1(
@@ -819,7 +819,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return an [[IntervalValueV1]].
    */
-  private def makeIntervalValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeIntervalValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(
@@ -836,7 +836,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[TimeValueV1]].
    */
-  private def makeTimeValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeTimeValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates   = valueProps.literalData
     val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
 
@@ -954,7 +954,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[ColorValueV1]].
    */
-  private def makeColorValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeColorValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(ColorValueV1(predicates(OntologyConstants.KnoraBase.ValueHasColor).literals.head))
@@ -966,7 +966,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[GeomValueV1]].
    */
-  private def makeGeomValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeGeomValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(GeomValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeometry).literals.head))
@@ -978,7 +978,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[HierarchicalListValueV1]].
    */
-  private def makeListValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeListValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(HierarchicalListValueV1(predicates(OntologyConstants.KnoraBase.ValueHasListNode).literals.head))
@@ -990,11 +990,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[StillImageFileValueV1]].
    */
-  private def makeStillImageValue(
-    valueProps: ValueProps,
-    projectShortcode: String,
-    userProfile: UserADM
-  ): Task[ApiValueV1] = {
+  private def makeStillImageValue(valueProps: ValueProps, projectShortcode: String): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(
@@ -1015,11 +1011,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[TextFileValueV1]].
    */
-  private def makeTextFileValue(
-    valueProps: ValueProps,
-    projectShortcode: String,
-    userProfile: UserADM
-  ): Task[ApiValueV1] = {
+  private def makeTextFileValue(valueProps: ValueProps, projectShortcode: String): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(
@@ -1038,11 +1030,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[DocumentFileValueV1]].
    */
-  private def makeDocumentFileValue(
-    valueProps: ValueProps,
-    projectShortcode: String,
-    userProfile: UserADM
-  ): Task[ApiValueV1] = {
+  private def makeDocumentFileValue(valueProps: ValueProps, projectShortcode: String): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(
@@ -1064,11 +1052,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[ArchiveFileValueV1]].
    */
-  private def makeArchiveFileValue(
-    valueProps: ValueProps,
-    projectShortcode: String,
-    userProfile: UserADM
-  ): Task[ApiValueV1] = {
+  private def makeArchiveFileValue(valueProps: ValueProps, projectShortcode: String): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(
@@ -1087,11 +1071,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[AudioFileValueV1]].
    */
-  private def makeAudioFileValue(
-    valueProps: ValueProps,
-    projectShortcode: String,
-    userProfile: UserADM
-  ): Task[ApiValueV1] = {
+  private def makeAudioFileValue(valueProps: ValueProps, projectShortcode: String): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(
@@ -1113,11 +1093,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[MovingImageFileValueV1]].
    */
-  private def makeVideoFileValue(
-    valueProps: ValueProps,
-    projectShortcode: String,
-    userProfile: UserADM
-  ): Task[ApiValueV1] = {
+  private def makeVideoFileValue(valueProps: ValueProps, projectShortcode: String): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(
@@ -1144,7 +1120,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[LinkValueV1]].
    */
-  private def makeLinkValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeLinkValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(
@@ -1163,7 +1139,7 @@ final case class ValueUtilV1ZLive(
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[GeonameValueV1]].
    */
-  private def makeGeonameValue(valueProps: ValueProps, userProfile: UserADM): Task[ApiValueV1] = {
+  private def makeGeonameValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     ZIO.attempt(GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head))
