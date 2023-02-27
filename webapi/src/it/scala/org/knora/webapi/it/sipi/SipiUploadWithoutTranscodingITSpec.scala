@@ -22,10 +22,7 @@ import zio.json.DeriveJsonCodec
 /**
  * Tests uploading files to Sipi through the /upload_without_transcoding route.
  */
-class SipiUploadWithoutTranscodingITSpec
-    extends ITKnoraLiveSpec
-    with AuthenticationV2Serialization
-    with TriplestoreJsonProtocol {
+class SipiUploadWithoutTranscodingITSpec extends ITKnoraLiveSpec with AuthenticationV2Serialization {
 
   private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
   private val password          = SharedTestDataADM.testPass
@@ -102,14 +99,13 @@ class SipiUploadWithoutTranscodingITSpec
       assert(Files.exists(pathToRosettaDerivative), s"File $pathToRosettaDerivative does not exist")
       assert(Files.exists(pathToRosettaSidecar), s"File $pathToRosettaSidecar does not exist")
 
-      val url  = s"$baseInternalSipiUrl/upload_without_transcoding?token=$loginToken"
-      val test = "http://127.0.0.1/post"
+      val url = s"$baseInternalSipiUrl/upload_without_transcoding?token=$loginToken"
       val request =
         Client.request(
           url,
           Method.POST,
           Headers.Header("Content-Type", "multipart/form-data"),
-          Body.fromStream(ZStream.fromPath(pathToRosettaOriginal).++(ZStream.fromPath(pathToRosettaDerivative)))
+          Body.fromStream(ZStream.fromPath(pathToRosettaOriginal) /* .++(ZStream.fromPath(pathToRosettaDerivative)) */ )
         )
 
       val upload = for {
@@ -120,9 +116,7 @@ class SipiUploadWithoutTranscodingITSpec
                 case Left(error) =>
                   Console.printLineError(res) *>
                     Console.printLineError(s"body: $bodyString") *>
-                    ZIO.dieMessage(
-                      "JSON deserialization error: " + error
-                    )
+                    ZIO.dieMessage("JSON deserialization error: " + error)
                 case Right(response) => ZIO.succeed(response)
               }
       } yield lr
