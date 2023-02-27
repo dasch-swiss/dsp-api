@@ -40,6 +40,8 @@ import org.knora.webapi.responders.v1.ProjectsResponderV1
 import org.knora.webapi.responders.v1.ProjectsResponderV1Live
 import org.knora.webapi.responders.v1.UsersResponderV1
 import org.knora.webapi.responders.v1.UsersResponderV1Live
+import org.knora.webapi.responders.v2.ListsResponderV2
+import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -83,6 +85,7 @@ object LayersLive {
       with IIIFServiceManager
       with IriService
       with JWTService
+      with ListsResponderV2
       with ListsResponderADM
       with ListsResponderV1
       with MessageRelay
@@ -127,6 +130,7 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       JWTService.layer,
+      ListsResponderV2Live.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,

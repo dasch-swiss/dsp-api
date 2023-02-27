@@ -48,6 +48,8 @@ import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.v1.CkanResponderV1
 import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.v2.ListsResponderV2
+import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.responders.v1.ListsResponderV1
 import org.knora.webapi.responders.v1.ListsResponderV1Live
 import org.knora.webapi.responders.v1.ProjectsResponderV1
@@ -80,6 +82,7 @@ object LayersTest {
     with IIIFServiceManager
     with IriConverter
     with IriService
+    with ListsResponderV2
     with ListsResponderADM
     with ListsResponderV1
     with MessageRelay
@@ -117,6 +120,7 @@ object LayersTest {
       IIIFServiceManager.layer,
       IriConverter.layer,
       IriService.layer,
+      ListsResponderV2Live.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
