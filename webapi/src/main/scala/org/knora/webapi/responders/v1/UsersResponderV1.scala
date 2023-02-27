@@ -504,7 +504,7 @@ final case class UsersResponderV1Live(
         /* get the user's permission profile from the permissions responder */
         permissionData <-
           messageRelay
-            .ask[PermissionDataGetADM](
+            .ask[PermissionsDataADM](
               PermissionDataGetADM(
                 projectIris = projectIris,
                 groupIris = groupIris,
@@ -513,7 +513,6 @@ final case class UsersResponderV1Live(
                 requestingUser = KnoraSystemInstances.Users.SystemUser
               )
             )
-            .as(PermissionsDataADM())
 
         maybeProjectInfoFutures: Seq[Task[Option[ProjectInfoV1]]] =
           projectIris.map { projectIri =>

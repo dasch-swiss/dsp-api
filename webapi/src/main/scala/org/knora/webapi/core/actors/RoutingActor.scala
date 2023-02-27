@@ -78,8 +78,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), searchResponderV1.receive(searchResponderRequestV1), log)
     case standoffResponderRequestV1: StandoffResponderRequestV1 =>
       ActorUtil.future2Message(sender(), standoffResponderV1.receive(standoffResponderRequestV1), log)
-    case projectsResponderRequestV1: ProjectsResponderRequestV1 =>
-      ActorUtil.future2Message(sender(), projectsResponderV1.receive(projectsResponderRequestV1), log)
 
     // V2 request messages
     case ontologiesResponderRequestV2: OntologiesResponderRequestV2 =>
