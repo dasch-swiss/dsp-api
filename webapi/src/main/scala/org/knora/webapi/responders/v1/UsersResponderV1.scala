@@ -38,7 +38,7 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Provides information about Knora users to other responders.
  */
-trait UsersResponderV1 {}
+trait UsersResponderV1
 final case class UsersResponderV1Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
