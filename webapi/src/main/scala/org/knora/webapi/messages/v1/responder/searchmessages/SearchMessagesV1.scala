@@ -13,6 +13,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
+import org.knora.webapi.core.RelayedMessage
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -20,7 +21,7 @@ import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 /**
  * An abstract trait for messages that can be sent to `SearchResponderV1`.
  */
-sealed trait SearchResponderRequestV1 extends KnoraRequestV1 {
+sealed trait SearchResponderRequestV1 extends KnoraRequestV1 with RelayedMessage {
   def searchValue: Any
 
   // will be implemented as String or a List of Strings
