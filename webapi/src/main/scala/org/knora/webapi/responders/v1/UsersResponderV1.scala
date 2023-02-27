@@ -5,22 +5,26 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
+import com.typesafe.scalalogging.LazyLogging
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio._
 
 import java.util.UUID
-import scala.concurrent.Future
 
 import dsp.errors.ApplicationCacheException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByIRIGetV1
@@ -28,22 +32,32 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Provides information about Knora users to other responders.
  */
-class UsersResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+trait UsersResponderV1
+final case class UsersResponderV1Live(
+  appConfig: AppConfig,
+  messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService
+) extends UsersResponderV1
+    with MessageHandler
+    with LazyLogging {
 
   // The IRI used to lock user creation and update
   val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
 
   val USER_PROFILE_CACHE_NAME = "userProfileCache"
 
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[UsersResponderRequestV1]
+
   /**
    * Receives a message of type [[UsersResponderRequestV1]], and returns an appropriate response message.
    */
-  def receive(msg: UsersResponderRequestV1) = msg match {
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case UsersGetV1(userProfile)            => usersGetV1(userProfile)
     case UsersGetRequestV1(userProfileV1)   => usersGetRequestV1(userProfileV1)
     case UserDataByIriGetV1(userIri, short) => userDataByIriGetV1(userIri, short)
@@ -61,7 +75,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       userProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
     case UserGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID) =>
       userGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -69,22 +83,21 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    *
    * @return all the users as a sequence of [[UserDataV1]].
    */
-  private def usersGetV1(userProfileV1: UserProfileV1): Future[Seq[UserDataV1]] =
-    // log.debug("usersGetV1")
+  private def usersGetV1(userProfileV1: UserProfileV1): Task[Seq[UserDataV1]] =
     for {
-      _ <- Future(
+      _ <- ZIO.attempt(
              if (!userProfileV1.permissionData.isSystemAdmin) {
                throw ForbiddenException("SystemAdmin permissions are required.")
              }
            )
 
-      sparqlQueryString <- Future(
+      sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getUsers()
                                .toString()
                            )
 
-      usersResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      usersResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
       usersResponseRows: Seq[VariableResultsRow] = usersResponse.results.bindings
 
@@ -97,7 +110,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 UserDataV1(
                   lang = propsMap.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
                     case Some(langList) => langList
-                    case None           => responderData.appConfig.fallbackLanguage
+                    case None           => appConfig.fallbackLanguage
                   },
                   user_id = Some(userIri),
                   email = propsMap.get(OntologyConstants.KnoraAdmin.Email),
@@ -115,7 +128,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    * @param userProfileV1 the type of the requested profile (restricted of full).
    * @return all the users as a [[UsersGetResponseV1]].
    */
-  private def usersGetRequestV1(userProfileV1: UserProfileV1): Future[UsersGetResponseV1] =
+  private def usersGetRequestV1(userProfileV1: UserProfileV1): Task[UsersGetResponseV1] =
     for {
       maybeUsersListToReturn <- usersGetV1(userProfileV1)
       result = maybeUsersListToReturn match {
@@ -130,10 +143,9 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    * @param userIri the IRI of the user.
    * @return a [[UserDataV1]] describing the user.
    */
-  private def userDataByIriGetV1(userIri: IRI, short: Boolean): Future[Option[UserDataV1]] =
-    // log.debug("userDataByIriGetV1 - userIri: {}", userIri)
+  private def userDataByIriGetV1(userIri: IRI, short: Boolean): Task[Option[UserDataV1]] =
     for {
-      sparqlQueryString <- Future(
+      sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getUserByIri(
                                  userIri = userIri
@@ -141,13 +153,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                .toString()
                            )
 
-      // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
-      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-
-      maybeUserDataV1 <- userDataQueryResponse2UserDataV1(userDataQueryResponse, short)
-
-      // _ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
+      userDataQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
+      maybeUserDataV1       <- userDataQueryResponse2UserDataV1(userDataQueryResponse, short)
 
     } yield maybeUserDataV1
 
@@ -163,17 +170,16 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   private def userProfileByIRIGetV1(
     userIri: IRI,
     profileType: UserProfileType
-  ): Future[Option[UserProfileV1]] =
-    // log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
+  ): Task[Option[UserProfileV1]] =
     CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, userIri) match {
       case Some(userProfile) =>
         // found a user profile in the cache
-        log.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
-        FastFuture.successful(Some(userProfile.ofType(profileType)))
+        logger.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
+        ZIO.succeed(Some(userProfile.ofType(profileType)))
 
       case None =>
         for {
-          sparqlQueryString <- Future(
+          sparqlQueryString <- ZIO.attempt(
                                  org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                    .getUserByIri(
                                      userIri = userIri
@@ -181,10 +187,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                    .toString()
                                )
 
-          // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
-          userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-
+          userDataQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
                                   userDataQueryResponse = userDataQueryResponse
                                 )
@@ -194,8 +197,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
               }
 
           result = maybeUserProfileV1.map(_.ofType(profileType))
-
-          // _ = log.debug("userProfileByIRIGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
         } yield result // UserProfileV1(userData, groups, projects_info, sessionId, isSystemUser, permissionData)
     }
 
@@ -212,9 +213,9 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     userIRI: IRI,
     profileType: UserProfileType,
     userProfile: UserProfileV1
-  ): Future[UserProfileResponseV1] =
+  ): Task[UserProfileResponseV1] =
     for {
-      _ <- Future(
+      _ <- ZIO.attempt(
              if (!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI)) {
                throw ForbiddenException("SystemAdmin permissions are required.")
              }
@@ -242,28 +243,24 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   private def userProfileByEmailGetV1(
     email: String,
     profileType: UserProfileType
-  ): Future[Option[UserProfileV1]] =
-    // log.debug(s"userProfileByEmailGetV1: username = '{}', type = '{}'", email, profileType)
+  ): Task[Option[UserProfileV1]] =
     CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, email) match {
       case Some(userProfile) =>
         // found a user profile in the cache
-        log.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
-        FastFuture.successful(Some(userProfile.ofType(profileType)))
+        logger.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
+        ZIO.succeed(Some(userProfile.ofType(profileType)))
 
       case None =>
         for {
-          sparqlQueryString <- Future(
+          sparqlQueryString <- ZIO.attempt(
                                  org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                    .getUserByEmail(
                                      email = email
                                    )
                                    .toString()
                                )
-          // _ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
 
-          userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-
-          // _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+          userDataQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
                                   userDataQueryResponse = userDataQueryResponse
                                 )
@@ -273,9 +270,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
               }
 
           result = maybeUserProfileV1.map(_.ofType(profileType))
-
-          // _ = log.debug("userProfileByEmailGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
-
         } yield result // UserProfileV1(userDataV1, groupIris, projectIris)
     }
 
@@ -293,7 +287,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     email: String,
     profileType: UserProfileType,
     userProfile: UserProfileV1
-  ): Future[UserProfileResponseV1] =
+  ): Task[UserProfileResponseV1] =
     for {
       maybeUserProfileToReturn <- userProfileByEmailGetV1(
                                     email = email,
@@ -318,9 +312,9 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     userIri: IRI,
     userProfileV1: UserProfileV1,
     apiRequestID: UUID
-  ): Future[UserProjectMembershipsGetResponseV1] =
+  ): Task[UserProjectMembershipsGetResponseV1] =
     for {
-      sparqlQueryString <- Future(
+      sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getUserByIri(
                                  userIri = userIri
@@ -328,9 +322,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                .toString()
                            )
 
-      // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
-      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -341,8 +333,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                 case Some(projects) => projects
                                 case None           => Seq.empty[IRI]
                               }
-
-      // _ = log.debug("userProjectMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
     } yield UserProjectMembershipsGetResponseV1(projects = projectIris)
 
   /**
@@ -358,9 +348,9 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     userIri: IRI,
     userProfileV1: UserProfileV1,
     apiRequestID: UUID
-  ): Future[UserProjectAdminMembershipsGetResponseV1] =
+  ): Task[UserProjectAdminMembershipsGetResponseV1] =
     for {
-      sparqlQueryString <- Future(
+      sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getUserByIri(
                                  userIri = userIri
@@ -368,9 +358,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                .toString()
                            )
 
-      // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
-      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -382,7 +370,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                 case None           => Seq.empty[IRI]
                               }
 
-      // _ = log.debug("userProjectAdminMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
     } yield UserProjectAdminMembershipsGetResponseV1(projects = projectIris)
 
   /**
@@ -397,9 +384,9 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     userIri: IRI,
     userProfileV1: UserProfileV1,
     apiRequestID: UUID
-  ): Future[UserGroupMembershipsGetResponseV1] =
+  ): Task[UserGroupMembershipsGetResponseV1] =
     for {
-      sparqlQueryString <- Future(
+      sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getUserByIri(
                                  userIri = userIri
@@ -407,9 +394,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                .toString()
                            )
 
-      // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
-      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -420,7 +405,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                               case Some(projects) => projects
                               case None           => Seq.empty[IRI]
                             }
-      // _ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
 
     } yield UserGroupMembershipsGetResponseV1(groups = groupIris)
 
@@ -438,8 +422,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   private def userDataQueryResponse2UserDataV1(
     userDataQueryResponse: SparqlSelectResult,
     short: Boolean
-  ): Future[Option[UserDataV1]] =
-    // log.debug("userDataQueryResponse2UserDataV1 - " + MessageUtil.toSource(userDataQueryResponse))
+  ): Task[Option[UserDataV1]] =
     if (userDataQueryResponse.results.bindings.nonEmpty) {
       val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
 
@@ -448,12 +431,10 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           predicate -> rows.map(_.rowMap("o"))
         }
 
-      // _ = log.debug(s"userDataQueryResponse2UserProfileV1 - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
-
       val userDataV1 = UserDataV1(
         lang = groupedUserData.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
           case Some(langList) => langList.head
-          case None           => responderData.appConfig.fallbackLanguage
+          case None           => appConfig.fallbackLanguage
         },
         user_id = Some(returnedUserIri),
         email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),
@@ -464,10 +445,10 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         } else None,
         status = groupedUserData.get(OntologyConstants.KnoraAdmin.Status).map(_.head.toBoolean)
       )
-      // _ = log.debug(s"userDataQueryResponse - userDataV1: {}", MessageUtil.toSource(userDataV1)")
-      FastFuture.successful(Some(userDataV1))
+
+      ZIO.succeed(Some(userDataV1))
     } else {
-      FastFuture.successful(None)
+      ZIO.succeed(None)
     }
 
   /**
@@ -478,8 +459,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    */
   private def userDataQueryResponse2UserProfileV1(
     userDataQueryResponse: SparqlSelectResult
-  ): Future[Option[UserProfileV1]] =
-    // log.debug("userDataQueryResponse2UserProfileV1 - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
+  ): Task[Option[UserProfileV1]] =
     if (userDataQueryResponse.results.bindings.nonEmpty) {
       val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
 
@@ -488,12 +468,10 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           predicate -> rows.map(_.rowMap("o"))
         }
 
-      // log.debug("userDataQueryResponse2UserProfileV1 - groupedUserData: {}", MessageUtil.toSource(groupedUserData))
-
       val userDataV1 = UserDataV1(
         lang = groupedUserData.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
           case Some(langList) => langList.head
-          case None           => responderData.appConfig.fallbackLanguage
+          case None           => appConfig.fallbackLanguage
         },
         user_id = Some(returnedUserIri),
         email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),
@@ -503,24 +481,17 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         status = groupedUserData.get(OntologyConstants.KnoraAdmin.Status).map(_.head.toBoolean)
       )
 
-      // log.debug("userDataQueryResponse2UserProfileV1 - userDataV1: {}", MessageUtil.toSource(userDataV1))
-
       /* the projects the user is member of */
       val projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProject) match {
         case Some(projects) => projects
         case None           => Seq.empty[IRI]
       }
 
-      // log.debug(s"userDataQueryResponse2UserProfileV1 - projectIris: ${MessageUtil.toSource(projectIris)}")
-
       /* the groups the user is member of (only explicit groups) */
       val groupIris = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInGroup) match {
         case Some(groups) => groups
         case None         => Seq.empty[IRI]
       }
-
-      // log.debug(s"userDataQueryResponse2UserProfileV1 - groupIris: ${MessageUtil.toSource(groupIris)}")
-
       /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
       val isInProjectAdminGroups =
         groupedUserData.getOrElse(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup, Vector.empty[IRI])
@@ -531,33 +502,32 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       for {
         /* get the user's permission profile from the permissions responder */
-        permissionData <- appActor
-                            .ask(
-                              PermissionDataGetADM(
-                                projectIris = projectIris,
-                                groupIris = groupIris,
-                                isInProjectAdminGroups = isInProjectAdminGroups,
-                                isInSystemAdminGroup = isInSystemAdminGroup,
-                                requestingUser = KnoraSystemInstances.Users.SystemUser
-                              )
-                            )
-                            .mapTo[PermissionsDataADM]
+        permissionData <-
+          messageRelay
+            .ask[PermissionsDataADM](
+              PermissionDataGetADM(
+                projectIris = projectIris,
+                groupIris = groupIris,
+                isInProjectAdminGroups = isInProjectAdminGroups,
+                isInSystemAdminGroup = isInSystemAdminGroup,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
+            )
 
-        maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] =
+        maybeProjectInfoFutures: Seq[Task[Option[ProjectInfoV1]]] =
           projectIris.map { projectIri =>
-            appActor
+            messageRelay
               .ask(
                 ProjectInfoByIRIGetV1(
                   iri = projectIri,
                   userProfileV1 = None
                 )
               )
-              .mapTo[Option[ProjectInfoV1]]
           }
 
-        maybeProjectInfos: Seq[Option[ProjectInfoV1]] <- Future.sequence(maybeProjectInfoFutures)
-        projectInfos                                   = maybeProjectInfos.flatten
-        projectInfoMap: Map[IRI, ProjectInfoV1]        = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
+        maybeProjectInfos                      <- ZIO.collectAll(maybeProjectInfoFutures)
+        projectInfos                            = maybeProjectInfos.flatten
+        projectInfoMap: Map[IRI, ProjectInfoV1] = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
 
         /* construct the user profile from the different parts */
         up = UserProfileV1(
@@ -567,13 +537,12 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                sessionId = None,
                permissionData = permissionData
              )
-        // _ = log.debug("Retrieved UserProfileV1: {}", up.toString)
 
         result: Option[UserProfileV1] = Some(up)
       } yield result
 
     } else {
-      FastFuture.successful(None)
+      ZIO.succeed(None)
     }
 
   /**
@@ -582,14 +551,13 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    * @param userIri the IRI of the user.
    * @return a [[Boolean]].
    */
-  def userExists(userIri: IRI): Future[Boolean] =
+  def userExists(userIri: IRI): Task[Boolean] =
     for {
-      askString <- Future(
+      askString <- ZIO.attempt(
                      org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString
                    )
-      // _ = log.debug("userExists - query: {}", askString)
 
-      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -600,16 +568,15 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    * @param projectIri the IRI of the project.
    * @return a [[Boolean]].
    */
-  def projectExists(projectIri: IRI): Future[Boolean] =
+  def projectExists(projectIri: IRI): Task[Boolean] =
     for {
-      askString <- Future(
+      askString <- ZIO.attempt(
                      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                        .checkProjectExistsByIri(projectIri = projectIri)
                        .toString
                    )
-      // _ = log.debug("projectExists - query: {}", askString)
 
-      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -620,15 +587,14 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    * @param groupIri the IRI of the group.
    * @return a [[Boolean]].
    */
-  def groupExists(groupIri: IRI): Future[Boolean] =
+  def groupExists(groupIri: IRI): Task[Boolean] =
     for {
       askString <-
-        Future(
+        ZIO.attempt(
           org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
         )
-      // _ = log.debug("groupExists - query: {}", askString)
 
-      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -667,5 +633,15 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
     true
   }
+}
 
+object UsersResponderV1Live {
+  val layer: URLayer[AppConfig with MessageRelay with TriplestoreService, UsersResponderV1] = ZLayer.fromZIO {
+    for {
+      ac      <- ZIO.service[AppConfig]
+      mr      <- ZIO.service[MessageRelay]
+      ts      <- ZIO.service[TriplestoreService]
+      handler <- mr.subscribe(UsersResponderV1Live(ac, mr, ts))
+    } yield handler
+  }
 }

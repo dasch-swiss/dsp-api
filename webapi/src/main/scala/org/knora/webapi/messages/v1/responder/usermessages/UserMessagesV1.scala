@@ -13,6 +13,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -32,7 +33,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.Use
 /**
  * An abstract trait representing message that can be sent to `UsersResponderV1`.
  */
-sealed trait UsersResponderRequestV1 extends KnoraRequestV1
+sealed trait UsersResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
 
 /**
  * Get all information about all users in form of [[UsersGetResponseV1]]. The UsersGetRequestV1 returns either
