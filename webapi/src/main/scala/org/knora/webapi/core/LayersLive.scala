@@ -21,6 +21,8 @@ import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
@@ -32,8 +34,18 @@ import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.v1.ListsResponderV1
+import org.knora.webapi.responders.v1.ListsResponderV1Live
+import org.knora.webapi.responders.v1.OntologyResponderV1
+import org.knora.webapi.responders.v1.OntologyResponderV1Live
+import org.knora.webapi.responders.v1.ProjectsResponderV1
+import org.knora.webapi.responders.v1.ProjectsResponderV1Live
 import org.knora.webapi.responders.v1.ResourcesResponderV1
 import org.knora.webapi.responders.v1.ResourcesResponderV1Live
+import org.knora.webapi.responders.v1.UsersResponderV1
+import org.knora.webapi.responders.v1.UsersResponderV1Live
 import org.knora.webapi.responders.v2.ResourceUtilV2Z
 import org.knora.webapi.responders.v2.ResourceUtilV2ZLive
 import org.knora.webapi.routing.ApiRoutes
@@ -72,15 +84,20 @@ object LayersLive {
       with AppRouterRelayingMessageHandler
       with CacheService
       with CacheServiceManager
+      with CkanResponderV1
       with GroupsResponderADM
       with HttpServer
       with IIIFService
       with IIIFServiceManager
       with IriService
       with JWTService
+      with ListsResponderADM
+      with ListsResponderV1
       with MessageRelay
+      with OntologyResponderV1
       with PermissionsResponderADM
       with ProjectsResponderADM
+      with ProjectsResponderV1
       with RepositoryUpdater
       with ResourceUtilV2Z
       with ResourcesResponderV1
@@ -94,6 +111,7 @@ object LayersLive {
       with TriplestoreServiceManager
       with UsersResponderADM
       with ValueUtilV1Z
+      with UsersResponderV1
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -112,6 +130,7 @@ object LayersLive {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
@@ -120,12 +139,16 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       JWTService.layer,
+      ListsResponderADMLive.layer,
+      ListsResponderV1Live.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      OntologyResponderV1Live.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsResponderADMLive.layer,
+      ProjectsResponderV1Live.layer,
       ProjectsRouteZ.layer,
       ProjectsServiceLive.layer,
       RepositoryUpdater.layer,
@@ -143,6 +166,7 @@ object LayersLive {
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
       UsersResponderADMLive.layer,
-      ValueUtilV1ZLive.layer
+      ValueUtilV1ZLive.layer,
+      UsersResponderV1Live.layer
     )
 }

@@ -11,6 +11,8 @@ import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
+import org.knora.webapi.responders.v1.UsersResponderV1
+import org.knora.webapi.responders.v1.UsersResponderV1Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -40,12 +42,22 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2ZLive
 import org.knora.webapi.messages.util.ValueUtilV1ZLive
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Z
 import org.knora.webapi.messages.util.ValueUtilV1Z
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.v1.ListsResponderV1
+import org.knora.webapi.responders.v1.ListsResponderV1Live
+import org.knora.webapi.responders.v1.ProjectsResponderV1
+import org.knora.webapi.responders.v1.ProjectsResponderV1Live
+import org.knora.webapi.responders.v1.OntologyResponderV1
+import org.knora.webapi.responders.v1.OntologyResponderV1Live
 import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADMLive
 import org.knora.webapi.responders.v1.ResourcesResponderV1
@@ -70,14 +82,19 @@ object LayersTest {
     with CacheService
     with CacheServiceManager
     with CardinalityService
+    with CkanResponderV1
     with GroupsResponderADM
     with HttpServer
     with IIIFServiceManager
     with IriConverter
     with IriService
+    with ListsResponderADM
+    with ListsResponderV1
     with MessageRelay
+    with OntologyResponderV1
     with PermissionsResponderADM
     with ProjectsResponderADM
+    with ProjectsResponderV1
     with RepositoryUpdater
     with ResourceInfoRepo
     with ResourceUtilV2Z
@@ -94,6 +111,7 @@ object LayersTest {
     with TriplestoreServiceManager
     with UsersResponderADM
     with ValueUtilV1Z
+    with UsersResponderV1
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -105,17 +123,22 @@ object LayersTest {
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFServiceManager.layer,
       IriConverter.layer,
       IriService.layer,
+      ListsResponderADMLive.layer,
+      ListsResponderV1Live.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      OntologyResponderV1Live.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsResponderADMLive.layer,
+      ProjectsResponderV1Live.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,
@@ -131,7 +154,8 @@ object LayersTest {
       ResourceUtilV2ZLive.layer,
       ResourcesResponderV1Live.layer,
       StandoffTagUtilV2ZLive.layer,
-      ValueUtilV1ZLive.layer
+      ValueUtilV1ZLive.layer,
+      UsersResponderV1Live.layer
     )
 
   private val fusekiAndSipiTestcontainers =
