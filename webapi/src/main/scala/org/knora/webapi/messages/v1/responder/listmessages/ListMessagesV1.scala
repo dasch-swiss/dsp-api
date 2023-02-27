@@ -9,6 +9,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -22,7 +23,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 /**
  * An abstract trait for messages that can be sent to `HierarchicalListsResponderV1`.
  */
-sealed trait ListsResponderRequestV1 extends KnoraRequestV1
+sealed trait ListsResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
 
 /**
  * Requests a list. A successful response will be a [[HListGetResponseV1]].
@@ -63,7 +64,7 @@ sealed abstract class ListGetResponseV1 extends KnoraResponseV1
  * @param hlist the list requested.
  */
 case class HListGetResponseV1(hlist: Seq[ListNodeV1]) extends ListGetResponseV1 with ListV1JsonProtocol {
-  def toJsValue = hlistGetResponseV1Format.write(this)
+  def toJsValue: JsValue = hlistGetResponseV1Format.write(this)
 }
 
 /**
@@ -72,7 +73,7 @@ case class HListGetResponseV1(hlist: Seq[ListNodeV1]) extends ListGetResponseV1 
  * @param selection the list requested.
  */
 case class SelectionGetResponseV1(selection: Seq[ListNodeV1]) extends ListGetResponseV1 with ListV1JsonProtocol {
-  def toJsValue = selectionGetResponseV1Format.write(this)
+  def toJsValue: JsValue = selectionGetResponseV1Format.write(this)
 }
 
 /**
@@ -81,7 +82,7 @@ case class SelectionGetResponseV1(selection: Seq[ListNodeV1]) extends ListGetRes
  * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
  */
 case class NodePathGetResponseV1(nodelist: Seq[NodePathElementV1]) extends ListGetResponseV1 with ListV1JsonProtocol {
-  def toJsValue = nodePathGetResponseV1Format.write(this)
+  def toJsValue: JsValue = nodePathGetResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

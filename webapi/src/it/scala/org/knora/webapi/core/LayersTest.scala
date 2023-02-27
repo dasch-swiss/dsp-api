@@ -36,6 +36,8 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import zio._
 
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
 import org.knora.webapi.responders.admin.SipiResponderADM
@@ -46,6 +48,12 @@ import org.knora.webapi.responders.v1.CkanResponderV1
 import org.knora.webapi.responders.v1.CkanResponderV1Live
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
+import org.knora.webapi.responders.v1.ListsResponderV1
+import org.knora.webapi.responders.v1.ListsResponderV1Live
+import org.knora.webapi.responders.v1.ProjectsResponderV1
+import org.knora.webapi.responders.v1.ProjectsResponderV1Live
+import org.knora.webapi.responders.v1.OntologyResponderV1
+import org.knora.webapi.responders.v1.OntologyResponderV1Live
 import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADMLive
 
@@ -73,9 +81,13 @@ object LayersTest {
     with IriConverter
     with IriService
     with ListsResponderV2
+    with ListsResponderADM
+    with ListsResponderV1
     with MessageRelay
+    with OntologyResponderV1
     with PermissionsResponderADM
     with ProjectsResponderADM
+    with ProjectsResponderV1
     with RepositoryUpdater
     with ResourceInfoRepo
     with RestCardinalityService
@@ -106,12 +118,16 @@ object LayersTest {
       IriConverter.layer,
       IriService.layer,
       ListsResponderV2Live.layer,
+      ListsResponderADMLive.layer,
+      ListsResponderV1Live.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      OntologyResponderV1Live.layer,
       PermissionsResponderADMLive.layer,
-      ProjectsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
+      ProjectsResponderADMLive.layer,
+      ProjectsResponderV1Live.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       RestCardinalityService.layer,
