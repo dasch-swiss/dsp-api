@@ -38,6 +38,8 @@ import org.knora.webapi.responders.v1.OntologyResponderV1
 import org.knora.webapi.responders.v1.OntologyResponderV1Live
 import org.knora.webapi.responders.v1.ProjectsResponderV1
 import org.knora.webapi.responders.v1.ProjectsResponderV1Live
+import org.knora.webapi.responders.v1.UsersResponderV1
+import org.knora.webapi.responders.v1.UsersResponderV1Live
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.routing.ApiRoutes
@@ -100,6 +102,7 @@ object LayersLive {
       with TriplestoreService
       with TriplestoreServiceManager
       with UsersResponderADM
+      with UsersResponderV1
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -151,6 +154,7 @@ object LayersLive {
       StringFormatter.live,
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
-      UsersResponderADMLive.layer
+      UsersResponderADMLive.layer,
+      UsersResponderV1Live.layer
     )
 }
