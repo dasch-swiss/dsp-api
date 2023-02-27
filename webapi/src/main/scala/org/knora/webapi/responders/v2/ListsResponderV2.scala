@@ -24,7 +24,7 @@ import org.knora.webapi.responders.Responder
 /**
  * Responds to requests relating to lists and nodes.
  */
-trait ListsResponderV2 {}
+trait ListsResponderV2
 final case class ListsResponderV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay
