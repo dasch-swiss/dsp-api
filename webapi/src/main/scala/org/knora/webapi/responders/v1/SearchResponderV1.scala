@@ -5,11 +5,20 @@
 
 package org.knora.webapi.responders.v1
 
+import zio.Task
+import zio.ZIO
+import zio._
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.SearchCriterion
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -21,16 +30,8 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.config.AppConfig
-import zio.Task
-import org.knora.webapi.messages.ResponderRequest
-import zio.ZIO
-import org.knora.webapi.messages.StringFormatter
-import zio._
+import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
  * Responds to requests for user search queries and returns responses in Knora API
