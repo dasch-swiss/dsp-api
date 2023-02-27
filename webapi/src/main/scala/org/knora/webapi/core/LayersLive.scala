@@ -14,7 +14,34 @@ import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
-import org.knora.webapi.responders.admin.ProjectsService
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.responders.admin.GroupsResponderADMLive
+import org.knora.webapi.responders.admin.ListsResponderADM
+import org.knora.webapi.responders.admin.ListsResponderADMLive
+import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponderADMLive
+import org.knora.webapi.responders.admin.ProjectsResponderADM
+import org.knora.webapi.responders.admin.ProjectsResponderADMLive
+import org.knora.webapi.responders.admin.ProjectsServiceLive
+import org.knora.webapi.responders.admin.SipiResponderADM
+import org.knora.webapi.responders.admin.SipiResponderADMLive
+import org.knora.webapi.responders.admin.StoresResponderADM
+import org.knora.webapi.responders.admin.StoresResponderADMLive
+import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.responders.v1.CkanResponderV1
+import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.v1.ListsResponderV1
+import org.knora.webapi.responders.v1.ListsResponderV1Live
+import org.knora.webapi.responders.v1.OntologyResponderV1
+import org.knora.webapi.responders.v1.OntologyResponderV1Live
+import org.knora.webapi.responders.v1.ProjectsResponderV1
+import org.knora.webapi.responders.v1.ProjectsResponderV1Live
+import org.knora.webapi.responders.v1.UsersResponderV1
+import org.knora.webapi.responders.v1.UsersResponderV1Live
+import org.knora.webapi.responders.v2.ListsResponderV2
+import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -48,18 +75,34 @@ object LayersLive {
       with ApiRoutes
       with AppConfig
       with AppRouter
-      with CacheServiceManager
+      with AppRouterRelayingMessageHandler
       with CacheService
+      with CacheServiceManager
+      with CkanResponderV1
+      with GroupsResponderADM
       with HttpServer
-      with IIIFServiceManager
       with IIIFService
+      with IIIFServiceManager
+      with IriService
       with JWTService
+      with ListsResponderV2
+      with ListsResponderADM
+      with ListsResponderV1
+      with MessageRelay
+      with OntologyResponderV1
+      with PermissionsResponderADM
+      with ProjectsResponderADM
+      with ProjectsResponderV1
       with RepositoryUpdater
-      with RestResourceInfoService
       with RestCardinalityService
+      with RestResourceInfoService
+      with SipiResponderADM
       with State
-      with TriplestoreServiceManager
+      with StoresResponderADM
       with TriplestoreService
+      with TriplestoreServiceManager
+      with UsersResponderADM
+      with UsersResponderV1
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -72,30 +115,46 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
+      AppRouterRelayingMessageHandler.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
       CardinalityService.layer,
+      CkanResponderV1Live.layer,
+      GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
+      IriService.layer,
       JWTService.layer,
+      ListsResponderV2Live.layer,
+      ListsResponderADMLive.layer,
+      ListsResponderV1Live.layer,
+      MessageRelayLive.layer,
       OntologyCache.layer,
       OntologyRepoLive.layer,
+      OntologyResponderV1Live.layer,
+      PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
+      ProjectsResponderADMLive.layer,
+      ProjectsResponderV1Live.layer,
       ProjectsRouteZ.layer,
-      ProjectsService.live,
+      ProjectsServiceLive.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
+      SipiResponderADMLive.layer,
       State.layer,
+      StoresResponderADMLive.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,
-      TriplestoreServiceManager.layer
+      TriplestoreServiceManager.layer,
+      UsersResponderADMLive.layer,
+      UsersResponderV1Live.layer
     )
 }

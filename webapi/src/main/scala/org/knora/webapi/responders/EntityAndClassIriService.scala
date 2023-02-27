@@ -8,7 +8,6 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import zio.ZLayer
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -136,9 +135,4 @@ final case class EntityAndClassIriService(
 
       case None => stringFormatter.makeUnusedIri(iriFormatter, appActor, logger)
     }
-}
-
-object EntityAndClassIriService {
-  val layer: ZLayer[ActorDeps with StringFormatter, Nothing, EntityAndClassIriService] =
-    ZLayer.fromFunction(EntityAndClassIriService.apply _)
 }

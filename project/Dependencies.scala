@@ -11,7 +11,7 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.0.11" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.6.3" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.7.1" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.10"
 
@@ -23,11 +23,11 @@ object Dependencies {
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.3.0"
-  val ZioLoggingVersion           = "2.1.8"
-  val ZioMetricsConnectorsVersion = "2.0.5"
+  val ZioLoggingVersion           = "2.1.9"
+  val ZioMetricsConnectorsVersion = "2.0.6"
   val ZioPreludeVersion           = "1.0.0-RC16"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.7"
+  val ZioVersion                  = "2.0.9"
 
   // ZIO - all Scala 3 compatible
   val zio                  = "dev.zio" %% "zio"                    % ZioVersion
@@ -38,7 +38,7 @@ object Dependencies {
   val zioHttp              = "dev.zio" %% "zio-http"               % ZioHttpVersion
   val zioJson              = "dev.zio" %% "zio-json"               % ZioJsonVersion
   val zioLogging           = "dev.zio" %% "zio-logging"            % ZioLoggingVersion
-  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j"      % ZioLoggingVersion
+  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j2"     % ZioLoggingVersion
   val zioMacros            = "dev.zio" %% "zio-macros"             % ZioVersion
   val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
   val zioPrelude           = "dev.zio" %% "zio-prelude"            % ZioPreludeVersion
@@ -95,8 +95,8 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "72.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.2"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.2"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.3"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.3"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.0"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.5" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible

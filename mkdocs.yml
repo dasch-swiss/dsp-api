@@ -92,6 +92,10 @@ nav:
               - SPARQL Query Design: 05-internals/design/api-v2/query-design.md
           - Admin API Design:
               - Administration: 05-internals/design/api-admin/administration.md
+          - DSP Domain:
+              - Domain Entities and Relations: 05-internals/design/domain/domain-entities-and-relations.md
+              - System Instances: 05-internals/design/domain/system-instances.md
+              - Class and Property Hierarchies: 05-internals/design/domain/class-and-property-hierarchies.md
       - Development:
           - Overview: 05-internals/development/overview.md
           - Build and Running: 05-internals/development/building-and-running.md
@@ -122,3 +126,15 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tasklist:
+      custom_checkbox: true
