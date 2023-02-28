@@ -43,12 +43,11 @@ trait OntologyResponderV1 {}
 final case class OntologyResponderV1Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
+  valueUtilV1: ValueUtilV1,
   implicit val stringFormatter: StringFormatter
 ) extends OntologyResponderV1
     with MessageHandler
     with LazyLogging {
-
-  private val valueUtilV1 = new ValueUtilV1(appConfig)
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[OntologyResponderRequestV1]
@@ -704,12 +703,14 @@ final case class OntologyResponderV1Live(
 }
 
 object OntologyResponderV1Live {
-  val layer: URLayer[StringFormatter with MessageRelay with AppConfig, OntologyResponderV1Live] = ZLayer.fromZIO {
-    for {
-      config  <- ZIO.service[AppConfig]
-      mr      <- ZIO.service[MessageRelay]
-      sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(OntologyResponderV1Live(config, mr, sf))
-    } yield handler
-  }
+  val layer: URLayer[ValueUtilV1 with StringFormatter with MessageRelay with AppConfig, OntologyResponderV1Live] =
+    ZLayer.fromZIO {
+      for {
+        config  <- ZIO.service[AppConfig]
+        mr      <- ZIO.service[MessageRelay]
+        sf      <- ZIO.service[StringFormatter]
+        vu      <- ZIO.service[ValueUtilV1]
+        handler <- mr.subscribe(OntologyResponderV1Live(config, mr, vu, sf))
+      } yield handler
+    }
 }

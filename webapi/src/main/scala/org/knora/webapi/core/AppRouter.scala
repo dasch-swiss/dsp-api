@@ -16,6 +16,7 @@ import zio.macros.accessible
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -41,7 +42,8 @@ object AppRouter {
       with IIIFServiceManager
       with MessageRelay
       with StandoffTagUtilV2
-      with TriplestoreServiceManager,
+      with TriplestoreServiceManager
+      with ValueUtilV1,
     Nothing,
     AppRouter
   ] =
@@ -53,7 +55,7 @@ object AppRouter {
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
         messageRelay              <- ZIO.service[MessageRelay]
-        runtime                   <- ZIO.runtime[CardinalityService with StandoffTagUtilV2]
+        runtime                   <- ZIO.runtime[CardinalityService with StandoffTagUtilV2 with ValueUtilV1]
       } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem = as.system
 

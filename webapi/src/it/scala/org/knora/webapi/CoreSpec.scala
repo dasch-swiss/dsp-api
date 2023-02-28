@@ -65,6 +65,9 @@ abstract class CoreSpec
 
   def getService[R: Tag](implicit runtime: Runtime[R]): R = UnsafeZioRun.runOrThrow(ZIO.service[R])
 
+  def runOrThrowWithService[R: Tag, A](run: R => A)(implicit runtime: Runtime[R]): A =
+    UnsafeZioRun.runOrThrow(ZIO.service[R].map(run))
+
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
   private val routerAndConfig = for {

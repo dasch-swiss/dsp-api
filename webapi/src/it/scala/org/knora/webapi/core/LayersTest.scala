@@ -40,6 +40,8 @@ import zio._
 
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
+import org.knora.webapi.messages.util.ValueUtilV1
+import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
@@ -109,6 +111,7 @@ object LayersTest {
     with TriplestoreServiceManager
     with UsersResponderADM
     with UsersResponderV1
+    with ValueUtilV1
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -151,7 +154,8 @@ object LayersTest {
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
       UsersResponderADMLive.layer,
-      UsersResponderV1Live.layer
+      UsersResponderV1Live.layer,
+      ValueUtilV1Live.layer
     )
 
   private val fusekiAndSipiTestcontainers =
