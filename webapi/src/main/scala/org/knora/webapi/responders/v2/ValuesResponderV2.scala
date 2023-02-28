@@ -394,7 +394,7 @@ class ValuesResponderV2(responderData: ResponderData, implicit val runtime: zio.
 
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
-    val fut = UnsafeZioRun.runToFuture(
+    UnsafeZioRun.runToFuture(
       ZIO.serviceWithZIO[ResourceUtilV2](
         _.doSipiPostUpdate(
           updateFuture = ZIO.fromFuture(ec => triplestoreUpdateFuture),
@@ -404,7 +404,6 @@ class ValuesResponderV2(responderData: ResponderData, implicit val runtime: zio.
         )
       )
     )
-    fut
   }
 
   /**
