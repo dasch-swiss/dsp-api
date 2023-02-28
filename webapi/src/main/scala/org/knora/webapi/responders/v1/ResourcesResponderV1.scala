@@ -37,6 +37,7 @@ import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -57,7 +58,8 @@ import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
  */
-class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class ResourcesResponderV1(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
+    extends Responder(responderData.actorDeps) {
 
   // Converts SPARQL query results to ApiValueV1 objects.
   private val valueUtilV1 = new ValueUtilV1(responderData.appConfig)

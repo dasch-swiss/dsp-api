@@ -18,6 +18,7 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
@@ -42,7 +43,7 @@ final case class RoutingActor(
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  implicit val runtime: zio.Runtime[CardinalityService]
+  implicit val runtime: zio.Runtime[CardinalityService with StandoffTagUtilV2]
 ) extends Actor {
 
   private val log: Logger                                 = Logger(this.getClass)
@@ -51,17 +52,17 @@ final case class RoutingActor(
   private implicit val executionContext: ExecutionContext = actorDeps.executionContext
 
   // V1 responders
-  private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
-  private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData)
+  private val resourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData, runtime)
+  private val valuesResponderV1: ValuesResponderV1       = new ValuesResponderV1(responderData, runtime)
   private val standoffResponderV1: StandoffResponderV1   = new StandoffResponderV1(responderData)
   private val searchResponderV1: SearchResponderV1       = new SearchResponderV1(responderData)
 
   // V2 responders
   private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, runtime)
-  private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData)
-  private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
+  private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData, runtime)
+  private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData, runtime)
   private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)
-  private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData)
+  private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData, runtime)
 
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay

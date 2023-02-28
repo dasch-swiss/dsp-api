@@ -49,7 +49,8 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport._
 
-class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
+class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
+    extends ResponderWithStandoffV2(responderData) {
 
   // A Gravsearch type inspection runner.
   private val gravsearchTypeInspectionRunner =
