@@ -12,6 +12,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.ValueUtilV1
+import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.ActorDeps
@@ -110,6 +112,7 @@ object LayersLive {
       with TriplestoreServiceManager
       with UsersResponderADM
       with UsersResponderV1
+      with ValueUtilV1
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -164,6 +167,7 @@ object LayersLive {
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
       UsersResponderADMLive.layer,
-      UsersResponderV1Live.layer
+      UsersResponderV1Live.layer,
+      ValueUtilV1Live.layer
     )
 }

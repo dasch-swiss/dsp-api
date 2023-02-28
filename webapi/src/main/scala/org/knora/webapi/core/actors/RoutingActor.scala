@@ -18,6 +18,7 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
@@ -42,7 +43,7 @@ final case class RoutingActor(
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  implicit val runtime: zio.Runtime[CardinalityService with StandoffTagUtilV2]
+  implicit val runtime: zio.Runtime[CardinalityService with StandoffTagUtilV2 with ValueUtilV1]
 ) extends Actor {
 
   private val log: Logger                                 = Logger(this.getClass)

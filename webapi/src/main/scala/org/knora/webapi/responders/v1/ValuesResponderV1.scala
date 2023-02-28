@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
+import zio.ZIO
 
 import java.time.Instant
 import scala.annotation.tailrec
@@ -48,6 +49,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.util._
@@ -55,15 +57,15 @@ import org.knora.webapi.util._
 /**
  * Updates Knora values.
  */
-class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
-    extends Responder(responderData.actorDeps) {
-  // Converts SPARQL query results to ApiValueV1 objects.
-  val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
+class ValuesResponderV1(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ValueUtilV1]
+) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.
    */
-  def receive(msg: ValuesResponderRequestV1) = msg match {
+  def receive(msg: ValuesResponderRequestV1): Future[Any] = msg match {
     case ValueGetRequestV1(valueIri, userProfile) =>
       getValueResponseV1(valueIri, userProfile)
     case LinkValueGetRequestV1(subjectIri, predicateIri, objectIri, userProfile) =>
@@ -806,7 +808,10 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
                                            )
 
         changedLocation = response.value match {
-                            case fileValueV1: FileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1)
+                            case fileValueV1: FileValueV1 =>
+                              UnsafeZioRun.runOrThrow(
+                                ZIO.service[ValueUtilV1].map(_.fileValueV12LocationV1(fileValueV1))
+                              )
                             case other =>
                               throw AssertionException(
                                 s"Expected Sipi to change a file value, but it changed one of these: ${other.valueTypeIri}"
@@ -1227,7 +1232,7 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
                          .toString()
 
         // Do the update.
-        sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // To find out whether the update succeeded, look for the new value in the triplestore.
         verifyUpdateResult <- verifyOrdinaryValueUpdate(
@@ -1453,7 +1458,7 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
                                            }
 
         // Do the update.
-        sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1970,7 +1975,11 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
 
     if (rows.nonEmpty) {
       // Convert the query results to a ApiValueV1.
-      val valueProps = valueUtilV1.createValueProps(valueIri, rows)
+      val valueProps = UnsafeZioRun.runOrThrow(
+        ZIO
+          .service[ValueUtilV1]
+          .map(_.createValueProps(valueIri, rows))
+      )
 
       for {
         projectShortcode: String <-
@@ -1979,11 +1988,14 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
               .getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $valueIri"))
           )
 
-        value <- valueUtilV1.makeValueV1(
-                   valueProps = valueProps,
-                   projectShortcode = projectShortcode,
-                   appActor = appActor,
-                   userProfile = userProfile
+        value <- UnsafeZioRun.runToFuture(
+                   ZIO.serviceWithZIO[ValueUtilV1](
+                     _.makeValueV1(
+                       valueProps = valueProps,
+                       projectShortcode = projectShortcode,
+                       userProfile = userProfile
+                     )
+                   )
                  )
 
         // Get the value's class IRI.
@@ -2088,8 +2100,7 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
       val linkValueIri = firstRowMap("linkValue")
 
       // Convert the query results into a LinkValueV1.
-      val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
-
+      val valueProps = UnsafeZioRun.runOrThrow(ZIO.service[ValueUtilV1].map(_.createValueProps(linkValueIri, rows)))
       for {
         projectShortcode: String <-
           Future(
@@ -2097,11 +2108,15 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
               .getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $linkValueIri"))
           )
 
-        linkValueMaybe <- valueUtilV1.makeValueV1(
-                            valueProps = valueProps,
-                            projectShortcode = projectShortcode,
-                            appActor = appActor,
-                            userProfile = userProfile
+        linkValueMaybe <- UnsafeZioRun.runToFuture(
+                            ZIO
+                              .serviceWithZIO[ValueUtilV1](
+                                _.makeValueV1(
+                                  valueProps = valueProps,
+                                  projectShortcode = projectShortcode,
+                                  userProfile = userProfile
+                                )
+                              )
                           )
 
         linkValueV1: LinkValueV1 = linkValueMaybe match {
@@ -2484,7 +2499,7 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
        */
 
       // Do the update.
-      sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield UnverifiedValueV1(
       newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
       value = linkUpdateV1
@@ -2563,14 +2578,8 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
                        )
                        .toString()
 
-      /*
-            _ = println("================ Create value ================")
-            _ = println(sparqlUpdate)
-            _ = println("==============================================")
-       */
-
       // Do the update.
-      sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield UnverifiedValueV1(
       newValueIri = newValueIri,
       value = value
@@ -2658,14 +2667,8 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
                        )
                        .toString()
 
-      /*
-            _ = println("================ Update link ================")
-            _ = println(sparqlUpdate)
-            _ = println("=============================================")
-       */
-
       // Do the update.
-      sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
       // To find out whether the update succeeded, check that the new link is in the triplestore.
       linkValueQueryResult <- verifyLinkUpdate(
@@ -2830,14 +2833,8 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
                        )
                        .toString()
 
-      /*
-            _ = println("================ Update value ================")
-            _ = println(sparqlUpdate)
-            _ = println("==============================================")
-       */
-
       // Do the update.
-      sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
       // To find out whether the update succeeded, look for the new value in the triplestore.
       verifyUpdateResult <- verifyOrdinaryValueUpdate(
@@ -2895,10 +2892,7 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
                                    )
 
       // Check that the target resource actually exists and is a knora-base:Resource.
-      targetIriCheckResult <- checkStandoffResourceReferenceTargets(
-                                targetIris = Set(targetResourceIri),
-                                userProfile = userProfile
-                              )
+      _ <- checkStandoffResourceReferenceTargets(targetIris = Set(targetResourceIri), userProfile = userProfile)
 
       // Generate an IRI for the new LinkValue.
       newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
@@ -3138,12 +3132,16 @@ class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.
 
                   case otherValue =>
                     // We're creating an ordinary value. Check that its type is valid for the property's knora-base:objectClassConstraint.
-                    valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
-                      propertyIri = propertyIri,
-                      propertyObjectClassConstraint = propertyObjectClassConstraint,
-                      valueType = otherValue.valueTypeIri,
-                      appActor = appActor,
-                      userProfile = userProfile
+                    UnsafeZioRun.runToFuture(
+                      ZIO
+                        .serviceWithZIO[ValueUtilV1](
+                          _.checkValueTypeForPropertyObjectClassConstraint(
+                            propertyIri = propertyIri,
+                            propertyObjectClassConstraint = propertyObjectClassConstraint,
+                            valueType = otherValue.valueTypeIri,
+                            userProfile = userProfile
+                          )
+                        )
                     )
                 }
     } yield result
