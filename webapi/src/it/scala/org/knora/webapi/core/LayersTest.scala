@@ -11,6 +11,8 @@ import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
+import org.knora.webapi.responders.v1.UsersResponderV1
+import org.knora.webapi.responders.v1.UsersResponderV1Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -46,6 +48,8 @@ import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.v1.CkanResponderV1
 import org.knora.webapi.responders.v1.CkanResponderV1Live
+import org.knora.webapi.responders.v2.ListsResponderV2
+import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.responders.v1.ListsResponderV1
 import org.knora.webapi.responders.v1.ListsResponderV1Live
 import org.knora.webapi.responders.v1.ProjectsResponderV1
@@ -80,6 +84,7 @@ object LayersTest {
     with IIIFServiceManager
     with IriConverter
     with IriService
+    with ListsResponderV2
     with ListsResponderADM
     with ListsResponderV1
     with MessageRelay
@@ -100,6 +105,7 @@ object LayersTest {
     with TriplestoreService
     with TriplestoreServiceManager
     with UsersResponderADM
+    with UsersResponderV1
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -117,6 +123,7 @@ object LayersTest {
       IIIFServiceManager.layer,
       IriConverter.layer,
       IriService.layer,
+      ListsResponderV2Live.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
@@ -139,7 +146,8 @@ object LayersTest {
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       TriplestoreServiceManager.layer,
-      UsersResponderADMLive.layer
+      UsersResponderADMLive.layer,
+      UsersResponderV1Live.layer
     )
 
   private val fusekiAndSipiTestcontainers =
