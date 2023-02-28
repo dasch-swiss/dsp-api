@@ -40,6 +40,8 @@ import zio._
 
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.responders.admin.ListsResponderADM
@@ -96,6 +98,7 @@ object LayersTest {
     with ListsResponderV1
     with MessageRelay
     with OntologyResponderV1
+    with PermissionUtilADM
     with PermissionsResponderADM
     with ProjectsResponderADM
     with ProjectsResponderV1
@@ -140,6 +143,7 @@ object LayersTest {
       OntologyCache.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
+      PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsResponderADMLive.layer,

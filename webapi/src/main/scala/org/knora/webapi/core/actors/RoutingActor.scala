@@ -17,6 +17,7 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -43,7 +44,9 @@ final case class RoutingActor(
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  implicit val runtime: zio.Runtime[CardinalityService with StandoffTagUtilV2 with ValueUtilV1 with ResourceUtilV2]
+  implicit val runtime: zio.Runtime[
+    CardinalityService with StandoffTagUtilV2 with ValueUtilV1 with ResourceUtilV2 with PermissionUtilADM
+  ]
 ) extends Actor {
 
   private val log: Logger                                 = Logger(this.getClass)

@@ -46,8 +46,10 @@ import org.knora.webapi.util.ActorUtil
 /**
  * Handles requests to read and write Knora values.
  */
-class ValuesResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[ResourceUtilV2])
-    extends Responder(responderData.actorDeps) {
+class ValuesResponderV2(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[ResourceUtilV2 with PermissionUtilADM]
+) extends Responder(responderData.actorDeps) {
 
   /**
    * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
@@ -300,10 +302,8 @@ class ValuesResponderV2(responderData: ResponderData, implicit val runtime: zio.
             case Some(permissions: String) =>
               // Yes. Validate them.
               for {
-                validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
-                                                permissionLiteral = permissions,
-                                                appActor = appActor
-                                              )
+                validatedCustomPermissions <-
+                  UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissions)))
 
                 // Is the requesting user a system admin, or an admin of this project?
                 _ = if (
@@ -1052,9 +1052,8 @@ class ValuesResponderV2(responderData: ResponderData, implicit val runtime: zio.
         // Validate and reformat the submitted permissions.
 
         newValuePermissionLiteral: String <-
-          PermissionUtilADM.validatePermissions(
-            permissionLiteral = updateValuePermissionsV2.permissions,
-            appActor = appActor
+          UnsafeZioRun.runToFuture(
+            ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(updateValuePermissionsV2.permissions))
           )
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
         // different from the current ones.
@@ -1169,9 +1168,8 @@ class ValuesResponderV2(responderData: ResponderData, implicit val runtime: zio.
           updateValueContentV2.permissions match {
             case Some(permissions) =>
               // Yes. Validate them.
-              PermissionUtilADM.validatePermissions(
-                permissionLiteral = permissions,
-                appActor = appActor
+              UnsafeZioRun.runToFuture(
+                ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissions))
               )
 
             case None =>

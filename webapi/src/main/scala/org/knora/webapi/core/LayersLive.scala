@@ -12,6 +12,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -99,6 +101,7 @@ object LayersLive {
       with ListsResponderV1
       with MessageRelay
       with OntologyResponderV1
+      with PermissionUtilADM
       with PermissionsResponderADM
       with ProjectsResponderADM
       with ProjectsResponderV1
@@ -150,6 +153,7 @@ object LayersLive {
       OntologyCache.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
+      PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsResponderADMLive.layer,

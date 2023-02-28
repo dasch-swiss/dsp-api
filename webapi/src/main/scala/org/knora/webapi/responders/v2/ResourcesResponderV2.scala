@@ -69,7 +69,7 @@ import org.knora.webapi.util._
 
 class ResourcesResponderV2(
   responderData: ResponderData,
-  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ResourceUtilV2]
+  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ResourceUtilV2 with PermissionUtilADM]
 ) extends ResponderWithStandoffV2(responderData) {
 
   /**
@@ -879,10 +879,8 @@ class ResourcesResponderV2(
         internalCreateResource.permissions match {
           case Some(permissionStr) =>
             for {
-              validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(
-                                                      permissionLiteral = permissionStr,
-                                                      appActor = appActor
-                                                    )
+              validatedCustomPermissions: String <-
+                UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissionStr)))
 
               // Is the requesting user a system admin, or an admin of this project?
               _ = if (
@@ -1231,10 +1229,10 @@ class ResourcesResponderV2(
               case Some(permissionStr: String) =>
                 // Yes. Validate and reformat them.
                 for {
-                  validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
-                                                  permissionLiteral = permissionStr,
-                                                  appActor = appActor
-                                                )
+                  validatedCustomPermissions <-
+                    UnsafeZioRun.runToFuture(
+                      ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissionStr))
+                    )
 
                   // Is the requesting user a system admin, or an admin of this project?
                   _ =
