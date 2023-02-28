@@ -7,10 +7,10 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
-import zio._
-import dsp.errors.ForbiddenException
 import zio.Task
+import zio._
 
+import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -56,10 +56,10 @@ trait ResourceUtilV2 {
   /**
    * Checks that a user has the specified permission on a value.
    *
-   * @param resourceInfo             the resource containing the value.
-   * @param valueInfo                the value to be updated.
-   * @param permissionNeeded         the necessary EntityPermission,
-   * @param requestingUser           the requesting user.
+   * @param resourceInfo              the resource containing the value.
+   * @param valueInfo                 the value to be updated.
+   * @param permissionNeeded          the necessary EntityPermission,
+   * @param requestingUser            the requesting user.
    * @return  [[ForbiddenException]]  if user does not have permissions on the value.
    */
   def checkValuePermission(
