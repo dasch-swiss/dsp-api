@@ -20,6 +20,7 @@ import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.settings._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.store.cache.CacheServiceManager
@@ -41,6 +42,7 @@ object AppRouter {
       with CardinalityService
       with IIIFServiceManager
       with MessageRelay
+      with ResourceUtilV2
       with StandoffTagUtilV2
       with TriplestoreServiceManager
       with ValueUtilV1,
@@ -55,7 +57,7 @@ object AppRouter {
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
         messageRelay              <- ZIO.service[MessageRelay]
-        runtime                   <- ZIO.runtime[CardinalityService with StandoffTagUtilV2 with ValueUtilV1]
+        runtime                   <- ZIO.runtime[CardinalityService with ResourceUtilV2 with StandoffTagUtilV2 with ValueUtilV1]
       } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem = as.system
 

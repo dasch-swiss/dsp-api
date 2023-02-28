@@ -6,11 +6,12 @@
 package org.knora.webapi.responders.v2
 
 import akka.util.Timeout
-
+import zio.ZIO
 import scala.concurrent.ExecutionContextExecutor
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.routing.UnsafeZioRun
 
 object ResourceUtilV2Spec {}
 
@@ -25,22 +26,34 @@ class ResourceUtilV2Spec extends CoreSpec {
   "ResourceUtil" when {
     "called `checkListNodeExistsAndIsRootNode` method" should {
       "return FALSE for list child node" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/otherTreeList01"
-        val checkNode = ResourceUtilV2.checkListNodeExistsAndIsRootNode(nodeIri, appActor)
+        val nodeIri = "http://rdfh.ch/lists/0001/otherTreeList01"
+        val checkNode = UnsafeZioRun.runToFuture(
+          ZIO
+            .service[ResourceUtilV2]
+            .map(_.checkListNodeExistsAndIsRootNode(nodeIri))
+        )
 
         checkNode.onComplete(_.get should be(Right(false)))
       }
 
       "return TRUE for list root node" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/otherTreeList"
-        val checkNode = ResourceUtilV2.checkListNodeExistsAndIsRootNode(nodeIri, appActor)
+        val nodeIri = "http://rdfh.ch/lists/0001/otherTreeList"
+        val checkNode = UnsafeZioRun.runToFuture(
+          ZIO
+            .service[ResourceUtilV2]
+            .map(_.checkListNodeExistsAndIsRootNode(nodeIri))
+        )
 
         checkNode.onComplete(_.get should be(Right(true)))
       }
 
       "should return NONE for nonexistent list" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/otherTreeList77"
-        val checkNode = ResourceUtilV2.checkListNodeExistsAndIsRootNode(nodeIri, appActor)
+        val nodeIri = "http://rdfh.ch/lists/0001/otherTreeList77"
+        val checkNode = UnsafeZioRun.runToFuture(
+          ZIO
+            .service[ResourceUtilV2]
+            .map(_.checkListNodeExistsAndIsRootNode(nodeIri))
+        )
 
         checkNode.onComplete(_.get should be(Left(None)))
       }

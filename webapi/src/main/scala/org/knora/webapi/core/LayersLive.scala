@@ -48,6 +48,8 @@ import org.knora.webapi.responders.v1.UsersResponderV1
 import org.knora.webapi.responders.v1.UsersResponderV1Live
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
+import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -103,6 +105,7 @@ object LayersLive {
       with RepositoryUpdater
       with RestCardinalityService
       with RestResourceInfoService
+      with ResourceUtilV2
       with SearchResponderV1
       with SipiResponderADM
       with StandoffTagUtilV2
@@ -158,6 +161,7 @@ object LayersLive {
       ResourceInfoRoute.layer,
       RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
+      ResourceUtilV2Live.layer,
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
       StandoffTagUtilV2Live.layer,

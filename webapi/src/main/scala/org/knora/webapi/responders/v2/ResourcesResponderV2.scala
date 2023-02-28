@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -59,14 +60,17 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
-class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
-    extends ResponderWithStandoffV2(responderData) {
+class ResourcesResponderV2(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ResourceUtilV2]
+) extends ResponderWithStandoffV2(responderData) {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -85,7 +89,7 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
   /**
    * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: ResourcesResponderRequestV2) = msg match {
+  def receive(msg: ResourcesResponderRequestV2): Future[Any] = msg match {
     case ResourcesGetRequestV2(
           resIris,
           propertyIri,
@@ -170,7 +174,7 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
         result <- stringFormatter.checkIriExists(resourceIri, appActor)
 
         _ = if (result) {
-              throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
+              throw DuplicateValueException(s"Resource IRI: '$resourceIri' already exists.")
             }
 
         // Convert the resource to the internal ontology schema.
@@ -434,10 +438,16 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
             }
 
         // Check that the user has permission to modify the resource.
-        _ = ResourceUtilV2.checkResourcePermission(
-              resourceInfo = resource,
-              permissionNeeded = ModifyPermission,
-              requestingUser = updateResourceMetadataRequestV2.requestingUser
+        _ = UnsafeZioRun.runOrThrow(
+              ZIO
+                .service[ResourceUtilV2]
+                .map(
+                  _.checkResourcePermission(
+                    resourceInfo = resource,
+                    permissionNeeded = ModifyPermission,
+                    requestingUser = updateResourceMetadataRequestV2.requestingUser
+                  )
+                )
             )
 
         // Get the IRI of the named graph in which the resource is stored.
@@ -595,10 +605,16 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
             }
 
         // Check that the user has permission to mark the resource as deleted.
-        _ = ResourceUtilV2.checkResourcePermission(
-              resourceInfo = resource,
-              permissionNeeded = DeletePermission,
-              requestingUser = deleteResourceV2.requestingUser
+        _ = UnsafeZioRun.runOrThrow(
+              ZIO
+                .service[ResourceUtilV2]
+                .map(
+                  _.checkResourcePermission(
+                    resourceInfo = resource,
+                    permissionNeeded = DeletePermission,
+                    requestingUser = deleteResourceV2.requestingUser
+                  )
+                )
             )
 
         // Get the IRI of the named graph in which the resource is stored.
@@ -1163,7 +1179,9 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
       .sequence(
         listNodesThatShouldExist.map { listNodeIri =>
           for {
-            checkNode <- ResourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri, appActor)
+            checkNode <- UnsafeZioRun.runToFuture(
+                           ZIO.serviceWithZIO[ResourceUtilV2](_.checkListNodeExistsAndIsRootNode(listNodeIri))
+                         )
 
             _ = checkNode match {
                   // it doesn't have isRootNode property - it's a child node
@@ -1171,12 +1189,12 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
                   // it does have isRootNode property - it's a root node
                   case Right(true) =>
                     throw BadRequestException(
-                      s"<${listNodeIri}> is a root node. Root nodes cannot be set as values."
+                      s"<$listNodeIri> is a root node. Root nodes cannot be set as values."
                     )
                   // it deosn't exists or isn't valid list
                   case Left(_) =>
                     throw NotFoundException(
-                      s"<${listNodeIri}> does not exist, or is not a ListNode."
+                      s"<$listNodeIri> does not exist, or is not a ListNode."
                     )
                 }
           } yield ()
@@ -1319,12 +1337,16 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
     val permissionsFutures: Map[SmartIri, Future[Map[SmartIri, String]]] = resourceClassProperties.map {
       case (resourceClassIri, propertyIris) =>
         val propertyPermissionsFutures: Map[SmartIri, Future[String]] = propertyIris.toSeq.map { propertyIri =>
-          propertyIri -> ResourceUtilV2.getDefaultValuePermissions(
-            projectIri = projectIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            requestingUser = requestingUser,
-            appActor = appActor
+          propertyIri -> UnsafeZioRun.runToFuture(
+            ZIO
+              .serviceWithZIO[ResourceUtilV2](
+                _.getDefaultValuePermissions(
+                  projectIri = projectIri,
+                  resourceClassIri = resourceClassIri,
+                  propertyIri = propertyIri,
+                  requestingUser = requestingUser
+                )
+              )
           )
         }.toMap
 
@@ -1457,12 +1479,15 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
     val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
 
     val resultFutures: Seq[Future[T]] = allValues.map { valueContent =>
-      ResourceUtilV2.doSipiPostUpdate(
-        updateFuture = updateFuture,
-        valueContent = valueContent,
-        requestingUser = requestingUser,
-        appActor = appActor,
-        log = log
+      UnsafeZioRun.runToFuture(
+        ZIO.serviceWithZIO[ResourceUtilV2](
+          _.doSipiPostUpdate(
+            updateFuture = ZIO.fromFuture(_ => updateFuture),
+            valueContent = valueContent,
+            requestingUser = requestingUser,
+            log = log
+          )
+        )
       )
     }
 
@@ -2999,7 +3024,7 @@ class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: z
     // check that the version date of the previousValue is before the version date of the current value.
     if (previousVersionDate.versionDate.isAfter(currentVersionOfValue.valueCreationDate)) {
       throw ForbiddenException(
-        s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI ${previousValueIri} " +
+        s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI $previousValueIri " +
           s"has a date after the current value."
       )
     }
