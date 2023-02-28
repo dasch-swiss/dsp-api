@@ -8,6 +8,7 @@ package org.knora.webapi.messages.util
 import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
+import zio.ZIO
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -30,6 +31,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateVal
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateValueResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * Converts data from SPARQL query results into [[ApiValueV1]] objects.
@@ -50,7 +52,11 @@ class ValueUtilV1(appConfig: AppConfig) {
     projectShortcode: String,
     appActor: ActorRef,
     userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+  )(implicit
+    timeout: Timeout,
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
+  ): Future[ApiValueV1] = {
     val valueTypeIri = valueProps.literalData(OntologyConstants.Rdf.Type).literals.head
 
     valueTypeIri match {
@@ -713,7 +719,11 @@ class ValueUtilV1(appConfig: AppConfig) {
     valueProps: ValueProps,
     appActor: ActorRef,
     userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
+  )(implicit
+    timeout: Timeout,
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
+  ): Future[TextValueWithStandoffV1] = {
 
     // get the IRI of the mapping
     val mappingIri = valueProps.literalData
@@ -739,11 +749,15 @@ class ValueUtilV1(appConfig: AppConfig) {
                                                  )
                                                  .mapTo[GetMappingResponseV2]
 
-      standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(
-                                            standoffAssertions = valueProps.standoff,
-                                            appActor = appActor,
-                                            requestingUser = userProfile
-                                          )
+      standoffTags: Seq[StandoffTagV2] <-
+        UnsafeZioRun.runToFuture(
+          ZIO.serviceWithZIO[StandoffTagUtilV2](
+            _.createStandoffTagsV2FromSelectResults(
+              standoffAssertions = valueProps.standoff,
+              requestingUser = userProfile
+            )
+          )
+        )
 
     } yield TextValueWithStandoffV1(
       utf8str = utf8str,
@@ -783,7 +797,11 @@ class ValueUtilV1(appConfig: AppConfig) {
     valueProps: ValueProps,
     appActor: ActorRef,
     userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+  )(implicit
+    timeout: Timeout,
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
+  ): Future[ApiValueV1] = {
 
     val valueHasString: String = valueProps.literalData
       .get(OntologyConstants.KnoraBase.ValueHasString)

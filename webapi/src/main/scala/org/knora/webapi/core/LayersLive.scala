@@ -12,6 +12,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
@@ -100,6 +102,7 @@ object LayersLive {
       with RestResourceInfoService
       with SearchResponderV1
       with SipiResponderADM
+      with StandoffTagUtilV2
       with State
       with StoresResponderADM
       with TriplestoreService
@@ -153,6 +156,7 @@ object LayersLive {
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
+      StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
       StringFormatter.live,

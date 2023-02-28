@@ -9,6 +9,7 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
 import akka.util.Timeout
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -43,6 +44,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffRespon
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ActorUtil
 
 object ConstructResponseUtilV2 {
@@ -933,7 +935,8 @@ object ConstructResponseUtilV2 {
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
     val valueLanguageOption: Option[String] =
@@ -949,10 +952,13 @@ object ConstructResponseUtilV2 {
         mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
 
       for {
-        standoff: Vector[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromConstructResults(
-                                             standoffAssertions = valueObject.standoff,
-                                             appActor = appActor,
-                                             requestingUser = requestingUser
+        standoff: Vector[StandoffTagV2] <- UnsafeZioRun.runToFuture(
+                                             ZIO.serviceWithZIO[StandoffTagUtilV2](
+                                               _.createStandoffTagsV2FromConstructResults(
+                                                 standoffAssertions = valueObject.standoff,
+                                                 requestingUser = requestingUser
+                                               )
+                                             )
                                            )
 
         valueHasMaxStandoffStartIndex: Int = valueObject.requireIntObject(
@@ -1133,7 +1139,8 @@ object ConstructResponseUtilV2 {
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[LinkValueContentV2] = {
     val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
       valueObject.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
@@ -1201,7 +1208,8 @@ object ConstructResponseUtilV2 {
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[ValueContentV2] = {
     // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
     val valueObjectValueHasString: Option[String] =
@@ -1433,7 +1441,8 @@ object ConstructResponseUtilV2 {
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[ReadResourceV2] = {
     def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
       val mayHaveDeletedStatements: Option[Boolean] =
@@ -1628,7 +1637,8 @@ object ConstructResponseUtilV2 {
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[ReadResourcesSequenceV2] = {
 
     val visibleResourceIris: Seq[IRI] =
