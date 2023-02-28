@@ -72,7 +72,7 @@ final case class OntologyResponderV2(
   /**
    * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: OntologiesResponderRequestV2): Future[Product] = msg match {
+  def receive(msg: OntologiesResponderRequestV2): Future[Any] = msg match {
     case LoadOntologiesRequestV2(requestingUser) =>
       Cache.loadOntologies(appActor, requestingUser)
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
@@ -1787,7 +1787,7 @@ final case class OntologyResponderV2(
       userCanUpdateOntology <-
         OntologyHelpers.canUserUpdateOntology(internalOntologyIri, canDeleteClassRequest.requestingUser)
       classIsUsed <- iriService.isEntityUsed(entityIri = internalClassIri)
-    } yield CanDoResponseV2(userCanUpdateOntology && !classIsUsed)
+    } yield CanDoResponseV2.of(userCanUpdateOntology && !classIsUsed)
   }
 
   /**
@@ -1925,7 +1925,7 @@ final case class OntologyResponderV2(
       userCanUpdateOntology <-
         OntologyHelpers.canUserUpdateOntology(internalOntologyIri, canDeletePropertyRequest.requestingUser)
       propertyIsUsed <- iriService.isEntityUsed(internalPropertyIri)
-    } yield CanDoResponseV2(userCanUpdateOntology && !propertyIsUsed)
+    } yield CanDoResponseV2.of(userCanUpdateOntology && !propertyIsUsed)
   }
 
   /**
@@ -2081,7 +2081,7 @@ final case class OntologyResponderV2(
       userCanUpdateOntology <-
         OntologyHelpers.canUserUpdateOntology(internalOntologyIri, canDeleteOntologyRequest.requestingUser)
       subjectsUsingOntology <- OntologyHelpers.getSubjectsUsingOntology(appActor, ontology)
-    } yield CanDoResponseV2(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
+    } yield CanDoResponseV2.of(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
   }
 
   private def deleteOntology(deleteOntologyRequest: DeleteOntologyRequestV2): Future[SuccessResponseV2] = {

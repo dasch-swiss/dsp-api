@@ -676,6 +676,7 @@ object OntologyConstants {
     val Error: IRI              = KnoraApiV2PrefixExpansion + "error"
     val CanDo: IRI              = KnoraApiV2PrefixExpansion + "canDo"
     val CannotDoReason: IRI     = KnoraApiV2PrefixExpansion + "cannotDoReason"
+    val CannotDoContext: IRI    = KnoraApiV2PrefixExpansion + "cannotDoContext"
     val MayHaveMoreResults: IRI = KnoraApiV2PrefixExpansion + "mayHaveMoreResults"
     val EventType: IRI          = KnoraApiV2PrefixExpansion + "eventType"
     val EventBody: IRI          = KnoraApiV2PrefixExpansion + "eventBody"
