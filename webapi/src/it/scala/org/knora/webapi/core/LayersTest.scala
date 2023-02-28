@@ -14,7 +14,7 @@ import org.knora.webapi.responders.admin.ProjectsResponderADMLive
 import org.knora.webapi.responders.v1.UsersResponderV1
 import org.knora.webapi.responders.v1.UsersResponderV1Live
 import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
@@ -46,6 +46,7 @@ import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.admin.UsersResponderADMLive
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.PermissionsResponderADM
@@ -142,7 +143,7 @@ object LayersTest {
       ProjectsResponderV1Live.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
-      RestCardinalityService.layer,
+      RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
