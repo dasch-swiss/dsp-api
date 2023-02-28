@@ -51,7 +51,7 @@ trait ResourceUtilV2 {
     resourceInfo: ReadResourceV2,
     permissionNeeded: EntityPermission,
     requestingUser: UserADM
-  ): Task[Unit]
+  ): IO[ForbiddenException, Unit]
 
   /**
    * Checks that a user has the specified permission on a value.
@@ -67,7 +67,7 @@ trait ResourceUtilV2 {
     valueInfo: ReadValueV2,
     permissionNeeded: EntityPermission,
     requestingUser: UserADM
-  ): Task[Unit]
+  ): IO[ForbiddenException, Unit]
 
   /**
    * Gets the default permissions for a new value.
@@ -126,7 +126,7 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
     resourceInfo: ReadResourceV2,
     permissionNeeded: EntityPermission,
     requestingUser: UserADM
-  ): Task[Unit] = {
+  ): IO[ForbiddenException, Unit] = {
     val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = resourceInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
@@ -162,7 +162,7 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
     valueInfo: ReadValueV2,
     permissionNeeded: EntityPermission,
     requestingUser: UserADM
-  ): Task[Unit] = {
+  ): IO[ForbiddenException, Unit] = {
     val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = valueInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
