@@ -434,11 +434,10 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           searchval,
           throw BadRequestException(s"Invalid search string: '$searchval'")
         )
-      val searchString = stringFormatter.replaceLuceneQueryParserSyntaxCharacters(sparqlEncodedSearchString)
 
-      if (searchString.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
+      if (sparqlEncodedSearchString.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
         throw BadRequestException(
-          s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$searchString' given of length ${searchString.length}."
+          s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$sparqlEncodedSearchString' given of length ${sparqlEncodedSearchString.length}."
         )
       }
 
@@ -455,7 +454,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
         requestingUser <- getUserADM(requestContext, routeData.appConfig)
       } yield SearchResourceByLabelRequestV2(
-        searchValue = searchString,
+        searchValue = sparqlEncodedSearchString,
         offset = offset,
         limitToProject = limitToProject,
         limitToResourceClass = limitToResourceClass,
