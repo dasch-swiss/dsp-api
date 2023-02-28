@@ -38,6 +38,8 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import zio._
 
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.admin.ListsResponderADM
 import org.knora.webapi.responders.admin.ListsResponderADMLive
 import org.knora.webapi.responders.admin.UsersResponderADM
@@ -95,6 +97,7 @@ object LayersTest {
     with RestCardinalityService
     with RestResourceInfoService
     with SipiResponderADM
+    with StandoffTagUtilV2
     with State
     with StoresResponderADM
     with StringFormatter
@@ -136,6 +139,7 @@ object LayersTest {
       RestCardinalityService.layer,
       RestResourceInfoService.layer,
       SipiResponderADMLive.layer,
+      StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
       StringFormatter.test,
