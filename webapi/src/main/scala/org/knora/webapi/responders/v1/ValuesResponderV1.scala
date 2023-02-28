@@ -33,6 +33,7 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByIRIGetV1
@@ -54,7 +55,8 @@ import org.knora.webapi.util._
 /**
  * Updates Knora values.
  */
-class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class ValuesResponderV1(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
+    extends Responder(responderData.actorDeps) {
   // Converts SPARQL query results to ApiValueV1 objects.
   val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
 

@@ -6,9 +6,8 @@
 package org.knora.webapi.util.standoff
 
 import akka.util.Timeout
-
+import zio.ZIO
 import java.util.UUID
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import org.knora.webapi.CoreSpec
@@ -16,6 +15,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
@@ -322,14 +322,16 @@ class StandoffTagUtilV2Spec extends CoreSpec {
 
       val anythingUserProfile = SharedTestDataADM.anythingUser2
 
-      val standoffTagsV1: Vector[StandoffTagV2] = Await.result(
-        StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(sparqlResultsV1, appActor, anythingUserProfile),
-        10.seconds
+      val standoffTagsV1: Vector[StandoffTagV2] = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[StandoffTagUtilV2](
+          _.createStandoffTagsV2FromSelectResults(sparqlResultsV1, anythingUserProfile)
+        )
       )
 
-      val standoffTagsV2: Vector[StandoffTagV2] = Await.result(
-        StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(sparqlResultsV2, appActor, anythingUserProfile),
-        10.seconds
+      val standoffTagsV2: Vector[StandoffTagV2] = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[StandoffTagUtilV2](
+          _.createStandoffTagsV2FromSelectResults(sparqlResultsV2, anythingUserProfile)
+        )
       )
 
       assert(standoffTagsV1 == expectedStandoffTagsV1)

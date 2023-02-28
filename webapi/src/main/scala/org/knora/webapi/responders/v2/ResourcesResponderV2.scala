@@ -65,7 +65,8 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
-class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
+class ResourcesResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
+    extends ResponderWithStandoffV2(responderData) {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.

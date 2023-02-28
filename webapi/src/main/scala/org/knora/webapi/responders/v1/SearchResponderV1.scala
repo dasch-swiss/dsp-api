@@ -5,22 +5,24 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.pattern._
-
-import scala.concurrent.Future
+import zio.Task
+import zio.ZIO
+import zio._
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
+import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.SearchCriterion
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.ValueUtilV1
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetResponseV1
@@ -28,13 +30,21 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
  * Responds to requests for user search queries and returns responses in Knora API
  * v1 format.
  */
-class SearchResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+trait SearchResponderV1
+final case class SearchResponderV1Live(
+  appConfig: AppConfig,
+  messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService,
+  implicit val stringFormatter: StringFormatter
+) extends SearchResponderV1
+    with MessageHandler {
 
   // Valid combinations of value types and comparison operators, for determining whether a requested search
   // criterion is valid. The valid comparison operators for search criteria involving link properties can be
@@ -132,15 +142,17 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     valuePermissionCode: Option[Int]
   )
 
-  val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
+  val valueUtilV1 = new ValueUtilV1(appConfig)
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[SearchResponderRequestV1]
 
   /**
    * Receives a message of type [[SearchResponderRequestV1]], and returns an appropriate response message.
    */
-  def receive(msg: SearchResponderRequestV1) = msg match {
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case searchGetRequest: FulltextSearchGetRequestV1 => fulltextSearchV1(searchGetRequest)
     case searchGetRequest: ExtendedSearchGetRequestV1 => extendedSearchV1(searchGetRequest)
-    case other                                        => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other                                        => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -149,7 +161,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
    * @param searchGetRequest the user search request.
    * @return a [[SearchGetResponseV1]] containing the search results.
    */
-  private def fulltextSearchV1(searchGetRequest: FulltextSearchGetRequestV1): Future[SearchGetResponseV1] = {
+  private def fulltextSearchV1(searchGetRequest: FulltextSearchGetRequestV1): Task[SearchGetResponseV1] = {
 
     val userProfileV1 = searchGetRequest.userProfile.asUserProfileV1
 
@@ -160,21 +172,20 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
     for {
       // Get the search results with paging.
-      searchSparql <- Future(
-                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                          .searchFulltext(
-                            searchTerms = LuceneQueryString(searchGetRequest.searchValue),
-                            preferredLanguage = searchGetRequest.userProfile.lang,
-                            fallbackLanguage = responderData.appConfig.fallbackLanguage,
-                            projectIriOption = searchGetRequest.filterByProject,
-                            restypeIriOption = searchGetRequest.filterByRestype
-                          )
-                          .toString()
-                      )
+      searchSparql <-
+        ZIO.attempt(
+          org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+            .searchFulltext(
+              searchTerms = LuceneQueryString(searchGetRequest.searchValue),
+              preferredLanguage = searchGetRequest.userProfile.lang,
+              fallbackLanguage = appConfig.fallbackLanguage,
+              projectIriOption = searchGetRequest.filterByProject,
+              restypeIriOption = searchGetRequest.filterByRestype
+            )
+            .toString()
+        )
 
-      // _ = println("================" + pagingSparql)
-
-      searchResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
+      searchResponse <- triplestoreService.sparqlHttpSelect(searchSparql)
 
       // Get the IRIs of all the properties mentioned in the search results.
       propertyIris: Set[IRI] = searchResponse.results.bindings.flatMap(_.rowMap.get("resourceProperty")).toSet
@@ -190,7 +201,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                             userProfile = searchGetRequest.userProfile
                           )
 
-      entityInfoResponse <- appActor.ask(entityInfoRequest).mapTo[EntityInfoGetResponseV1]
+      entityInfoResponse <- messageRelay.ask[EntityInfoGetResponseV1](entityInfoRequest)
 
       // Group the search results by resource IRI.
       groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings
@@ -227,7 +238,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
               val resourceEntityInfo: ClassInfoV1 = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
               val resourceClassLabel = resourceEntityInfo.getPredicateObject(
                 predicateIri = OntologyConstants.Rdfs.Label,
-                preferredLangs = Some(searchGetRequest.userProfile.lang, responderData.appConfig.fallbackLanguage)
+                preferredLangs = Some(searchGetRequest.userProfile.lang, appConfig.fallbackLanguage)
               )
               val resourceClassIcon = resourceEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
               val resourceLabel = firstRowMap.getOrElse(
@@ -258,8 +269,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                         .propertyInfoMap(propertyIri)
                         .getPredicateObject(
                           OntologyConstants.Rdfs.Label,
-                          preferredLangs =
-                            Some(searchGetRequest.userProfile.lang, responderData.appConfig.fallbackLanguage)
+                          preferredLangs = Some(searchGetRequest.userProfile.lang, appConfig.fallbackLanguage)
                         ) match {
                         case Some(label) => label
                         case None =>
@@ -308,11 +318,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                   value = resourceLabel +: matchingValues.map(_.literal),
                   preview_nx = firstRowMap.get("previewDimX") match {
                     case Some(previewDimX) => previewDimX.toInt
-                    case None              => responderData.appConfig.gui.defaultIconSize.dimX
+                    case None              => appConfig.gui.defaultIconSize.dimX
                   },
                   preview_ny = firstRowMap.get("previewDimY") match {
                     case Some(previewDimY) => previewDimY.toInt
-                    case None              => responderData.appConfig.gui.defaultIconSize.dimY
+                    case None              => appConfig.gui.defaultIconSize.dimY
                   },
                   rights = resourcePermissionCode
                 )
@@ -347,22 +357,21 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
    * @param searchGetRequest the user search request
    * @return a [[SearchGetResponseV1]] containing the search results.
    */
-  private def extendedSearchV1(searchGetRequest: ExtendedSearchGetRequestV1): Future[SearchGetResponseV1] = {
-    import org.knora.webapi.messages.StringFormatter
+  private def extendedSearchV1(searchGetRequest: ExtendedSearchGetRequestV1): Task[SearchGetResponseV1] = {
 
     val userProfileV1 = searchGetRequest.userProfile.asUserProfileV1
     val limit         = checkLimit(searchGetRequest.showNRows)
 
     for {
       // get information about all the properties involved
-      propertyInfo: EntityInfoGetResponseV1 <- appActor
-                                                 .ask(
-                                                   EntityInfoGetRequestV1(
-                                                     propertyIris = searchGetRequest.propertyIri.toSet,
-                                                     userProfile = searchGetRequest.userProfile
-                                                   )
-                                                 )
-                                                 .mapTo[EntityInfoGetResponseV1]
+      propertyInfo <-
+        messageRelay
+          .ask[EntityInfoGetResponseV1](
+            EntityInfoGetRequestV1(
+              propertyIris = searchGetRequest.propertyIri.toSet,
+              userProfile = searchGetRequest.userProfile
+            )
+          )
 
       /*
        * handle parallel lists here: propertyIri, comparisonOperator, SearchValue
@@ -574,20 +583,19 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
         }
 
       // Get the search results.
-      searchSparql = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                       .searchExtended(
-                         searchCriteria = searchCriteria,
-                         preferredLanguage = searchGetRequest.userProfile.lang,
-                         fallbackLanguage = responderData.appConfig.fallbackLanguage,
-                         projectIriOption = searchGetRequest.filterByProject,
-                         restypeIriOption = searchGetRequest.filterByRestype,
-                         ownerIriOption = searchGetRequest.filterByOwner
-                       )
-                       .toString()
+      searchSparql =
+        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+          .searchExtended(
+            searchCriteria = searchCriteria,
+            preferredLanguage = searchGetRequest.userProfile.lang,
+            fallbackLanguage = appConfig.fallbackLanguage,
+            projectIriOption = searchGetRequest.filterByProject,
+            restypeIriOption = searchGetRequest.filterByRestype,
+            ownerIriOption = searchGetRequest.filterByOwner
+          )
+          .toString()
 
-      // _ = println(searchSparql)
-
-      searchResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
+      searchResponse <- triplestoreService.sparqlHttpSelect(searchSparql)
 
       // Collect all the resource class IRIs mentioned in the search results.
       resourceClassIris: Set[IRI] = searchResponse.results.bindings.map(_.rowMap("resourceClass")).toSet
@@ -599,7 +607,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                             userProfile = searchGetRequest.userProfile
                           )
 
-      entityInfoResponse <- appActor.ask(entityInfoRequest).mapTo[EntityInfoGetResponseV1]
+      entityInfoResponse <- messageRelay.ask[EntityInfoGetResponseV1](entityInfoRequest)
 
       // Group the search results by resource IRI.
       groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings
@@ -636,7 +644,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
               val resourceEntityInfo = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
               val resourceClassLabel = resourceEntityInfo.getPredicateObject(
                 predicateIri = OntologyConstants.Rdfs.Label,
-                preferredLangs = Some(searchGetRequest.userProfile.lang, responderData.appConfig.fallbackLanguage)
+                preferredLangs = Some(searchGetRequest.userProfile.lang, appConfig.fallbackLanguage)
               )
               val resourceClassIcon = resourceEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
               val resourceLabel = firstRowMap.getOrElse(
@@ -701,8 +709,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                           .propertyInfoMap(propertyIri)
                           .getPredicateObject(
                             predicateIri = OntologyConstants.Rdfs.Label,
-                            preferredLangs =
-                              Some(searchGetRequest.userProfile.lang, responderData.appConfig.fallbackLanguage)
+                            preferredLangs = Some(searchGetRequest.userProfile.lang, appConfig.fallbackLanguage)
                           ) match {
                           case Some(label) => label
                           case None =>
@@ -760,11 +767,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                   value = resourceLabel +: matchingValues.map(_.literal),
                   preview_nx = firstRowMap.get("previewDimX") match {
                     case Some(previewDimX) => previewDimX.toInt
-                    case None              => responderData.appConfig.gui.defaultIconSize.dimX
+                    case None              => appConfig.gui.defaultIconSize.dimX
                   },
                   preview_ny = firstRowMap.get("previewDimY") match {
                     case Some(previewDimY) => previewDimY.toInt
-                    case None              => responderData.appConfig.gui.defaultIconSize.dimY
+                    case None              => appConfig.gui.defaultIconSize.dimY
                   },
                   rights = resourcePermissionCode
                 )
@@ -831,8 +838,8 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
       throw BadRequestException("Search limit must be greater than 0")
     }
 
-    if (limit > responderData.appConfig.maxResultsPerSearchResultPage)
-      responderData.appConfig.maxResultsPerSearchResultPage
+    if (limit > appConfig.maxResultsPerSearchResultPage)
+      appConfig.maxResultsPerSearchResultPage
     else limit
   }
 
@@ -847,5 +854,18 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
       val newMaxX = if (searchResultRow.preview_nx > accX) searchResultRow.preview_nx else accX
       val newMaxY = if (searchResultRow.preview_ny > accY) searchResultRow.preview_ny else accY
       (newMaxX, newMaxY)
+    }
+}
+
+object SearchResponderV1Live {
+  val layer: URLayer[AppConfig with MessageRelay with TriplestoreService with StringFormatter, SearchResponderV1] =
+    ZLayer.fromZIO {
+      for {
+        ac      <- ZIO.service[AppConfig]
+        mr      <- ZIO.service[MessageRelay]
+        ts      <- ZIO.service[TriplestoreService]
+        sf      <- ZIO.service[StringFormatter]
+        handler <- mr.subscribe(SearchResponderV1Live(ac, mr, ts, sf))
+      } yield handler
     }
 }
