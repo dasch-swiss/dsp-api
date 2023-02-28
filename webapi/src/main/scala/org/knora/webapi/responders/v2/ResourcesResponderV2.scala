@@ -8,14 +8,13 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import zio.ZIO
-
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
-
 import dsp.errors._
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -438,17 +437,16 @@ class ResourcesResponderV2(
             }
 
         // Check that the user has permission to modify the resource.
-        _ = UnsafeZioRun.runOrThrow(
-              ZIO
-                .service[ResourceUtilV2]
-                .map(
-                  _.checkResourcePermission(
-                    resourceInfo = resource,
-                    permissionNeeded = ModifyPermission,
-                    requestingUser = updateResourceMetadataRequestV2.requestingUser
-                  )
-                )
-            )
+        _ <- UnsafeZioRun.runToFuture(
+               ZIO
+                 .serviceWithZIO[ResourceUtilV2](
+                   _.checkResourcePermission(
+                     resourceInfo = resource,
+                     permissionNeeded = ModifyPermission,
+                     requestingUser = updateResourceMetadataRequestV2.requestingUser
+                   )
+                 )
+             )
 
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
@@ -605,17 +603,16 @@ class ResourcesResponderV2(
             }
 
         // Check that the user has permission to mark the resource as deleted.
-        _ = UnsafeZioRun.runOrThrow(
-              ZIO
-                .service[ResourceUtilV2]
-                .map(
-                  _.checkResourcePermission(
-                    resourceInfo = resource,
-                    permissionNeeded = DeletePermission,
-                    requestingUser = deleteResourceV2.requestingUser
-                  )
-                )
-            )
+        _ <- UnsafeZioRun.runToFuture(
+               ZIO
+                 .serviceWithZIO[ResourceUtilV2](
+                   _.checkResourcePermission(
+                     resourceInfo = resource,
+                     permissionNeeded = DeletePermission,
+                     requestingUser = deleteResourceV2.requestingUser
+                   )
+                 )
+             )
 
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)

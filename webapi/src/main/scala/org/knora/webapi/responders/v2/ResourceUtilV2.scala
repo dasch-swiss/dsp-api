@@ -8,8 +8,9 @@ package org.knora.webapi.responders.v2
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
 import zio._
-
 import dsp.errors.ForbiddenException
+import zio.Task
+
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -41,32 +42,32 @@ trait ResourceUtilV2 {
   /**
    * Checks that a user has the specified permission on a resource.
    *
-   * @param resourceInfo     the resource to be updated.
-   * @param permissionNeeded the necessary EntityPermission,
-   * @param requestingUser   the requesting user.
+   * @param resourceInfo             the resource to be updated.
+   * @param permissionNeeded         the necessary EntityPermission,
+   * @param requestingUser           the requesting user.
+   * @return [[ForbiddenException]]  if user does not have permission needed on the resource.
    */
-  @throws[ForbiddenException]("if user does not have permission needed on the resource")
   def checkResourcePermission(
     resourceInfo: ReadResourceV2,
     permissionNeeded: EntityPermission,
     requestingUser: UserADM
-  ): Unit
+  ): Task[Unit]
 
   /**
    * Checks that a user has the specified permission on a value.
    *
-   * @param resourceInfo     the resource containing the value.
-   * @param valueInfo        the value to be updated.
-   * @param permissionNeeded the necessary EntityPermission,
-   * @param requestingUser   the requesting user.
+   * @param resourceInfo             the resource containing the value.
+   * @param valueInfo                the value to be updated.
+   * @param permissionNeeded         the necessary EntityPermission,
+   * @param requestingUser           the requesting user.
+   * @return  [[ForbiddenException]]  if user does not have permissions on the value.
    */
-  @throws[ForbiddenException]("if user does not have permissions on the value")
   def checkValuePermission(
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
     permissionNeeded: EntityPermission,
     requestingUser: UserADM
-  ): Unit
+  ): Task[Unit]
 
   /**
    * Gets the default permissions for a new value.
@@ -121,12 +122,11 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
    * @param permissionNeeded the necessary EntityPermission,
    * @param requestingUser   the requesting user.
    */
-  @throws[ForbiddenException]("if user does not have permission needed on the resource")
   override def checkResourcePermission(
     resourceInfo: ReadResourceV2,
     permissionNeeded: EntityPermission,
     requestingUser: UserADM
-  ): Unit = {
+  ): Task[Unit] = {
     val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = resourceInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
@@ -139,11 +139,14 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
       case None                                   => false
     }
 
-    if (!hasRequiredPermission) {
-      throw ForbiddenException(
-        s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>"
+    ZIO
+      .fail(
+        ForbiddenException(
+          s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>"
+        )
       )
-    }
+      .when(!hasRequiredPermission)
+      .unit
   }
 
   /**
@@ -154,13 +157,12 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
    * @param permissionNeeded the necessary EntityPermission,
    * @param requestingUser   the requesting user.
    */
-  @throws[ForbiddenException]("if user does not have permissions on the value")
   override def checkValuePermission(
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
     permissionNeeded: EntityPermission,
     requestingUser: UserADM
-  ): Unit = {
+  ): Task[Unit] = {
     val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = valueInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
@@ -173,11 +175,14 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
       case None                                   => false
     }
 
-    if (!hasRequiredPermission) {
-      throw ForbiddenException(
-        s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>"
+    ZIO
+      .fail(
+        ForbiddenException(
+          s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>"
+        )
       )
-    }
+      .when(!hasRequiredPermission)
+      .unit
   }
 
   /**
