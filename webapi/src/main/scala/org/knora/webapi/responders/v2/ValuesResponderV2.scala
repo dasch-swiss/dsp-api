@@ -363,7 +363,7 @@ final case class ValuesResponderV2Live(
 
         // Check that the value was written correctly to the triplestore.
 
-        verifiedValue: VerifiedValueV2 <-
+        verifiedValue <-
           verifyValue(
             resourceIri = createValueRequest.createValue.resourceIri,
             propertyIri = submittedInternalPropertyIri,
@@ -500,7 +500,7 @@ final case class ValuesResponderV2Live(
     for {
 
       // Make a new value UUID.
-      newValueUUID: UUID <- ZIO.succeed(makeNewValueUUID(maybeValueIri, maybeValueUUID))
+      newValueUUID: UUID <- makeNewValueUUID(maybeValueIri, maybeValueUUID)
 
       // Make an IRI for the new value.
       newValueIri <- iriService.checkOrCreateEntityIriTask(
@@ -947,10 +947,8 @@ final case class ValuesResponderV2Live(
             requestingUser = updateValueRequest.requestingUser
           )
 
-        propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          appActor
-            .ask(propertyInfoRequestForSubmittedProperty)
-            .mapTo[ReadOntologyV2]
+        propertyInfoResponseForSubmittedProperty <-
+          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
 
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
           propertyInfoResponseForSubmittedProperty.properties(
@@ -973,7 +971,7 @@ final case class ValuesResponderV2Live(
         // corresponding link property, whose objects we will need to query. Get ontology information about the
         // adjusted property.
 
-        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <-
+        adjustedInternalPropertyInfo <-
           getAdjustedInternalPropertyInfo(
             submittedPropertyIri = submittedExternalPropertyIri,
             maybeSubmittedValueType = Some(submittedExternalValueType),
@@ -984,7 +982,7 @@ final case class ValuesResponderV2Live(
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
         // so we can see objects that the user doesn't have permission to see.
 
-        resourceInfo: ReadResourceV2 <-
+        resourceInfo <-
           getResourceWithPropertyValues(
             resourceIri = resourceIri,
             propertyInfo = adjustedInternalPropertyInfo,
@@ -1040,7 +1038,7 @@ final case class ValuesResponderV2Live(
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
 
-        resourcePropertyValue: ResourcePropertyValue <-
+        resourcePropertyValue <-
           getResourcePropertyValue(
             resourceIri = updateValuePermissionsV2.resourceIri,
             submittedExternalResourceClassIri = updateValuePermissionsV2.resourceClassIri,
@@ -1148,7 +1146,7 @@ final case class ValuesResponderV2Live(
     ): Task[UpdateValueResponseV2] = {
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
-        resourcePropertyValue: ResourcePropertyValue <-
+        resourcePropertyValue <-
           getResourcePropertyValue(
             resourceIri = updateValueContentV2.resourceIri,
             submittedExternalResourceClassIri = updateValueContentV2.resourceClassIri,
@@ -1332,7 +1330,7 @@ final case class ValuesResponderV2Live(
 
         // Check that the value was written correctly to the triplestore.
 
-        verifiedValue: VerifiedValueV2 <-
+        verifiedValue <-
           verifyValue(
             resourceIri = updateValueContentV2.resourceIri,
             propertyIri = submittedInternalPropertyIri,
@@ -1671,10 +1669,9 @@ final case class ValuesResponderV2Live(
             requestingUser = deleteValueRequest.requestingUser
           )
 
-        propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          appActor
-            .ask(propertyInfoRequestForSubmittedProperty)
-            .mapTo[ReadOntologyV2]
+        propertyInfoResponseForSubmittedProperty <-
+          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
+
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
           propertyInfoResponseForSubmittedProperty.properties(
             submittedInternalPropertyIri
@@ -1696,7 +1693,7 @@ final case class ValuesResponderV2Live(
         // corresponding link property, whose objects we will need to query. Get ontology information about the
         // adjusted property.
 
-        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <-
+        adjustedInternalPropertyInfo <-
           getAdjustedInternalPropertyInfo(
             submittedPropertyIri = deleteValueRequest.propertyIri,
             maybeSubmittedValueType = None,
@@ -1710,7 +1707,7 @@ final case class ValuesResponderV2Live(
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
         // so we can see objects that the user doesn't have permission to see.
 
-        resourceInfo: ReadResourceV2 <-
+        resourceInfo <-
           getResourceWithPropertyValues(
             resourceIri = deleteValueRequest.resourceIri,
             propertyInfo = adjustedInternalPropertyInfo,
@@ -1806,7 +1803,7 @@ final case class ValuesResponderV2Live(
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
         // Do the update.
-        deletedValueIri: IRI <-
+        deletedValueIri <-
           deleteValueV2AfterChecks(
             dataNamedGraph = dataNamedGraph,
             resourceInfo = resourceInfo,
