@@ -121,6 +121,10 @@ case class JsonLDBoolean(value: Boolean) extends JsonLDValue {
       case _                          => 0
     }
 }
+object JsonLDBoolean {
+  val TRUE: JsonLDBoolean  = JsonLDBoolean(true)
+  val FALSE: JsonLDBoolean = JsonLDBoolean(false)
+}
 
 /**
  * Represents a JSON object in a JSON-LD document.
@@ -814,6 +818,10 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   }
 }
 
+object JsonLDObject {
+  val empty: JsonLDObject = JsonLDObject(Map.empty[String, JsonLDValue])
+}
+
 /**
  * Represents a JSON array in a JSON-LD document.
  *
@@ -821,6 +829,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
  */
 case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
   implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+  val nonEmpty: Boolean = value.nonEmpty
 
   override def equals(that: Any): Boolean =
     // Ignore the order of elements when testing equality for this class, since by default,
@@ -1448,7 +1458,7 @@ object JsonLDUtil {
     // Is the model empty?
     val body: JsonLDObject = if (model.isEmpty) {
       // Yes. Just make an empty JSON-LD object.
-      JsonLDObject(Map.empty)
+      JsonLDObject.empty
     } else {
       // Get the set of subjects in the model.
       val subjects: Set[RdfResource] = model.getSubjects
@@ -1706,7 +1716,7 @@ object JsonLDUtil {
 
       case _: BlankNode =>
         // It's a blank node. It should be possible to inline it. If not, return an empty blank node.
-        inlineResource(JsonLDObject(Map.empty))
+        inlineResource(JsonLDObject.empty)
     }
   }
 }

@@ -42,6 +42,7 @@ final case class SearchResponderV1Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
   triplestoreService: TriplestoreService,
+  valueUtilV1: ValueUtilV1,
   implicit val stringFormatter: StringFormatter
 ) extends SearchResponderV1
     with MessageHandler {
@@ -141,8 +142,6 @@ final case class SearchResponderV1Live(
     literal: String,
     valuePermissionCode: Option[Int]
   )
-
-  val valueUtilV1 = new ValueUtilV1(appConfig)
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[SearchResponderRequestV1]
 
@@ -858,14 +857,18 @@ final case class SearchResponderV1Live(
 }
 
 object SearchResponderV1Live {
-  val layer: URLayer[AppConfig with MessageRelay with TriplestoreService with StringFormatter, SearchResponderV1] =
+  val layer: URLayer[
+    AppConfig with MessageRelay with TriplestoreService with StringFormatter with ValueUtilV1,
+    SearchResponderV1
+  ] =
     ZLayer.fromZIO {
       for {
         ac      <- ZIO.service[AppConfig]
         mr      <- ZIO.service[MessageRelay]
         ts      <- ZIO.service[TriplestoreService]
+        vu      <- ZIO.service[ValueUtilV1]
         sf      <- ZIO.service[StringFormatter]
-        handler <- mr.subscribe(SearchResponderV1Live(ac, mr, ts, sf))
+        handler <- mr.subscribe(SearchResponderV1Live(ac, mr, ts, vu, sf))
       } yield handler
     }
 }

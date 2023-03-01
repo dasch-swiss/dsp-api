@@ -186,7 +186,7 @@ object CardinalityHandler {
           )
 
       // response is true only when property is not used in data and cardinality is defined directly on that class
-    } yield CanDoResponseV2(!propertyIsUsed && !atLeastOneCardinalityNotDefinedOnClass)
+    } yield CanDoResponseV2.of(!propertyIsUsed && !atLeastOneCardinalityNotDefinedOnClass)
   }
 
   /**

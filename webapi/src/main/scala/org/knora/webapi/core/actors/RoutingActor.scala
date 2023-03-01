@@ -17,7 +17,9 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
@@ -42,7 +44,9 @@ final case class RoutingActor(
   triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  implicit val runtime: zio.Runtime[CardinalityService with StandoffTagUtilV2]
+  implicit val runtime: zio.Runtime[
+    CardinalityService with StandoffTagUtilV2 with ValueUtilV1 with ResourceUtilV2 with PermissionUtilADM
+  ]
 ) extends Actor {
 
   private val log: Logger                                 = Logger(this.getClass)
@@ -59,7 +63,7 @@ final case class RoutingActor(
   private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, runtime)
   private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData, runtime)
   private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData, runtime)
-  private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData)
+  private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData, runtime)
   private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData, runtime)
 
   def receive: Receive = {
