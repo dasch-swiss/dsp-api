@@ -50,6 +50,8 @@ import org.knora.webapi.responders.v1.StandoffResponderV1
 import org.knora.webapi.responders.v1.StandoffResponderV1Live
 import org.knora.webapi.responders.v1.UsersResponderV1
 import org.knora.webapi.responders.v1.UsersResponderV1Live
+import org.knora.webapi.responders.v1.ValuesResponderV1
+import org.knora.webapi.responders.v1.ValuesResponderV1Live
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
@@ -121,6 +123,7 @@ object LayersLive {
       with TriplestoreServiceManager
       with UsersResponderADM
       with UsersResponderV1
+      with ValuesResponderV1
       with ValueUtilV1
 
   /**
@@ -180,6 +183,7 @@ object LayersLive {
       TriplestoreServiceManager.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
+      ValuesResponderV1Live.layer,
       ValueUtilV1Live.layer
     )
 }
