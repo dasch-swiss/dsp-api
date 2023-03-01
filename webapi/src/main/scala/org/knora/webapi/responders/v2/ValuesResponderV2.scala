@@ -54,6 +54,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
 import org.apache.jena.sparql.pfunction.library.listIndex
 import com.typesafe.scalalogging.LazyLogging
+import zio._
 
 /**
  * Handles requests to read and write Knora values.
@@ -65,9 +66,9 @@ final case class ValuesResponderV2Live(
   messageRelay: MessageRelay,
   resourceUtilV2: ResourceUtilV2,
   triplestoreService: TriplestoreService,
-  implicit val runtime: zio.Runtime[ResourceUtilV2 with PermissionUtilADM],
   implicit val stringFormatter: StringFormatter
-) extends MessageHandler
+) extends ValuesResponderV2
+    with MessageHandler
     with LazyLogging {
 
   /**
@@ -2708,4 +2709,21 @@ final case class ValuesResponderV2Live(
           case None => UUID.randomUUID
         }
     }
+}
+
+object ValuesResponderV2Live {
+  val layer: URLayer[
+    AppConfig with IriService with MessageRelay with ResourceUtilV2 with TriplestoreService with StringFormatter,
+    ValuesResponderV2
+  ] = ZLayer.fromZIO {
+    for {
+      config  <- ZIO.service[AppConfig]
+      is      <- ZIO.service[IriService]
+      mr      <- ZIO.service[MessageRelay]
+      ru      <- ZIO.service[ResourceUtilV2]
+      ts      <- ZIO.service[TriplestoreService]
+      sf      <- ZIO.service[StringFormatter]
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, ru, ts, sf))
+    } yield handler
+  }
 }

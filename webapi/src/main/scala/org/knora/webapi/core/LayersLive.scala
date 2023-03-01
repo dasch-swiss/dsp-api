@@ -52,6 +52,8 @@ import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.responders.v2.ValuesResponderV2Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -119,6 +121,7 @@ object LayersLive {
       with UsersResponderADM
       with UsersResponderV1
       with ValueUtilV1
+      with ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -176,6 +179,7 @@ object LayersLive {
       TriplestoreServiceManager.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
-      ValueUtilV1Live.layer
+      ValueUtilV1Live.layer,
+      ValuesResponderV2Live.layer
     )
 }

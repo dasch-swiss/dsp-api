@@ -69,6 +69,8 @@ import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADMLive
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.responders.v2.ValuesResponderV2Live
 
 object LayersTest {
 
@@ -119,6 +121,7 @@ object LayersTest {
     with UsersResponderADM
     with UsersResponderV1
     with ValueUtilV1
+    with ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -164,7 +167,8 @@ object LayersTest {
       TriplestoreServiceManager.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
-      ValueUtilV1Live.layer
+      ValueUtilV1Live.layer,
+      ValuesResponderV2Live.layer
     )
 
   private val fusekiAndSipiTestcontainers =
