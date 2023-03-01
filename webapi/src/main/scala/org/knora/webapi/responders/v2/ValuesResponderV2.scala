@@ -232,7 +232,7 @@ final case class ValuesResponderV2Live(
                        }
                  } yield ()
 
-               case _ => FastFuture.successful(())
+               case _ => ZIO.succeed(())
              }
 
         // Check that the resource class's cardinality for the submitted property allows another value to be added
@@ -283,7 +283,7 @@ final case class ValuesResponderV2Live(
                    requestingUser = createValueRequest.requestingUser
                  )
 
-               case _ => FastFuture.successful(())
+               case _ => ZIO.succeed(())
              }
 
         // Get the default permissions for the new value.
@@ -335,7 +335,7 @@ final case class ValuesResponderV2Live(
 
             case None =>
               // No. Use the default permissions.
-              FastFuture.successful(defaultValuePermissions)
+              ZIO.succeed(defaultValuePermissions)
           }
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
@@ -375,10 +375,10 @@ final case class ValuesResponderV2Live(
       )
     }
 
-    val triplestoreUpdateFuture: Future[CreateValueResponseV2] = for {
+    val triplestoreUpdateFuture: Task[CreateValueResponseV2] = for {
 
       // Don't allow anonymous users to create values.
-      _ <- Future {
+      _ <- ZIO.attempt {
              if (createValueRequest.requestingUser.isAnonymousUser) {
                throw ForbiddenException("Anonymous users aren't allowed to create values")
              } else {
@@ -436,7 +436,7 @@ final case class ValuesResponderV2Live(
     valueCreator: IRI,
     valuePermissions: String,
     requestingUser: UserADM
-  ): Future[UnverifiedValueV2] =
+  ): Task[UnverifiedValueV2] =
     value match {
       case linkValueContent: LinkValueContentV2 =>
         createLinkValueV2AfterChecks(
@@ -492,11 +492,11 @@ final case class ValuesResponderV2Live(
     valueCreator: IRI,
     valuePermissions: String,
     requestingUser: UserADM
-  ): Future[UnverifiedValueV2] =
+  ): Task[UnverifiedValueV2] =
     for {
 
       // Make a new value UUID.
-      newValueUUID: UUID <- Future.successful(makeNewValueUUID(maybeValueIri, maybeValueUUID))
+      newValueUUID: UUID <- ZIO.succeed(makeNewValueUUID(maybeValueIri, maybeValueUUID))
 
       // Make an IRI for the new value.
       newValueIri: IRI <- iriService.checkOrCreateEntityIri(
@@ -514,7 +514,7 @@ final case class ValuesResponderV2Live(
       standoffLinkUpdates <- value match {
                                case textValueContent: TextValueContentV2 =>
                                  // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-                                 val linkUpdateFutures: Seq[Future[SparqlTemplateLinkUpdate]] =
+                                 val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
                                    textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
                                      incrementLinkValue(
                                        sourceResourceInfo = resourceInfo,
@@ -526,9 +526,9 @@ final case class ValuesResponderV2Live(
                                      )
                                    }.toVector
 
-                                 Future.sequence(linkUpdateFutures)
+                                 ZIO.collectAll(linkUpdateFutures)
 
-                               case _ => FastFuture.successful(Vector.empty[SparqlTemplateLinkUpdate])
+                               case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
                              }
 
       // Generate a SPARQL update string.
@@ -589,7 +589,7 @@ final case class ValuesResponderV2Live(
     valueCreator: IRI,
     valuePermissions: String,
     requestingUser: UserADM
-  ): Future[UnverifiedValueV2] = {
+  ): Task[UnverifiedValueV2] = {
     // Make a new value UUID.
     val newValueUUID: UUID = makeNewValueUUID(maybeValueIri, maybeValueUUID)
 
@@ -656,7 +656,7 @@ final case class ValuesResponderV2Live(
    */
   private def generateSparqlToCreateMultipleValuesV2(
     createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2
-  ): Future[GenerateSparqlToCreateMultipleValuesResponseV2] =
+  ): Task[GenerateSparqlToCreateMultipleValuesResponseV2] =
     for {
       // Generate SPARQL to create links and LinkValues for standoff links in text values.
       sparqlForStandoffLinks: Option[String] <- generateInsertSparqlForStandoffLinksInMultipleValues(
@@ -664,7 +664,7 @@ final case class ValuesResponderV2Live(
                                                 )
 
       // Generate SPARQL for each value.
-      sparqlForPropertyValueFutures: Map[SmartIri, Seq[Future[InsertSparqlWithUnverifiedValue]]] =
+      sparqlForPropertyValueFutures: Map[SmartIri, Seq[Task[InsertSparqlWithUnverifiedValue]]] =
         createMultipleValuesRequest.values.map {
           case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
             propertyIri -> valuesToCreate.zipWithIndex.map {
@@ -720,12 +720,12 @@ final case class ValuesResponderV2Live(
     valueHasOrder: Int,
     resourceCreationDate: Instant,
     requestingUser: UserADM
-  ): Future[InsertSparqlWithUnverifiedValue] =
+  ): Task[InsertSparqlWithUnverifiedValue] =
     for {
       // Make new value UUID.
-      newValueUUID: UUID <- Future.successful(
-                              makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
-                            )
+      newValueUUID <- ZIO.succeed(
+                        makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
+                      )
 
       newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                             valueToCreate.customValueIri,
@@ -813,7 +813,7 @@ final case class ValuesResponderV2Live(
    */
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2
-  ): Future[Option[String]] = {
+  ): Task[Option[String]] = {
     // To create LinkValues for the standoff links in the values to be created, we need to compute
     // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
     // that have standoff links to a particular target resource.
@@ -849,7 +849,7 @@ final case class ValuesResponderV2Live(
 
       // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
       // and one LinkValue with its initial reference count.
-      val standoffLinkUpdatesFutures: Seq[Future[SparqlTemplateLinkUpdate]] = initialReferenceCounts.toSeq.map {
+      val standoffLinkUpdatesFutures: Seq[Task[SparqlTemplateLinkUpdate]] = initialReferenceCounts.toSeq.map {
         case (targetIri, initialReferenceCount) =>
           for {
             newValueIri <- makeUnusedValueIri(createMultipleValuesRequest.resourceIri)
@@ -870,7 +870,7 @@ final case class ValuesResponderV2Live(
           )
       }
       for {
-        standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- Future.sequence(standoffLinkUpdatesFutures)
+        standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- ZIO.collectAll(standoffLinkUpdatesFutures)
         // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
         sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                          .generateInsertStatementsForStandoffLinks(
@@ -882,7 +882,7 @@ final case class ValuesResponderV2Live(
                          .toString()
       } yield Some(sparqlInsert)
     } else {
-      FastFuture.successful(None)
+      ZIO.succeed(None)
     }
   }
 
@@ -892,7 +892,7 @@ final case class ValuesResponderV2Live(
    * @param updateValueRequest the request to update the value.
    * @return a [[UpdateValueResponseV2]].
    */
-  private def updateValueV2(updateValueRequest: UpdateValueRequestV2): Future[UpdateValueResponseV2] = {
+  private def updateValueV2(updateValueRequest: UpdateValueRequestV2): Task[UpdateValueResponseV2] = {
 
     /**
      * Information about a resource, a submitted property, and a value of the property.
@@ -929,9 +929,10 @@ final case class ValuesResponderV2Live(
       submittedExternalPropertyIri: SmartIri,
       valueIri: IRI,
       submittedExternalValueType: SmartIri
-    ): Future[ResourcePropertyValue] =
+    ): Task[ResourcePropertyValue] =
       for {
-        submittedInternalPropertyIri: SmartIri <- Future(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
+        submittedInternalPropertyIri <-
+          ZIO.attempt(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
 
         // Get ontology information about the submitted property.
 
@@ -1031,7 +1032,7 @@ final case class ValuesResponderV2Live(
      */
     def makeTaskFutureToUpdateValuePermissions(
       updateValuePermissionsV2: UpdateValuePermissionsV2
-    ): Future[UpdateValueResponseV2] =
+    ): Task[UpdateValueResponseV2] =
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
 
@@ -1141,7 +1142,7 @@ final case class ValuesResponderV2Live(
      */
     def makeTaskFutureToUpdateValueContent(
       updateValueContentV2: UpdateValueContentV2
-    ): Future[UpdateValueResponseV2] = {
+    ): Task[UpdateValueResponseV2] = {
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
         resourcePropertyValue: ResourcePropertyValue <-
@@ -1170,7 +1171,7 @@ final case class ValuesResponderV2Live(
 
             case None =>
               // No. Use the permissions on the current version of the value.
-              FastFuture.successful(currentValue.permissions)
+              ZIO.succeed(currentValue.permissions)
           }
 
         // Check that the user has permission to do the update. If they want to change the permissions
@@ -1241,7 +1242,7 @@ final case class ValuesResponderV2Live(
                        }
                  } yield ()
 
-               case _ => FastFuture.successful(())
+               case _ => ZIO.succeed(())
              }
 
         // Check that the updated value would not duplicate the current value version.
@@ -1280,7 +1281,7 @@ final case class ValuesResponderV2Live(
                case _: LinkValueContentV2 =>
                  // We're updating a link. This means deleting an existing link and creating a new one, so
                  // check that the user has permission to modify the resource.
-                 Future {
+                 ZIO.attempt {
                    ResourceUtilV2.checkResourcePermission(
                      resourceInfo = resourceInfo,
                      permissionNeeded = ModifyPermission,
@@ -1288,7 +1289,7 @@ final case class ValuesResponderV2Live(
                    )
                  }
 
-               case _ => FastFuture.successful(())
+               case _ => ZIO.succeed(())
              }
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
@@ -1348,12 +1349,12 @@ final case class ValuesResponderV2Live(
     }
 
     if (updateValueRequest.requestingUser.isAnonymousUser) {
-      FastFuture.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
+      ZIO.fail(ForbiddenException("Anonymous users aren't allowed to update values"))
     } else {
       updateValueRequest.updateValue match {
         case updateValueContentV2: UpdateValueContentV2 =>
           // This is a request to update the content of a value.
-          val triplestoreUpdateFuture: Future[UpdateValueResponseV2] = IriLocker.runWithIriLock(
+          val triplestoreUpdateFuture: Task[UpdateValueResponseV2] = IriLocker.runWithIriLock(
             updateValueRequest.apiRequestID,
             updateValueContentV2.resourceIri,
             () => makeTaskFutureToUpdateValueContent(updateValueContentV2)
@@ -1404,7 +1405,7 @@ final case class ValuesResponderV2Live(
     valueCreationDate: Option[Instant],
     newValueVersionIri: Option[SmartIri],
     requestingUser: UserADM
-  ): Future[UnverifiedValueV2] =
+  ): Task[UnverifiedValueV2] =
     for {
       newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                             newValueVersionIri,
@@ -1426,7 +1427,7 @@ final case class ValuesResponderV2Live(
               currentTextValue.standoffLinkTagTargetResourceIris -- newTextValue.standoffLinkTagTargetResourceIris
 
             // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-            val standoffLinkUpdatesForAddedResourceRefFutures: Seq[Future[SparqlTemplateLinkUpdate]] =
+            val standoffLinkUpdatesForAddedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               addedResourceRefs.toVector.map { targetResourceIri =>
                 incrementLinkValue(
                   sourceResourceInfo = resourceInfo,
@@ -1438,13 +1439,13 @@ final case class ValuesResponderV2Live(
                 )
               }
 
-            val standoffLinkUpdatesForAddedResourceRefsFuture: Future[Seq[SparqlTemplateLinkUpdate]] =
-              Future.sequence(
+            val standoffLinkUpdatesForAddedResourceRefsFuture: Task[Seq[SparqlTemplateLinkUpdate]] =
+              ZIO.collectAll(
                 standoffLinkUpdatesForAddedResourceRefFutures
               )
 
             // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
-            val standoffLinkUpdatesForRemovedResourceRefFutures: Seq[Future[SparqlTemplateLinkUpdate]] =
+            val standoffLinkUpdatesForRemovedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               removedResourceRefs.toVector.map { removedTargetResource =>
                 decrementLinkValue(
                   sourceResourceInfo = resourceInfo,
@@ -1457,7 +1458,7 @@ final case class ValuesResponderV2Live(
               }
 
             val standoffLinkUpdatesForRemovedResourceRefFuture =
-              Future.sequence(
+              ZIO.collectAll(
                 standoffLinkUpdatesForRemovedResourceRefFutures
               )
 
@@ -1469,7 +1470,7 @@ final case class ValuesResponderV2Live(
             } yield standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
 
           case _ =>
-            FastFuture.successful(
+            ZIO.succeed(
               Vector.empty[SparqlTemplateLinkUpdate]
             )
         }
@@ -1542,7 +1543,7 @@ final case class ValuesResponderV2Live(
     valueCreationDate: Option[Instant],
     newValueVersionIri: Option[SmartIri],
     requestingUser: UserADM
-  ): Future[UnverifiedValueV2] =
+  ): Task[UnverifiedValueV2] =
     // Are we changing the link target?
     if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
       for {
@@ -1578,7 +1579,7 @@ final case class ValuesResponderV2Live(
 
         // Generate a SPARQL update string.
         sparqlUpdate <-
-          Future(
+          ZIO.attempt(
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt
               .changeLinkTarget(
                 dataNamedGraph = dataNamedGraph,
@@ -1653,12 +1654,12 @@ final case class ValuesResponderV2Live(
    *
    * @param deleteValueRequest the request to mark the value as deleted.
    */
-  private def deleteValueV2(deleteValueRequest: DeleteValueRequestV2): Future[SuccessResponseV2] = {
-    def makeTaskFuture: Future[SuccessResponseV2] = {
+  private def deleteValueV2(deleteValueRequest: DeleteValueRequestV2): Task[SuccessResponseV2] = {
+    def makeTaskFuture: Task[SuccessResponseV2] = {
       for {
         // Convert the submitted property IRI to the internal schema.
-        submittedInternalPropertyIri: SmartIri <-
-          Future(
+        submittedInternalPropertyIri <-
+          ZIO.attempt(
             deleteValueRequest.propertyIri.toOntologySchema(InternalSchema)
           )
 
@@ -1846,7 +1847,7 @@ final case class ValuesResponderV2Live(
 
     for {
       // Don't allow anonymous users to create values.
-      _ <- Future {
+      _ <- ZIO.attempt {
              if (deleteValueRequest.requestingUser.isAnonymousUser) {
                throw ForbiddenException("Anonymous users aren't allowed to update values")
              } else {
@@ -1885,7 +1886,7 @@ final case class ValuesResponderV2Live(
     deleteDate: Option[Instant],
     currentValue: ReadValueV2,
     requestingUser: UserADM
-  ): Future[IRI] =
+  ): Task[IRI] =
     currentValue.valueContent match {
       case _: LinkValueContentV2 =>
         deleteLinkValueV2AfterChecks(
@@ -1930,7 +1931,7 @@ final case class ValuesResponderV2Live(
     deleteComment: Option[String],
     deleteDate: Option[Instant],
     requestingUser: UserADM
-  ): Future[IRI] = {
+  ): Task[IRI] = {
     // Make a new version of of the LinkValue with a reference count of 0, and mark the new
     // version as deleted. Give the new version the same permissions as the previous version.
 
@@ -1989,12 +1990,12 @@ final case class ValuesResponderV2Live(
     deleteComment: Option[String],
     deleteDate: Option[Instant],
     requestingUser: UserADM
-  ): Future[IRI] = {
+  ): Task[IRI] = {
     // Mark the existing version of the value as deleted.
 
     // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
     // links in standoff markup.
-    val linkUpdateFutures: Seq[Future[SparqlTemplateLinkUpdate]] = currentValue.valueContent match {
+    val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] = currentValue.valueContent match {
       case textValue: TextValueContentV2 =>
         textValue.standoffLinkTagTargetResourceIris.toVector.map { removedTargetResource =>
           decrementLinkValue(
@@ -2007,10 +2008,10 @@ final case class ValuesResponderV2Live(
           )
         }
 
-      case _ => Seq.empty[Future[SparqlTemplateLinkUpdate]]
+      case _ => Seq.empty[Task[SparqlTemplateLinkUpdate]]
     }
 
-    val linkUpdateFuture = Future.sequence(linkUpdateFutures)
+    val linkUpdateFuture = ZIO.collectAll(linkUpdateFutures)
 
     // If no custom delete date was provided, make a timestamp to indicate when the value was
     // marked as deleted.
@@ -2609,7 +2610,7 @@ final case class ValuesResponderV2Live(
     valueCreator: IRI,
     valuePermissions: String,
     requestingUser: UserADM
-  ): Future[SparqlTemplateLinkUpdate] = {
+  ): Task[SparqlTemplateLinkUpdate] = {
 
     // Check whether a LinkValue already exists for this link.
     val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
