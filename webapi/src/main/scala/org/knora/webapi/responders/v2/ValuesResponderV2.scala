@@ -52,6 +52,7 @@ import org.knora.webapi.messages.ResponderRequest
 import zio.ZIO
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
+import org.apache.jena.sparql.pfunction.library.listIndex
 
 /**
  * Handles requests to read and write Knora values.
@@ -61,6 +62,7 @@ final case class ValuesResponderV2Live(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
+  resourceUtilV2: ResourceUtilV2,
   triplestoreService: TriplestoreService,
   implicit val runtime: zio.Runtime[ResourceUtilV2 with PermissionUtilADM],
   implicit val stringFormatter: StringFormatter
@@ -74,8 +76,6 @@ final case class ValuesResponderV2Live(
    * @param permissions the permissions attached to the new value.
    */
   private case class VerifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
-
-  // def handle(message: ResponderRequest): Task[Any] = ???
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ValuesResponderRequestV2]
 
@@ -98,7 +98,7 @@ final case class ValuesResponderV2Live(
    * @return a [[CreateValueResponseV2]].
    */
   private def createValueV2(createValueRequest: CreateValueRequestV2): Task[CreateValueResponseV2] = {
-    def makeTaskFuture: Task[CreateValueResponseV2] = {
+    def makeTask: Task[CreateValueResponseV2] = {
       for {
         // Convert the submitted value to the internal schema.
         submittedInternalPropertyIri <-
@@ -166,15 +166,10 @@ final case class ValuesResponderV2Live(
 
         // Check that the user has permission to modify the resource.
 
-        _ <- UnsafeZioRun.runToFuture(
-               ZIO
-                 .serviceWithZIO[ResourceUtilV2](
-                   _.checkResourcePermission(
-                     resourceInfo = resourceInfo,
-                     permissionNeeded = ModifyPermission,
-                     requestingUser = createValueRequest.requestingUser
-                   )
-                 )
+        _ <- resourceUtilV2.checkResourcePermission(
+               resourceInfo = resourceInfo,
+               permissionNeeded = ModifyPermission,
+               requestingUser = createValueRequest.requestingUser
              )
 
         // Check that the resource has the rdf:type that the client thinks it has.
@@ -224,11 +219,7 @@ final case class ValuesResponderV2Live(
                case listValue: HierarchicalListValueContentV2 =>
                  for {
                    checkNode <-
-                     UnsafeZioRun.runToFuture(
-                       ZIO.serviceWithZIO[ResourceUtilV2](
-                         _.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
-                       )
-                     )
+                     resourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
 
                    _ = checkNode match {
                          // it doesn't have isRootNode property - it's a child node
@@ -301,16 +292,12 @@ final case class ValuesResponderV2Live(
              }
 
         // Get the default permissions for the new value.
-        defaultValuePermissions: String <-
-          UnsafeZioRun.runToFuture(
-            ZIO.serviceWithZIO[ResourceUtilV2](
-              _.getDefaultValuePermissions(
-                projectIri = resourceInfo.projectADM.id,
-                resourceClassIri = resourceInfo.resourceClassIri,
-                propertyIri = submittedInternalPropertyIri,
-                requestingUser = createValueRequest.requestingUser
-              )
-            )
+        defaultValuePermissions <-
+          resourceUtilV2.getDefaultValuePermissions(
+            projectIri = resourceInfo.projectADM.id,
+            resourceClassIri = resourceInfo.resourceClassIri,
+            propertyIri = submittedInternalPropertyIri,
+            requestingUser = createValueRequest.requestingUser
           )
 
         // Did the user submit permissions for the new value?
@@ -405,21 +392,17 @@ final case class ValuesResponderV2Live(
       taskResult <- IriLocker.runWithIriLock(
                       createValueRequest.apiRequestID,
                       createValueRequest.createValue.resourceIri,
-                      () => makeTaskFuture
+                      () => makeTask
                     )
     } yield taskResult
 
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
-    UnsafeZioRun.runToFuture(
-      ZIO.serviceWithZIO[ResourceUtilV2](
-        _.doSipiPostUpdate(
-          updateFuture = ZIO.fromFuture(ec => triplestoreUpdateFuture),
-          valueContent = createValueRequest.createValue.valueContent,
-          requestingUser = createValueRequest.requestingUser,
-          log = log
-        )
-      )
+    resourceUtilV2.doSipiPostUpdate(
+      updateFuture = ZIO.fromFuture(ec => triplestoreUpdateFuture),
+      valueContent = createValueRequest.createValue.valueContent,
+      requestingUser = createValueRequest.requestingUser,
+      log = log
     )
   }
 
@@ -1092,16 +1075,11 @@ final case class ValuesResponderV2Live(
               throw BadRequestException(s"The submitted permissions are the same as the current ones")
             }
 
-        _ <- UnsafeZioRun.runToFuture(
-               ZIO
-                 .serviceWithZIO[ResourceUtilV2](
-                   _.checkValuePermission(
-                     resourceInfo = resourceInfo,
-                     valueInfo = currentValue,
-                     permissionNeeded = ChangeRightsPermission,
-                     requestingUser = updateValueRequest.requestingUser
-                   )
-                 )
+        _ <- resourceUtilV2.checkValuePermission(
+               resourceInfo = resourceInfo,
+               valueInfo = currentValue,
+               permissionNeeded = ChangeRightsPermission,
+               requestingUser = updateValueRequest.requestingUser
              )
 
         // Do the update.
@@ -1218,16 +1196,11 @@ final case class ValuesResponderV2Live(
             ModifyPermission
           }
 
-        _ <- UnsafeZioRun.runToFuture(
-               ZIO
-                 .serviceWithZIO[ResourceUtilV2](
-                   _.checkValuePermission(
-                     resourceInfo = resourceInfo,
-                     valueInfo = currentValue,
-                     permissionNeeded = permissionNeeded,
-                     requestingUser = updateValueRequest.requestingUser
-                   )
-                 )
+        _ <- resourceUtilV2.checkValuePermission(
+               resourceInfo = resourceInfo,
+               valueInfo = currentValue,
+               permissionNeeded = permissionNeeded,
+               requestingUser = updateValueRequest.requestingUser
              )
 
         // Convert the submitted value content to the internal schema.
@@ -1250,11 +1223,7 @@ final case class ValuesResponderV2Live(
                case listValue: HierarchicalListValueContentV2 =>
                  for {
                    checkNode <-
-                     UnsafeZioRun.runToFuture(
-                       ZIO.serviceWithZIO[ResourceUtilV2](
-                         _.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
-                       )
-                     )
+                     resourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
 
                    _ = checkNode match {
                          // it doesn't have isRootNode property - it's a child node
@@ -1311,15 +1280,10 @@ final case class ValuesResponderV2Live(
                case _: LinkValueContentV2 =>
                  // We're updating a link. This means deleting an existing link and creating a new one, so
                  // check that the user has permission to modify the resource.
-                 UnsafeZioRun.runToFuture(
-                   ZIO
-                     .serviceWithZIO[ResourceUtilV2](
-                       _.checkResourcePermission(
-                         resourceInfo = resourceInfo,
-                         permissionNeeded = ModifyPermission,
-                         requestingUser = updateValueRequest.requestingUser
-                       )
-                     )
+                 resourceUtilV2.checkResourcePermission(
+                   resourceInfo = resourceInfo,
+                   permissionNeeded = ModifyPermission,
+                   requestingUser = updateValueRequest.requestingUser
                  )
 
                case _ => ZIO.succeed(())
@@ -1393,15 +1357,11 @@ final case class ValuesResponderV2Live(
             () => makeTaskFutureToUpdateValueContent(updateValueContentV2)
           )
 
-          UnsafeZioRun.runToFuture(
-            ZIO.serviceWithZIO[ResourceUtilV2](
-              _.doSipiPostUpdate(
-                updateFuture = ZIO.fromFuture(_ => triplestoreUpdateFuture),
-                valueContent = updateValueContentV2.valueContent,
-                requestingUser = updateValueRequest.requestingUser,
-                log = log
-              )
-            )
+          resourceUtilV2.doSipiPostUpdate(
+            updateFuture = ZIO.fromFuture(_ => triplestoreUpdateFuture),
+            valueContent = updateValueContentV2.valueContent,
+            requestingUser = updateValueRequest.requestingUser,
+            log = log
           )
 
         case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
@@ -1691,7 +1651,7 @@ final case class ValuesResponderV2Live(
    * @param deleteValueRequest the request to mark the value as deleted.
    */
   private def deleteValueV2(deleteValueRequest: DeleteValueRequestV2): Task[SuccessResponseV2] = {
-    def makeTaskFuture: Task[SuccessResponseV2] = {
+    def makeTask: Task[SuccessResponseV2] = {
       for {
         // Convert the submitted property IRI to the internal schema.
         submittedInternalPropertyIri <-
@@ -1790,16 +1750,11 @@ final case class ValuesResponderV2Live(
           }
 
         // Check the user's permissions on the value.
-        _ <- UnsafeZioRun.runToFuture(
-               ZIO
-                 .serviceWithZIO[ResourceUtilV2](
-                   _.checkValuePermission(
-                     resourceInfo = resourceInfo,
-                     valueInfo = currentValue,
-                     permissionNeeded = DeletePermission,
-                     requestingUser = deleteValueRequest.requestingUser
-                   )
-                 )
+        _ <- resourceUtilV2.checkValuePermission(
+               resourceInfo = resourceInfo,
+               valueInfo = currentValue,
+               permissionNeeded = DeletePermission,
+               requestingUser = deleteValueRequest.requestingUser
              )
 
         // Get the definition of the resource class.
@@ -1900,7 +1855,7 @@ final case class ValuesResponderV2Live(
         IriLocker.runWithIriLock(
           deleteValueRequest.apiRequestID,
           deleteValueRequest.resourceIri,
-          () => makeTaskFuture
+          () => makeTask
         )
     } yield taskResult
   }
