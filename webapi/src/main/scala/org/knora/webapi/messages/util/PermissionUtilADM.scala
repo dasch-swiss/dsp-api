@@ -912,7 +912,7 @@ trait PermissionUtilADM {
    * @param permissionLiteral the permission literal.
    * @return the validated permission literal, normalised and reformatted.
    */
-  def validatePermissions(permissionLiteral: _root_.java.lang.String): zio.Task[_root_.java.lang.String]
+  def validatePermissions(permissionLiteral: String): zio.Task[String]
 }
 
 final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatter: StringFormatter)
