@@ -559,7 +559,7 @@ final case class ValuesResponderV2Live(
        */
 
       // Do the update.
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = newValueUUID,
@@ -633,7 +633,7 @@ final case class ValuesResponderV2Live(
        */
 
       // Do the update.
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
     } yield UnverifiedValueV2(
       newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
       newValueUUID = newValueUUID,
@@ -1110,7 +1110,7 @@ final case class ValuesResponderV2Live(
             )
             .toString()
 
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
 
         // Check that the value was written correctly to the triplestore.
 
@@ -1123,7 +1123,7 @@ final case class ValuesResponderV2Live(
             creationDate = currentTime
           )
 
-        verifiedValue: VerifiedValueV2 <-
+        verifiedValue <-
           verifyValue(
             resourceIri = resourceInfo.resourceIri,
             propertyIri = submittedInternalPropertyIri,
@@ -1506,7 +1506,7 @@ final case class ValuesResponderV2Live(
        */
 
       // Do the update.
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
 
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
@@ -1600,7 +1600,7 @@ final case class ValuesResponderV2Live(
                 _ = println("==============================================")
          */
 
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
         newValueUUID = newLinkValueUUID,
@@ -1611,7 +1611,7 @@ final case class ValuesResponderV2Live(
     } else {
       for {
         // We're not changing the link target, just the metadata on the LinkValue.
-        sparqlTemplateLinkUpdate: SparqlTemplateLinkUpdate <-
+        sparqlTemplateLinkUpdate <-
           changeLinkValueMetadata(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = linkPropertyIri,
@@ -1637,7 +1637,7 @@ final case class ValuesResponderV2Live(
             )
             .toString()
 
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
 
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
@@ -1769,8 +1769,8 @@ final case class ValuesResponderV2Live(
             requestingUser = deleteValueRequest.requestingUser
           )
 
-        classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
-        classInfo: ReadClassInfoV2         = classInfoResponse.classes(resourceInfo.resourceClassIri)
+        classInfoResponse         <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
+        classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
 
         cardinalityInfo: KnoraCardinalityInfo =
           classInfo.allCardinalities.getOrElse(
@@ -1825,7 +1825,7 @@ final case class ValuesResponderV2Live(
             )
             .toString()
 
-        sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+        sparqlSelectResponse <- messageRelay.ask[SparqlSelectResult](SparqlSelectRequest(sparqlQuery))
         rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
@@ -1964,7 +1964,7 @@ final case class ValuesResponderV2Live(
                        )
                        .toString()
 
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
     } yield sparqlTemplateLinkUpdate.newLinkValueIri
   }
 
@@ -2016,8 +2016,7 @@ final case class ValuesResponderV2Live(
     val currentTime: Instant = deleteDate.getOrElse(Instant.now)
 
     for {
-      linkUpdates: Seq[SparqlTemplateLinkUpdate] <- linkUpdateFuture
-
+      linkUpdates <- linkUpdateFuture
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                        .deleteValue(
                          dataNamedGraph = dataNamedGraph,
@@ -2032,7 +2031,7 @@ final case class ValuesResponderV2Live(
                        )
                        .toString()
 
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
     } yield currentValue.valueIri
   }
 
