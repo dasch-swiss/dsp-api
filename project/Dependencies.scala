@@ -24,7 +24,7 @@ object Dependencies {
   val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.3.0"
   val ZioLoggingVersion           = "2.1.9"
-  val ZioMetricsConnectorsVersion = "2.0.6"
+  val ZioMetricsConnectorsVersion = "2.0.7"
   val ZioPreludeVersion           = "1.0.0-RC16"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.9"
