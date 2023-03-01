@@ -28,7 +28,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesRespond
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
@@ -63,7 +62,6 @@ final case class RoutingActor(
   private val ontologiesResponderV2: OntologyResponderV2 = OntologyResponderV2(responderData, runtime)
   private val searchResponderV2: SearchResponderV2       = new SearchResponderV2(responderData, runtime)
   private val resourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData, runtime)
-  private val valuesResponderV2: ValuesResponderV2       = new ValuesResponderV2(responderData, runtime)
   private val standoffResponderV2: StandoffResponderV2   = new StandoffResponderV2(responderData, runtime)
 
   def receive: Receive = {
@@ -85,8 +83,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), searchResponderV2.receive(searchResponderRequestV2), log)
     case resourcesResponderRequestV2: ResourcesResponderRequestV2 =>
       ActorUtil.future2Message(sender(), resourcesResponderV2.receive(resourcesResponderRequestV2), log)
-    case valuesResponderRequestV2: ValuesResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), valuesResponderV2.receive(valuesResponderRequestV2), log)
     case standoffResponderRequestV2: StandoffResponderRequestV2 =>
       ActorUtil.future2Message(sender(), standoffResponderV2.receive(standoffResponderRequestV2), log)
 

@@ -64,6 +64,7 @@ final case class ValuesResponderV2Live(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
+  permissionUtilADM: PermissionUtilADM,
   resourceUtilV2: ResourceUtilV2,
   triplestoreService: TriplestoreService,
   implicit val stringFormatter: StringFormatter
@@ -310,7 +311,7 @@ final case class ValuesResponderV2Live(
               // Yes. Validate them.
               for {
                 validatedCustomPermissions <-
-                  UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissions)))
+                  permissionUtilADM.validatePermissions(permissions)
 
                 // Is the requesting user a system admin, or an admin of this project?
                 _ = if (
@@ -1053,10 +1054,8 @@ final case class ValuesResponderV2Live(
 
         // Validate and reformat the submitted permissions.
 
-        newValuePermissionLiteral: String <-
-          UnsafeZioRun.runToFuture(
-            ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(updateValuePermissionsV2.permissions))
-          )
+        newValuePermissionLiteral <- permissionUtilADM.validatePermissions(updateValuePermissionsV2.permissions)
+
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
         // different from the current ones.
 
@@ -1165,9 +1164,7 @@ final case class ValuesResponderV2Live(
           updateValueContentV2.permissions match {
             case Some(permissions) =>
               // Yes. Validate them.
-              UnsafeZioRun.runToFuture(
-                ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissions))
-              )
+              permissionUtilADM.validatePermissions(permissions)
 
             case None =>
               // No. Use the permissions on the current version of the value.
@@ -1545,7 +1542,7 @@ final case class ValuesResponderV2Live(
     if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
       for {
         // Yes. Delete the existing link and decrement its LinkValue's reference count.
-        sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate <-
+        sparqlTemplateLinkUpdateForCurrentLink <-
           decrementLinkValue(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = linkPropertyIri,
@@ -1556,7 +1553,7 @@ final case class ValuesResponderV2Live(
           )
 
         // Create a new link, and create a new LinkValue for it.
-        sparqlTemplateLinkUpdateForNewLink: SparqlTemplateLinkUpdate <-
+        sparqlTemplateLinkUpdateForNewLink <-
           incrementLinkValue(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = linkPropertyIri,
@@ -2709,17 +2706,24 @@ final case class ValuesResponderV2Live(
 
 object ValuesResponderV2Live {
   val layer: URLayer[
-    AppConfig with IriService with MessageRelay with ResourceUtilV2 with TriplestoreService with StringFormatter,
+    AppConfig
+      with IriService
+      with MessageRelay
+      with PermissionUtilADM
+      with ResourceUtilV2
+      with TriplestoreService
+      with StringFormatter,
     ValuesResponderV2
   ] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       is      <- ZIO.service[IriService]
       mr      <- ZIO.service[MessageRelay]
+      pu      <- ZIO.service[PermissionUtilADM]
       ru      <- ZIO.service[ResourceUtilV2]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, ru, ts, sf))
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, ts, sf))
     } yield handler
   }
 }
