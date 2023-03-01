@@ -12,6 +12,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -48,6 +50,8 @@ import org.knora.webapi.responders.v1.UsersResponderV1
 import org.knora.webapi.responders.v1.UsersResponderV1Live
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
+import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -97,12 +101,14 @@ object LayersLive {
       with ListsResponderV1
       with MessageRelay
       with OntologyResponderV1
+      with PermissionUtilADM
       with PermissionsResponderADM
       with ProjectsResponderADM
       with ProjectsResponderV1
       with RepositoryUpdater
       with RestCardinalityService
       with RestResourceInfoService
+      with ResourceUtilV2
       with SearchResponderV1
       with SipiResponderADM
       with StandoffTagUtilV2
@@ -147,6 +153,7 @@ object LayersLive {
       OntologyCache.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
+      PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
       ProjectsResponderADMLive.layer,
@@ -158,6 +165,7 @@ object LayersLive {
       ResourceInfoRoute.layer,
       RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
+      ResourceUtilV2Live.layer,
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
       StandoffTagUtilV2Live.layer,

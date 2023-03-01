@@ -59,7 +59,7 @@ import org.knora.webapi.util._
  */
 class ValuesResponderV1(
   responderData: ResponderData,
-  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ValueUtilV1]
+  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ValueUtilV1 with ResourceUtilV2]
 ) extends Responder(responderData.actorDeps) {
 
   /**
@@ -822,12 +822,15 @@ class ValuesResponderV1(
         projectADM = projectADM
       )
 
-      ResourceUtilV2.doSipiPostUpdate(
-        updateFuture = triplestoreUpdateFuture,
-        valueContent = fileValueContent,
-        requestingUser = changeFileValueRequest.userProfile,
-        appActor = appActor,
-        log = log
+      UnsafeZioRun.runToFuture(
+        ZIO.serviceWithZIO[ResourceUtilV2](
+          _.doSipiPostUpdate(
+            updateFuture = ZIO.fromFuture(_ => triplestoreUpdateFuture),
+            valueContent = fileValueContent,
+            requestingUser = changeFileValueRequest.userProfile,
+            log = log
+          )
+        )
       )
     }
 

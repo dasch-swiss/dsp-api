@@ -62,7 +62,7 @@ import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
  */
 class ResourcesResponderV1(
   responderData: ResponderData,
-  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ValueUtilV1]
+  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ValueUtilV1 with ResourceUtilV2]
 ) extends Responder(responderData.actorDeps) {
 
   /**
@@ -1954,12 +1954,15 @@ class ResourcesResponderV1(
     requestingUser: UserADM
   ): Future[T] = {
     val resultFutures: Seq[Future[T]] = fileValueContentV2s.map { valueContent =>
-      ResourceUtilV2.doSipiPostUpdate(
-        updateFuture = updateFuture,
-        valueContent = valueContent,
-        requestingUser = requestingUser,
-        appActor = appActor,
-        log = log
+      UnsafeZioRun.runToFuture(
+        ZIO.serviceWithZIO[ResourceUtilV2](
+          _.doSipiPostUpdate(
+            updateFuture = ZIO.fromFuture(_ => updateFuture),
+            valueContent = valueContent,
+            requestingUser = requestingUser,
+            log = log
+          )
+        )
       )
     }
 
