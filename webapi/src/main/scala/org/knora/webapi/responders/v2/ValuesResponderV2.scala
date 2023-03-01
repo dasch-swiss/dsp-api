@@ -51,6 +51,7 @@ import zio.Task
 import org.knora.webapi.messages.ResponderRequest
 import zio.ZIO
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.IriService
 
 /**
  * Handles requests to read and write Knora values.
@@ -58,6 +59,7 @@ import org.knora.webapi.messages.StringFormatter
 trait ValuesResponderV2
 final case class ValuesResponderV2Live(
   appConfig: AppConfig,
+  iriService: IriService,
   messageRelay: MessageRelay,
   triplestoreService: TriplestoreService,
   implicit val runtime: zio.Runtime[ResourceUtilV2 with PermissionUtilADM],
@@ -515,10 +517,10 @@ final case class ValuesResponderV2Live(
       newValueUUID: UUID <- ZIO.succeed(makeNewValueUUID(maybeValueIri, maybeValueUUID))
 
       // Make an IRI for the new value.
-      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                            maybeValueIri,
-                            stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
-                          )
+      newValueIri <- iriService.checkOrCreateEntityIriTask(
+                       maybeValueIri,
+                       stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
+                     )
 
       // Make a creation date for the new value
       creationDate: Instant = maybeValueCreationDate match {
@@ -743,10 +745,10 @@ final case class ValuesResponderV2Live(
                         makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
                       )
 
-      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                            valueToCreate.customValueIri,
-                            stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
-                          )
+      newValueIri <- iriService.checkOrCreateEntityIriTask(
+                       valueToCreate.customValueIri,
+                       stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
+                     )
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
@@ -1105,10 +1107,10 @@ final case class ValuesResponderV2Live(
         // Do the update.
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
-        newValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                              updateValuePermissionsV2.newValueVersionIri,
-                              stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
-                            )
+        newValueIri <- iriService.checkOrCreateEntityIriTask(
+                         updateValuePermissionsV2.newValueVersionIri,
+                         stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+                       )
 
         currentTime: Instant =
           updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
@@ -1441,10 +1443,10 @@ final case class ValuesResponderV2Live(
     requestingUser: UserADM
   ): Task[UnverifiedValueV2] =
     for {
-      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                            newValueVersionIri,
-                            stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
-                          )
+      newValueIri <- iriService.checkOrCreateEntityIriTask(
+                       newValueVersionIri,
+                       stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+                     )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
       standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <-
@@ -2507,10 +2509,10 @@ final case class ValuesResponderV2Live(
 
     for {
       // Make an IRI for the new LinkValue.
-      newLinkValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                                customNewLinkValueIri,
-                                stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-                              )
+      newLinkValueIri <- iriService.checkOrCreateEntityIriTask(
+                           customNewLinkValueIri,
+                           stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
+                         )
 
       linkUpdate =
         maybeLinkValueInfo match {
@@ -2664,10 +2666,10 @@ final case class ValuesResponderV2Live(
 
         for {
           // If no custom IRI was provided, generate an IRI for the new LinkValue.
-          newLinkValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                                    customNewLinkValueIri,
-                                    stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-                                  )
+          newLinkValueIri <- iriService.checkOrCreateEntityIriTask(
+                               customNewLinkValueIri,
+                               stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
+                             )
 
         } yield SparqlTemplateLinkUpdate(
           linkPropertyIri = linkPropertyIri,
