@@ -53,6 +53,7 @@ import zio.ZIO
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
 import org.apache.jena.sparql.pfunction.library.listIndex
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * Handles requests to read and write Knora values.
@@ -66,7 +67,8 @@ final case class ValuesResponderV2Live(
   triplestoreService: TriplestoreService,
   implicit val runtime: zio.Runtime[ResourceUtilV2 with PermissionUtilADM],
   implicit val stringFormatter: StringFormatter
-) extends MessageHandler {
+) extends MessageHandler
+    with LazyLogging {
 
   /**
    * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
@@ -402,7 +404,7 @@ final case class ValuesResponderV2Live(
       updateFuture = ZIO.fromFuture(ec => triplestoreUpdateFuture),
       valueContent = createValueRequest.createValue.valueContent,
       requestingUser = createValueRequest.requestingUser,
-      log = log
+      logger
     )
   }
 
@@ -1361,7 +1363,7 @@ final case class ValuesResponderV2Live(
             updateFuture = ZIO.fromFuture(_ => triplestoreUpdateFuture),
             valueContent = updateValueContentV2.valueContent,
             requestingUser = updateValueRequest.requestingUser,
-            log = log
+            logger
           )
 
         case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
