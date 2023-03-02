@@ -22,6 +22,7 @@ import dsp.errors.NotImplementedException
 import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -41,7 +42,6 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util._
-import org.knora.webapi.core.RelayedMessage
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
