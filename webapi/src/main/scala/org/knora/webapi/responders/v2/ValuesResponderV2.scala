@@ -193,13 +193,14 @@ final case class ValuesResponderV2Live(
         // Check that the resource class has a cardinality for the submitted property.
 
         classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-        cardinalityInfo: KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(
-                                                  submittedInternalPropertyIri,
-                                                  throw BadRequestException(
-                                                    s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                                                        .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
-                                                  )
-                                                )
+        cardinalityInfo: KnoraCardinalityInfo =
+          classInfo.allCardinalities.getOrElse(
+            submittedInternalPropertyIri,
+            throw BadRequestException(
+              s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
+            )
+          )
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -247,8 +248,9 @@ final case class ValuesResponderV2Live(
             (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty
           ) {
             throw InconsistentRepositoryDataException(
-              s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property"
+              s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a " +
+                s"cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, " +
+                s"but resource <${createValueRequest.createValue.resourceIri}> has no value for that property"
             )
           }
 
@@ -325,7 +327,8 @@ final case class ValuesResponderV2Live(
 
                       if (permissionComparisonResult == AGreaterThanB) {
                         throw ForbiddenException(
-                          s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
+                          s"The specified value permissions would give a value's creator a higher " +
+                            s"permission on the value than the default permissions"
                         )
                       }
                     }
@@ -543,12 +546,6 @@ final case class ValuesResponderV2Live(
                        )
                        .toString()
 
-      /*
-            _ = println("================ Create value ================")
-            _ = println(sparqlUpdate)
-            _ = println("==============================================")
-       */
-
       // Do the update.
       _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
     } yield UnverifiedValueV2(
@@ -617,12 +614,6 @@ final case class ValuesResponderV2Live(
                          stringFormatter = stringFormatter
                        )
                        .toString()
-
-      /*
-            _ = println("================ Create link ===============")
-            _ = println(sparqlUpdate)
-            _ = println("=============================================")
-       */
 
       // Do the update.
       _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
@@ -951,7 +942,8 @@ final case class ValuesResponderV2Live(
         // Don't accept link properties.
         _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
               throw BadRequestException(
-                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
+                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. " +
+                  s"Use a link value property to submit a link."
               )
             }
 
@@ -1002,7 +994,8 @@ final case class ValuesResponderV2Live(
         // Check that the current value has the submitted value type.
         _ = if (currentValue.valueContent.valueType != submittedExternalValueType.toOntologySchema(InternalSchema)) {
               throw BadRequestException(
-                s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <$submittedExternalValueType>"
+                s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, " +
+                  s"but the submitted type was <$submittedExternalValueType>"
               )
             }
 
@@ -1486,12 +1479,6 @@ final case class ValuesResponderV2Live(
           )
           .toString()
 
-      /*
-            _ = println("================ Update value ================")
-            _ = println(sparqlUpdate)
-            _ = println("==============================================")
-       */
-
       // Do the update.
       _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
 
@@ -1581,12 +1568,6 @@ final case class ValuesResponderV2Live(
               .toString()
           )
 
-        /*
-                _ = println("================ Update link ================")
-                _ = println(sparqlUpdate)
-                _ = println("==============================================")
-         */
-
         _ <- messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(sparqlUpdate))
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
@@ -1669,7 +1650,8 @@ final case class ValuesResponderV2Live(
         // Don't accept link properties.
         _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
               throw BadRequestException(
-                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
+                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. " +
+                  s"Use a link value property to submit a link."
               )
             }
 
@@ -1725,7 +1707,8 @@ final case class ValuesResponderV2Live(
             case Some(value) => value
             case None =>
               throw NotFoundException(
-                s"Resource <${deleteValueRequest.resourceIri}> does not have value <${deleteValueRequest.valueIri}> as an object of property <${deleteValueRequest.propertyIri}>"
+                s"Resource <${deleteValueRequest.resourceIri}> does not have value <${deleteValueRequest.valueIri}> " +
+                  s"as an object of property <${deleteValueRequest.propertyIri}>"
               )
           }
 
@@ -1778,7 +1761,9 @@ final case class ValuesResponderV2Live(
             (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.size == 1
           ) {
             throw OntologyConstraintException(
-              s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValueRequest.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValueRequest.resourceIri}>"
+              s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of " +
+                s"${cardinalityInfo.cardinality} on property <${deleteValueRequest.propertyIri}>, and this does not allow a " +
+                s"value to be deleted for that property from resource <${deleteValueRequest.resourceIri}>"
             )
           }
 
@@ -1823,7 +1808,8 @@ final case class ValuesResponderV2Live(
               )
             ) {
               throw UpdateNotPerformedException(
-                s"The request to mark value <${deleteValueRequest.valueIri}> (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."
+                s"The request to mark value <${deleteValueRequest.valueIri}> (or a new version of that value) " +
+                  s"as deleted did not succeed. Please report this as a possible bug."
               )
             }
       } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
@@ -2215,16 +2201,6 @@ final case class ValuesResponderV2Live(
               valueInTriplestore.permissions == unverifiedValue.permissions &&
               valueInTriplestore.attachedToUser == requestingUser.id)
           ) {
-            /*
-                import org.knora.webapi.util.MessageUtil
-                println("==============================")
-                println("Submitted value:")
-                println(MessageUtil.toSource(unverifiedValue.valueContent))
-                println
-                println("==============================")
-                println("Saved value:")
-                println(MessageUtil.toSource(valueInTriplestore.valueContent))
-             */
             throw AssertionException(
               s"The value saved as ${unverifiedValue.newValueIri} is not the same as the one that was submitted"
             )
@@ -2284,7 +2260,8 @@ final case class ValuesResponderV2Live(
       // If it isn't, throw an exception.
       _ = if (!subClassResponse.isSubClass) {
             throw OntologyConstraintException(
-              s"Resource <${linkValueContent.referredResourceIri}> cannot be the target of property <$linkPropertyIri>, because it is not a member of class <$objectClassConstraint>"
+              s"Resource <${linkValueContent.referredResourceIri}> cannot be the target of property <$linkPropertyIri>, " +
+                s"because it is not a member of class <$objectClassConstraint>"
             )
           }
     } yield ()
@@ -2323,7 +2300,8 @@ final case class ValuesResponderV2Live(
         // If it isn't, throw an exception.
         _ = if (!subClassResponse.isSubClass) {
               throw OntologyConstraintException(
-                s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
+                s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, " +
+                  s"because it is not a member of class <$objectClassConstraint>"
               )
             }
 
@@ -2567,7 +2545,8 @@ final case class ValuesResponderV2Live(
       case None =>
         // We didn't find the LinkValue. This shouldn't happen.
         throw InconsistentRepositoryDataException(
-          s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
+          s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> " +
+            s"to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
         )
     }
   }
@@ -2632,7 +2611,8 @@ final case class ValuesResponderV2Live(
       case None =>
         // We didn't find the LinkValue. This shouldn't happen.
         throw InconsistentRepositoryDataException(
-          s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
+          s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> " +
+            s"to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
         )
     }
   }
