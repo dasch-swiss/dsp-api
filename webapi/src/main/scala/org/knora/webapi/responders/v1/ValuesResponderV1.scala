@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v1
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.Task
 import zio._
 
 import java.time.Instant
