@@ -55,6 +55,7 @@ import org.knora.webapi.responders.IriService
 import org.apache.jena.sparql.pfunction.library.listIndex
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+import org.knora.webapi.util.ZioHelper
 
 /**
  * Handles requests to read and write Knora values.
@@ -497,12 +498,10 @@ final case class ValuesResponderV2Live(
     valueCreator: IRI,
     valuePermissions: String,
     requestingUser: UserADM
-  ): Task[UnverifiedValueV2] =
+  ): Task[UnverifiedValueV2] = {
+    val newValueUUID: UUID = makeNewValueUUID(maybeValueIri, maybeValueUUID)
+
     for {
-
-      // Make a new value UUID.
-      newValueUUID: UUID <- makeNewValueUUID(maybeValueIri, maybeValueUUID)
-
       // Make an IRI for the new value.
       newValueIri <- iriService.checkOrCreateEntityIriTask(
                        maybeValueIri,
@@ -568,6 +567,7 @@ final case class ValuesResponderV2Live(
       permissions = valuePermissions,
       creationDate = creationDate
     )
+  }
 
   /**
    * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
@@ -664,15 +664,16 @@ final case class ValuesResponderV2Live(
   ): Task[GenerateSparqlToCreateMultipleValuesResponseV2] =
     for {
       // Generate SPARQL to create links and LinkValues for standoff links in text values.
-      sparqlForStandoffLinks: Option[String] <- generateInsertSparqlForStandoffLinksInMultipleValues(
-                                                  createMultipleValuesRequest
-                                                )
+      sparqlForStandoffLinks <-
+        generateInsertSparqlForStandoffLinksInMultipleValues(
+          createMultipleValuesRequest
+        )
 
       // Generate SPARQL for each value.
-      sparqlForPropertyValueFutures: Map[SmartIri, Seq[Task[InsertSparqlWithUnverifiedValue]]] =
+      sparqlForPropertyValueFutures =
         createMultipleValuesRequest.values.map {
-          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
-            propertyIri -> valuesToCreate.zipWithIndex.map {
+          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) => {
+            val values = valuesToCreate.zipWithIndex.map {
               case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
                 generateInsertSparqlWithUnverifiedValue(
                   resourceIri = createMultipleValuesRequest.resourceIri,
@@ -683,24 +684,24 @@ final case class ValuesResponderV2Live(
                   requestingUser = createMultipleValuesRequest.requestingUser
                 )
             }
+
+            (propertyIri -> ZIO.collectAll(values))
+          }
         }
 
-      sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] <- ActorUtil.sequenceSeqFuturesInMap(
-                                                                                        sparqlForPropertyValueFutures
-                                                                                      )
+      sparqlForPropertyValues <- ZioHelper.sequence(sparqlForPropertyValueFutures)
 
       // Concatenate all the generated SPARQL.
-      allInsertSparql: String = sparqlForPropertyValues.values.flatten
-                                  .map(_.insertSparql)
-                                  .mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
+      allInsertSparql = sparqlForPropertyValues.values.flatten
+                          .map(_.insertSparql)
+                          .mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
 
       // Collect all the unverified values.
-      unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]] = sparqlForPropertyValues.map {
-                                                                  case (propertyIri, unverifiedValuesWithSparql) =>
-                                                                    propertyIri -> unverifiedValuesWithSparql.map(
-                                                                      _.unverifiedValue
-                                                                    )
-                                                                }
+      unverifiedValues = sparqlForPropertyValues.map { case (propertyIri, unverifiedValuesWithSparql) =>
+                           propertyIri -> unverifiedValuesWithSparql.map(
+                             _.unverifiedValue
+                           )
+                         }
     } yield GenerateSparqlToCreateMultipleValuesResponseV2(
       insertSparql = allInsertSparql,
       unverifiedValues = unverifiedValues,
@@ -875,7 +876,7 @@ final case class ValuesResponderV2Live(
           )
       }
       for {
-        standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- ZIO.collectAll(standoffLinkUpdatesFutures)
+        standoffLinkUpdates <- ZIO.collectAll(standoffLinkUpdatesFutures)
         // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
         sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                          .generateInsertStatementsForStandoffLinks(
@@ -1356,7 +1357,7 @@ final case class ValuesResponderV2Live(
           )
 
           resourceUtilV2.doSipiPostUpdate(
-            updateFuture = ZIO.fromFuture(_ => triplestoreUpdateFuture),
+            updateFuture = triplestoreUpdateFuture,
             valueContent = updateValueContentV2.valueContent,
             requestingUser = updateValueRequest.requestingUser,
             logger
@@ -2243,8 +2244,8 @@ final case class ValuesResponderV2Live(
       permissions = unverifiedValue.permissions
     )
 
-    verifiedValueFuture.recover { case _: NotFoundException =>
-      throw UpdateNotPerformedException(s"Resource <$resourceIri> was not found. Please report this as a possible bug.")
+    verifiedValueFuture.mapError { case _: NotFoundException =>
+      UpdateNotPerformedException(s"Resource <$resourceIri> was not found. Please report this as a possible bug.")
     }
   }
 
