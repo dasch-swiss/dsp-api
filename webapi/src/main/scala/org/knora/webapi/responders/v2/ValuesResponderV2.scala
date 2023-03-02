@@ -176,7 +176,8 @@ final case class ValuesResponderV2Live(
               .toOntologySchema(InternalSchema)
           ) {
             throw BadRequestException(
-              s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>"
+              s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> " +
+                s"is not <${createValueRequest.createValue.resourceClassIri}>"
             )
           }
 

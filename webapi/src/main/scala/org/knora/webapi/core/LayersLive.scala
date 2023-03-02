@@ -46,8 +46,12 @@ import org.knora.webapi.responders.v1.ProjectsResponderV1
 import org.knora.webapi.responders.v1.ProjectsResponderV1Live
 import org.knora.webapi.responders.v1.SearchResponderV1
 import org.knora.webapi.responders.v1.SearchResponderV1Live
+import org.knora.webapi.responders.v1.StandoffResponderV1
+import org.knora.webapi.responders.v1.StandoffResponderV1Live
 import org.knora.webapi.responders.v1.UsersResponderV1
 import org.knora.webapi.responders.v1.UsersResponderV1Live
+import org.knora.webapi.responders.v1.ValuesResponderV1
+import org.knora.webapi.responders.v1.ValuesResponderV1Live
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
@@ -113,6 +117,7 @@ object LayersLive {
       with ResourceUtilV2
       with SearchResponderV1
       with SipiResponderADM
+      with StandoffResponderV1
       with StandoffTagUtilV2
       with State
       with StoresResponderADM
@@ -121,6 +126,7 @@ object LayersLive {
       with UsersResponderADM
       with UsersResponderV1
       with ValueUtilV1
+      with ValuesResponderV1
       with ValuesResponderV2
 
   /**
@@ -171,6 +177,7 @@ object LayersLive {
       ResourceUtilV2Live.layer,
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
+      StandoffResponderV1Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
@@ -180,6 +187,7 @@ object LayersLive {
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,
+      ValuesResponderV1Live.layer,
       ValuesResponderV2Live.layer
     )
 }
