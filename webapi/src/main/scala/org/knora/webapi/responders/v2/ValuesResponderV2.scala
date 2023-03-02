@@ -396,14 +396,14 @@ final case class ValuesResponderV2Live(
       taskResult <- IriLocker.runWithIriLock(
                       createValueRequest.apiRequestID,
                       createValueRequest.createValue.resourceIri,
-                      () => makeTask
+                      makeTask
                     )
     } yield taskResult
 
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
     resourceUtilV2.doSipiPostUpdate(
-      updateFuture = ZIO.fromFuture(ec => triplestoreUpdateFuture),
+      updateFuture = triplestoreUpdateFuture,
       valueContent = createValueRequest.createValue.valueContent,
       requestingUser = createValueRequest.requestingUser,
       logger
@@ -1291,7 +1291,7 @@ final case class ValuesResponderV2Live(
 
         // Create the new value version.
 
-        unverifiedValue: UnverifiedValueV2 <-
+        unverifiedValue <-
           (currentValue, submittedInternalValueContent) match {
             case (
                   currentLinkValue: ReadLinkValueV2,
@@ -1352,7 +1352,7 @@ final case class ValuesResponderV2Live(
           val triplestoreUpdateFuture: Task[UpdateValueResponseV2] = IriLocker.runWithIriLock(
             updateValueRequest.apiRequestID,
             updateValueContentV2.resourceIri,
-            () => makeTaskFutureToUpdateValueContent(updateValueContentV2)
+            makeTaskFutureToUpdateValueContent(updateValueContentV2)
           )
 
           resourceUtilV2.doSipiPostUpdate(
@@ -1367,7 +1367,7 @@ final case class ValuesResponderV2Live(
           IriLocker.runWithIriLock(
             updateValueRequest.apiRequestID,
             updateValuePermissionsV2.resourceIri,
-            () => makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2)
+            makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2)
           )
       }
     }
@@ -1407,7 +1407,7 @@ final case class ValuesResponderV2Live(
                      )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
-      standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <-
+      standoffLinkUpdates <-
         (currentValue.valueContent, newValueVersion) match {
           case (
                 currentTextValue: TextValueContentV2,
@@ -1852,7 +1852,7 @@ final case class ValuesResponderV2Live(
         IriLocker.runWithIriLock(
           deleteValueRequest.apiRequestID,
           deleteValueRequest.resourceIri,
-          () => makeTask
+          makeTask
         )
     } yield taskResult
   }
@@ -2556,7 +2556,7 @@ final case class ValuesResponderV2Live(
 
         for {
           // Generate an IRI for the new LinkValue.
-          newLinkValueIri: IRI <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
+          newLinkValueIri <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
         } yield SparqlTemplateLinkUpdate(
           linkPropertyIri = linkPropertyIri,
           directLinkExists = true,
