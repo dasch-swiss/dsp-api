@@ -67,6 +67,8 @@ import org.knora.webapi.responders.v1.SearchResponderV1
 import org.knora.webapi.responders.v1.SearchResponderV1Live
 import org.knora.webapi.responders.admin.StoresResponderADM
 import org.knora.webapi.responders.admin.StoresResponderADMLive
+import org.knora.webapi.responders.v1.StandoffResponderV1
+import org.knora.webapi.responders.v1.StandoffResponderV1Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 
@@ -109,6 +111,7 @@ object LayersTest {
     with ResourceUtilV2
     with SearchResponderV1
     with SipiResponderADM
+    with StandoffResponderV1
     with StandoffTagUtilV2
     with State
     with StoresResponderADM
@@ -155,6 +158,7 @@ object LayersTest {
       ResourceUtilV2Live.layer,
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
+      StandoffResponderV1Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
