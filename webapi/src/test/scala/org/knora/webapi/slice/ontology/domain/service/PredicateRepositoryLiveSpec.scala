@@ -95,7 +95,7 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
             List(
               (InternalIri("http://aPublicationWithZero"), 0),
               (InternalIri("http://aPublicationWithOne"), 1),
-              (InternalIri("http://aPublicationWithTwo"), 2),
+              (InternalIri("http://aPublicationWithTwo"), 2)
             )
           )
         )
