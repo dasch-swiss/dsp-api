@@ -56,6 +56,8 @@ import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.responders.v2.StandoffResponderV2
+import org.knora.webapi.responders.v2.StandoffResponderV2Live
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -116,6 +118,7 @@ object LayersLive {
       with SearchResponderV1
       with SipiResponderADM
       with StandoffResponderV1
+      with StandoffResponderV2
       with StandoffTagUtilV2
       with State
       with StoresResponderADM
@@ -175,6 +178,7 @@ object LayersLive {
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV1Live.layer,
+      StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,

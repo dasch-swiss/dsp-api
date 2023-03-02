@@ -55,24 +55,37 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-import org.knora.webapi.util._
+// import org.knora.webapi.util._
 import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.messages.ResponderRequest
+import zio.ZIO
+import zio._
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
-    extends Responder(responderData.actorDeps) {
+trait StandoffResponderV2
+final case class StandoffResponderV2Live(
+  appConfig: AppConfig,
+  messageRelay: MessageRelay,
+  implicit val stringFormatter: StringFormatter
+) extends StandoffResponderV2
+    with MessageHandler {
 
   private def xmlMimeTypes = Set(
     "text/xml",
     "application/xml"
   )
 
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[StandoffResponderRequestV2]
+
   /**
    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: StandoffResponderRequestV2) = msg match {
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
     case getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2 =>
       getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2)
@@ -89,45 +102,45 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
       getMappingV2(mappingIri, requestingUser)
     case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) =>
       getXSLTransformation(xsltTextReprIri, requestingUser)
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   private val xsltCacheName = "xsltCache"
 
-  private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Future[GetStandoffResponseV2] = {
-    val requestMaxStartIndex = getStandoffRequestV2.offset + responderData.appConfig.standoffPerPage - 1
+  private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Task[GetStandoffResponseV2] = {
+    val requestMaxStartIndex = getStandoffRequestV2.offset + appConfig.standoffPerPage - 1
 
     for {
-      resourceRequestSparql <- Future(
-                                 org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                   .getResourcePropertiesAndValues(
-                                     resourceIris = Seq(getStandoffRequestV2.resourceIri),
-                                     preview = false,
-                                     withDeleted = false,
-                                     maybePropertyIri = None,
-                                     maybeVersionDate = None,
-                                     queryAllNonStandoff = false,
-                                     maybeValueIri = Some(getStandoffRequestV2.valueIri),
-                                     maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
-                                     maybeStandoffMaxStartIndex = Some(requestMaxStartIndex),
-                                     stringFormatter = stringFormatter
-                                   )
-                                   .toString()
-                               )
+      resourceRequestSparql <-
+        ZIO.attempt(
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .getResourcePropertiesAndValues(
+              resourceIris = Seq(getStandoffRequestV2.resourceIri),
+              preview = false,
+              withDeleted = false,
+              maybePropertyIri = None,
+              maybeVersionDate = None,
+              queryAllNonStandoff = false,
+              maybeValueIri = Some(getStandoffRequestV2.valueIri),
+              maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
+              maybeStandoffMaxStartIndex = Some(requestMaxStartIndex),
+              stringFormatter = stringFormatter
+            )
+            .toString()
+        )
 
       // _ = println("=================================")
       // _ = println(resourceRequestSparql)
 
       // standoffPageStartTime = System.currentTimeMillis()
 
-      resourceRequestResponse: SparqlExtendedConstructResponse <-
-        appActor
-          .ask(
+      resourceRequestResponse <-
+        messageRelay
+          .ask[SparqlExtendedConstructResponse](
             SparqlExtendedConstructRequest(
               sparql = resourceRequestSparql
             )
           )
-          .mapTo[SparqlExtendedConstructResponse]
 
       // standoffPageEndTime = System.currentTimeMillis()
 
@@ -152,7 +165,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
                                                             versionDate = None,
                                                             appActor = appActor,
                                                             targetSchema = getStandoffRequestV2.targetSchema,
-                                                            appConfig = responderData.appConfig,
+                                                            appConfig = appConfig,
                                                             requestingUser = getStandoffRequestV2.requestingUser
                                                           )
 
@@ -203,20 +216,19 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
   private def getXSLTransformation(
     xslTransformationIri: IRI,
     requestingUser: UserADM
-  ): Future[GetXSLTransformationResponseV2] = {
+  ): Task[GetXSLTransformationResponseV2] = {
 
     val xsltUrlFuture = for {
 
-      textRepresentationResponseV2: ReadResourcesSequenceV2 <-
-        appActor
-          .ask(
+      textRepresentationResponseV2 <-
+        messageRelay
+          .ask[ReadResourcesSequenceV2](
             ResourcesGetRequestV2(
               resourceIris = Vector(xslTransformationIri),
               targetSchema = ApiV2Complex,
               requestingUser = requestingUser
             )
           )
-          .mapTo[ReadResourcesSequenceV2]
 
       resource = textRepresentationResponseV2.toResource(xslTransformationIri)
 
@@ -256,12 +268,12 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
           }
 
       xsltUrl: String =
-        s"${responderData.appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
+        s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
     } yield xsltUrl
 
     val recoveredXsltUrlFuture = xsltUrlFuture.recover { case notFound: NotFoundException =>
-      throw BadRequestException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
+      BadRequestException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
     }
 
     for {
@@ -309,7 +321,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
     mappingName: String,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): Future[CreateMappingResponseV2] = {
+  ): Task[CreateMappingResponseV2] = {
 
     def createMappingAndCheck(
       xml: String,
@@ -317,7 +329,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
       mappingIri: IRI,
       namedGraph: String,
       requestingUser: UserADM
-    ): Future[CreateMappingResponseV2] = {
+    ): Task[CreateMappingResponseV2] = {
 
       val createMappingFuture = for {
 
@@ -583,13 +595,13 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
                                      )
                                      .toString()
 
-        existingMappingResponse: SparqlConstructResponse <- appActor
-                                                              .ask(
-                                                                SparqlConstructRequest(
-                                                                  sparql = getExistingMappingSparql
-                                                                )
-                                                              )
-                                                              .mapTo[SparqlConstructResponse]
+        existingMappingResponse <-
+          messageRelay
+            .ask[SparqlConstructResponse](
+              SparqlConstructRequest(
+                sparql = getExistingMappingSparql
+              )
+            )
 
         _ = if (existingMappingResponse.statements.nonEmpty) {
               throw BadRequestException(s"mapping IRI $mappingIri already exists")
@@ -606,18 +618,17 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
                                    .toString()
 
         // Do the update.
-        createResourceResponse: SparqlUpdateResponse <- appActor
-                                                          .ask(SparqlUpdateRequest(createNewMappingSparql))
-                                                          .mapTo[SparqlUpdateResponse]
+        createResourceResponse <-
+          messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(createNewMappingSparql))
 
         // check if the mapping has been created
-        newMappingResponse <- appActor
-                                .ask(
-                                  SparqlConstructRequest(
-                                    sparql = getExistingMappingSparql
-                                  )
-                                )
-                                .mapTo[SparqlConstructResponse]
+        newMappingResponse <-
+          messageRelay
+            .ask[SparqlConstructResponse](
+              SparqlConstructRequest(
+                sparql = getExistingMappingSparql
+              )
+            )
 
         _ = if (newMappingResponse.statements.isEmpty) {
               log.error(
@@ -665,16 +676,15 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
                       }
 
       // check if the given project IRI represents an actual project
-      projectInfoMaybe: Option[ProjectADM] <-
-        appActor
-          .ask(
+      projectInfoMaybe <-
+        messageRelay
+          .ask[Option[ProjectADM]](
             ProjectGetADM(
               identifier = IriIdentifier
                 .fromString(projectIri.toString)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
-          .mapTo[Option[ProjectADM]]
 
       // TODO: make sure that has sufficient permissions to create a mapping in the given project
 
@@ -687,21 +697,22 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
       // put the mapping into the named graph of the project
       namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectInfoMaybe.get)
 
-      result: CreateMappingResponseV2 <- IriLocker.runWithIriLock(
-                                           apiRequestID,
-                                           stringFormatter
-                                             .createMappingLockIriForProject(
-                                               projectIri.toString
-                                             ), // use a special project specific IRI to lock the creation of mappings for the given project
-                                           () =>
-                                             createMappingAndCheck(
-                                               xml = xml,
-                                               label = label,
-                                               mappingIri = mappingIri,
-                                               namedGraph = namedGraph,
-                                               requestingUser = requestingUser
-                                             )
-                                         )
+      result: CreateMappingResponseV2 <-
+        IriLocker.runWithIriLock(
+          apiRequestID,
+          stringFormatter
+            .createMappingLockIriForProject(
+              projectIri.toString
+            ), // use a special project specific IRI to lock the creation of mappings for the given project
+          () =>
+            createMappingAndCheck(
+              xml = xml,
+              label = label,
+              mappingIri = mappingIri,
+              namedGraph = namedGraph,
+              requestingUser = requestingUser
+            )
+        )
 
     } yield result
 
@@ -867,9 +878,9 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
   private def getMappingV2(
     mappingIri: IRI,
     requestingUser: UserADM
-  ): Future[GetMappingResponseV2] = {
+  ): Task[GetMappingResponseV2] = {
 
-    val mappingFuture: Future[GetMappingResponseV2] =
+    val mappingFuture: Task[GetMappingResponseV2] =
       CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
         case Some(mapping: MappingXMLtoStandoff) =>
           for {
@@ -898,7 +909,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
           )
       }
 
-    val mappingRecovered: Future[GetMappingResponseV2] = mappingFuture.recover { case e: Exception =>
+    val mappingRecovered: Task[GetMappingResponseV2] = mappingFuture.recover { case e: Exception =>
       throw BadRequestException(s"An error occurred when requesting mapping $mappingIri: ${e.getMessage}")
     }
 
@@ -919,7 +930,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
   private def getMappingFromTriplestore(
     mappingIri: IRI,
     requestingUser: UserADM
-  ): Future[MappingXMLtoStandoff] = {
+  ): Task[MappingXMLtoStandoff] = {
 
     val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .getMapping(
@@ -929,13 +940,13 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
 
     for {
 
-      mappingResponse: SparqlConstructResponse <- appActor
-                                                    .ask(
-                                                      SparqlConstructRequest(
-                                                        sparql = getMappingSparql
-                                                      )
-                                                    )
-                                                    .mapTo[SparqlConstructResponse]
+      mappingResponse <-
+        messageRelay
+          .ask[SparqlConstructResponse](
+            SparqlConstructRequest(
+              sparql = getMappingSparql
+            )
+          )
 
       // if the result is empty, the mapping does not exist
       _ = if (mappingResponse.statements.isEmpty) {
@@ -1048,7 +1059,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
   private def getStandoffEntitiesFromMappingV2(
     mappingXMLtoStandoff: MappingXMLtoStandoff,
     requestingUser: UserADM
-  ): Future[StandoffEntityInfoGetResponseV2] = {
+  ): Task[StandoffEntityInfoGetResponseV2] = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1079,15 +1090,14 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
     for {
 
       // request information about standoff classes that should be created
-      standoffClassEntities: StandoffEntityInfoGetResponseV2 <-
-        appActor
-          .ask(
+      standoffClassEntities <-
+        messageRelay
+          .ask[StandoffEntityInfoGetResponseV2](
             StandoffEntityInfoGetRequestV2(
               standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri),
               requestingUser = requestingUser
             )
           )
-          .mapTo[StandoffEntityInfoGetResponseV2]
 
       // check that the ontology responder returned the information for all the standoff classes it was asked for
       // if the ontology responder does not return a standoff class it was asked for, then this standoff class does not exist
@@ -1108,15 +1118,14 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
         }
 
       // request information about the standoff properties
-      standoffPropertyEntities: StandoffEntityInfoGetResponseV2 <-
-        appActor
-          .ask(
+      standoffPropertyEntities <-
+        messageRelay
+          .ask[StandoffEntityInfoGetResponseV2](
             StandoffEntityInfoGetRequestV2(
               standoffPropertyIris = standoffPropertyIrisFromOntologyResponder,
               requestingUser = requestingUser
             )
           )
-          .mapTo[StandoffEntityInfoGetResponseV2]
 
       // check that the ontology responder returned the information for all the standoff properties it was asked for
       // if the ontology responder does not return a standoff property it was asked for, then this standoff property does not exist
@@ -1231,7 +1240,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
   ) extends Task[StandoffTaskUnderlyingResult] {
     override def runTask(
       previousResult: Option[TaskResult[StandoffTaskUnderlyingResult]]
-    )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[StandoffTaskUnderlyingResult]] =
+    )(implicit timeout: Timeout, executionContext: ExecutionContext): Task[TaskResult[StandoffTaskUnderlyingResult]] =
       for {
         // Get a page of standoff.
         standoffResponse <- getStandoffV2(
@@ -1275,11 +1284,11 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
    */
   private def getRemainingStandoffFromTextValueV2(
     getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2
-  ): Future[GetStandoffResponseV2] = {
+  ): Task[GetStandoffResponseV2] = {
     val firstTask = GetStandoffTask(
       resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
       valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      offset = responderData.appConfig.standoffPerPage, // the offset of the second page
+      offset = appConfig.standoffPerPage, // the offset of the second page
       requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
     )
 
@@ -1291,4 +1300,16 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
       nextOffset = None
     )
   }
+}
+
+object StandoffResponderV2Live {
+  val layer: URLayer[AppConfig with MessageRelay with StringFormatter, StandoffResponderV2] =
+    ZLayer.fromZIO {
+      for {
+        ac      <- ZIO.service[AppConfig]
+        mr      <- ZIO.service[MessageRelay]
+        sf      <- ZIO.service[StringFormatter]
+        handler <- mr.subscribe(StandoffResponderV2Live(ac, mr, sf))
+      } yield handler
+    }
 }
