@@ -2665,7 +2665,7 @@ final case class ValuesResponderV2Live(
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    stringFormatter.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri), appActor, logger)
+    iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
 
   /**
    * Make a new value UUID considering optional custom value UUID and custom value IRI.
