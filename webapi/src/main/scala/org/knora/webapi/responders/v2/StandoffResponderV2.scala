@@ -289,15 +289,15 @@ final case class StandoffResponderV2Live(
           Future(xsltMaybe.get)
         } else {
           for {
-            response: SipiGetTextFileResponse <- appActor
-                                                   .ask(
-                                                     SipiGetTextFileRequest(
-                                                       fileUrl = xsltFileUrl,
-                                                       requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                                       senderName = this.getClass.getName
-                                                     )
-                                                   )
-                                                   .mapTo[SipiGetTextFileResponse]
+            response: SipiGetTextFileResponse <-
+              messageRelay
+                .ask[SipiGetTextFileResponse](
+                  SipiGetTextFileRequest(
+                    fileUrl = xsltFileUrl,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser,
+                    senderName = this.getClass.getName
+                  )
+                )
             _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = response.content)
           } yield response.content
         }
@@ -333,7 +333,7 @@ final case class StandoffResponderV2Live(
 
       val createMappingFuture = for {
 
-        factory <- Future(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
+        factory <- ZIO.attempt(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
 
         // get the schema the mapping has to be validated against
         schemaFile: String = FileUtil.readTextResource("mappingXMLToStandoff.xsd")
@@ -667,13 +667,14 @@ final case class StandoffResponderV2Live(
 
     for {
       // Don't allow anonymous users to create a mapping.
-      userIri: IRI <- Future {
-                        if (requestingUser.isAnonymousUser) {
-                          throw ForbiddenException("Anonymous users aren't allowed to create mappings")
-                        } else {
-                          requestingUser.id
-                        }
-                      }
+      userIri <-
+        ZIO.attempt {
+          if (requestingUser.isAnonymousUser) {
+            throw ForbiddenException("Anonymous users aren't allowed to create mappings")
+          } else {
+            requestingUser.id
+          }
+        }
 
       // check if the given project IRI represents an actual project
       projectInfoMaybe <-
@@ -885,7 +886,7 @@ final case class StandoffResponderV2Live(
         case Some(mapping: MappingXMLtoStandoff) =>
           for {
 
-            entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
+            entities <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
           } yield GetMappingResponseV2(
             mappingIri = mappingIri,
@@ -895,12 +896,12 @@ final case class StandoffResponderV2Live(
 
         case None =>
           for {
-            mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(
-                                               mappingIri = mappingIri,
-                                               requestingUser = requestingUser
-                                             )
+            mapping <- getMappingFromTriplestore(
+                         mappingIri = mappingIri,
+                         requestingUser = requestingUser
+                       )
 
-            entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
+            entities <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
           } yield GetMappingResponseV2(
             mappingIri = mappingIri,
