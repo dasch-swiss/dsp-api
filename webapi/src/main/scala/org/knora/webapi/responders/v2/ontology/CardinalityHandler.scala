@@ -6,10 +6,11 @@
 package org.knora.webapi.responders.v2.ontology
 
 import zio._
+
 import java.time.Instant
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
@@ -35,10 +36,10 @@ trait CardinalityHandler {
    * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
    */
   def canDeleteCardinalitiesFromClass(
-    deleteCardinalitiesFromClassRequest: _root_.org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2,
-    internalClassIri: _root_.org.knora.webapi.messages.SmartIri,
-    internalOntologyIri: _root_.org.knora.webapi.messages.SmartIri
-  ): zio.Task[_root_.org.knora.webapi.messages.v2.responder.CanDoResponseV2]
+    deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
+    internalClassIri: SmartIri,
+    internalOntologyIri: SmartIri
+  ): Task[CanDoResponseV2]
 
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
@@ -51,10 +52,10 @@ trait CardinalityHandler {
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
   def deleteCardinalitiesFromClass(
-    deleteCardinalitiesFromClassRequest: _root_.org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2,
-    internalClassIri: _root_.org.knora.webapi.messages.SmartIri,
-    internalOntologyIri: _root_.org.knora.webapi.messages.SmartIri
-  ): zio.Task[_root_.org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2]
+    deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
+    internalClassIri: SmartIri,
+    internalOntologyIri: SmartIri
+  ): Task[ReadOntologyV2]
 
   /**
    * Check if a property entity is used in resource instances. Returns `true` if
@@ -65,10 +66,7 @@ trait CardinalityHandler {
    *
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  def isPropertyUsedInResources(
-    classIri: _root_.org.knora.webapi.slice.resourceinfo.domain.InternalIri,
-    propertyIri: _root_.org.knora.webapi.slice.resourceinfo.domain.InternalIri
-  ): zio.Task[Boolean]
+  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean]
 }
 
 final case class CardinalityHandlerLive(

@@ -51,9 +51,7 @@ trait OntologyHelpers {
    * @param ontology the ontology.
    * @return the set of subjects that refer to the ontology or its entities.
    */
-  def getSubjectsUsingOntology(
-    ontology: _root_.org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-  ): Task[_root_.scala.collection.immutable.Set[_root_.org.knora.webapi.IRI]]
+  def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]]
 
   /**
    * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
@@ -61,9 +59,7 @@ trait OntologyHelpers {
    * @param propertyIri the IRI of the property to be loaded.
    * @return a [[PropertyInfoContentV2]] representing the property definition.
    */
-  def loadPropertyDefinition(
-    propertyIri: SmartIri
-  ): Task[_root_.org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2]
+  def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2]
 
   /**
    * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
@@ -74,10 +70,10 @@ trait OntologyHelpers {
    * @return an [[EntityInfoGetResponseV2]].
    */
   def getEntityInfoResponseV2(
-    classIris: _root_.scala.collection.immutable.Set[SmartIri] = Set.empty[SmartIri],
-    propertyIris: _root_.scala.collection.immutable.Set[SmartIri] = Set.empty[SmartIri],
-    requestingUser: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-  ): Task[_root_.org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2]
+    classIris: Set[SmartIri] = Set.empty[SmartIri],
+    propertyIris: Set[SmartIri] = Set.empty[SmartIri],
+    requestingUser: UserADM
+  ): Task[EntityInfoGetResponseV2]
 
   /**
    * Requests information about OWL classes in a single ontology.
@@ -87,10 +83,10 @@ trait OntologyHelpers {
    * @return a [[ReadOntologyV2]].
    */
   def getClassDefinitionsFromOntologyV2(
-    classIris: _root_.scala.collection.immutable.Set[SmartIri],
+    classIris: Set[SmartIri],
     allLanguages: Boolean,
-    requestingUser: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-  ): Task[_root_.org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2]
+    requestingUser: UserADM
+  ): Task[ReadOntologyV2]
 
   /**
    * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
@@ -98,9 +94,7 @@ trait OntologyHelpers {
    * @param classIri the IRI of the class to be loaded.
    * @return a [[ClassInfoContentV2]] representing the class definition.
    */
-  def loadClassDefinition(
-    classIri: SmartIri
-  ): Task[_root_.org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2]
+  def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2]
 
   /**
    * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
@@ -112,7 +106,7 @@ trait OntologyHelpers {
    */
   def checkOntologyLastModificationDateBeforeUpdate(
     internalOntologyIri: SmartIri,
-    expectedLastModificationDate: _root_.java.time.Instant
+    expectedLastModificationDate: Instant
   ): Task[Unit]
 
   /**
@@ -125,7 +119,7 @@ trait OntologyHelpers {
    */
   def checkOntologyLastModificationDateAfterUpdate(
     internalOntologyIri: SmartIri,
-    expectedLastModificationDate: _root_.java.time.Instant
+    expectedLastModificationDate: Instant
   ): Task[Unit]
 
   /**
@@ -135,10 +129,7 @@ trait OntologyHelpers {
    * @param requestingUser      the user making the request.
    * @return `true` if the user has permission to update the ontology
    */
-  def canUserUpdateOntology(
-    internalOntologyIri: SmartIri,
-    requestingUser: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-  ): Task[Boolean]
+  def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: UserADM): Task[Boolean]
 
   /**
    * Checks whether an ontology IRI is valid for an update.
@@ -159,7 +150,7 @@ trait OntologyHelpers {
   def checkOntologyAndEntityIrisForUpdate(
     externalOntologyIri: SmartIri,
     externalEntityIri: SmartIri,
-    requestingUser: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+    requestingUser: UserADM
   ): Task[Unit]
 
   /**
@@ -169,10 +160,7 @@ trait OntologyHelpers {
    * @param requestingUser      the user making the request.
    * @return the project IRI.
    */
-  def checkPermissionsForOntologyUpdate(
-    internalOntologyIri: SmartIri,
-    requestingUser: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-  ): Task[SmartIri]
+  def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: UserADM): Task[SmartIri]
 }
 
 object OntologyHelpers {
