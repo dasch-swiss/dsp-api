@@ -18,6 +18,7 @@ import scala.collection.mutable
 import dsp.errors._
 import dsp.valueobjects.V2
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
@@ -32,7 +33,7 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
-sealed trait TriplestoreRequest extends StoreRequest
+sealed trait TriplestoreRequest extends StoreRequest with RelayedMessage
 
 /**
  * Simple message for checking the connection to the triplestore.

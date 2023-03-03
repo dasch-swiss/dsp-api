@@ -75,7 +75,8 @@ import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
+import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -120,7 +121,7 @@ object LayersLive {
       with State
       with StoresResponderADM
       with TriplestoreService
-      with TriplestoreServiceManager
+      with TriplestoreRequestMessageHandler
       with UsersResponderADM
       with UsersResponderV1
       with ValuesResponderV1
@@ -180,7 +181,7 @@ object LayersLive {
       StoresResponderADMLive.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,
-      TriplestoreServiceManager.layer,
+      TriplestoreRequestMessageHandlerLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValuesResponderV1Live.layer,

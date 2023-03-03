@@ -29,7 +29,6 @@ import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -73,6 +72,8 @@ import org.knora.webapi.responders.v1.ValuesResponderV1
 import org.knora.webapi.responders.v1.ValuesResponderV1Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
+import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 
 object LayersTest {
 
@@ -120,7 +121,7 @@ object LayersTest {
     with StringFormatter
     with TestClientService
     with TriplestoreService
-    with TriplestoreServiceManager
+    with TriplestoreRequestMessageHandler
     with UsersResponderADM
     with UsersResponderV1
     with ValueUtilV1
@@ -168,7 +169,7 @@ object LayersTest {
       StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      TriplestoreServiceManager.layer,
+      TriplestoreRequestMessageHandlerLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,

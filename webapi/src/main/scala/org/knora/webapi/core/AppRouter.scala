@@ -26,7 +26,6 @@ import org.knora.webapi.settings._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 
 @accessible
 trait AppRouter {
@@ -46,19 +45,17 @@ object AppRouter {
       with PermissionUtilADM
       with ResourceUtilV2
       with StandoffTagUtilV2
-      with TriplestoreServiceManager
       with ValueUtilV1,
     Nothing,
     AppRouter
   ] =
     ZLayer {
       for {
-        as                        <- ZIO.service[core.ActorSystem]
-        cacheServiceManager       <- ZIO.service[CacheServiceManager]
-        iiifServiceManager        <- ZIO.service[IIIFServiceManager]
-        triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
-        appConfig                 <- ZIO.service[AppConfig]
-        messageRelay              <- ZIO.service[MessageRelay]
+        as                  <- ZIO.service[core.ActorSystem]
+        cacheServiceManager <- ZIO.service[CacheServiceManager]
+        iiifServiceManager  <- ZIO.service[IIIFServiceManager]
+        appConfig           <- ZIO.service[AppConfig]
+        messageRelay        <- ZIO.service[MessageRelay]
         runtime <-
           ZIO.runtime[
             CardinalityService with PermissionUtilADM with ResourceUtilV2 with StandoffTagUtilV2 with ValueUtilV1
@@ -71,7 +68,6 @@ object AppRouter {
             core.actors.RoutingActor(
               cacheServiceManager,
               iiifServiceManager,
-              triplestoreServiceManager,
               appConfig,
               messageRelay,
               runtime
