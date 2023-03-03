@@ -69,7 +69,8 @@ import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
-import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -92,7 +93,7 @@ object LayersLive {
       with AppRouter
       with AppRouterRelayingMessageHandler
       with CacheService
-      with CacheServiceManager
+      with CacheServiceRequestMessageHandler
       with CkanResponderV1
       with GroupsResponderADM
       with HttpServer
@@ -141,7 +142,7 @@ object LayersLive {
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
-      CacheServiceManager.layer,
+      CacheServiceRequestMessageHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,

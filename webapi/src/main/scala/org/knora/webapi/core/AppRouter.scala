@@ -24,7 +24,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.settings._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 
@@ -39,7 +38,6 @@ object AppRouter {
   val layer: ZLayer[
     core.ActorSystem
       with AppConfig
-      with CacheServiceManager
       with CardinalityService
       with IIIFServiceManager
       with MessageRelay
@@ -54,7 +52,6 @@ object AppRouter {
     ZLayer {
       for {
         as                        <- ZIO.service[core.ActorSystem]
-        cacheServiceManager       <- ZIO.service[CacheServiceManager]
         iiifServiceManager        <- ZIO.service[IIIFServiceManager]
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
@@ -69,7 +66,6 @@ object AppRouter {
         val ref: ActorRef = system.actorOf(
           Props(
             core.actors.RoutingActor(
-              cacheServiceManager,
               iiifServiceManager,
               triplestoreServiceManager,
               appConfig,
