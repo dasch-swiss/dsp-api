@@ -22,7 +22,6 @@ import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
-import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -72,6 +71,9 @@ import org.knora.webapi.responders.v1.ValuesResponderV1
 import org.knora.webapi.responders.v1.ValuesResponderV1Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
+
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
@@ -93,7 +95,7 @@ object LayersTest {
     with AppRouter
     with AppRouterRelayingMessageHandler
     with CacheService
-    with CacheServiceManager
+    with CacheServiceRequestMessageHandler
     with CardinalityHandler
     with CardinalityService
     with CkanResponderV1
@@ -140,7 +142,7 @@ object LayersTest {
       AppRouter.layer,
       AppRouterRelayingMessageHandler.layer,
       CacheServiceInMemImpl.layer,
-      CacheServiceManager.layer,
+      CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,

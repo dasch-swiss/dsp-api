@@ -26,7 +26,6 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.settings._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 
 @accessible
@@ -40,7 +39,6 @@ object AppRouter {
   val layer: ZLayer[
     core.ActorSystem
       with AppConfig
-      with CacheServiceManager
       with CardinalityHandler
       with CardinalityService
       with IIIFServiceManager
@@ -55,11 +53,10 @@ object AppRouter {
   ] =
     ZLayer {
       for {
-        as                  <- ZIO.service[core.ActorSystem]
-        cacheServiceManager <- ZIO.service[CacheServiceManager]
-        iiifServiceManager  <- ZIO.service[IIIFServiceManager]
-        appConfig           <- ZIO.service[AppConfig]
-        messageRelay        <- ZIO.service[MessageRelay]
+        as                 <- ZIO.service[core.ActorSystem]
+        iiifServiceManager <- ZIO.service[IIIFServiceManager]
+        appConfig          <- ZIO.service[AppConfig]
+        messageRelay       <- ZIO.service[MessageRelay]
         runtime <-
           ZIO.runtime[
             CardinalityHandler
@@ -76,7 +73,6 @@ object AppRouter {
         val ref: ActorRef = system.actorOf(
           Props(
             core.actors.RoutingActor(
-              cacheServiceManager,
               iiifServiceManager,
               appConfig,
               messageRelay,
