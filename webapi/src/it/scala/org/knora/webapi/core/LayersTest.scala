@@ -73,6 +73,10 @@ import org.knora.webapi.responders.v1.ValuesResponderV1
 import org.knora.webapi.responders.v1.ValuesResponderV1Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 
 object LayersTest {
 
@@ -90,6 +94,7 @@ object LayersTest {
     with AppRouterRelayingMessageHandler
     with CacheService
     with CacheServiceManager
+    with CardinalityHandler
     with CardinalityService
     with CkanResponderV1
     with GroupsResponderADM
@@ -102,6 +107,7 @@ object LayersTest {
     with ListsResponderV1
     with MessageRelay
     with OntologyResponderV1
+    with OntologyHelpers
     with PermissionUtilADM
     with PermissionsResponderADM
     with ProjectsResponderADM
@@ -135,6 +141,7 @@ object LayersTest {
       AppRouterRelayingMessageHandler.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceManager.layer,
+      CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
@@ -147,6 +154,7 @@ object LayersTest {
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
+      OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
       PermissionUtilADMLive.layer,

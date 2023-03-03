@@ -110,9 +110,8 @@ object Cache extends LazyLogging {
       allOntologyMetadataResponse: SparqlSelectResult <- appActor
                                                            .ask(SparqlSelectRequest(allOntologyMetadataSparql))
                                                            .mapTo[SparqlSelectResult]
-      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = OntologyHelpers.buildOntologyMetadata(
-                                                                 allOntologyMetadataResponse
-                                                               )
+      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] =
+        OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
       knoraBaseOntologyMetadata: OntologyMetadataV2 =
         allOntologyMetadata.getOrElse(
