@@ -63,6 +63,8 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.messages.ResponderRequest
 import zio.ZIO
 import zio._
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.TaskResult
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
@@ -351,32 +353,33 @@ final case class StandoffResponderV2Live(
         mappingXML: Elem = XML.loadString(xml)
 
         // get the default XSL transformation, if given (optional)
-        defaultXSLTransformation: Option[IRI] <- mappingXML \ "defaultXSLTransformation" match {
-                                                   case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
-                                                     // check if the IRI is valid
-                                                     val transIri = stringFormatter.validateAndEscapeIri(
-                                                       defaultTrans.headOption
-                                                         .getOrElse(
-                                                           throw BadRequestException(
-                                                             "could not access <defaultXSLTransformation>"
-                                                           )
-                                                         )
-                                                         .text,
-                                                       throw BadRequestException(
-                                                         s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"
-                                                       )
-                                                     )
+        defaultXSLTransformation <-
+          mappingXML \ "defaultXSLTransformation" match {
+            case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
+              // check if the IRI is valid
+              val transIri = stringFormatter.validateAndEscapeIri(
+                defaultTrans.headOption
+                  .getOrElse(
+                    throw BadRequestException(
+                      "could not access <defaultXSLTransformation>"
+                    )
+                  )
+                  .text,
+                throw BadRequestException(
+                  s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"
+                )
+              )
 
-                                                     // try to obtain the XSL transformation to make sure that it really exists
-                                                     for {
-                                                       transform: GetXSLTransformationResponseV2 <-
-                                                         getXSLTransformation(
-                                                           xslTransformationIri = transIri,
-                                                           requestingUser = requestingUser
-                                                         )
-                                                     } yield Some(transIri)
-                                                   case _ => Future(None)
-                                                 }
+              // try to obtain the XSL transformation to make sure that it really exists
+              for {
+                transform <-
+                  getXSLTransformation(
+                    xslTransformationIri = transIri,
+                    requestingUser = requestingUser
+                  )
+              } yield Some(transIri)
+            case _ => ZIO.attempt(None)
+          }
 
         // create a collection of a all elements mappingElement
         mappingElementsXML: NodeSeq = mappingXML \ "mappingElement"
@@ -910,8 +913,8 @@ final case class StandoffResponderV2Live(
           )
       }
 
-    val mappingRecovered: Task[GetMappingResponseV2] = mappingFuture.recover { case e: Exception =>
-      throw BadRequestException(s"An error occurred when requesting mapping $mappingIri: ${e.getMessage}")
+    val mappingRecovered: Task[GetMappingResponseV2] = mappingFuture.mapError { case e: Exception =>
+      BadRequestException(s"An error occurred when requesting mapping $mappingIri: ${e.getMessage}")
     }
 
     for {
