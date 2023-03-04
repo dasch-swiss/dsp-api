@@ -12,7 +12,6 @@
         <encoder class="LayoutWrappingEncoder">
             <layout class="JsonLayout">
                 <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampFormat>
-                <!-- <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId> -->
                 <jsonFormatter class="JacksonJsonFormatter">
                     <!-- <prettyPrint>true</prettyPrint> -->
                 </jsonFormatter>
@@ -21,20 +20,15 @@
         </encoder>
     </appender>
 
-
-    <root level="ERROR">
-        <appender-ref ref="JSON"/>
-    </root> 
-
-    <!-- <appender name="STDOUT" class="ConsoleAppender">
+    <appender name="TEXT" class="ConsoleAppender">
         <encoder class="PatternLayoutEncoder">
             <pattern>%d{HH:mm:ss.SSS} [%thread] [%kvp] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
     <root level="ERROR">
-        <appender-ref ref="STDOUT"/>
-    </root> -->
+        <appender-ref ref="${DSP_API_LOG_APPENDER:-TEXT}"/>
+    </root> 
 
     <logger name="org.eclipse.rdf4j.rio.RDFParserRegistry" level="ERROR"/>
     <logger name="org.apache.jena.riot" level="ERROR"/>
