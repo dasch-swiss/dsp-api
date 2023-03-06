@@ -24,7 +24,6 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
@@ -73,6 +72,8 @@ import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
@@ -101,7 +102,7 @@ object LayersTest {
     with CkanResponderV1
     with GroupsResponderADM
     with HttpServer
-    with IIIFServiceManager
+    with IIIFRequestMessageHandler
     with IriConverter
     with IriService
     with ListsResponderV2
@@ -148,7 +149,7 @@ object LayersTest {
       CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
-      IIIFServiceManager.layer,
+      IIIFRequestMessageHandlerLive.layer,
       IriConverter.layer,
       IriService.layer,
       ListsResponderV2Live.layer,
