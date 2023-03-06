@@ -1241,7 +1241,7 @@ final case class StandoffResponderV2Live(
     valueIri: IRI,
     offset: Int,
     requestingUser: UserADM
-  ) extends Task[StandoffTaskUnderlyingResult] {
+  ) extends NextExecutionStep[StandoffTaskUnderlyingResult] {
     override def runTask(
       previousResult: Option[TaskResult[StandoffTaskUnderlyingResult]]
     )(implicit timeout: Timeout, executionContext: ExecutionContext): Task[TaskResult[StandoffTaskUnderlyingResult]] =
@@ -1297,10 +1297,10 @@ final case class StandoffResponderV2Live(
     )
 
     for {
-      result: TaskResult[StandoffTaskUnderlyingResult] <- ActorUtil.runTasks(firstTask)
+      result <- NextExecutionStep.runSteps(firstTask)
     } yield GetStandoffResponseV2(
       valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      standoff = result.underlyingResult.standoff,
+      standoff = result.result.standoff,
       nextOffset = None
     )
   }

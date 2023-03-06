@@ -17,7 +17,6 @@ import scala.reflect.ClassTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors._
 
 object ActorUtil {
@@ -262,4 +261,36 @@ trait Task[T] {
   def runTask(
     previousResult: Option[TaskResult[T]]
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[T]]
+}
+
+trait ResultAndNext[T] {
+  def result: T
+  def nextStep: Option[NextExecutionStep[T]]
+}
+trait NextExecutionStep[T] {
+  def run(params: Option[ResultAndNext[T]]): zio.Task[ResultAndNext[T]]
+}
+object NextExecutionStep {
+
+  /**
+   * Recursively runs a sequence of tasks.
+   *
+   * @param previousResult the previous result or `None` if this is the first task in the sequence.
+   * @param nextTask       the next task to be run.
+   * @tparam T the type of the underlying task result.
+   * @return the result of the last task in the sequence.
+   */
+  def runSteps[T](
+    nextTask: NextExecutionStep[T],
+    previousResult: Option[ResultAndNext[T]] = None
+  ): zio.Task[ResultAndNext[T]] =
+    // This function doesn't need to be tail recursive: https://stackoverflow.com/a/16986416
+    for {
+      taskResult <- nextTask.run(previousResult)
+      recResult <-
+        ZIO
+          .fromOption(taskResult.nextStep)
+          .flatMap(runSteps(_, Some(taskResult)))
+          .orElse(ZIO.succeed(taskResult))
+    } yield recResult
 }
