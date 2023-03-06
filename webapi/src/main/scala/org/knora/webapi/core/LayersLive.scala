@@ -58,6 +58,10 @@ import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2Live
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
@@ -71,13 +75,16 @@ import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
-import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
+import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -94,12 +101,14 @@ object LayersLive {
       with AppRouter
       with AppRouterRelayingMessageHandler
       with CacheService
-      with CacheServiceManager
+      with CacheServiceRequestMessageHandler
+      with CardinalityHandler
+      with CardinalityService
       with CkanResponderV1
       with GroupsResponderADM
       with HttpServer
       with IIIFService
-      with IIIFServiceManager
+      with IIIFRequestMessageHandler
       with IriService
       with JWTService
       with ListsResponderV2
@@ -107,6 +116,7 @@ object LayersLive {
       with ListsResponderV1
       with MessageRelay
       with OntologyResponderV1
+      with OntologyHelpers
       with PermissionUtilADM
       with PermissionsResponderADM
       with ProjectsResponderADM
@@ -122,7 +132,7 @@ object LayersLive {
       with State
       with StoresResponderADM
       with TriplestoreService
-      with TriplestoreServiceManager
+      with TriplestoreRequestMessageHandler
       with UsersResponderADM
       with UsersResponderV1
       with ValueUtilV1
@@ -144,13 +154,14 @@ object LayersLive {
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
-      CacheServiceManager.layer,
+      CacheServiceRequestMessageHandlerLive.layer,
+      CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
-      IIIFServiceManager.layer,
+      IIIFRequestMessageHandlerLive.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       IriService.layer,
@@ -160,6 +171,7 @@ object LayersLive {
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
+      OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
       PermissionUtilADMLive.layer,
@@ -183,7 +195,7 @@ object LayersLive {
       StoresResponderADMLive.layer,
       StringFormatter.live,
       TriplestoreServiceLive.layer,
-      TriplestoreServiceManager.layer,
+      TriplestoreRequestMessageHandlerLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,

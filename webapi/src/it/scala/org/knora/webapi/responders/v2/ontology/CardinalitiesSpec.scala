@@ -6,14 +6,16 @@
 package org.knora.webapi.responders.v2.ontology
 
 import akka.util.Timeout
+import zio.ZIO
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.routing.UnsafeZioRun
 
 /**
- * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
+ * This spec is used to test [[CardinalityHandler]].
  */
 class CardinalitiesSpec extends CoreSpec {
 
@@ -28,7 +30,12 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTest").toInternalIri
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
+      val resF =
+        UnsafeZioRun.runToFuture(
+          ZIO.serviceWithZIO[CardinalityHandler](
+            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
+          )
+        )
       resF map { res => println(res); assert(res, "property is used in resource (instance of that resource class)") }
     }
 
@@ -37,7 +44,12 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTestResourceClass").toInternalIri
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
+      val resF =
+        UnsafeZioRun.runToFuture(
+          ZIO.serviceWithZIO[CardinalityHandler](
+            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
+          )
+        )
       resF map { res =>
         println(res); assert(!res, "property is not used in resource (instance of that resource class)")
       }
@@ -48,7 +60,12 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTest").toInternalIri
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
+      val resF =
+        UnsafeZioRun.runToFuture(
+          ZIO.serviceWithZIO[CardinalityHandler](
+            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
+          )
+        )
       resF map { res =>
         println(res); assert(!res, "property is not used in resource (instance of that resource class)")
       }
@@ -60,7 +77,12 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = anythingOntologyIri.makeEntityIri("Thing").toInternalIri
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
+      val resF =
+        UnsafeZioRun.runToFuture(
+          ZIO.serviceWithZIO[CardinalityHandler](
+            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
+          )
+        )
       resF map { res => println(res); assert(res, "property is used in resource (instance of resource class)") }
     }
 
@@ -69,9 +91,11 @@ class CardinalitiesSpec extends CoreSpec {
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTest").toInternalIri
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = CardinalityHandler.isPropertyUsedInResources(appActor, internalClassIri, internalPropertyIri)
+      val resF =
+        UnsafeZioRun.runToFuture(
+          ZIO.serviceWithZIO[CardinalityHandler](_.isPropertyUsedInResources(internalClassIri, internalPropertyIri))
+        )
       resF map { res => println(res); assert(res, "property is used in a resource of subclass") }
     }
-
   }
 }

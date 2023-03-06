@@ -14,6 +14,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
+import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.KnoraBase
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -44,8 +45,12 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
        |  <${Biblio.Property.hasTitle.value}> "The second Another Publication Title" .
        |
        |<http://aPublicationWithZero>
-       |  a <${Biblio.Class.Publication.value}> ;
+       |  a <${Biblio.Class.Publication.value}> .
        |
+       |<http://aDeletedPublication>
+       |  a <${Biblio.Class.Publication.value}> ;
+       |  <${Biblio.Property.hasTitle.value}>     "The Title of a deleted Publication" ;
+       |  <${KnoraBase.Property.isDeleted.value}> true .
        |""".stripMargin
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], PredicateRepositoryLive](
