@@ -65,6 +65,7 @@ import zio.ZIO
 import zio._
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.TaskResult
+import org.knora.webapi.util.NextExecutionStep
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
@@ -274,7 +275,7 @@ final case class StandoffResponderV2Live(
 
     } yield xsltUrl
 
-    val recoveredXsltUrlFuture = xsltUrlFuture.recover { case notFound: NotFoundException =>
+    val recoveredXsltUrlFuture = xsltUrlFuture.mapError { case notFound: NotFoundException =>
       BadRequestException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
     }
 
@@ -285,13 +286,13 @@ final case class StandoffResponderV2Live(
 
       xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = xsltFileUrl)
 
-      xslt: String <-
+      xslt <-
         if (xsltMaybe.nonEmpty) {
           // XSL transformation is cached
-          Future(xsltMaybe.get)
+          ZIO.attempt(xsltMaybe.get)
         } else {
           for {
-            response: SipiGetTextFileResponse <-
+            response <-
               messageRelay
                 .ask[SipiGetTextFileResponse](
                   SipiGetTextFileRequest(
@@ -655,7 +656,7 @@ final case class StandoffResponderV2Live(
         )
       }
 
-      createMappingFuture.recover {
+      createMappingFuture.mapError {
         case validationException: SAXException =>
           throw BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
 
@@ -665,7 +666,6 @@ final case class StandoffResponderV2Live(
           throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
 
       }
-
     }
 
     for {
