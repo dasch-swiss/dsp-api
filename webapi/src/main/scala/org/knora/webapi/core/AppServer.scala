@@ -104,6 +104,7 @@ final case class AppServer(
                  ZIO.logError("IIIF service not running") *> ZIO.die(new Exception("IIIF service not running"))
              }
              .when(requiresIIIFService)
+             .orDie
       _ <- state.set(AppState.IIIFServiceReady)
     } yield ()
 

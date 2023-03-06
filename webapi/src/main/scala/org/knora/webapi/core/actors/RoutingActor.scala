@@ -14,7 +14,6 @@ import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.ValueUtilV1
@@ -31,11 +30,9 @@ import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.util.ActorUtil
 
 final case class RoutingActor(
-  iiifServiceManager: IIIFServiceManager,
   appConfig: AppConfig,
   messageRelay: MessageRelay,
   implicit val runtime: zio.Runtime[
@@ -83,9 +80,6 @@ final case class RoutingActor(
       ActorUtil.future2Message(sender(), valuesResponderV2.receive(valuesResponderRequestV2), log)
     case standoffResponderRequestV2: StandoffResponderRequestV2 =>
       ActorUtil.future2Message(sender(), standoffResponderV2.receive(standoffResponderRequestV2), log)
-
-    // Admin request messages
-    case msg: IIIFRequest => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg))
 
     case other =>
       throw UnexpectedMessageException(
