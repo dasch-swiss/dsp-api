@@ -22,14 +22,11 @@ import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
-import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -75,7 +72,17 @@ import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2Live
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 
+import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
+import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 object LayersTest {
 
   /**
@@ -91,12 +98,13 @@ object LayersTest {
     with AppRouter
     with AppRouterRelayingMessageHandler
     with CacheService
-    with CacheServiceManager
+    with CacheServiceRequestMessageHandler
+    with CardinalityHandler
     with CardinalityService
     with CkanResponderV1
     with GroupsResponderADM
     with HttpServer
-    with IIIFServiceManager
+    with IIIFRequestMessageHandler
     with IriConverter
     with IriService
     with ListsResponderV2
@@ -104,6 +112,7 @@ object LayersTest {
     with ListsResponderV1
     with MessageRelay
     with OntologyResponderV1
+    with OntologyHelpers
     with PermissionUtilADM
     with PermissionsResponderADM
     with ProjectsResponderADM
@@ -123,7 +132,7 @@ object LayersTest {
     with StringFormatter
     with TestClientService
     with TriplestoreService
-    with TriplestoreServiceManager
+    with TriplestoreRequestMessageHandler
     with UsersResponderADM
     with UsersResponderV1
     with ValueUtilV1
@@ -137,12 +146,13 @@ object LayersTest {
       AppRouter.layer,
       AppRouterRelayingMessageHandler.layer,
       CacheServiceInMemImpl.layer,
-      CacheServiceManager.layer,
+      CacheServiceRequestMessageHandlerLive.layer,
+      CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
-      IIIFServiceManager.layer,
+      IIIFRequestMessageHandlerLive.layer,
       IriConverter.layer,
       IriService.layer,
       ListsResponderV2Live.layer,
@@ -150,6 +160,7 @@ object LayersTest {
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
       OntologyCache.layer,
+      OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
       PermissionUtilADMLive.layer,
@@ -172,7 +183,7 @@ object LayersTest {
       StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      TriplestoreServiceManager.layer,
+      TriplestoreRequestMessageHandlerLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,
