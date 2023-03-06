@@ -10,10 +10,10 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import dsp.errors.BadRequestException.invalidQueryParamValue
 import dsp.errors.BadRequestException.missingQueryParamValue
 import dsp.errors.ForbiddenException
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -154,7 +154,7 @@ case class RestCardinalityServiceLive(
   }
 
   private def getExternalIris(failure: CanSetCardinalityCheckResult.Failure): Task[List[String]] =
-    ZIO.foreach(failure.failureAffectedIris)(iriConverter.asExternalIri)
+    ZIO.foreach(failure.failureAffectedIris)(iriConverter.asExternalIri).map(_.distinct)
 
   private def toExternalContext(failure: CanSetCardinalityCheckResult.Failure): Task[JsonLDObject] =
     for {
