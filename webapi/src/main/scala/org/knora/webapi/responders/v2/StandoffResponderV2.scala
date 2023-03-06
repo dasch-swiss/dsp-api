@@ -66,6 +66,7 @@ import zio._
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.TaskResult
 import org.knora.webapi.util.NextExecutionStep
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
@@ -76,7 +77,8 @@ final case class StandoffResponderV2Live(
   messageRelay: MessageRelay,
   implicit val stringFormatter: StringFormatter
 ) extends StandoffResponderV2
-    with MessageHandler {
+    with MessageHandler
+    with LazyLogging {
 
   private def xmlMimeTypes = Set(
     "text/xml",
@@ -635,7 +637,7 @@ final case class StandoffResponderV2Live(
             )
 
         _ = if (newMappingResponse.statements.isEmpty) {
-              log.error(
+              logger.error(
                 s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$newMappingResponse"
               )
               throw UpdateNotPerformedException(
@@ -701,25 +703,23 @@ final case class StandoffResponderV2Live(
       // put the mapping into the named graph of the project
       namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectInfoMaybe.get)
 
-      result: CreateMappingResponseV2 <-
+      result <-
         IriLocker.runWithIriLock(
           apiRequestID,
           stringFormatter
             .createMappingLockIriForProject(
               projectIri.toString
             ), // use a special project specific IRI to lock the creation of mappings for the given project
-          () =>
-            createMappingAndCheck(
-              xml = xml,
-              label = label,
-              mappingIri = mappingIri,
-              namedGraph = namedGraph,
-              requestingUser = requestingUser
-            )
+          createMappingAndCheck(
+            xml = xml,
+            label = label,
+            mappingIri = mappingIri,
+            namedGraph = namedGraph,
+            requestingUser = requestingUser
+          )
         )
 
     } yield result
-
   }
 
   /**
