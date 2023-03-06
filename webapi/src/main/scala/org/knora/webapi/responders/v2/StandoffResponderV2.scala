@@ -61,7 +61,8 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
+    extends Responder(responderData.actorDeps) {
 
   private def xmlMimeTypes = Set(
     "text/xml",

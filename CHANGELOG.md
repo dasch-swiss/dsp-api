@@ -1,5 +1,54 @@
 # Changelog
 
+## [27.1.0](https://github.com/dasch-swiss/dsp-api/compare/v27.0.0...v27.1.0) (2023-03-03)
+
+
+### Bug Fixes
+
+* Filter out deleted subjects and objects when counting for cardinalities (DEV-1795) ([#2499](https://github.com/dasch-swiss/dsp-api/issues/2499)) ([60e1833](https://github.com/dasch-swiss/dsp-api/commit/60e183323762cf02e556d6257b05315e2682e90f))
+
+
+### Documentation
+
+* add high level overview of the current domain entities to the documentation (DEV-1416) ([#2431](https://github.com/dasch-swiss/dsp-api/issues/2431)) ([02db5ce](https://github.com/dasch-swiss/dsp-api/commit/02db5ce908b4ea516b302b1a9bd69062d94197b2))
+* add missing documentation (DEV-1422) ([#2482](https://github.com/dasch-swiss/dsp-api/issues/2482)) ([9667f7a](https://github.com/dasch-swiss/dsp-api/commit/9667f7a9d59234ec9bdedc96d91df220dfa8f93f))
+
+
+### Enhancements
+
+* Add context for can set cardinalities failed responses (DEV-1768) ([#2471](https://github.com/dasch-swiss/dsp-api/issues/2471)) ([16c137e](https://github.com/dasch-swiss/dsp-api/commit/16c137e7065e5958620f4a1bf47152829701aad7))
+
+
+### Maintenance
+
+* Add MessageRelay as a preparation for enabling us to migrate responders to ZIO DEV-1728 ([#2453](https://github.com/dasch-swiss/dsp-api/issues/2453)) ([c61368a](https://github.com/dasch-swiss/dsp-api/commit/c61368a311992e05b9addc9040f4ebaf89db231f))
+* add missing github-actions workflow ([#2463](https://github.com/dasch-swiss/dsp-api/issues/2463)) ([8983c95](https://github.com/dasch-swiss/dsp-api/commit/8983c954f73994a94231c6e9709633f47a011b26))
+* improve finding all graphs ([#2470](https://github.com/dasch-swiss/dsp-api/issues/2470)) ([6de3c5d](https://github.com/dasch-swiss/dsp-api/commit/6de3c5d10312ae5b8e0de45f3bf392f078dfcbdd))
+* Integrate zio-fied project responder in zio route DEV-1728 ([#2460](https://github.com/dasch-swiss/dsp-api/issues/2460)) ([1ed0175](https://github.com/dasch-swiss/dsp-api/commit/1ed0175a74319cb482271cc81903def854aca292))
+* log request and user ID as log annotations (DEV-1233) ([#2466](https://github.com/dasch-swiss/dsp-api/issues/2466)) ([bec6fe6](https://github.com/dasch-swiss/dsp-api/commit/bec6fe68d4490d9110b0f68807ce065fe4ea1ef6))
+* Move key frames extraction from store.lua to upload.lua (DEV-1716) ([#2454](https://github.com/dasch-swiss/dsp-api/issues/2454)) ([34924e2](https://github.com/dasch-swiss/dsp-api/commit/34924e213e83dac99d7ab023d5f5c0f8b591a8fc))
+* update dependencies ([#2497](https://github.com/dasch-swiss/dsp-api/issues/2497)) ([d20b9ff](https://github.com/dasch-swiss/dsp-api/commit/d20b9ff7c1e5a1c95a1cffbfd1bb1c02d14d98c7))
+* update SIPI version and adjust Lua scripts (DEV-1727) ([#2462](https://github.com/dasch-swiss/dsp-api/issues/2462)) ([9884539](https://github.com/dasch-swiss/dsp-api/commit/98845390c0bebb6727d83ed5fef228cc813ba3e7))
+* ziofy CkanResponderV1  DEV-1743 ([#2473](https://github.com/dasch-swiss/dsp-api/issues/2473)) ([5a2d16c](https://github.com/dasch-swiss/dsp-api/commit/5a2d16c5dc3fab045f6332aae0d6c60adf974449))
+* ziofy CkanResponderV1 & ListsResponderV1 (DEV-1743 DEV-1744) ([#2474](https://github.com/dasch-swiss/dsp-api/issues/2474)) ([34c2d95](https://github.com/dasch-swiss/dsp-api/commit/34c2d95a795edd8e164dc4a8120a2d630698959a))
+* ziofy GroupsResponderADM DEV-1737 ([#2461](https://github.com/dasch-swiss/dsp-api/issues/2461)) ([44c5d46](https://github.com/dasch-swiss/dsp-api/commit/44c5d46792c72ffe539c7bf41189fbd3be209c48))
+* ziofy ListsResponderADM (DEV-1738) ([#2467](https://github.com/dasch-swiss/dsp-api/issues/2467)) ([b5bd82b](https://github.com/dasch-swiss/dsp-api/commit/b5bd82bece212737db7c1e2c022ac50e0e32e710))
+* ziofy ListsResponderV2 (DEV-1752) ([#2479](https://github.com/dasch-swiss/dsp-api/issues/2479)) ([28d5b48](https://github.com/dasch-swiss/dsp-api/commit/28d5b48a795380045397e045e5ebc498febbb4da))
+* ziofy OntologyResponderV1 (DEV-1745) ([#2475](https://github.com/dasch-swiss/dsp-api/issues/2475)) ([f8344ff](https://github.com/dasch-swiss/dsp-api/commit/f8344fff6fbe4f602a9f3250a22c8ba4572a6673))
+* ziofy PermissionsResponderADM  DEV-1739 ([#2468](https://github.com/dasch-swiss/dsp-api/issues/2468)) ([ba85b94](https://github.com/dasch-swiss/dsp-api/commit/ba85b94f787e529598bd929d043ec45bff0d3c73))
+* Ziofy ProjectsResponderADM DEV-1728 ([#2459](https://github.com/dasch-swiss/dsp-api/issues/2459)) ([69c0640](https://github.com/dasch-swiss/dsp-api/commit/69c06403de863528822267bfadfbf4a5b29196cf))
+* ziofy ProjectsResponderV1 (DEV-1746) ([#2476](https://github.com/dasch-swiss/dsp-api/issues/2476)) ([715c117](https://github.com/dasch-swiss/dsp-api/commit/715c117258668165a8e67b62576b4310d5c322ca))
+* ziofy ResourceUtilV2 & PermissionUtilADM (NO-TICKET) ([#2485](https://github.com/dasch-swiss/dsp-api/issues/2485)) ([e2dcd43](https://github.com/dasch-swiss/dsp-api/commit/e2dcd43742d8e233394214608a5fee50c71a526e))
+* ziofy SearchResponderV1 (DEV-1748) ([#2480](https://github.com/dasch-swiss/dsp-api/issues/2480)) ([7711a47](https://github.com/dasch-swiss/dsp-api/commit/7711a473d9c12aec58e6868445f1edbf44b35145))
+* ziofy SipiResponderADM DEV-1740 ([#2469](https://github.com/dasch-swiss/dsp-api/issues/2469)) ([fcfdc39](https://github.com/dasch-swiss/dsp-api/commit/fcfdc39751928063804c1621160e17c9f0789141))
+* ziofy StandoffResponderV1 (DEV-1749) ([#2495](https://github.com/dasch-swiss/dsp-api/issues/2495)) ([6a13eb0](https://github.com/dasch-swiss/dsp-api/commit/6a13eb0f27f19755964d16fe02711c7f7890cb5f))
+* ziofy StandoffTagUtilV2 (NO-TICKET) ([#2481](https://github.com/dasch-swiss/dsp-api/issues/2481)) ([1daf98b](https://github.com/dasch-swiss/dsp-api/commit/1daf98bbc7840e992ac67b2dd5666bd815067553))
+* ziofy StoresResponderADM DEV-1741 ([#2472](https://github.com/dasch-swiss/dsp-api/issues/2472)) ([991d5b9](https://github.com/dasch-swiss/dsp-api/commit/991d5b92e2d685b0a0432bcea5ea265f75728521))
+* ziofy UsersResponderADM DEV-1742 ([#2465](https://github.com/dasch-swiss/dsp-api/issues/2465)) ([208087e](https://github.com/dasch-swiss/dsp-api/commit/208087ed48d427d6a9d04e31ef05e67b4decc9c3))
+* ziofy UsersResponderV1 (DEV-1750) ([#2478](https://github.com/dasch-swiss/dsp-api/issues/2478)) ([e8112f8](https://github.com/dasch-swiss/dsp-api/commit/e8112f860c8d564bff939e932d92abc3658d4733))
+* ziofy ValuesResponderV1 (DEV-1751) ([#2496](https://github.com/dasch-swiss/dsp-api/issues/2496)) ([9b68e89](https://github.com/dasch-swiss/dsp-api/commit/9b68e891bc62395eefbe5fef84bd7b69a51fbdb5))
+* ziofy ValueUtilV1 (NO-TICKET) ([#2484](https://github.com/dasch-swiss/dsp-api/issues/2484)) ([4f38ac2](https://github.com/dasch-swiss/dsp-api/commit/4f38ac269fa3259cf0c4266aba662db4071067c8))
+
 ## [27.0.0](https://github.com/dasch-swiss/dsp-api/compare/v26.2.0...v27.0.0) (2023-02-16)
 
 

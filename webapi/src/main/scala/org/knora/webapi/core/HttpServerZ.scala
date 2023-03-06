@@ -9,7 +9,9 @@ import zio._
 import zio.http._
 import zio.http.middleware.Cors
 import zio.http.model.Method
+import zio.logging.LogAnnotation.TraceId
 
+import java.util.UUID
 import scala.annotation.tailrec
 
 import org.knora.webapi.config.AppConfig
@@ -31,6 +33,17 @@ object HttpServerZ {
           }
         )
     } yield Middleware.cors(corsConfig)
+
+  private val loggingMiddleware = Middleware.requestLogging()
+
+  private val tracingMiddleware = new Middleware[Any, Nothing, Request, Response, Request, Response] {
+    override def apply[R1, E1](http: Http[R1, E1, Request, Response])(implicit
+      trace: Trace
+    ): Http[R1, E1, Request, Response] =
+      Http.collectZIO[Request] { case request =>
+        http(request).mapError(_.get) @@ TraceId(UUID.randomUUID())
+      }
+  }
 
   private def metricsMiddleware() = {
     // in order to avoid extensive amounts of labels, we should replace path segment slugs
@@ -66,7 +79,7 @@ object HttpServerZ {
       routes              <- apiRoutes
       cors                <- corsMiddleware
       metrics              = metricsMiddleware()
-      routesWithMiddleware = routes @@ cors @@ metrics
+      routesWithMiddleware = routes @@ cors @@ metrics @@ loggingMiddleware @@ tracingMiddleware
       serverConfig         = ZLayer.succeed(ServerConfig.default.port(port))
       _                   <- Server.serve(routesWithMiddleware).provide(Server.live, serverConfig).forkDaemon
       _                   <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")

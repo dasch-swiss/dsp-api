@@ -5,21 +5,24 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.pattern._
-
-import scala.concurrent.Future
+import com.typesafe.scalalogging.LazyLogging
+import zio._
 
 import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
@@ -27,6 +30,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.util.ZioHelper
 
 /**
  * Handles requests for information about ontology entities.
@@ -34,14 +38,21 @@ import org.knora.webapi.responders.Responder
  * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
  * the application.
  */
-class OntologyResponderV1(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+trait OntologyResponderV1 {}
 
-  private val valueUtilV1 = new ValueUtilV1(responderData.appConfig)
+final case class OntologyResponderV1Live(
+  appConfig: AppConfig,
+  messageRelay: MessageRelay,
+  valueUtilV1: ValueUtilV1,
+  implicit val stringFormatter: StringFormatter
+) extends OntologyResponderV1
+    with MessageHandler
+    with LazyLogging {
 
-  /**
-   * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message.
-   */
-  def receive(msg: OntologyResponderRequestV1) = msg match {
+  override def isResponsibleFor(message: ResponderRequest): Boolean =
+    message.isInstanceOf[OntologyResponderRequestV1]
+
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case LoadOntologiesRequestV1(userProfile) => loadOntologies(userProfile)
     case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) =>
       getEntityInfoResponseV1(resourceIris, propertyIris, userProfile)
@@ -63,7 +74,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     case StandoffAllPropertiesGetRequestV1(userProfile)       => getAllStandoffPropertyEntities(userProfile)
     case NamedGraphEntityInfoRequestV1(namedGraphIri, userProfile) =>
       getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -72,19 +83,10 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    * @param userProfile          the profile of the user making the request.
    * @return a [[LoadOntologiesResponse]].
    */
-  private def loadOntologies(
-    userProfile: UserADM
-  ): Future[LoadOntologiesResponse] =
-    for {
-      // forward the request to the v2 ontologies responder
-      _: SuccessResponseV2 <- appActor
-                                .ask(
-                                  LoadOntologiesRequestV2(
-                                    requestingUser = userProfile
-                                  )
-                                )
-                                .mapTo[SuccessResponseV2]
-    } yield LoadOntologiesResponse()
+  private def loadOntologies(userProfile: UserADM): Task[LoadOntologiesResponse] =
+    messageRelay
+      .ask[SuccessResponseV2](LoadOntologiesRequestV2(userProfile))
+      .as(LoadOntologiesResponse())
 
   /**
    * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
@@ -98,17 +100,16 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     resourceClassIris: Set[IRI] = Set.empty[IRI],
     propertyIris: Set[IRI] = Set.empty[IRI],
     userProfile: UserADM
-  ): Future[EntityInfoGetResponseV1] =
+  ): Task[EntityInfoGetResponseV1] =
     for {
-      response: EntityInfoGetResponseV2 <- appActor
-                                             .ask(
-                                               EntityInfoGetRequestV2(
-                                                 resourceClassIris.map(_.toSmartIri),
-                                                 propertyIris.map(_.toSmartIri),
-                                                 userProfile
-                                               )
-                                             )
-                                             .mapTo[EntityInfoGetResponseV2]
+      response <- messageRelay
+                    .ask[EntityInfoGetResponseV2](
+                      EntityInfoGetRequestV2(
+                        resourceClassIris.map(_.toSmartIri),
+                        propertyIris.map(_.toSmartIri),
+                        userProfile
+                      )
+                    )
     } yield EntityInfoGetResponseV1(
       resourceClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.classInfoMap),
       propertyInfoMap = ConvertOntologyClassV2ToV1.propertyInfoMapV2ToV1(response.propertyInfoMap)
@@ -126,17 +127,16 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     standoffClassIris: Set[IRI] = Set.empty[IRI],
     standoffPropertyIris: Set[IRI] = Set.empty[IRI],
     userProfile: UserADM
-  ): Future[StandoffEntityInfoGetResponseV1] =
+  ): Task[StandoffEntityInfoGetResponseV1] =
     for {
-      response: StandoffEntityInfoGetResponseV2 <- appActor
-                                                     .ask(
-                                                       StandoffEntityInfoGetRequestV2(
-                                                         standoffClassIris.map(_.toSmartIri),
-                                                         standoffPropertyIris.map(_.toSmartIri),
-                                                         userProfile
-                                                       )
-                                                     )
-                                                     .mapTo[StandoffEntityInfoGetResponseV2]
+      response <- messageRelay
+                    .ask[StandoffEntityInfoGetResponseV2](
+                      StandoffEntityInfoGetRequestV2(
+                        standoffClassIris.map(_.toSmartIri),
+                        standoffPropertyIris.map(_.toSmartIri),
+                        userProfile
+                      )
+                    )
 
     } yield StandoffEntityInfoGetResponseV1(
       standoffClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.standoffClassInfoMap),
@@ -151,15 +151,15 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    */
   private def getStandoffStandoffClassesWithDataTypeV1(
     userProfile: UserADM
-  ): Future[StandoffClassesWithDataTypeGetResponseV1] =
+  ): Task[StandoffClassesWithDataTypeGetResponseV1] =
     for {
-      response: StandoffClassesWithDataTypeGetResponseV2 <- appActor
-                                                              .ask(
-                                                                StandoffClassesWithDataTypeGetRequestV2(
-                                                                  userProfile
-                                                                )
-                                                              )
-                                                              .mapTo[StandoffClassesWithDataTypeGetResponseV2]
+      response <- messageRelay
+                    .ask[StandoffClassesWithDataTypeGetResponseV2](
+                      StandoffClassesWithDataTypeGetRequestV2(
+                        userProfile
+                      )
+                    )
+
     } yield StandoffClassesWithDataTypeGetResponseV1(
       standoffClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.standoffClassInfoMap)
     )
@@ -170,15 +170,15 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    * @param userProfile the profile of the user making the request.
    * @return a [[StandoffAllPropertiesGetResponseV1]].
    */
-  private def getAllStandoffPropertyEntities(userProfile: UserADM): Future[StandoffAllPropertiesGetResponseV1] =
+  private def getAllStandoffPropertyEntities(userProfile: UserADM): Task[StandoffAllPropertiesGetResponseV1] =
     for {
-      response: StandoffAllPropertyEntitiesGetResponseV2 <- appActor
-                                                              .ask(
-                                                                StandoffAllPropertyEntitiesGetRequestV2(
-                                                                  userProfile
-                                                                )
-                                                              )
-                                                              .mapTo[StandoffAllPropertyEntitiesGetResponseV2]
+      response <- messageRelay
+                    .ask[StandoffAllPropertyEntitiesGetResponseV2](
+                      StandoffAllPropertyEntitiesGetRequestV2(
+                        userProfile
+                      )
+                    )
+
     } yield StandoffAllPropertiesGetResponseV1(
       standoffAllPropertiesInfoMap =
         ConvertOntologyClassV2ToV1.propertyInfoMapV2ToV1(response.standoffAllPropertiesEntityInfoMap)
@@ -195,23 +195,23 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
   private def getResourceTypeResponseV1(
     resourceTypeIri: String,
     userProfile: UserADM
-  ): Future[ResourceTypeResponseV1] = {
+  ): Task[ResourceTypeResponseV1] = {
 
     for {
       // Get all information about the resource type, including its property cardinalities.
-      resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(
-                                                              resourceClassIris = Set(resourceTypeIri),
-                                                              userProfile = userProfile
-                                                            )
+      resourceClassInfoResponse <- getEntityInfoResponseV1(
+                                     resourceClassIris = Set(resourceTypeIri),
+                                     userProfile = userProfile
+                                   )
       resourceClassInfo: ClassInfoV1 =
         resourceClassInfoResponse.resourceClassInfoMap
           .getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
       // Get all information about those properties.
-      propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(
-                                                 propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet,
-                                                 userProfile = userProfile
-                                               )
+      propertyInfo <- getEntityInfoResponseV1(
+                        propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet,
+                        userProfile = userProfile
+                      )
 
       // Build the property definitions.
       propertyDefinitions: Vector[PropertyDefinitionV1] = resourceClassInfo.knoraResourceCardinalities.filterNot {
@@ -239,14 +239,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         predicateIri = OntologyConstants.Rdfs.Label,
                                                                         preferredLangs = Some(
                                                                           userProfile.lang,
-                                                                          responderData.appConfig.fallbackLanguage
+                                                                          appConfig.fallbackLanguage
                                                                         )
                                                                       ),
                                                                       description = entityInfo.getPredicateObject(
                                                                         predicateIri = OntologyConstants.Rdfs.Comment,
                                                                         preferredLangs = Some(
                                                                           userProfile.lang,
-                                                                          responderData.appConfig.fallbackLanguage
+                                                                          appConfig.fallbackLanguage
                                                                         )
                                                                       ),
                                                                       vocabulary = entityInfo.ontologyIri,
@@ -289,14 +289,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         predicateIri = OntologyConstants.Rdfs.Label,
                                                                         preferredLangs = Some(
                                                                           userProfile.lang,
-                                                                          responderData.appConfig.fallbackLanguage
+                                                                          appConfig.fallbackLanguage
                                                                         )
                                                                       ),
                                                                       description = entityInfo.getPredicateObject(
                                                                         predicateIri = OntologyConstants.Rdfs.Comment,
                                                                         preferredLangs = Some(
                                                                           userProfile.lang,
-                                                                          responderData.appConfig.fallbackLanguage
+                                                                          appConfig.fallbackLanguage
                                                                         )
                                                                       ),
                                                                       vocabulary = entityInfo.ontologyIri,
@@ -339,11 +339,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                  name = resourceTypeIri,
                                  label = resourceClassInfo.getPredicateObject(
                                    predicateIri = OntologyConstants.Rdfs.Label,
-                                   preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                                   preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                                  ),
                                  description = resourceClassInfo.getPredicateObject(
                                    predicateIri = OntologyConstants.Rdfs.Comment,
-                                   preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                                   preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                                  ),
                                  iconsrc =
                                    resourceClassInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
@@ -359,17 +359,16 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    * @param checkSubClassRequest a [[CheckSubClassRequestV1]]
    * @return a [[CheckSubClassResponseV1]].
    */
-  private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] =
+  private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Task[CheckSubClassResponseV1] =
     for {
-      response: CheckSubClassResponseV2 <- appActor
-                                             .ask(
-                                               CheckSubClassRequestV2(
-                                                 subClassIri = checkSubClassRequest.subClassIri.toSmartIri,
-                                                 superClassIri = checkSubClassRequest.superClassIri.toSmartIri,
-                                                 checkSubClassRequest.userProfile
-                                               )
-                                             )
-                                             .mapTo[CheckSubClassResponseV2]
+      response <- messageRelay
+                    .ask[CheckSubClassResponseV2](
+                      CheckSubClassRequestV2(
+                        subClassIri = checkSubClassRequest.subClassIri.toSmartIri,
+                        superClassIri = checkSubClassRequest.superClassIri.toSmartIri,
+                        checkSubClassRequest.userProfile
+                      )
+                    )
 
     } yield CheckSubClassResponseV1(response.isSubClass)
 
@@ -379,16 +378,15 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    * @param getSubClassesRequest a [[SubClassesGetRequestV1]].
    * @return a [[SubClassesGetResponseV1]].
    */
-  private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] =
+  private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Task[SubClassesGetResponseV1] =
     for {
-      response: SubClassesGetResponseV2 <- appActor
-                                             .ask(
-                                               SubClassesGetRequestV2(
-                                                 getSubClassesRequest.resourceClassIri.toSmartIri,
-                                                 getSubClassesRequest.userADM
-                                               )
-                                             )
-                                             .mapTo[SubClassesGetResponseV2]
+      response <- messageRelay
+                    .ask[SubClassesGetResponseV2](
+                      SubClassesGetRequestV2(
+                        getSubClassesRequest.resourceClassIri.toSmartIri,
+                        getSubClassesRequest.userADM
+                      )
+                    )
 
       subClasses = response.subClasses.map { subClassInfoV2 =>
                      SubClassInfoV1(
@@ -410,22 +408,17 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
   private def getNamedGraphs(
     projectIris: Set[IRI] = Set.empty[IRI],
     userProfile: UserADM
-  ): Future[NamedGraphsResponseV1] =
+  ): Task[NamedGraphsResponseV1] =
     for {
-      projectsResponse <- appActor
-                            .ask(
-                              ProjectsGetRequestADM()
-                            )
-                            .mapTo[ProjectsGetResponseADM]
+      projectsResponse <- messageRelay.ask[ProjectsGetResponseADM](ProjectsGetRequestADM())
 
-      readOntologyMetadataV2 <- appActor
-                                  .ask(
+      readOntologyMetadataV2 <- messageRelay
+                                  .ask[ReadOntologyMetadataV2](
                                     OntologyMetadataGetByProjectRequestV2(
                                       projectIris = projectIris.map(_.toSmartIri),
                                       requestingUser = userProfile
                                     )
                                   )
-                                  .mapTo[ReadOntologyMetadataV2]
 
       projectsMap: Map[IRI, ProjectADM] = projectsResponse.projects.map { project =>
                                             project.id -> project
@@ -476,16 +469,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    * @param userProfile   the profile of the user making the request.
    * @return a [[NamedGraphEntityInfoV1]].
    */
-  def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserADM): Future[NamedGraphEntityInfoV1] =
+  private def getNamedGraphEntityInfoV1ForNamedGraph(
+    namedGraphIri: IRI,
+    userProfile: UserADM
+  ): Task[NamedGraphEntityInfoV1] =
     for {
-      response: OntologyKnoraEntitiesIriInfoV2 <- appActor
-                                                    .ask(
-                                                      OntologyKnoraEntityIrisGetRequestV2(
-                                                        namedGraphIri.toSmartIri,
-                                                        userProfile
-                                                      )
-                                                    )
-                                                    .mapTo[OntologyKnoraEntitiesIriInfoV2]
+      response <- messageRelay.ask[OntologyKnoraEntitiesIriInfoV2](
+                    OntologyKnoraEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)
+                  )
 
       classIrisForV1    = response.classIris.map(_.toString) -- OntologyConstants.KnoraBase.AbstractResourceClasses
       propertyIrisForV1 = response.propertyIris.map(_.toString) - OntologyConstants.KnoraBase.ResourceProperty
@@ -507,27 +498,27 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
   private def getResourceTypesForNamedGraph(
     namedGraphIriOption: Option[IRI],
     userProfile: UserADM
-  ): Future[ResourceTypesForNamedGraphResponseV1] = {
+  ): Task[ResourceTypesForNamedGraphResponseV1] = {
 
     // get the resource types for a named graph
-    def getResourceTypes(namedGraphIri: IRI): Future[Seq[ResourceTypeV1]] =
+    def getResourceTypes(namedGraphIri: IRI): Task[Seq[ResourceTypeV1]] =
       for {
 
         // get NamedGraphEntityInfoV1 for the given named graph
-        namedGraphEntityInfo: NamedGraphEntityInfoV1 <- getNamedGraphEntityInfoV1ForNamedGraph(
-                                                          namedGraphIri,
-                                                          userProfile
-                                                        )
+        namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(
+                                  namedGraphIri,
+                                  userProfile
+                                )
 
         // get resinfo for each resource class in namedGraphEntityInfo
-        resInfosForNamedGraphFuture: Set[Future[(String, ResourceTypeResponseV1)]] =
+        resInfosForNamedGraphFuture: Set[Task[(String, ResourceTypeResponseV1)]] =
           namedGraphEntityInfo.resourceClasses.map { resClassIri =>
             for {
               resInfo <- getResourceTypeResponseV1(resClassIri, userProfile)
             } yield (resClassIri, resInfo)
           }
 
-        resInfosForNamedGraph: Set[(IRI, ResourceTypeResponseV1)] <- Future.sequence(resInfosForNamedGraphFuture)
+        resInfosForNamedGraph <- ZioHelper.sequence(resInfosForNamedGraphFuture)
 
         resourceTypes: Vector[ResourceTypeV1] = resInfosForNamedGraph.map { case (resClassIri, resInfo) =>
                                                   val properties = resInfo.restype_info.properties.map { prop =>
@@ -563,14 +554,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
 
       case None => // map over all named graphs and collect the resource types
         for {
-          projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(
-                                                                 userProfile = userProfile
-                                                               )
+          projectNamedGraphsResponse <- getNamedGraphs(
+                                          userProfile = userProfile
+                                        )
 
           projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
-          resourceTypesPerProject: Seq[Future[Seq[ResourceTypeV1]]] =
+          resourceTypesPerProject: Seq[Task[Seq[ResourceTypeV1]]] =
             projectNamedGraphIris.map(iri => getResourceTypes(iri))
-          resourceTypes: Seq[Seq[ResourceTypeV1]] <- Future.sequence(resourceTypesPerProject)
+          resourceTypes <- ZioHelper.sequence(resourceTypesPerProject)
         } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten)
     }
 
@@ -587,19 +578,19 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
   private def getPropertyTypesForNamedGraph(
     namedGraphIriOption: Option[IRI],
     userProfile: UserADM
-  ): Future[PropertyTypesForNamedGraphResponseV1] = {
+  ): Task[PropertyTypesForNamedGraphResponseV1] = {
 
     def getPropertiesForNamedGraph(
       namedGraphIri: IRI,
       userProfile: UserADM
-    ): Future[Seq[PropertyDefinitionInNamedGraphV1]] =
+    ): Task[Seq[PropertyDefinitionInNamedGraphV1]] =
       for {
         namedGraphEntityInfo  <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
         propertyIris: Set[IRI] = namedGraphEntityInfo.propertyIris
-        entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(
-                                               propertyIris = propertyIris,
-                                               userProfile = userProfile
-                                             )
+        entities <- getEntityInfoResponseV1(
+                      propertyIris = propertyIris,
+                      userProfile = userProfile
+                    )
         propertyInfoMap: Map[IRI, PropertyInfoV1] =
           entities.propertyInfoMap.filterNot { case (_, propertyEntityInfo) =>
             propertyEntityInfo.isLinkValueProp
@@ -617,11 +608,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                 name = propertyIri,
                 label = entityInfo.getPredicateObject(
                   predicateIri = OntologyConstants.Rdfs.Label,
-                  preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                 ),
                 description = entityInfo.getPredicateObject(
                   predicateIri = OntologyConstants.Rdfs.Comment,
-                  preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                 ),
                 vocabulary = entityInfo.ontologyIri,
                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
@@ -649,11 +640,11 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                 name = propertyIri,
                 label = entityInfo.getPredicateObject(
                   predicateIri = OntologyConstants.Rdfs.Label,
-                  preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                 ),
                 description = entityInfo.getPredicateObject(
                   predicateIri = OntologyConstants.Rdfs.Comment,
-                  preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
                 ),
                 vocabulary = entityInfo.ontologyIri,
                 valuetype_id = entityInfo
@@ -670,9 +661,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                   .getPredicateObject(SalsahGui.GuiElementProp)
                   .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
               )
-
             }
-
           }.toVector
       } yield propertyDefinitions
 
@@ -684,17 +673,16 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
         } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes)
       case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
         for {
-          projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(
-                                                                 userProfile = userProfile
-                                                               )
+          projectNamedGraphsResponse <- getNamedGraphs(
+                                          userProfile = userProfile
+                                        )
 
           projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
-          propertyTypesPerProject: Seq[Future[Seq[PropertyDefinitionInNamedGraphV1]]] =
+          propertyTypesPerProject: Seq[Task[Seq[PropertyDefinitionInNamedGraphV1]]] =
             projectNamedGraphIris.map(iri => getPropertiesForNamedGraph(iri, userProfile))
-          propertyTypes: Seq[Seq[PropertyDefinitionInNamedGraphV1]] <- Future.sequence(propertyTypesPerProject)
+          propertyTypes <- ZioHelper.sequence(propertyTypesPerProject)
         } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes.flatten)
     }
-
   }
 
   /**
@@ -707,11 +695,22 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
   private def getPropertyTypesForResourceType(
     resourceClassIri: IRI,
     userProfile: UserADM
-  ): Future[PropertyTypesForResourceTypeResponseV1] =
+  ): Task[PropertyTypesForResourceTypeResponseV1] =
     for {
-      resInfo: ResourceTypeResponseV1 <- getResourceTypeResponseV1(resourceClassIri, userProfile)
-      propertyTypes                    = resInfo.restype_info.properties.toVector
-
+      resInfo      <- getResourceTypeResponseV1(resourceClassIri, userProfile)
+      propertyTypes = resInfo.restype_info.properties.toVector
     } yield PropertyTypesForResourceTypeResponseV1(properties = propertyTypes)
+}
 
+object OntologyResponderV1Live {
+  val layer: URLayer[ValueUtilV1 with StringFormatter with MessageRelay with AppConfig, OntologyResponderV1Live] =
+    ZLayer.fromZIO {
+      for {
+        config  <- ZIO.service[AppConfig]
+        mr      <- ZIO.service[MessageRelay]
+        sf      <- ZIO.service[StringFormatter]
+        vu      <- ZIO.service[ValueUtilV1]
+        handler <- mr.subscribe(OntologyResponderV1Live(config, mr, vu, sf))
+      } yield handler
+    }
 }

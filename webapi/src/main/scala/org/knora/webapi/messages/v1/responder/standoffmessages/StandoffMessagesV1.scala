@@ -11,6 +11,7 @@ import spray.json._
 import java.util.UUID
 
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -20,7 +21,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 /**
  * An abstract trait representing a Knora v1 API request message that can be sent to `StandoffResponderV1`.
  */
-sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
+sealed trait StandoffResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
 
 /**
  * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.

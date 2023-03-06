@@ -966,6 +966,208 @@ properties of a class, and the predicates `salsah-gui:guiElement` and
 editing the value of a property. For more information on the
 `salsah-gui` ontology, see [The SALSAH GUI Ontology](../../02-dsp-ontologies/salsah-gui.md).
 
+### Querying class definition
+
+To get the definition of a class, use the following route:
+
+```
+HTTP GET to http://host/v2/ontologies/classes/CLASS_IRI
+```
+
+Sample response:
+
+```json
+{
+    "knora-api:lastModificationDate": {
+        "@value": "2023-01-09T15:39:48.548298041Z",
+        "@type": "xsd:dateTimeStamp"
+    },
+    "rdfs:label": "The anything ontology",
+    "@graph": [
+        {
+            "knora-api:isResourceClass": true,
+            "rdfs:label": "Institution",
+            "knora-api:canBeInstantiated": true,
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToProject"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:creationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLinkValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkToValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasName"
+                    },
+                    "owl:cardinality": 1,
+                    "salsah-gui:guiOrder": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasLocation"
+                    },
+                    "owl:cardinality": 1,
+                    "salsah-gui:guiOrder": 2
+                }
+            ],
+            "rdfs:comment": "some comment",
+            "@type": "owl:Class",
+            "@id": "anything:Institution"
+        }
+    ],
+    "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0001"
+    },
+    "@type": "owl:Ontology",
+    "@id": "http://0.0.0.0:3333/ontology/0001/anything/v2",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+        "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+    }
+}
+```
+
+
 ## Ontology Updates
 
 The ontology update API must ensure that the ontologies it creates are
@@ -1313,6 +1515,8 @@ Values for `rdfs:label` must be submitted in at least one language,
 either as an object or as an array of objects. The submitted labels will
 replace the existing ones.
 
+To get the current labels use the [class definition](#querying-class-definition).
+
 ### Changing the Comments of a Class
 
 This operation is permitted even if the class is used in data.
@@ -1352,6 +1556,8 @@ HTTP PUT to http://host/v2/ontologies/classes
 Values for `rdfs:comment` must be submitted in at least one language,
 either as an object or as an array of objects. The submitted comments
 will replace the existing ones.
+
+To get the current comments use the [class definition](#querying-class-definition).
 
 ### Deleting the Comments of a Class
 
@@ -1717,11 +1923,30 @@ The response will look like this:
 Failure:
 ```json
 {
-    "knora-api:canDo": false,
-    "knora-api:cannotDoReason": "An explanation, understandable to humans, why the update cannot be carried out.",
-    "@context": {
-        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
-    } 
+  "knora-api:canDo": false,
+  "knora-api:cannotDoReason": "An explanation, understandable to humans, why the update cannot be carried out.",
+  "knora-api:cannotDoContext": {
+    "knora-api:canSetCardinalityCheckFailure": [
+      {
+        "knora-api:canSetCardinalityOntologySuperClassCheckFailed": [
+          {
+            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#somePublicationInstance"
+          },
+          {
+            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#someArticleInstance"
+          }
+        ]
+      },
+      {
+        "knora-api:canSetCardinalityOntologySubclassCheckFailed": {
+          "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2#someJournalArticleInstance"
+        }
+      }
+    ]
+  },
+  "@context": {
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+  }
 }
 ```
 

@@ -25,6 +25,7 @@ import zio.logging.backend.SLF4J
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.responders.ActorDeps
+import org.knora.webapi.routing.UnsafeZioRun
 
 abstract class CoreSpec
     extends AnyWordSpec
@@ -57,10 +58,15 @@ abstract class CoreSpec
   ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
 
   // create a configured runtime
-  val runtime = Unsafe.unsafe { implicit u =>
+  implicit val runtime = Unsafe.unsafe { implicit u =>
     Runtime.unsafe
       .fromLayer(bootstrap)
   }
+
+  def getService[R: Tag](implicit runtime: Runtime[R]): R = UnsafeZioRun.runOrThrow(ZIO.service[R])
+
+  def runOrThrowWithService[R: Tag, A](run: R => A)(implicit runtime: Runtime[R]): A =
+    UnsafeZioRun.runOrThrow(ZIO.service[R].map(run))
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code

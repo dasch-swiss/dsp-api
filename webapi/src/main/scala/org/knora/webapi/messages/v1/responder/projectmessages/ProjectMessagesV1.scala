@@ -13,6 +13,7 @@ import spray.json.NullOptions
 import spray.json.RootJsonFormat
 
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -28,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 /**
  * An abstract trait representing a request message that can be sent to [[org.knora.webapi.responders.v1.ProjectsResponderV1]].
  */
-sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
+sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
 
 // Requests
 /**

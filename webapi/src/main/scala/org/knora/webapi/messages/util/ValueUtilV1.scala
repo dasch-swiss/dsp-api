@@ -5,18 +5,14 @@
 
 package org.knora.webapi.messages.util
 
-import akka.actor.ActorRef
-import akka.pattern._
-import akka.util.Timeout
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import zio._
 
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import dsp.errors.OntologyConstraintException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -34,9 +30,164 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 /**
  * Converts data from SPARQL query results into [[ApiValueV1]] objects.
  */
-class ValueUtilV1(appConfig: AppConfig) {
+trait ValueUtilV1 {
+  def makeSipiImagePreviewGetUrlFromFilename(projectShortcode: IRI, filename: IRI): IRI
 
-  private val stringFormatter = StringFormatter.getGeneralInstance
+  /**
+   * Creates a IIIF URL for accessing an image file via Sipi.
+   *
+   * @param imageFileValueV1 the image file value representing the image.
+   * @return a Sipi IIIF URL.
+   */
+  def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String
+
+  /**
+   * Creates a URL for accessing a document file via Sipi.
+   *
+   * @param documentFileValueV1 the document file value.
+   * @return a Sipi  URL.
+   */
+  def makeSipiDocumentGetUrlFromFilename(documentFileValueV1: DocumentFileValueV1): String
+
+  /**
+   * Creates a URL for accessing a archive file via Sipi.
+   *
+   * @param archiveFileValueV1 the archive file value.
+   * @return a Sipi  URL.
+   */
+  def makeSipiArchiveGetUrlFromFilename(archiveFileValueV1: ArchiveFileValueV1): String
+
+  /**
+   * Creates a URL for accessing a text file via Sipi.
+   *
+   * @param textFileValue the text file value representing the text file.
+   * @return a Sipi URL.
+   */
+  def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1): String
+
+  /**
+   * Creates a URL for accessing an audio file via Sipi.
+   *
+   * @param audioFileValue the file value representing the audio file.
+   * @return a Sipi URL.
+   */
+  def makeSipiAudioFileGetUrlFromFilename(audioFileValue: AudioFileValueV1): String
+
+  /**
+   * Creates a URL for accessing a video file via Sipi.
+   *
+   * @param videoFileValue the file value representing the video file.
+   * @return a Sipi URL.
+   */
+  def makeSipiVideoFileGetUrlFromFilename(videoFileValue: MovingImageFileValueV1): String
+
+  /**
+   * Converts a [[FileValueV1]] (which is used internally by the Knora API server) to a [[LocationV1]] (which is
+   * used in certain API responses).
+   *
+   * @param fileValueV1 a [[FileValueV1]].
+   * @return a [[LocationV1]].
+   */
+  def fileValueV12LocationV1(fileValueV1: FileValueV1): LocationV1
+
+  /**
+   * Creates a URL pointing to the given resource class icon. From the resource class IRI it gets the ontology specific path, i.e. the ontology name.
+   * If the resource class IRI is "http://www.knora.org/ontology/knora-base#Region", the ontology name would be "knora-base".
+   * To the base path, the icon name is appended. In case of a region with the icon name "region.gif",
+   * "http://salsahapp:port/project-icons-basepath/knora-base/region.gif" is returned.
+   *
+   * This method requires the IRI segment before the last slash to be a unique identifier for all the ontologies used with Knora..
+   *
+   * @param resourceClassIri the IRI of the resource class in question.
+   * @param iconsSrc         the name of the icon file.
+   */
+  def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI
+
+  /**
+   * Creates [[ValueProps]] from a List of [[VariableResultsRow]] representing a value object
+   * (the triples where the given value object is the subject in).
+   *
+   * A [[VariableResultsRow]] is expected to have the following members (SPARQL variable names):
+   *
+   * - objPred: the object predicate (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
+   * - objObj: The string representation of the value assigned to objPred.
+   *
+   * In one given row, objPred **must** indicate the type of the given value object using rdfs:type (e.g. http://www.knora.org/ontology/knora-base#TextValue)
+   *
+   * In case the given value object contains standoff (objPred is http://www.knora.org/ontology/knora-base#valueHasStandoff),
+   * it has the following additional members compared those mentioned above:
+   *
+   * - predStandoff: the standoff predicate (e.g. http://www.knora.org/ontology/knora-base#standoffHasStart)
+   * - objStandoff: the string representation of the value assigned to predStandoff
+   *
+   * @param valueIri the IRI of the value that was queried.
+   * @param objRows  SPARQL results.
+   * @return a [[ValueProps]] representing the SPARQL results.
+   */
+  def createValueProps(
+    valueIri: IRI,
+    objRows: _root_.scala.collection.immutable.Seq[_root_.org.knora.webapi.messages.util.rdf.VariableResultsRow]
+  ): _root_.org.knora.webapi.messages.util.GroupedProps.ValueProps
+
+  /**
+   * Converts three lists of SPARQL query results representing all the properties of a resource into a [[GroupedPropertiesByType]].
+   *
+   * Each [[VariableResultsRow]] is expected to have the following SPARQL variables:
+   *
+   * - prop: the IRI of the resource property (e.g. http://www.knora.org/ontology/knora-base#hasComment)
+   * - obj: the IRI of the object that the property points to, which may be either a value object (an ordinary value or a reification) or another resource
+   * - objPred: the IRI of each predicate of `obj` (e.g. for its literal contents, or for its permissions)
+   * - objObj: the object of each `objPred`
+   *
+   * The remaining members are identical to those documented in [[createValueProps]].
+   *
+   * @param rowsWithOrdinaryValues SPARQL result rows describing properties that point to ordinary values (not link values).
+   * @param rowsWithLinkValues     SPARQL result rows describing properties that point link values (reifications of links to resources).
+   * @param rowsWithLinks          SPARQL result rows describing properties that point to resources.
+   * @return a [[GroupedPropertiesByType]] representing the SPARQL results.
+   */
+  def createGroupedPropsByType(
+    rowsWithOrdinaryValues: _root_.scala.collection.immutable.Seq[
+      _root_.org.knora.webapi.messages.util.rdf.VariableResultsRow
+    ],
+    rowsWithLinkValues: _root_.scala.collection.immutable.Seq[
+      _root_.org.knora.webapi.messages.util.rdf.VariableResultsRow
+    ],
+    rowsWithLinks: _root_.scala.collection.immutable.Seq[_root_.org.knora.webapi.messages.util.rdf.VariableResultsRow]
+  ): _root_.org.knora.webapi.messages.util.GroupedProps.GroupedPropertiesByType
+
+  /**
+   * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
+   *
+   * @param propertyIri                   the IRI of the property.
+   * @param valueType                     the IRI of the value type.
+   * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
+   * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
+   */
+  def checkValueTypeForPropertyObjectClassConstraint(
+    propertyIri: IRI,
+    valueType: IRI,
+    propertyObjectClassConstraint: IRI,
+    userProfile: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+  ): zio.Task[Unit]
+
+  /**
+   * Converts a [[CreateValueResponseV1]] returned by the values responder on value creation
+   * to the expected format for the resources responder [[ResourceCreateValueResponseV1]], which describes a value
+   * added to a new resource.
+   *
+   * @param resourceIri   the IRI of the created resource.
+   * @param creatorIri    the creator of the resource.
+   * @param propertyIri   the property the valueResponse belongs to.
+   * @param valueResponse the value that has been attached to the resource.
+   * @return a [[ResourceCreateValueResponseV1]] representing the created value.
+   */
+  def convertCreateValueResponseV1ToResourceCreateValueResponseV1(
+    resourceIri: IRI,
+    creatorIri: IRI,
+    propertyIri: IRI,
+    valueResponse: _root_.org.knora.webapi.messages.v1.responder.valuemessages.CreateValueResponseV1
+  ): _root_.org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateValueResponseV1
 
   /**
    * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -46,43 +197,75 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @return a [[ApiValueV1]] representing the `Value`.
    */
   def makeValueV1(
+    valueProps: _root_.org.knora.webapi.messages.util.GroupedProps.ValueProps,
+    projectShortcode: String,
+    userProfile: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+  ): zio.Task[_root_.org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1]
+
+  /**
+   * Creates an attribute segment for the Salsah GUI from the given resource class.
+   * Example: if "http://www.knora.org/ontology/0803/incunabula#book" is given, the function returns "restypeid=http://www.knora.org/ontology/0803/incunabula#book".
+   *
+   * @param resourceClass the resource class.
+   * @return an attribute string to be included in the attributes for the GUI
+   */
+  def makeAttributeRestype(resourceClass: IRI): String
+
+  /**
+   * Given a set of attribute segments representing assertions about the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property,
+   * combines the attributes into a string for use in an API v1 response.
+   *
+   * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
+   * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
+   */
+  def makeAttributeString(attributes: Set[String]): Option[String]
+}
+
+final case class ValueUtilV1Live(
+  appConfig: AppConfig,
+  messageRelay: MessageRelay,
+  standoffTagUtilV2: StandoffTagUtilV2,
+  implicit val stringFormatter: StringFormatter
+) extends ValueUtilV1 {
+
+  /**
+   * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
+   *
+   * @param valueProps           a [[GroupedProps.ValueProps]] resulting from querying the `Value`, in which the keys are RDF predicates,
+   *                             and the values are lists of the objects of each predicate.
+   * @return a [[ApiValueV1]] representing the `Value`.
+   */
+  override def makeValueV1(
     valueProps: ValueProps,
     projectShortcode: String,
-    appActor: ActorRef,
     userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+  ): Task[ApiValueV1] = {
     val valueTypeIri = valueProps.literalData(OntologyConstants.Rdf.Type).literals.head
 
     valueTypeIri match {
-      case OntologyConstants.KnoraBase.TextValue     => makeTextValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.IntValue      => makeIntValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.DecimalValue  => makeDecimalValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.BooleanValue  => makeBooleanValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.UriValue      => makeUriValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.DateValue     => makeDateValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.ColorValue    => makeColorValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.GeomValue     => makeGeomValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.GeonameValue  => makeGeonameValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.ListValue     => makeListValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.TimeValue     => makeTimeValue(valueProps, appActor, userProfile)
-      case OntologyConstants.KnoraBase.StillImageFileValue =>
-        makeStillImageValue(valueProps, projectShortcode, appActor, userProfile)
-      case OntologyConstants.KnoraBase.TextFileValue =>
-        makeTextFileValue(valueProps, projectShortcode, appActor, userProfile)
-      case OntologyConstants.KnoraBase.AudioFileValue =>
-        makeAudioFileValue(valueProps, projectShortcode, appActor, userProfile)
-      case OntologyConstants.KnoraBase.MovingImageFileValue =>
-        makeVideoFileValue(valueProps, projectShortcode, appActor, userProfile)
-      case OntologyConstants.KnoraBase.DocumentFileValue =>
-        makeDocumentFileValue(valueProps, projectShortcode, appActor, userProfile)
-      case OntologyConstants.KnoraBase.ArchiveFileValue =>
-        makeArchiveFileValue(valueProps, projectShortcode, appActor, userProfile)
-      case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.TextValue            => makeTextValue(valueProps, userProfile)
+      case OntologyConstants.KnoraBase.IntValue             => makeIntValue(valueProps)
+      case OntologyConstants.KnoraBase.DecimalValue         => makeDecimalValue(valueProps)
+      case OntologyConstants.KnoraBase.BooleanValue         => makeBooleanValue(valueProps)
+      case OntologyConstants.KnoraBase.UriValue             => makeUriValue(valueProps)
+      case OntologyConstants.KnoraBase.DateValue            => makeDateValue(valueProps)
+      case OntologyConstants.KnoraBase.ColorValue           => makeColorValue(valueProps)
+      case OntologyConstants.KnoraBase.GeomValue            => makeGeomValue(valueProps)
+      case OntologyConstants.KnoraBase.GeonameValue         => makeGeonameValue(valueProps)
+      case OntologyConstants.KnoraBase.ListValue            => makeListValue(valueProps)
+      case OntologyConstants.KnoraBase.IntervalValue        => makeIntervalValue(valueProps)
+      case OntologyConstants.KnoraBase.TimeValue            => makeTimeValue(valueProps)
+      case OntologyConstants.KnoraBase.StillImageFileValue  => makeStillImageValue(valueProps, projectShortcode)
+      case OntologyConstants.KnoraBase.TextFileValue        => makeTextFileValue(valueProps, projectShortcode)
+      case OntologyConstants.KnoraBase.AudioFileValue       => makeAudioFileValue(valueProps, projectShortcode)
+      case OntologyConstants.KnoraBase.MovingImageFileValue => makeVideoFileValue(valueProps, projectShortcode)
+      case OntologyConstants.KnoraBase.DocumentFileValue    => makeDocumentFileValue(valueProps, projectShortcode)
+      case OntologyConstants.KnoraBase.ArchiveFileValue     => makeArchiveFileValue(valueProps, projectShortcode)
+      case OntologyConstants.KnoraBase.LinkValue            => makeLinkValue(valueProps)
     }
   }
 
-  def makeSipiImagePreviewGetUrlFromFilename(projectShortcode: String, filename: String): String =
+  override def makeSipiImagePreviewGetUrlFromFilename(projectShortcode: String, filename: String): String =
     s"${appConfig.sipi.externalBaseUrl}/$projectShortcode/$filename/full/!128,128/0/default.jpg"
 
   /**
@@ -91,7 +274,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param imageFileValueV1 the image file value representing the image.
    * @return a Sipi IIIF URL.
    */
-  def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String =
+  override def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String =
     s"${appConfig.sipi.externalBaseUrl}/${imageFileValueV1.projectShortcode}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
 
   /**
@@ -100,7 +283,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param documentFileValueV1 the document file value.
    * @return a Sipi  URL.
    */
-  def makeSipiDocumentGetUrlFromFilename(documentFileValueV1: DocumentFileValueV1): String =
+  override def makeSipiDocumentGetUrlFromFilename(documentFileValueV1: DocumentFileValueV1): String =
     s"${appConfig.sipi.externalBaseUrl}/${documentFileValueV1.projectShortcode}/${documentFileValueV1.internalFilename}/file"
 
   /**
@@ -109,7 +292,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param archiveFileValueV1 the archive file value.
    * @return a Sipi  URL.
    */
-  def makeSipiArchiveGetUrlFromFilename(archiveFileValueV1: ArchiveFileValueV1): String =
+  override def makeSipiArchiveGetUrlFromFilename(archiveFileValueV1: ArchiveFileValueV1): String =
     s"${appConfig.sipi.externalBaseUrl}/${archiveFileValueV1.projectShortcode}/${archiveFileValueV1.internalFilename}/file"
 
   /**
@@ -118,7 +301,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param textFileValue the text file value representing the text file.
    * @return a Sipi URL.
    */
-  def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1): String =
+  override def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1): String =
     s"${appConfig.sipi.externalBaseUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
 
   /**
@@ -127,7 +310,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param audioFileValue the file value representing the audio file.
    * @return a Sipi URL.
    */
-  def makeSipiAudioFileGetUrlFromFilename(audioFileValue: AudioFileValueV1): String =
+  override def makeSipiAudioFileGetUrlFromFilename(audioFileValue: AudioFileValueV1): String =
     s"${appConfig.sipi.externalBaseUrl}/${audioFileValue.projectShortcode}/${audioFileValue.internalFilename}/file"
 
   /**
@@ -136,7 +319,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param videoFileValue the file value representing the video file.
    * @return a Sipi URL.
    */
-  def makeSipiVideoFileGetUrlFromFilename(videoFileValue: MovingImageFileValueV1): String =
+  override def makeSipiVideoFileGetUrlFromFilename(videoFileValue: MovingImageFileValueV1): String =
     s"${appConfig.sipi.externalBaseUrl}/${videoFileValue.projectShortcode}/${videoFileValue.internalFilename}/file"
 
   // A Map of MIME types to Knora API v1 binary format name.
@@ -182,7 +365,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param fileValueV1 a [[FileValueV1]].
    * @return a [[LocationV1]].
    */
-  def fileValueV12LocationV1(fileValueV1: FileValueV1): LocationV1 =
+  override def fileValueV12LocationV1(fileValueV1: FileValueV1): LocationV1 =
     fileValueV1 match {
       case stillImageFileValueV1: StillImageFileValueV1 =>
         LocationV1(
@@ -244,7 +427,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param resourceClassIri the IRI of the resource class in question.
    * @param iconsSrc         the name of the icon file.
    */
-  def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
+  override def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
     // get ontology name, e.g. "knora-base" from "http://www.knora.org/ontology/knora-base#Region"
     // add +1 to ignore the slash
     val ontologyName =
@@ -275,7 +458,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param objRows  SPARQL results.
    * @return a [[ValueProps]] representing the SPARQL results.
    */
-  def createValueProps(valueIri: IRI, objRows: Seq[VariableResultsRow]): ValueProps = {
+  override def createValueProps(valueIri: IRI, objRows: Seq[VariableResultsRow]): ValueProps = {
 
     val groupedValueObject = groupKnoraValueObjectPredicateRows(objRows.map(_.rowMap))
 
@@ -308,7 +491,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param rowsWithLinks          SPARQL result rows describing properties that point to resources.
    * @return a [[GroupedPropertiesByType]] representing the SPARQL results.
    */
-  def createGroupedPropsByType(
+  override def createGroupedPropsByType(
     rowsWithOrdinaryValues: Seq[VariableResultsRow],
     rowsWithLinkValues: Seq[VariableResultsRow],
     rowsWithLinks: Seq[VariableResultsRow]
@@ -325,30 +508,27 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param propertyIri                   the IRI of the property.
    * @param valueType                     the IRI of the value type.
    * @param propertyObjectClassConstraint the IRI of the property's `knora-base:objectClassConstraint`.
-   * @param responderManager              a reference to the Knora API Server responder manager.
    * @return A future containing Unit on success, or a failed future if the value type is not valid for the property's range.
    */
-  def checkValueTypeForPropertyObjectClassConstraint(
+  override def checkValueTypeForPropertyObjectClassConstraint(
     propertyIri: IRI,
     valueType: IRI,
     propertyObjectClassConstraint: IRI,
-    appActor: ActorRef,
     userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] =
+  ): Task[Unit] =
     if (propertyObjectClassConstraint == valueType) {
-      Future.successful(())
+      ZIO.succeed(())
     } else {
       for {
         checkSubClassResponse <-
-          appActor
-            .ask(
+          messageRelay
+            .ask[CheckSubClassResponseV1](
               CheckSubClassRequestV1(
                 subClassIri = valueType,
                 superClassIri = propertyObjectClassConstraint,
                 userProfile = userProfile
               )
             )
-            .mapTo[CheckSubClassResponseV1]
 
         _ = if (!checkSubClassResponse.isSubClass) {
               throw OntologyConstraintException(
@@ -369,7 +549,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueResponse the value that has been attached to the resource.
    * @return a [[ResourceCreateValueResponseV1]] representing the created value.
    */
-  def convertCreateValueResponseV1ToResourceCreateValueResponseV1(
+  override def convertCreateValueResponseV1ToResourceCreateValueResponseV1(
     resourceIri: IRI,
     creatorIri: IRI,
     propertyIri: IRI,
@@ -576,13 +756,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return an [[IntegerValueV1]].
    */
-  private def makeIntValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeIntValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(IntegerValueV1(predicates(OntologyConstants.KnoraBase.ValueHasInteger).literals.head.toInt))
+    ZIO.attempt(IntegerValueV1(predicates(OntologyConstants.KnoraBase.ValueHasInteger).literals.head.toInt))
   }
 
   /**
@@ -591,13 +768,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[DecimalValueV1]].
    */
-  private def makeDecimalValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeDecimalValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head)))
+    ZIO.attempt(DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head)))
   }
 
   /**
@@ -606,13 +780,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[BooleanValueV1]].
    */
-  private def makeBooleanValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeBooleanValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean))
+    ZIO.attempt(BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean))
   }
 
   /**
@@ -621,13 +792,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[UriValueV1]].
    */
-  private def makeUriValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeUriValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head))
+    ZIO.attempt(UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head))
   }
 
   /**
@@ -636,10 +804,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[DateValueV1]].
    */
-  private def makeDateValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeDateValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     val julianDayNumberValueV1 = JulianDayNumberValueV1(
@@ -652,7 +817,7 @@ class ValueUtilV1(appConfig: AppConfig) {
       calendar = KnoraCalendarV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasCalendar).literals.head)
     )
 
-    Future(DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1))
+    ZIO.attempt(DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1))
   }
 
   /**
@@ -661,13 +826,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return an [[IntervalValueV1]].
    */
-  private def makeIntervalValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeIntervalValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(
+    ZIO.attempt(
       IntervalValueV1(
         timeval1 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head),
         timeval2 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head)
@@ -681,14 +843,11 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[TimeValueV1]].
    */
-  private def makeTimeValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeTimeValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates   = valueProps.literalData
     val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
 
-    Future(
+    ZIO.attempt(
       TimeValueV1(
         timeStamp = stringFormatter.xsdDateTimeStampToInstant(
           timeStampStr,
@@ -703,7 +862,6 @@ class ValueUtilV1(appConfig: AppConfig) {
    *
    * @param utf8str              the string representation.
    * @param valueProps           the properties of the TextValue with standoff.
-   * @param responderManager     the responder manager.
    * @param userProfile          the client that is making the request.
    * @return a [[TextValueWithStandoffV1]].
    */
@@ -711,9 +869,8 @@ class ValueUtilV1(appConfig: AppConfig) {
     utf8str: String,
     language: Option[String] = None,
     valueProps: ValueProps,
-    appActor: ActorRef,
     userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
+  ): Task[TextValueWithStandoffV1] = {
 
     // get the IRI of the mapping
     val mappingIri = valueProps.literalData
@@ -730,20 +887,14 @@ class ValueUtilV1(appConfig: AppConfig) {
 
       // get the mapping and the related standoff entities
       // v2 responder is used here directly, v1 responder would inernally use v2 responder anyway and do unnecessary back and forth conversions
-      mappingResponse: GetMappingResponseV2 <- appActor
-                                                 .ask(
-                                                   GetMappingRequestV2(
-                                                     mappingIri = mappingIri,
-                                                     requestingUser = userProfile
-                                                   )
-                                                 )
-                                                 .mapTo[GetMappingResponseV2]
+      mappingResponse <- messageRelay.ask[GetMappingResponseV2](
+                           GetMappingRequestV2(
+                             mappingIri = mappingIri,
+                             requestingUser = userProfile
+                           )
+                         )
 
-      standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(
-                                            standoffAssertions = valueProps.standoff,
-                                            appActor = appActor,
-                                            requestingUser = userProfile
-                                          )
+      standoffTags <- standoffTagUtilV2.createStandoffTagsV2FromSelectResults(valueProps.standoff, userProfile)
 
     } yield TextValueWithStandoffV1(
       utf8str = utf8str,
@@ -762,11 +913,8 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param utf8str the string representation of the TextValue.
    * @return a [[TextValueSimpleV1]].
    */
-  private def makeTextValueSimple(utf8str: String, language: Option[String] = None)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[TextValueSimpleV1] =
-    Future(
+  private def makeTextValueSimple(utf8str: String, language: Option[String] = None): Task[TextValueSimpleV1] =
+    ZIO.attempt(
       TextValueSimpleV1(
         utf8str = utf8str,
         language = language
@@ -781,9 +929,8 @@ class ValueUtilV1(appConfig: AppConfig) {
    */
   private def makeTextValue(
     valueProps: ValueProps,
-    appActor: ActorRef,
     userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+  ): Task[ApiValueV1] = {
 
     val valueHasString: String = valueProps.literalData
       .get(OntologyConstants.KnoraBase.ValueHasString)
@@ -800,8 +947,7 @@ class ValueUtilV1(appConfig: AppConfig) {
         utf8str = valueHasString,
         language = valueHasLanguage,
         valueProps = valueProps,
-        appActor = appActor,
-        userProfile = userProfile
+        userProfile
       )
 
     } else {
@@ -817,13 +963,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[ColorValueV1]].
    */
-  private def makeColorValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeColorValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(ColorValueV1(predicates(OntologyConstants.KnoraBase.ValueHasColor).literals.head))
+    ZIO.attempt(ColorValueV1(predicates(OntologyConstants.KnoraBase.ValueHasColor).literals.head))
   }
 
   /**
@@ -832,13 +975,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[GeomValueV1]].
    */
-  private def makeGeomValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeGeomValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(GeomValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeometry).literals.head))
+    ZIO.attempt(GeomValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeometry).literals.head))
   }
 
   /**
@@ -847,13 +987,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[HierarchicalListValueV1]].
    */
-  private def makeListValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeListValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(HierarchicalListValueV1(predicates(OntologyConstants.KnoraBase.ValueHasListNode).literals.head))
+    ZIO.attempt(HierarchicalListValueV1(predicates(OntologyConstants.KnoraBase.ValueHasListNode).literals.head))
   }
 
   /**
@@ -864,13 +1001,11 @@ class ValueUtilV1(appConfig: AppConfig) {
    */
   private def makeStillImageValue(
     valueProps: ValueProps,
-    projectShortcode: String,
-    appActor: ActorRef,
-    userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    projectShortcode: String
+  ): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(
+    ZIO.attempt(
       StillImageFileValueV1(
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
@@ -890,13 +1025,11 @@ class ValueUtilV1(appConfig: AppConfig) {
    */
   private def makeTextFileValue(
     valueProps: ValueProps,
-    projectShortcode: String,
-    appActor: ActorRef,
-    userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    projectShortcode: String
+  ): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(
+    ZIO.attempt(
       TextFileValueV1(
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
@@ -914,13 +1047,11 @@ class ValueUtilV1(appConfig: AppConfig) {
    */
   private def makeDocumentFileValue(
     valueProps: ValueProps,
-    projectShortcode: String,
-    appActor: ActorRef,
-    userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    projectShortcode: String
+  ): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(
+    ZIO.attempt(
       DocumentFileValueV1(
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
@@ -941,13 +1072,11 @@ class ValueUtilV1(appConfig: AppConfig) {
    */
   private def makeArchiveFileValue(
     valueProps: ValueProps,
-    projectShortcode: String,
-    appActor: ActorRef,
-    userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    projectShortcode: String
+  ): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(
+    ZIO.attempt(
       ArchiveFileValueV1(
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
@@ -965,13 +1094,11 @@ class ValueUtilV1(appConfig: AppConfig) {
    */
   private def makeAudioFileValue(
     valueProps: ValueProps,
-    projectShortcode: String,
-    appActor: ActorRef,
-    userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    projectShortcode: String
+  ): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(
+    ZIO.attempt(
       AudioFileValueV1(
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
@@ -992,13 +1119,11 @@ class ValueUtilV1(appConfig: AppConfig) {
    */
   private def makeVideoFileValue(
     valueProps: ValueProps,
-    projectShortcode: String,
-    appActor: ActorRef,
-    userProfile: UserADM
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    projectShortcode: String
+  ): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(
+    ZIO.attempt(
       MovingImageFileValueV1(
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
@@ -1022,13 +1147,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[LinkValueV1]].
    */
-  private def makeLinkValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeLinkValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(
+    ZIO.attempt(
       LinkValueV1(
         subjectIri = predicates(OntologyConstants.Rdf.Subject).literals.head,
         predicateIri = predicates(OntologyConstants.Rdf.Predicate).literals.head,
@@ -1044,13 +1166,10 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[GeonameValueV1]].
    */
-  private def makeGeonameValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[ApiValueV1] = {
+  private def makeGeonameValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    Future(GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head))
+    ZIO.attempt(GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head))
   }
 
   /**
@@ -1060,7 +1179,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param resourceClass the resource class.
    * @return an attribute string to be included in the attributes for the GUI
    */
-  def makeAttributeRestype(resourceClass: IRI): String =
+  override def makeAttributeRestype(resourceClass: IRI): String =
     "restypeid=" + resourceClass
 
   /**
@@ -1070,7 +1189,7 @@ class ValueUtilV1(appConfig: AppConfig) {
    * @param attributes the values of [[OntologyConstants.SalsahGui.GuiAttribute]] for a property.
    * @return a semicolon-delimited string containing the attributes, or [[None]] if no attributes were found.
    */
-  def makeAttributeString(attributes: Set[String]): Option[String] =
+  override def makeAttributeString(attributes: Set[String]): Option[String] =
     if (attributes.isEmpty) {
       None
     } else {
@@ -1139,4 +1258,9 @@ object GroupedProps {
    */
   case class ValueLiterals(literals: Seq[String])
 
+}
+
+object ValueUtilV1Live {
+  val layer: URLayer[AppConfig with MessageRelay with StandoffTagUtilV2 with StringFormatter, ValueUtilV1Live] =
+    ZLayer.fromFunction(ValueUtilV1Live.apply _)
 }

@@ -11,7 +11,7 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.0.11" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.6.3" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.7.1" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.10"
 
@@ -23,9 +23,9 @@ object Dependencies {
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.3.0"
-  val ZioLoggingVersion           = "2.1.9"
-  val ZioMetricsConnectorsVersion = "2.0.6"
-  val ZioPreludeVersion           = "1.0.0-RC16"
+  val ZioLoggingVersion           = "2.1.10"
+  val ZioMetricsConnectorsVersion = "2.0.7"
+  val ZioPreludeVersion           = "1.0.0-RC17"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.9"
 
@@ -38,7 +38,7 @@ object Dependencies {
   val zioHttp              = "dev.zio" %% "zio-http"               % ZioHttpVersion
   val zioJson              = "dev.zio" %% "zio-json"               % ZioJsonVersion
   val zioLogging           = "dev.zio" %% "zio-logging"            % ZioLoggingVersion
-  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j"      % ZioLoggingVersion
+  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j2"     % ZioLoggingVersion
   val zioMacros            = "dev.zio" %% "zio-macros"             % ZioVersion
   val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
   val zioPrelude           = "dev.zio" %% "zio-prelude"            % ZioPreludeVersion
@@ -80,7 +80,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.0.1" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.0.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.72"
 
   // caching
