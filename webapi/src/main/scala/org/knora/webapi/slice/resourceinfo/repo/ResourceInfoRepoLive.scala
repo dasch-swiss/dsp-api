@@ -5,8 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.repo
 
-import zio.UIO
-import zio.ZIO
+import zio._
 
 import java.time.Instant
 
@@ -23,7 +22,7 @@ final case class ResourceInfoRepoLive(ts: TriplestoreService) extends ResourceIn
   override def findByProjectAndResourceClass(
     projectIri: InternalIri,
     resourceClass: InternalIri
-  ): UIO[List[ResourceInfo]] = {
+  ): Task[List[ResourceInfo]] = {
     val query = resourcesByCreationDate(resourceClass, projectIri).toString
     ZIO.debug(query) *> ts.sparqlHttpSelect(query).map(toResourceInfoList)
   }

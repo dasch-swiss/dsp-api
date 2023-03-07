@@ -77,7 +77,8 @@ import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
@@ -105,7 +106,7 @@ object LayersLive {
       with GroupsResponderADM
       with HttpServer
       with IIIFService
-      with IIIFServiceManager
+      with IIIFRequestMessageHandler
       with IriService
       with JWTService
       with ListsResponderV2
@@ -157,7 +158,7 @@ object LayersLive {
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
-      IIIFServiceManager.layer,
+      IIIFRequestMessageHandlerLive.layer,
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       IriService.layer,
