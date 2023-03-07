@@ -120,7 +120,7 @@
 ## Images Reviewer
 <http://rdfh.ch/users/images-reviewer-user>
     rdf:type                         knora-admin:User ;
-    knora-admin:username             "images-reviewer-user"^^xsd:string ;
+    knora-admin:username             "images_reviewer_user"^^xsd:string ;
     knora-admin:email                "images-reviewer-user@example.com"^^xsd:string ;
     knora-admin:givenName            "User03"^^xsd:string ;
     knora-admin:familyName           "User"^^xsd:string ;
@@ -208,7 +208,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ## Project Creator and Member
 <http://rdfh.ch/users/91e19f1e01>
     rdf:type                         knora-admin:User ;
-    knora-admin:username             "root-alt"^^xsd:string ;
+    knora-admin:username             "root_alt"^^xsd:string ;
     knora-admin:familyName           "Admin-alt"^^xsd:string ;
     knora-admin:givenName            "Administrator-alt"^^xsd:string ;
     knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
@@ -390,7 +390,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ## Project Member
 <http://rdfh.ch/users/webernProjectMember>
     a                                knora-admin:User ;
-    knora-admin:username             "webern-nutzer"^^xsd:string ;
+    knora-admin:username             "webern_nutzer"^^xsd:string ;
     knora-admin:familyName           "Webern"^^xsd:string ;
     knora-admin:givenName            "Nutzer"^^xsd:string ;
     knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
@@ -403,7 +403,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ## Project Admin
 <http://rdfh.ch/users/webernProjectAdmin>
     a                                 knora-admin:User ;
-    knora-admin:username              "webern-admin"^^xsd:string ;
+    knora-admin:username              "webern_admin"^^xsd:string ;
     knora-admin:familyName            "Webern"^^xsd:string ;
     knora-admin:givenName             "Admin"^^xsd:string ;
     knora-admin:password              "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
