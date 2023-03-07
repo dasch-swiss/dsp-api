@@ -363,23 +363,19 @@ case class TriplestoreServiceLive(
    * This method is useful in cases with large amount of data (over 10 million statements),
    * where the method [[dropAllTriplestoreContent()]] could create timeout issues.
    */
-  def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK] = {
-    val sparqlQuery = (graph: String) => s"DROP GRAPH <$graph>"
-
+  def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK] =
     for {
       _      <- ZIO.logWarning("==>> Drop All Data Start")
       graphs <- getAllGraphs
       _      <- ZIO.logInfo(s"Found graphs: ${graphs.length}")
-      _ <- ZIO.foreach(graphs)(graph =>
-             for {
-               _ <- ZIO.logInfo(s"Dropping graph: $graph")
-               _ <- getSparqlHttpResponse(sparqlQuery(graph), isUpdate = true)
-               _ <- ZIO.logInfo(s"==>> Dropped graph: $graph")
-             } yield ()
-           )
-      _ <- ZIO.logWarning("==>> Drop All Data End")
+      _      <- ZIO.foreachDiscard(graphs)(dropGraph)
+      _      <- ZIO.logWarning("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
-  }
+
+  private def dropGraph(graphName: String): Task[Unit] =
+    ZIO.logInfo(s"Dropping graph: $graphName") *>
+      getSparqlHttpResponse(s"DROP GRAPH <$graphName>", isUpdate = true) *>
+      ZIO.logInfo(s"==>> Dropped graph: $graphName")
 
   /**
    * Gets all graphs stored in the triplestore.
