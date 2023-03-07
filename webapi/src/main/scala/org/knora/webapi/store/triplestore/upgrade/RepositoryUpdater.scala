@@ -31,7 +31,7 @@ trait RepositoryUpdater {
    *
    * @return a response indicating what was done.
    */
-  val maybeUpgradeRepository: UIO[RepositoryUpdatedResponse]
+  val maybeUpgradeRepository: Task[RepositoryUpdatedResponse]
 }
 
 /**
@@ -71,7 +71,7 @@ object RepositoryUpdater {
      *
      * @return a response indicating what was done.
      */
-    override val maybeUpgradeRepository: UIO[RepositoryUpdatedResponse] =
+    override val maybeUpgradeRepository: Task[RepositoryUpdatedResponse] =
       for {
         foundRepositoryVersion    <- getRepositoryVersion()
         requiredRepositoryVersion <- ZIO.succeed(org.knora.webapi.KnoraBaseVersion)
@@ -132,7 +132,7 @@ object RepositoryUpdater {
      *
      * @return the `knora-base` version string, if any, in the repository.
      */
-    private def getRepositoryVersion(): UIO[Option[String]] =
+    private def getRepositoryVersion(): Task[Option[String]] =
       for {
         repositoryVersionResponse <- triplestoreService.sparqlHttpSelect(knoraBaseVersionQuery)
         bindings                  <- ZIO.succeed(repositoryVersionResponse.results.bindings)

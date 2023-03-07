@@ -8,12 +8,7 @@ package org.knora.webapi.store.triplestore
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.ReadWrite
 import org.apache.jena.rdf.model.Model
-import zio.Ref
-import zio.Task
-import zio.TaskLayer
-import zio.ULayer
-import zio.ZIO
-import zio.ZLayer
+import zio._
 
 import java.io.StringReader
 
