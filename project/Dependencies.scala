@@ -30,18 +30,18 @@ object Dependencies {
   val ZioVersion                  = "2.0.9"
 
   // ZIO - all Scala 3 compatible
-  val zio                  = "dev.zio" %% "zio"                    % ZioVersion
-  val zioConfig            = "dev.zio" %% "zio-config"             % ZioConfigVersion
-  val zioConfigMagnolia    = "dev.zio" %% "zio-config-magnolia"    % ZioConfigVersion
-  val zioConfigTypesafe    = "dev.zio" %% "zio-config-typesafe"    % ZioConfigVersion
-  val zioHttpOld           = "io.d11"  %% "zhttp"                  % ZioHttpVersionOld
-  val zioHttp              = "dev.zio" %% "zio-http"               % ZioHttpVersion
-  val zioJson              = "dev.zio" %% "zio-json"               % ZioJsonVersion
-  val zioLogging           = "dev.zio" %% "zio-logging"            % ZioLoggingVersion
-  val zioLoggingSlf4j      = "dev.zio" %% "zio-logging-slf4j2"     % ZioLoggingVersion
-  val zioMacros            = "dev.zio" %% "zio-macros"             % ZioVersion
-  val zioMetricsConnectors = "dev.zio" %% "zio-metrics-connectors" % ZioMetricsConnectorsVersion
-  val zioPrelude           = "dev.zio" %% "zio-prelude"            % ZioPreludeVersion
+  val zio                   = "dev.zio" %% "zio"                       % ZioVersion
+  val zioConfig             = "dev.zio" %% "zio-config"                % ZioConfigVersion
+  val zioConfigMagnolia     = "dev.zio" %% "zio-config-magnolia"       % ZioConfigVersion
+  val zioConfigTypesafe     = "dev.zio" %% "zio-config-typesafe"       % ZioConfigVersion
+  val zioHttpOld            = "io.d11"  %% "zhttp"                     % ZioHttpVersionOld
+  val zioHttp               = "dev.zio" %% "zio-http"                  % ZioHttpVersion
+  val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
+  val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
+  val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
+  val zioMacros             = "dev.zio" %% "zio-macros"                % ZioVersion
+  val zioMetricsConnectors  = "dev.zio" %% "zio-metrics-connectors"    % ZioMetricsConnectorsVersion
+  val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
 
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
@@ -60,12 +60,8 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val jacksonDatabind    = "com.fasterxml.jackson.core"  % "jackson-databind"     % "2.14.2" // the logging implementation
-  val logbackClassic     = "ch.qos.logback"              % "logback-classic"      % "1.4.5"  // the logging implementation
-  val logbackJackson     = "ch.qos.logback.contrib"      % "logback-jackson"      % "0.1.5"  // the logging implementation
-  val logbackJsonClassic = "ch.qos.logback.contrib"      % "logback-json-classic" % "0.1.5"  // the logging implementation
-  val scalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"        % "3.9.5"  // Scala 3 compatible
-  val slf4jApi           = "org.slf4j"                   % "slf4j-api"            % "2.0.6"  // the logging interface
+  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" // Scala 3 compatible
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.6" // the logging interface
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.19"
@@ -140,16 +136,12 @@ object Dependencies {
     ehcache,
     gwtServlet,
     icu4j,
-    jacksonDatabind,
     jakartaJSON,
     jenaText,
     jodd,
     jwtSprayJson,
     kamonCore,
     kamonScalaFuture,
-    logbackClassic,
-    logbackJsonClassic,
-    logbackJackson,
     rdf4jShacl,
     saxonHE,
     scalaGraph,
@@ -166,7 +158,7 @@ object Dependencies {
     zioHttp,
     zioJson,
     zioLogging,
-    zioLoggingSlf4j,
+    zioLoggingSlf4jBridge,
     zioMacros,
     zioMetricsConnectors,
     zioPrelude
@@ -188,11 +180,7 @@ object Dependencies {
     zioJson,
     zioMetricsConnectors,
     zioLogging,
-    zioLoggingSlf4j,
-    logbackClassic,
-    logbackJsonClassic,
-    logbackJackson,
-    jacksonDatabind
+    zioLoggingSlf4jBridge
   )
 
   // schema project dependencies
@@ -217,8 +205,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j,
-    logbackClassic,
+    zioLoggingSlf4jBridge,
     zioJson,
     zioHttpOld
   )
@@ -230,8 +217,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j,
-    logbackClassic,
+    zioLoggingSlf4jBridge,
     zioJson
   )
   val userCoreLibraryDependencies = Seq(
@@ -242,8 +228,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j,
-    logbackClassic,
+    zioLoggingSlf4jBridge,
     zioJson
   )
   val userRepoLibraryDependencies = Seq(
@@ -252,8 +237,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j,
-    logbackClassic,
+    zioLoggingSlf4jBridge,
     zioJson
   )
 
@@ -264,7 +248,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4jBridge
   )
   val roleHandlerLibraryDependencies = Seq(
     bouncyCastle,
@@ -274,7 +258,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4jBridge
   )
   val roleCoreLibraryDependencies = Seq(
     bouncyCastle,
@@ -284,7 +268,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4jBridge
   )
   val roleRepoLibraryDependencies = Seq(
     zio,
@@ -292,7 +276,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j
+    zioLoggingSlf4jBridge
   )
 
   // shared project dependencies
@@ -310,7 +294,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test,
     zioLogging,
-    zioLoggingSlf4j,
+    zioLoggingSlf4jBridge,
     zioJson
   )
 
