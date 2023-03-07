@@ -113,7 +113,7 @@ for file_index, file_params in pairs(server.uploads) do
         send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
         return
     end
-    server.log("upload_without_transcoding.lua: wrote file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+    server.log("upload_without_processing.lua: wrote file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
 
     -- Calculate the checksum of the file
     local checksum = file_checksum(tmp_storage_file_path)

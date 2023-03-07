@@ -198,8 +198,8 @@ routes = {
     },
     {
         method = 'POST',
-        route = '/upload_without_transcoding',
-        script = 'upload_without_transcoding.lua'
+        route = '/upload_without_processing',
+        script = 'upload_without_processing.lua'
     }
 
 }
