@@ -5,8 +5,8 @@
 
 package org.knora.webapi.store.triplestore.impl
 
+import dsp.errors.NotFoundException
 import zio._
-import zio.test.Assertion._
 import zio.test._
 
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -98,8 +98,9 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
           // _      <- TriplestoreService.sparqlHttpSelect(searchStringOfDeath, false).exit.repeatN(100)
           // _      <- Clock.ClockLive.sleep(10.seconds)
           result <- TriplestoreService.sparqlHttpSelect(searchStringOfDeath, false).exit
-        } yield assert(result)(
-          diesWithA[dsp.errors.NotFoundException]
+        } yield assertTrue(
+          result.isFailure,
+          result.causeOption.exists(_.failures.head.isInstanceOf[NotFoundException])
         )
       }
     ).provideLayer(testLayer) @@ TestAspect.sequential
