@@ -21,7 +21,7 @@ trait TriplestoreService {
   /**
    * Simulates a read timeout.
    */
-  def doSimulateTimeout(): UIO[SparqlSelectResult]
+  def doSimulateTimeout(): Task[SparqlSelectResult]
 
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
@@ -35,7 +35,7 @@ trait TriplestoreService {
     sparql: String,
     simulateTimeout: Boolean = false,
     isGravsearch: Boolean = false
-  ): UIO[SparqlSelectResult]
+  ): Task[SparqlSelectResult]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
@@ -43,7 +43,7 @@ trait TriplestoreService {
    * @param sparqlConstructRequest the query.
    * @return a [[SparqlConstructResponse]]
    */
-  def sparqlHttpConstruct(sparqlConstructRequest: String): UIO[SparqlConstructResponse] =
+  def sparqlHttpConstruct(sparqlConstructRequest: String): Task[SparqlConstructResponse] =
     sparqlHttpConstruct(SparqlConstructRequest(sparqlConstructRequest))
 
   /**
@@ -52,7 +52,7 @@ trait TriplestoreService {
    * @param sparqlConstructRequest the request message.
    * @return a [[SparqlConstructResponse]]
    */
-  def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): UIO[SparqlConstructResponse]
+  def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): Task[SparqlConstructResponse]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
@@ -62,9 +62,9 @@ trait TriplestoreService {
    */
   def sparqlHttpExtendedConstruct(
     sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
-  ): UIO[SparqlExtendedConstructResponse]
+  ): Task[SparqlExtendedConstructResponse]
 
-  def sparqlHttpExtendedConstruct(query: String): UIO[SparqlExtendedConstructResponse] = sparqlHttpExtendedConstruct(
+  def sparqlHttpExtendedConstruct(query: String): Task[SparqlExtendedConstructResponse] = sparqlHttpExtendedConstruct(
     SparqlExtendedConstructRequest(query)
   )
 
@@ -82,7 +82,7 @@ trait TriplestoreService {
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): UIO[FileWrittenResponse]
+  ): Task[FileWrittenResponse]
 
   /**
    * Performs a SPARQL update operation.
@@ -90,7 +90,7 @@ trait TriplestoreService {
    * @param sparqlUpdate the SPARQL update.
    * @return a [[SparqlUpdateResponse]].
    */
-  def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse]
+  def sparqlHttpUpdate(sparqlUpdate: String): Task[SparqlUpdateResponse]
 
   /**
    * Performs a SPARQL ASK query.
@@ -98,7 +98,7 @@ trait TriplestoreService {
    * @param sparql the SPARQL ASK query.
    * @return a [[SparqlAskResponse]].
    */
-  def sparqlHttpAsk(sparql: String): UIO[SparqlAskResponse]
+  def sparqlHttpAsk(sparql: String): Task[SparqlAskResponse]
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
@@ -113,7 +113,7 @@ trait TriplestoreService {
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): UIO[FileWrittenResponse]
+  ): Task[FileWrittenResponse]
 
   /**
    * Requests the contents of a named graph, returning the response as Turtle.
@@ -121,7 +121,7 @@ trait TriplestoreService {
    * @param graphIri the IRI of the named graph.
    * @return a string containing the contents of the graph in Turtle format.
    */
-  def sparqlHttpGraphData(graphIri: IRI): UIO[NamedGraphDataResponse]
+  def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse]
 
   /**
    * Resets the content of the triplestore with the data supplied with the request.
@@ -133,17 +133,17 @@ trait TriplestoreService {
   def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean = true
-  ): UIO[ResetRepositoryContentACK]
+  ): Task[ResetRepositoryContentACK]
 
   /**
    * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
    */
-  def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK]
+  def dropAllTriplestoreContent(): Task[DropAllRepositoryContentACK]
 
   /**
    * Wipes all triplestore data out using HTTP requests.
    */
-  def dropDataGraphByGraph(): UIO[DropDataGraphByGraphACK]
+  def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK]
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`
@@ -156,13 +156,13 @@ trait TriplestoreService {
   def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): UIO[InsertTriplestoreContentACK]
+  ): Task[InsertTriplestoreContentACK]
 
   /**
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
    * configured, tries to automatically configure (initialize) the required dataset.
    */
-  def checkTriplestore(): UIO[CheckTriplestoreResponse]
+  def checkTriplestore(): Task[CheckTriplestoreResponse]
 
   /**
    * Dumps the whole repository in N-Quads format, saving the response in a file.
@@ -172,14 +172,14 @@ trait TriplestoreService {
    */
   def downloadRepository(
     outputFile: Path
-  ): UIO[FileWrittenResponse]
+  ): Task[FileWrittenResponse]
 
   /**
    * Uploads repository content from an N-Quads file.
    *
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
-  def uploadRepository(inputFile: Path): UIO[RepositoryUploadedResponse]
+  def uploadRepository(inputFile: Path): Task[RepositoryUploadedResponse]
 
   /**
    * Puts a data graph into the repository.
@@ -187,6 +187,6 @@ trait TriplestoreService {
    * @param graphContent a data graph in Turtle format to be inserted into the repository.
    * @param graphName    the name of the graph.
    */
-  def insertDataGraphRequest(graphContent: String, graphName: String): UIO[InsertGraphDataContentResponse]
+  def insertDataGraphRequest(graphContent: String, graphName: String): Task[InsertGraphDataContentResponse]
 
 }
