@@ -21,7 +21,7 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
 
   /**
-   * Defines a layer which encompases all dependencies that are needed for
+   * Defines a layer which encompasses all dependencies that are needed for
    * running the tests. `bootstrap` overrides the base layer of ZIOApp.
    */
   val testLayer: ULayer[TriplestoreService] =
@@ -32,13 +32,13 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
       StringFormatter.test
     )
 
-  def spec =
+  def spec: Spec[Any, Nothing] =
     suite("TriplestoreServiceLiveSpec")(
       test("successfully simulate a timeout") {
         for {
           result <- TriplestoreService.doSimulateTimeout().exit
         } yield assertTrue(
-          result.is(_.die) == TriplestoreTimeoutException(
+          result.is(_.failure) == TriplestoreTimeoutException(
             "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
           )
         )
@@ -97,11 +97,8 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
           // TODO: Need to first load testdata. Only then this query should trigger a 500 error in Fuseki.
           // _      <- TriplestoreService.sparqlHttpSelect(searchStringOfDeath, false).exit.repeatN(100)
           // _      <- Clock.ClockLive.sleep(10.seconds)
-          result <- TriplestoreService.sparqlHttpSelect(searchStringOfDeath, false).exit
-        } yield assertTrue(
-          result.isFailure,
-          result.causeOption.exists(_.failures.head.isInstanceOf[NotFoundException])
-        )
+          result <- TriplestoreService.sparqlHttpSelect(searchStringOfDeath, simulateTimeout = false).exit
+        } yield assertTrue(result.is(_.failure) == NotFoundException("The requested data was not found"))
       }
     ).provideLayer(testLayer) @@ TestAspect.sequential
 }
