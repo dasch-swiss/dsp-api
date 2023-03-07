@@ -896,19 +896,18 @@ case class TriplestoreServiceLive(
         }
       }
 
-    (for {
-      _ <- checkSimulateTimeout()
-      // start      <- ZIO.attempt(java.lang.System.currentTimeMillis())
+    def getResponse = ZIO.acquireRelease(executeQuery())(response => ZIO.succeed(response.close()))
+
+    ZIO.scoped(for {
+      _          <- checkSimulateTimeout()
       _          <- ZIO.logDebug("Executing query...")
-      response   <- executeQuery()
+      response   <- getResponse
       statusCode <- ZIO.attempt(response.getStatusLine.getStatusCode)
       _          <- ZIO.logDebug(s"Executing query done with status code: $statusCode")
       _          <- checkResponse(response, statusCode)
       _          <- ZIO.logDebug("Checking response done.")
       result     <- processResponse(response)
       _          <- ZIO.logDebug("Processing response done.")
-      _          <- ZIO.attempt(response.close()) // TODO: rewrite with ensuring
-      // _          <- logTimeTook(start, statusCode)
     } yield result)
   }
 
