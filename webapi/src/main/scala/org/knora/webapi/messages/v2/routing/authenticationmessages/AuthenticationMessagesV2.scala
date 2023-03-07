@@ -7,10 +7,8 @@ package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
@@ -103,6 +101,5 @@ trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions 
 }
 
 trait AuthenticationV2Serialization {
-  implicit lazy val encLoginResponse: JsonEncoder[LoginResponse] = DeriveJsonEncoder.gen[LoginResponse]
-  implicit lazy val decLoginResponse: JsonDecoder[LoginResponse] = DeriveJsonDecoder.gen[LoginResponse]
+  implicit val codec: JsonCodec[LoginResponse] = DeriveJsonCodec.gen[LoginResponse]
 }
