@@ -21,7 +21,7 @@ object Logger {
       label("spans", bracketed(spans)) +
       (space + label("cause", cause).highlight).filter(LogFilter.causeNonEmpty)
 
-  private val textLog: ZLayer[Any, Nothing, Unit] = zio.logging.console(
+  private val textLogger: ZLayer[Any, Nothing, Unit] = zio.logging.console(
     logFormatText,
     logFilter
   )
@@ -32,7 +32,7 @@ object Logger {
       LogFormat.annotations +
       LogFormat.spans
 
-  private val jsonLog: ZLayer[Any, Nothing, Unit] = consoleJson(
+  private val jsonLogger: ZLayer[Any, Nothing, Unit] = consoleJson(
     logFormatJson,
     logFilter
   )
@@ -40,15 +40,15 @@ object Logger {
   private val useJsonLogger = sys.env.getOrElse("DSP_API_LOG_APPENDER", "TEXT") == "JSON"
 
   private val logger: ZLayer[Any, Nothing, Unit] =
-    if (useJsonLogger) jsonLog
-    else textLog
+    if (useJsonLogger) jsonLogger
+    else textLogger
 
   def fromEnv(): ZLayer[Any, Nothing, Unit with Unit] =
     Runtime.removeDefaultLoggers >>> logger >+> Slf4jBridge.initialize
 
-  def jsonLogger(): ZLayer[Any, Nothing, Unit with Unit] =
-    Runtime.removeDefaultLoggers >>> jsonLog >+> Slf4jBridge.initialize
+  def json(): ZLayer[Any, Nothing, Unit with Unit] =
+    Runtime.removeDefaultLoggers >>> jsonLogger >+> Slf4jBridge.initialize
 
-  def textLogger(): ZLayer[Any, Nothing, Unit with Unit] =
-    Runtime.removeDefaultLoggers >>> textLog >+> Slf4jBridge.initialize
+  def text(): ZLayer[Any, Nothing, Unit with Unit] =
+    Runtime.removeDefaultLoggers >>> textLogger >+> Slf4jBridge.initialize
 }

@@ -50,7 +50,7 @@ abstract class CoreSpec
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  private val bootstrap = util.Logger.textLogger() >>> effectLayers
+  private val bootstrap = util.Logger.text() >>> effectLayers
 
   // create a configured runtime
   implicit val runtime = Unsafe.unsafe { implicit u =>
