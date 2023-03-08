@@ -73,6 +73,7 @@ services:
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=0.0.0.0
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
+      # - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally
 
 networks:
   knora-net:
