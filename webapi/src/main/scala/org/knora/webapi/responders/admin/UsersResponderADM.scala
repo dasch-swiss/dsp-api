@@ -1591,7 +1591,7 @@ final case class UsersResponderADMLive(
             throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
           }
       // we are changing the user, so lets get rid of the cached copy
-      _ = invalidateCachedUserADM(maybeCurrentUser)
+      _ <- invalidateCachedUserADM(maybeCurrentUser)
 
       // update the password
       updateUserSparqlString <- ZIO.attempt(
