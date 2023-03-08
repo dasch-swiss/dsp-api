@@ -6,9 +6,9 @@
 package org.knora.webapi
 
 import zio._
-import zio.logging.backend.SLF4J
 
 import org.knora.webapi.core._
+import org.knora.webapi.util.Logger
 
 object Main extends ZIOApp {
 
@@ -23,8 +23,8 @@ object Main extends ZIOApp {
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  override def bootstrap: ZLayer[ZIOAppArgs, Any, Environment] =
-    Runtime.removeDefaultLoggers >>> SLF4J.slf4j >>> LayersLive.dspLayersLive
+  override def bootstrap: ZLayer[Any, Nothing, LayersLive.DspEnvironmentLive] =
+    Logger.fromEnv() >>> LayersLive.dspLayersLive
 
   /**
    *  Entrypoint of our Application
