@@ -43,8 +43,6 @@ import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
-import java.net.URL
-import java.net.URI
 
 /**
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
