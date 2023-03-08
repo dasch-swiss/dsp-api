@@ -16,14 +16,16 @@ import zio.macros.accessible
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.settings._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 
 @accessible
 trait AppRouter {
@@ -36,33 +38,38 @@ object AppRouter {
   val layer: ZLayer[
     core.ActorSystem
       with AppConfig
-      with CacheServiceManager
+      with CardinalityHandler
       with CardinalityService
-      with IIIFServiceManager
       with MessageRelay
+      with OntologyHelpers
+      with PermissionUtilADM
+      with ResourceUtilV2
       with StandoffTagUtilV2
-      with TriplestoreServiceManager,
+      with ValueUtilV1,
     Nothing,
     AppRouter
   ] =
     ZLayer {
       for {
-        as                        <- ZIO.service[core.ActorSystem]
-        cacheServiceManager       <- ZIO.service[CacheServiceManager]
-        iiifServiceManager        <- ZIO.service[IIIFServiceManager]
-        triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
-        appConfig                 <- ZIO.service[AppConfig]
-        messageRelay              <- ZIO.service[MessageRelay]
-        runtime                   <- ZIO.runtime[CardinalityService with StandoffTagUtilV2]
+        as           <- ZIO.service[core.ActorSystem]
+        appConfig    <- ZIO.service[AppConfig]
+        messageRelay <- ZIO.service[MessageRelay]
+        runtime <-
+          ZIO.runtime[
+            CardinalityHandler
+              with CardinalityService
+              with PermissionUtilADM
+              with OntologyHelpers
+              with ResourceUtilV2
+              with StandoffTagUtilV2
+              with ValueUtilV1
+          ]
       } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem = as.system
 
         val ref: ActorRef = system.actorOf(
           Props(
             core.actors.RoutingActor(
-              cacheServiceManager,
-              iiifServiceManager,
-              triplestoreServiceManager,
               appConfig,
               messageRelay,
               runtime

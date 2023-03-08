@@ -646,8 +646,6 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
   private val resourcesResponderV1SpecFullData: ResourcesResponderV1SpecFullData =
     new ResourcesResponderV1SpecFullData(appConfig)
 
-  private val valueUtilV1 = new ValueUtilV1(appConfig)
-
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -749,11 +747,13 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
             )
 
             // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
-            valueUtilV1.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
-              resourceIri = "http://www.knora.org/test",
-              creatorIri = "http://rdfh.ch/users/b83acc5f05",
-              propertyIri = propIri,
-              valueResponse = valueResponse
+            runOrThrowWithService[ValueUtilV1, ResourceCreateValueResponseV1](
+              _.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
+                resourceIri = "http://www.knora.org/test",
+                creatorIri = "http://rdfh.ch/users/b83acc5f05",
+                propertyIri = propIri,
+                valueResponse = valueResponse
+              )
             )
           }
         )

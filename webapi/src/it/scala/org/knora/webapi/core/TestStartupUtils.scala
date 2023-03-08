@@ -8,7 +8,6 @@ package org.knora.webapi.core
 import com.typesafe.scalalogging.LazyLogging
 import zio._
 
-import org.knora.webapi.core.AppRouter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -23,7 +22,7 @@ trait TestStartupUtils extends LazyLogging {
    *
    * @param rdfDataObjects a list of [[RdfDataObject]]
    */
-  def prepareRepository(rdfDataObjects: List[RdfDataObject]): ZIO[TriplestoreService with AppRouter, Nothing, Unit] =
+  def prepareRepository(rdfDataObjects: List[RdfDataObject]): ZIO[TriplestoreService with AppRouter, Throwable, Unit] =
     for {
       _         <- ZIO.logInfo("Loading test data started ...")
       tss       <- ZIO.service[TriplestoreService]

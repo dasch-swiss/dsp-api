@@ -38,7 +38,7 @@ final case class AppServer(
   /**
    * Checks if the TriplestoreService is running and the repository is properly initialized.
    */
-  private val checkTriplestoreService: UIO[Unit] =
+  private val checkTriplestoreService: Task[Unit] =
     for {
       _      <- state.set(AppState.WaitingForTriplestore)
       status <- ts.checkTriplestore().map(_.triplestoreStatus)
@@ -55,7 +55,7 @@ final case class AppServer(
    *
    * @param requiresRepository If `true`, calls the RepositoryUpdater to initiate the repository, otherwise returns ()
    */
-  private def upgradeRepository(requiresRepository: Boolean): UIO[Unit] =
+  private def upgradeRepository(requiresRepository: Boolean): Task[Unit] =
     for {
       _ <- state.set(AppState.UpdatingRepository)
       _ <- ru.maybeUpgradeRepository.flatMap(response => ZIO.logInfo(response.message)).when(requiresRepository)
@@ -104,6 +104,7 @@ final case class AppServer(
                  ZIO.logError("IIIF service not running") *> ZIO.die(new Exception("IIIF service not running"))
              }
              .when(requiresIIIFService)
+             .orDie
       _ <- state.set(AppState.IIIFServiceReady)
     } yield ()
 
