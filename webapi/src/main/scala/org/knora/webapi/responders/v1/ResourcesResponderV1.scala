@@ -218,8 +218,6 @@ final case class ResourcesResponderV1Live(
                       .toString()
                   )
 
-        // _ = println(sparql)
-
         response <- triplestoreService.sparqlHttpSelect(sparql)
         rows      = response.results.bindings
 
@@ -297,7 +295,6 @@ final case class ResourcesResponderV1Live(
 
               // Filter out edges we've already traversed.
               val isRedundant = traversedEdges.contains(edge)
-              // if (isRedundant) println(s"filtering out edge from ${edge.sourceNodeIri} to ${edge.targetNodeIri}")
 
               hasPermission && !isRedundant
             }.toSet
@@ -354,8 +351,6 @@ final case class ResourcesResponderV1Live(
                     )
                     .toString()
                 )
-
-      // _ = println(sparql)
 
       response <- triplestoreService.sparqlHttpSelect(sparql)
       rows      = response.results.bindings
@@ -3047,7 +3042,6 @@ final case class ResourcesResponderV1Live(
                          )
                          .toString()
                      )
-      // _ = println(sparqlQuery)
       resPropsResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
 
       // Partition the property result rows into rows with value properties and rows with link properties.
