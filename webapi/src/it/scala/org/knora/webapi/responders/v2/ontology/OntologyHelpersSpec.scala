@@ -5,16 +5,18 @@
 
 package org.knora.webapi.responders.v2.ontology
 
+import zio.ZIO
+
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.ontology.Cache._
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
-import org.knora.webapi.{CoreSpec, InternalSchema}
-
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.OntologyHelpers]].
@@ -41,8 +43,7 @@ class OntologyHelpersSpec extends CoreSpec {
 
     "determine the least strict cardinality allowed for a (inherited) property from a list of classes" in {
 
-      val cacheDataFuture: Future[OntologyCacheData] = Cache.getCacheData
-      val cacheData: OntologyCacheData               = Await.result(cacheDataFuture, 2.seconds)
+      val cacheData: OntologyCacheData = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[Cache](_.getCacheData))
 
       // define the classes
       val unbounded  = freetestOntologyIri.makeEntityIri("PubMayHaveMany").toOntologySchema(InternalSchema)  // 0-n

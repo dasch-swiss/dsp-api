@@ -6,14 +6,14 @@
 package org.knora.webapi.responders.v2.ontology
 
 import akka.util.Timeout
-
 import java.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
-
 import dsp.constants.SalsahGui
+import zio.ZIO
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.OntologyConstants
@@ -26,6 +26,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].
@@ -52,7 +53,7 @@ class CacheSpec extends CoreSpec {
 
     "successfully load the cache cata" in {
       val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
-        cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+        cacheData: Cache.OntologyCacheData <- UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Cache](_.getCacheData))
       } yield cacheData.ontologies
 
       ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] =>
@@ -64,7 +65,7 @@ class CacheSpec extends CoreSpec {
       val iri: SmartIri       = stringFormatter.toSmartIri(rdfDataObjects.head.name)
       val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
-      val previousCacheDataFuture: Future[Cache.OntologyCacheData] = Cache.getCacheData
+      val previousCacheDataFuture: Future[Cache.OntologyCacheData] = getCacheData
       val previousCacheData: Cache.OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
 
       val previousBooksMaybe = previousCacheData.ontologies.get(iri)
@@ -83,12 +84,12 @@ class CacheSpec extends CoreSpec {
           val newCacheData = previousCacheData.copy(
             ontologies = previousCacheData.ontologies + (iri -> newBooks)
           )
-          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
+          val updatedCacheFuture = cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
           Await.ready(updatedCacheFuture, 1.second)
 
           // read back the cache
           val newCachedCacheDataFuture = for {
-            cacheData <- Cache.getCacheData
+            cacheData <- getCacheData
           } yield cacheData
           val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
 
@@ -116,7 +117,7 @@ class CacheSpec extends CoreSpec {
       val iri: SmartIri             = stringFormatter.toSmartIri(rdfDataObjects.head.name)
       val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
 
-      val previousCacheDataFuture = Cache.getCacheData
+      val previousCacheDataFuture = getCacheData
       val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
 
       val previousBooksMaybe = previousCacheData.ontologies.get(iri)
@@ -176,12 +177,12 @@ class CacheSpec extends CoreSpec {
           val newCacheData = previousCacheData.copy(
             ontologies = previousCacheData.ontologies + (iri -> newBooks)
           )
-          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
+          val updatedCacheFuture = cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
           Await.ready(updatedCacheFuture, 1.second)
 
           // read back the cache
           val newCachedCacheDataFuture = for {
-            cacheData <- Cache.getCacheData
+            cacheData <- getCacheData
           } yield cacheData
           val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
 
@@ -213,7 +214,7 @@ class CacheSpec extends CoreSpec {
         stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPageValue")
       val bookIri = stringFormatter.toSmartIri("http://rdfh.ch/0001/book-instance-01")
 
-      val previousCacheData = Await.result(Cache.getCacheData, 2 seconds)
+      val previousCacheData = Await.result(getCacheData, 2 seconds)
       previousCacheData.ontologies.get(ontologyIri) match {
         case Some(previousBooks) =>
           // copy books-ontology but add link from book to page
@@ -273,11 +274,11 @@ class CacheSpec extends CoreSpec {
           val newCacheData = previousCacheData.copy(
             ontologies = previousCacheData.ontologies + (ontologyIri -> newBooks)
           )
-          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)
+          val updatedCacheFuture = cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)
           Await.ready(updatedCacheFuture, 1.second)
 
           // read back the cache
-          val newCachedCacheData = Await.result(Cache.getCacheData, 2 seconds)
+          val newCachedCacheData = Await.result(getCacheData, 2 seconds)
 
           // ensure that the cache updated correctly
           newCachedCacheData.ontologies.get(ontologyIri) match {
@@ -313,5 +314,12 @@ class CacheSpec extends CoreSpec {
     }
 
   }
+  def getCacheData = UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Cache](_.getCacheData))
 
+  def cacheUpdatedOntologyWithoutUpdatingMaps(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2
+  ) = UnsafeZioRun.runToFuture(
+    ZIO.serviceWithZIO[Cache](_.cacheUpdatedOntologyWithoutUpdatingMaps(updatedOntologyIri, updatedOntologyData))
+  )
 }

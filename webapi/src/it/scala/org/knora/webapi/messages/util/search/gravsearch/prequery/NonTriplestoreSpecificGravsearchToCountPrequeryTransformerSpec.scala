@@ -1,13 +1,12 @@
 package org.knora.webapi.util.search.gravsearch.prequery
 
 import akka.actor.ActorRef
-
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-
 import dsp.errors.AssertionException
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -20,6 +19,7 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 private object CountQueryHandler {
@@ -33,7 +33,7 @@ private object CountQueryHandler {
     appActor: ActorRef,
     responderData: ResponderData,
     appConfig: AppConfig
-  )(implicit executionContext: ExecutionContext): SelectQuery = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 

@@ -8,6 +8,7 @@ package org.knora.webapi.messages.util.search
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
+import zio.ZIO
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent._
@@ -23,6 +24,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.responders.v2.ontology.Cache
+import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -86,7 +88,7 @@ trait WhereTransformer {
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext): Seq[QueryPattern]
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): Seq[QueryPattern]
 
   /**
    * Transforms a [[FilterPattern]] in a WHERE clause into zero or more query patterns.
@@ -271,7 +273,7 @@ object QueryTraverser {
   def getOntologiesRelevantForInference(
     whereClause: WhereClause,
     storeManager: ActorRef
-  )(implicit executionContext: ExecutionContext): Future[Option[Set[SmartIri]]] = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): Future[Option[Set[SmartIri]]] = {
     // internal function for easy recursion
     // gets a sequence of [[QueryPattern]] and returns the set of entities that the patterns consist of
     def getEntities(patterns: Seq[QueryPattern]): Seq[Entity] =
@@ -293,7 +295,7 @@ object QueryTraverser {
     val entities = getEntities(whereClause.patterns)
 
     for {
-      ontoCache <- Cache.getCacheData
+      ontoCache <- getCacheData
       // from the cache, get the map from entity to the ontology where the entity is defined
       entityMap = ontoCache.entityDefinedInOntology
       // resolve all entities from the WHERE clause to the ontology where they are defined
@@ -327,7 +329,7 @@ object QueryTraverser {
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): Seq[QueryPattern] = {
 
     // Optimization has to be called before WhereTransformer.transformStatementInWhere, because optimisation might
     // remove statements that would otherwise be expanded by transformStatementInWhere
@@ -464,7 +466,8 @@ object QueryTraverser {
     transformer: ConstructToSelectTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[Cache]
   ): SelectQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
@@ -497,7 +500,8 @@ object QueryTraverser {
     transformer: SelectToSelectTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]]
   )(implicit
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[Cache]
   ): SelectQuery =
     inputQuery.copy(
       fromClause = transformer.getFromClause,
@@ -523,7 +527,7 @@ object QueryTraverser {
     inputQuery: ConstructQuery,
     transformer: ConstructToConstructTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext): ConstructQuery = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): ConstructQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
       patterns = inputQuery.whereClause.patterns,
@@ -542,4 +546,7 @@ object QueryTraverser {
       whereClause = WhereClause(patterns = transformedWherePatterns)
     )
   }
+
+  def getCacheData(implicit runtime: zio.Runtime[Cache]) =
+    UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Cache](_.getCacheData))
 }

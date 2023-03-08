@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderReque
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
+import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -36,7 +37,8 @@ final case class RoutingActor(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
   implicit val runtime: zio.Runtime[
-    CardinalityHandler
+    Cache
+      with CardinalityHandler
       with CardinalityService
       with PermissionUtilADM
       with OntologyHelpers

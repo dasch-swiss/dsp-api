@@ -56,6 +56,8 @@ import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.responders.v2.ontology.Cache
+import org.knora.webapi.responders.v2.ontology.CacheLive
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
@@ -98,6 +100,7 @@ object LayersLive {
       with AppConfig
       with AppRouter
       with AppRouterRelayingMessageHandler
+      with Cache
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
@@ -150,6 +153,7 @@ object LayersLive {
       AppRouterRelayingMessageHandler.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.layer,
+      CacheLive.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,

@@ -5,8 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 import zio.Task
-import zio.ULayer
-import zio.ZIO
+import zio.URLayer
 import zio.ZLayer
 import zio.macros.accessible
 
@@ -17,10 +16,10 @@ trait OntologyCache {
   def get: Task[Cache.OntologyCacheData]
 }
 
-final case class OntologyCacheLive() extends OntologyCache {
-  def get: Task[Cache.OntologyCacheData] = ZIO.fromFuture(implicit ec => Cache.getCacheData)
+final case class OntologyCacheLive(cache: Cache) extends OntologyCache {
+  def get: Task[Cache.OntologyCacheData] = cache.getCacheData
 }
 
 object OntologyCache {
-  val layer: ULayer[OntologyCacheLive] = ZLayer.succeed(OntologyCacheLive())
+  val layer: URLayer[Cache, OntologyCache] = ZLayer.fromFunction(OntologyCacheLive(_))
 }

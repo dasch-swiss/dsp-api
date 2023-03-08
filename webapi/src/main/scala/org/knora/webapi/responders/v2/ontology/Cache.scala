@@ -5,15 +5,10 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import akka.actor.ActorRef
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
-import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
+import zio._
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 import dsp.errors._
 import org.knora.webapi.ApiV2Complex
@@ -25,31 +20,92 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.OntologyUtil
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
+import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheKey
+import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheName
+import org.knora.webapi.responders.v2.ontology.Cache.storeCacheData
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.cache.CacheUtil
 
-object Cache extends LazyLogging {
+trait Cache {
 
-  // The name of the ontology cache.
-  private val OntologyCacheName = "ontologyCache"
+  /**
+   * Loads and caches all ontology information.
+   *
+   * @param requestingUser the user making the request.
+   * @return a [[SuccessResponseV2]].
+   */
+  def loadOntologies(requestingUser: UserADM): Task[SuccessResponseV2]
 
-  // The cache key under which cached ontology data is stored.
-  private val OntologyCacheKey = "ontologyCacheData"
+  /**
+   * Gets the ontology data from the cache.
+   *
+   * @return an [[OntologyCacheData]]
+   */
+  def getCacheData: Task[OntologyCacheData]
 
+  /**
+   * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @return the updated cache data
+   */
+  def cacheUpdatedOntologyWithoutUpdatingMaps(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2
+  ): Task[OntologyCacheData]
+
+  /**
+   * Deletes an ontology from the cache.
+   *
+   * @param ontologyIri the IRI of the ontology to delete
+   * @return the updated cache data
+   */
+  def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData]
+
+  /**
+   * Updates an existing ontology in the cache. If a class has changed, use `cacheUpdatedOntologyWithClass()`.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @return the updated cache data
+   */
+  def cacheUpdatedOntology(updatedOntologyIri: SmartIri, updatedOntologyData: ReadOntologyV2): Task[OntologyCacheData]
+
+  /**
+   * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @param updatedClassIri     the IRI of the changed class
+   * @return the updated cache data
+   */
+  def cacheUpdatedOntologyWithClass(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2,
+    updatedClassIri: SmartIri
+  ): Task[OntologyCacheData]
+}
+
+object Cache {
   // The global ontology cache lock. This is needed because every ontology update replaces the whole ontology cache
   // (because definitions in one ontology can refer to definitions in another ontology). Without a global lock,
   // concurrent updates (even to different ontologies) could overwrite each other.
   val ONTOLOGY_CACHE_LOCK_IRI = "http://rdfh.ch/ontologies"
+
+  // The name of the ontology cache.
+  val OntologyCacheName = "ontologyCache"
+
+  // The cache key under which cached ontology data is stored.
+  val OntologyCacheKey = "ontologyCacheData"
 
   /**
    * The in-memory cache of ontologies.
@@ -83,105 +139,131 @@ object Cache extends LazyLogging {
   }
 
   /**
-   * Loads and caches all ontology information.
+   * Checks a class definition to ensure that it doesn't refer to any non-shared ontologies in other projects.
    *
-   * @param requestingUser the user making the request.
-   * @return a [[SuccessResponseV2]].
+   * @param cache    the ontology cache data.
+   * @param classDef the class definition.
+   * @param errorFun a function that throws an exception with the specified message if the property definition is invalid.
    */
-  def loadOntologies(
-    appActor: ActorRef,
-    requestingUser: UserADM
-  )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] =
-    for {
-      _ <- Future {
-             if (
-               !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)
-             ) {
-               throw ForbiddenException(s"Only a system administrator can reload ontologies")
-             }
-           }
+  def checkOntologyReferencesInClassDef(
+    cache: OntologyCacheData,
+    classDef: ClassInfoContentV2,
+    errorFun: String => Nothing
+  ): Unit = {
+    classDef.subClassOf.foreach(checkOntologyReferenceInEntity(cache, classDef.classIri, _, errorFun))
+    classDef.directCardinalities.keys.foreach(checkOntologyReferenceInEntity(cache, classDef.classIri, _, errorFun))
+  }
 
-      // Get all ontology metadata.
-      allOntologyMetadataSparql <- FastFuture.successful(
-                                     org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                       .getAllOntologyMetadata()
-                                       .toString()
-                                   )
-      allOntologyMetadataResponse: SparqlSelectResult <- appActor
-                                                           .ask(SparqlSelectRequest(allOntologyMetadataSparql))
-                                                           .mapTo[SparqlSelectResult]
-      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] =
-        OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
+  /**
+   * Checks a reference between an ontology entity and another ontology entity to see if the target
+   * is in a non-shared ontology in another project.
+   *
+   * @param ontologyCacheData the ontology cache data.
+   * @param sourceEntityIri   the entity whose definition contains the reference.
+   * @param targetEntityIri   the entity that's the target of the reference.
+   * @param errorFun          a function that throws an exception with the specified message if the reference is invalid.
+   */
+  private def checkOntologyReferenceInEntity(
+    ontologyCacheData: OntologyCacheData,
+    sourceEntityIri: SmartIri,
+    targetEntityIri: SmartIri,
+    errorFun: String => Nothing
+  ): Unit =
+    if (targetEntityIri.isKnoraDefinitionIri) {
+      val sourceOntologyIri      = sourceEntityIri.getOntologyFromEntity
+      val sourceOntologyMetadata = ontologyCacheData.ontologies(sourceOntologyIri).ontologyMetadata
 
-      knoraBaseOntologyMetadata: OntologyMetadataV2 =
-        allOntologyMetadata.getOrElse(
-          OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
-          throw InconsistentRepositoryDataException(s"No knora-base ontology found")
-        )
-      knoraBaseOntologyVersion: String =
-        knoraBaseOntologyMetadata.ontologyVersion.getOrElse(
-          throw InconsistentRepositoryDataException(
-            "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."
+      val targetOntologyIri      = targetEntityIri.getOntologyFromEntity
+      val targetOntologyMetadata = ontologyCacheData.ontologies(targetOntologyIri).ontologyMetadata
+
+      if (sourceOntologyMetadata.projectIri != targetOntologyMetadata.projectIri) {
+        if (!(targetOntologyIri.isKnoraBuiltInDefinitionIri || targetOntologyIri.isKnoraSharedDefinitionIri)) {
+          errorFun(
+            s"Entity $sourceEntityIri refers to entity $targetEntityIri, which is in a non-shared ontology that belongs to another project"
           )
+        }
+      }
+    }
+
+  /**
+   * Checks a property definition to ensure that it doesn't refer to any other non-shared ontologies.
+   *
+   * @param ontologyCacheData the ontology cache data.
+   * @param propertyDef       the property definition.
+   * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
+   */
+  def checkOntologyReferencesInPropertyDef(
+    ontologyCacheData: OntologyCacheData,
+    propertyDef: PropertyInfoContentV2,
+    errorFun: String => Nothing
+  )(implicit stringFormatter: StringFormatter): Unit = {
+    // Ensure that the property isn't a subproperty of any property in a non-shared ontology in another project.
+
+    for (subPropertyOf <- propertyDef.subPropertyOf) {
+      checkOntologyReferenceInEntity(
+        ontologyCacheData = ontologyCacheData,
+        sourceEntityIri = propertyDef.propertyIri,
+        targetEntityIri = subPropertyOf,
+        errorFun = errorFun
+      )
+    }
+
+    // Ensure that the property doesn't have subject or object constraints pointing to a non-shared ontology in another project.
+
+    propertyDef.getPredicateIriObject(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
+      case Some(subjectClassConstraint) =>
+        checkOntologyReferenceInEntity(
+          ontologyCacheData = ontologyCacheData,
+          sourceEntityIri = propertyDef.propertyIri,
+          targetEntityIri = subjectClassConstraint,
+          errorFun = errorFun
         )
 
-      _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
-            throw InconsistentRepositoryDataException(
-              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates."
-            )
+      case None => ()
+    }
+
+    propertyDef.getPredicateIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) match {
+      case Some(objectClassConstraint) =>
+        checkOntologyReferenceInEntity(
+          ontologyCacheData = ontologyCacheData,
+          sourceEntityIri = propertyDef.propertyIri,
+          targetEntityIri = objectClassConstraint,
+          errorFun = errorFun
+        )
+
+      case None => ()
+    }
+  }
+
+  /**
+   * Checks references between ontologies to ensure that they do not refer to non-shared ontologies in other projects.
+   *
+   * @param ontologyCacheData the ontology cache data.
+   */
+  private def checkReferencesBetweenOntologies(
+    ontologyCacheData: OntologyCacheData
+  )(implicit stringFormatter: StringFormatter): Unit =
+    for (ontology <- ontologyCacheData.ontologies.values) {
+      for (propertyInfo <- ontology.properties.values) {
+        checkOntologyReferencesInPropertyDef(
+          ontologyCacheData = ontologyCacheData,
+          propertyDef = propertyInfo.entityInfoContent,
+          errorFun = { msg: String =>
+            throw InconsistentRepositoryDataException(msg)
           }
+        )
+      }
 
-      // Get the contents of each named graph containing an ontology.
-      ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] =
-        allOntologyMetadata.keys.map { ontologyIri =>
-          val ontology: OntologyMetadataV2 =
-            allOntologyMetadata(ontologyIri)
-          val lastModificationDate: Option[Instant] =
-            ontology.lastModificationDate
-          val attachedToProject: Option[SmartIri] =
-            ontology.projectIri
-
-          // throw an exception if ontology doesn't have lastModificationDate property and isn't attached to system project
-          lastModificationDate match {
-            case None =>
-              attachedToProject match {
-                case Some(iri: SmartIri) =>
-                  if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
-                    throw MissingLastModificationDateOntologyException(
-                      s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
-                    )
-                  }
-                case _ => ()
-              }
-            case _ => ()
+      for (classInfo <- ontology.classes.values) {
+        checkOntologyReferencesInClassDef(
+          cache = ontologyCacheData,
+          classDef = classInfo.entityInfoContent,
+          errorFun = { msg: String =>
+            throw InconsistentRepositoryDataException(msg)
           }
-
-          val ontologyGraphConstructQuery =
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-              .getOntologyGraph(
-                ontologyGraph = ontologyIri
-              )
-              .toString
-
-          appActor
-            .ask(
-              SparqlExtendedConstructRequest(
-                sparql = ontologyGraphConstructQuery
-              )
-            )
-            .mapTo[SparqlExtendedConstructResponse]
-            .map { response =>
-              OntologyGraph(
-                ontologyIri = ontologyIri,
-                constructResponse = response
-              )
-            }
-        }
-
-      ontologyGraphs: Iterable[OntologyGraph] <- Future.sequence(ontologyGraphResponseFutures)
-
-      _ = makeOntologyCache(allOntologyMetadata, ontologyGraphs)
-    } yield SuccessResponseV2("Ontologies loaded.")
+        )
+      }
+    }
 
   /**
    * Creates an [[OntologyCacheData]] object on the basis of a map of ontology IRIs to the corresponding [[ReadOntologyV2]].
@@ -189,9 +271,7 @@ object Cache extends LazyLogging {
    * @param ontologies a map of ontology IRIs to the corresponding [[ReadOntologyV2]]
    * @return An [[OntologyCacheData]] object
    */
-  def make(ontologies: Map[SmartIri, ReadOntologyV2]): OntologyCacheData = {
-    implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
-
+  def make(ontologies: Map[SmartIri, ReadOntologyV2])(implicit stringFormatter: StringFormatter): OntologyCacheData = {
     // A map of ontology IRIs to class IRIs in each ontology.
     val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map { case (iri, ontology) =>
       val classIris = ontology.classes.values.map { classInfo: ReadClassInfoV2 =>
@@ -357,7 +437,7 @@ object Cache extends LazyLogging {
    * @param allOntologyMetadata a map of ontology IRIs to ontology metadata.
    * @param ontologyGraphs      a list of ontology graphs.
    */
-  private def makeOntologyCache(
+  def makeOntologyCache(
     allOntologyMetadata: Map[SmartIri, OntologyMetadataV2],
     ontologyGraphs: Iterable[OntologyGraph]
   )(implicit stringFormatter: StringFormatter): Unit = {
@@ -670,7 +750,7 @@ object Cache extends LazyLogging {
     }
 
     // Check references between ontologies.
-    checkReferencesBetweenOntologies(ontologyCacheData)
+    Cache.checkReferencesBetweenOntologies(ontologyCacheData)
 
     // Update the cache.
     storeCacheData(ontologyCacheData)
@@ -761,147 +841,114 @@ object Cache extends LazyLogging {
   }
 
   /**
-   * Checks a reference between an ontology entity and another ontology entity to see if the target
-   * is in a non-shared ontology in another project.
-   *
-   * @param ontologyCacheData the ontology cache data.
-   * @param sourceEntityIri   the entity whose definition contains the reference.
-   * @param targetEntityIri   the entity that's the target of the reference.
-   * @param errorFun          a function that throws an exception with the specified message if the reference is invalid.
-   */
-  private def checkOntologyReferenceInEntity(
-    ontologyCacheData: OntologyCacheData,
-    sourceEntityIri: SmartIri,
-    targetEntityIri: SmartIri,
-    errorFun: String => Nothing
-  ): Unit =
-    if (targetEntityIri.isKnoraDefinitionIri) {
-      val sourceOntologyIri      = sourceEntityIri.getOntologyFromEntity
-      val sourceOntologyMetadata = ontologyCacheData.ontologies(sourceOntologyIri).ontologyMetadata
-
-      val targetOntologyIri      = targetEntityIri.getOntologyFromEntity
-      val targetOntologyMetadata = ontologyCacheData.ontologies(targetOntologyIri).ontologyMetadata
-
-      if (sourceOntologyMetadata.projectIri != targetOntologyMetadata.projectIri) {
-        if (!(targetOntologyIri.isKnoraBuiltInDefinitionIri || targetOntologyIri.isKnoraSharedDefinitionIri)) {
-          errorFun(
-            s"Entity $sourceEntityIri refers to entity $targetEntityIri, which is in a non-shared ontology that belongs to another project"
-          )
-        }
-      }
-    }
-
-  /**
-   * Checks a property definition to ensure that it doesn't refer to any other non-shared ontologies.
-   *
-   * @param ontologyCacheData the ontology cache data.
-   * @param propertyDef       the property definition.
-   * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
-   */
-  def checkOntologyReferencesInPropertyDef(
-    ontologyCacheData: OntologyCacheData,
-    propertyDef: PropertyInfoContentV2,
-    errorFun: String => Nothing
-  )(implicit stringFormatter: StringFormatter): Unit = {
-    // Ensure that the property isn't a subproperty of any property in a non-shared ontology in another project.
-
-    for (subPropertyOf <- propertyDef.subPropertyOf) {
-      checkOntologyReferenceInEntity(
-        ontologyCacheData = ontologyCacheData,
-        sourceEntityIri = propertyDef.propertyIri,
-        targetEntityIri = subPropertyOf,
-        errorFun = errorFun
-      )
-    }
-
-    // Ensure that the property doesn't have subject or object constraints pointing to a non-shared ontology in another project.
-
-    propertyDef.getPredicateIriObject(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
-      case Some(subjectClassConstraint) =>
-        checkOntologyReferenceInEntity(
-          ontologyCacheData = ontologyCacheData,
-          sourceEntityIri = propertyDef.propertyIri,
-          targetEntityIri = subjectClassConstraint,
-          errorFun = errorFun
-        )
-
-      case None => ()
-    }
-
-    propertyDef.getPredicateIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) match {
-      case Some(objectClassConstraint) =>
-        checkOntologyReferenceInEntity(
-          ontologyCacheData = ontologyCacheData,
-          sourceEntityIri = propertyDef.propertyIri,
-          targetEntityIri = objectClassConstraint,
-          errorFun = errorFun
-        )
-
-      case None => ()
-    }
-  }
-
-  /**
-   * Checks a class definition to ensure that it doesn't refer to any non-shared ontologies in other projects.
-   *
-   * @param cache    the ontology cache data.
-   * @param classDef the class definition.
-   * @param errorFun a function that throws an exception with the specified message if the property definition is invalid.
-   */
-  def checkOntologyReferencesInClassDef(
-    cache: OntologyCacheData,
-    classDef: ClassInfoContentV2,
-    errorFun: String => Nothing
-  ): Unit = {
-    classDef.subClassOf.foreach(checkOntologyReferenceInEntity(cache, classDef.classIri, _, errorFun))
-    classDef.directCardinalities.keys.foreach(checkOntologyReferenceInEntity(cache, classDef.classIri, _, errorFun))
-  }
-
-  /**
-   * Checks references between ontologies to ensure that they do not refer to non-shared ontologies in other projects.
-   *
-   * @param ontologyCacheData the ontology cache data.
-   */
-  private def checkReferencesBetweenOntologies(
-    ontologyCacheData: OntologyCacheData
-  )(implicit stringFormatter: StringFormatter): Unit =
-    for (ontology <- ontologyCacheData.ontologies.values) {
-      for (propertyInfo <- ontology.properties.values) {
-        checkOntologyReferencesInPropertyDef(
-          ontologyCacheData = ontologyCacheData,
-          propertyDef = propertyInfo.entityInfoContent,
-          errorFun = { msg: String =>
-            throw InconsistentRepositoryDataException(msg)
-          }
-        )
-      }
-
-      for (classInfo <- ontology.classes.values) {
-        checkOntologyReferencesInClassDef(
-          cache = ontologyCacheData,
-          classDef = classInfo.entityInfoContent,
-          errorFun = { msg: String =>
-            throw InconsistentRepositoryDataException(msg)
-          }
-        )
-      }
-    }
-
-  /**
    * Updates the ontology cache.
    *
    * @param cacheData the updated data to be cached.
    */
-  private def storeCacheData(cacheData: OntologyCacheData): Unit =
+  def storeCacheData(cacheData: OntologyCacheData): Unit =
     CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = cacheData)
+
+}
+
+final case class CacheLive(triplestoreService: TriplestoreService, implicit val stringFormatter: StringFormatter)
+    extends Cache
+    with LazyLogging {
+
+  /**
+   * Loads and caches all ontology information.
+   *
+   * @param requestingUser the user making the request.
+   * @return a [[SuccessResponseV2]].
+   */
+  override def loadOntologies(requestingUser: UserADM): Task[SuccessResponseV2] =
+    for {
+      _ <-
+        ZIO
+          .fail(ForbiddenException(s"Only a system administrator can reload ontologies"))
+          .when(
+            !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)
+          )
+
+      // Get all ontology metadata.
+      allOntologyMetadataSparql <- ZIO.succeed(
+                                     org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                                       .getAllOntologyMetadata()
+                                       .toString()
+                                   )
+      allOntologyMetadataResponse <- triplestoreService.sparqlHttpSelect(allOntologyMetadataSparql)
+      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] =
+        OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
+
+      knoraBaseOntologyMetadata: OntologyMetadataV2 =
+        allOntologyMetadata.getOrElse(
+          OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
+          throw InconsistentRepositoryDataException(s"No knora-base ontology found")
+        )
+      knoraBaseOntologyVersion: String =
+        knoraBaseOntologyMetadata.ontologyVersion.getOrElse(
+          throw InconsistentRepositoryDataException(
+            "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."
+          )
+        )
+
+      _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
+            throw InconsistentRepositoryDataException(
+              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates."
+            )
+          }
+
+      // Get the contents of each named graph containing an ontology.
+      ontologyGraphResponseFutures: Iterable[Task[OntologyGraph]] =
+        allOntologyMetadata.keys.map { ontologyIri =>
+          val ontology: OntologyMetadataV2 =
+            allOntologyMetadata(ontologyIri)
+          val lastModificationDate: Option[Instant] =
+            ontology.lastModificationDate
+          val attachedToProject: Option[SmartIri] =
+            ontology.projectIri
+
+          // throw an exception if ontology doesn't have lastModificationDate property and isn't attached to system project
+          lastModificationDate match {
+            case None =>
+              attachedToProject match {
+                case Some(iri: SmartIri) =>
+                  if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
+                    throw MissingLastModificationDateOntologyException(
+                      s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
+                    )
+                  }
+                case _ => ()
+              }
+            case _ => ()
+          }
+
+          val ontologyGraphConstructQuery =
+            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              .getOntologyGraph(
+                ontologyGraph = ontologyIri
+              )
+              .toString
+
+          triplestoreService.sparqlHttpExtendedConstruct(ontologyGraphConstructQuery).map { response =>
+            OntologyGraph(
+              ontologyIri = ontologyIri,
+              constructResponse = response
+            )
+          }
+        }
+
+      ontologyGraphs <- ZIO.collectAll(ontologyGraphResponseFutures)
+
+      _ = Cache.makeOntologyCache(allOntologyMetadata, ontologyGraphs)
+    } yield SuccessResponseV2("Ontologies loaded.")
 
   /**
    * Gets the ontology data from the cache.
    *
    * @return an [[OntologyCacheData]]
    */
-  def getCacheData(implicit ec: ExecutionContext): Future[OntologyCacheData] =
-    Future {
+  override def getCacheData: Task[OntologyCacheData] =
+    ZIO.attempt {
       CacheUtil.get[OntologyCacheData](cacheName = OntologyCacheName, key = OntologyCacheKey) match {
         case Some(data) => data
         case None =>
@@ -990,17 +1037,15 @@ object Cache extends LazyLogging {
    * @param updatedClassIri     the IRI of the changed class
    * @return the updated cache data
    */
-  def cacheUpdatedOntologyWithClass(
+  override def cacheUpdatedOntologyWithClass(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
     updatedClassIri: SmartIri
-  )(implicit
-    ec: ExecutionContext
-  ): Future[OntologyCacheData] =
+  ): Task[OntologyCacheData] =
     for {
       ontologyCache        <- getCacheData
       newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
-      newOntologyCacheData  = make(newOntologies)
+      newOntologyCacheData  = Cache.make(newOntologies)
       updatedCacheData      = updateSubClasses(updatedClassIri, newOntologyCacheData)
       _                     = storeCacheData(updatedCacheData)
       updatedOntologyCache <- getCacheData
@@ -1013,16 +1058,14 @@ object Cache extends LazyLogging {
    * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
    * @return the updated cache data
    */
-  def cacheUpdatedOntology(
+  override def cacheUpdatedOntology(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2
-  )(implicit
-    ec: ExecutionContext
-  ): Future[OntologyCacheData] =
+  ): Task[OntologyCacheData] =
     for {
       ontologyCache        <- getCacheData
       newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
-      newOntologyCacheData  = make(newOntologies)
+      newOntologyCacheData  = Cache.make(newOntologies)
       _                     = storeCacheData(newOntologyCacheData)
       updatedOntologyCache <- getCacheData
     } yield updatedOntologyCache
@@ -1034,12 +1077,10 @@ object Cache extends LazyLogging {
    * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
    * @return the updated cache data
    */
-  def cacheUpdatedOntologyWithoutUpdatingMaps(
+  override def cacheUpdatedOntologyWithoutUpdatingMaps(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2
-  )(implicit
-    ec: ExecutionContext
-  ): Future[OntologyCacheData] =
+  ): Task[OntologyCacheData] =
     for {
       ontologyCache        <- getCacheData
       newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
@@ -1054,14 +1095,16 @@ object Cache extends LazyLogging {
    * @param ontologyIri the IRI of the ontology to delete
    * @return the updated cache data
    */
-  def deleteOntology(ontologyIri: SmartIri)(implicit
-    ec: ExecutionContext
-  ): Future[OntologyCacheData] =
+  override def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData] =
     for {
       ontologyCache        <- getCacheData
       newOntologies         = ontologyCache.ontologies - ontologyIri
-      newOntologyCacheData  = make(newOntologies)
+      newOntologyCacheData  = Cache.make(newOntologies)
       _                     = storeCacheData(newOntologyCacheData)
       updatedOntologyCache <- getCacheData
     } yield updatedOntologyCache
+}
+
+object CacheLive {
+  val layer: URLayer[TriplestoreService with StringFormatter, Cache] = ZLayer.fromFunction(CacheLive.apply _)
 }

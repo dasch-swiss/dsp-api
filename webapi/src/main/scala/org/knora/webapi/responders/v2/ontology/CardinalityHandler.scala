@@ -70,6 +70,7 @@ trait CardinalityHandler {
 }
 
 final case class CardinalityHandlerLive(
+  cache: Cache,
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
   ontologyHelpers: OntologyHelpers,
@@ -397,9 +398,7 @@ final case class CardinalityHandlerLive(
                           classes = ontology.classes + (internalClassIri -> readClassInfo)
                         )
 
-      _ <- ZIO.fromFuture(implicit ec =>
-             Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
-           )
+      _ <- cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
       // Read the data back from the cache.
 
@@ -503,7 +502,7 @@ final case class CardinalityHandlerLive(
 
 object CardinalityHandlerLive {
   val layer: URLayer[
-    TriplestoreService with MessageRelay with OntologyHelpers with OntologyCache with StringFormatter,
+    Cache with TriplestoreService with MessageRelay with OntologyHelpers with OntologyCache with StringFormatter,
     CardinalityHandler
   ] = ZLayer.fromFunction(CardinalityHandlerLive.apply _)
 }

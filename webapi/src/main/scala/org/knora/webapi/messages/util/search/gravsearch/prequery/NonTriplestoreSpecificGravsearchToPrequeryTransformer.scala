@@ -17,6 +17,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo
 import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
+import org.knora.webapi.responders.v2.ontology.Cache
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -54,7 +55,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): Seq[QueryPattern] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
     processStatementPatternFromWhereClause(

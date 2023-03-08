@@ -22,6 +22,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.settings._
@@ -38,6 +39,7 @@ object AppRouter {
   val layer: ZLayer[
     core.ActorSystem
       with AppConfig
+      with Cache
       with CardinalityHandler
       with CardinalityService
       with MessageRelay
@@ -56,7 +58,8 @@ object AppRouter {
         messageRelay <- ZIO.service[MessageRelay]
         runtime <-
           ZIO.runtime[
-            CardinalityHandler
+            Cache
+              with CardinalityHandler
               with CardinalityService
               with PermissionUtilADM
               with OntologyHelpers
