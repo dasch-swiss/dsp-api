@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,6 +7,7 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
+import play.twirl.api.TxtFormat
 import spray.json._
 import zio._
 
@@ -17,19 +18,22 @@ import scala.collection.mutable
 import dsp.errors._
 import dsp.valueobjects.V2
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.domain
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
-sealed trait TriplestoreRequest extends StoreRequest
+sealed trait TriplestoreRequest extends StoreRequest with RelayedMessage
 
 /**
  * Simple message for checking the connection to the triplestore.
@@ -103,19 +107,16 @@ object SparqlExtendedConstructResponse {
    * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
    *
    * @param turtleStr     the Turtle document.
-   * @param rdfFormatUtil an [[RdfFormatUtil]].
-   * @param log           a [[Logger]].
    * @return a [[SparqlExtendedConstructResponse]] representing the document.
    */
   def parseTurtleResponse(
     turtleStr: String
-  ): IO[DataConversionException, SparqlExtendedConstructResponse] = {
+  )(implicit stringFormatter: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] = {
 
     val rdfFormatUtil: RdfFormatUtil =
       RdfFeatureFactory.getRdfFormatUtil()
 
     ZIO.attemptBlocking {
-      implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
       val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
       val rdfModel: RdfModel                                              = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
@@ -192,8 +193,8 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      _ =>
-        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter") *>
+      e =>
+        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter : ${e.getMessage}") *>
           ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
       ZIO.succeed(_)
     )
@@ -222,6 +223,7 @@ case class NamedGraphFileRequest(
   outputFile: Path,
   outputFormat: QuadFormat
 ) extends TriplestoreRequest
+    with ResponderRequest
 
 /**
  * Requests a named graph, which will be returned as Turtle. A successful response
@@ -254,7 +256,9 @@ case class SparqlUpdateResponse()
  *
  * @param sparql the SPARQL string.
  */
-case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
+case class SparqlAskRequest(sparql: String) extends TriplestoreRequest {
+  def this(txt: TxtFormat.Appendable) = this(txt.toString())
+}
 
 /**
  * Represents a response to a SPARQL ASK query, containing the result.
@@ -287,6 +291,16 @@ case class DropAllTRepositoryContent() extends TriplestoreRequest
  * Sent as a response to [[DropAllTRepositoryContent]] if the request was processed successfully.
  */
 case class DropAllRepositoryContentACK()
+
+/**
+ * Message for removing all content from the repository.
+ */
+case class DropDataGraphByGraph() extends TriplestoreRequest
+
+/**
+ * Sent as a response to [[DropDataGraphByGraph]] if the request was processed successfully.
+ */
+case class DropDataGraphByGraphACK()
 
 /**
  * Inserts data into the repository.
@@ -334,9 +348,11 @@ case class CheckTriplestoreRequest() extends TriplestoreRequest
  * Response indicating whether the triplestore has finished initialization and is ready for processing messages
  *
  * @param triplestoreStatus the state of the triplestore.
- * @param msg               further description.
  */
 case class CheckTriplestoreResponse(triplestoreStatus: domain.TriplestoreStatus)
+object CheckTriplestoreResponse {
+  val Available: CheckTriplestoreResponse = CheckTriplestoreResponse(TriplestoreStatus.Available)
+}
 
 /**
  * Simulates a triplestore timeout. Used only in testing.

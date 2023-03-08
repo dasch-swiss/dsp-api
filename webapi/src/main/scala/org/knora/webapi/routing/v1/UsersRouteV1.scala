@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -36,13 +36,12 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         /* return all users */
         requestContext =>
           val requestMessage = for {
-            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+            userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
           } yield UsersGetRequestV1(userProfile)
 
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessage,
             requestContext,
-            settings,
             appActor,
             log
           )
@@ -55,7 +54,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             /* check if email or iri was supplied */
             val requestMessage = if (identifier == "email") {
               for {
-                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
               } yield UserProfileByEmailGetRequestV1(
                 email = value,
                 userProfileType = UserProfileTypeV1.RESTRICTED,
@@ -63,7 +62,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               )
             } else {
               for {
-                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
                 userIri = stringFormatter.validateAndEscapeIri(
                             value,
                             throw BadRequestException(s"Invalid user IRI $value")
@@ -78,7 +77,6 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,
               requestContext,
-              settings,
               appActor,
               log
             )
@@ -90,7 +88,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           /* get user's project memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")
@@ -104,7 +102,6 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,
               requestContext,
-              settings,
               appActor,
               log
             )
@@ -115,7 +112,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           /* get user's project admin memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")
@@ -129,7 +126,6 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,
               requestContext,
-              settings,
               appActor,
               log
             )
@@ -140,7 +136,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           /* get user's group memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")
@@ -154,7 +150,6 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,
               requestContext,
-              settings,
               appActor,
               log
             )

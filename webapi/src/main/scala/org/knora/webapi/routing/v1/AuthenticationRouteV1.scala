@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -24,7 +24,7 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
     path("v1" / "authenticate") {
       get { requestContext =>
         requestContext.complete {
-          doAuthenticateV1(requestContext)
+          doAuthenticateV1(requestContext, routeData.appConfig)
         }
       }
     } ~ path("v1" / "session") {
@@ -32,20 +32,20 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
         requestContext.complete {
           val params = requestContext.request.uri.query().toMap
           if (params.contains("logout")) {
-            doLogoutV2(requestContext)
+            doLogoutV2(requestContext, routeData.appConfig)
           } else if (params.contains("login")) {
-            doLoginV1(requestContext)
+            doLoginV1(requestContext, routeData.appConfig)
           } else {
-            doAuthenticateV1(requestContext)
+            doAuthenticateV1(requestContext, routeData.appConfig)
           }
         }
       } ~ post { requestContext =>
         requestContext.complete {
-          doLoginV1(requestContext)
+          doLoginV1(requestContext, routeData.appConfig)
         }
       } ~ delete { requestContext =>
         requestContext.complete {
-          doLogoutV2(requestContext)
+          doLogoutV2(requestContext, routeData.appConfig)
         }
       }
     }

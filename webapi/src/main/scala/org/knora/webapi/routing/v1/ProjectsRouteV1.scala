@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -29,7 +29,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
         /* returns all projects */
         requestContext =>
           val requestMessage = for {
-            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+            userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
           } yield ProjectsGetRequestV1(
             userProfile = Some(userProfile)
           )
@@ -37,7 +37,6 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessage,
             requestContext,
-            settings,
             appActor,
             log
           )
@@ -49,7 +48,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
           val requestMessage = if (identifier != "iri") { // identify project by shortname.
             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
             for {
-              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
             } yield ProjectInfoByShortnameGetRequestV1(
               shortname = shortNameDec,
               userProfileV1 = Some(userProfile)
@@ -58,7 +57,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
             val checkedProjectIri =
               stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
             for {
-              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
             } yield ProjectInfoByIRIGetRequestV1(
               iri = checkedProjectIri,
               userProfileV1 = Some(userProfile)
@@ -68,7 +67,6 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessage,
             requestContext,
-            settings,
             appActor,
             log
           )

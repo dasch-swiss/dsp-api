@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -176,22 +176,16 @@ relationship is expressed using the property `incunabula:partOf`:
 
 The key things to notice here are:
 
-* `rdfs:subPropertyOf knora-base:isPartOf`: The Knora base ontology
-  provides a generic `isPartOf` property to express part-whole
-  relationships. Like many properties defined in `knora-base`, a
-  project cannot use `knora-base:isPartOf` directly, but must make a
-  subproperty such as `incunabula:partOf`. It is important to note
-  that `knora-base:isPartOf` is a subproperty of
-  `knora-base:hasLinkTo`. Any property that points to a
-  `knora-base:Resource` must be a subproperty of
-  `knora-base:hasLinkTo`. In Knora terminology, such a property is
-  called a *link property*.
-* `knora-base:objectClassConstraint :book`: The object of this
-  property must be a member of the class `incunabula:book`, which, as
-  we will see below, is a subclass of `knora-base:Resource`.
-* `salsah-gui:guiElement salsah-gui:Searchbox`: When SALSAH prompts a
-  user to select the book that a page is part of, it should provide a
-  search box enabling the user to find the desired book.
+* `rdfs:subPropertyOf knora-base:isPartOf`: The `knora-base` ontology provides a generic `isPartOf` property to express 
+  part-whole relationships. A project may use `knora-base:isPartOf` directly, however creating a subproperty such as 
+  `incunabula:partOf` will allow to customize the property further, e.g. by giving it a more descriptive label.  
+  It is important to note that `knora-base:isPartOf` is a subproperty of `knora-base:hasLinkTo`. Any property that 
+  points to a `knora-base:Resource` must be a subproperty of `knora-base:hasLinkTo`. Such a
+  property is called a *link property*.
+* `knora-base:objectClassConstraint :book`: The object of this property must be a member of the class `incunabula:book`,
+  which, as we will see below, is a subclass of `knora-base:Resource`.
+* `salsah-gui:guiElement salsah-gui:Searchbox`: When SALSAH prompts a user to select the book that a page is part of, it
+  should provide a search box enabling the user to find the desired book.
 
 Because `incunabula:partOf` is a link property, it must always
 accompanied by a *link value property*, which enables Knora to store
@@ -322,7 +316,7 @@ least one title and at most one publication date. In the DSP-API
 version 1, the word 'occurrence' is used instead of 'cardinality'.
 
 The OWL cardinalities supported by Knora are described in
-[OWL Cardinalities](../02-knora-ontologies/knora-base.md#owl-cardinalities).
+[OWL Cardinalities](../02-dsp-ontologies/knora-base.md#owl-cardinalities).
 
 Note that `incunabula:book` specifies a cardinality of
 `owl:minCardinality 0` on the property `incunabula:hasAuthor`. At first

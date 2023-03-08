@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,6 +14,7 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
@@ -154,7 +155,7 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
 /**
  * An abstract trait for messages that can be sent to `HierarchicalListsResponderV2`.
  */
-sealed trait ListsResponderRequestADM extends KnoraRequestADM
+sealed trait ListsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
  * Requests a list of all lists or the lists inside a project. A successful response will be a [[ListsGetResponseADM]]
@@ -341,7 +342,7 @@ case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Bool
 /**
  * Returns an information if node can be deleted (none of its nodes is used in data).
  *
- * @param iri           the IRI of the list that is checked.
+ * @param listIri           the IRI of the list that is checked.
  * @param canDeleteList contains a boolean value if list node can be deleted.
  */
 case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)

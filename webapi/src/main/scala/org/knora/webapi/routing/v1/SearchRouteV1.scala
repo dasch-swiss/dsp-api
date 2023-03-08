@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -247,14 +247,13 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
       get { requestContext =>
         val requestMessage = for {
-          userADM                         <- getUserADM(requestContext)
+          userADM                         <- getUserADM(requestContext, routeData.appConfig)
           params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         } yield makeExtendedSearchRequestMessage(userADM, params)
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
           requestContext,
-          settings,
           appActor,
           log
         )
@@ -264,14 +263,13 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
           get { requestContext =>
             val requestMessage = for {
-              userADM                    <- getUserADM(requestContext)
+              userADM                    <- getUserADM(requestContext, routeData.appConfig)
               params: Map[String, String] = requestContext.request.uri.query().toMap
             } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
 
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,
               requestContext,
-              settings,
               appActor,
               log
             )

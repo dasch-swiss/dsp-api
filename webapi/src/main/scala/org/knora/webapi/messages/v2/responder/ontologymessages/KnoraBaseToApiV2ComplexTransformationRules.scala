@@ -1,11 +1,10 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -15,6 +14,7 @@ import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 
 /**
  * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Complex]] schema.
@@ -1372,177 +1372,105 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     )
   )
 
-  private val DocumentFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-    subjectType = Some(OntologyConstants.KnoraApiV2Complex.DocumentFileValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "Document file value has X dimension"
-        )
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "The horizontal dimension of a document file value."
-        )
-      )
-    )
-  )
-
-  private val DocumentFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-    subjectType = Some(OntologyConstants.KnoraApiV2Complex.DocumentFileValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "Document file value has Y dimension"
-        )
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "The vertical dimension of a document file value."
-        )
-      )
-    )
-  )
-
-  private val DocumentFileValueHasPageCount: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-    subjectType = Some(OntologyConstants.KnoraApiV2Complex.DocumentFileValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "Document file value has page count"
-        )
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "The page count of a document file value."
-        )
-      )
-    )
-  )
-
   private val ResourceCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> MayHaveMany,
-    OntologyConstants.KnoraApiV2Complex.ArkUrl               -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.VersionArkUrl        -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.VersionDate          -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.UserHasPermission    -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.IsDeleted            -> MayHaveOne
+    OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> Unbounded,
+    OntologyConstants.KnoraApiV2Complex.ArkUrl               -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.VersionArkUrl        -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.VersionDate          -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.UserHasPermission    -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.IsDeleted            -> ZeroOrOne
   )
 
   private val DateBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear  -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear    -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth   -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay   -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay     -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra   -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra     -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar   -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear  -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear    -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth   -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay   -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay     -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra   -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra     -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar   -> ExactlyOne
   )
 
   private val UriBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.UriValueAsUri -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.UriValueAsUri -> ExactlyOne
   )
 
   private val BooleanBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.BooleanValueAsBoolean -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.BooleanValueAsBoolean -> ExactlyOne
   )
 
   private val IntBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.IntValueAsInt -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.IntValueAsInt -> ExactlyOne
   )
 
   private val DecimalBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal -> ExactlyOne
   )
 
   private val IntervalBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd   -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd   -> ExactlyOne
   )
 
   private val ColorBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.ColorValueAsColor -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.ColorValueAsColor -> ExactlyOne
   )
 
   private val ValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.ValueAsString     -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.HasPermissions    -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.UserHasPermission -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.ArkUrl            -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.VersionArkUrl     -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.IsDeleted         -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.ValueHasUUID      -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.ValueAsString     -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.HasPermissions    -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.UserHasPermission -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.ArkUrl            -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.VersionArkUrl     -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.IsDeleted         -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.ValueHasUUID      -> ExactlyOne
   )
 
   private val TextValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff              -> MayHaveMany,
-    OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup                -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage              -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueAsXml                    -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueAsHtml                   -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueHasMapping               -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> MayHaveOne
+    OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff              -> Unbounded,
+    OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup                -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage              -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueAsXml                    -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueAsHtml                   -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueHasMapping               -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> ZeroOrOne
   )
 
   private val StandoffTagCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParentIndex -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex   -> MayHaveOne
+    OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParentIndex -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex   -> ZeroOrOne
   )
 
   private val LinkValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.LinkValueHasSource    -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget    -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.LinkValueHasSourceIri -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri -> MayHaveOne
+    OntologyConstants.KnoraApiV2Complex.LinkValueHasSource    -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget    -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.LinkValueHasSourceIri -> ZeroOrOne,
+    OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri -> ZeroOrOne
   )
 
   private val GeomValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry -> ExactlyOne
   )
 
   private val ListValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.ListValueAsListNode -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.ListValueAsListNode -> ExactlyOne
   )
 
   private val GeonameValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.GeonameValueAsGeonameCode -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.GeonameValueAsGeonameCode -> ExactlyOne
   )
 
   private val FileValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.FileValueAsUrl       -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.FileValueHasFilename -> MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.FileValueAsUrl       -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.FileValueHasFilename -> ExactlyOne
   )
 
   private val StillImageFileValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX        -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY        -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> MustHaveOne
-  )
-
-  private val DocumentFileValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX      -> MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY      -> MayHaveOne
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX        -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY        -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> ExactlyOne
   )
 
   /**
@@ -1649,8 +1577,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.ListValue           -> ListValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.GeonameValue        -> GeonameValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.FileValue           -> FileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.DocumentFileValue   -> DocumentFileValueCardinalities
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri -> cardinalities.map { case (propertyIri, cardinality) =>
       propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
@@ -1730,10 +1657,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     FileValueHasFilename,
     StillImageFileValueHasDimX,
     StillImageFileValueHasDimY,
-    StillImageFileValueHasIIIFBaseUrl,
-    DocumentFileValueHasDimX,
-    DocumentFileValueHasDimY,
-    DocumentFileValueHasPageCount
+    StillImageFileValueHasIIIFBaseUrl
   ).map { propertyInfo =>
     propertyInfo.entityInfoContent.propertyIri -> propertyInfo
   }.toMap

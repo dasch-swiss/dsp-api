@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -22,7 +22,7 @@ two reasons:
     triplestore, bypassing Knora.
 
 The design of the `knora-base` ontology supports two ways of specifying
-constraints on data (see [knora-base: Consistency Checking](../../../02-knora-ontologies/knora-base.md#consistency-checking)
+constraints on data (see [knora-base: Consistency Checking](../../../02-dsp-ontologies/knora-base.md#consistency-checking)
 for details):
 
 1.  A property definition should specify the types that are allowed as

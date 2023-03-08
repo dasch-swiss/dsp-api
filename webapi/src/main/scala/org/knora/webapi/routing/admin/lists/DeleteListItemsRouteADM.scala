@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -45,7 +45,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list item Iri: $iri"))
 
         val requestMessage: Future[ListItemDeleteRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
         } yield ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           requestingUser = requestingUser,
@@ -55,7 +55,6 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -72,7 +71,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 
         val requestMessage: Future[CanDeleteListRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
+          requestingUser <- getUserADM(requestContext, routeData.appConfig)
         } yield CanDeleteListRequestADM(
           iri = listIri,
           requestingUser = requestingUser
@@ -81,7 +80,6 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )
@@ -98,7 +96,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListNodeCommentsDeleteRequestADM] =
           for {
-            requestingUser <- getUserADM(requestContext)
+            requestingUser <- getUserADM(requestContext, routeData.appConfig)
           } yield ListNodeCommentsDeleteRequestADM(
             iri = listIri,
             requestingUser = requestingUser
@@ -107,7 +105,6 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          settings = settings,
           appActor = appActor,
           log = log
         )

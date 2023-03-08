@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,20 +11,24 @@ import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
+import zio.prelude.Validation
 
 import java.nio.file.Path
 import java.util.UUID
 
 import dsp.errors.BadRequestException
-import dsp.errors.DataConversionException
 import dsp.errors.OntologyConstraintException
+import dsp.errors.ValidationException
+import dsp.valueobjects.Iri.ProjectIri
+import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 
@@ -73,7 +77,7 @@ case class CreateProjectApiRequestADM(
 case class ChangeProjectApiRequestADM(
   shortname: Option[String] = None,
   longname: Option[String] = None,
-  description: Option[Seq[StringLiteralV2]] = None,
+  description: Option[Seq[V2.StringLiteralV2]] = None,
   keywords: Option[Seq[String]] = None,
   logo: Option[String] = None,
   status: Option[Boolean] = None,
@@ -114,15 +118,15 @@ case class ChangeProjectApiRequestADM(
       errorFun = throw BadRequestException(s"The supplied logo: '$logo' is not valid.")
     )
 
-    val validatedDescriptions: Option[Seq[StringLiteralV2]] = description match {
-      case Some(descriptions: Seq[StringLiteralV2]) =>
+    val validatedDescriptions: Option[Seq[V2.StringLiteralV2]] = description match {
+      case Some(descriptions: Seq[V2.StringLiteralV2]) =>
         val escapedDescriptions = descriptions.map { des =>
           val escapedValue =
             stringFormatter.toSparqlEncodedString(
               des.value,
               errorFun = throw BadRequestException(s"The supplied description: '${des.value}' is not valid.")
             )
-          StringLiteralV2(value = escapedValue, language = des.language)
+          V2.StringLiteralV2(value = escapedValue, language = des.language)
         }
         Some(escapedDescriptions)
       case None => None
@@ -155,49 +159,31 @@ case class ChangeProjectApiRequestADM(
 /**
  * An abstract trait representing a request message that can be sent to [[org.knora.webapi.responders.admin.ProjectsResponderADM]].
  */
-sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
+sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 // Requests
 
 /**
  * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
- *
- * @param requestingUser       the user making the request.
  */
-case class ProjectsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
-
-/**
- * Get all information about all projects in form of a sequence of [[ProjectADM]]. Returns an empty sequence if
- * no projects are found. Administration permission checking is skipped.
- *
- * @param requestingUser       the user making the request.
- */
-case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
+case class ProjectsGetRequestADM() extends ProjectsResponderRequestADM
 
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
  * of [[ProjectGetResponseADM]]. External use.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param requestingUser       the user making the request.
  */
-case class ProjectGetRequestADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
-) extends ProjectsResponderRequestADM
+case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
  * of [[ProjectADM]]. Internal use only.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param requestingUser       the user making the request.
  */
-case class ProjectGetADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
-) extends ProjectsResponderRequestADM
+case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
 /**
  * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
@@ -223,42 +209,34 @@ case class ProjectAdminMembersGetRequestADM(
 
 /**
  * Returns all unique keywords for all projects.
- *
- * @param requestingUser       the user making the request.
  */
-case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
+case class ProjectsKeywordsGetRequestADM() extends ProjectsResponderRequestADM
 
 /**
  * Returns all keywords for a project identified through IRI.
  *
  * @param projectIri           the IRI of the project.
- * @param requestingUser       the user making the request.
  */
 case class ProjectKeywordsGetRequestADM(
-  projectIri: IRI,
-  requestingUser: UserADM
+  projectIri: ProjectIri
 ) extends ProjectsResponderRequestADM
 
 /**
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
  *
  * @param identifier           the identifier of the project.
- * @param requestingUser       the user making the request.
  */
 case class ProjectRestrictedViewSettingsGetADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
+  identifier: ProjectIdentifierADM
 ) extends ProjectsResponderRequestADM
 
 /**
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
  *
  * @param identifier           the identifier of the project.
- * @param requestingUser       the user making the request.
  */
 case class ProjectRestrictedViewSettingsGetRequestADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
+  identifier: ProjectIdentifierADM
 ) extends ProjectsResponderRequestADM
 
 /**
@@ -288,14 +266,14 @@ case class ProjectCreateRequestADM(
 /**
  * Requests updating an existing project.
  *
- * @param projectIri           the IRI of the project to be updated.
- * @param changeProjectRequest the data which needs to be update.
- * @param requestingUser       the user making the request.
- * @param apiRequestID         the ID of the API request.
+ * @param projectIri            the IRI of the project to be updated.
+ * @param projectUpdatePayload  the [[ProjectUpdatePayloadADM]]
+ * @param requestingUser        the user making the request.
+ * @param apiRequestID          the ID of the API request.
  */
 case class ProjectChangeRequestADM(
-  projectIri: IRI,
-  changeProjectRequest: ChangeProjectApiRequestADM,
+  projectIri: ProjectIri,
+  projectUpdatePayload: ProjectUpdatePayloadADM,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM
@@ -409,7 +387,7 @@ case class ProjectADM(
   shortname: String,
   shortcode: String,
   longname: Option[String],
-  description: Seq[StringLiteralV2],
+  description: Seq[V2.StringLiteralV2],
   keywords: Seq[String],
   logo: Option[String],
   ontologies: Seq[IRI],
@@ -491,8 +469,8 @@ case class ProjectADM(
 
   def unescape: ProjectADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val unescapedDescriptions: Seq[StringLiteralV2] = description.map(desc =>
-      StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(desc.value), language = desc.language)
+    val unescapedDescriptions: Seq[V2.StringLiteralV2] = description.map(desc =>
+      V2.StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(desc.value), language = desc.language)
     )
     val unescapedKeywords: Seq[String] = keywords.map(key => stringFormatter.fromSparqlEncodedString(key))
     copy(
@@ -507,130 +485,81 @@ case class ProjectADM(
 }
 
 /**
- * The ProjectIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
- * validated and escaped.
+ * Represents the project's identifier, which can be an IRI, shortcode or shortname.
  */
-object ProjectIdentifierADM {
-  def apply(maybeIri: Option[IRI] = None, maybeShortname: Option[String] = None, maybeShortcode: Option[String] = None)(
-    implicit sf: StringFormatter
-  ): ProjectIdentifierADM = {
-
-    val parametersCount: Int = List(
-      maybeIri,
-      maybeShortname,
-      maybeShortcode
-    ).flatten.size
-
-    // something needs to be set
-    if (parametersCount == 0) throw BadRequestException("Empty project identifier is not allowed.")
-
-    if (parametersCount > 1) throw BadRequestException("Only one option allowed for project identifier.")
-
-    new ProjectIdentifierADM(
-      maybeIri =
-        sf.validateAndEscapeOptionalProjectIri(maybeIri, throw BadRequestException(s"Invalid user project $maybeIri")),
-      maybeShortname = sf.validateAndEscapeOptionalProjectShortname(
-        maybeShortname,
-        throw BadRequestException(s"Invalid user project shortname $maybeShortname")
-      ),
-      maybeShortcode = sf.validateAndEscapeOptionalProjectShortcode(
-        maybeShortcode,
-        throw BadRequestException(s"Invalid user project shortcode $maybeShortcode")
-      )
-    )
-  }
-}
-
-/**
- * Represents the project's identifier. It can be an IRI, shortcode or shortname.
- *
- * @param maybeIri       the project's IRI.
- * @param maybeShortname the project's shortname.
- * @param maybeShortcode the project's shortcode
- */
-class ProjectIdentifierADM private (
-  maybeIri: Option[IRI] = None,
-  maybeShortname: Option[String] = None,
-  maybeShortcode: Option[String] = None
-) {
-
-  // squash and return value.
-  val value: String = List(
-    maybeIri,
-    maybeShortname,
-    maybeShortcode
-  ).flatten.head
-
-  def hasType: ProjectIdentifierType =
-    if (maybeIri.isDefined) {
-      ProjectIdentifierType.IRI
-    } else if (maybeShortcode.isDefined) {
-      ProjectIdentifierType.SHORTCODE
-    } else {
-      ProjectIdentifierType.SHORTNAME
+sealed trait ProjectIdentifierADM { self =>
+  def asIriIdentifierOption: Option[String] =
+    self match {
+      case IriIdentifier(value) => Some(value.value)
+      case _                    => None
     }
 
-  /**
-   * Tries to return the value as an IRI.
-   */
-  def toIri: IRI =
-    maybeIri.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type.")
-    )
+  def asShortcodeIdentifierOption: Option[String] =
+    self match {
+      case ShortcodeIdentifier(value) => Some(value.value)
+      case _                          => None
+    }
 
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toIriOption: Option[IRI] =
-    maybeIri
-
-  /**
-   * Tries to return the value as an SHORTNAME.
-   */
-  def toShortname: String =
-    maybeShortname.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTNAME' type.")
-    )
-
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toShortnameOption: Option[String] =
-    maybeShortname
-
-  /**
-   * Tries to return the value as an SHORTCODE.
-   */
-  def toShortcode: String =
-    maybeShortcode.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTCODE' type.")
-    )
-
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toShortcodeOption: Option[String] =
-    maybeShortcode
-
-  /**
-   * Returns the string representation
-   */
-  override def toString: IRI =
-    s"ProjectIdentifierADM(${this.value})"
-
+  def asShortnameIdentifierOption: Option[String] =
+    self match {
+      case ShortnameIdentifier(value) => Some(value.value)
+      case _                          => None
+    }
 }
 
-/**
- * Project identifier types:
- *  - IRI
- *  - Shortcode
- *  - Shortname
- */
-sealed trait ProjectIdentifierType
-object ProjectIdentifierType {
-  case object IRI       extends ProjectIdentifierType
-  case object SHORTCODE extends ProjectIdentifierType
-  case object SHORTNAME extends ProjectIdentifierType
+object ProjectIdentifierADM {
+
+  /**
+   * Represents [[IriIdentifier]] identifier.
+   *
+   * @param value that constructs the identifier in the type of [[ProjectIri]] value object.
+   */
+  final case class IriIdentifier(value: ProjectIri) extends ProjectIdentifierADM
+  object IriIdentifier {
+    def fromString(value: String): Validation[ValidationException, IriIdentifier] =
+      ProjectIri.make(value).map {
+        IriIdentifier(_)
+      }
+  }
+
+  /**
+   * Represents [[ShortcodeIdentifier]] identifier.
+   *
+   * @param value that constructs the identifier in the type of [[ShortCode]] value object.
+   */
+  final case class ShortcodeIdentifier(value: ShortCode) extends ProjectIdentifierADM
+  object ShortcodeIdentifier {
+    def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
+      ShortCode.make(value).map {
+        ShortcodeIdentifier(_)
+      }
+  }
+
+  /**
+   * Represents [[ShortnameIdentifier]] identifier.
+   *
+   * @param value that constructs the identifier in the type of [[ShortName]] value object.
+   */
+  final case class ShortnameIdentifier(value: ShortName) extends ProjectIdentifierADM
+  object ShortnameIdentifier {
+    def fromString(value: String): Validation[ValidationException, ShortnameIdentifier] =
+      ShortName.make(value).map {
+        ShortnameIdentifier(_)
+      }
+  }
+
+  /**
+   * Gets desired Project identifier value.
+   *
+   * @param identifier either IRI, Shortname or Shortcode of the project.
+   * @return identifier's value as [[String]]
+   */
+  def getId(identifier: ProjectIdentifierADM): String =
+    identifier match {
+      case IriIdentifier(value)       => value.value
+      case ShortnameIdentifier(value) => value.value
+      case ShortcodeIdentifier(value) => value.value
+    }
 }
 
 /**
@@ -640,27 +569,6 @@ object ProjectIdentifierType {
  * @param watermark the watermark file.
  */
 case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
-
-/**
- * Payload used for updating of an existing project.
- *
- * @param shortname   The project's shortname. Needs to be system wide unique.
- * @param longname    The project's long name.
- * @param description The project's description.
- * @param keywords    The project's keywords.
- * @param logo        The project's logo.
- * @param status      The project's status.
- * @param selfjoin    The project's self-join status.
- */
-case class ProjectUpdatePayloadADM(
-  shortname: Option[String] = None,
-  longname: Option[String] = None,
-  description: Option[Seq[StringLiteralV2]] = None,
-  keywords: Option[Seq[String]] = None,
-  logo: Option[String] = None,
-  status: Option[Boolean] = None,
-  selfjoin: Option[Boolean] = None
-)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating

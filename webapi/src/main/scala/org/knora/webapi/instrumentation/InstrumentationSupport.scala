@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -43,28 +43,20 @@ trait InstrumentationSupport {
     /**
      * NOTE: The elapsed time of the span is saved somewhere by kamon, but
      * I have no idea how to get to it and this is why I'm calculating
-     * it in the metricsLogger.info line. This is a quick and dirty hack to
+     * it in the metricsLogger.debug line. This is a quick and dirty hack to
      * have at least something.
      */
     val start = System.currentTimeMillis()
     Kamon.span(name) {
       future.andThen { case Success(_) =>
-        metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
+        metricsLogger.debug(s"$name: {} ms", System.currentTimeMillis() - start)
       }
     }
   }
 
-  //    def counter(name: String) = Kamon.metrics.counter(name)
-  //    def minMaxCounter(name: String) = Kamon.metrics.minMaxCounter(name)
-  //    def time[A](name: String)(thunk: => A) = Latency.measure(Kamon.metrics.histogram(name))(thunk)
-  //    def traceFuture[A](name:String)(future: => Future[A]):Future[A] =
-  //        Tracer.withContext(Kamon.tracer.newContext(name)) {
-  //            future.andThen { case completed ⇒ Tracer.currentContext.finish() }(SameThreadExecutionContext)
-  //        }
-
   /**
    * Based on the current class name, create a logger with the name in the
-   * form 'M-ClassName', e.g., 'M-RedisManager'.
+   * form 'M-ClassName', e.g., 'M-CacheManager'.
    * All loggers returned by this method can be configured in 'logback.xml',
    * i.e., turned on or off.
    */

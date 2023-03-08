@@ -1,10 +1,12 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package dsp.valueobjects
 
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -48,7 +50,8 @@ object Id {
      * @return new RoleId instance
      */
     def fromUuid(uuid: UUID): Validation[Throwable, RoleId] = {
-      val iri = Iri.RoleIri.make(roleIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      val iri =
+        Iri.RoleIri.make(roleIriPrefix + uuid.toString).getOrElseWith(e => throw ValidationException(e.head.getMessage))
       Validation.succeed(new RoleId(uuid, iri) {})
     }
 
@@ -59,7 +62,8 @@ object Id {
      */
     def make(): Validation[Throwable, RoleId] = {
       val uuid = UUID.randomUUID()
-      val iri  = Iri.RoleIri.make(roleIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      val iri =
+        Iri.RoleIri.make(roleIriPrefix + uuid.toString).getOrElseWith(e => throw ValidationException(e.head.getMessage))
       Validation.succeed(new RoleId(uuid, iri) {})
     }
   }
@@ -80,6 +84,11 @@ object Id {
    */
   object UserId {
 
+    implicit val decoder: JsonDecoder[UserId] = JsonDecoder[Iri.UserIri].mapOrFail { case iri =>
+      UserId.fromIri(iri).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[UserId] = JsonEncoder[String].contramap((userId: UserId) => userId.iri.value)
+
     private val userIriPrefix = "http://rdfh.ch/users/"
 
     /**
@@ -93,23 +102,15 @@ object Id {
     }
 
     /**
-     * Generates a UserId instance from a given UUID and an IRI which is created from a prefix and the UUID.
-     *
-     * @return a new UserId instance
-     */
-    def fromUuid(uuid: UUID): Validation[Throwable, UserId] = {
-      val iri = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
-      Validation.succeed(new UserId(uuid, iri) {})
-    }
-
-    /**
      * Generates a UserId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
      *
+     * @param uuid a valid UUID has to be provided in order to create a UserId
+     *
      * @return a new UserId instance
      */
-    def make(): Validation[Throwable, UserId] = {
-      val uuid: UUID = UUID.randomUUID()
-      val iri        = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+    def make(uuid: UUID): Validation[Throwable, UserId] = {
+      val iri =
+        Iri.UserIri.make(userIriPrefix + uuid.toString).getOrElseWith(e => throw ValidationException(e.head.getMessage))
       Validation.succeed(new UserId(uuid, iri) {})
     }
   }

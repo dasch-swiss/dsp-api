@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -7,11 +7,11 @@
 
 ## OntologySchema Type
 
-As explained in [API Schema](../../../03-apis/api-v2/introduction.md#api-schema),
+As explained in [API Schema](../../../03-endpoints/api-v2/introduction.md#api-schema),
 Knora can represent the same RDF data in different forms: an "internal schema"
 for use in the triplestore, and different "external schemas" for use in Knora
 API v2. Different schemas use different IRIs, as explained in
-[Knora IRIs](../../../03-apis/api-v2/knora-iris.md). Internally,
+[Knora IRIs](../../../03-endpoints/api-v2/knora-iris.md). Internally,
 Knora uses a [SmartIri](smart-iris.md) class to convert IRIs between
 schemas.
 

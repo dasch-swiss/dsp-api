@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -60,9 +60,6 @@ final case class RoleRepoMock(
     } yield id).commit.tap(_ => ZIO.logInfo(s"Deleted role: ${id.uuid}"))
 }
 
-/**
- * Companion object providing the layer with an initialized implementation of [[RoleRepo]]
- */
 object RoleRepoMock {
   val layer: ZLayer[Any, Nothing, RoleRepo] =
     ZLayer {

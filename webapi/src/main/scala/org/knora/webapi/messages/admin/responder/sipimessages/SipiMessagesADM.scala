@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,6 +11,7 @@ import spray.json.JsValue
 import spray.json.NullOptions
 import spray.json.RootJsonFormat
 
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
@@ -20,7 +21,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 /**
  * An abstract trait representing a Knora v1 API request message that can be sent to `SipiResponderV2`.
  */
-sealed trait SipiResponderRequestADM extends KnoraRequestADM
+sealed trait SipiResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
  * A Knora v1 API request message that requests information about a `FileValue`.

@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -89,16 +89,3 @@ $ docker run --name sipi \
              daschswiss/sipi \
              /sipi/local/bin/sipi -config /localdir/sipi.test-config.lua
 ```
-
-## Redis Server
-
-The DSP-API server uses Redis for caching.
-
-On macOS you can install Redis through [Homebrew](https://brew.sh):
-
-```bash
-$ brew install redis
-```
-
-If you don't want to use Redis, you can disable caching in `application.conf`
-via the `app.use-redis-cache` key, by setting it to `false`.

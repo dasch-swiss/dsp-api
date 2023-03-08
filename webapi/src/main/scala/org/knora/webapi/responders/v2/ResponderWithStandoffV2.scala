@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -27,7 +27,7 @@ import org.knora.webapi.store.iiif.errors.SipiException
 /**
  * An abstract class with standoff utility methods for v2 responders.
  */
-abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Responder(responderData) {
+abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
 
   /**
    * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].

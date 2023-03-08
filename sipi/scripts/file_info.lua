@@ -1,4 +1,4 @@
--- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+-- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
 require "util"
@@ -18,12 +18,14 @@ ARCHIVE = "archive"
 -------------------------------------------------------------------------------
 
 local IMAGE_JP2 = "image/jp2"
+local IMAGE_JPX = "image/jpx"
 local IMAGE_TIFF = "image/tiff"
 local IMAGE_PNG = "image/png"
 local IMAGE_JPG = "image/jpeg"
 local APPLICATION_XML = "application/xml"
 local TEXT_XML = "text/xml"
 local TEXT_PLAIN = "text/plain"
+local TEXT_CSV = "text/csv"
 local AUDIO_MP3 = "audio/mpeg"
 local AUDIO_WAV = "audio/wav"
 local AUDIO_X_WAV = "audio/x-wav"
@@ -48,6 +50,7 @@ local VIDEO_MP4 = "video/mp4"
 
 local image_mime_types = {
     IMAGE_JP2,
+    IMAGE_JPX,
     IMAGE_TIFF,
     IMAGE_PNG,
     IMAGE_JPG
@@ -64,7 +67,8 @@ local text_mime_types = {
     TEXT_PLAIN,
     APPLICATION_XML,
     TEXT_XML,
-    APPLICATION_CSV
+    APPLICATION_CSV,
+    TEXT_CSV
 }
 
 local document_mime_types = {

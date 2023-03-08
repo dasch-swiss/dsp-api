@@ -1,5 +1,5 @@
     ###
-# * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+# * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 # * SPDX-License-Identifier: Apache-2.0
 ###
 
@@ -19,7 +19,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v24" .
+    :ontologyVersion   "knora-base v25" .
 
 
 #################################################################
@@ -561,6 +561,7 @@
     rdfs:comment            "Indicates that this resource is part of another resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :Resource ;
+    :isEditable             true ;
     rdfs:subPropertyOf      :hasLinkTo .
 
 
@@ -570,6 +571,7 @@
     rdf:type                owl:ObjectProperty ;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Resource ;
+    :isEditable             true ;
     rdfs:subPropertyOf      :hasLinkToValue .
 
 
@@ -584,6 +586,7 @@
     rdfs:comment            "Indicates that this resource is a sequence of a video or audio resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :Resource ;
+    :isEditable             true ;
     rdfs:subPropertyOf      :hasLinkTo .
 
 
@@ -593,6 +596,7 @@
     rdf:type                owl:ObjectProperty ;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Resource ;
+    :isEditable             true ;
     rdfs:subPropertyOf      :hasLinkToValue .
 
 
@@ -641,6 +645,7 @@
 :seqnum
     rdf:type               owl:ObjectProperty ;
     :objectClassConstraint :IntValue ;
+    :isEditable            true ;
     rdfs:subPropertyOf     :hasValue ;
     rdfs:label             "Sequenznummer"@de,
                            "Sequence number"@en,
@@ -654,6 +659,7 @@
 :hasSequenceBounds
     rdf:type               owl:ObjectProperty ;
     :objectClassConstraint :IntervalValue ;
+    :isEditable             true ;
     rdfs:subPropertyOf     :hasValue ;
     rdfs:label             "Sequenz-Grenzen"@de,
                            "Sequence Bounds"@en;

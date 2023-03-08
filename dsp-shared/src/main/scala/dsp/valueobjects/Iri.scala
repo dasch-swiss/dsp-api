@@ -1,11 +1,13 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package dsp.valueobjects
 
 import org.apache.commons.validator.routines.UrlValidator
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import scala.util.Try
@@ -47,7 +49,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraGroupIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -78,7 +80,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraListIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -104,6 +106,12 @@ object Iri {
    */
   sealed abstract case class ProjectIri private (value: String) extends Iri
   object ProjectIri { self =>
+    implicit val decoder: JsonDecoder[ProjectIri] = JsonDecoder[String].mapOrFail { case value =>
+      ProjectIri.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[ProjectIri] =
+      JsonEncoder[String].contramap((projectIri: ProjectIri) => projectIri.value)
+
     def make(value: String): Validation[ValidationException, ProjectIri] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
@@ -112,7 +120,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraProjectIriStr(value)) {
           Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val eitherValue = Try(
@@ -135,6 +143,24 @@ object Iri {
   }
 
   /**
+   * Base64Uuid value object.
+   * This is base64 encoded UUID version without paddings.
+   *
+   * @param value to validate.
+   */
+  sealed abstract case class Base64Uuid private (value: String)
+  object Base64Uuid {
+    def make(value: String): Validation[ValidationException, Base64Uuid] =
+      if (value.isEmpty) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidMissing))
+      } else if (!V2UuidValidation.hasUuidLength(value)) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(value)))
+      } else if (!V2UuidValidation.isUuidSupported(value)) {
+        Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      } else Validation.succeed(new Base64Uuid(value) {})
+  }
+
+  /**
    * RoleIri value object.
    */
   sealed abstract case class RoleIri private (value: String) extends Iri
@@ -147,7 +173,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraRoleIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -167,6 +193,11 @@ object Iri {
    */
   sealed abstract case class UserIri private (value: String) extends Iri
   object UserIri {
+    implicit val decoder: JsonDecoder[UserIri] = JsonDecoder[String].mapOrFail { case value =>
+      UserIri.make(value).toEitherWith(e => e.head.getMessage())
+    }
+    implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
+
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
@@ -175,7 +206,7 @@ object Iri {
 
         if (!V2IriValidation.isKnoraUserIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid(value)))
-        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -223,6 +254,8 @@ object IriErrorMessages {
   val RoleIriInvalid     = (iri: String) => s"Role IRI: $iri is invalid."
   val UserIriMissing     = "User IRI cannot be empty."
   val UserIriInvalid     = (iri: String) => s"User IRI: $iri is invalid."
+  val UuidMissing        = "UUID cannot be empty"
+  val UuidInvalid        = (uuid: String) => s"'$uuid' is not a UUID"
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
   val PropertyIriMissing = "Property IRI cannot be empty."
 }

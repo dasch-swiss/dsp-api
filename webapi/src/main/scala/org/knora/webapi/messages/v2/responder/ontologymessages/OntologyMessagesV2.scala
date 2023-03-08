@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,11 +20,10 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.InconsistentRepositoryDataException
-import dsp.schema.domain.Cardinality
-import dsp.schema.domain.Cardinality._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -37,7 +36,7 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -51,20 +50,20 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
  * starts, before it accepts any API requests. A successful response will be a [[SuccessResponseV2]].
  *
- * @param requestingUser       the user making the request.
+ * @param requestingUser the user making the request.
  */
 case class LoadOntologiesRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologyV2]].
  *
- * @param ontologyName         the name of the ontology to be created.
- * @param projectIri           the IRI of the project that the ontology will belong to.
- * @param isShared             the flag that shows if an ontology is a shared one.
- * @param label                the label of the ontology.
- * @param comment              the optional comment that described the ontology to be created.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
+ * @param ontologyName   the name of the ontology to be created.
+ * @param projectIri     the IRI of the project that the ontology will belong to.
+ * @param isShared       the flag that shows if an ontology is a shared one.
+ * @param label          the label of the ontology.
+ * @param comment        the optional comment that described the ontology to be created.
+ * @param apiRequestID   the ID of the API request.
+ * @param requestingUser the user making the request.
  */
 case class CreateOntologyRequestV2(
   ontologyName: String,
@@ -84,12 +83,11 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
   /**
    * Converts JSON-LD input into a [[CreateOntologyRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActor             a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[CreateOntologyRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -97,7 +95,6 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] =
     Future {
@@ -144,7 +141,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 /**
  * Checks whether an ontology can be deleted. A successful response will be a [[CanDoResponseV2]].
  *
- * @param ontologyIri the ontology IRI.
+ * @param ontologyIri    the ontology IRI.
  * @param requestingUser the user making the request.
  */
 case class CanDeleteOntologyRequestV2(
@@ -394,12 +391,11 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
   /**
    * Converts a JSON-LD request to a [[CreatePropertyRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[CreatePropertyRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -407,7 +403,6 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] =
     Future {
@@ -491,12 +486,11 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
   /**
    * Converts a JSON-LD request to a [[CreateClassRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[CreateClassRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -504,7 +498,6 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] =
     Future {
@@ -567,12 +560,11 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
   /**
    * Converts JSON-LD input into an [[AddCardinalitiesToClassRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -580,7 +572,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] =
     Future {
@@ -619,17 +610,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
 }
 
 /**
- * Checks whether the cardinalities of a class can be replaced. A successful response will be a [[CanDoResponseV2]].
- *
- * @param classIri the class IRI.
- * @param requestingUser the user making the request.
- */
-case class CanChangeCardinalitiesRequestV2(
-  classIri: SmartIri,
-  requestingUser: UserADM
-) extends OntologiesResponderRequestV2
-
-/**
  * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
@@ -637,7 +617,7 @@ case class CanChangeCardinalitiesRequestV2(
  * @param apiRequestID         the ID of the API request.
  * @param requestingUser       the user making the request.
  */
-case class ChangeCardinalitiesRequestV2(
+case class ReplaceClassCardinalitiesRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
@@ -645,29 +625,27 @@ case class ChangeCardinalitiesRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[ChangeCardinalitiesRequestV2]] based on JSON-LD input.
+ * Constructs instances of [[ReplaceClassCardinalitiesRequestV2]] based on JSON-LD input.
  */
-object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCardinalitiesRequestV2] {
+object ReplaceClassCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ReplaceClassCardinalitiesRequestV2] {
 
   /**
-   * Converts JSON-LD input into a [[ChangeCardinalitiesRequestV2]].
+   * Converts JSON-LD input into a [[ReplaceClassCardinalitiesRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
-   * @return a [[ChangeCardinalitiesRequestV2]] representing the input.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
+   * @return a [[ReplaceClassCardinalitiesRequestV2]] representing the input.
    */
   override def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] =
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReplaceClassCardinalitiesRequestV2] =
     Future {
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
@@ -680,13 +658,13 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
-  ): ChangeCardinalitiesRequestV2 = {
+  ): ReplaceClassCardinalitiesRequestV2 = {
     val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
     val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
-    ChangeCardinalitiesRequestV2(
+    ReplaceClassCardinalitiesRequestV2(
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
@@ -720,12 +698,11 @@ object CanDeleteCardinalitiesFromClassRequestV2
   /**
    * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -733,7 +710,6 @@ object CanDeleteCardinalitiesFromClassRequestV2
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CanDeleteCardinalitiesFromClassRequestV2] =
     Future {
@@ -787,12 +763,11 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
   /**
    * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -800,7 +775,6 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteCardinalitiesFromClassRequestV2] =
     Future {
@@ -848,8 +822,8 @@ case class DeleteClassRequestV2(
 /**
  * Asks whether a class can be deleted. A successful response will be a [[CanDoResponseV2]].
  *
- * @param classIri             the IRI of the class to be deleted.
- * @param requestingUser       the user making the request.
+ * @param classIri       the IRI of the class to be deleted.
+ * @param requestingUser the user making the request.
  */
 case class CanDeleteClassRequestV2(
   classIri: SmartIri,
@@ -874,8 +848,8 @@ case class DeletePropertyRequestV2(
 /**
  * Asks whether a property can be deleted. A successful response will be a [[CanDoResponseV2]].
  *
- * @param propertyIri          the IRI of the property to be deleted.
- * @param requestingUser       the user making the request.
+ * @param propertyIri    the IRI of the property to be deleted.
+ * @param requestingUser the user making the request.
  */
 case class CanDeletePropertyRequestV2(
   propertyIri: SmartIri,
@@ -923,12 +897,11 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
   /**
    * Converts a JSON-LD request to a [[ChangePropertyGuiElementRequest]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActor            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
    */
   @deprecated
@@ -937,7 +910,6 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
     Future {
@@ -976,12 +948,11 @@ object ChangePropertyLabelsOrCommentsRequestV2
   /**
    * Converts a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -989,7 +960,6 @@ object ChangePropertyLabelsOrCommentsRequestV2
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] =
     Future {
@@ -1047,12 +1017,11 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
   /**
    * Converts a JSON-LD request to a [[DeletePropertyCommentRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActor             a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[DeletePropertyCommentRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -1060,7 +1029,6 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeletePropertyCommentRequestV2] =
     Future {
@@ -1118,12 +1086,11 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
   /**
    * Converts a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -1131,7 +1098,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] =
     Future {
@@ -1189,12 +1155,11 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
   /**
    * Converts a JSON-LD request to a [[DeleteClassCommentRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActor             a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[DeleteClassCommentRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -1202,7 +1167,6 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteClassCommentRequestV2] =
     Future {
@@ -1245,7 +1209,6 @@ object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrder
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeGuiOrderRequestV2] =
     Future {
@@ -1310,12 +1273,11 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
   /**
    * Converts a JSON-LD request to a [[ChangeOntologyMetadataRequestV2]].
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
-   * @param log                  a logging adapter.
+   * @param jsonLDDocument the JSON-LD input.
+   * @param apiRequestID   the UUID of the API request.
+   * @param requestingUser the user making the request.
+   * @param appActor       a reference to the application actor.
+   * @param log            a logging adapter.
    * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
    */
   override def fromJsonLD(
@@ -1323,7 +1285,6 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] =
     Future {
@@ -1378,9 +1339,9 @@ case class DeleteOntologyCommentRequestV2(
  * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
  * [[EntityInfoGetResponseV2]].
  *
- * @param classIris            the IRIs of the class entities to be queried.
- * @param propertyIris         the IRIs of the property entities to be queried.
- * @param requestingUser       the user making the request.
+ * @param classIris      the IRIs of the class entities to be queried.
+ * @param propertyIris   the IRIs of the property entities to be queried.
+ * @param requestingUser the user making the request.
  */
 case class EntityInfoGetRequestV2(
   classIris: Set[SmartIri] = Set.empty[SmartIri],
@@ -1428,7 +1389,7 @@ case class StandoffEntityInfoGetResponseV2(
  * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
  * [[StandoffClassesWithDataTypeGetResponseV2]].
  *
- * @param requestingUser       the user making the request.
+ * @param requestingUser the user making the request.
  */
 case class StandoffClassesWithDataTypeGetRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
 
@@ -1443,7 +1404,7 @@ case class StandoffClassesWithDataTypeGetResponseV2(standoffClassInfoMap: Map[Sm
  * Requests information about all standoff property entities. A successful response will be an
  * [[StandoffAllPropertyEntitiesGetResponseV2]].
  *
- * @param requestingUser       the user making the request.
+ * @param requestingUser the user making the request.
  */
 case class StandoffAllPropertyEntitiesGetRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
 
@@ -1494,8 +1455,8 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
  * Request information about the Knora entities (Knora resource classes, standoff class, resource properties, and standoff properties) of a named graph.
  * A successful response will be a [[OntologyKnoraEntitiesIriInfoV2]].
  *
- * @param ontologyIri          the IRI of the named graph.
- * @param requestingUser       the user making the request.
+ * @param ontologyIri    the IRI of the named graph.
+ * @param requestingUser the user making the request.
  */
 case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requestingUser: UserADM)
     extends OntologiesResponderRequestV2
@@ -1503,9 +1464,9 @@ case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requesting
 /**
  * Requests metadata about ontologies by project.
  *
- * @param projectIris          the IRIs of the projects for which ontologies should be returned. If this set is empty, information
- *                             about all ontologies is returned.
- * @param requestingUser       the user making the request.
+ * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
+ *                       about all ontologies is returned.
+ * @param requestingUser the user making the request.
  */
 case class OntologyMetadataGetByProjectRequestV2(
   projectIris: Set[SmartIri] = Set.empty[SmartIri],
@@ -1515,9 +1476,9 @@ case class OntologyMetadataGetByProjectRequestV2(
 /**
  * Requests metadata about ontologies by ontology IRI.
  *
- * @param ontologyIris         the IRIs of the ontologies to be queried. If this set is empty, information
- *                             about all ontologies is returned.
- * @param requestingUser       the user making the request.
+ * @param ontologyIris   the IRIs of the ontologies to be queried. If this set is empty, information
+ *                       about all ontologies is returned.
+ * @param requestingUser the user making the request.
  */
 case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM)
     extends OntologiesResponderRequestV2
@@ -1525,9 +1486,9 @@ case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.e
 /**
  * Requests entity definitions for the given ontology.
  *
- * @param ontologyIri          the ontology to query for.
- * @param allLanguages         true if information in all available languages should be returned.
- * @param requestingUser       the user making the request.
+ * @param ontologyIri    the ontology to query for.
+ * @param allLanguages   true if information in all available languages should be returned.
+ * @param requestingUser the user making the request.
  */
 case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM)
     extends OntologiesResponderRequestV2
@@ -1535,9 +1496,9 @@ case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boo
 /**
  * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadOntologyV2]].
  *
- * @param classIris            the IRIs of the classes to be queried.
- * @param allLanguages         true if information in all available languages should be returned.
- * @param requestingUser       the user making the request.
+ * @param classIris      the IRIs of the classes to be queried.
+ * @param allLanguages   true if information in all available languages should be returned.
+ * @param requestingUser the user making the request.
  */
 case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM)
     extends OntologiesResponderRequestV2
@@ -1545,9 +1506,9 @@ case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, 
 /**
  * Requests the definitions of the specified properties. A successful response will be a [[ReadOntologyV2]].
  *
- * @param propertyIris         the IRIs of the properties to be queried.
- * @param allLanguages         true if information in all available languages should be returned.
- * @param requestingUser       the user making the request.
+ * @param propertyIris   the IRIs of the properties to be queried.
+ * @param allLanguages   true if information in all available languages should be returned.
+ * @param requestingUser the user making the request.
  */
 case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM)
     extends OntologiesResponderRequestV2
@@ -1668,12 +1629,12 @@ case class ReadOntologyV2(
 
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument =
-    toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    toOntologySchema(targetSchema).generateJsonLD(targetSchema, appConfig)
 
-  private def generateJsonLD(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl): JsonLDDocument = {
+  private def generateJsonLD(targetSchema: ApiV2Schema, appConfig: AppConfig): JsonLDDocument = {
     // Get the ontologies of all Knora entities mentioned in class definitions.
 
     val knoraOntologiesFromClasses: Set[SmartIri] = classes.values.flatMap { classInfo =>
@@ -1748,7 +1709,7 @@ case class ReadOntologyV2(
     val jsonClasses: Vector[JsonLDObject] = classes.values.map { readClassInfo =>
       userLang match {
         case Some(lang) =>
-          readClassInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+          readClassInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, appConfig = appConfig)
         case None => readClassInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
       }
     }.toVector
@@ -1756,7 +1717,11 @@ case class ReadOntologyV2(
     val jsonProperties: Vector[JsonLDObject] = properties.values.map { readPropertyInfo =>
       userLang match {
         case Some(lang) =>
-          readPropertyInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+          readPropertyInfo.toJsonLDWithSingleLanguage(
+            targetSchema = targetSchema,
+            userLang = lang,
+            appConfig = appConfig
+          )
         case None => readPropertyInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
       }
     }.toVector
@@ -1767,7 +1732,7 @@ case class ReadOntologyV2(
           readIndividualInfo.toJsonLDWithSingleLanguage(
             targetSchema = targetSchema,
             userLang = lang,
-            settings = settings
+            appConfig = appConfig
           )
         case None => readIndividualInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
       }
@@ -2035,7 +2000,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
 
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument =
     toOntologySchema(targetSchema).generateJsonLD(targetSchema)
@@ -2161,10 +2126,11 @@ object OwlCardinality extends Enumeration {
    * @param cardinality the Knora cardinality.
    * @param guiOrder    the SALSAH GUI order.
    */
-  case class KnoraCardinalityInfo(cardinality: Cardinality, guiOrder: Option[Int] = None) { self =>
+  case class KnoraCardinalityInfo(cardinality: Cardinality, guiOrder: Option[Int] = None) {
+    self =>
     override def toString: String = guiOrder match {
-      case Some(definedGuiOrder) => s"${cardinality.value} (guiOrder $definedGuiOrder)"
-      case None                  => cardinality.value
+      case Some(definedGuiOrder) => s"${cardinality.toString} (guiOrder $definedGuiOrder)"
+      case None                  => cardinality.toString
     }
 
     def equalsWithoutGuiOrder(that: KnoraCardinalityInfo): Boolean =
@@ -2175,26 +2141,11 @@ object OwlCardinality extends Enumeration {
   /**
    * The valid mappings between Knora cardinalities and OWL cardinalities.
    */
-  private val knoraCardinality2OwlCardinalityMap: Map[Cardinality, OwlCardinalityInfo] = Map(
-    MayHaveOne -> OwlCardinalityInfo(
-      owlCardinalityIri = OntologyConstants.Owl.MaxCardinality,
-      owlCardinalityValue = 1
-    ),
-    MayHaveMany -> OwlCardinalityInfo(
-      owlCardinalityIri = OntologyConstants.Owl.MinCardinality,
-      owlCardinalityValue = 0
-    ),
-    MustHaveOne -> OwlCardinalityInfo(owlCardinalityIri = OntologyConstants.Owl.Cardinality, owlCardinalityValue = 1),
-    MustHaveSome -> OwlCardinalityInfo(
-      owlCardinalityIri = OntologyConstants.Owl.MinCardinality,
-      owlCardinalityValue = 1
-    )
-  )
+  private val knoraCardinality2OwlCardinalityMap: Map[Cardinality, OwlCardinalityInfo] =
+    Cardinality.allCardinalities.map(c => (c, Cardinality.toOwl(c))).toMap
 
   private val owlCardinality2KnoraCardinalityMap: Map[OwlCardinalityInfo, Cardinality] =
-    knoraCardinality2OwlCardinalityMap.map { case (knoraC, owlC) =>
-      (owlC, knoraC)
-    }
+    knoraCardinality2OwlCardinalityMap.map(_.swap)
 
   /**
    * Converts information about an OWL cardinality restriction to a [[Value]] of this enumeration.
@@ -2297,12 +2248,12 @@ sealed trait EntityInfoContentV2 {
    */
   def getPredicateAndStringLiteralObjectWithLang(
     predicateIri: SmartIri,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     userLang: String
   ): Option[(SmartIri, String)] =
     getPredicateStringLiteralObject(
       predicateIri = predicateIri,
-      preferredLangs = Some(userLang, settings.fallbackLanguage)
+      preferredLangs = Some(userLang, appConfig.fallbackLanguage)
     ).map(obj => predicateIri -> obj)
 
   /**
@@ -2376,30 +2327,6 @@ sealed trait EntityInfoContentV2 {
 
       case None => Seq.empty[SmartIri]
     }
-
-  /**
-   * Returns the first object specified as a boolean value for the given predicate, or `false` if the
-   * entity doesn't have that predicate.
-   *
-   * @param predicateIri the IRI of the predicate.
-   * @return the predicate's object, if given, otherwise `false`.
-   */
-  def getPredicateBooleanObject(predicateIri: SmartIri): Boolean = {
-    val values: Seq[Boolean] = predicates.get(predicateIri) match {
-      case Some(predicateInfo) =>
-        predicateInfo.objects.collect { case BooleanLiteralV2(value) =>
-          value
-        }
-
-      case None => Seq.empty[Boolean]
-    }
-
-    if (values.nonEmpty) {
-      values.head
-    } else {
-      false
-    }
-  }
 
   /**
    * Returns the first object specified as an IRI for the given predicate.
@@ -2570,22 +2497,22 @@ sealed trait ReadEntityInfoV2 {
    *
    * @param targetSchema the API v2 schema in which the response will be returned.
    * @param userLang     the user's preferred language.
-   * @param settings     the application settings.
+   * @param appConfig    the application's configuration.
    * @return a JSON-LD object representing the entity.
    */
   def toJsonLDWithSingleLanguage(
     targetSchema: ApiV2Schema,
     userLang: String,
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): JsonLDObject = {
     val label: Option[(IRI, JsonLDString)] = entityInfoContent
-      .getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Label.toSmartIri, settings, userLang)
+      .getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Label.toSmartIri, appConfig, userLang)
       .map { case (k: SmartIri, v: String) =>
         (k.toString, JsonLDString(v))
       }
 
     val comment: Option[(IRI, JsonLDString)] = entityInfoContent
-      .getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Comment.toSmartIri, settings, userLang)
+      .getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Comment.toSmartIri, appConfig, userLang)
       .map { case (k: SmartIri, v: String) =>
         (k.toString, JsonLDString(v))
       }
@@ -2627,7 +2554,7 @@ sealed trait ReadEntityInfoV2 {
  * Represents an OWL class definition as returned in an API response.
  *
  * @param entityInfoContent       a [[ReadClassInfoV2]] providing information about the class.
- * @param allBaseClasses          a seq of the IRIs of all the base classes of the class.
+ * @param allBaseClasses          a seq of the IRIs of all the super-classes of this class.
  * @param isResourceClass         `true` if this is a subclass of `knora-base:Resource`.
  * @param isStandoffClass         `true` if this is a subclass of `knora-base:StandoffTag`.
  * @param isValueClass            `true` if the class is a Knora value class.
@@ -2776,11 +2703,9 @@ case class ReadClassInfoV2(
     }.sortBy { case (_, cardinalityInfo: KnoraCardinalityInfo) =>
       cardinalityInfo.guiOrder
     }.toIndexedSeq.map { case (propertyIri: SmartIri, cardinalityInfo: KnoraCardinalityInfo) =>
-      val prop2card: (IRI, JsonLDInt) = cardinalityInfo.cardinality match {
-        case MayHaveMany  => OntologyConstants.Owl.MinCardinality -> JsonLDInt(0)
-        case MayHaveOne   => OntologyConstants.Owl.MaxCardinality -> JsonLDInt(1)
-        case MustHaveOne  => OntologyConstants.Owl.Cardinality    -> JsonLDInt(1)
-        case MustHaveSome => OntologyConstants.Owl.MinCardinality -> JsonLDInt(1)
+      val prop2card: (IRI, JsonLDInt) = {
+        val owl = Cardinality.toOwl(cardinalityInfo.cardinality)
+        (owl.owlCardinalityIri, JsonLDInt(owl.owlCardinalityValue))
       }
 
       // If we're using the complex schema and the cardinality is inherited, add an annotation to say so.

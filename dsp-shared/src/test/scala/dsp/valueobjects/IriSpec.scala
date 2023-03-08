@@ -1,34 +1,47 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package dsp.valueobjects
 
 import zio.prelude.Validation
+import zio.test.Assertion._
 import zio.test._
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri._
+import dsp.valueobjects.V2UuidValidation._
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.
  */
 object IriSpec extends ZIOSpecDefault {
-  val invalidIri                 = "Invalid IRI"
-  val validGroupIri              = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  val groupIriWithUUIDVersion3   = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
-  val validListIri               = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  val listIriWithUUIDVersion3    = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
-  val validProjectIri            = "http://rdfh.ch/projects/0001"
-  val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
-  val validRoleIri               = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
-  val roleIriWithUUIDVersion3    = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
-  val validUserIri               = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
-  val userIriWithUUIDVersion3    = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
+  val invalidIri               = "Invalid IRI"
+  val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+  val groupIriWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
 
-  def spec = (groupIriTest + listIriTest + projectIriTest + RoleIriTest + UserIriTest)
+  val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+  val listIriWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
+
+  val invalidProjectIri          = "http://rdfh.ch/projects/0001"
+  val validProjectIri            = "http://rdfh.ch/projects/CwQ8hXF9Qlm1gl2QE6pTpg"
+  val beolProjectIri             = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+  val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
+  val builtInProjectIri          = "http://www.knora.org/ontology/knora-admin#SystemProject"
+
+  val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
+  val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
+
+  val validUserIri            = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
+  val userIriWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
+
+  val invalidUuid   = "MAgdcpn2MO211YYOplR32v"
+  val uuidVersion3  = getUuidFromIri(userIriWithUUIDVersion3)
+  val supportedUuid = getUuidFromIri(validUserIri)
+
+  def spec = (groupIriTest + listIriTest + projectIriTest + uuidTest + roleIriTest + userIriTest)
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
     test("pass an empty value and return an error") {
@@ -62,8 +75,14 @@ object IriSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(GroupIri.make(validGroupIri).toOption.get.value == validGroupIri) &&
-      assertTrue(GroupIri.make(Option(validGroupIri)).getOrElse(null).get.value == validGroupIri)
+      val groupIri      = GroupIri.make(validGroupIri)
+      val maybeGroupIri = GroupIri.make(Some(validGroupIri))
+
+      (for {
+        iri      <- groupIri
+        maybeIri <- maybeGroupIri
+      } yield assertTrue(iri.value == validGroupIri) &&
+        assert(maybeIri)(isSome(equalTo(iri)))).toZIO
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -104,8 +123,14 @@ object IriSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(ListIri.make(validListIri).toOption.get.value == validListIri) &&
-      assertTrue(ListIri.make(Option(validListIri)).getOrElse(null).get.value == validListIri)
+      val listIri      = ListIri.make(validListIri)
+      val maybeListIri = ListIri.make(Some(validListIri))
+
+      (for {
+        iri      <- listIri
+        maybeIri <- maybeListIri
+      } yield assertTrue(iri.value == validListIri) &&
+        assert(maybeIri)(isSome(equalTo(iri)))).toZIO
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -145,9 +170,26 @@ object IriSpec extends ZIOSpecDefault {
         )
       )
     },
+    test("pass an invalid IRI containing the shortcode and return an error") {
+      assertTrue(
+        ProjectIri.make(invalidIri) == Validation.fail(
+          ValidationException(IriErrorMessages.ProjectIriInvalid)
+        )
+      )
+    },
     test("pass a valid value and successfully create value object") {
-      assertTrue(ProjectIri.make(validProjectIri).toOption.get.value == validProjectIri) &&
-      assertTrue(ProjectIri.make(Option(validProjectIri)).getOrElse(null).get.value == validProjectIri)
+      def makeProjectIri(iri: String) = ProjectIri.make(iri)
+      val maybeProjectIri             = ProjectIri.make(Some(validProjectIri))
+
+      (for {
+        iri      <- makeProjectIri(validProjectIri)
+        iri2     <- makeProjectIri(builtInProjectIri)
+        beolIri  <- makeProjectIri(beolProjectIri)
+        maybeIri <- maybeProjectIri
+      } yield assertTrue(iri.value == validProjectIri) &&
+        assertTrue(iri2.value == builtInProjectIri) &&
+        assertTrue(beolIri.value == beolProjectIri) &&
+        assert(maybeIri)(isSome(equalTo(iri)))).toZIO
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -156,7 +198,28 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
-  private val RoleIriTest = suite("IriSpec - roleIri")(
+  private val uuidTest = suite("IriSpec - Base64Uuid")(
+    test("pass an empty value and return an error") {
+      assertTrue(Base64Uuid.make("") == Validation.fail(ValidationException(IriErrorMessages.UuidMissing)))
+    },
+    test("pass an invalid UUID and return an error") {
+      assertTrue(
+        Base64Uuid.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(invalidIri)))
+      )
+    },
+    test("pass an valid UUID, which has not supported version 3") {
+      assertTrue(
+        Base64Uuid.make(uuidVersion3) == Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      )
+    },
+    test("pass valid UUID and successfully create value object") {
+      (for {
+        uuid <- Base64Uuid.make(supportedUuid)
+      } yield assertTrue(uuid.value == supportedUuid)).toZIO
+    }
+  )
+
+  private val roleIriTest = suite("IriSpec - roleIri")(
     test("pass an empty value and return an error") {
       assertTrue(RoleIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing)))
     },
@@ -179,7 +242,7 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
-  private val UserIriTest = suite("IriSpec - UserIri")(
+  private val userIriTest = suite("IriSpec - UserIri")(
     test("pass an empty value and return an error") {
       assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
     },
@@ -198,7 +261,11 @@ object IriSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(UserIri.make(validUserIri).toOption.get.value == validUserIri)
+      val userIri = UserIri.make(validUserIri)
+
+      (for {
+        iri <- userIri
+      } yield assertTrue(iri.value == validUserIri)).toZIO
     }
   )
 }

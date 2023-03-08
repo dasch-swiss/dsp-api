@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,6 +13,7 @@ import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import spray.json._
+import zio.ZLayer
 
 import java.nio.ByteBuffer
 import java.time._
@@ -43,7 +44,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
 
@@ -216,6 +217,12 @@ object StringFormatter {
       case None           => throw AssertionException("StringFormatter not yet initialised")
     }
 
+  def getInitializedTestInstance: StringFormatter =
+    generalInstance match {
+      case Some(instance) => instance
+      case None           => StringFormatter.initForTest(); getGeneralInstance
+    }
+
   /**
    * Gets the singleton instance of [[StringFormatter]] that can only handle the IRIs in built-in
    * ontologies.
@@ -225,7 +232,7 @@ object StringFormatter {
   /**
    * Initialises the general instance of [[StringFormatter]].
    *
-   * @param settings the application settings.
+   * @param config the application's configuration.
    */
   def init(config: AppConfig): Unit =
     this.synchronized {
@@ -312,6 +319,16 @@ object StringFormatter {
         creationFun()
       })
     )
+
+  val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
+    StringFormatter.init(appConfig)
+    StringFormatter.getGeneralInstance
+  }
+
+  val test: ZLayer[Any, Nothing, StringFormatter] = ZLayer.fromFunction { () =>
+    StringFormatter.initForTest()
+    StringFormatter.getGeneralInstance
+  }
 }
 
 /**
@@ -345,6 +362,10 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    * Returns this IRI as a string in angle brackets.
    */
   def toSparql: String
+
+  def toIri: IRI = toString
+
+  def toInternalIri: InternalIri = InternalIri(toOntologySchema(InternalSchema).toIri)
 
   /**
    * Returns `true` if this is a Knora data or definition IRI.
@@ -1070,27 +1091,28 @@ class StringFormatter private (
 
     override def getStandoffStartIndex: Option[Int] = iriInfo.standoffStartIndex
 
-    lazy val ontologyFromEntity: SmartIri = if (isKnoraOntologyIri) {
-      throw DataConversionException(s"$iri is not a Knora entity IRI")
-    } else {
-      val lastHashPos = iri.lastIndexOf('#')
-
-      val entityDelimPos = if (lastHashPos >= 0) {
-        lastHashPos
+    lazy val ontologyFromEntity: SmartIri =
+      if (isKnoraOntologyIri) {
+        throw DataConversionException(s"$iri is not a Knora entity IRI")
       } else {
-        val lastSlashPos = iri.lastIndexOf('/')
+        val lastHashPos = iri.lastIndexOf('#')
 
-        if (lastSlashPos < iri.length - 1) {
-          lastSlashPos
+        val entityDelimPos = if (lastHashPos >= 0) {
+          lastHashPos
         } else {
-          throw DataConversionException(s"Can't interpret IRI $iri as an entity IRI")
+          val lastSlashPos = iri.lastIndexOf('/')
+
+          if (lastSlashPos < iri.length - 1) {
+            lastSlashPos
+          } else {
+            throw DataConversionException(s"Can't interpret IRI $iri as an entity IRI")
+          }
         }
+
+        val convertedIriStr = iri.substring(0, entityDelimPos)
+
+        getOrCacheSmartIri(convertedIriStr, () => new SmartIriImpl(convertedIriStr))
       }
-
-      val convertedIriStr = iri.substring(0, entityDelimPos)
-
-      getOrCacheSmartIri(convertedIriStr, () => new SmartIriImpl(convertedIriStr))
-    }
 
     override def getOntologyFromEntity: SmartIri = ontologyFromEntity
 
@@ -1667,8 +1689,6 @@ class StringFormatter private (
   /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
    *
-   * If the param `revert` is set to `true`, the string is unescaped.
-   *
    * @param s        a string.
    * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
    *                 a carriage return (`\r`).
@@ -1698,6 +1718,17 @@ class StringFormatter private (
       SparqlEscapeOutput,
       SparqlEscapeInput
     )
+
+  /**
+   * Replaces all characters that have a special meaning in the Lucene Query Parser syntax and normalizes spaces.
+   *
+   * @param s  a string
+   * @return   the normalized string
+   */
+  def replaceLuceneQueryParserSyntaxCharacters(s: String): String = {
+    val stringWithoutSpecialCharacters = s.replaceAll("[\\/\\+\\-&\\|!\\(\\)\\{\\}\\[\\]\\^\"~\\*\\?:\\\\]", " ")
+    StringUtils.normalizeSpace(stringWithoutSpecialCharacters)
+  }
 
   /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.
@@ -2594,12 +2625,10 @@ class StringFormatter private (
   /**
    * Constructs a path for accessing a file that has been uploaded to Sipi's temporary storage.
    *
-   * @param settings the application settings.
    * @param filename the filename.
    * @return a URL for accessing the file.
    */
-  def makeSipiTempFilePath(settings: KnoraSettingsImpl, filename: String): String =
-    s"/tmp/$filename"
+  def makeSipiTempFilePath(filename: String): String = s"/tmp/$filename"
 
   /**
    * Checks whether an IRI already exists in the triplestore.
@@ -2755,6 +2784,7 @@ class StringFormatter private (
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.
+   *
    * @param s the string (IRI) to be checked.
    * @return UUID version.
    */
@@ -2764,16 +2794,16 @@ class StringFormatter private (
   }
 
   /**
-   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * Checks if UUID used to create IRI has supported version (4 and 5 are allowed).
+   * With an exception of BEOL project IRI `http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF`.
+   *
    * @param s the string (IRI) to be checked.
-   * @return TRUE for correct versions, FALSE for incorrect.
+   * @return TRUE for supported versions, FALSE for not supported.
    */
-  def isUuidVersion4Or5(s: IRI): Boolean =
-    if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
-      true
-    } else {
-      false
-    }
+  def isUuidSupported(s: String): Boolean =
+    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
+      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+    } else true
 
   /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
@@ -2786,19 +2816,21 @@ class StringFormatter private (
 
   /**
    * Validates resource IRI
+   *
    * @param iri to be validated
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
-    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidVersion4Or5(iri.toString)) {
+    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidSupported(iri.toString)) {
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     }
 
   /**
    * Validates permission IRI
+   *
    * @param iri to be validated.
    */
   def validatePermissionIRI(iri: IRI): Unit =
-    if (isKnoraPermissionIriStr(iri) && !isUuidVersion4Or5(iri)) {
+    if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) {
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     } else {
       validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
@@ -2864,13 +2896,14 @@ class StringFormatter private (
     s"$projectIri/mappings"
 
   /**
-   * Creates a new project IRI based on a UUID or project shortcode.
+   * Creates a new project IRI based on a UUID.
    *
-   * @param shortcode the required project shortcode.
    * @return a new project IRI.
    */
-  def makeRandomProjectIri(shortcode: String): IRI =
-    s"http://$IriDomain/projects/$shortcode"
+  def makeRandomProjectIri: IRI = {
+    val uuid = makeRandomBase64EncodedUuid
+    s"http://$IriDomain/projects/$uuid"
+  }
 
   /**
    * Creates a new group IRI based on a UUID.

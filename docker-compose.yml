@@ -2,8 +2,15 @@ version: '3.7'
 
 services:
 
+  app:
+    image: daschswiss/dsp-app:latest
+    ports:
+      - "4200:4200"
+    networks:
+      - knora-net
+
   db:
-    image: daschswiss/apache-jena-fuseki:2.0.8 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+    image: daschswiss/apache-jena-fuseki:2.0.11 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
     ports:
       - "3030:3030"
     volumes:
@@ -26,6 +33,7 @@ services:
       - ${LOCAL_HOME}/sipi/config:/sipi/config:delegated
       - ${LOCAL_HOME}/sipi/images:/sipi/images:delegated
       - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
+      - ${LOCAL_HOME}/sipi/scripts:/sipi/scripts:delegated
     networks:
       - knora-net
     environment:
@@ -45,6 +53,8 @@ services:
     image: daschswiss/knora-api:latest
     ports:
       - "3333:3333"
+      - "5555:5555"
+      - "3339:3339"
     volumes:
       - /tmp:/tmp
     networks:
@@ -60,8 +70,6 @@ services:
       - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME=admin
       - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD=test
       - KNORA_WEBAPI_CACHE_SERVICE_ENABLED=true
-      - KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis
-      - KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT=6379
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=0.0.0.0
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333

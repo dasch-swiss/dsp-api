@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -23,7 +23,7 @@ import scala.util.Try
 
 import dsp.errors.FileWriteException
 import dsp.errors.NotFoundException
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.config.AppConfig
 
 /**
  * Functions for reading and writing files.
@@ -125,31 +125,18 @@ object FileUtil {
   }
 
   /**
-   * Saves data to a temporary file.
+   * Creates an empty file in the default temporary-file directory specified in the application's configuration
    *
-   * @param settings   Knora application settings.
-   * @param binaryData the binary file data to be saved.
-   * @return the location where the file has been written to.
-   */
-  def saveFileToTmpLocation(settings: KnoraSettingsImpl, binaryData: Array[Byte]): Path = {
-    val file = createTempFile(settings)
-    Files.write(file, binaryData)
-    file
-  }
-
-  /**
-   * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
-   *
-   * @param settings      Knora's application settings.
+   * @param appConfig     the application's configuration
    * @param fileExtension the extension to be used for the temporary file name, if any,
    * @return the location where the file has been written to.
    */
-  def createTempFile(settings: KnoraSettingsImpl, fileExtension: Option[String] = None): Path = {
-    val tempDataDir = Paths.get(settings.tmpDataDir)
+  def createTempFile(fileExtension: Option[String] = None, appConfig: AppConfig): Path = {
+    val tempDataDir = Paths.get(appConfig.tmpDatadir)
 
     // check if the location for writing temporary files exists
     if (!Files.exists(tempDataDir)) {
-      throw FileWriteException(s"Data directory ${settings.tmpDataDir} does not exist on server")
+      throw FileWriteException(s"Data directory ${appConfig.tmpDatadir} does not exist on server")
     }
 
     val extension = fileExtension.getOrElse("bin")

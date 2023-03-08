@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -67,7 +67,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-            userProfile <- getUserADM(requestContext)
+            userProfile <- getUserADM(requestContext, routeData.appConfig)
 
             allParts: Map[Name, String] <- allPartsFuture
 
@@ -114,7 +114,6 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessageFuture,
             requestContext,
-            settings,
             appActor,
             log
           )

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,7 +7,7 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import akka.stream.Materializer
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -16,7 +16,6 @@ import scala.util.Failure
 import scala.util.Success
 
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -24,6 +23,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
@@ -60,14 +60,17 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
-class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
-
-  /* actor materializer needed for http requests */
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+class ResourcesResponderV2(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ResourceUtilV2 with PermissionUtilADM]
+) extends ResponderWithStandoffV2(responderData) {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -86,7 +89,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   /**
    * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: ResourcesResponderRequestV2) = msg match {
+  def receive(msg: ResourcesResponderRequestV2): Future[Any] = msg match {
     case ResourcesGetRequestV2(
           resIris,
           propertyIri,
@@ -171,7 +174,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         result <- stringFormatter.checkIriExists(resourceIri, appActor)
 
         _ = if (result) {
-              throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
+              throw DuplicateValueException(s"Resource IRI: '$resourceIri' already exists.")
             }
 
         // Convert the resource to the internal ontology schema.
@@ -181,7 +184,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           )
 
         // Check link targets and list nodes that should exist.
-
         _ <- checkStandoffLinkTargets(
                values = internalCreateResource.flatValues,
                requestingUser = createResourceRequestV2.requestingUser
@@ -198,7 +200,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // Get the definitions of the resource class and its properties, as well as of the classes of all
         // resources that are link targets.
-
         resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <-
           appActor
             .ask(
@@ -365,7 +366,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           }
 
       resourceIri: IRI <-
-        checkOrCreateEntityIri(
+        iriService.checkOrCreateEntityIri(
           createResourceRequestV2.createResource.resourceIri,
           stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode)
         )
@@ -437,11 +438,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             }
 
         // Check that the user has permission to modify the resource.
-        _ = ResourceUtilV2.checkResourcePermission(
-              resourceInfo = resource,
-              permissionNeeded = ModifyPermission,
-              requestingUser = updateResourceMetadataRequestV2.requestingUser
-            )
+        _ <- UnsafeZioRun.runToFuture(
+               ZIO
+                 .serviceWithZIO[ResourceUtilV2](
+                   _.checkResourcePermission(
+                     resourceInfo = resource,
+                     permissionNeeded = ModifyPermission,
+                     requestingUser = updateResourceMetadataRequestV2.requestingUser
+                   )
+                 )
+             )
 
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
@@ -598,11 +604,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             }
 
         // Check that the user has permission to mark the resource as deleted.
-        _ = ResourceUtilV2.checkResourcePermission(
-              resourceInfo = resource,
-              permissionNeeded = DeletePermission,
-              requestingUser = deleteResourceV2.requestingUser
-            )
+        _ <- UnsafeZioRun.runToFuture(
+               ZIO
+                 .serviceWithZIO[ResourceUtilV2](
+                   _.checkResourcePermission(
+                     resourceInfo = resource,
+                     permissionNeeded = DeletePermission,
+                     requestingUser = deleteResourceV2.requestingUser
+                   )
+                 )
+             )
 
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
@@ -710,12 +721,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
-        _ <- throwIfEntityIsUsed(
+        _ <- iriService.throwIfEntityIsUsed(
                entityIri = resourceSmartIri,
+               ignoreRdfSubjectAndObject = true,
                errorFun = throw BadRequestException(
                  s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
-               ),
-               ignoreRdfSubjectAndObject = true
+               )
              )
 
         // Get the IRI of the named graph from which the resource will be erased.
@@ -814,7 +825,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               )
 
               if (
-                (cardinalityInfo.cardinality == MayHaveOne || cardinalityInfo.cardinality == MustHaveOne) && valuesForProperty.size > 1
+                (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
               ) {
                 throw OntologyConstraintException(
                   s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
@@ -826,7 +837,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Check that no required values are missing.
 
       requiredProps: Set[SmartIri] = knoraPropertyCardinalities.filter { case (_, cardinalityInfo) =>
-                                       cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome
+                                       cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne
                                      }.keySet -- resourceClassInfo.linkProperties
 
       internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet
@@ -868,10 +879,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         internalCreateResource.permissions match {
           case Some(permissionStr) =>
             for {
-              validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(
-                                                      permissionLiteral = permissionStr,
-                                                      appActor = appActor
-                                                    )
+              validatedCustomPermissions: String <-
+                UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissionStr)))
 
               // Is the requesting user a system admin, or an admin of this project?
               _ = if (
@@ -1166,7 +1175,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       .sequence(
         listNodesThatShouldExist.map { listNodeIri =>
           for {
-            checkNode <- ResourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri, appActor)
+            checkNode <- UnsafeZioRun.runToFuture(
+                           ZIO.serviceWithZIO[ResourceUtilV2](_.checkListNodeExistsAndIsRootNode(listNodeIri))
+                         )
 
             _ = checkNode match {
                   // it doesn't have isRootNode property - it's a child node
@@ -1174,12 +1185,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                   // it does have isRootNode property - it's a root node
                   case Right(true) =>
                     throw BadRequestException(
-                      s"<${listNodeIri}> is a root node. Root nodes cannot be set as values."
+                      s"<$listNodeIri> is a root node. Root nodes cannot be set as values."
                     )
                   // it deosn't exists or isn't valid list
                   case Left(_) =>
                     throw NotFoundException(
-                      s"<${listNodeIri}> does not exist, or is not a ListNode."
+                      s"<$listNodeIri> does not exist, or is not a ListNode."
                     )
                 }
           } yield ()
@@ -1218,10 +1229,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               case Some(permissionStr: String) =>
                 // Yes. Validate and reformat them.
                 for {
-                  validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
-                                                  permissionLiteral = permissionStr,
-                                                  appActor = appActor
-                                                )
+                  validatedCustomPermissions <-
+                    UnsafeZioRun.runToFuture(
+                      ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissionStr))
+                    )
 
                   // Is the requesting user a system admin, or an admin of this project?
                   _ =
@@ -1322,12 +1333,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     val permissionsFutures: Map[SmartIri, Future[Map[SmartIri, String]]] = resourceClassProperties.map {
       case (resourceClassIri, propertyIris) =>
         val propertyPermissionsFutures: Map[SmartIri, Future[String]] = propertyIris.toSeq.map { propertyIri =>
-          propertyIri -> ResourceUtilV2.getDefaultValuePermissions(
-            projectIri = projectIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            requestingUser = requestingUser,
-            appActor = appActor
+          propertyIri -> UnsafeZioRun.runToFuture(
+            ZIO
+              .serviceWithZIO[ResourceUtilV2](
+                _.getDefaultValuePermissions(
+                  projectIri = projectIri,
+                  resourceClassIri = resourceClassIri,
+                  propertyIri = propertyIri,
+                  requestingUser = requestingUser
+                )
+              )
           )
         }.toMap
 
@@ -1460,12 +1475,15 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
 
     val resultFutures: Seq[Future[T]] = allValues.map { valueContent =>
-      ResourceUtilV2.doSipiPostUpdate(
-        updateFuture = updateFuture,
-        valueContent = valueContent,
-        requestingUser = requestingUser,
-        appActor = appActor,
-        log = log
+      UnsafeZioRun.runToFuture(
+        ZIO.serviceWithZIO[ResourceUtilV2](
+          _.doSipiPostUpdate(
+            updateFuture = ZIO.fromFuture(_ => updateFuture),
+            valueContent = valueContent,
+            requestingUser = requestingUser,
+            log = log
+          )
+        )
       )
     }
 
@@ -1507,7 +1525,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) =
       StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
         queryStandoff = queryStandoff,
-        settings = settings
+        appConfig = responderData.appConfig
       )
 
     for {
@@ -1613,7 +1631,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                 calculateMayHaveMoreResults = false,
                                                 appActor = appActor,
                                                 targetSchema = targetSchema,
-                                                settings = settings,
+                                                appConfig = responderData.appConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1704,7 +1722,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                 calculateMayHaveMoreResults = false,
                                                 appActor = appActor,
                                                 targetSchema = targetSchema,
-                                                settings = settings,
+                                                appConfig = responderData.appConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1794,7 +1812,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           }
 
       gravsearchUrl: String =
-        s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
+        s"${responderData.appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
     } yield gravsearchUrl
 
     val recoveredGravsearchUrlFuture = gravsearchUrlFuture.recover { case notFound: NotFoundException =>
@@ -2078,7 +2096,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               header = TEIHeader(
                 headerInfo = headerResource,
                 headerXSLT = headerXSLT,
-                settings = settings
+                appConfig = responderData.appConfig
               ),
               body = TEIBody(
                 bodyInfo = bodyTextValue,
@@ -2177,7 +2195,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         startNodeOnly = false,
                         maybeExcludeLinkProperty = excludePropertyInternal,
                         outbound = outbound, // true to query outbound edges, false to query inbound edges
-                        limit = settings.maxGraphBreadth
+                        limit = responderData.appConfig.v2.graphRoute.maxGraphBreadth
                       )
                       .toString()
                   )
@@ -2318,7 +2336,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                       maybeExcludeLinkProperty = excludePropertyInternal,
                       startNodeOnly = true,
                       outbound = true,
-                      limit = settings.maxGraphBreadth
+                      limit = responderData.appConfig.v2.graphRoute.maxGraphBreadth
                     )
                     .toString()
                 )
@@ -2567,7 +2585,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 }
 
                 val fileUrl: String =
-                  imageValueContent.makeFileUrl(projectADM = representation.projectADM, settings = settings)
+                  imageValueContent.makeFileUrl(
+                    projectADM = representation.projectADM,
+                    responderData.appConfig.sipi.externalBaseUrl
+                  )
 
                 JsonLDObject(
                   Map(
@@ -2608,7 +2629,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                           Seq(
                                             JsonLDObject(
                                               Map(
-                                                "id"      -> JsonLDString(settings.externalSipiIIIFGetUrl),
+                                                "id"      -> JsonLDString(responderData.appConfig.sipi.externalBaseUrl),
                                                 "type"    -> JsonLDString("ImageService3"),
                                                 "profile" -> JsonLDString("level1")
                                               )
@@ -2675,17 +2696,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   ): Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectInfoResponse: ProjectGetResponseADM <- appActor
-                                                      .ask(
-                                                        ProjectGetRequestADM(
-                                                          identifier = ProjectIdentifierADM(maybeIri =
-                                                            Some(projectResourceHistoryEventsGetRequest.projectIri)
-                                                          ),
-                                                          requestingUser =
-                                                            projectResourceHistoryEventsGetRequest.requestingUser
-                                                        )
-                                                      )
-                                                      .mapTo[ProjectGetResponseADM]
+      projectInfoResponse: ProjectGetResponseADM <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(identifier =
+              IriIdentifier
+                .fromString(projectResourceHistoryEventsGetRequest.projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -3000,7 +3020,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     // check that the version date of the previousValue is before the version date of the current value.
     if (previousVersionDate.versionDate.isAfter(currentVersionOfValue.valueCreationDate)) {
       throw ForbiddenException(
-        s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI ${previousValueIri} " +
+        s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI $previousValueIri " +
           s"has a date after the current value."
       )
     }

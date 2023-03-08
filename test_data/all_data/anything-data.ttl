@@ -2269,12 +2269,12 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
-    knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    knora-base:valueCreationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     knora-base:isDeleted         false .
 
 # Video Sequence Resource
 <http://rdfh.ch/0001/QUDQJ0U2RfWp5K-pY0g6Iw>
-    a                            anything:VideoSequencThing ;
+    a                            anything:VideoSequenceThing ;
     knora-base:isSequenceOf      <http://rdfh.ch/0001/zUelKon-SdmuL9iiHMgnGw> ;
     knora-base:isSequenceOfValue <http://rdfh.ch/0001/QUDQJ0U2RfWp5K-pY0g6Iw/values/VPDWlq3dSH-FNKIL9CX3vw> ;
     knora-base:hasSequenceBounds <http://rdfh.ch/0001/QUDQJ0U2RfWp5K-pY0g6Iw/values/8QR16dqWSLiatmna1a0-HA> ;
@@ -2355,12 +2355,12 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
-    knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    knora-base:valueCreationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     knora-base:isDeleted         false .
 
 # Audio Sequence Resource
 <http://rdfh.ch/0001/n3ApOxXpTMi0R6jo9Vb_Hg>
-    a                            anything:AudioSequencThing ;
+    a                            anything:AudioSequenceThing ;
     knora-base:isSequenceOf      <http://rdfh.ch/0001/gT2msR9wS-CeLWXaj3N2aA> ;
     knora-base:isSequenceOfValue <http://rdfh.ch/0001/n3ApOxXpTMi0R6jo9Vb_Hg/values/4ug_4NNNReygjjzOm8R7Cw> ;
     knora-base:hasSequenceBounds <http://rdfh.ch/0001/n3ApOxXpTMi0R6jo9Vb_Hg/values/tbK4Yom-Smq24USjY6RgEw> ;

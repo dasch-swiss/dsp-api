@@ -1,21 +1,20 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.util
 
-import akka.actor.ActorRef
-import akka.pattern.ask
-import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -28,6 +27,8 @@ import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.GroupedProps.ValueLiterals
 import org.knora.webapi.messages.util.GroupedProps.ValueProps
+import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
+import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 
 /**
@@ -357,7 +358,7 @@ object PermissionUtilADM extends LazyLogging {
   }
 
   /**
-   * Given data from a [[SparqlExtendedConstructResponse]], determines the permissions that a user has on a entity,
+   * Given data from a [[org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse]], determines the permissions that a user has on a entity,
    * and returns an [[EntityPermission]].
    *
    * @param entityIri      the IRI of the entity.
@@ -720,61 +721,6 @@ object PermissionUtilADM extends LazyLogging {
       case PermissionType.DOAP => ???
     }
 
-  /**
-   * Given a permission literal, checks that it refers to valid permissions and groups.
-   *
-   * @param permissionLiteral the permission literal.
-   * @param responderManager  a reference to the responder manager.
-   * @param timeout           a timeout for `ask` messages.
-   * @param executionContext  an execution context for futures.
-   * @return the validated permission literal, normalised and reformatted.
-   */
-  def validatePermissions(
-    permissionLiteral: String,
-    appActor: ActorRef
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
-    val stringFormatter = StringFormatter.getGeneralInstance
-
-    for {
-      // Parse the permission literal.
-      parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] <-
-        Future(
-          parsePermissions(
-            permissionLiteral = permissionLiteral,
-            errorFun = { literal =>
-              throw BadRequestException(s"Invalid permission literal: $literal")
-            }
-          )
-        )
-
-      // Get the group IRIs that are mentioned, minus the built-in groups.
-      projectSpecificGroupIris: Set[IRI] =
-        parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraAdmin.BuiltInGroups
-
-      validatedProjectSpecificGroupIris: Set[IRI] =
-        projectSpecificGroupIris.map(iri =>
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid group IRI: $iri"))
-        )
-
-      // Check that those groups exist.
-      _ <- appActor
-             .ask(
-               MultipleGroupsGetRequestADM(
-                 groupIris = validatedProjectSpecificGroupIris,
-                 requestingUser = KnoraSystemInstances.Users.SystemUser
-               )
-             )
-             .mapTo[Set[GroupGetResponseADM]]
-
-      // Reformat the permission literal.
-      permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap { case (entityPermission, groupIris) =>
-                                             groupIris.map { groupIri =>
-                                               entityPermission.toPermissionADM(groupIri)
-                                             }
-                                           }.toSet
-    } yield formatPermissionADMs(permissions = permissionADMs, permissionType = PermissionType.OAP)
-  }
-
   /////////////////////////////////////////
   // API v1 methods
 
@@ -956,5 +902,65 @@ object PermissionUtilADM extends LazyLogging {
 
     maybePermissionLevel.map(_.toInt)
   }
+}
 
+trait PermissionUtilADM {
+
+  /**
+   * Given a permission literal, checks that it refers to valid permissions and groups.
+   *
+   * @param permissionLiteral the permission literal.
+   * @return the validated permission literal, normalised and reformatted.
+   */
+  def validatePermissions(permissionLiteral: _root_.java.lang.String): zio.Task[_root_.java.lang.String]
+}
+
+final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatter: StringFormatter)
+    extends PermissionUtilADM {
+
+  /**
+   * Given a permission literal, checks that it refers to valid permissions and groups.
+   *
+   * @param permissionLiteral the permission literal.
+   * @return the validated permission literal, normalised and reformatted.
+   */
+  override def validatePermissions(permissionLiteral: String): Task[String] =
+    for {
+      // Parse the permission literal.
+      parsedPermissions <-
+        ZIO.attempt(
+          parsePermissions(
+            permissionLiteral = permissionLiteral,
+            errorFun = { literal =>
+              throw BadRequestException(s"Invalid permission literal: $literal")
+            }
+          )
+        )
+
+      // Get the group IRIs that are mentioned, minus the built-in groups.
+      projectSpecificGroupIris: Set[IRI] =
+        parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraAdmin.BuiltInGroups
+
+      validatedProjectSpecificGroupIris <-
+        ZIO.attempt(
+          projectSpecificGroupIris.map(iri =>
+            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid group IRI: $iri"))
+          )
+        )
+
+      // Check that those groups exist.
+      _ <- messageRelay.ask[Set[GroupGetResponseADM]](MultipleGroupsGetRequestADM(validatedProjectSpecificGroupIris))
+
+      // Reformat the permission literal.
+      permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap { case (entityPermission, groupIris) =>
+                                             groupIris.map { groupIri =>
+                                               entityPermission.toPermissionADM(groupIri)
+                                             }
+                                           }.toSet
+    } yield formatPermissionADMs(permissions = permissionADMs, permissionType = PermissionType.OAP)
+}
+
+object PermissionUtilADMLive {
+  val layer: URLayer[StringFormatter with MessageRelay, PermissionUtilADMLive] =
+    ZLayer.fromFunction(PermissionUtilADMLive.apply _)
 }

@@ -1,9 +1,11 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package dsp.user.sharedtestdata
+
+import java.util.UUID
 
 import dsp.user.domain.User
 import dsp.valueobjects.Id
@@ -11,9 +13,10 @@ import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 
 object SharedTestData {
+  // TODO check faker to create test data: https://index.scala-lang.org/bitblitconsulting/scala-faker
   val passwordStrength = PasswordStrength(12)
 
-  val userId1     = Id.UserId.make()
+  val userId1     = Id.UserId.make(UUID.randomUUID)
   val givenName1  = GivenName.make("GivenName1")
   val familyName1 = FamilyName.make("FamilyName1")
   val username1   = Username.make("username1")
@@ -22,7 +25,7 @@ object SharedTestData {
     password <- PasswordHash.make("password1", passwordStrength)
   } yield password
 
-  val userId2     = Id.UserId.make()
+  val userId2     = Id.UserId.make(UUID.randomUUID)
   val givenName2  = GivenName.make("GivenName2")
   val familyName2 = FamilyName.make("FamilyName2")
   val username2   = Username.make("username2")
@@ -31,7 +34,7 @@ object SharedTestData {
     password <- PasswordHash.make("password2", passwordStrength)
   } yield password
 
-  val userId3     = Id.UserId.make()
+  val userId3     = Id.UserId.make(UUID.randomUUID)
   val givenName3  = GivenName.make("GivenName3")
   val familyName3 = FamilyName.make("FamilyName3")
   val username3   = Username.make("username3")

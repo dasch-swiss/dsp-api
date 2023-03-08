@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,10 +21,9 @@ trait AroundDirectives extends InstrumentationSupport {
   def logDuration: Directive0 = extractRequestContext.flatMap { ctx =>
     val start = System.currentTimeMillis()
     mapResponse { resp =>
-      val took = System.currentTimeMillis() - start
-      metricsLogger.info(
-        s"[${resp.status.intValue()}] ${ctx.request.method.name} " + s"${ctx.request.uri} took: ${took}ms"
-      )
+      val took    = System.currentTimeMillis() - start
+      val message = s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${took}ms"
+      if (resp.status.isFailure()) metricsLogger.warn(message) else metricsLogger.debug(message)
       resp
     }
   }

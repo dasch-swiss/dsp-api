@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -16,7 +16,7 @@
 ## Design
 
 As explained in
-[Knora Ontology Versions](../../02-knora-ontologies/knora-base.md#knora-ontology-versions),
+[Knora Ontology Versions](../../02-dsp-ontologies/knora-base.md#knora-ontology-versions),
 the `knora-base` ontology contains a version string to ensure compatibility
 between a repository and a given version of Knora. The same version string
 is therefore hard-coded in the Knora source code, in the string constant

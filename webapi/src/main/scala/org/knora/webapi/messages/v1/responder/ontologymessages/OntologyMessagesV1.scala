@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,6 +9,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.SmartIri
@@ -28,7 +29,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeC
 /**
  * An abstract trait representing a message that can be sent to `OntologyResponderV1`.
  */
-sealed trait OntologyResponderRequestV1 extends KnoraRequestV1
+sealed trait OntologyResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
 
 /**
  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
@@ -42,7 +43,7 @@ case class LoadOntologiesRequestV1(userADM: UserADM) extends OntologyResponderRe
  * Indicates that all ontologies were loaded.
  */
 case class LoadOntologiesResponse() extends KnoraResponseV1 {
-  def toJsValue = JsObject(Map("result" -> JsString("Ontologies loaded.")))
+  def toJsValue: JsValue = JsObject(Map("result" -> JsString("Ontologies loaded.")))
 }
 
 /**
@@ -140,7 +141,7 @@ case class ResourceTypeGetRequestV1(resourceTypeIri: IRI, userProfile: UserADM) 
  * @param restype_info basic information about the resource type.
  */
 case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1) extends KnoraResponseV1 {
-  def toJsValue = ResourceTypeV1JsonProtocol.resourceTypeResponseV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.resourceTypeResponseV1Format.write(this)
 }
 
 /**
@@ -179,7 +180,7 @@ case class NamedGraphsGetRequestV1(
  * @param vocabularies information about named graphs containing ontologies.
  */
 case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1]) extends KnoraResponseV1 {
-  def toJsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)
 }
 
 /**
@@ -200,7 +201,7 @@ case class ResourceTypesForNamedGraphGetRequestV1(
  * @param resourcetypes the resource classes for the queried named graph.
  */
 case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Seq[ResourceTypeV1]) extends KnoraResponseV1 {
-  def toJsValue = ResourceTypeV1JsonProtocol.resourceTypesForNamedGraphResponseV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.resourceTypesForNamedGraphResponseV1Format.write(this)
 }
 
 /**
@@ -223,7 +224,7 @@ case class PropertyTypesForNamedGraphGetRequestV1(
  */
 case class PropertyTypesForNamedGraphResponseV1(properties: Seq[PropertyDefinitionInNamedGraphV1])
     extends KnoraResponseV1 {
-  def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForNamedGraphResponseV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.propertyTypesForNamedGraphResponseV1Format.write(this)
 }
 
 /**
@@ -242,7 +243,7 @@ case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userP
  * @param properties the property types for the requested resource class.
  */
 case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDefinitionV1]) extends KnoraResponseV1 {
-  def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForResourceTypeResponseV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.propertyTypesForResourceTypeResponseV1Format.write(this)
 }
 
 /**
@@ -260,7 +261,7 @@ case class SubClassesGetRequestV1(resourceClassIri: IRI, userADM: UserADM) exten
  * @param subClasses a list of [[SubClassInfoV1]] representing the subclasses of the specified class.
  */
 case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV1]) extends KnoraResponseV1 {
-  def toJsValue = ResourceTypeV1JsonProtocol.subClassesGetResponseV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.subClassesGetResponseV1Format.write(this)
 }
 
 /**
@@ -576,7 +577,7 @@ case class NamedGraphV1(
   uri: IRI,
   active: Boolean
 ) {
-  def toJsValue = ResourceTypeV1JsonProtocol.namedGraphV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.namedGraphV1Format.write(this)
 }
 
 /**
@@ -595,7 +596,7 @@ case class SubClassInfoV1(id: IRI, label: String)
  * @param properties the properties of the resource class.
  */
 case class ResourceTypeV1(id: IRI, label: String, properties: Vector[PropertyTypeV1]) {
-  def toJsValue = ResourceTypeV1JsonProtocol.resourceTypeV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.resourceTypeV1Format.write(this)
 }
 
 /**
@@ -605,7 +606,7 @@ case class ResourceTypeV1(id: IRI, label: String, properties: Vector[PropertyTyp
  * @param label the label of the property type.
  */
 case class PropertyTypeV1(id: IRI, label: String) {
-  def toJsValue = ResourceTypeV1JsonProtocol.propertyTypeV1Format.write(this)
+  def toJsValue: JsValue = ResourceTypeV1JsonProtocol.propertyTypeV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

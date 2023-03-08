@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,6 +17,7 @@ import scala.concurrent.Future
 
 import dsp.errors.AssertionException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -28,7 +29,6 @@ import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDRequestReaderV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
@@ -84,7 +84,7 @@ case class GetStandoffResponseV2(valueIri: IRI, standoff: Seq[StandoffTagV2], ne
    */
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
@@ -153,7 +153,6 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
     Future {
@@ -211,7 +210,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
 
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
 

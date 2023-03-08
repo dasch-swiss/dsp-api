@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -57,8 +57,6 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.fuseki.username        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME        | admin                 |
 | app.triplestore.fuseki.password        | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD        | test                  |
 | app.cache-service.enabled              | KNORA_WEBAPI_CACHE_SERVICE_ENABLED              | true                  |
-| app.cache-service.redis.host           | KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST           | localhost             |
-| app.cache-service.redis.port           | KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT           | 6379                  |
 
 ## Selectively Disabling Routes
 

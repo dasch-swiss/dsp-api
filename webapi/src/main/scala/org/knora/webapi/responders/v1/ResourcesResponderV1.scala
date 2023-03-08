@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -17,7 +18,6 @@ import scala.util.Try
 
 import dsp.constants.SalsahGui
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCre
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
@@ -38,6 +38,7 @@ import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -50,23 +51,24 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetad
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
  */
-class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData) {
-
-  // Converts SPARQL query results to ApiValueV1 objects.
-  private val valueUtilV1 = new ValueUtilV1(settings)
+class ResourcesResponderV1(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ValueUtilV1 with ResourceUtilV2]
+) extends Responder(responderData.actorDeps) {
 
   /**
    * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
    */
-  def receive(msg: ResourcesResponderRequestV1) = msg match {
+  def receive(msg: ResourcesResponderRequestV1): Future[Any] = msg match {
     case ResourceInfoGetRequestV1(resourceIri, userProfile) =>
       getResourceInfoResponseV1(resourceIri, userProfile)
     case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) =>
@@ -435,8 +437,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                              .resourceClassInfoMap(node.nodeClass)
                                              .getPredicateObject(
                                                predicateIri = OntologyConstants.Rdfs.Label,
-                                               preferredLangs =
-                                                 Some(graphDataGetRequest.userADM.lang, settings.fallbackLanguage)
+                                               preferredLangs = Some(
+                                                 graphDataGetRequest.userADM.lang,
+                                                 responderData.appConfig.fallbackLanguage
+                                               )
                                              )
                                              .getOrElse(
                                                throw InconsistentRepositoryDataException(
@@ -459,8 +463,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                              .propertyInfoMap(edge.linkProp)
                                              .getPredicateObject(
                                                predicateIri = OntologyConstants.Rdfs.Label,
-                                               preferredLangs =
-                                                 Some(graphDataGetRequest.userADM.lang, settings.fallbackLanguage)
+                                               preferredLangs = Some(
+                                                 graphDataGetRequest.userADM.lang,
+                                                 responderData.appConfig.fallbackLanguage
+                                               )
                                              )
                                              .getOrElse(
                                                throw InconsistentRepositoryDataException(
@@ -652,20 +658,24 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                               ) =>
                             // Convert the rows representing the LinkValue to a ValueProps.
                             val linkValueProps =
-                              valueUtilV1.createValueProps(
-                                valueIri = linkValueIri,
-                                objRows = linkValueRows
+                              UnsafeZioRun.runOrThrow(
+                                ZIO.service[ValueUtilV1].map(_.createValueProps(linkValueIri, linkValueRows))
                               )
 
                             // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.
 
                             for {
-                              apiValueV1 <-
-                                valueUtilV1.makeValueV1(
-                                  valueProps = linkValueProps,
-                                  projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
-                                  appActor = appActor,
-                                  userProfile = userProfile
+                              apiValueV1: ApiValueV1 <-
+                                UnsafeZioRun.runToFuture(
+                                  ZIO
+                                    .service[ValueUtilV1]
+                                    .flatMap(
+                                      _.makeValueV1(
+                                        valueProps = linkValueProps,
+                                        projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
+                                        userProfile = userProfile
+                                      )
+                                    )
                                 )
 
                               linkValueV1: LinkValueV1 =
@@ -760,20 +770,26 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                    OntologyConstants.KnoraBase.ResourceIcon
                                  ) match {
                                    case Some(resClassIcon) =>
-                                     Some(valueUtilV1.makeResourceClassIconURL(resourceTypeIri, resClassIcon))
+                                     Some(
+                                       UnsafeZioRun.runOrThrow(
+                                         ZIO
+                                           .service[ValueUtilV1]
+                                           .map(_.makeResourceClassIconURL(resourceTypeIri, resClassIcon))
+                                       )
+                                     )
                                    case _ => None
                                  }
 
       resourceClassLabel = resourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Label,
-                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                            )
 
       resInfo: ResourceInfoV1 = resInfoWithoutQueryingOntology.copy(
                                   restype_label = resourceClassLabel,
                                   restype_description = resourceTypeEntityInfo.getPredicateObject(
                                     predicateIri = OntologyConstants.Rdfs.Comment,
-                                    preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                                    preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                                   ),
                                   restype_iconsrc = maybeResourceTypeIconSrc
                                 )
@@ -796,17 +812,23 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                          resinfo = incoming.resinfo.copy(
                            restype_label = incomingResourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Label,
-                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                            ),
                            restype_description = incomingResourceTypeEntityInfo.getPredicateObject(
                              predicateIri = OntologyConstants.Rdfs.Comment,
-                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                             preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                            ),
                            restype_iconsrc = incomingResourceTypeEntityInfo.getPredicateObject(
                              OntologyConstants.KnoraBase.ResourceIcon
                            ) match {
                              case Some(resClassIcon) =>
-                               Some(valueUtilV1.makeResourceClassIconURL(incoming.resinfo.restype_id, resClassIcon))
+                               Some(
+                                 UnsafeZioRun.runOrThrow(
+                                   ZIO
+                                     .service[ValueUtilV1]
+                                     .map(_.makeResourceClassIconURL(incoming.resinfo.restype_id, resClassIcon))
+                                 )
+                               )
                              case _ => None
                            }
                          )
@@ -872,17 +894,26 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             ),
                                           label = propertyEntityInfo.getPredicateObject(
                                             predicateIri = OntologyConstants.Rdfs.Label,
-                                            preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                                            preferredLangs =
+                                              Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                                           ),
-                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.value),
+                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                                           attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
                                             SalsahGui.GuiAttribute
-                                          ) + valueUtilV1.makeAttributeRestype(
-                                            propertyEntityInfo
-                                              .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-                                              .getOrElse(
-                                                throw InconsistentRepositoryDataException(
-                                                  s"Property $propertyIri has no knora-base:objectClassConstraint"
+                                          ) + UnsafeZioRun.runOrThrow(
+                                            ZIO
+                                              .service[ValueUtilV1]
+                                              .map(
+                                                _.makeAttributeRestype(
+                                                  propertyEntityInfo
+                                                    .getPredicateObject(
+                                                      OntologyConstants.KnoraBase.ObjectClassConstraint
+                                                    )
+                                                    .getOrElse(
+                                                      throw InconsistentRepositoryDataException(
+                                                        s"Property $propertyIri has no knora-base:objectClassConstraint"
+                                                      )
+                                                    )
                                                 )
                                               )
                                           )).mkString(";"),
@@ -903,9 +934,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             ),
                                           label = propertyEntityInfo.getPredicateObject(
                                             predicateIri = OntologyConstants.Rdfs.Label,
-                                            preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                                            preferredLangs =
+                                              Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                                           ),
-                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.value),
+                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                                           attributes = propertyEntityInfo
                                             .getPredicateStringObjectsWithoutLang(
                                               SalsahGui.GuiAttribute
@@ -1193,12 +1225,22 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                            ) match {
                                                              case Some(full: StillImageFileValue) =>
                                                                val preview: LocationV1 =
-                                                                 valueUtilV1.fileValueV12LocationV1(
-                                                                   fullSizeImageFileValueToPreview(full.image)
+                                                                 UnsafeZioRun.runOrThrow(
+                                                                   ZIO
+                                                                     .service[ValueUtilV1]
+                                                                     .map(
+                                                                       _.fileValueV12LocationV1(
+                                                                         fullSizeImageFileValueToPreview(full.image)
+                                                                       )
+                                                                     )
                                                                  )
                                                                val fileVals: Seq[LocationV1] =
                                                                  createMultipleImageResolutions(full.image).map(
-                                                                   valueUtilV1.fileValueV12LocationV1
+                                                                   UnsafeZioRun.runOrThrow(
+                                                                     ZIO
+                                                                       .service[ValueUtilV1]
+                                                                       .map(_.fileValueV12LocationV1)
+                                                                   )
                                                                  )
                                                                (Some(preview), Some(Vector(preview) ++ fileVals))
 
@@ -1300,16 +1342,21 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             predicateInfo: PredicateInfoV1
                           ) =>
                         Some(
-                          valueUtilV1
-                            .makeResourceClassIconURL(
-                              resClass,
-                              predicateInfo.objects.headOption
-                                .getOrElse(
-                                  throw InconsistentRepositoryDataException(
-                                    s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"
-                                  )
+                          UnsafeZioRun.runOrThrow(
+                            ZIO
+                              .service[ValueUtilV1]
+                              .map(
+                                _.makeResourceClassIconURL(
+                                  resClass,
+                                  predicateInfo.objects.headOption
+                                    .getOrElse(
+                                      throw InconsistentRepositoryDataException(
+                                        s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"
+                                      )
+                                    )
                                 )
-                            )
+                              )
+                          )
                         )
                       case None => None
                     }
@@ -1576,14 +1623,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                       }
 
       // Get information about the project in which the resources will be created.
-      projectInfoResponse <- appActor
-                               .ask(
-                                 ProjectGetRequestADM(
-                                   identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                   requestingUser = requestingUser
-                                 )
-                               )
-                               .mapTo[ProjectGetResponseADM]
+      projectInfoResponse <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(identifier =
+              IriIdentifier
+                .fromString(projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       projectADM = projectInfoResponse.project
 
@@ -1610,7 +1659,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectADM.shortcode)
             )
             .toMap,
-          errorTemplateFun = { key =>
+          errorTemplateFun = { key: Any =>
             s"Resource $key is the target of a link, but was not provided in the request"
           },
           errorFun = { errorMsg =>
@@ -1622,7 +1671,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       clientResourceIDsToResourceClasses: Map[String, IRI] =
         new ErrorHandlingMap(
           toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> resRequest.resourceTypeIri).toMap,
-          errorTemplateFun = { key =>
+          errorTemplateFun = { key: Any =>
             s"Resource $key is the target of a link, but was not provided in the request"
           },
           errorFun = { errorMsg =>
@@ -1768,7 +1817,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] =
         new ErrorHandlingMap(
-          defaultPropertyAccessPermissionsMapToWrap.toMap,
+          defaultPropertyAccessPermissionsMapToWrap,
           { key: IRI =>
             s"No default property access permissions found for resource class $key"
           }
@@ -1867,9 +1916,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                               )
 
       // Do the update.
-      createResourceResponse <- appActor
-                                  .ask(SparqlUpdateRequest(createMultipleResourcesSparql))
-                                  .mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
 
       // We don't query the newly created resources to verify that they and their values were actually created,
       // because this would be too expensive. In any case, since the update is done with INSERT DATA, i.e. there is no WHERE clause,
@@ -1907,12 +1954,15 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     requestingUser: UserADM
   ): Future[T] = {
     val resultFutures: Seq[Future[T]] = fileValueContentV2s.map { valueContent =>
-      ResourceUtilV2.doSipiPostUpdate(
-        updateFuture = updateFuture,
-        valueContent = valueContent,
-        requestingUser = requestingUser,
-        appActor = appActor,
-        log = log
+      UnsafeZioRun.runToFuture(
+        ZIO.serviceWithZIO[ResourceUtilV2](
+          _.doSipiPostUpdate(
+            updateFuture = ZIO.fromFuture(_ => updateFuture),
+            valueContent = valueContent,
+            requestingUser = requestingUser,
+            log = log
+          )
+        )
       )
     }
 
@@ -1956,90 +2006,90 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     for {
       // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
       // point to it.
-      propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
-                                                          values.foldLeft(Vector.empty[Future[Unit]]) {
-                                                            case (acc, (propertyIri, valuesWithComments)) =>
-                                                              val propertyInfo =
-                                                                propertyInfoMap.getOrElse(
-                                                                  propertyIri,
-                                                                  throw NotFoundException(
-                                                                    s"Property not found: $propertyIri"
-                                                                  )
-                                                                )
-                                                              val propertyObjectClassConstraint =
-                                                                propertyInfo
-                                                                  .getPredicateObject(
-                                                                    OntologyConstants.KnoraBase.ObjectClassConstraint
-                                                                  )
-                                                                  .getOrElse {
-                                                                    throw InconsistentRepositoryDataException(
-                                                                      s"Property $propertyIri has no knora-base:objectClassConstraint"
-                                                                    )
-                                                                  }
+      _ <- Future.sequence {
+             values.foldLeft(Vector.empty[Future[Unit]]) { case (acc, (propertyIri, valuesWithComments)) =>
+               val propertyInfo =
+                 propertyInfoMap.getOrElse(
+                   propertyIri,
+                   throw NotFoundException(
+                     s"Property not found: $propertyIri"
+                   )
+                 )
+               val propertyObjectClassConstraint =
+                 propertyInfo
+                   .getPredicateObject(
+                     OntologyConstants.KnoraBase.ObjectClassConstraint
+                   )
+                   .getOrElse {
+                     throw InconsistentRepositoryDataException(
+                       s"Property $propertyIri has no knora-base:objectClassConstraint"
+                     )
+                   }
 
-                                                              acc ++ valuesWithComments.map {
-                                                                valueV1WithComment: CreateValueV1WithComment =>
-                                                                  valueV1WithComment.updateValueV1 match {
-                                                                    case LinkToClientIDUpdateV1(targetClientID) =>
-                                                                      // We're creating a link to a resource that doesn't exist yet, because it
-                                                                      // will be created in the same transaction. Check that it will belong to a
-                                                                      // suitable class.
-                                                                      val checkSubClassRequest = CheckSubClassRequestV1(
-                                                                        subClassIri =
-                                                                          clientResourceIDsToResourceClasses(
-                                                                            targetClientID
-                                                                          ),
-                                                                        superClassIri = propertyObjectClassConstraint,
-                                                                        userProfile = userProfile
-                                                                      )
+               acc ++ valuesWithComments.map { valueV1WithComment: CreateValueV1WithComment =>
+                 valueV1WithComment.updateValueV1 match {
+                   case LinkToClientIDUpdateV1(targetClientID) =>
+                     // We're creating a link to a resource that doesn't exist yet, because it
+                     // will be created in the same transaction. Check that it will belong to a
+                     // suitable class.
+                     val checkSubClassRequest = CheckSubClassRequestV1(
+                       subClassIri = clientResourceIDsToResourceClasses(
+                         targetClientID
+                       ),
+                       superClassIri = propertyObjectClassConstraint,
+                       userProfile = userProfile
+                     )
 
-                                                                      for {
-                                                                        subClassResponse <-
-                                                                          appActor
-                                                                            .ask(checkSubClassRequest)
-                                                                            .mapTo[CheckSubClassResponseV1]
+                     for {
+                       subClassResponse <-
+                         appActor
+                           .ask(checkSubClassRequest)
+                           .mapTo[CheckSubClassResponseV1]
 
-                                                                        _ = if (!subClassResponse.isSubClass) {
-                                                                              throw OntologyConstraintException(
-                                                                                s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
-                                                                              )
-                                                                            }
-                                                                      } yield ()
+                       _ = if (!subClassResponse.isSubClass) {
+                             throw OntologyConstraintException(
+                               s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                             )
+                           }
+                     } yield ()
 
-                                                                    case linkUpdate: LinkUpdateV1 =>
-                                                                      // We're creating a link to an existing resource. Check that it belongs to a
-                                                                      // suitable class.
-                                                                      for {
-                                                                        checkTargetClassResponse <-
-                                                                          checkResourceClass(
-                                                                            resourceIri = linkUpdate.targetResourceIri,
-                                                                            owlClass = propertyObjectClassConstraint,
-                                                                            userProfile = userProfile
-                                                                          ).mapTo[ResourceCheckClassResponseV1]
+                   case linkUpdate: LinkUpdateV1 =>
+                     // We're creating a link to an existing resource. Check that it belongs to a
+                     // suitable class.
+                     for {
+                       checkTargetClassResponse <-
+                         checkResourceClass(
+                           resourceIri = linkUpdate.targetResourceIri,
+                           owlClass = propertyObjectClassConstraint,
+                           userProfile = userProfile
+                         ).mapTo[ResourceCheckClassResponseV1]
 
-                                                                        _ = if (!checkTargetClassResponse.isInClass) {
-                                                                              throw OntologyConstraintException(
-                                                                                s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
-                                                                              )
-                                                                            }
-                                                                      } yield ()
+                       _ = if (!checkTargetClassResponse.isInClass) {
+                             throw OntologyConstraintException(
+                               s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                             )
+                           }
+                     } yield ()
 
-                                                                    case otherValue =>
-                                                                      // We're creating an ordinary value. Check that its type is valid for the property's
-                                                                      // knora-base:objectClassConstraint.
-                                                                      valueUtilV1
-                                                                        .checkValueTypeForPropertyObjectClassConstraint(
-                                                                          propertyIri = propertyIri,
-                                                                          propertyObjectClassConstraint =
-                                                                            propertyObjectClassConstraint,
-                                                                          valueType = otherValue.valueTypeIri,
-                                                                          appActor = appActor,
-                                                                          userProfile = userProfile
-                                                                        )
-                                                                  }
-                                                              }
-                                                          }
-                                                        }
+                   case otherValue =>
+                     // We're creating an ordinary value. Check that its type is valid for the property's
+                     // knora-base:objectClassConstraint.
+                     UnsafeZioRun.runToFuture(
+                       ZIO
+                         .service[ValueUtilV1]
+                         .map(
+                           _.checkValueTypeForPropertyObjectClassConstraint(
+                             propertyIri = propertyIri,
+                             propertyObjectClassConstraint = propertyObjectClassConstraint,
+                             valueType = otherValue.valueTypeIri,
+                             userProfile = userProfile
+                           )
+                         )
+                     )
+                 }
+               }
+             }
+           }
 
       // Check that the resource class has a suitable cardinality for each submitted value.
 
@@ -2052,7 +2102,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             )
 
             if (
-              (cardinalityInfo.cardinality == MayHaveOne || cardinalityInfo.cardinality == MustHaveOne) && valuesForProperty.size > 1
+              (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
             ) {
               throw OntologyConstraintException(
                 s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri"
@@ -2062,7 +2112,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Check that no required values are missing.
       requiredProps: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.filter { case (_, cardinalityInfo) =>
-                                  cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome
+                                  cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne
                                 }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
       submittedPropertyIris = values.keySet
@@ -2231,11 +2281,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             (
               propIri,
               values.map { valueResponse: CreateValueResponseV1 =>
-                valueUtilV1.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
-                  creatorIri = creatorIri,
-                  propertyIri = propIri,
-                  resourceIri = resourceIri,
-                  valueResponse = valueResponse
+                UnsafeZioRun.runOrThrow(
+                  ZIO
+                    .service[ValueUtilV1]
+                    .map(
+                      _.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
+                        creatorIri = creatorIri,
+                        propertyIri = propIri,
+                        resourceIri = resourceIri,
+                        valueResponse = valueResponse
+                      )
+                    )
                 )
               }
             )
@@ -2391,9 +2447,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 )
 
       // Do the update.
-      createResourceResponse <- appActor
-                                  .ask(SparqlUpdateRequest(createNewResourceSparql))
-                                  .mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 
       apiResponse <- verifyResourceCreated(
                        resourceIri = resourceIri,
@@ -2451,14 +2505,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           }
 
       // Get project info
-      projectResponse <- appActor
-                           .ask(
-                             ProjectGetRequestADM(
-                               identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                               requestingUser = userProfile
-                             )
-                           )
-                           .mapTo[ProjectGetResponseADM]
+      projectResponse <-
+        appActor
+          .ask(
+            ProjectGetRequestADM(identifier =
+              IriIdentifier
+                .fromString(projectIri)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       // Ensure that the project isn't the system project or the shared ontologies project.
 
@@ -2585,7 +2641,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                          .toString()
 
         // Do the update.
-        sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -2732,10 +2788,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                          )
                          .toString()
 
-        // _ = print(sparqlUpdate)
-
         // Do the update.
-        sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -2997,9 +3051,15 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                             case (fileValueIri, fileValueRows) =>
                                                               (
                                                                 fileValueIri,
-                                                                valueUtilV1.createValueProps(
-                                                                  fileValueIri,
-                                                                  fileValueRows
+                                                                UnsafeZioRun.runOrThrow(
+                                                                  ZIO
+                                                                    .service[ValueUtilV1]
+                                                                    .map(
+                                                                      _.createValueProps(
+                                                                        fileValueIri,
+                                                                        fileValueRows
+                                                                      )
+                                                                    )
                                                                 )
                                                               )
                                                           }.filter { case (fileValueIri, fileValueProps) =>
@@ -3021,12 +3081,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
                                                            case (fileValueIri, fileValueProps) =>
                                                              for {
-                                                               valueV1 <- valueUtilV1.makeValueV1(
-                                                                            valueProps = fileValueProps,
-                                                                            projectShortcode = projectShortcode,
-                                                                            appActor = appActor,
-                                                                            userProfile = userProfile
-                                                                          )
+                                                               valueV1: ApiValueV1 <-
+                                                                 UnsafeZioRun.runToFuture(
+                                                                   ZIO
+                                                                     .service[ValueUtilV1]
+                                                                     .flatMap(
+                                                                       _.makeValueV1(
+                                                                         valueProps = fileValueProps,
+                                                                         projectShortcode = projectShortcode,
+                                                                         userProfile = userProfile
+                                                                       )
+                                                                     )
+                                                                 )
 
                                                              } yield valueV1 match {
                                                                case fileValueV1: FileValueV1 => fileValueV1
@@ -3047,13 +3113,21 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         preview: Option[LocationV1] =
           fullSizeImageFileValues.headOption.map { fullSizeImageFileValue: StillImageFileValueV1 =>
-            valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(fullSizeImageFileValue))
+            UnsafeZioRun.runOrThrow(
+              ZIO
+                .service[ValueUtilV1]
+                .map(_.fileValueV12LocationV1(fullSizeImageFileValueToPreview(fullSizeImageFileValue)))
+            )
           }
 
         // Convert the file values into LocationV1 objects as required by Knora API v1.
         locations: Seq[LocationV1] = preview.toVector ++ fileValues.flatMap { fileValueV1 =>
                                        createMultipleImageResolutions(fileValueV1).map(oneResolution =>
-                                         valueUtilV1.fileValueV12LocationV1(oneResolution)
+                                         UnsafeZioRun.runOrThrow(
+                                           ZIO
+                                             .service[ValueUtilV1]
+                                             .map(_.fileValueV12LocationV1(oneResolution))
+                                         )
                                        )
                                      }
 
@@ -3096,15 +3170,21 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               entityInfo = entityInfoResponse.resourceClassInfoMap(resTypeIri)
               label = entityInfo.getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
-                        preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                        preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                       )
               description = entityInfo.getPredicateObject(
                               predicateIri = OntologyConstants.Rdfs.Comment,
-                              preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                              preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                             )
               iconsrc = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
                           case Some(resClassIcon) =>
-                            Some(valueUtilV1.makeResourceClassIconURL(resTypeIri, resClassIcon))
+                            Some(
+                              UnsafeZioRun.runOrThrow(
+                                ZIO
+                                  .service[ValueUtilV1]
+                                  .map(_.makeResourceClassIconURL(resTypeIri, resClassIcon))
+                              )
+                            )
                           case _ => None
                         }
             } yield (label, description, iconsrc)
@@ -3162,11 +3242,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         rowsWithValues
           .partition(_.rowMap.get("isLinkValueProp").exists(_.toBoolean))
 
-    } yield valueUtilV1.createGroupedPropsByType(
-      rowsWithOrdinaryValues = rowsWithOrdinaryValues,
-      rowsWithLinkValues = rowsWithLinkValues,
-      rowsWithLinks = rowsWithLinks
-    )
+      result <- UnsafeZioRun.runToFuture(
+                  ZIO
+                    .service[ValueUtilV1]
+                    .map(
+                      _.createGroupedPropsByType(
+                        rowsWithOrdinaryValues = rowsWithOrdinaryValues,
+                        rowsWithLinkValues = rowsWithLinkValues,
+                        rowsWithLinks = rowsWithLinks
+                      )
+                    )
+                )
+    } yield result
 
   /**
    * Converts grouped property query results returned by the `getGroupedProperties` method to a [[Seq]] of [[PropertyV1]] objects, optionally
@@ -3227,20 +3314,26 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         label = propertyEntityInfo.flatMap(
           _.getPredicateObject(
             predicateIri = OntologyConstants.Rdfs.Label,
-            preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+            preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
           )
         ),
-        occurrence = propertyCardinality.map(_.cardinality.value),
+        occurrence = propertyCardinality.map(_.cardinality.toString),
         attributes = propertyEntityInfo match {
           case Some(entityInfo) =>
             if (entityInfo.isLinkProp) {
-              (entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute) + valueUtilV1
-                .makeAttributeRestype(
-                  entityInfo
-                    .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-                    .getOrElse(
-                      throw InconsistentRepositoryDataException(
-                        s"Property $propertyIri has no knora-base:objectClassConstraint"
+              (entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute) +
+                UnsafeZioRun.runOrThrow(
+                  ZIO
+                    .service[ValueUtilV1]
+                    .map(
+                      _.makeAttributeRestype(
+                        entityInfo
+                          .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
+                          .getOrElse(
+                            throw InconsistentRepositoryDataException(
+                              s"Property $propertyIri has no knora-base:objectClassConstraint"
+                            )
+                          )
                       )
                     )
                 )).mkString(";")
@@ -3287,11 +3380,16 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
               for {
                 // Convert the SPARQL query results to a ValueV1.
-                valueV1 <- valueUtilV1.makeValueV1(
-                             valueProps = valueProps,
-                             projectShortcode = projectShortcode,
-                             appActor = appActor,
-                             userProfile = userProfile
+                valueV1 <- UnsafeZioRun.runToFuture(
+                             ZIO
+                               .service[ValueUtilV1]
+                               .flatMap(
+                                 _.makeValueV1(
+                                   valueProps = valueProps,
+                                   projectShortcode = projectShortcode,
+                                   userProfile = userProfile
+                                 )
+                               )
                            )
 
                 valPermission = PermissionUtilADM.getUserPermissionWithValuePropsV1(
@@ -3340,10 +3438,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                          )
           } yield
           // If the property has a value that the user isn't allowed to see, and its cardinality
-          // is MustHaveOne or MayHaveOne, don't return any information about the property.
+          // is ExactlyOne or ZeroOrOne, don't return any information about the property.
           propsAndCardinalities.get(propertyIri) match {
             case Some(cardinalityInfo)
-                if (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MayHaveOne) && valueObjectsV1Sorted.nonEmpty && valueObjectListFiltered.isEmpty =>
+                if (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == ZeroOrOne) && valueObjectsV1Sorted.nonEmpty && valueObjectListFiltered.isEmpty =>
               None
             case _ => Some(propertyV1)
           }
@@ -3375,7 +3473,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     case Some(referencedResTypeEntityInfo) =>
                       val labelOption: Option[String] = referencedResTypeEntityInfo.getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
-                        preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                        preferredLangs = Some(userProfile.lang, responderData.appConfig.fallbackLanguage)
                       )
                       val resIconOption: Option[String] =
                         referencedResTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
@@ -3389,7 +3487,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 // build the correct path to the icon
                 val maybeValueResourceClassIcon = valueResourceClassOption match {
                   case Some(resClass) if maybeResourceClassIcon.nonEmpty =>
-                    Some(valueUtilV1.makeResourceClassIconURL(resClass, maybeResourceClassIcon.get))
+                    Some(
+                      UnsafeZioRun.runOrThrow(
+                        ZIO
+                          .service[ValueUtilV1]
+                          .map(_.makeResourceClassIconURL(resClass, maybeResourceClassIcon.get))
+                      )
+                    )
                   case _ => None
                 }
 
@@ -3439,20 +3543,25 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 }
 
                 for {
-                  apiValueV1ForLinkValue <- valueUtilV1.makeValueV1(
-                                              valueProps = linkValueProps,
-                                              projectShortcode = projectShortcode,
-                                              appActor = appActor,
-                                              userProfile = userProfile
+                  apiValueV1ForLinkValue <- UnsafeZioRun.runToFuture(
+                                              ZIO
+                                                .service[ValueUtilV1]
+                                                .flatMap(
+                                                  _.makeValueV1(
+                                                    valueProps = linkValueProps,
+                                                    projectShortcode = projectShortcode,
+                                                    userProfile = userProfile
+                                                  )
+                                                )
                                             )
 
-                  linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
-                                               case linkValueV1: LinkValueV1 => linkValueV1
-                                               case _ =>
-                                                 throw InconsistentRepositoryDataException(
-                                                   s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}"
-                                                 )
-                                             }
+                  _ = apiValueV1ForLinkValue match {
+                        case linkValueV1: LinkValueV1 => linkValueV1
+                        case _ =>
+                          throw InconsistentRepositoryDataException(
+                            s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}"
+                          )
+                      }
 
                   // Check the permissions on the LinkValue.
                   linkValuePermission = PermissionUtilADM.getUserPermissionWithValuePropsV1(
@@ -3509,10 +3618,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                            )
 
               // If the property has a value that the user isn't allowed to see, and its cardinality
-              // is MustHaveOne or MayHaveOne, don't return any information about the property.
+              // is ExactlyOne or ZeroOrOne, don't return any information about the property.
             } yield propsAndCardinalities.get(propertyIri) match {
               case Some(cardinalityInfo)
-                  if (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MayHaveOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty =>
+                  if (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == ZeroOrOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty =>
                 None
               case _ => Some(propertyV1)
             }

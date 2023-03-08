@@ -1,39 +1,66 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.responders.v1
 
-import akka.pattern._
+import zio._
 
 import scala.annotation.tailrec
-import scala.concurrent.Future
 
 import dsp.errors.NotFoundException
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * A responder that returns information about hierarchical lists.
  */
-class ListsResponderV1(responderData: ResponderData) extends Responder(responderData) {
+trait ListsResponderV1 {
 
   /**
-   * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.
+   * Retrieves a list from the triplestore and returns it as a [[ListGetResponseV1]].
+   * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
+   * [[ListGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
+   *
+   * @param rootNodeIri the Iri if the root node of the list to be queried.
+   * @param userProfile the profile of the user making the request.
+   * @param pathType    the type of the list (HList or Selection).
+   * @return a [[ListGetResponseV1]].
    */
-  def receive(msg: ListsResponderRequestV1) = msg match {
+  def listGetRequestV1(rootNodeIri: IRI, userProfile: UserProfileV1, pathType: PathType.Value): Task[ListGetResponseV1]
+
+  /**
+   * Provides the path to a particular hierarchical list node.
+   *
+   * @param queryNodeIri the IRI of the node whose path is to be queried.
+   * @param userProfile  the profile of the user making the request.
+   */
+  def getNodePathResponseV1(queryNodeIri: IRI, userProfile: UserProfileV1): Task[NodePathGetResponseV1]
+}
+
+final case class ListsResponderV1Live(
+  appConfig: AppConfig,
+  triplestoreService: TriplestoreService
+) extends ListsResponderV1
+    with MessageHandler {
+
+  override def isResponsibleFor(message: ResponderRequest): Boolean =
+    message.isInstanceOf[ListsResponderRequestV1]
+
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case HListGetRequestV1(listIri, userProfile)                    => listGetRequestV1(listIri, userProfile, PathType.HList)
     case SelectionGetRequestV1(listIri, userProfile)                => listGetRequestV1(listIri, userProfile, PathType.Selection)
     case NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) => getNodePathResponseV1(iri, userProfile)
-    case other                                                      => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other                                                      => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -46,11 +73,11 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
    * @param pathType    the type of the list (HList or Selection).
    * @return a [[ListGetResponseV1]].
    */
-  def listGetRequestV1(
+  override def listGetRequestV1(
     rootNodeIri: IRI,
     userProfile: UserProfileV1,
     pathType: PathType.Value
-  ): Future[ListGetResponseV1] =
+  ): Task[ListGetResponseV1] =
     for {
       maybeChildren <- listGetV1(rootNodeIri, userProfile)
 
@@ -74,7 +101,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
    * @param userProfile the profile of the user making the request.
    * @return a sequence of [[ListNodeV1]].
    */
-  private def listGetV1(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListNodeV1]] = {
+  private def listGetV1(rootNodeIri: IRI, userProfile: UserProfileV1): Task[Seq[ListNodeV1]] = {
 
     /**
      * Compares the `position`-values of two nodes
@@ -108,7 +135,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                 The information about the parent node is repeated in each row.
                 Therefore, we can just access the first row for all the information about the parent.
 
-                node                                      position	   nodeName   label         child
+                node                               position	   nodeName   label         child
 
                 http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/a665b90cd
                 http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/4238eabcc
@@ -142,16 +169,16 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
     }
 
     for {
-      listQuery <- Future {
+      listQuery <- ZIO.attempt {
                      org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                        .getList(
                          rootNodeIri = rootNodeIri,
                          preferredLanguage = userProfile.userData.lang,
-                         fallbackLanguage = settings.fallbackLanguage
+                         fallbackLanguage = appConfig.fallbackLanguage
                        )
                        .toString()
                    }
-      listQueryResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResult]
+      listQueryResponse <- triplestoreService.sparqlHttpSelect(listQuery)
 
       // Group the results to map each node to the SPARQL query results representing its children.
       groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]] =
@@ -180,7 +207,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
    * @param queryNodeIri the IRI of the node whose path is to be queried.
    * @param userProfile  the profile of the user making the request.
    */
-  private def getNodePathResponseV1(queryNodeIri: IRI, userProfile: UserProfileV1): Future[NodePathGetResponseV1] = {
+  override def getNodePathResponseV1(queryNodeIri: IRI, userProfile: UserProfileV1): Task[NodePathGetResponseV1] = {
 
     /**
      * Recursively constructs the path to a node.
@@ -224,24 +251,22 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
     }
 
     for {
-      nodePathQuery <- Future {
+      nodePathQuery <- ZIO.attempt {
                          org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                            .getNodePath(
                              queryNodeIri = queryNodeIri,
                              preferredLanguage = userProfile.userData.lang,
-                             fallbackLanguage = settings.fallbackLanguage
+                             fallbackLanguage = appConfig.fallbackLanguage
                            )
                            .toString()
                        }
-      nodePathResponse: SparqlSelectResult <- appActor
-                                                .ask(SparqlSelectRequest(nodePathQuery))
-                                                .mapTo[SparqlSelectResult]
+      nodePathResponse <- triplestoreService.sparqlHttpSelect(nodePathQuery)
 
       /*
 
             If we request the path to the node <http://rdfh.ch/lists/c7f07a3fc1> ("Heidi Film"), the response has the following format:
 
-            node                                        nodeName     label                     child
+            node                                 nodeName     label                     child
             <http://rdfh.ch/lists/c7f07a3fc1>    1            Heidi Film
             <http://rdfh.ch/lists/2ebd2706c1>    7            FILM UND FOTO             <http://rdfh.ch/lists/c7f07a3fc1>
             <http://rdfh.ch/lists/691eee1cbe>    4KUN         ART                       <http://rdfh.ch/lists/2ebd2706c1>
@@ -266,5 +291,16 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
     } yield NodePathGetResponseV1(
       nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil)
     )
+  }
+}
+
+object ListsResponderV1Live {
+  val layer: URLayer[TriplestoreService with MessageRelay with AppConfig, ListsResponderV1] = ZLayer.fromZIO {
+    for {
+      config  <- ZIO.service[AppConfig]
+      mr      <- ZIO.service[MessageRelay]
+      ts      <- ZIO.service[TriplestoreService]
+      handler <- mr.subscribe(ListsResponderV1Live(config, ts))
+    } yield handler
   }
 }

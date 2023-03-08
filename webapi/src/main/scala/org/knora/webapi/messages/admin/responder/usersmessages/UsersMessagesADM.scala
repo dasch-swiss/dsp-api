@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,6 +15,7 @@ import dsp.errors.DataConversionException
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
@@ -122,7 +123,7 @@ case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], ne
 /**
  * An abstract trait representing message that can be sent to `UsersResponderADM`.
  */
-sealed trait UsersResponderRequestADM extends KnoraRequestADM
+sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
  * Get all information about all users in form of a sequence of [[UserADM]]. Returns an empty sequence if
@@ -482,7 +483,7 @@ final case class UserADM(
       if (hashedPassword.startsWith("$e0801$")) {
         // SCrypt
         import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-        val encoder = new SCryptPasswordEncoder()
+        val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
         encoder.matches(password, hashedPassword)
       } else if (hashedPassword.startsWith("$2a$")) {
         // BCrypt
@@ -837,13 +838,16 @@ case class UserChangeRequestADM(
     throw BadRequestException("Too many parameters sent for system admin membership change.")
   }
 
-  // change project memberships
-  if (projects.isDefined && parametersCount > 1) {
+  // change project memberships (could also involve changing projectAdmin memberships)
+  if (
+    projects.isDefined && projectsAdmin.isDefined && parametersCount > 2 ||
+    projects.isDefined && !projectsAdmin.isDefined && parametersCount > 1
+  ) {
     throw BadRequestException("Too many parameters sent for project membership change.")
   }
 
-  // change projectAdmin memberships
-  if (projectsAdmin.isDefined && parametersCount > 1) {
+  // change projectAdmin memberships only (without changing project memberships)
+  if (projectsAdmin.isDefined && !projects.isDefined && parametersCount > 1) {
     throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
   }
 

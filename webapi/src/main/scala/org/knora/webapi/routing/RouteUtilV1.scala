@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -38,7 +38,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV
 import org.knora.webapi.messages.v1.responder.valuemessages.TextFileValueV1
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
@@ -51,8 +50,7 @@ object RouteUtilV1 {
    *
    * @param requestMessage   a [[KnoraRequestV1]] message that should be sent to the responder manager.
    * @param requestContext   the akka-http [[RequestContext]].
-   * @param settings         the application's settings.
-   * @param responderManager a reference to the responder manager.
+   * @param appActor         a reference to the application actor.
    * @param log              a logging adapter.
    * @param timeout          a timeout for `ask` messages.
    * @param executionContext an execution context for futures.
@@ -61,14 +59,9 @@ object RouteUtilV1 {
   def runJsonRoute(
     requestMessage: KnoraRequestV1,
     requestContext: RequestContext,
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
-    // Optionally log the request message. TODO: move this to the testing framework.
-    if (settings.dumpMessages) {
-      log.debug(requestMessage.toString)
-    }
 
     val httpResponse: Future[HttpResponse] = for {
       // Make sure the responder sent a reply of type KnoraResponseV1.
@@ -82,11 +75,6 @@ object RouteUtilV1 {
                              s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
                            )
                        }
-
-      // Optionally log the reply message. TODO: move this to the testing framework.
-      _ = if (settings.dumpMessages) {
-            log.debug(knoraResponse.toString)
-          }
 
       // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
       jsonResponseWithStatus =
@@ -110,8 +98,7 @@ object RouteUtilV1 {
    *
    * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
    * @param requestContext   the akka-http [[RequestContext]].
-   * @param settings         the application's settings.
-   * @param responderManager a reference to the responder manager.
+   * @param appActor         a reference to the application actor.
    * @param log              a logging adapter.
    * @param timeout          a timeout for `ask` messages.
    * @param executionContext an execution context for futures.
@@ -120,7 +107,6 @@ object RouteUtilV1 {
   def runJsonRouteWithFuture[RequestMessageT <: KnoraRequestV1](
     requestMessageF: Future[RequestMessageT],
     requestContext: RequestContext,
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] =
@@ -129,7 +115,6 @@ object RouteUtilV1 {
       routeResult <- runJsonRoute(
                        requestMessage = requestMessage,
                        requestContext = requestContext,
-                       settings = settings,
                        appActor = appActor,
                        log = log
                      )
@@ -143,7 +128,6 @@ object RouteUtilV1 {
    * @param requestMessageF  a [[Future]] containing the message that should be sent to the responder manager.
    * @param viewHandler      a function that can generate HTML from the responder's reply message.
    * @param requestContext   the [[RequestContext]].
-   * @param settings         the application's settings.
    * @param responderManager a reference to the responder manager.
    * @param log              a logging adapter.
    * @param timeout          a timeout for `ask` messages.
@@ -153,7 +137,6 @@ object RouteUtilV1 {
     requestMessageF: Future[RequestMessageT],
     viewHandler: (ReplyMessageT, ActorRef) => String,
     requestContext: RequestContext,
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -161,11 +144,6 @@ object RouteUtilV1 {
     val httpResponse: Future[HttpResponse] = for {
 
       requestMessage <- requestMessageF
-
-      // Optionally log the request message. TODO: move this to the testing framework.
-      _ = if (settings.dumpMessages) {
-            log.debug(requestMessage.toString)
-          }
 
       // Make sure the responder sent a reply of type ReplyMessageT.
       knoraResponse <- (appActor.ask(requestMessage)).map {
@@ -177,11 +155,6 @@ object RouteUtilV1 {
                            val msg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
                            throw UnexpectedMessageException(msg)
                        }
-
-      // Optionally log the reply message. TODO: move this to the testing framework.
-      _ = if (settings.dumpMessages) {
-            log.debug(knoraResponse.toString)
-          }
 
     } yield HttpResponse(
       status = StatusCodes.OK,
@@ -203,8 +176,6 @@ object RouteUtilV1 {
    *                                       resources. In a bulk import, this allows standoff links to resources
    *                                       that are to be created by the import.
    * @param userProfile                    the user making the request.
-   *
-   * @param settings                       the application's settings.
    * @param responderManager               a reference to the responder manager.
    * @param log                            a logging adapter.
    * @param timeout                        a timeout for `ask` messages.
@@ -216,7 +187,6 @@ object RouteUtilV1 {
     mappingIri: IRI,
     acceptStandoffLinksToClientIDs: Boolean,
     userProfile: UserADM,
-    settings: KnoraSettingsImpl,
     appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV2] =

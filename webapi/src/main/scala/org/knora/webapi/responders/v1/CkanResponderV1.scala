@@ -1,26 +1,22 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.ActorRef
-import akka.pattern._
-import akka.util.Timeout
+import com.typesafe.scalalogging.LazyLogging
+import zio._
 
 import java.net.URLEncoder
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetRequestV1
@@ -34,26 +30,37 @@ import org.knora.webapi.messages.v1.responder.valuemessages.HierarchicalListValu
 import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util.ZioHelper
 
 /**
  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
  * under http://data.humanities.ch
  */
-class CkanResponderV1(responderData: ResponderData) extends Responder(responderData) {
+trait CkanResponderV1 {}
+
+final case class CkanResponderV1Live(
+  messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService
+) extends CkanResponderV1
+    with MessageHandler
+    with LazyLogging {
 
   /**
    * A user representing the Knora API server, used in those cases where a user is required.
    */
   private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
+  override def isResponsibleFor(message: ResponderRequest): Boolean =
+    message.isInstanceOf[CkanResponderRequestV1]
+
   /**
    * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
    */
-  def receive(msg: CkanResponderRequestV1) = msg match {
+  override def handle(msg: ResponderRequest): Task[CkanResponseV1] = msg match {
     case CkanRequestV1(projects, limit, info, userProfile) =>
       getCkanResponseV1(projects, limit, info, userProfile)
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   private def getCkanResponseV1(
@@ -61,12 +68,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     limit: Option[Int],
     info: Boolean,
     userProfile: UserADM
-  ): Future[CkanResponseV1] = {
+  ): Task[CkanResponseV1] = {
 
-    log.debug("Ckan Endpoint:")
-    log.debug(s"Project: $project")
-    log.debug(s"Limit: $limit")
-    log.debug(s"Info: $info")
+    logger.debug("Ckan Endpoint:")
+    logger.debug(s"Project: $project")
+    logger.debug(s"Limit: $limit")
+    logger.debug(s"Info: $info")
 
     val defaultProjectList: Seq[String] = Vector("dokubib", "incunabula")
 
@@ -89,28 +96,28 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
     for {
       projects <- selectedProjectsFuture
-      ckanProjects: Seq[Future[CkanProjectV1]] = projects flatMap {
-                                                   case ("dokubib", projectFullInfo) =>
-                                                     Some(
-                                                       getDokubibCkanProject(
-                                                         pinfo = projectFullInfo,
-                                                         limit = limit,
-                                                         userProfile = userProfile
-                                                       )
+      ckanProjects: Seq[Task[CkanProjectV1]] = projects flatMap {
+                                                 case ("dokubib", projectFullInfo) =>
+                                                   Some(
+                                                     getDokubibCkanProject(
+                                                       pinfo = projectFullInfo,
+                                                       limit = limit,
+                                                       userProfile = userProfile
                                                      )
+                                                   )
 
-                                                   case ("incunabula", projectFullInfo) =>
-                                                     Some(
-                                                       getIncunabulaCkanProject(
-                                                         pinfo = projectFullInfo,
-                                                         limit = limit,
-                                                         userProfile = userProfile
-                                                       )
+                                                 case ("incunabula", projectFullInfo) =>
+                                                   Some(
+                                                     getIncunabulaCkanProject(
+                                                       pinfo = projectFullInfo,
+                                                       limit = limit,
+                                                       userProfile = userProfile
                                                      )
+                                                   )
 
-                                                   case _ => None
-                                                 }
-      result  <- Future.sequence(ckanProjects)
+                                                 case _ => None
+                                               }
+      result  <- ZioHelper.sequence(ckanProjects)
       response = CkanResponseV1(projects = result)
     } yield response
   }
@@ -121,17 +128,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
   /**
    * Dokubib specific Ckan export stuff
-   *
-   * @param pinfo
-   * @param limit
-   * @param userProfile
-   * @return
    */
   private def getDokubibCkanProject(
     pinfo: ProjectInfoV1,
     limit: Option[Int],
     userProfile: UserADM
-  ): Future[CkanProjectV1] = {
+  ): Task[CkanProjectV1] = {
 
     /*
          - datasets
@@ -151,7 +153,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         ckan_license_id = "CC-BY-NC-SA-4.0"
       )
 
-    val datasetsFuture: Future[Seq[CkanProjectDatasetV1]] = for {
+    val datasetsFuture: Task[Seq[CkanProjectDatasetV1]] = for {
       bilder <- getDokubibBilderIRIs(pIri, limit)
 
       bilderMitPropsFuture = getResources(
@@ -160,24 +162,25 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                              )
 
       bilderMitProps <- bilderMitPropsFuture
-      dataset = bilderMitProps.map { case (iri, info, props) =>
-                  flattenInfo(info)
-                  val propsMap = flattenProps(props)
-                  CkanProjectDatasetV1(
-                    ckan_title = propsMap.getOrElse("Description", ""),
-                    ckan_tags = propsMap.getOrElse("Title", "").split("/").toIndexedSeq.map(_.trim),
-                    files = Vector(
-                      CkanProjectDatasetFileV1(
-                        ckan_title = propsMap.getOrElse("preview_loc_origname", ""),
-                        data_url = "http://localhost:3333/v1/assets/" + URLEncoder.encode(iri, "UTF-8"),
-                        data_mimetype = "",
-                        source_url = "http://salsah.org/resources/" + URLEncoder.encode(iri, "UTF-8"),
-                        source_mimetype = ""
-                      )
-                    ),
-                    other_props = propsMap
-                  )
-                }
+      dataset <- ZioHelper.sequence(bilderMitProps.map { case (iri, info, props) =>
+                   flattenInfo(info)
+                   flattenProps(props).map { propsMap =>
+                     CkanProjectDatasetV1(
+                       ckan_title = propsMap.getOrElse("Description", ""),
+                       ckan_tags = propsMap.getOrElse("Title", "").split("/").toIndexedSeq.map(_.trim),
+                       files = Vector(
+                         CkanProjectDatasetFileV1(
+                           ckan_title = propsMap.getOrElse("preview_loc_origname", ""),
+                           data_url = "http://localhost:3333/v1/assets/" + URLEncoder.encode(iri, "UTF-8"),
+                           data_mimetype = "",
+                           source_url = "http://salsah.org/resources/" + URLEncoder.encode(iri, "UTF-8"),
+                           source_mimetype = ""
+                         )
+                       ),
+                       other_props = propsMap
+                     )
+                   }
+                 })
     } yield dataset
 
     for {
@@ -189,22 +192,15 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
   /**
    * Get all Bilder IRIs for Dokubib
-   *
-   * @param projectIri
-   * @param limit
-   * @return
    */
-  private def getDokubibBilderIRIs(projectIri: IRI, limit: Option[Int]): Future[Seq[IRI]] = {
-
-    implicit val timeout = Timeout(180.seconds)
-
+  private def getDokubibBilderIRIs(projectIri: IRI, limit: Option[Int]): Task[Seq[IRI]] =
     for {
-      sparqlQuery <- Future(
+      sparqlQuery <- ZIO.attempt(
                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                          .ckanDokubib(projectIri, limit)
                          .toString()
                      )
-      response                             <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                             <- triplestoreService.sparqlHttpSelect(sparqlQuery)
       responseRows: Seq[VariableResultsRow] = response.results.bindings
 
       bilder: Seq[String] = responseRows.groupBy(_.rowMap("bild")).keys.toVector
@@ -216,26 +212,18 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
     } yield result
 
-  }
-
   ///////////////////////////////////////////////////////////////////////////////////////////
   // INCUNABULA
   ///////////////////////////////////////////////////////////////////////////////////////////
 
   /**
    * Incunabula specific Ckan stuff
-   *
-   * @param pinfo
-   * @param limit
-   *
-   * @param userProfile
-   * @return
    */
   private def getIncunabulaCkanProject(
     pinfo: ProjectInfoV1,
     limit: Option[Int],
     userProfile: UserADM
-  ): Future[CkanProjectV1] = {
+  ): Task[CkanProjectV1] = {
 
     /*
          - datasets
@@ -262,41 +250,40 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
     val bookDatasetsFuture = booksWithPagesFuture.flatMap { singleBook =>
       val bookDataset = singleBook map { case (bookIri: IRI, pageIris: Seq[IRI]) =>
-        val bookResourceFuture = getResource(
-          iri = bookIri,
-          userProfile = userProfile
-        )
+        val bookResourceFuture = getResource(bookIri, userProfile)
 
         bookResourceFuture flatMap { case (_, _, bProps) =>
-          val bPropsMap = flattenProps(bProps)
-          val files = pageIris map { pageIri =>
-            getResource(
-              iri = pageIri,
-              userProfile = userProfile
-            ) map { case (pIri, _, pProps) =>
-              val pPropsMap = flattenProps(pProps)
-              CkanProjectDatasetFileV1(
-                ckan_title = pPropsMap.getOrElse("Page identifier", ""),
-                ckan_description = Some(pPropsMap.getOrElse("Beschreibung (Richtext)", "")),
-                data_url = "http://localhost:3333/v1/assets/" + URLEncoder.encode(pIri, "UTF-8"),
-                data_mimetype = "",
-                source_url = "http://salsah.org/resources/" + URLEncoder.encode(pIri, "UTF-8"),
-                source_mimetype = "",
-                other_props = Some(pPropsMap)
+          flattenProps(bProps).flatMap { bPropsMap =>
+            val files = pageIris map { pageIri =>
+              getResource(
+                iri = pageIri,
+                userProfile = userProfile
+              ) flatMap { case (pIri, _, pProps) =>
+                flattenProps(pProps).map { pPropsMap =>
+                  CkanProjectDatasetFileV1(
+                    ckan_title = pPropsMap.getOrElse("Page identifier", ""),
+                    ckan_description = Some(pPropsMap.getOrElse("Beschreibung (Richtext)", "")),
+                    data_url = "http://localhost:3333/v1/assets/" + URLEncoder.encode(pIri, "UTF-8"),
+                    data_mimetype = "",
+                    source_url = "http://salsah.org/resources/" + URLEncoder.encode(pIri, "UTF-8"),
+                    source_mimetype = "",
+                    other_props = Some(pPropsMap)
+                  )
+                }
+              }
+            }
+            ZioHelper.sequence(files) map { filesList =>
+              CkanProjectDatasetV1(
+                ckan_title = bPropsMap.getOrElse("Title", ""),
+                ckan_tags = Vector("Kunstgeschichte"),
+                files = filesList,
+                other_props = bPropsMap
               )
             }
           }
-          Future.sequence(files) map { filesList =>
-            CkanProjectDatasetV1(
-              ckan_title = bPropsMap.getOrElse("Title", ""),
-              ckan_tags = Vector("Kunstgeschichte"),
-              files = filesList,
-              other_props = bPropsMap
-            )
-          }
         }
       }
-      Future.sequence(bookDataset.toVector)
+      ZioHelper.sequence(bookDataset.toVector)
     }
 
     for {
@@ -307,28 +294,22 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
   /**
    * Get all book IRIs for Incunabula
-   *
-   * @param projectIri
-   * @param limit
-   * @return
    */
-  private def getIncunabulaBooksWithPagesIRIs(projectIri: IRI, limit: Option[Int]): Future[Map[IRI, Seq[IRI]]] =
+  private def getIncunabulaBooksWithPagesIRIs(projectIri: IRI, limit: Option[Int]): Task[Map[IRI, Seq[IRI]]] =
     for {
-      sparqlQuery <- Future(
+      sparqlQuery <- ZIO.attempt(
                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                          .ckanIncunabula(projectIri, limit)
                          .toString()
                      )
-      response                             <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                             <- triplestoreService.sparqlHttpSelect(sparqlQuery)
       responseRows: Seq[VariableResultsRow] = response.results.bindings
 
       booksWithPages: Map[String, Seq[String]] =
         responseRows.groupBy(_.rowMap("book")).map { case (bookIri: String, rows: Seq[VariableResultsRow]) =>
           (
             bookIri,
-            rows.map { case row =>
-              row.rowMap("page")
-            }
+            rows.map(row => row.rowMap("page"))
           )
         }
 
@@ -345,28 +326,22 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
   /**
    * Get detailed information about the projects
-   *
-   * @param projectNames
-   *
-   * @param userProfile
-   * @return
    */
   private def getProjectInfos(
     projectNames: Seq[String],
     userProfile: UserADM
-  ): Future[Seq[(String, ProjectInfoV1)]] =
-    Future.sequence {
+  ): Task[Seq[(String, ProjectInfoV1)]] =
+    ZioHelper.sequence {
       for {
         pName <- projectNames
 
-        projectInfoResponseFuture = appActor
-                                      .ask(
+        projectInfoResponseFuture = messageRelay
+                                      .ask[ProjectInfoResponseV1](
                                         ProjectInfoByShortnameGetRequestV1(
                                           shortname = pName,
                                           userProfileV1 = Some(userProfile.asUserProfileV1)
                                         )
                                       )
-                                      .mapTo[ProjectInfoResponseV1]
 
         result = projectInfoResponseFuture.map(_.project_info) map { pInfo =>
                    (pName, pInfo)
@@ -376,17 +351,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
   /**
    * Get all information there is about these resources
-   *
-   * @param iris
-   *
-   * @param userProfile
-   * @return
    */
   private def getResources(
     iris: Seq[IRI],
     userProfile: UserADM
-  ): Future[Seq[(String, Option[ResourceInfoV1], Option[PropsV1])]] =
-    Future.sequence {
+  ): Task[Seq[(String, Option[ResourceInfoV1], Option[PropsV1])]] =
+    ZioHelper.sequence {
       for {
         iri <- iris
 
@@ -399,31 +369,24 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
   /**
    * Get all information there is about this one resource
-   *
-   * @param iri
-   *
-   * @param userProfile
-   * @return
    */
   private def getResource(
     iri: IRI,
     userProfile: UserADM
-  ): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
+  ): Task[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
 
     val resourceFullResponseFuture =
-      appActor
-        .ask(
+      messageRelay
+        .ask[ResourceFullResponseV1](
           ResourceFullGetRequestV1(
             iri = iri,
             userADM = userProfile
           )
         )
-        .mapTo[ResourceFullResponseV1]
 
     resourceFullResponseFuture map { case ResourceFullResponseV1(resInfo, _, props, _, _) =>
       (iri, resInfo, props)
     }
-
   }
 
   private def flattenInfo(maybeInfo: Option[ResourceInfoV1]): Map[String, String] = {
@@ -444,7 +407,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         ) ++ flattenLocation(info.preview)
         listOfOptions.flatten.toMap
     }
-
   }
 
   private def flattenLocation(location: Option[LocationV1]): Seq[Option[(String, String)]] =
@@ -454,64 +416,72 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         Vector(Some(("preview_loc_origname", loc.origname.getOrElse(""))))
     }
 
-  private def flattenProps(props: Option[PropsV1]): Map[String, String] =
+  private def flattenProps(props: Option[PropsV1]): Task[Map[String, String]] =
     if (props.nonEmpty) {
-      val properties = props.get.properties
+      val properties: Seq[PropertyV1] = props.get.properties
 
-      val propMap = properties.foldLeft(Map.empty[String, String]) { case (acc, propertyV1: PropertyV1) =>
-        val label = propertyV1.label.getOrElse("")
+      val propMap: Task[Map[IRI, IRI]] = properties.foldLeft(ZIO.attempt(Map.empty[String, String])) {
+        case (acc, propertyV1: PropertyV1) =>
+          val label = propertyV1.label.getOrElse("")
 
-        val values: Seq[String] = propertyV1.valuetype_id.get match {
-          case OntologyConstants.KnoraBase.TextValue =>
-            propertyV1.values.map(literal => textValue2String(literal.asInstanceOf[TextValueV1]))
+          val values: Task[Seq[String]] = propertyV1.valuetype_id.get match {
+            case OntologyConstants.KnoraBase.TextValue =>
+              ZIO.succeed(propertyV1.values.map(literal => textValue2String(literal.asInstanceOf[TextValueV1])))
 
-          case OntologyConstants.KnoraBase.DateValue =>
-            propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1]))
+            case OntologyConstants.KnoraBase.DateValue =>
+              ZIO.succeed(propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1])))
 
-          case OntologyConstants.KnoraBase.ListValue =>
-            propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], appActor))
+            case OntologyConstants.KnoraBase.ListValue =>
+              ZioHelper
+                .sequence(
+                  propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1]))
+                )
 
-          case OntologyConstants.KnoraBase.Resource => // TODO: this could actually be a subclass of knora-base:Resource.
-            propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1], appActor))
+            case OntologyConstants.KnoraBase.Resource =>
+              ZIO.succeed(propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1])))
 
-          case _ => Vector()
-        }
+            case _ => ZIO.succeed(Vector())
+          }
 
-        if (label.nonEmpty && values.nonEmpty) {
-          acc + (label -> values.mkString(","))
-        } else {
-          acc
-        }
+          values.flatMap { values =>
+            if (label.nonEmpty && values.nonEmpty) {
+              acc.map(_ + (label -> values.mkString(",")))
+            } else {
+              acc
+            }
+          }
       }
 
       propMap
     } else {
-      Map.empty[String, String]
+      ZIO.succeed(Map.empty[String, String])
     }
 
-  private def textValue2String(text: TextValueV1): String =
-    text.utf8str
+  private def textValue2String(text: TextValueV1): String = text.utf8str
 
   private def dateValue2String(date: DateValueV1): String =
     if (date.dateval1 == date.dateval2) {
-      date.dateval1.toString + " " + date.era1 + ", " + date.calendar.toString + " " + date.era2
+      date.dateval1 + " " + date.era1 + ", " + date.calendar.toString + " " + date.era2
     } else {
-      date.dateval1.toString + " " + date.era1 + ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
+      date.dateval1 + " " + date.era1 + ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
     }
 
-  private def listValue2String(list: HierarchicalListValueV1, appActor: ActorRef): String = {
+  private def listValue2String(list: HierarchicalListValueV1): Task[String] =
+    for {
+      nodePath <- messageRelay.ask[NodePathGetResponseV1](NodePathGetRequestV1(list.hierarchicalListIri, systemUser))
+      labels    = nodePath.nodelist map (element => element.label.getOrElse(""))
+    } yield labels.mkString(" / ")
 
-    val resultFuture = appActor.ask(NodePathGetRequestV1(list.hierarchicalListIri, systemUser))
-    val nodePath     = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
+  private def resourceValue2String(resource: LinkV1): String = resource.valueLabel.get
 
-    val labels = nodePath.nodelist map { case element =>
-      element.label.getOrElse("")
+}
+object CkanResponderV1Live {
+  val layer: URLayer[TriplestoreService with MessageRelay, CkanResponderV1] =
+    ZLayer.fromZIO {
+      for {
+        mr      <- ZIO.service[MessageRelay]
+        ts      <- ZIO.service[TriplestoreService]
+        handler <- mr.subscribe(CkanResponderV1Live(mr, ts))
+      } yield handler
     }
-
-    labels.mkString(" / ")
-  }
-
-  private def resourceValue2String(resource: LinkV1, appActor: ActorRef): String =
-    resource.valueLabel.get
-
 }

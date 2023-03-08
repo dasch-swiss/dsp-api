@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,6 +8,7 @@ package org.knora.webapi.messages.v2.responder.searchmessages
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.IRI
 import org.knora.webapi.SchemaOption
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
@@ -18,7 +19,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * An abstract trait for messages that can be sent to `SearchResponderV2`.
@@ -134,7 +134,7 @@ case class SearchResourceByLabelRequestV2(
 case class ResourceCountV2(numberOfResources: Int) extends KnoraJsonLDResponseV2 {
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument =
     JsonLDDocument(

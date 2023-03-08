@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -18,7 +18,7 @@ With [Docker](https://www.docker.com/) installed,
 
     to create the knora-test repository and initialize it with loading some test data into the triplestore (Fuseki). 
 
-1. Start the entire knora-stack (fuseki (db), sipi, redis, api, salsah1) with the following command:
+1. Start the entire knora-stack (fuseki (db), sipi, api, salsah1) with the following command:
 
     ```
     $ make stack-up
@@ -89,8 +89,8 @@ database container can be printed out using the following command:
 ```
 $ make stack-logs-db
 ```
-Similarly, the logs of the other containers can be printed out by running make with `stack-logs-api`, `stack-logs-sipi`, 
-or `stack-logs-redis`. These commands print out and follow the logs, to only print the logs out without following, use 
+Similarly, the logs of the other containers can be printed out by running make with `stack-logs-api` or `stack-logs-sipi`.
+These commands print out and follow the logs, to only print the logs out without following, use 
 `-no-follow` version of the commands for example:
 
  ```
@@ -114,7 +114,7 @@ The docker plugin also allows for a number of other useful features, like inspec
 To run all test targets, use the following in the command line:
 
 ```
-$ make test
+$ make test-all
 ```
 
 To run a single test from the command line, for example `SearchV1R2RSpec`, 

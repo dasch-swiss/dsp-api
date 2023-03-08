@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,13 +17,13 @@ import spray.json.JsValue
 
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.http.status.ApiStatusCodesV2
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
@@ -35,7 +35,7 @@ object KnoraExceptionHandler extends LazyLogging {
   private val GENERIC_INTERNAL_SERVER_ERROR_MESSAGE =
     "The request could not be completed because of an internal server error."
 
-  def apply(settingsImpl: KnoraSettingsImpl): ExceptionHandler = ExceptionHandler {
+  def apply(appConfig: AppConfig): ExceptionHandler = ExceptionHandler {
 
     /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
 
@@ -44,11 +44,11 @@ object KnoraExceptionHandler extends LazyLogging {
         val url = request.uri.path.toString
 
         if (url.startsWith("/v1")) {
-          complete(exceptionToJsonHttpResponseV1(rre, settingsImpl))
+          complete(exceptionToJsonHttpResponseV1(rre, appConfig))
         } else if (url.startsWith("/v2")) {
-          complete(exceptionToJsonHttpResponseV2(rre, settingsImpl))
+          complete(exceptionToJsonHttpResponseV2(rre, appConfig))
         } else {
-          complete(exceptionToJsonHttpResponseADM(rre, settingsImpl))
+          complete(exceptionToJsonHttpResponseADM(rre, appConfig))
         }
       }
 
@@ -60,11 +60,11 @@ object KnoraExceptionHandler extends LazyLogging {
         logger.error(s"Internal Server Exception: Unable to run route $url", ise)
 
         if (url.startsWith("/v1")) {
-          complete(exceptionToJsonHttpResponseV1(ise, settingsImpl))
+          complete(exceptionToJsonHttpResponseV1(ise, appConfig))
         } else if (url.startsWith("/v2")) {
-          complete(exceptionToJsonHttpResponseV2(ise, settingsImpl))
+          complete(exceptionToJsonHttpResponseV2(ise, appConfig))
         } else {
-          complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
+          complete(exceptionToJsonHttpResponseADM(ise, appConfig))
         }
       }
 
@@ -77,11 +77,11 @@ object KnoraExceptionHandler extends LazyLogging {
         logger.error(s"Unable to run route $url", other)
 
         if (url.startsWith("/v1")) {
-          complete(exceptionToJsonHttpResponseV1(other, settingsImpl))
+          complete(exceptionToJsonHttpResponseV1(other, appConfig))
         } else if (url.startsWith("/v2")) {
-          complete(exceptionToJsonHttpResponseV2(other, settingsImpl))
+          complete(exceptionToJsonHttpResponseV2(other, appConfig))
         } else {
-          complete(exceptionToJsonHttpResponseADM(other, settingsImpl))
+          complete(exceptionToJsonHttpResponseADM(other, appConfig))
         }
       }
   }
@@ -92,7 +92,7 @@ object KnoraExceptionHandler extends LazyLogging {
    * @param ex the exception to be converted.
    * @return an [[HttpResponse]] in JSON format.
    */
-  private def exceptionToJsonHttpResponseV1(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
+  private def exceptionToJsonHttpResponseV1(ex: Throwable, appConfig: AppConfig): HttpResponse = {
     // Get the API status code that corresponds to the exception.
     val apiStatus: ApiStatusCodesV1.Value = ApiStatusCodesV1.fromException(ex)
 
@@ -110,7 +110,7 @@ object KnoraExceptionHandler extends LazyLogging {
 
     val responseFields: Map[String, JsValue] = Map(
       "status" -> JsNumber(apiStatus.id),
-      "error"  -> JsString(makeClientErrorMessage(ex, settings))
+      "error"  -> JsString(makeClientErrorMessage(ex, appConfig))
     ) ++ maybeAccess
 
     HttpResponse(
@@ -125,7 +125,7 @@ object KnoraExceptionHandler extends LazyLogging {
    * @param ex the exception to be converted.
    * @return an [[HttpResponse]] in JSON format.
    */
-  private def exceptionToJsonHttpResponseV2(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
+  private def exceptionToJsonHttpResponseV2(ex: Throwable, appConfig: AppConfig): HttpResponse = {
     // Get the HTTP status code that corresponds to the exception.
     val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
 
@@ -133,7 +133,7 @@ object KnoraExceptionHandler extends LazyLogging {
 
     val jsonLDDocument = JsonLDDocument(
       body = JsonLDObject(
-        Map(OntologyConstants.KnoraApiV2Complex.Error -> JsonLDString(makeClientErrorMessage(ex, settings)))
+        Map(OntologyConstants.KnoraApiV2Complex.Error -> JsonLDString(makeClientErrorMessage(ex, appConfig)))
       ),
       context = JsonLDObject(
         Map(
@@ -157,14 +157,14 @@ object KnoraExceptionHandler extends LazyLogging {
    * @param ex the exception to be converted.
    * @return an [[HttpResponse]] in JSON format.
    */
-  private def exceptionToJsonHttpResponseADM(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
+  private def exceptionToJsonHttpResponseADM(ex: Throwable, appConfig: AppConfig): HttpResponse = {
 
     // Get the HTTP status code that corresponds to the exception.
     val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
 
     // Generate an HTTP response containing the error message ...
     val responseFields: Map[String, JsValue] = Map(
-      "error" -> JsString(makeClientErrorMessage(ex, settings))
+      "error" -> JsString(makeClientErrorMessage(ex, appConfig))
     )
 
     // ... and the HTTP status code.
@@ -177,16 +177,16 @@ object KnoraExceptionHandler extends LazyLogging {
   /**
    * Given an exception, returns an error message suitable for clients.
    *
-   * @param ex       the exception.
-   * @param settings the application settings.
+   * @param ex        the exception.
+   * @param appConfig the application's configuration.
    * @return an error message suitable for clients.
    */
-  private def makeClientErrorMessage(ex: Throwable, settings: KnoraSettingsImpl): String =
+  private def makeClientErrorMessage(ex: Throwable, appConfig: AppConfig): String =
     ex match {
       case rre: RequestRejectedException => rre.toString
 
       case other =>
-        if (settings.showInternalErrors) {
+        if (appConfig.showInternalErrors) {
           other.toString
         } else {
           GENERIC_INTERNAL_SERVER_ERROR_MESSAGE

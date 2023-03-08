@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -154,7 +154,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                       mappingIri = mappingIri,
                       acceptStandoffLinksToClientIDs = false,
                       userProfile = userADM,
-                      settings = settings,
                       appActor = appActor,
                       log = log
                     )
@@ -372,7 +371,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                       mappingIri = mappingIri,
                       acceptStandoffLinksToClientIDs = false,
                       userProfile = userADM,
-                      settings = settings,
                       appActor = appActor,
                       log = log
                     )
@@ -582,7 +580,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     ): Future[ChangeFileValueRequestV1] = {
       val resourceIri =
         stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
-      val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, apiRequest.file)
+      val tempFilePath = stringFormatter.makeSipiTempFilePath(apiRequest.file)
 
       for {
         fileMetadataResponse: GetFileMetadataResponse <-
@@ -611,14 +609,14 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext
+                       requestContext = requestContext,
+                       routeData.appConfig
                      )
         } yield makeVersionHistoryRequestMessage(iris = iris, userADM = userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
           requestContext,
-          settings,
           appActor,
           log
         )
@@ -628,7 +626,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         entity(as[CreateValueApiRequestV1]) { apiRequest => requestContext =>
           val requestMessageFuture = for {
             userADM <- getUserADM(
-                         requestContext = requestContext
+                         requestContext = requestContext,
+                         routeData.appConfig
                        )
             request <- makeCreateValueRequestMessage(apiRequest = apiRequest, userADM = userADM)
           } yield request
@@ -636,7 +635,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessageFuture,
             requestContext,
-            settings,
             appActor,
             log
           )
@@ -646,14 +644,14 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext
+                       requestContext = requestContext,
+                       routeData.appConfig
                      )
         } yield makeGetValueRequest(valueIriStr = valueIriStr, userADM = userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
           requestContext,
-          settings,
           appActor,
           log
         )
@@ -663,7 +661,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           // we are getting a request to change either the value or the comment, but not both.
           val requestMessageFuture = for {
             userADM <- getUserADM(
-                         requestContext = requestContext
+                         requestContext = requestContext,
+                         routeData.appConfig
                        )
             request <- apiRequest match {
                          case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
@@ -686,7 +685,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessageFuture,
             requestContext,
-            settings,
             appActor,
             log
           )
@@ -694,7 +692,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       } ~ delete { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext
+                       requestContext = requestContext,
+                       routeData.appConfig
                      )
           params        = requestContext.request.uri.query().toMap
           deleteComment = params.get("deleteComment")
@@ -703,7 +702,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
           requestContext,
-          settings,
           appActor,
           log
         )
@@ -712,14 +710,14 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       delete { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext
+                       requestContext = requestContext,
+                       routeData.appConfig
                      )
         } yield makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userADM = userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
           requestContext,
-          settings,
           appActor,
           log
         )
@@ -729,14 +727,14 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext
+                       requestContext = requestContext,
+                       routeData.appConfig
                      )
         } yield makeLinkValueGetRequestMessage(iris = iris, userADM = userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
           requestContext,
-          settings,
           appActor,
           log
         )
@@ -746,7 +744,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-                         requestContext = requestContext
+                         requestContext = requestContext,
+                         routeData.appConfig
                        )
             resourceIri = stringFormatter.validateAndEscapeIri(
                             resIriStr,
@@ -777,7 +776,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessage,
             requestContext,
-            settings,
             appActor,
             log
           )

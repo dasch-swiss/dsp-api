@@ -2029,27 +2029,6 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:documentFileValueHasDimX"
-                    },
-                    "owl:maxCardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:documentFileValueHasDimY"
-                    },
-                    "owl:maxCardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:documentFileValueHasPageCount"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
                         "@id": "knora-api:fileValueAsUrl"
                     },
                     "owl:cardinality": 1,
@@ -2078,6 +2057,13 @@
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:pageCount"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -6997,51 +6983,6 @@
             "rdfs:comment": "Indicates who deleted a resource or value"
         },
         {
-            "rdfs:label": "Document file value has X dimension",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:documentFileValueHasDimX",
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The horizontal dimension of a document file value."
-        },
-        {
-            "rdfs:label": "Document file value has Y dimension",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:documentFileValueHasDimY",
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The vertical dimension of a document file value."
-        },
-        {
-            "rdfs:label": "Document file value has page count",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:documentFileValueHasPageCount",
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The page count of a document file value."
-        },
-        {
             "rdfs:label": "error",
             "rdfs:comment": "Provides an error message",
             "@type": "owl:DatatypeProperty",
@@ -7389,6 +7330,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "rdfs:comment": "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource.",
             "@type": "owl:ObjectProperty",
@@ -7644,6 +7586,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
@@ -7661,6 +7604,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "knora-api:subjectType": {
                 "@id": "knora-api:Resource"
@@ -7724,6 +7668,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
@@ -7741,6 +7686,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "knora-api:subjectType": {
                 "@id": "knora-api:Resource"
@@ -7918,6 +7864,19 @@
             "@id": "knora-api:ontologyName"
         },
         {
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "knora-api:subjectType": {
+                "@id": "knora-api:FileValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:integer"
+            },
+            "@id": "knora-api:pageCount"
+        },
+        {
             "@id": "knora-api:resourceIcon",
             "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
@@ -7950,6 +7909,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
             },
+            "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "rdfs:comment": "Indicates the position of a resource within a compound object. Typically used to indicate the order of pages within a book or similar resource.",
             "@type": "owl:ObjectProperty",

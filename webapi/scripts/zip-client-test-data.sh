@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Downloads client test data from Redis into a Zip file.
+# Downloads client test data from cache into a Zip file.
 
 # A pushd that produces no output.
 pushd () {

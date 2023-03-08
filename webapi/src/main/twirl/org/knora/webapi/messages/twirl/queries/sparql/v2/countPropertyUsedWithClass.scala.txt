@@ -1,0 +1,35 @@
+@*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@*
+ * This query is asking whether there are any instances of a class or subclass that have a specific property.
+ * I.e. checks whether a property is used, for example whether it is the property of any statements.
+ *
+ * @param propertyIri the IRI of the property
+ * @param classIri the IRI of class to check
+ *@
+
+@(
+  propertyIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri,
+  classIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri
+)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?subject (COUNT(?o) as ?count)
+WHERE {
+
+   BIND(IRI("@{propertyIri.value}") AS ?propertyIri)
+   BIND(IRI("@{classIri.value}") AS ?classIri)
+
+   ?subject  a                     ?classIri .
+
+   OPTIONAL { ?subject  ?propertyIri          ?o . }.
+   MINUS    { ?subject  knora-base:isDeleted  true }.
+   MINUS    { ?o        knora-base:isDeleted  true }.
+}
+GROUP by ?subject

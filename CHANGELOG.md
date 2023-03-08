@@ -1,5 +1,312 @@
 # Changelog
 
+## [27.1.0](https://github.com/dasch-swiss/dsp-api/compare/v27.0.0...v27.1.0) (2023-03-03)
+
+
+### Bug Fixes
+
+* Filter out deleted subjects and objects when counting for cardinalities (DEV-1795) ([#2499](https://github.com/dasch-swiss/dsp-api/issues/2499)) ([60e1833](https://github.com/dasch-swiss/dsp-api/commit/60e183323762cf02e556d6257b05315e2682e90f))
+
+
+### Documentation
+
+* add high level overview of the current domain entities to the documentation (DEV-1416) ([#2431](https://github.com/dasch-swiss/dsp-api/issues/2431)) ([02db5ce](https://github.com/dasch-swiss/dsp-api/commit/02db5ce908b4ea516b302b1a9bd69062d94197b2))
+* add missing documentation (DEV-1422) ([#2482](https://github.com/dasch-swiss/dsp-api/issues/2482)) ([9667f7a](https://github.com/dasch-swiss/dsp-api/commit/9667f7a9d59234ec9bdedc96d91df220dfa8f93f))
+
+
+### Enhancements
+
+* Add context for can set cardinalities failed responses (DEV-1768) ([#2471](https://github.com/dasch-swiss/dsp-api/issues/2471)) ([16c137e](https://github.com/dasch-swiss/dsp-api/commit/16c137e7065e5958620f4a1bf47152829701aad7))
+
+
+### Maintenance
+
+* Add MessageRelay as a preparation for enabling us to migrate responders to ZIO DEV-1728 ([#2453](https://github.com/dasch-swiss/dsp-api/issues/2453)) ([c61368a](https://github.com/dasch-swiss/dsp-api/commit/c61368a311992e05b9addc9040f4ebaf89db231f))
+* add missing github-actions workflow ([#2463](https://github.com/dasch-swiss/dsp-api/issues/2463)) ([8983c95](https://github.com/dasch-swiss/dsp-api/commit/8983c954f73994a94231c6e9709633f47a011b26))
+* improve finding all graphs ([#2470](https://github.com/dasch-swiss/dsp-api/issues/2470)) ([6de3c5d](https://github.com/dasch-swiss/dsp-api/commit/6de3c5d10312ae5b8e0de45f3bf392f078dfcbdd))
+* Integrate zio-fied project responder in zio route DEV-1728 ([#2460](https://github.com/dasch-swiss/dsp-api/issues/2460)) ([1ed0175](https://github.com/dasch-swiss/dsp-api/commit/1ed0175a74319cb482271cc81903def854aca292))
+* log request and user ID as log annotations (DEV-1233) ([#2466](https://github.com/dasch-swiss/dsp-api/issues/2466)) ([bec6fe6](https://github.com/dasch-swiss/dsp-api/commit/bec6fe68d4490d9110b0f68807ce065fe4ea1ef6))
+* Move key frames extraction from store.lua to upload.lua (DEV-1716) ([#2454](https://github.com/dasch-swiss/dsp-api/issues/2454)) ([34924e2](https://github.com/dasch-swiss/dsp-api/commit/34924e213e83dac99d7ab023d5f5c0f8b591a8fc))
+* update dependencies ([#2497](https://github.com/dasch-swiss/dsp-api/issues/2497)) ([d20b9ff](https://github.com/dasch-swiss/dsp-api/commit/d20b9ff7c1e5a1c95a1cffbfd1bb1c02d14d98c7))
+* update SIPI version and adjust Lua scripts (DEV-1727) ([#2462](https://github.com/dasch-swiss/dsp-api/issues/2462)) ([9884539](https://github.com/dasch-swiss/dsp-api/commit/98845390c0bebb6727d83ed5fef228cc813ba3e7))
+* ziofy CkanResponderV1  DEV-1743 ([#2473](https://github.com/dasch-swiss/dsp-api/issues/2473)) ([5a2d16c](https://github.com/dasch-swiss/dsp-api/commit/5a2d16c5dc3fab045f6332aae0d6c60adf974449))
+* ziofy CkanResponderV1 & ListsResponderV1 (DEV-1743 DEV-1744) ([#2474](https://github.com/dasch-swiss/dsp-api/issues/2474)) ([34c2d95](https://github.com/dasch-swiss/dsp-api/commit/34c2d95a795edd8e164dc4a8120a2d630698959a))
+* ziofy GroupsResponderADM DEV-1737 ([#2461](https://github.com/dasch-swiss/dsp-api/issues/2461)) ([44c5d46](https://github.com/dasch-swiss/dsp-api/commit/44c5d46792c72ffe539c7bf41189fbd3be209c48))
+* ziofy ListsResponderADM (DEV-1738) ([#2467](https://github.com/dasch-swiss/dsp-api/issues/2467)) ([b5bd82b](https://github.com/dasch-swiss/dsp-api/commit/b5bd82bece212737db7c1e2c022ac50e0e32e710))
+* ziofy ListsResponderV2 (DEV-1752) ([#2479](https://github.com/dasch-swiss/dsp-api/issues/2479)) ([28d5b48](https://github.com/dasch-swiss/dsp-api/commit/28d5b48a795380045397e045e5ebc498febbb4da))
+* ziofy OntologyResponderV1 (DEV-1745) ([#2475](https://github.com/dasch-swiss/dsp-api/issues/2475)) ([f8344ff](https://github.com/dasch-swiss/dsp-api/commit/f8344fff6fbe4f602a9f3250a22c8ba4572a6673))
+* ziofy PermissionsResponderADM  DEV-1739 ([#2468](https://github.com/dasch-swiss/dsp-api/issues/2468)) ([ba85b94](https://github.com/dasch-swiss/dsp-api/commit/ba85b94f787e529598bd929d043ec45bff0d3c73))
+* Ziofy ProjectsResponderADM DEV-1728 ([#2459](https://github.com/dasch-swiss/dsp-api/issues/2459)) ([69c0640](https://github.com/dasch-swiss/dsp-api/commit/69c06403de863528822267bfadfbf4a5b29196cf))
+* ziofy ProjectsResponderV1 (DEV-1746) ([#2476](https://github.com/dasch-swiss/dsp-api/issues/2476)) ([715c117](https://github.com/dasch-swiss/dsp-api/commit/715c117258668165a8e67b62576b4310d5c322ca))
+* ziofy ResourceUtilV2 & PermissionUtilADM (NO-TICKET) ([#2485](https://github.com/dasch-swiss/dsp-api/issues/2485)) ([e2dcd43](https://github.com/dasch-swiss/dsp-api/commit/e2dcd43742d8e233394214608a5fee50c71a526e))
+* ziofy SearchResponderV1 (DEV-1748) ([#2480](https://github.com/dasch-swiss/dsp-api/issues/2480)) ([7711a47](https://github.com/dasch-swiss/dsp-api/commit/7711a473d9c12aec58e6868445f1edbf44b35145))
+* ziofy SipiResponderADM DEV-1740 ([#2469](https://github.com/dasch-swiss/dsp-api/issues/2469)) ([fcfdc39](https://github.com/dasch-swiss/dsp-api/commit/fcfdc39751928063804c1621160e17c9f0789141))
+* ziofy StandoffResponderV1 (DEV-1749) ([#2495](https://github.com/dasch-swiss/dsp-api/issues/2495)) ([6a13eb0](https://github.com/dasch-swiss/dsp-api/commit/6a13eb0f27f19755964d16fe02711c7f7890cb5f))
+* ziofy StandoffTagUtilV2 (NO-TICKET) ([#2481](https://github.com/dasch-swiss/dsp-api/issues/2481)) ([1daf98b](https://github.com/dasch-swiss/dsp-api/commit/1daf98bbc7840e992ac67b2dd5666bd815067553))
+* ziofy StoresResponderADM DEV-1741 ([#2472](https://github.com/dasch-swiss/dsp-api/issues/2472)) ([991d5b9](https://github.com/dasch-swiss/dsp-api/commit/991d5b92e2d685b0a0432bcea5ea265f75728521))
+* ziofy UsersResponderADM DEV-1742 ([#2465](https://github.com/dasch-swiss/dsp-api/issues/2465)) ([208087e](https://github.com/dasch-swiss/dsp-api/commit/208087ed48d427d6a9d04e31ef05e67b4decc9c3))
+* ziofy UsersResponderV1 (DEV-1750) ([#2478](https://github.com/dasch-swiss/dsp-api/issues/2478)) ([e8112f8](https://github.com/dasch-swiss/dsp-api/commit/e8112f860c8d564bff939e932d92abc3658d4733))
+* ziofy ValuesResponderV1 (DEV-1751) ([#2496](https://github.com/dasch-swiss/dsp-api/issues/2496)) ([9b68e89](https://github.com/dasch-swiss/dsp-api/commit/9b68e891bc62395eefbe5fef84bd7b69a51fbdb5))
+* ziofy ValueUtilV1 (NO-TICKET) ([#2484](https://github.com/dasch-swiss/dsp-api/issues/2484)) ([4f38ac2](https://github.com/dasch-swiss/dsp-api/commit/4f38ac269fa3259cf0c4266aba662db4071067c8))
+
+## [27.0.0](https://github.com/dasch-swiss/dsp-api/compare/v26.2.0...v27.0.0) (2023-02-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* return empty list instead of an error on GET /admin/groups route (DEV-1599) ([#2439](https://github.com/dasch-swiss/dsp-api/issues/2439))
+
+### Bug Fixes
+
+* **CORS:** explicitly assign allowed CORS methods ([#2443](https://github.com/dasch-swiss/dsp-api/issues/2443)) ([99fe6fa](https://github.com/dasch-swiss/dsp-api/commit/99fe6facd7bfa3146b719a62c53aaadc80794e90))
+* fix JVM metrics and logging DEV-1639 ([#2426](https://github.com/dasch-swiss/dsp-api/issues/2426)) ([97eb0fc](https://github.com/dasch-swiss/dsp-api/commit/97eb0fcf142be7b3c8427bfe2dfd8e7c580391b1))
+* return empty list instead of an error on GET /admin/groups route (DEV-1599) ([#2439](https://github.com/dasch-swiss/dsp-api/issues/2439)) ([f966f7c](https://github.com/dasch-swiss/dsp-api/commit/f966f7c9b98ad4d04ad127dea84a8650ac2a4d6c))
+
+
+### Enhancements
+
+* expose GET /admin/projects/[ iri | shortname | shortcode ]/{iri | shortname | shortcode }/admin-members as ZIO HTTP route (DEV-1587) ([#2423](https://github.com/dasch-swiss/dsp-api/issues/2423)) ([d7c2cd6](https://github.com/dasch-swiss/dsp-api/commit/d7c2cd66615d7f657dcfea2145646fe0b61dd7c5))
+* expose GET /admin/projects/[ iri | shortname | shortcode ]/{iri | shortname | shortcode }/members as ZIO HTTP route (DEV-1587)  ([#2422](https://github.com/dasch-swiss/dsp-api/issues/2422)) ([b5300b5](https://github.com/dasch-swiss/dsp-api/commit/b5300b5cf25eea28f873a13de49228ee177383e0))
+* expose GET /admin/projects/[iri | shortname | shortcode]/{projectIri | shortname | shortcode}/RestrictedViewSettings as ZIO HTTP route (DEV-1587)  ([#2428](https://github.com/dasch-swiss/dsp-api/issues/2428)) ([8080951](https://github.com/dasch-swiss/dsp-api/commit/8080951d7f5a38cdea780d68b009ef0e96cca462))
+* expose GET /admin/projects/iri/{projectIri}/Keywords as ZIO HTTP route (DEV-1587)  ([#2425](https://github.com/dasch-swiss/dsp-api/issues/2425)) ([3b86834](https://github.com/dasch-swiss/dsp-api/commit/3b86834471af5d1e73cc75446962dc2f02bf9f28))
+* expose GET /admin/projects/Keywords as ZIO HTTP route (DEV-1587)  ([#2424](https://github.com/dasch-swiss/dsp-api/issues/2424)) ([39607a2](https://github.com/dasch-swiss/dsp-api/commit/39607a2bc52ed2de38706d3f2cbd6a0a5292a83f))
+
+
+### Documentation
+
+* fix broken links in docs and remove unused files ([#2433](https://github.com/dasch-swiss/dsp-api/issues/2433)) ([34df59d](https://github.com/dasch-swiss/dsp-api/commit/34df59dc290921fa570534e3d0ecc9e58566fec9))
+* replace/canset cardinality documentation (DEV-1564 & DEV-1563) ([#2420](https://github.com/dasch-swiss/dsp-api/issues/2420)) ([adf1a34](https://github.com/dasch-swiss/dsp-api/commit/adf1a34b99f5b6abf9a85fb840e65343fb49b79d))
+
+
+### Maintenance
+
+* add 0.0.0.0 to allowed origins in config ([#2430](https://github.com/dasch-swiss/dsp-api/issues/2430)) ([9afd7a0](https://github.com/dasch-swiss/dsp-api/commit/9afd7a0d55360feea368bbf64048231ca6ac8ac9))
+* add complete in-memory triple store implementation (DEV-628) ([#2432](https://github.com/dasch-swiss/dsp-api/issues/2432)) ([708c217](https://github.com/dasch-swiss/dsp-api/commit/708c21796a76cafab7ffe3f328af8c860fddf70b))
+* Add more tests for the ZIO HTTP routes (DEV-1695) ([#2419](https://github.com/dasch-swiss/dsp-api/issues/2419)) ([84e2ead](https://github.com/dasch-swiss/dsp-api/commit/84e2ead596e57844e0647e0a1e0d881d7fe324a2))
+* Clean-up ZIO HTTP routes and related code ([#2429](https://github.com/dasch-swiss/dsp-api/issues/2429)) ([1684718](https://github.com/dasch-swiss/dsp-api/commit/1684718149b48b889ee2e0498feb8990a664c5fd))
+* cleanup remove unused shacl and redundant StringFormatter setup ([#2438](https://github.com/dasch-swiss/dsp-api/issues/2438)) ([293f6a3](https://github.com/dasch-swiss/dsp-api/commit/293f6a368c8993a8e7ebd51141eb5af16ded9485))
+* **instrumentation:** expose ZIO-HTTP metrics (DEV-1714) ([#2452](https://github.com/dasch-swiss/dsp-api/issues/2452)) ([a76b6f9](https://github.com/dasch-swiss/dsp-api/commit/a76b6f9cd53be1b26019f35b66c1529ed54106e2))
+* Rename ITTestDataFactory ([#2440](https://github.com/dasch-swiss/dsp-api/issues/2440)) ([dc8b4b5](https://github.com/dasch-swiss/dsp-api/commit/dc8b4b5aa15177795c73870b430f99c82b4677c3))
+* update PR template and GH release action ([#2427](https://github.com/dasch-swiss/dsp-api/issues/2427)) ([65180ef](https://github.com/dasch-swiss/dsp-api/commit/65180eff2794af7101a21684fb2b67e4d168c158))
+
+## [26.2.0](https://github.com/dasch-swiss/dsp-api/compare/v26.1.0...v26.2.0) (2023-02-02)
+
+
+### Bug Fixes
+
+* Search by label returns an Error when searching with a slash (DEV-1656) ([#2406](https://github.com/dasch-swiss/dsp-api/issues/2406)) ([bb02464](https://github.com/dasch-swiss/dsp-api/commit/bb0246468b43e2d42d33a95cd3d7405610aa9b33))
+* Test file issue ([#2418](https://github.com/dasch-swiss/dsp-api/issues/2418)) ([78612e0](https://github.com/dasch-swiss/dsp-api/commit/78612e05fa2f43d007eb23f50a08bfb8a2502a3c))
+
+
+### Maintenance
+
+* cleanup Cache class, ie. scaladoc, renaming, code improvements ([#2411](https://github.com/dasch-swiss/dsp-api/issues/2411)) ([5efa7ac](https://github.com/dasch-swiss/dsp-api/commit/5efa7ac23747385ffbe159e34e3d127bec16be96))
+* **deps:** change schedule of dependency updates check ([#2414](https://github.com/dasch-swiss/dsp-api/issues/2414)) ([a5c7a38](https://github.com/dasch-swiss/dsp-api/commit/a5c7a38449e3814a93281c93dd754bcddc87a2f2))
+* **deps:** update scalafmt-core, kamon-core, kamon-scala-future ([#2412](https://github.com/dasch-swiss/dsp-api/issues/2412)) ([a02408a](https://github.com/dasch-swiss/dsp-api/commit/a02408a5a6eb45ae5dd353c7d6b9be48e176f331))
+* enable publishing docker image in both arm64 and amd64 architectures (DEV-1684) ([#2410](https://github.com/dasch-swiss/dsp-api/issues/2410)) ([f224b24](https://github.com/dasch-swiss/dsp-api/commit/f224b24c768fb82cd050457085ffc798e513e276))
+* rename ReplaceCardinalitiesRequestV2, remove old code, simplify and extract methods in OntologyResponder ([#2389](https://github.com/dasch-swiss/dsp-api/issues/2389)) ([5a4f4b6](https://github.com/dasch-swiss/dsp-api/commit/5a4f4b66e73d7655af52a269b341ea394cb6cfca))
+* Replace Cardinality isStricterThan with isIncludedIn ([#2405](https://github.com/dasch-swiss/dsp-api/issues/2405)) ([229b362](https://github.com/dasch-swiss/dsp-api/commit/229b362f021c477a66cd6c7e63074195e4853ac0))
+* update Scala to 2.13.10 ([#2415](https://github.com/dasch-swiss/dsp-api/issues/2415)) ([d501f59](https://github.com/dasch-swiss/dsp-api/commit/d501f59b59c62bee5016f0da7e1136e76b163959))
+* upgrade dependencies ([#2404](https://github.com/dasch-swiss/dsp-api/issues/2404)) ([0d78030](https://github.com/dasch-swiss/dsp-api/commit/0d780304904e00cb4eeaf711f5872daf464a8eef))
+
+
+### Enhancements
+
+* add CORS to ZIO-HTTP routes (DEV-1619) ([#2390](https://github.com/dasch-swiss/dsp-api/issues/2390)) ([8dad4b2](https://github.com/dasch-swiss/dsp-api/commit/8dad4b2dd1dac41dd8a2c14e1ba609ac707f6e4e))
+* allow setting a cardinality given the count in the persisted data is compatible  DEV-1563 ([#2416](https://github.com/dasch-swiss/dsp-api/issues/2416)) ([789bdd1](https://github.com/dasch-swiss/dsp-api/commit/789bdd1ffe0996feb0a3f6023173e9bb29c689ac))
+* Allow setting new Cardinalities if they are more restrictive than the respective Cardinalities of a possibly existing super class ([#2397](https://github.com/dasch-swiss/dsp-api/issues/2397)) ([dbde740](https://github.com/dasch-swiss/dsp-api/commit/dbde740314dfedfc4fa7e6d52d02d31a80ecdc35))
+* expose GET /admin/projects/iri/{project_iri}/allData as ZIO HTTP route (DEV-1587)  ([#2413](https://github.com/dasch-swiss/dsp-api/issues/2413)) ([eefaf62](https://github.com/dasch-swiss/dsp-api/commit/eefaf62eeb32aff4632bb7395f0a4b25f8fbf2b2))
+* expose PUT /admin/projects/iri/{project_iri} as ZIO HTTP route (DEV-1587) ([#2394](https://github.com/dasch-swiss/dsp-api/issues/2394)) ([a832868](https://github.com/dasch-swiss/dsp-api/commit/a832868ef6d142878baa9f3848594235fed399c4))
+
+## [26.1.0](https://github.com/dasch-swiss/dsp-api/compare/v26.0.0...v26.1.0) (2023-01-19)
+
+
+### Bug Fixes
+
+* API starts up and reports healthy despite failing to load ontologies ([#2363](https://github.com/dasch-swiss/dsp-api/issues/2363)) ([1696f7d](https://github.com/dasch-swiss/dsp-api/commit/1696f7dd51c0cb5f904cb37f0d68cd234fc60374))
+
+
+### Enhancements
+
+* Add check for can a cardinality be set for specific class and property ([#2382](https://github.com/dasch-swiss/dsp-api/issues/2382)) ([17e7064](https://github.com/dasch-swiss/dsp-api/commit/17e7064987194dd3232a389b05c785ec77eec423))
+* Add mimetype image/jpx as accepted ([#2378](https://github.com/dasch-swiss/dsp-api/issues/2378)) ([d590e38](https://github.com/dasch-swiss/dsp-api/commit/d590e38e80bfa88c1c0c5493b2bc93d2d19ee071))
+* expose DELETE /admin/projects as ZIO HTTP route (DEV-1587)  ([#2386](https://github.com/dasch-swiss/dsp-api/issues/2386)) ([6059012](https://github.com/dasch-swiss/dsp-api/commit/60590129cb21a9e7aef72cc22913b5ed51136f65))
+* expose POST /admin/projects as ZIO HTTP route (DEV-1587) ([#2376](https://github.com/dasch-swiss/dsp-api/issues/2376)) ([983bec7](https://github.com/dasch-swiss/dsp-api/commit/983bec7e9c3624799ad4c69d3db003bf07a98121))
+
+
+### Documentation
+
+* clean up ADRs and add new one for ZIO HTTP ([#2380](https://github.com/dasch-swiss/dsp-api/issues/2380)) ([3a03733](https://github.com/dasch-swiss/dsp-api/commit/3a0373364c2136e75f9b15c7b0b8046b2f760661))
+* Fix broken links in docs ([#2392](https://github.com/dasch-swiss/dsp-api/issues/2392)) ([85d25e3](https://github.com/dasch-swiss/dsp-api/commit/85d25e3e71c86f312319db261549b37e465d4604))
+
+
+### Maintenance
+
+* add authentication middleware ([#2370](https://github.com/dasch-swiss/dsp-api/issues/2370)) ([73a18ff](https://github.com/dasch-swiss/dsp-api/commit/73a18ff9c2a3d32ad55f3764b28b92575bc29799))
+* Add tests for ZIO HTTP project routes ([#2377](https://github.com/dasch-swiss/dsp-api/issues/2377)) ([88e067b](https://github.com/dasch-swiss/dsp-api/commit/88e067bbff6d0f43f586d6f26ffc1de513bc493f))
+* Cleanup and remove unused code ([#2383](https://github.com/dasch-swiss/dsp-api/issues/2383)) ([6aaf1bf](https://github.com/dasch-swiss/dsp-api/commit/6aaf1bffe6da6b7b52ded59d0f859601e9f20616))
+* Expose the zio-http port in docker-compose.yml for the frontend (DEV-1482) ([#2381](https://github.com/dasch-swiss/dsp-api/issues/2381)) ([b11d493](https://github.com/dasch-swiss/dsp-api/commit/b11d49312c7960a756ca87b73aa61cef10458232))
+* fix manual release form branch (DEV-1519) ([#2393](https://github.com/dasch-swiss/dsp-api/issues/2393)) ([97d7399](https://github.com/dasch-swiss/dsp-api/commit/97d73994bf97ca257e3f04aa785efac5b5371264))
+* Remove deprecated Cardinality model ([#2387](https://github.com/dasch-swiss/dsp-api/issues/2387)) ([3c13e3a](https://github.com/dasch-swiss/dsp-api/commit/3c13e3a0d3e0134434ca0b806bcef3070268ee58))
+* Suppress compiler warnings ([#2368](https://github.com/dasch-swiss/dsp-api/issues/2368)) ([62e1193](https://github.com/dasch-swiss/dsp-api/commit/62e11938afe4f8ee77b8730d40c1214e54d5ea10))
+* switch zio http implementation from d11 to dev.zio ([#2395](https://github.com/dasch-swiss/dsp-api/issues/2395)) ([0ef6d2f](https://github.com/dasch-swiss/dsp-api/commit/0ef6d2f2c0cb173ed4c2f6fad449924c3e9c0498))
+* update create-release.yml ([#2371](https://github.com/dasch-swiss/dsp-api/issues/2371)) ([f97f1bd](https://github.com/dasch-swiss/dsp-api/commit/f97f1bdcd007b135d31f7287afb599dc1efa9cb9))
+* update year in the copyright header ([#2391](https://github.com/dasch-swiss/dsp-api/issues/2391)) ([d3740f8](https://github.com/dasch-swiss/dsp-api/commit/d3740f8ea1e3424ace3f7f3bb0eaaddddc7a518c))
+
+## [26.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v25.0.0...v26.0.0) (2023-01-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* return external representation of ontology IRIs in admin routes (#2330)
+
+### Bug Fixes
+
+* return external representation of ontology IRIs in admin routes ([#2330](https://www.github.com/dasch-swiss/dsp-api/issues/2330)) ([b58828a](https://www.github.com/dasch-swiss/dsp-api/commit/b58828a7557c24aac3cfa88101f4b12ed8d474ff))
+
+
+### Documentation
+
+* update admin documentation ([#2328](https://www.github.com/dasch-swiss/dsp-api/issues/2328)) ([cedb603](https://www.github.com/dasch-swiss/dsp-api/commit/cedb603f57ceb31acf4ca88052b12c9641e7c954))
+
+
+### Maintenance
+
+* Add BEOL exception to UUID validation (DEV-1570) ([#2349](https://www.github.com/dasch-swiss/dsp-api/issues/2349)) ([ed34df1](https://www.github.com/dasch-swiss/dsp-api/commit/ed34df105f29d7c64e468d17f7c6066e7650c631))
+* add docker healthcheck to SIPI image (INFRA-130) ([#2359](https://www.github.com/dasch-swiss/dsp-api/issues/2359)) ([8554e3b](https://www.github.com/dasch-swiss/dsp-api/commit/8554e3b06c5a87267a8d61b9f732477484e119c0))
+* Add dorny/test-reporter for webapi test results DEV-1544 ([#2322](https://www.github.com/dasch-swiss/dsp-api/issues/2322)) ([5c76338](https://www.github.com/dasch-swiss/dsp-api/commit/5c76338f8b3799c6c3c9dc10807fabd10d4f8c6e))
+* add metrics endpoint (DEV-1555) ([#2331](https://www.github.com/dasch-swiss/dsp-api/issues/2331)) ([b06f5b4](https://www.github.com/dasch-swiss/dsp-api/commit/b06f5b4631c5c748d87adb94655dd4cc3db11e22))
+* Add sbt-header plugin to webapi project and add missing headers ([#2317](https://www.github.com/dasch-swiss/dsp-api/issues/2317)) ([afec4a7](https://www.github.com/dasch-swiss/dsp-api/commit/afec4a74f14355599f00058c01fcd4a86a53258d))
+* add stack-without-app target ([#2324](https://www.github.com/dasch-swiss/dsp-api/issues/2324)) ([5ec3223](https://www.github.com/dasch-swiss/dsp-api/commit/5ec32236505daab1ed22941854ae00ee6f8c0065))
+* Add test report generation for integration tests (DEV-1544) ([#2325](https://www.github.com/dasch-swiss/dsp-api/issues/2325)) ([a61f227](https://www.github.com/dasch-swiss/dsp-api/commit/a61f227ad86a38db3122430edfe8377864ae5eef))
+* Extract common code from responders into EntityAndClassIriS… ([#2348](https://www.github.com/dasch-swiss/dsp-api/issues/2348)) ([238ed71](https://www.github.com/dasch-swiss/dsp-api/commit/238ed712567be4c86ad0f0885a5d1e5d53c8e3bf))
+* make it possible to debug integration tests with sbt or IDE ([#2327](https://www.github.com/dasch-swiss/dsp-api/issues/2327)) ([3a222bb](https://www.github.com/dasch-swiss/dsp-api/commit/3a222bb265e2fc064bef1b6404c2bff4a9097c8b))
+* refactor project route for ZIO HTTP ([#2338](https://www.github.com/dasch-swiss/dsp-api/issues/2338)) ([e5be1db](https://www.github.com/dasch-swiss/dsp-api/commit/e5be1db9ad85647872b6d93b47a298ee85997a1f))
+* remove methods that gets project and members by UUID ([#2346](https://www.github.com/dasch-swiss/dsp-api/issues/2346)) ([2c8da6c](https://www.github.com/dasch-swiss/dsp-api/commit/2c8da6c6ce1c16dda209a248912cc15de36adffb))
+* remove PR2255 plugin and revert project IRIs (DEV-1571) ([#2350](https://www.github.com/dasch-swiss/dsp-api/issues/2350)) ([86a19ab](https://www.github.com/dasch-swiss/dsp-api/commit/86a19ab19c625289a757a2a0555c67e8582532c6))
+* remove Redis cache implementation leftovers (DEV-1503) ([#2290](https://www.github.com/dasch-swiss/dsp-api/issues/2290)) ([a678dc5](https://www.github.com/dasch-swiss/dsp-api/commit/a678dc5ceaf84a4a60e8a2eb4d3ba299d20cdcc7))
+* Remove unused dependency to gatling ([#2361](https://www.github.com/dasch-swiss/dsp-api/issues/2361)) ([baca8a8](https://www.github.com/dasch-swiss/dsp-api/commit/baca8a8d009d500a59c633608960d3e6a11ae4c9))
+* remove unused route GET /admin/stores ([#2329](https://www.github.com/dasch-swiss/dsp-api/issues/2329)) ([1e11655](https://www.github.com/dasch-swiss/dsp-api/commit/1e116559df4013dec346f681e7d6acf1ccd63dc2))
+* replace Spray-JSON with ZIO-JSON in health route ([#2360](https://www.github.com/dasch-swiss/dsp-api/issues/2360)) ([1b8e74b](https://www.github.com/dasch-swiss/dsp-api/commit/1b8e74b3d81105ca726f315d059c3b424c65ae0c))
+* simplify health route setup ([#2337](https://www.github.com/dasch-swiss/dsp-api/issues/2337)) ([26e9596](https://www.github.com/dasch-swiss/dsp-api/commit/26e95960e37bd34c1c56152d5c1fc08672c11dcf))
+* Simplify layer setup for integration-tests and reduce to two layers ([#2339](https://www.github.com/dasch-swiss/dsp-api/issues/2339)) ([94836e8](https://www.github.com/dasch-swiss/dsp-api/commit/94836e88b90193a0cdde8fc96a174ead3398be12))
+* Split long running integration tests and fast unit tests (DEV-1537) ([#2315](https://www.github.com/dasch-swiss/dsp-api/issues/2315)) ([5b4d601](https://www.github.com/dasch-swiss/dsp-api/commit/5b4d60146a98008132f28da1ea63c40023b239d2))
+* update dependencies ([#2347](https://www.github.com/dasch-swiss/dsp-api/issues/2347)) ([560b84f](https://www.github.com/dasch-swiss/dsp-api/commit/560b84f8c65d98dccfc2545c6b8d5fcfc5c4efe9))
+* update dependencies ([#2358](https://www.github.com/dasch-swiss/dsp-api/issues/2358)) ([6007266](https://www.github.com/dasch-swiss/dsp-api/commit/6007266dc35423cd257825568b8bb1cb00774fce))
+* upgrade Apache Jena Fuseki docker image to v2.0.11 (DEV-1299) ([#2362](https://www.github.com/dasch-swiss/dsp-api/issues/2362)) ([c91d284](https://www.github.com/dasch-swiss/dsp-api/commit/c91d28403e879c183505bd1490a60cbdab79cb43))
+
+
+### Enhancements
+
+* Add resources/info endpoint (DEV-792) ([#2309](https://www.github.com/dasch-swiss/dsp-api/issues/2309)) ([c3f96a9](https://www.github.com/dasch-swiss/dsp-api/commit/c3f96a92651d5b32dee4fdebc11e871c212a88e9))
+* expose GET /admin/projects as ZIO HTTP route ([#2366](https://www.github.com/dasch-swiss/dsp-api/issues/2366)) ([b19f81c](https://www.github.com/dasch-swiss/dsp-api/commit/b19f81c2ac896b26f18e53ec236881877ba721ea))
+* expose GET /admin/projects/[shortname | shortcode]/{shortname | shortcode} as ZIO HTTP routes ([#2365](https://www.github.com/dasch-swiss/dsp-api/issues/2365)) ([9907cdf](https://www.github.com/dasch-swiss/dsp-api/commit/9907cdf6d2ec18bfffb206ae93200c4e781c9885))
+* Expose GET /admin/projects/iri/{iriUrlEncoded} as zio-http route ([#2355](https://www.github.com/dasch-swiss/dsp-api/issues/2355)) ([2f42906](https://www.github.com/dasch-swiss/dsp-api/commit/2f42906387f3f0775b3c4e797e8a3959d34dcc84))
+
+## [25.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.8...v25.0.0) (2022-12-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* partOf and sequenceOf properties are not marked as isEditable (#2268)
+* change all project IRIs to contain UUID instead of shortcode (DEV-1400) (#2255)
+
+### Bug Fixes
+
+* Allow warn logging for requests/responses which are failures ([#2273](https://www.github.com/dasch-swiss/dsp-api/issues/2273)) ([92531ce](https://www.github.com/dasch-swiss/dsp-api/commit/92531ceb0c38f0c6117bc08633bb66a89dbcabc7))
+* Ask timeouts with GetUserADM (DEV-1443) ([#2267](https://www.github.com/dasch-swiss/dsp-api/issues/2267)) ([3f77b6e](https://www.github.com/dasch-swiss/dsp-api/commit/3f77b6e5708e94f7531c5df09164cbfce20b9fc1))
+* Deprecation warnings for SCryptPasswordEncoder ([#2308](https://www.github.com/dasch-swiss/dsp-api/issues/2308)) ([86dc389](https://www.github.com/dasch-swiss/dsp-api/commit/86dc389fb2a45d99e82c601f27bcd813dcf8be12))
+* Don't log hashes (DEV-1442) ([#2265](https://www.github.com/dasch-swiss/dsp-api/issues/2265)) ([adaf4b0](https://www.github.com/dasch-swiss/dsp-api/commit/adaf4b0ca982464e38672b2cc3aaac04c802b49f))
+* Exclude characters with special meaning in Lucene Query Parser syntax from searchbylabel search (DEV-1446) ([#2269](https://www.github.com/dasch-swiss/dsp-api/issues/2269)) ([b359916](https://www.github.com/dasch-swiss/dsp-api/commit/b3599163f3e74375da657e14e47387d598f8485e))
+* fix RepositoryUpdater that is not timing out during repository upgrade (DEV-1534) ([#2313](https://www.github.com/dasch-swiss/dsp-api/issues/2313)) ([213a5f0](https://www.github.com/dasch-swiss/dsp-api/commit/213a5f0fd6cd48ffba8128e33b6a964059ed3309))
+* Increase timeout when emptying repository (DEV-1506) ([#2289](https://www.github.com/dasch-swiss/dsp-api/issues/2289)) ([39771ed](https://www.github.com/dasch-swiss/dsp-api/commit/39771ed743cd485679a05e5679a25352a8891aea))
+* key frame extraction (DEV-1513) ([#2300](https://www.github.com/dasch-swiss/dsp-api/issues/2300)) ([729f071](https://www.github.com/dasch-swiss/dsp-api/commit/729f0718ff6ac831e91279b77046e4f6b9438b65))
+* partOf and sequenceOf properties are not marked as isEditable ([#2268](https://www.github.com/dasch-swiss/dsp-api/issues/2268)) ([68f19c3](https://www.github.com/dasch-swiss/dsp-api/commit/68f19c3e570c470563d831ab7f8483e1f392de6f))
+
+
+### Enhancements
+
+* **projectsADM:** add possibility to get project and members by UUID (DEV-1408) ([#2272](https://www.github.com/dasch-swiss/dsp-api/issues/2272)) ([4b66682](https://www.github.com/dasch-swiss/dsp-api/commit/4b666829ff81a447cd1c1fae304bb5ca518fbab9))
+
+
+### Documentation
+
+* improve permissions documentation ([#2314](https://www.github.com/dasch-swiss/dsp-api/issues/2314)) ([f4004b2](https://www.github.com/dasch-swiss/dsp-api/commit/f4004b2525821285ac798b251a0a11ba42cc5daf))
+* publish architectural decision records ([#2301](https://www.github.com/dasch-swiss/dsp-api/issues/2301)) ([be6bcd0](https://www.github.com/dasch-swiss/dsp-api/commit/be6bcd0b1b6b8d321e2105f25431a43d5814d5c6))
+* Remove warning which considers v2 as not production ready ([#2282](https://www.github.com/dasch-swiss/dsp-api/issues/2282)) ([0246522](https://www.github.com/dasch-swiss/dsp-api/commit/024652259ada84f49c4615f91aa3f585da14d254))
+
+
+### Maintenance
+
+* add GH workflow to publish manually from branches ([#2316](https://www.github.com/dasch-swiss/dsp-api/issues/2316)) ([6f5020e](https://www.github.com/dasch-swiss/dsp-api/commit/6f5020ea54cd0df9a96d132043992f612ffb09cd))
+* change all project IRIs to contain UUID instead of shortcode (DEV-1400) ([#2255](https://www.github.com/dasch-swiss/dsp-api/issues/2255)) ([f2b2584](https://www.github.com/dasch-swiss/dsp-api/commit/f2b2584489748bf8a9d56044744c7821582bdce8))
+* Decrease timeout for emptying repository (DEV-1518) ([#2310](https://www.github.com/dasch-swiss/dsp-api/issues/2310)) ([a83000b](https://www.github.com/dasch-swiss/dsp-api/commit/a83000ba0b234b294c80931c5930fe15b26c9fdc))
+* Introduce ZIO HTTP (DEV-1425) ([#2256](https://www.github.com/dasch-swiss/dsp-api/issues/2256)) ([7ae6d24](https://www.github.com/dasch-swiss/dsp-api/commit/7ae6d24604cda006b85aceda689ed45089025f5a))
+* make possible to run Publish GH Action manually (DEV-1519) ([#2297](https://www.github.com/dasch-swiss/dsp-api/issues/2297)) ([bfe578a](https://www.github.com/dasch-swiss/dsp-api/commit/bfe578a37f7609cfac0b2c38e318c98641eebb49))
+* **SIPI:** add timestamp to some SIPI Lua logs ([#2311](https://www.github.com/dasch-swiss/dsp-api/issues/2311)) ([8f3f19f](https://www.github.com/dasch-swiss/dsp-api/commit/8f3f19f235a3787afa43b010afedac86bd320958))
+* slight improvements to PR template ([#2312](https://www.github.com/dasch-swiss/dsp-api/issues/2312)) ([ca3a8d0](https://www.github.com/dasch-swiss/dsp-api/commit/ca3a8d0def066e8b3b949080bd8d4e163948c73f))
+* update dependencies ([#2264](https://www.github.com/dasch-swiss/dsp-api/issues/2264)) ([41d5315](https://www.github.com/dasch-swiss/dsp-api/commit/41d53150e3fee7d91d6c67fda3511e02644e38e3))
+* update dependencies ([#2281](https://www.github.com/dasch-swiss/dsp-api/issues/2281)) ([725bc0f](https://www.github.com/dasch-swiss/dsp-api/commit/725bc0f750ec9503ea7902d54a549d848983c358))
+
+### [24.0.8](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.7...v24.0.8) (2022-10-18)
+
+
+### Bug Fixes
+
+* User can be project admin without being project member (DEV-1383) ([#2248](https://www.github.com/dasch-swiss/dsp-api/issues/2248)) ([c1aa8f0](https://www.github.com/dasch-swiss/dsp-api/commit/c1aa8f0bd4e8f7141d25c0134aec65a8ff0e0546))
+
+
+### Maintenance
+
+* automatically clean sipi image files (DEV-1395) ([#2237](https://www.github.com/dasch-swiss/dsp-api/issues/2237)) ([eddb34d](https://www.github.com/dasch-swiss/dsp-api/commit/eddb34d80b8fc41a1b219051159ed2eea4f2fd3e))
+* fix project name ([#2239](https://www.github.com/dasch-swiss/dsp-api/issues/2239)) ([5af65eb](https://www.github.com/dasch-swiss/dsp-api/commit/5af65eba2edecdf13bbda837cd5a529791dcefe0))
+* update dependencies ([#2247](https://www.github.com/dasch-swiss/dsp-api/issues/2247)) ([2eefcbc](https://www.github.com/dasch-swiss/dsp-api/commit/2eefcbcee1734fb46b8086e22dc63f36e5146d3c))
+
+### [24.0.7](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.6...v24.0.7) (2022-10-07)
+
+
+### Bug Fixes
+
+* DSP-API project IRI validation fails for BEOL project IRI ([#2240](https://www.github.com/dasch-swiss/dsp-api/issues/2240)) ([4b63a72](https://www.github.com/dasch-swiss/dsp-api/commit/4b63a729ab260b123979f5c2ba4a3aaff27197f8))
+
+### [24.0.6](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.5...v24.0.6) (2022-10-06)
+
+
+### Bug Fixes
+
+* Ask timeouts when requesting projects (DEV-1386) ([#2235](https://www.github.com/dasch-swiss/dsp-api/issues/2235)) ([1820367](https://www.github.com/dasch-swiss/dsp-api/commit/1820367f4e7b9d844f4abd7d98ae75e41133161b))
+* User can't be edited by project admin (DEV-1373) ([#2232](https://www.github.com/dasch-swiss/dsp-api/issues/2232)) ([e0b1433](https://www.github.com/dasch-swiss/dsp-api/commit/e0b143382fbf1c55146f775a720562d6ea7444d0))
+
+### [24.0.5](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.4...v24.0.5) (2022-10-05)
+
+
+### Bug Fixes
+
+* Timeout for multiple Gravsearch queries (DEV-1379) ([#2234](https://www.github.com/dasch-swiss/dsp-api/issues/2234)) ([c63567b](https://www.github.com/dasch-swiss/dsp-api/commit/c63567b5ea4b96c8b6b88600f351c3016d5aec23))
+
+
+### Maintenance
+
+* app actor cleanup ([#2230](https://www.github.com/dasch-swiss/dsp-api/issues/2230)) ([a67c98f](https://www.github.com/dasch-swiss/dsp-api/commit/a67c98f67793066ab46fe607f24f046b0abcfc44))
+
+### [24.0.4](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.3...v24.0.4) (2022-09-29)
+
+
+### Bug Fixes
+
+* API returns invalid file URLs, due to including the port ([#2223](https://www.github.com/dasch-swiss/dsp-api/issues/2223)) ([1a0b09c](https://www.github.com/dasch-swiss/dsp-api/commit/1a0b09c4244e65a55d45072ab69bd699c6cc5aa8))
+* Value update or deletion doesn't work for properties of other ontology (DEV-1367) ([#2222](https://www.github.com/dasch-swiss/dsp-api/issues/2222)) ([472b375](https://www.github.com/dasch-swiss/dsp-api/commit/472b375e2950264ddd12b09f0497d3b720e80267))
+
+### [24.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.2...v24.0.3) (2022-09-21)
+
+
+### Maintenance
+
+* application actor (DEV-956) ([#2166](https://www.github.com/dasch-swiss/dsp-api/issues/2166)) ([4852425](https://www.github.com/dasch-swiss/dsp-api/commit/48524250c73d5adc6965f5b8a2e2c587a82efdc3))
+* remove swagger route and docs annotations (DEV-1335) ([#2203](https://www.github.com/dasch-swiss/dsp-api/issues/2203)) ([bec5b8a](https://www.github.com/dasch-swiss/dsp-api/commit/bec5b8aafb3e32cbbb1fe9613f33e1d2b85a3bc1))
+* Replace Settings with AppConfig (DEV-1312) ([#2202](https://www.github.com/dasch-swiss/dsp-api/issues/2202)) ([9b76417](https://www.github.com/dasch-swiss/dsp-api/commit/9b7641750214df4a6164adb6d34889e15b16dff3))
+* update dependencies ([#2214](https://www.github.com/dasch-swiss/dsp-api/issues/2214)) ([3706acd](https://www.github.com/dasch-swiss/dsp-api/commit/3706acd4585fb1f90e53de7821baf49572147237))
+
 ### [24.0.2](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.1...v24.0.2) (2022-09-08)
 
 
@@ -1465,7 +1772,7 @@
 * MAJOR: Fix property names for incoming links (#1144))
 * MAJOR: Generate and resolve ARK URLs for resources (#1161). Projects
   that have resource IRIs that do not conform to the format specified in
-  <https://docs.knora.org/paradox/03-apis/api-v2/knora-iris.html#iris-for-data>
+  <https://docs.knora.org/paradox/03-endpoints/api-v2/knora-iris.html#iris-for-data>
   must update them.
 * MAJOR: Use project shortcode in IIIF URLs (#1191). If you have file value IRIs containing the substring `/reps/`, you must replace `/reps/` with `/values/`.
 

@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -11,7 +11,7 @@ Authentication is the process of making sure that if someone is
 accessing something then this someone is actually also the someone he
 pretends to be. The process of making sure that someone is authorized,
 i.e. has the permission to access something, is handled as described in
-[Authorisation](../../../02-knora-ontologies/knora-base.md#authorisation)).
+[Authorisation](../../../02-dsp-ontologies/knora-base.md#authorisation)).
 
 ## Implementation
 

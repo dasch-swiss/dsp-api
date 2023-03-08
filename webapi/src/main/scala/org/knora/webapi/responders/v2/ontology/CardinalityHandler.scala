@@ -1,135 +1,122 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.responders.v2.ontology
 
-import akka.actor.ActorRef
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
-import akka.util.Timeout
+import zio._
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.InternalSchema
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Contains methods used for dealing with cardinalities on a class
  */
-object CardinalityHandler {
+trait CardinalityHandler {
 
   /**
-   * FIXME(DSP-1856): Only works if a single cardinality is supplied.
-   *
-   * @param settings the applications settings.
-   * @param storeManager the store manager actor.
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
    * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
    */
   def canDeleteCardinalitiesFromClass(
-    settings: KnoraSettingsImpl,
-    appActor: ActorRef,
     deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
-  )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[CanDoResponseV2] = {
+  ): Task[CanDoResponseV2]
+
+  /**
+   * FIXME(DSP-1856): Only works if a single cardinality is supplied.
+   * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
+   * of the class and any subclasses.
+   *
+   * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
+   * @param internalClassIri the Class from which the cardinalities are deleted.
+   * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
+   * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
+   */
+  def deleteCardinalitiesFromClass(
+    deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
+    internalClassIri: SmartIri,
+    internalOntologyIri: SmartIri
+  ): Task[ReadOntologyV2]
+
+  /**
+   * Check if a property entity is used in resource instances. Returns `true` if
+   * it is used, and `false` if it is not used.
+   *
+   * @param classIri the IRI of the class that is being checked for usage.
+   * @param propertyIri the IRI of the entity that is being checked for usage.
+   *
+   * @return a [[Boolean]] denoting if the property entity is used.
+   */
+  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean]
+}
+
+final case class CardinalityHandlerLive(
+  triplestoreService: TriplestoreService,
+  messageRelay: MessageRelay,
+  ontologyHelpers: OntologyHelpers,
+  ontologyCache: OntologyCache,
+  implicit val stringFormatter: StringFormatter
+) extends CardinalityHandler {
+
+  /**
+   * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
+   * @param internalClassIri the Class from which the cardinalities are deleted.
+   * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
+   * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
+   */
+  override def canDeleteCardinalitiesFromClass(
+    deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
+    internalClassIri: SmartIri,
+    internalOntologyIri: SmartIri
+  ): Task[CanDoResponseV2] = {
+    val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
-      cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+      cacheData <- ontologyCache.get
 
-      submittedClassDefinition: ClassInfoContentV2 =
-        deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
-
-      // Check that the ontology exists and has not been updated by another user since the client last read it.
-      _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
-             settings,
-             appActor,
-             internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
-           )
-
-      // Check that the class's rdf:type is owl:Class.
-
-      rdfType: SmartIri = submittedClassDefinition.requireIriObject(
-                            OntologyConstants.Rdf.Type.toSmartIri,
-                            throw BadRequestException(s"No rdf:type specified")
-                          )
-
-      _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
-            throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
-          }
-
-      // Check that cardinalities were submitted.
-
-      _ = if (submittedClassDefinition.directCardinalities.isEmpty) {
-            throw BadRequestException("No cardinalities specified")
-          }
-
-      // Check that only one cardinality was submitted.
-
-      _ = if (submittedClassDefinition.directCardinalities.size > 1) {
-            throw BadRequestException("Only one cardinality is allowed to be submitted.")
-          }
-
-      // Check that the class exists
-      currentClassDefinition: ClassInfoContentV2 <-
-        classExists(
-          cacheData,
-          deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema),
-          internalClassIri,
-          internalOntologyIri
+      _ <- // Check that the ontology exists and has not been updated by another user since the client last read it.
+        ontologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
         )
 
-      // FIXME: This seems not to work or is not needed. Check that it is a subclass of knora-base:Resource
-      // _ <- isKnoraResourceClass(deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema))
+      _ <- getRdfTypeAndEnsureSingleCardinality(internalClassInfo)
+
+      // Check that the class exists
+      currentClassDefinition <- classExists(cacheData, internalClassInfo, internalClassIri, internalOntologyIri)
 
       // Check that the submitted cardinality to delete is defined on this class
-
-      cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
-        deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
-
-      isDefinedOnClassList: List[Boolean] <- Future
-                                               .sequence(cardinalitiesToDelete.map { p =>
-                                                 for {
-                                                   isDefined: Boolean <- isCardinalityDefinedOnClass(
-                                                                           cacheData,
-                                                                           p._1,
-                                                                           p._2,
-                                                                           internalClassIri,
-                                                                           internalOntologyIri
-                                                                         )
-                                                 } yield isDefined
-                                               }.toList)
-
+      cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] = internalClassInfo.directCardinalities
+      isDefinedOnClassList <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
+                                isCardinalityDefinedOnClass(cacheData, k, v, internalClassIri, internalOntologyIri)
+                              }
       atLeastOneCardinalityNotDefinedOnClass: Boolean = isDefinedOnClassList.contains(false)
 
       // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
-      propertyIsUsed: Boolean <- isPropertyUsedInResources(
-                                   settings,
-                                   appActor,
-                                   internalClassIri,
-                                   submittedPropertyToDelete
-                                 )
+      propertyIsUsed <- isPropertyUsedInResources(
+                          internalClassIri.toInternalIri,
+                          submittedPropertyToDelete.toInternalIri
+                        )
 
       // Make an update class definition in which the cardinality to delete is removed
 
@@ -154,7 +141,7 @@ object CardinalityHandler {
 
       allBaseClassIrisWithoutInternal: Seq[SmartIri] =
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
-          cacheData.subClassOfRelations.getOrElse(
+          cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
             Seq.empty[SmartIri]
           )
@@ -162,7 +149,7 @@ object CardinalityHandler {
 
       allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
 
-      (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
+      (newInternalClassDefWithLinkValueProps, _) =
         OntologyHelpers
           .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
             internalClassDef = newClassDefinitionWithRemovedCardinality,
@@ -182,7 +169,7 @@ object CardinalityHandler {
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
       _ = Cache.checkOntologyReferencesInClassDef(
-            ontologyCacheData = cacheData,
+            cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
               throw BadRequestException(msg)
@@ -190,91 +177,83 @@ object CardinalityHandler {
           )
 
       // response is true only when property is not used in data and cardinality is defined directly on that class
-    } yield CanDoResponseV2(!propertyIsUsed && !atLeastOneCardinalityNotDefinedOnClass)
+    } yield CanDoResponseV2.of(!propertyIsUsed && !atLeastOneCardinalityNotDefinedOnClass)
   }
+
+  /**
+   * Check that the class's rdf:type is owl:Class.
+   * Check that cardinalities were submitted.
+   * Check that only one cardinality was submitted.
+   * @param classInfo the submitted class Info
+   * @return the rdfType
+   *
+   *         [[BadRequestException]] if no rdf:type was specified
+   *
+   *         [[BadRequestException]] if no invalid rdf:type was specified
+   *
+   *         [[BadRequestException]] if no cardinalities was specified
+   *
+   *         [[BadRequestException]] if more than one one cardinality was specified
+   */
+  private def getRdfTypeAndEnsureSingleCardinality(classInfo: ClassInfoContentV2): Task[SmartIri] =
+    for {
+      // Check that the class's rdf:type is owl:Class.
+      rdfType <- ZIO.attempt {
+                   classInfo.requireIriObject(
+                     OntologyConstants.Rdf.Type.toSmartIri,
+                     throw BadRequestException(s"No rdf:type specified")
+                   )
+                 }
+      _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
+            throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
+          }
+
+      // Check that cardinalities were submitted.
+      _ = if (classInfo.directCardinalities.isEmpty) {
+            throw BadRequestException("No cardinalities specified")
+          }
+
+      // Check that only one cardinality was submitted.
+      _ = if (classInfo.directCardinalities.size > 1) {
+            throw BadRequestException("Only one cardinality is allowed to be submitted.")
+          }
+    } yield rdfType
 
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
    * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
    * of the class and any subclasses.
    *
-   * @param settings the applications settings.
-   * @param storeManager the store manager actor.
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  def deleteCardinalitiesFromClass(
-    settings: KnoraSettingsImpl,
-    appActor: ActorRef,
+  override def deleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
-  )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[ReadOntologyV2] =
+  ): Task[ReadOntologyV2] = {
+    val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
-      cacheData: Cache.OntologyCacheData <- Cache.getCacheData
-      ontology                            = cacheData.ontologies(internalOntologyIri)
-      submittedClassDefinition: ClassInfoContentV2 =
-        deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
+      cacheData <- ontologyCache.get
+      ontology   = cacheData.ontologies(internalOntologyIri)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
-      _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
-             settings,
-             appActor,
-             internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
+      _ <- ontologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+             internalOntologyIri,
+             deleteCardinalitiesFromClassRequest.lastModificationDate
            )
-
-      // Check that the class's rdf:type is owl:Class.
-
-      rdfType: SmartIri = submittedClassDefinition.requireIriObject(
-                            OntologyConstants.Rdf.Type.toSmartIri,
-                            throw BadRequestException(s"No rdf:type specified")
-                          )
-
-      _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
-            throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
-          }
-
-      // Check that cardinalities were submitted.
-
-      _ = if (submittedClassDefinition.directCardinalities.isEmpty) {
-            throw BadRequestException("No cardinalities specified")
-          }
-
-      // Check that only one cardinality was submitted.
-
-      _ = if (submittedClassDefinition.directCardinalities.size > 1) {
-            throw BadRequestException("Only one cardinality is allowed to be submitted.")
-          }
+      _ <- getRdfTypeAndEnsureSingleCardinality(internalClassInfo)
 
       // Check that the class exists
-      currentClassDefinition: ClassInfoContentV2 <-
-        classExists(
-          cacheData,
-          deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema),
-          internalClassIri,
-          internalOntologyIri
-        )
+      currentClassDefinition <- classExists(cacheData, internalClassInfo, internalClassIri, internalOntologyIri)
 
       // Check that the submitted cardinality to delete is defined on this class
-
-      cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
-        deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
-
-      isDefinedOnClassList: List[Boolean] <- Future
-                                               .sequence(cardinalitiesToDelete.map { p =>
-                                                 for {
-                                                   isDefined: Boolean <- isCardinalityDefinedOnClass(
-                                                                           cacheData,
-                                                                           p._1,
-                                                                           p._2,
-                                                                           internalClassIri,
-                                                                           internalOntologyIri
-                                                                         )
-                                                 } yield isDefined
-                                               }.toList)
+      cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] = internalClassInfo.directCardinalities
+      isDefinedOnClassList <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
+                                isCardinalityDefinedOnClass(cacheData, k, v, internalClassIri, internalOntologyIri)
+                              }
 
       _ = if (isDefinedOnClassList.contains(false)) {
             throw BadRequestException(
@@ -285,12 +264,8 @@ object CardinalityHandler {
       // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
-      propertyIsUsed: Boolean <- isPropertyUsedInResources(
-                                   settings,
-                                   appActor,
-                                   internalClassIri,
-                                   submittedPropertyToDelete
-                                 )
+      propertyIsUsed <-
+        isPropertyUsedInResources(internalClassIri.toInternalIri, submittedPropertyToDelete.toInternalIri)
       _ = if (propertyIsUsed) {
             throw BadRequestException("Property is used in data. The cardinality cannot be deleted.")
           }
@@ -316,9 +291,9 @@ object CardinalityHandler {
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
 
-      allBaseClassIrisWithoutInternal: Seq[SmartIri] =
+      allBaseClassIrisWithoutInternal =
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
-          cacheData.subClassOfRelations.getOrElse(
+          cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
             Seq.empty[SmartIri]
           )
@@ -346,7 +321,7 @@ object CardinalityHandler {
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
       _ = Cache.checkOntologyReferencesInClassDef(
-            ontologyCacheData = cacheData,
+            cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
               throw BadRequestException(msg)
@@ -398,24 +373,14 @@ object CardinalityHandler {
                        )
                        .toString()
 
-      _ <- appActor.ask(SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+      _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
 
       // Check that the ontology's last modification date was updated.
-
-      _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
-             settings,
-             appActor,
-             internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = currentTime
-           )
+      _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
 
       // Check that the data that was saved corresponds to the data that was submitted.
 
-      loadedClassDef <- OntologyHelpers.loadClassDefinition(
-                          settings,
-                          appActor,
-                          classIri = internalClassIri
-                        )
+      loadedClassDef <- ontologyHelpers.loadClassDefinition(internalClassIri)
 
       _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
             throw InconsistentRepositoryDataException(
@@ -432,49 +397,34 @@ object CardinalityHandler {
                           classes = ontology.classes + (internalClassIri -> readClassInfo)
                         )
 
-      _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+      _ <- ZIO.fromFuture(implicit ec =>
+             Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+           )
 
       // Read the data back from the cache.
 
-      response: ReadOntologyV2 <- OntologyHelpers.getClassDefinitionsFromOntologyV2(
-                                    classIris = Set(internalClassIri),
-                                    allLanguages = true,
-                                    requestingUser = deleteCardinalitiesFromClassRequest.requestingUser
-                                  )
+      response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
+                    Set(internalClassIri),
+                    allLanguages = true,
+                    deleteCardinalitiesFromClassRequest.requestingUser
+                  )
 
     } yield response
+  }
 
   /**
    * Check if a property entity is used in resource instances. Returns `true` if
    * it is used, and `false` if it is not used.
    *
-   * @param settings application settings.
-   * @param storeManager store manager actor ref.
-   * @param internalPropertyIri the IRI of the entity that is being checked for usage.
-   * @param ec the execution context onto with the future will run.
-   * @param timeout the timeout for the future.
+   * @param classIri the IRI of the class that is being checked for usage.
+   * @param propertyIri the IRI of the entity that is being checked for usage.
+   *
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  def isPropertyUsedInResources(
-    settings: KnoraSettingsImpl,
-    appActor: ActorRef,
-    internalClassIri: SmartIri,
-    internalPropertyIri: SmartIri
-  )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] =
-    for {
-      request <- Future(
-                   org.knora.webapi.queries.sparql.v2.txt
-                     .isPropertyUsed(
-                       internalPropertyIri = internalPropertyIri.toString,
-                       internalClassIri = internalClassIri.toString,
-                       ignoreKnoraConstraints = true,
-                       ignoreRdfSubjectAndObject = true
-                     )
-                     .toString()
-                 )
-      response: SparqlAskResponse <-
-        appActor.ask(SparqlAskRequest(request)).mapTo[SparqlAskResponse]
-    } yield response.result
+  override def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] = {
+    val request = twirl.queries.sparql.v2.txt.isPropertyUsed(propertyIri, classIri).toString()
+    triplestoreService.sparqlHttpAsk(request).map(_.result)
+  }
 
   /**
    * Checks if the class is defined inside the ontology found in the cache.
@@ -490,17 +440,13 @@ object CardinalityHandler {
     submittedClassInfoContentV2: ClassInfoContentV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
-  )(implicit ec: ExecutionContext): Future[ClassInfoContentV2] = for {
-    currentOntologyState: ReadOntologyV2 <- Future(cacheData.ontologies(internalOntologyIri))
-    currentClassDefinition = currentOntologyState.classes
-                               .getOrElse(
-                                 internalClassIri,
-                                 throw BadRequestException(
-                                   s"Class ${submittedClassInfoContentV2.classIri} does not exist"
-                                 )
-                               )
-                               .entityInfoContent
-  } yield currentClassDefinition
+  ): Task[ClassInfoContentV2] =
+    ZIO
+      .fromOption(cacheData.ontologies(internalOntologyIri).classes.get(internalClassIri))
+      .mapBoth(
+        _ => BadRequestException(s"Class ${submittedClassInfoContentV2.classIri} does not exist"),
+        _.entityInfoContent
+      )
 
   /**
    * Check if the cardinality for a property is defined on a class.
@@ -518,7 +464,7 @@ object CardinalityHandler {
     cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
-  )(implicit ec: ExecutionContext): Future[Boolean] = {
+  ): Task[Boolean] = {
     val currentOntologyState: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
 
     val readClassInfo: ReadClassInfoV2 = currentOntologyState.classes
@@ -531,7 +477,7 @@ object CardinalityHandler {
 
     // if cardinality is inherited, it's not directly defined on that class
     if (readClassInfo.inheritedCardinalities.keySet.contains(propertyIri)) {
-      return FastFuture.successful(false)
+      return ZIO.succeed(false)
     }
 
     val currentClassState: ClassInfoContentV2 = readClassInfo.entityInfoContent
@@ -539,10 +485,10 @@ object CardinalityHandler {
     existingCardinality match {
       case Some(cardinality) =>
         if (cardinality.cardinality.equals(cardinalityInfo.cardinality)) {
-          FastFuture.successful(true)
+          ZIO.succeed(true)
         } else {
-          FastFuture.failed(
-            throw BadRequestException(
+          ZIO.fail(
+            BadRequestException(
               s"Submitted cardinality for property $propertyIri does not match existing cardinality."
             )
           )
@@ -552,26 +498,12 @@ object CardinalityHandler {
           s"Submitted cardinality for property $propertyIri is not defined for class $internalClassIri."
         )
     }
-
   }
+}
 
-  /**
-   * Checks if the class is a subclass of `knora-base:Resource`.
-   *
-   * @param submittedClassInfoContentV2 the class to check
-   * @return `true` if the class is a subclass of `knora-base:Resource`, otherwise throws an exception.
-   */
-  def isKnoraResourceClass(
-    submittedClassInfoContentV2: ClassInfoContentV2
-  )(implicit ec: ExecutionContext, stringFormatter: StringFormatter): Future[Boolean] =
-    if (submittedClassInfoContentV2.subClassOf.contains(KnoraBase.Resource.toSmartIri)) {
-      FastFuture.successful(true)
-    } else {
-      FastFuture.failed(
-        throw BadRequestException(
-          s"Class ${submittedClassInfoContentV2.classIri} is not a subclass of ${KnoraBase.Resource.toSmartIri}. $submittedClassInfoContentV2"
-        )
-      )
-    }
-
+object CardinalityHandlerLive {
+  val layer: URLayer[
+    TriplestoreService with MessageRelay with OntologyHelpers with OntologyCache with StringFormatter,
+    CardinalityHandler
+  ] = ZLayer.fromFunction(CardinalityHandlerLive.apply _)
 }

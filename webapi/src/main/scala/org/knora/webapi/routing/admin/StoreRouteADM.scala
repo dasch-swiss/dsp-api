@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -32,16 +32,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
    * Returns the route.
    */
   override def makeRoute: Route = Route {
-    path("admin" / "store") {
-      get { requestContext =>
-        /**
-         * Maybe return some statistics about the store, e.g., what triplestore, number of triples in
-         * each named graph and in total, etc.
-         */
-        // TODO: Implement some simple return
-        requestContext.complete("Hello World")
-      }
-    } ~ path("admin" / "store" / "ResetTriplestoreContent") {
+    path("admin" / "store" / "ResetTriplestoreContent") {
       post {
         /* ResetTriplestoreContent */
         entity(as[Seq[RdfDataObject]]) { apiRequest =>
@@ -56,7 +47,6 @@ class StoreRouteADM(routeData: KnoraRouteData)
             RouteUtilADM.runJsonRoute(
               requestMessageF = requestMessage,
               requestContext = requestContext,
-              settings = settings,
               appActor = appActor,
               log = log
             )(timeout = 479999.milliseconds, executionContext = executionContext)

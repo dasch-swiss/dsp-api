@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -31,7 +31,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.store.iiif.api.IIIFService
@@ -41,14 +40,16 @@ import org.knora.webapi.util.SipiUtil
 
 /**
  * Makes requests to Sipi.
+ *
+ * @param appConfig   The application's configuration
+ * @param jwt         The JWT Service to handle JWT Tokens
+ * @param httpClient  The HTTP Client
  */
 case class IIIFServiceSipiImpl(
-  config: AppConfig,
+  appConfig: AppConfig,
   jwt: JWTService,
   httpClient: CloseableHttpClient
 ) extends IIIFService {
-
-  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   /**
    * Asks Sipi for metadata about a file, served from the 'knora.json' route.
@@ -56,15 +57,14 @@ case class IIIFServiceSipiImpl(
    * @param getFileMetadataRequest the request.
    * @return a [[GetFileMetadataResponse]] containing the requested metadata.
    */
-  def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): UIO[GetFileMetadataResponse] = {
+  def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): Task[GetFileMetadataResponse] = {
     import SipiKnoraJsonResponseProtocol._
 
     for {
-      url     <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
-      request <- ZIO.succeed(new HttpGet(url))
-      // _               <- ZIO.debug(request)
-      sipiResponseStr <- doSipiRequest(request).orDie
-      sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]).orDie
+      url             <- ZIO.succeed(appConfig.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
+      request         <- ZIO.succeed(new HttpGet(url))
+      sipiResponseStr <- doSipiRequest(request)
+      sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse])
     } yield GetFileMetadataResponse(
       originalFilename = sipiResponse.originalFilename,
       originalMimeType = sipiResponse.originalMimeType,
@@ -85,10 +85,10 @@ case class IIIFServiceSipiImpl(
    */
   def moveTemporaryFileToPermanentStorage(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
-  ): UIO[SuccessResponseV2] = {
+  ): Task[SuccessResponseV2] = {
 
     // create the JWT token with the necessary permission
-    val jwtToken: UIO[String] = jwt.newToken(
+    val jwtToken: Task[String] = jwt.newToken(
       moveTemporaryFileToPermanentStorageRequestV2.requestingUser.id,
       Map(
         "knora-data" -> JsObject(
@@ -103,7 +103,7 @@ case class IIIFServiceSipiImpl(
 
     // builds the url for the operation
     def moveFileUrl(token: String) =
-      ZIO.succeed(s"${config.sipi.internalBaseUrl}/${config.sipi.v2.moveFileRoute}?token=$token")
+      ZIO.succeed(s"${appConfig.sipi.internalBaseUrl}/${appConfig.sipi.moveFileRoute}?token=$token")
 
     // build the form to send together with the request
     val formParams = new util.ArrayList[NameValuePair]()
@@ -123,7 +123,7 @@ case class IIIFServiceSipiImpl(
       url     <- moveFileUrl(token)
       entity  <- ZIO.succeed(requestEntity)
       request <- ZIO.succeed(request(url, entity))
-      _       <- doSipiRequest(request).orDie
+      _       <- doSipiRequest(request)
     } yield SuccessResponseV2("Moved file to permanent storage.")
   }
 
@@ -133,9 +133,9 @@ case class IIIFServiceSipiImpl(
    * @param deleteTemporaryFileRequestV2 the request.
    * @return a [[SuccessResponseV2]].
    */
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): UIO[SuccessResponseV2] = {
+  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] = {
 
-    val jwtToken: UIO[String] = jwt.newToken(
+    val jwtToken: Task[String] = jwt.newToken(
       deleteTemporaryFileRequestV2.requestingUser.id,
       Map(
         "knora-data" -> JsObject(
@@ -147,16 +147,16 @@ case class IIIFServiceSipiImpl(
       )
     )
 
-    def deleteUrl(token: String): ZIO[Any, Nothing, String] =
+    def deleteUrl(token: String): Task[String] =
       ZIO.succeed(
-        s"${config.sipi.internalBaseUrl}/${config.sipi.v2.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
+        s"${appConfig.sipi.internalBaseUrl}/${appConfig.sipi.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
       )
 
     for {
       token   <- jwtToken
       url     <- deleteUrl(token)
       request <- ZIO.succeed(new HttpDelete(url))
-      _       <- doSipiRequest(request).orDie
+      _       <- doSipiRequest(request)
     } yield SuccessResponseV2("Deleted temporary file.")
   }
 
@@ -165,7 +165,7 @@ case class IIIFServiceSipiImpl(
    *
    * @param textFileRequest the request message.
    */
-  def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): UIO[SipiGetTextFileResponse] = {
+  def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] = {
 
     // helper method to handle errors
     def handleErrors(ex: Throwable) = ex match {
@@ -211,9 +211,9 @@ case class IIIFServiceSipiImpl(
   /**
    * Tries to access the IIIF Service to check if Sipi is running.
    */
-  def getStatus(): UIO[IIIFServiceStatusResponse] =
+  def getStatus(): Task[IIIFServiceStatusResponse] =
     for {
-      request  <- ZIO.succeed(new HttpGet(config.sipi.internalBaseUrl + "/server/test.html"))
+      request  <- ZIO.succeed(new HttpGet(appConfig.sipi.internalBaseUrl + "/server/test.html"))
       response <- doSipiRequest(request).fold(_ => IIIFServiceStatusNOK, _ => IIIFServiceStatusOK)
     } yield response
 
@@ -225,7 +225,7 @@ case class IIIFServiceSipiImpl(
    */
   private def doSipiRequest(request: HttpRequest): Task[String] = {
     val targetHost: HttpHost =
-      new HttpHost(config.sipi.internalHost, config.sipi.internalPort, config.sipi.internalProtocol)
+      new HttpHost(appConfig.sipi.internalHost, appConfig.sipi.internalPort, appConfig.sipi.internalProtocol)
     val httpContext: HttpClientContext               = HttpClientContext.create()
     var maybeResponse: Option[CloseableHttpResponse] = None
 
@@ -280,7 +280,7 @@ object IIIFServiceSipiImpl {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
+  private def acquire(config: AppConfig): UIO[CloseableHttpClient] = ZIO.attemptBlocking {
 
     // timeout from config
     val sipiTimeoutMillis: Int = config.sipi.timeoutInSeconds.toMillis.toInt
@@ -292,13 +292,13 @@ object IIIFServiceSipiImpl {
     val socketConfig: SocketConfig = SocketConfig
       .custom()
       .setTcpNoDelay(true)
-      .build();
+      .build()
 
     // Configure the connection manager to use socket configuration by default.
     connManager.setDefaultSocketConfig(socketConfig)
 
     // Validate connections after 1 sec of inactivity
-    connManager.setValidateAfterInactivity(1000);
+    connManager.setValidateAfterInactivity(1000)
 
     // Configure total max or per route limits for persistent connections
     // that can be kept in the pool or leased by the connection manager.
@@ -313,34 +313,26 @@ object IIIFServiceSipiImpl {
       .setSocketTimeout(sipiTimeoutMillis)
       .build()
 
-    // Create an HttpClient with the given custom dependencies and configuration.
-    val httpClient: CloseableHttpClient = HttpClients
+    // Return an HttpClient with the given custom dependencies and configuration.
+    HttpClients
       .custom()
       .setConnectionManager(connManager)
       .setDefaultRequestConfig(defaultRequestConfig)
       .build()
-
-    httpClient
-  }.tap(_ => ZIO.logInfo(">>> Acquire Sipi IIIF Service <<<")).orDie
+  }.logError.orDie.zipLeft(ZIO.logInfo(">>> Acquire Sipi IIIF Service <<<"))
 
   /**
    * Releases the httpClient, freeing all resources.
    */
-  private def release(httpClient: CloseableHttpClient): URIO[Any, Unit] =
-    ZIO.attemptBlocking {
-      httpClient.close()
-    }.tap(_ => ZIO.logInfo(">>> Release Sipi IIIF Service <<<")).orDie
+  private def release(httpClient: CloseableHttpClient): UIO[Unit] =
+    ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
   val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] =
     ZLayer.scoped {
       for {
-        config <- ZIO.service[AppConfig]
-        // _          <- ZIO.debug(config)
+        config     <- ZIO.service[AppConfig]
         jwtService <- ZIO.service[JWTService]
-        // HINT: Scope does not work when used together with unsafeRun to
-        // bridge over to Akka. Need to change this as soon Akka is removed
-        // httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
-        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
+        httpClient <- ZIO.acquireRelease(acquire(config))(release)
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,14 +10,15 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple
+import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * A trait for Knora API V2 response messages.
@@ -30,14 +31,14 @@ trait KnoraResponseV2 {
    * @param rdfFormat            the RDF format selected for the response.
    * @param targetSchema         the response schema.
    * @param schemaOptions        the schema options.
-   * @param settings             the application settings.
+   * @param appConfig            the application configuration.
    * @return a formatted string representing this response message.
    */
   def format(
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): String
 }
 
@@ -50,7 +51,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): String = {
     val targetApiV2Schema = targetSchema match {
       case apiV2Schema: ApiV2Schema => apiV2Schema
@@ -60,7 +61,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
     // Convert this response message to a JsonLDDocument.
     val jsonLDDocument: JsonLDDocument = toJsonLDDocument(
       targetSchema = targetApiV2Schema,
-      settings = settings,
+      appConfig = appConfig,
       schemaOptions = schemaOptions
     )
 
@@ -92,7 +93,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
    */
   protected def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument
 }
@@ -112,7 +113,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    settings: KnoraSettingsImpl
+    appConfig: AppConfig
   ): String = {
     if (targetSchema != InternalSchema) {
       throw AssertionException(s"Response can be returned only in the internal schema")
@@ -147,7 +148,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
 case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     val (ontologyPrefixExpansion, resultProp) = targetSchema match {
@@ -173,29 +174,62 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
  *
  * @param canDo `true` if the operation can be performed.
  */
-final case class CanDoResponseV2(canDo: Boolean) extends KnoraJsonLDResponseV2 {
-  def toJsonLDDocument(
+final case class CanDoResponseV2(
+  canDo: JsonLDBoolean,
+  cannotDoReason: Option[JsonLDString] = None,
+  cannotDoReasonContext: Option[JsonLDObject] = None
+) extends KnoraJsonLDResponseV2 {
+  require((cannotDoReason.nonEmpty && !canDo.value) || cannotDoReason.isEmpty)
+  require((cannotDoReasonContext.nonEmpty && !canDo.value) || cannotDoReasonContext.isEmpty)
+
+  override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
       throw BadRequestException(s"Response is available only in the complex schema")
     }
+    val bodyMap: Map[IRI, JsonLDValue] = Map(OntologyConstants.KnoraApiV2Complex.CanDo -> canDo)
+    val reasonMap: Map[IRI, JsonLDValue] = cannotDoReason
+      .filter(_.value.nonEmpty)
+      .map(reason => Map(OntologyConstants.KnoraApiV2Complex.CannotDoReason -> reason))
+      .getOrElse(Map.empty)
+    val cannotDoContextMap: Map[IRI, JsonLDValue] = cannotDoReasonContext
+      .map(context => Map(OntologyConstants.KnoraApiV2Complex.CannotDoContext -> context))
+      .getOrElse(Map.empty)
 
-    JsonLDDocument(
-      body = JsonLDObject(
-        Map(OntologyConstants.KnoraApiV2Complex.CanDo -> JsonLDBoolean(canDo))
-      ),
-      context = JsonLDObject(
-        Map(
-          OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
-            OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-          )
+    val body = JsonLDObject(bodyMap ++ reasonMap ++ cannotDoContextMap)
+    val context = JsonLDObject(
+      Map(
+        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
+          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
         )
       )
     )
+    JsonLDDocument(body, context)
   }
+}
+
+object CanDoResponseV2 {
+  val yes: CanDoResponseV2 = CanDoResponseV2(JsonLDBoolean.TRUE)
+  val no: CanDoResponseV2  = CanDoResponseV2(JsonLDBoolean.FALSE)
+  def of(boolean: Boolean): CanDoResponseV2 = boolean match {
+    case true  => yes
+    case false => no
+  }
+  def no(reason: String): CanDoResponseV2 =
+    CanDoResponseV2(
+      canDo = JsonLDBoolean.FALSE,
+      cannotDoReason = Some(JsonLDString(reason)),
+      cannotDoReasonContext = None
+    )
+  def no(reason: String, context: JsonLDObject): CanDoResponseV2 =
+    CanDoResponseV2(
+      canDo = JsonLDBoolean.FALSE,
+      cannotDoReason = Some(JsonLDString(reason)),
+      cannotDoReasonContext = Some(context)
+    )
 }
 
 /**

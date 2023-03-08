@@ -1,0 +1,22 @@
+@*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@(resourceClassIri:  org.knora.webapi.slice.resourceinfo.domain.InternalIri,
+  projectIri:  org.knora.webapi.slice.resourceinfo.domain.InternalIri)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
+WHERE {
+    ?resource
+        rdf:type <@resourceClassIri.value> ;
+        knora-base:attachedToProject <@projectIri.value> ;
+        knora-base:creationDate ?creationDate ;
+        knora-base:isDeleted ?isDeleted ;
+    OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate .}
+    OPTIONAL { ?resource knora-base:deleteDate ?deleteDate . }
+}

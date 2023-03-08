@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -18,6 +18,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -45,14 +46,15 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport._
 
-class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
+class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
+    extends ResponderWithStandoffV2(responderData) {
 
   // A Gravsearch type inspection runner.
-  private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(appActor, responderData)
+  private val gravsearchTypeInspectionRunner =
+    new GravsearchTypeInspectionRunner(appActor = appActor, responderData = responderData)
 
   /**
    * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
@@ -93,7 +95,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         returnFiles,
         targetSchema,
         schemaOptions,
-        requestingUser
+        requestingUser,
+        responderData.appConfig
       )
 
     case GravsearchCountRequestV2(query, requestingUser) =>
@@ -224,7 +227,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     returnFiles: Boolean,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    appConfig: AppConfig
   ): Future[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
 
@@ -243,8 +247,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               limitToStandoffClass = limitToStandoffClass.map(_.toString),
               returnFiles = returnFiles,
               separator = Some(groupConcatSeparator),
-              limit = settings.v2ResultsPerPage,
-              offset = offset * settings.v2ResultsPerPage, // determine the actual offset
+              limit = appConfig.v2.resourcesSequence.resultsPerPage,
+              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
               countQuery = false
             )
             .toString()
@@ -294,7 +298,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             valueObjectIris = allValueObjectIris,
             targetSchema = targetSchema,
             schemaOptions = schemaOptions,
-            settings = settings
+            appConfig = appConfig
           )
 
           val queryPatternTransformerConstruct: ConstructToConstructTransformer =
@@ -359,7 +363,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           calculateMayHaveMoreResults = true,
           versionDate = None,
           appActor = appActor,
-          settings = settings,
+          appConfig = appConfig,
           targetSchema = targetSchema,
           requestingUser = requestingUser
         )
@@ -505,17 +509,18 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-          settings = settings
+          appConfig = responderData.appConfig
         )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-      ontologiesForInferenceMaybe <-
+      ontologiesForInferenceMaybe: Option[Set[SmartIri]] <-
         QueryTraverser.getOntologiesRelevantForInference(
           inputQuery.whereClause,
           appActor
         )
+
       nonTriplestoreSpecificPrequery: SelectQuery =
         QueryTraverser.transformConstructToSelect(
           inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
@@ -541,7 +546,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         )
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
-      _                                 = log.debug(triplestoreSpecificPrequerySparql)
 
       start = System.currentTimeMillis()
       tryPrequeryResponseNotMerged =
@@ -635,7 +639,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             valueObjectIris = allValueObjectIris,
             targetSchema = targetSchema,
             schemaOptions = schemaOptions,
-            settings = settings
+            appConfig = responderData.appConfig
           )
 
           val queryPatternTransformerConstruct: ConstructToConstructTransformer =
@@ -721,7 +725,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           versionDate = None,
           calculateMayHaveMoreResults = true,
           appActor = appActor,
-          settings = settings,
+          appConfig = responderData.appConfig,
           targetSchema = targetSchema,
           requestingUser = requestingUser
         )
@@ -830,8 +834,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                      resourceClassIri = internalClassIri,
                      maybeOrderByProperty = maybeInternalOrderByPropertyIri,
                      maybeOrderByValuePredicate = maybeOrderByValuePredicate,
-                     limit = settings.v2ResultsPerPage,
-                     offset = resourcesInProjectGetRequestV2.page * settings.v2ResultsPerPage
+                     limit = responderData.appConfig.v2.resourcesSequence.resultsPerPage,
+                     offset =
+                       resourcesInProjectGetRequestV2.page * responderData.appConfig.v2.resourcesSequence.resultsPerPage
                    )
                    .toString
 
@@ -851,7 +856,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         StandoffTagUtilV2
           .getStandoffMinAndMaxStartIndexesForTextValueQuery(
             queryStandoff = queryStandoff,
-            settings = settings
+            appConfig = responderData.appConfig
           )
 
       // Are there any matching resources?
@@ -917,7 +922,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 calculateMayHaveMoreResults = true,
                 appActor = appActor,
                 targetSchema = resourcesInProjectGetRequestV2.targetSchema,
-                settings = settings,
+                appConfig = responderData.appConfig,
                 requestingUser = resourcesInProjectGetRequestV2.requestingUser
               )
           } yield readResourcesSequence
@@ -985,7 +990,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    * @param targetSchema         the schema of the response.
-   *
    * @param requestingUser       the the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
@@ -1008,8 +1012,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               searchTerm = searchPhrase,
               limitToProject = limitToProject,
               limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = settings.v2ResultsPerPage,
-              offset = offset * settings.v2ResultsPerPage,
+              limit = responderData.appConfig.v2.resourcesSequence.resultsPerPage,
+              offset = offset * responderData.appConfig.v2.resourcesSequence.resultsPerPage,
               countQuery = false
             )
             .toString()
@@ -1064,7 +1068,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           calculateMayHaveMoreResults = true,
           appActor = appActor,
           targetSchema = targetSchema,
-          settings = settings,
+          appConfig = responderData.appConfig,
           requestingUser = requestingUser
         )
 

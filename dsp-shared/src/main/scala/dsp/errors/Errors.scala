@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -85,6 +85,12 @@ object RequestRejectedException {
  * @param message a description of the error.
  */
 case class BadRequestException(message: String) extends RequestRejectedException(message)
+object BadRequestException {
+  def invalidQueryParamValue(key: String): BadRequestException =
+    BadRequestException(s"Invalid value for query parameter '$key'")
+  def missingQueryParamValue(key: String): BadRequestException =
+    BadRequestException(s"Missing query parameter '$key'")
+}
 
 /**
  * An exception indicating that a user has provided bad credentials.

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,68 +8,84 @@ package org.knora.webapi.core
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.pattern._
+import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import zio._
 import zio.macros.accessible
 
-import scala.concurrent.ExecutionContext
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.ValueUtilV1
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 
 @accessible
 trait AppRouter {
   val system: akka.actor.ActorSystem
   val ref: ActorRef
-  val populateOntologyCaches: UIO[Unit]
+  val populateOntologyCaches: Task[Unit]
 }
 
 object AppRouter {
   val layer: ZLayer[
-    core.ActorSystem with CacheServiceManager with IIIFServiceManager with TriplestoreServiceManager with AppConfig,
+    core.ActorSystem
+      with AppConfig
+      with CardinalityHandler
+      with CardinalityService
+      with MessageRelay
+      with OntologyHelpers
+      with PermissionUtilADM
+      with ResourceUtilV2
+      with StandoffTagUtilV2
+      with ValueUtilV1,
     Nothing,
     AppRouter
   ] =
     ZLayer {
       for {
-        as                        <- ZIO.service[core.ActorSystem]
-        cacheServiceManager       <- ZIO.service[CacheServiceManager]
-        iiifServiceManager        <- ZIO.service[IIIFServiceManager]
-        triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
-        appConfig                 <- ZIO.service[AppConfig]
-        runtime                   <- ZIO.runtime[Any]
-      } yield new AppRouter { self =>
-        implicit val system: akka.actor.ActorSystem     = as.system
-        implicit val executionContext: ExecutionContext = system.dispatcher
+        as           <- ZIO.service[core.ActorSystem]
+        appConfig    <- ZIO.service[AppConfig]
+        messageRelay <- ZIO.service[MessageRelay]
+        runtime <-
+          ZIO.runtime[
+            CardinalityHandler
+              with CardinalityService
+              with PermissionUtilADM
+              with OntologyHelpers
+              with ResourceUtilV2
+              with StandoffTagUtilV2
+              with ValueUtilV1
+          ]
+      } yield new AppRouter {
+        implicit val system: akka.actor.ActorSystem = as.system
 
         val ref: ActorRef = system.actorOf(
           Props(
-            new core.actors.RoutingActor(
-              cacheServiceManager,
-              iiifServiceManager,
-              triplestoreServiceManager,
+            core.actors.RoutingActor(
               appConfig,
+              messageRelay,
               runtime
             )
-          ),
+          ).withRouter(new RoundRobinPool(1_000)),
           name = APPLICATION_MANAGER_ACTOR_NAME
         )
 
         /* Calls into the OntologyResponderV2 to initiate loading of the ontologies into the cache. */
-        val populateOntologyCaches: UIO[Unit] = {
+        val populateOntologyCaches: Task[Unit] = {
 
           val request = LoadOntologiesRequestV2(requestingUser = KnoraSystemInstances.Users.SystemUser)
-          val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(3, scala.concurrent.duration.SECONDS))
+          val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(60, scala.concurrent.duration.SECONDS))
 
           for {
-            response <- ZIO.fromFuture(_ => (ref.ask(request)(timeout)).mapTo[SuccessResponseV2]).orDie
+            response <- ZIO.fromFuture(_ => ref.ask(request)(timeout).mapTo[SuccessResponseV2])
             _        <- ZIO.logInfo(response.message)
           } yield ()
         }

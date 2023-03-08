@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,6 +17,7 @@ import scala.concurrent.Future
 
 import dsp.errors._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -25,7 +26,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util._
@@ -35,7 +36,6 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util._
 
 /**
@@ -108,7 +108,7 @@ case class ResourceIIIFManifestGetRequestV2(
 case class ResourceIIIFManifestGetResponseV2(manifest: JsonLDDocument) extends KnoraJsonLDResponseV2 {
   override protected def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = manifest
 }
@@ -185,7 +185,7 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
    */
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -271,7 +271,7 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 case class TEIHeader(
   headerInfo: ReadResourceV2,
   headerXSLT: Option[String],
-  settings: KnoraSettingsImpl
+  appConfig: AppConfig
 ) {
 
   def toXML: String =
@@ -280,7 +280,7 @@ case class TEIHeader(
 
       // Convert the resource to a JsonLDDocument.
       val headerJsonLD: JsonLDDocument =
-        ReadResourcesSequenceV2(Seq(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
+        ReadResourcesSequenceV2(Seq(headerInfo)).toJsonLDDocument(ApiV2Complex, appConfig)
 
       // Convert the JsonLDDocument to an RdfModel.
       val rdfModel: RdfModel = headerJsonLD.toRdfModel(rdfFormatUtil.getRdfModelFactory)
@@ -422,7 +422,7 @@ case class ReadResourceV2(
 
   def toJsonLD(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -437,7 +437,7 @@ case class ReadResourceV2(
           readValue.toJsonLD(
             targetSchema = targetSchema,
             projectADM = projectADM,
-            settings = settings,
+            appConfig = appConfig,
             schemaOptions = schemaOptions
           )
         }
@@ -666,7 +666,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
@@ -675,7 +674,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
 
@@ -703,9 +701,10 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
       projectInfoResponse: ProjectGetResponseADM <-
         appActor
           .ask(
-            ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
-              requestingUser = requestingUser
+            ProjectGetRequestADM(identifier =
+              IriIdentifier
+                .fromString(projectIri.toString)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
           .mapTo[ProjectGetResponseADM]
@@ -784,7 +783,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                                 jsonLDObject = valueJsonLDObject,
                                                 requestingUser = requestingUser,
                                                 appActor = appActor,
-                                                settings = settings,
                                                 log = log
                                               )
 
@@ -880,7 +878,6 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
@@ -889,7 +886,6 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] =
     Future {
@@ -978,7 +974,7 @@ case class UpdateResourceMetadataResponseV2(
    */
   override protected def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
 
@@ -1067,7 +1063,6 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
@@ -1076,7 +1071,6 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] =
     Future {
@@ -1164,7 +1158,7 @@ case class ReadResourcesSequenceV2(
 
   private def generateJsonLD(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1174,7 +1168,7 @@ case class ReadResourcesSequenceV2(
     val resourcesJsonObjects: Seq[JsonLDObject] = resources.map { resource: ReadResourceV2 =>
       resource.toJsonLD(
         targetSchema = targetSchema,
-        settings = settings,
+        appConfig = appConfig,
         schemaOptions = schemaOptions
       )
     }
@@ -1228,12 +1222,12 @@ case class ReadResourcesSequenceV2(
 
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption] = Set.empty
   ): JsonLDDocument =
     toOntologySchema(targetSchema).generateJsonLD(
       targetSchema = targetSchema,
-      settings = settings,
+      appConfig = appConfig,
       schemaOptions = schemaOptions
     )
 
@@ -1373,7 +1367,7 @@ case class GraphEdgeV2(source: IRI, propertyIri: SmartIri, target: IRI) extends 
 case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV2], ontologySchema: OntologySchema)
     extends KnoraJsonLDResponseV2
     with KnoraReadV2[GraphDataGetResponseV2] {
-  private def generateJsonLD(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl): JsonLDDocument = {
+  private def generateJsonLD(targetSchema: ApiV2Schema): JsonLDDocument = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val sortedNodesInTargetSchema: Seq[GraphNodeV2] = nodes.map(_.toOntologySchema(targetSchema)).sortBy(_.resourceIri)
@@ -1453,10 +1447,10 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument =
-    toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    toOntologySchema(targetSchema).generateJsonLD(targetSchema)
 
   override def toOntologySchema(targetSchema: ApiV2Schema): GraphDataGetResponseV2 =
     GraphDataGetResponseV2(
@@ -1510,7 +1504,7 @@ case class ResourceEventBody(
 
   def toJsonLD(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1523,7 +1517,7 @@ case class ResourceEventBody(
             .toJsonLDValue(
               targetSchema = targetSchema,
               projectADM = projectADM,
-              settings = settings,
+              appConfig = appConfig,
               schemaOptions = schemaOptions
             )
         }
@@ -1638,7 +1632,7 @@ case class ValueEventBody(
 
   def toJsonLD(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1649,7 +1643,7 @@ case class ValueEventBody(
         .toJsonLDValue(
           targetSchema = targetSchema,
           projectADM = projectADM,
-          settings = settings,
+          appConfig = appConfig,
           schemaOptions = schemaOptions
         )
       propertyIri.toString -> contentJsonLD
@@ -1707,7 +1701,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
    */
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1721,9 +1715,9 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
     val historyEventsAsJsonLD: Seq[JsonLDObject] = historyEvents.map { historyEntry: ResourceAndValueHistoryEvent =>
       // convert event body to JsonLD object
       val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
-        case valueEventBody: ValueEventBody => valueEventBody.toJsonLD(targetSchema, settings, schemaOptions)
+        case valueEventBody: ValueEventBody => valueEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)
         case resourceEventBody: ResourceEventBody =>
-          resourceEventBody.toJsonLD(targetSchema, settings, schemaOptions)
+          resourceEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)
         case resourceMetadataEventBody: ResourceMetadataEventBody =>
           resourceMetadataEventBody.toJsonLD
         case _ => throw NotFoundException(s"Event body is missing or has wrong type.")

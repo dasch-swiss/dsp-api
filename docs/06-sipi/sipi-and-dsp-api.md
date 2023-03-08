@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -27,9 +27,9 @@ A file is first uploaded to Sipi, then its metadata is submitted to
 DSP. The implementation of this procedure is described in
 [DSP-API and Sipi](../05-internals/design/api-v2/sipi.md). Instructions
 for the client are given in
-[Creating File Values](../03-apis/api-v2/editing-values.md#creating-file-values)
+[Creating File Values](../03-endpoints/api-v2/editing-values.md#creating-file-values)
 (for DSP-API v2) and in
-[Adding Resources with Image Files](../03-apis/api-v1/adding-resources.md#adding-resources-with-image-files)
+[Adding Resources with Image Files](../03-endpoints/api-v1/adding-resources.md#adding-resources-with-image-files)
 (for API v1).
 
 ## Retrieving Files from Sipi
@@ -37,7 +37,7 @@ for the client are given in
 ### File URLs in API v2
 
 In DSP-API v2, image file URLs are provided in [IIIF](https://iiif.io/) format. In the simple
-[ontology schema](../03-apis/api-v2/introduction.md#api-schema), a file value is simply
+[ontology schema](../03-endpoints/api-v2/introduction.md#api-schema), a file value is simply
 a IIIF URL that can be used to retrieve the file from Sipi. In the complex schema,
 it is a `StillImageFileValue` with additional properties that the client can use to construct
 different IIIF URLs, e.g. at different resolutions. See the `knora-api` ontology for details.

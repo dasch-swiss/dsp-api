@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,6 +16,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -96,7 +97,7 @@ case class ChangeGroupApiRequestADM(
 /**
  * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
  */
-sealed trait GroupsResponderRequestADM extends KnoraRequestADM
+sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
  * Get all information about all groups.      the user initiating the request.
@@ -113,29 +114,25 @@ case class GroupsGetRequestADM() extends GroupsResponderRequestADM
  * an [[Option[GroupADM] ]], which will be `None` if the group was not found.
  *
  * @param groupIri             IRI of the group.
- * @param requestingUser       the user initiating the request.
  */
-case class GroupGetADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupGetADM(groupIri: IRI) extends GroupsResponderRequestADM
 
 /**
  * Get everything about a single group identified through its IRI. The response will be a
  * [[GroupGetResponseADM]], or an error if the group was not found.
  *
  * @param groupIri             IRI of the group.
- * @param requestingUser       the user initiating the request.
  */
-case class GroupGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupGetRequestADM(groupIri: IRI) extends GroupsResponderRequestADM
 
 /**
  * Get everything about a multiple groups identified by their IRIs. The response will be a
  * [[Set[GroupGetResponseADM] ]], or an error if one or more groups was not found.
  *
- * @param groupIris            the IRIs of the groups being requested.
- * @param requestingUser       the user initiating the request.
+ * @param groupIris            the IRIs of the groups being requested
  */
 case class MultipleGroupsGetRequestADM(
-  groupIris: Set[IRI],
-  requestingUser: UserADM
+  groupIris: Set[IRI]
 ) extends GroupsResponderRequestADM
 
 /**

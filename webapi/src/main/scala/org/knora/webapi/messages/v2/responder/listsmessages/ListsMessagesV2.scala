@@ -1,11 +1,13 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.v2.responder.listsmessages
 
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -17,12 +19,11 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `ListsResponderV2`.
  */
-sealed trait ListsResponderRequestV2 extends KnoraRequestV2
+sealed trait ListsResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
  * Requests a list. A successful response will be a [[ListGetResponseV2]]
@@ -73,7 +74,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
 
@@ -201,7 +202,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
 
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
 

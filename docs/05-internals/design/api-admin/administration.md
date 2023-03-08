@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -71,6 +71,11 @@ the built-in group to `knora-admin`, e.g., `knora-admin:KnownUser` where
 `knora-admin` corresponds to `http://www.knora.org/ontology/knora-admin#`.
 
 ## Permissions
+
+The permissions API endpoint is described [here](../../../03-endpoints/api-admin/permissions.md).
+
+The default permissions when a project is created are described
+[here](../../../03-endpoints/api-admin/projects.md#default-set-of-permissions-for-a-new-project).
 
 Up until know, we have mentioned two groups of permissions. The first
 called *object access permissions*, which contains permissions that
@@ -215,7 +220,7 @@ values can be used:
 
     1)  **ProjectAdminOntologyAllPermission**:
 
-      - description: gives the user the permission to administer
+      - description: gives the user the permission to administrate
         the project ontologies
       - usage: used as a value for the *knora-base:hasPermissions*
         property.

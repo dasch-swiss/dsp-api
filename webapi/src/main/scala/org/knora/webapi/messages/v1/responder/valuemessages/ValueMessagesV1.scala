@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,6 +14,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.StringFormatter
@@ -209,7 +210,7 @@ case class ChangeFileValueApiRequestV1(file: String) {
 /**
  * An abstract trait representing a message that can be sent to [[org.knora.webapi.responders.v1.ValuesResponderV1]].
  */
-sealed trait ValuesResponderRequestV1 extends KnoraRequestV1
+sealed trait ValuesResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
 
 /**
  * Represents a request for a (current) value. A successful response will be a [[ValueGetResponseV1]].

@@ -1,12 +1,11 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import akka.stream.Materializer
 import akka.util.Timeout
 import org.xml.sax.SAXException
 
@@ -25,7 +24,6 @@ import scala.xml.NodeSeq
 import scala.xml.XML
 
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -33,7 +31,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
@@ -55,17 +53,16 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.util._
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
-
-  /* actor materializer needed for http requests */
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
+    extends Responder(responderData.actorDeps) {
 
   private def xmlMimeTypes = Set(
     "text/xml",
@@ -98,7 +95,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
   private val xsltCacheName = "xsltCache"
 
   private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Future[GetStandoffResponseV2] = {
-    val requestMaxStartIndex = getStandoffRequestV2.offset + settings.standoffPerPage - 1
+    val requestMaxStartIndex = getStandoffRequestV2.offset + responderData.appConfig.standoffPerPage - 1
 
     for {
       resourceRequestSparql <- Future(
@@ -155,7 +152,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                                                             versionDate = None,
                                                             appActor = appActor,
                                                             targetSchema = getStandoffRequestV2.targetSchema,
-                                                            settings = settings,
+                                                            appConfig = responderData.appConfig,
                                                             requestingUser = getStandoffRequestV2.requestingUser
                                                           )
 
@@ -259,7 +256,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
           }
 
       xsltUrl: String =
-        s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
+        s"${responderData.appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
     } yield xsltUrl
 
@@ -672,8 +669,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         appActor
           .ask(
             ProjectGetADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
-              requestingUser = requestingUser
+              identifier = IriIdentifier
+                .fromString(projectIri.toString)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
           .mapTo[Option[ProjectADM]]
@@ -1158,7 +1156,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
               .standoffClassInfoMap(standoffClass.toSmartIri)
               .allCardinalities
               .filter { case (property: SmartIri, card: KnoraCardinalityInfo) =>
-                card.cardinality == MustHaveOne || card.cardinality == MustHaveSome
+                card.cardinality == ExactlyOne || card.cardinality == AtLeastOne
               }
               .keySet -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dataTypeProperties
               .map(_.toSmartIri)
@@ -1281,7 +1279,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     val firstTask = GetStandoffTask(
       resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
       valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      offset = settings.standoffPerPage, // the offset of the second page
+      offset = responderData.appConfig.standoffPerPage, // the offset of the second page
       requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
     )
 

@@ -1,8 +1,12 @@
 <!-- Important! Please follow the guidelines for naming Pull Requests: https://docs.dasch.swiss/latest/developers/dsp/contribution/ -->
 
-Issue Number: DEV-
-
 ## Pull Request Checklist
+
+### Task Description/Number
+
+<!-- Please add either the issue number or, in case of unscheduled work, a short description of the task at hand -->
+
+Issue Number: DEV-
 
 ### Basic Requirements
 
@@ -15,14 +19,13 @@ Please check if your PR fulfills the following requirements:
 
 What kind of change does this PR introduce?
 
-- [ ] Bugfix: represents bug fixes
-- [ ] Refactor: represents production code refactoring
-- [ ] Feature: represents a new feature
-- [ ] Documentation: documentation changes (no production code change)
-- [ ] Chore: maintenance tasks (no production code change)
-- [ ] Style: styles updates (no production code change)
-- [ ] Test: all about tests: adding, refactoring tests (no production code change)
-- [ ] Other... Please describe:
+- [ ] fix: represents bug fixes
+- [ ] refactor: represents production code refactoring
+- [ ] feat: represents a new feature
+- [ ] docs: documentation changes (no production code change)
+- [ ] chore: maintenance tasks (no production code change)
+- [ ] test: all about tests: adding, refactoring tests (no production code change)
+- [ ] other... Please describe:
 
 ### Does this PR introduce a breaking change?
 
@@ -30,10 +33,9 @@ What kind of change does this PR introduce?
 
 - [ ] Yes
 - [ ] No
+- [ ] Maybe (not 100% sure => check with FE)
 
 ### Does this PR change client-test-data?
 
 - [ ] Yes (don't forget to update the JS-LIB team about the change)
 - [ ] No
-
-### Other information

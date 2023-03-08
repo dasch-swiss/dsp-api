@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -73,7 +73,7 @@ final case class ProjectRepoLive(
     (for {
       exists <- lookupTableShortCodeToUuid.contains(shortCode).commit
       _ <- if (exists) ZIO.fail(None) // project shortcode does exist
-           else ZIO.succeed(()) // project shortcode does not exist
+           else ZIO.unit // project shortcode does not exist
     } yield ()).tapBoth(
       _ => ZIO.logInfo(s"Checked for project with shortCode '${shortCode.value}', project not found."),
       uuid => ZIO.logInfo(s"Checked for project with shortCode '${shortCode.value}', found project with UUID '$uuid'.")

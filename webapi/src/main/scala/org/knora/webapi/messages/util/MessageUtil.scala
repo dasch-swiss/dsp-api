@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,10 +10,13 @@ import org.apache.commons.text.StringEscapeUtils
 import java.time.Instant
 import scala.reflect.runtime.{universe => ru}
 
-import dsp.schema.domain.Cardinality
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 
 /**
  * Utility functions for working with Akka messages.
@@ -26,8 +29,7 @@ object MessageUtil {
       "stringFormatter",
       "base64Decoder",
       "knoraIdUtil",
-      "standoffLinkTagTargetResourceIris",
-      "knoraSettings"
+      "standoffLinkTagTargetResourceIris"
     )
 
   /**
@@ -63,10 +65,10 @@ object MessageUtil {
       // Handle value objects.
       case cardinality: Cardinality =>
         cardinality match {
-          case MayHaveOne   => "MayHaveOne"
-          case MayHaveMany  => "MayHaveMany"
-          case MustHaveOne  => "MustHaveOne"
-          case MustHaveSome => "MustHaveSome"
+          case ZeroOrOne  => "ZeroOrOne"
+          case Unbounded  => "Unbounded"
+          case ExactlyOne => "ExactlyOne"
+          case AtLeastOne => "AtLeastOne"
         }
 
       // Handle enumerations.

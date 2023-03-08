@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -8,7 +8,7 @@
 ## Usage
 
 The `SmartIri` trait can be used to parse and validate IRIs, and in
-particular for converting [Knora type IRIs](../../../03-apis/api-v2/knora-iris.md)
+particular for converting [Knora type IRIs](../../../03-endpoints/api-v2/knora-iris.md)
 between internal and external schemas. It validates each IRI it parses. To use it,
 import the following:
 

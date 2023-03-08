@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -72,7 +72,6 @@ object CacheUtil {
   def removeAllCaches(): Unit = {
     val cacheManager = CacheManager.getInstance()
     cacheManager.removeAllCaches()
-    // println("CacheUtil: Removed all application caches")
   }
 
   /**
@@ -85,7 +84,6 @@ object CacheUtil {
     Option(cacheManager.getCache(cacheName)) match {
       case Some(cache) =>
         cache.removeAll()
-      // println(s"CacheUtil: cleared application cache '$cacheName'")
       case None =>
         throw ApplicationCacheException(s"Application cache '$cacheName' not found")
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,18 +8,16 @@ package org.knora.webapi.messages.store.sipimessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.traits.RequestWithSender
 
 /**
- * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.IIIFManager]]
+ * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.api.IIIFService]]
  */
-sealed trait IIIFRequest extends StoreRequest
+sealed trait IIIFRequest extends StoreRequest with RelayedMessage
 
-/**
- * An abstract trait for messages that can be sent to [[org.knora.webapi.store.iiif.SipiConnector]].
- */
 sealed trait SipiRequest extends IIIFRequest {
   def requestingUser: UserADM
 }

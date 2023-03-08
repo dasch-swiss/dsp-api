@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,6 +9,7 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
 import akka.util.Timeout
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -16,16 +17,18 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -41,7 +44,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffRespon
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ActorUtil
 
 object ConstructResponseUtilV2 {
@@ -932,7 +935,8 @@ object ConstructResponseUtilV2 {
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
     val valueLanguageOption: Option[String] =
@@ -948,10 +952,13 @@ object ConstructResponseUtilV2 {
         mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
 
       for {
-        standoff: Vector[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromConstructResults(
-                                             standoffAssertions = valueObject.standoff,
-                                             appActor = appActor,
-                                             requestingUser = requestingUser
+        standoff: Vector[StandoffTagV2] <- UnsafeZioRun.runToFuture(
+                                             ZIO.serviceWithZIO[StandoffTagUtilV2](
+                                               _.createStandoffTagsV2FromConstructResults(
+                                                 standoffAssertions = valueObject.standoff,
+                                                 requestingUser = requestingUser
+                                               )
+                                             )
                                            )
 
         valueHasMaxStandoffStartIndex: Int = valueObject.requireIntObject(
@@ -1114,7 +1121,7 @@ object ConstructResponseUtilV2 {
    * @param versionDate               if defined, represents the requested time in the the resources' version history.
    * @param responderManager          the Knora responder manager.
    * @param targetSchema              the schema of the response.
-   * @param settings                  the application's settings.
+   * @param appConfig                 the application's configuration.
    * @param requestingUser            the user making the request.
    * @return a [[LinkValueContentV2]].
    */
@@ -1127,12 +1134,13 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[LinkValueContentV2] = {
     val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
       valueObject.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
@@ -1162,7 +1170,7 @@ object ConstructResponseUtilV2 {
                               appActor = appActor,
                               requestingUser = requestingUser,
                               targetSchema = targetSchema,
-                              settings = settings
+                              appConfig = appConfig
                             )
         } yield linkValue.copy(
           nestedResource = Some(nestedResource)
@@ -1183,7 +1191,7 @@ object ConstructResponseUtilV2 {
    * @param versionDate          if defined, represents the requested time in the the resources' version history.
    * @param responderManager     the Knora responder manager.
    * @param targetSchema         the schema of the response.
-   * @param settings             the application's settings.
+   * @param appConfig            the application's configuration.
    * @param requestingUser       the user making the request.
    * @return a [[ValueContentV2]] representing a value.
    */
@@ -1195,12 +1203,13 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant] = None,
     appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[ValueContentV2] = {
     // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
     val valueObjectValueHasString: Option[String] =
@@ -1344,7 +1353,7 @@ object ConstructResponseUtilV2 {
                   .mapTo[NodeGetResponseV2]
             } yield listNode.copy(
               listNodeLabel = nodeResponse.node
-                .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage)
+                .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = appConfig.fallbackLanguage)
             )
 
           case ApiV2Complex => FastFuture.successful(listNode)
@@ -1385,7 +1394,7 @@ object ConstructResponseUtilV2 {
           appActor = appActor,
           requestingUser = requestingUser,
           targetSchema = targetSchema,
-          settings = settings
+          appConfig = appConfig
         )
 
       case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
@@ -1415,7 +1424,7 @@ object ConstructResponseUtilV2 {
    * @param versionDate              if defined, represents the requested time in the the resources' version history.
    * @param responderManager         the Knora responder manager.
    * @param targetSchema             the schema of the response.
-   * @param settings                 the application's settings.
+   * @param appConfig                the application's configuration.
    * @param requestingUser           the user making the request.
    * @return a [[ReadResourceV2]].
    */
@@ -1427,12 +1436,13 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[ReadResourceV2] = {
     def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
       val mayHaveDeletedStatements: Option[Boolean] =
@@ -1496,7 +1506,7 @@ object ConstructResponseUtilV2 {
                   appActor = appActor,
                   requestingUser = requestingUser,
                   targetSchema = targetSchema,
-                  settings = settings
+                  appConfig = appConfig
                 )
 
               attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
@@ -1569,9 +1579,10 @@ object ConstructResponseUtilV2 {
       projectResponse: ProjectGetResponseADM <-
         appActor
           .ask(
-            ProjectGetRequestADM(
-              identifier = ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)),
-              requestingUser = requestingUser
+            ProjectGetRequestADM(identifier =
+              IriIdentifier
+                .fromString(resourceAttachedToProject)
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
           .mapTo[ProjectGetResponseADM]
@@ -1607,7 +1618,7 @@ object ConstructResponseUtilV2 {
    * @param versionDate                  if defined, represents the requested time in the the resources' version history.
    * @param responderManager             the Knora responder manager.
    * @param targetSchema                 the schema of response.
-   * @param settings                     the application's settings.
+   * @param appConfig                    the application's configuration.
    * @param requestingUser               the user making the request.
    * @return a collection of [[ReadResourceV2]] representing the search results.
    */
@@ -1621,12 +1632,13 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
+    appConfig: AppConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
     timeout: Timeout,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
+    runtime: zio.Runtime[StandoffTagUtilV2]
   ): Future[ReadResourcesSequenceV2] = {
 
     val visibleResourceIris: Seq[IRI] =
@@ -1643,7 +1655,7 @@ object ConstructResponseUtilV2 {
         versionDate = versionDate,
         appActor = appActor,
         targetSchema = targetSchema,
-        settings = settings,
+        appConfig = appConfig,
         requestingUser = requestingUser
       )
     }.toVector
@@ -1653,7 +1665,8 @@ object ConstructResponseUtilV2 {
 
       // If we got a full page of results from the triplestore (before filtering for permissions), there
       // might be at least one more page of results that the user could request.
-      mayHaveMoreResults = calculateMayHaveMoreResults && pageSizeBeforeFiltering == settings.v2ResultsPerPage
+      mayHaveMoreResults =
+        calculateMayHaveMoreResults && pageSizeBeforeFiltering == appConfig.v2.resourcesSequence.resultsPerPage
     } yield ReadResourcesSequenceV2(
       resources = resources,
       hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris,

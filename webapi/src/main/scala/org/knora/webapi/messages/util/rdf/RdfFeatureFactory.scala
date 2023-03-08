@@ -1,12 +1,10 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.util.rdf
 
-import dsp.errors.AssertionException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.rdf.jenaimpl._
 
 /**
@@ -15,27 +13,9 @@ import org.knora.webapi.messages.util.rdf.jenaimpl._
 object RdfFeatureFactory {
 
   // Jena singletons.
-  private val jenaNodeFactory                                = new JenaNodeFactory
-  private val jenaModelFactory                               = new JenaModelFactory(jenaNodeFactory)
-  private val jenaFormatUtil                                 = new JenaFormatUtil(modelFactory = jenaModelFactory, nodeFactory = jenaNodeFactory)
-  private var jenaShaclValidator: Option[JenaShaclValidator] = None
-
-  /**
-   * Initialises the [[RdfFeatureFactory]]. This method must be called once, on application startup.
-   *
-   * @param settings the application settings.
-   */
-  def init(config: AppConfig): Unit =
-    // Construct the SHACL validators, which need the application settings.
-    this.synchronized {
-      jenaShaclValidator = Some(
-        new JenaShaclValidator(
-          baseDir = config.shacl.shapesDirPath,
-          rdfFormatUtil = jenaFormatUtil,
-          nodeFactory = jenaNodeFactory
-        )
-      )
-    }
+  private val jenaNodeFactory  = new JenaNodeFactory
+  private val jenaModelFactory = new JenaModelFactory(jenaNodeFactory)
+  private val jenaFormatUtil   = new JenaFormatUtil(modelFactory = jenaModelFactory, nodeFactory = jenaNodeFactory)
 
   /**
    * Returns an [[RdfModelFactory]].
@@ -57,10 +37,4 @@ object RdfFeatureFactory {
    * @return an [[RdfFormatUtil]].
    */
   def getRdfFormatUtil(): RdfFormatUtil = jenaFormatUtil
-
-  def getShaclValidator(): ShaclValidator = {
-    def notInitialised: Nothing = throw AssertionException("RdfFeatureFactory has not been initialised")
-
-    jenaShaclValidator.getOrElse(notInitialised)
-  }
 }

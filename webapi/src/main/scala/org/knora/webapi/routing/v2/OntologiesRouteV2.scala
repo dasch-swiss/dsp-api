@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import zio.prelude.Validation
 
-import java.util.UUID
+import java.util.UUID.randomUUID
 import scala.concurrent.Future
 
 import dsp.constants.SalsahGui
@@ -21,7 +21,6 @@ import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
-import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -36,11 +35,16 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.RouteUtilV2.completeZioApiV2ComplexResponse
+import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
  */
-class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runtime[RestCardinalityService])
+    extends KnoraRoute(routeData)
+    with Authenticator {
 
   val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
 
@@ -60,7 +64,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       updateClass() ~
       deleteClassComment() ~
       addCardinalities() ~
-      canReplaceCardinalities() ~
+      canReplaceCardinalities ~
       replaceCardinalities() ~
       canDeleteCardinalitiesFromClass() ~
       deleteCardinalitiesFromClass() ~
@@ -85,7 +89,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       // This is the route used to dereference an actual ontology IRI. If the URL path looks like it
       // belongs to a built-in API ontology (which has to contain "knora-api"), prefix it with
       // http://api.knora.org to get the ontology IRI. Otherwise, if it looks like it belongs to a
-      // project-specific API ontology, prefix it with settings.externalOntologyIriHostAndPort to get the
+      // project-specific API ontology, prefix it with routeData.appConfig.externalOntologyIriHostAndPort to get the
       // ontology IRI.
 
       val urlPath = requestContext.request.uri.path.toString
@@ -93,7 +97,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       val requestedOntologyStr: IRI = if (stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath)) {
         OntologyConstants.KnoraApi.ApiOntologyHostname + urlPath
       } else if (stringFormatter.isProjectSpecificApiV2OntologyUrlPath(urlPath)) {
-        "http://" + settings.externalOntologyIriHostAndPort + urlPath
+        "http://" + routeData.appConfig.knoraApi.externalOntologyIriHostAndPort + urlPath
       } else {
         throw BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath")
       }
@@ -118,7 +122,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
       val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext
+                            requestContext = requestContext,
+                            routeData.appConfig
                           )
       } yield OntologyEntitiesGetRequestV2(
         ontologyIri = requestedOntology,
@@ -129,7 +134,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       RouteUtilV2.runRdfRouteWithFuture(
         requestMessageF = requestMessageFuture,
         requestContext = requestContext,
-        settings = settings,
+        appConfig = routeData.appConfig,
         appActor = appActor,
         log = log,
         targetSchema = targetSchema,
@@ -145,7 +150,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield OntologyMetadataGetByProjectRequestV2(
           projectIris = maybeProjectIri.toSet,
@@ -155,7 +161,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -173,15 +179,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
             val requestMessageFuture: Future[ChangeOntologyMetadataRequestV2] = for {
               requestingUser <- getUserADM(
-                                  requestContext = requestContext
+                                  requestContext = requestContext,
+                                  routeData.appConfig
                                 )
 
               requestMessage: ChangeOntologyMetadataRequestV2 <- ChangeOntologyMetadataRequestV2.fromJsonLD(
                                                                    jsonLDDocument = requestDoc,
-                                                                   apiRequestID = UUID.randomUUID,
+                                                                   apiRequestID = randomUUID,
                                                                    requestingUser = requestingUser,
                                                                    appActor = appActor,
-                                                                   settings = settings,
                                                                    log = log
                                                                  )
             } yield requestMessage
@@ -189,7 +195,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -205,7 +211,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       get { requestContext =>
         val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
 
           validatedProjectIris =
@@ -220,7 +227,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -252,7 +259,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield OntologyEntitiesGetRequestV2(
           ontologyIri = requestedOntologyIri,
@@ -263,7 +271,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = targetSchema,
@@ -279,17 +287,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         {
           val requestMessageFuture: Future[CreateClassRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                routeData.appConfig
                               )
 
             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
             requestMessage: CreateClassRequestV2 <- CreateClassRequestV2.fromJsonLD(
                                                       jsonLDDocument = requestDoc,
-                                                      apiRequestID = UUID.randomUUID,
+                                                      apiRequestID = randomUUID,
                                                       requestingUser = requestingUser,
                                                       appActor = appActor,
-                                                      settings = settings,
                                                       log = log
                                                     )
           } yield requestMessage
@@ -297,7 +305,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -316,17 +324,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           {
             val requestMessageFuture: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
               requestingUser <- getUserADM(
-                                  requestContext = requestContext
+                                  requestContext = requestContext,
+                                  routeData.appConfig
                                 )
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
               requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
                                   jsonLDDocument = requestDoc,
-                                  apiRequestID = UUID.randomUUID,
+                                  apiRequestID = randomUUID,
                                   requestingUser = requestingUser,
                                   appActor = appActor,
-                                  settings = settings,
                                   log = log
                                 )
             } yield requestMessage
@@ -334,7 +342,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -367,19 +375,20 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[DeleteClassCommentRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield DeleteClassCommentRequestV2(
           classIri = classIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -396,17 +405,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           {
             val requestMessageFuture: Future[AddCardinalitiesToClassRequestV2] = for {
               requestingUser <- getUserADM(
-                                  requestContext = requestContext
+                                  requestContext = requestContext,
+                                  routeData.appConfig
                                 )
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
               requestMessage: AddCardinalitiesToClassRequestV2 <- AddCardinalitiesToClassRequestV2.fromJsonLD(
                                                                     jsonLDDocument = requestDoc,
-                                                                    apiRequestID = UUID.randomUUID,
+                                                                    apiRequestID = randomUUID,
                                                                     requestingUser = requestingUser,
                                                                     appActor = appActor,
-                                                                    settings = settings,
                                                                     log = log
                                                                   )
             } yield requestMessage
@@ -414,7 +423,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -425,70 +434,37 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def canReplaceCardinalities(): Route =
-    path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIriStr: IRI =>
+  private def canReplaceCardinalities: Route =
+    // GET basePath/{iriEncode} or
+    // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
+    path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
       get { requestContext =>
-        val classIri = classIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(classIri)
-
-        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
-        }
-
-        val requestMessageFuture: Future[CanChangeCardinalitiesRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext
-                            )
-        } yield CanChangeCardinalitiesRequestV2(
-          classIri = classIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          settings = settings,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        val appConfig = routeData.appConfig
+        val responseZio = getUserADMZ(requestContext, appConfig)
+          .flatMap(user =>
+            RestCardinalityService.canChangeCardinality(
+              classIri,
+              user,
+              propertyIri = getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey),
+              newCardinality = getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey)
+            )
+          )
+        completeZioApiV2ComplexResponse(responseZio, requestContext, appConfig)
       }
     }
 
-  // Replaces all cardinalities with what was sent. Deleting means send empty
-  // replace request.
   private def replaceCardinalities(): Route =
     path(ontologiesBasePath / "cardinalities") {
       put {
-        entity(as[String]) { jsonRequest => requestContext =>
+        entity(as[String]) { reqBody => requestContext =>
           {
-            val requestMessageFuture: Future[ChangeCardinalitiesRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext
-                                )
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: ChangeCardinalitiesRequestV2 <- ChangeCardinalitiesRequestV2.fromJsonLD(
-                                                                jsonLDDocument = requestDoc,
-                                                                apiRequestID = UUID.randomUUID,
-                                                                requestingUser = requestingUser,
-                                                                appActor = appActor,
-                                                                settings = settings,
-                                                                log = log
-                                                              )
-            } yield requestMessage
-
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              settings = settings,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            val messageF = for {
+              user    <- getUserADM(requestContext, appConfig)
+              document = JsonLDUtil.parseJsonLD(reqBody)
+              msg     <- ReplaceClassCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
+            } yield msg
+            val options = RouteUtilV2.getSchemaOptions(requestContext)
+            RouteUtilV2.runRdfRouteWithFuture(messageF, requestContext, appConfig, appActor, log, ApiV2Complex, options)
           }
         }
       }
@@ -501,7 +477,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           {
             val requestMessageFuture: Future[CanDeleteCardinalitiesFromClassRequestV2] = for {
               requestingUser <- getUserADM(
-                                  requestContext = requestContext
+                                  requestContext = requestContext,
+                                  routeData.appConfig
                                 )
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
@@ -509,10 +486,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               requestMessage: CanDeleteCardinalitiesFromClassRequestV2 <-
                 CanDeleteCardinalitiesFromClassRequestV2.fromJsonLD(
                   jsonLDDocument = requestDoc,
-                  apiRequestID = UUID.randomUUID,
+                  apiRequestID = randomUUID,
                   requestingUser = requestingUser,
                   appActor = appActor,
-                  settings = settings,
                   log = log
                 )
             } yield requestMessage
@@ -520,7 +496,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -540,17 +516,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           {
             val requestMessageFuture: Future[DeleteCardinalitiesFromClassRequestV2] = for {
               requestingUser <- getUserADM(
-                                  requestContext = requestContext
+                                  requestContext = requestContext,
+                                  routeData.appConfig
                                 )
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
               requestMessage: DeleteCardinalitiesFromClassRequestV2 <- DeleteCardinalitiesFromClassRequestV2.fromJsonLD(
                                                                          jsonLDDocument = requestDoc,
-                                                                         apiRequestID = UUID.randomUUID,
+                                                                         apiRequestID = randomUUID,
                                                                          requestingUser = requestingUser,
                                                                          appActor = appActor,
-                                                                         settings = settings,
                                                                          log = log
                                                                        )
             } yield requestMessage
@@ -558,7 +534,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -577,17 +553,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           {
             val requestMessageFuture: Future[ChangeGuiOrderRequestV2] = for {
               requestingUser <- getUserADM(
-                                  requestContext = requestContext
+                                  requestContext = requestContext,
+                                  routeData.appConfig
                                 )
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
               requestMessage: ChangeGuiOrderRequestV2 <- ChangeGuiOrderRequestV2.fromJsonLD(
                                                            jsonLDDocument = requestDoc,
-                                                           apiRequestID = UUID.randomUUID,
+                                                           apiRequestID = randomUUID,
                                                            requestingUser = requestingUser,
                                                            appActor = appActor,
-                                                           settings = settings,
                                                            log = log
                                                          )
             } yield requestMessage
@@ -595,7 +571,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -650,7 +626,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[ClassesGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield ClassesGetRequestV2(
           classIris = classesForResponder,
@@ -661,7 +638,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = targetSchema,
@@ -682,7 +659,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[CanDeleteClassRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield CanDeleteClassRequestV2(
           classIri = classIri,
@@ -692,7 +670,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -727,19 +705,20 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[DeleteClassRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield DeleteClassRequestV2(
           classIri = classIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -769,19 +748,20 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[DeleteOntologyCommentRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield DeleteOntologyCommentRequestV2(
           ontologyIri = ontologyIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -798,7 +778,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           {
             val requestMessageFuture: Future[CreatePropertyRequestV2] = for {
 
-              requestingUser: UserADM <- getUserADM(requestContext = requestContext)
+              requestingUser: UserADM <- getUserADM(requestContext = requestContext, routeData.appConfig)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -848,10 +828,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
               requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
                                                            jsonLDDocument = requestDoc,
-                                                           apiRequestID = UUID.randomUUID,
+                                                           apiRequestID = randomUUID,
                                                            requestingUser = requestingUser,
                                                            appActor = appActor,
-                                                           settings = settings,
                                                            log = log
                                                          )
 
@@ -992,7 +971,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -1011,7 +990,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           {
             val requestMessageFuture: Future[ChangePropertyLabelsOrCommentsRequestV2] = for {
               requestingUser <- getUserADM(
-                                  requestContext = requestContext
+                                  requestContext = requestContext,
+                                  routeData.appConfig
                                 )
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
@@ -1019,10 +999,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               requestMessage: ChangePropertyLabelsOrCommentsRequestV2 <- ChangePropertyLabelsOrCommentsRequestV2
                                                                            .fromJsonLD(
                                                                              jsonLDDocument = requestDoc,
-                                                                             apiRequestID = UUID.randomUUID,
+                                                                             apiRequestID = randomUUID,
                                                                              requestingUser = requestingUser,
                                                                              appActor = appActor,
-                                                                             settings = settings,
                                                                              log = log
                                                                            )
             } yield requestMessage
@@ -1030,7 +1009,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -1063,19 +1042,20 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[DeletePropertyCommentRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield DeletePropertyCommentRequestV2(
           propertyIri = propertyIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -1092,7 +1072,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           {
             val requestMessageFuture: Future[ChangePropertyGuiElementRequest] = for {
 
-              requestingUser: UserADM <- getUserADM(requestContext = requestContext)
+              requestingUser: UserADM <- getUserADM(requestContext = requestContext, routeData.appConfig)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -1146,7 +1126,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                                  propertyIri = propertyIri.fold(e => throw e.head, v => v),
                                  newGuiObject = guiObject,
                                  lastModificationDate = lastModificationDate,
-                                 apiRequestID = UUID.randomUUID,
+                                 apiRequestID = randomUUID,
                                  requestingUser = requestingUser
                                )
 
@@ -1155,7 +1135,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             RouteUtilV2.runRdfRouteWithFuture(
               requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              settings = settings,
+              appConfig = routeData.appConfig,
               appActor = appActor,
               log = log,
               targetSchema = ApiV2Complex,
@@ -1210,7 +1190,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[PropertiesGetRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield PropertiesGetRequestV2(
           propertyIris = propsForResponder,
@@ -1221,7 +1202,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = targetSchema,
@@ -1242,7 +1223,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[CanDeletePropertyRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield CanDeletePropertyRequestV2(
           propertyIri = propertyIri,
@@ -1252,7 +1234,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -1287,19 +1269,20 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[DeletePropertyRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield DeletePropertyRequestV2(
           propertyIri = propertyIri,
           lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
+          apiRequestID = randomUUID,
           requestingUser = requestingUser
         )
 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -1315,17 +1298,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         {
           val requestMessageFuture: Future[CreateOntologyRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext
+                                requestContext = requestContext,
+                                routeData.appConfig
                               )
 
             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
             requestMessage: CreateOntologyRequestV2 <- CreateOntologyRequestV2.fromJsonLD(
                                                          jsonLDDocument = requestDoc,
-                                                         apiRequestID = UUID.randomUUID,
+                                                         apiRequestID = randomUUID,
                                                          requestingUser = requestingUser,
                                                          appActor = appActor,
-                                                         settings = settings,
                                                          log = log
                                                        )
           } yield requestMessage
@@ -1333,7 +1316,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            settings = settings,
+            appConfig = routeData.appConfig,
             appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
@@ -1356,7 +1339,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
         val requestMessageFuture: Future[CanDeleteOntologyRequestV2] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext
+                              requestContext = requestContext,
+                              routeData.appConfig
                             )
         } yield CanDeleteOntologyRequestV2(
           ontologyIri = ontologyIri,
@@ -1366,7 +1350,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          settings = settings,
+          appConfig = routeData.appConfig,
           appActor = appActor,
           log = log,
           targetSchema = ApiV2Complex,
@@ -1398,19 +1382,20 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
       val requestMessageFuture: Future[DeleteOntologyRequestV2] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext
+                            requestContext = requestContext,
+                            routeData.appConfig
                           )
       } yield DeleteOntologyRequestV2(
         ontologyIri = ontologyIri,
         lastModificationDate = lastModificationDate,
-        apiRequestID = UUID.randomUUID,
+        apiRequestID = randomUUID,
         requestingUser = requestingUser
       )
 
       RouteUtilV2.runRdfRouteWithFuture(
         requestMessageF = requestMessageFuture,
         requestContext = requestContext,
-        settings = settings,
+        appConfig = routeData.appConfig,
         appActor = appActor,
         log = log,
         targetSchema = ApiV2Complex,

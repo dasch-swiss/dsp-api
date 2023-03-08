@@ -1,4 +1,4 @@
--- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+-- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
 --
@@ -86,6 +86,7 @@ for file_index, file_params in pairs(server.uploads) do
     local file_info = get_file_info(original_filename, mime_type)
     
     if file_info == nil then
+        server.log("file_info appears to be nil for: " .. tostring(original_filename), server.loglevel.LOG_ERR)
         send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
         return
     end
@@ -173,6 +174,14 @@ for file_index, file_params in pairs(server.uploads) do
             return
         end
 
+        -- Normalize image orientation to top-left --
+        success, error_msg = uploaded_image:topleft()
+        if not success then
+            server.log("upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg), server.loglevel.LOG_ERR)
+            send_error(500, "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            return
+        end
+
         -- Convert the image to JPEG 2000 format.
         success, error_msg = uploaded_image:write(tmp_storage_file_path)
         if not success then
@@ -186,6 +195,12 @@ for file_index, file_params in pairs(server.uploads) do
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
             send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            return
+        end
+        -- extract the frames from video file; they will be used for preview
+        success_key_frames, error_msg_key_frames = os.execute("./scripts/export-moving-image-frames.sh -i " .. tmp_storage_file_path)
+        if not success_key_frames then
+            send_error(500, "export-moving-image-frames.sh failed: " .. error_msg_key_frames)
             return
         end
         server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)

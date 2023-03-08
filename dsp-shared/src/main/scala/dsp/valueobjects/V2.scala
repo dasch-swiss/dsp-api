@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,6 +7,7 @@ package dsp.valueobjects
 
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import org.apache.commons.lang3.StringUtils
+import zio.json._
 
 import java.nio.ByteBuffer
 import java.util.Base64
@@ -27,6 +28,9 @@ object V2 {
    * @param language the language iso.
    */
   case class StringLiteralV2(value: String, language: Option[String])
+  object StringLiteralV2 {
+    implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
+  }
 }
 
 object V2IriValidation {
@@ -116,7 +120,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraProjectIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
+    (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -217,22 +221,35 @@ object V2UuidValidation {
     s.length == CanonicalUuidLength || s.length == Base64UuidLength
 
   /**
-   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * Checks if UUID used to create IRI has supported version (4 and 5 are allowed).
+   * With an exception of BEOL project IRI `http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF`.
+   *
    * @param s the string (IRI) to be checked.
-   * @return TRUE for correct versions, FALSE for incorrect.
+   * @return TRUE for supported versions, FALSE for not supported.
    */
-  def isUuidVersion4Or5(s: String): Boolean =
-    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+  def isUuidSupported(s: String): Boolean =
+    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
+      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+    } else true
 
   /**
-   * Gets the last segment of IRI, decodes UUID and gets the version.
-   * @param s the string (IRI) to be checked.
+   * Decodes Base64 encoded UUID and gets its version.
+   *
+   * @param uuid the Base64 encoded UUID as [[String]] to be checked.
    * @return UUID version.
    */
-  def getUUIDVersion(s: String): Int = {
-    val encodedUUID = s.split("/").last
+  def getUUIDVersion(uuid: String): Int = {
+    val encodedUUID = getUuidFromIri(uuid)
     decodeUuid(encodedUUID).version()
   }
+
+  /**
+   * Gets the last IRI segment - Base64 encoded UUID.
+   *
+   * @param iri the IRI [[String]] to get the UUID from.
+   * @return Base64 encoded UUID as [[String]]
+   */
+  def getUuidFromIri(iri: String): String = iri.split("/").last
 
   /**
    * Calls `decodeUuidWithErr`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.

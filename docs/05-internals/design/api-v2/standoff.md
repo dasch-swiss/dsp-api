@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -7,8 +7,7 @@
 
 ## Requirements
 
-In Knora, text with markup is stored using
-[standoff markup](http://uahost.uantwerpen.be/lse/index.php/lexicon/markup-standoff/), i.e. markup that
+In Knora, text with markup is stored using standoff markup, i.e. markup that
 is stored separately from the content it applies to.
 
 Knora's standoff design is based on these requirements:
@@ -18,7 +17,7 @@ Knora's standoff design is based on these requirements:
 - Markup should be stored as RDF, so it can be searched and analysed using the same tools that are used
   with other data managed by Knora.
 
-- In particular, [Gravsearch](../../../03-apis/api-v2/query-language.md) queries should be able
+- In particular, [Gravsearch](../../../03-endpoints/api-v2/query-language.md) queries should be able
   to specify search criteria that refer to the markup tags attached to a text, together with
   any other search criteria relating to the resource that contains the text.
     
@@ -27,7 +26,7 @@ Knora's standoff design is based on these requirements:
 
 ## RDF Design
 
-See [Text with Standoff Markup](../../../02-knora-ontologies/knora-base.md#text-with-standoff-markup).
+See [Text with Standoff Markup](../../../02-dsp-ontologies/knora-base.md#text-with-standoff-markup).
 
 ## Querying Standoff
 
@@ -57,7 +56,7 @@ To optimise query performance:
 data structure to represent standoff. This data structure knows nothing about RDF, and each standoff tag
 contains its XML element name and namespace and those of its attributes.
 
-In Knora, it is possible to define [mappings](../../../03-apis/api-v2/xml-to-standoff-mapping.md) to
+In Knora, it is possible to define [mappings](../../../03-endpoints/api-v2/xml-to-standoff-mapping.md) to
 control how standoff/RDF is converted to XML and vice versa. Different mappings can be used to convert the same
 standoff/RDF to different sorts of XML documents. `StandoffTagUtilV2` converts between standoff/RDF and XML using
 mappings, delegating the lower-level work to `XMLToStandoffUtil`.

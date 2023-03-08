@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,13 +7,13 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
 
 import dsp.errors._
-import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -37,13 +37,19 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.util.ActorUtil
 
 /**
  * Handles requests to read and write Knora values.
  */
-class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData) {
+class ValuesResponderV2(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[ResourceUtilV2 with PermissionUtilADM]
+) extends Responder(responderData.actorDeps) {
 
   /**
    * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
@@ -57,7 +63,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
   /**
    * Receives a message of type [[ValuesResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: ValuesResponderRequestV2) = msg match {
+  def receive(msg: ValuesResponderRequestV2): Future[Any] = msg match {
     case createValueRequest: CreateValueRequestV2 => createValueV2(createValueRequest)
     case updateValueRequest: UpdateValueRequestV2 => updateValueV2(updateValueRequest)
     case deleteValueRequest: DeleteValueRequestV2 => deleteValueV2(deleteValueRequest)
@@ -95,6 +101,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           appActor
             .ask(propertyInfoRequestForSubmittedProperty)
             .mapTo[ReadOntologyV2]
+
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
                                                                  submittedInternalPropertyIri
                                                                )
@@ -120,47 +127,50 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // corresponding link property, whose objects we will need to query. Get ontology information about the
         // adjusted property.
 
-        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <- getAdjustedInternalPropertyInfo(
-                                                              submittedPropertyIri =
-                                                                createValueRequest.createValue.propertyIri,
-                                                              maybeSubmittedValueType = Some(
-                                                                createValueRequest.createValue.valueContent.valueType
-                                                              ),
-                                                              propertyInfoForSubmittedProperty =
-                                                                propertyInfoForSubmittedProperty,
-                                                              requestingUser = createValueRequest.requestingUser
-                                                            )
+        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <-
+          getAdjustedInternalPropertyInfo(
+            submittedPropertyIri = createValueRequest.createValue.propertyIri,
+            maybeSubmittedValueType = Some(createValueRequest.createValue.valueContent.valueType),
+            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+            requestingUser = createValueRequest.requestingUser
+          )
 
         adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
 
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
         // so we can see objects that the user doesn't have permission to see.
 
-        resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
-                                          resourceIri = createValueRequest.createValue.resourceIri,
-                                          propertyInfo = adjustedInternalPropertyInfo,
-                                          requestingUser = KnoraSystemInstances.Users.SystemUser
-                                        )
+        resourceInfo: ReadResourceV2 <-
+          getResourceWithPropertyValues(
+            resourceIri = createValueRequest.createValue.resourceIri,
+            propertyInfo = adjustedInternalPropertyInfo,
+            requestingUser = KnoraSystemInstances.Users.SystemUser
+          )
 
         // Check that the user has permission to modify the resource.
 
-        _ = ResourceUtilV2.checkResourcePermission(
-              resourceInfo = resourceInfo,
-              permissionNeeded = ModifyPermission,
-              requestingUser = createValueRequest.requestingUser
-            )
+        _ <- UnsafeZioRun.runToFuture(
+               ZIO
+                 .serviceWithZIO[ResourceUtilV2](
+                   _.checkResourcePermission(
+                     resourceInfo = resourceInfo,
+                     permissionNeeded = ModifyPermission,
+                     requestingUser = createValueRequest.requestingUser
+                   )
+                 )
+             )
 
         // Check that the resource has the rdf:type that the client thinks it has.
 
-        _ = if (
-              resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri.toOntologySchema(
-                InternalSchema
-              )
-            ) {
-              throw BadRequestException(
-                s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>"
-              )
-            }
+        _ =
+          if (
+            resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri
+              .toOntologySchema(InternalSchema)
+          ) {
+            throw BadRequestException(
+              s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>"
+            )
+          }
 
         // Get the definition of the resource class.
 
@@ -197,7 +207,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                case listValue: HierarchicalListValueContentV2 =>
                  for {
                    checkNode <-
-                     ResourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode, appActor)
+                     UnsafeZioRun.runToFuture(
+                       ZIO.serviceWithZIO[ResourceUtilV2](
+                         _.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
+                       )
+                     )
 
                    _ = checkNode match {
                          // it doesn't have isRootNode property - it's a child node
@@ -221,12 +235,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Check that the resource class's cardinality for the submitted property allows another value to be added
         // for that property.
 
-        currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values
-                                                   .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+        currentValuesForProp: Seq[ReadValueV2] =
+          resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
         _ =
           if (
-            (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome) && currentValuesForProp.isEmpty
+            (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty
           ) {
             throw InconsistentRepositoryDataException(
               s"Resource class <${resourceInfo.resourceClassIri
@@ -236,7 +250,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ =
           if (
-            cardinalityInfo.cardinality == MustHaveOne || (cardinalityInfo.cardinality == MayHaveOne && currentValuesForProp.nonEmpty)
+            cardinalityInfo.cardinality == ExactlyOne || (cardinalityInfo.cardinality == ZeroOrOne && currentValuesForProp.nonEmpty)
           ) {
             throw OntologyConstraintException(
               s"Resource class <${resourceInfo.resourceClassIri
@@ -270,54 +284,57 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
              }
 
         // Get the default permissions for the new value.
-        defaultValuePermissions: String <- ResourceUtilV2.getDefaultValuePermissions(
-                                             projectIri = resourceInfo.projectADM.id,
-                                             resourceClassIri = resourceInfo.resourceClassIri,
-                                             propertyIri = submittedInternalPropertyIri,
-                                             requestingUser = createValueRequest.requestingUser,
-                                             appActor = appActor
-                                           )
+        defaultValuePermissions: String <-
+          UnsafeZioRun.runToFuture(
+            ZIO.serviceWithZIO[ResourceUtilV2](
+              _.getDefaultValuePermissions(
+                projectIri = resourceInfo.projectADM.id,
+                resourceClassIri = resourceInfo.resourceClassIri,
+                propertyIri = submittedInternalPropertyIri,
+                requestingUser = createValueRequest.requestingUser
+              )
+            )
+          )
 
         // Did the user submit permissions for the new value?
-        newValuePermissionLiteral <- createValueRequest.createValue.permissions match {
-                                       case Some(permissions: String) =>
-                                         // Yes. Validate them.
-                                         for {
-                                           validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
-                                                                           permissionLiteral = permissions,
-                                                                           appActor = appActor
-                                                                         )
+        newValuePermissionLiteral <-
+          createValueRequest.createValue.permissions match {
+            case Some(permissions: String) =>
+              // Yes. Validate them.
+              for {
+                validatedCustomPermissions <-
+                  UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissions)))
 
-                                           // Is the requesting user a system admin, or an admin of this project?
-                                           _ = if (
-                                                 !(createValueRequest.requestingUser.permissions.isProjectAdmin(
-                                                   createValueRequest.requestingUser.id
-                                                 ) || createValueRequest.requestingUser.permissions.isSystemAdmin)
-                                               ) {
+                // Is the requesting user a system admin, or an admin of this project?
+                _ = if (
+                      !(createValueRequest.requestingUser.permissions.isProjectAdmin(
+                        createValueRequest.requestingUser.id
+                      ) || createValueRequest.requestingUser.permissions.isSystemAdmin)
+                    ) {
 
-                                                 // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                      // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
-                                                 val permissionComparisonResult: PermissionComparisonResult =
-                                                   PermissionUtilADM.comparePermissionsADM(
-                                                     entityCreator = createValueRequest.requestingUser.id,
-                                                     entityProject = resourceInfo.projectADM.id,
-                                                     permissionLiteralA = validatedCustomPermissions,
-                                                     permissionLiteralB = defaultValuePermissions,
-                                                     requestingUser = createValueRequest.requestingUser
-                                                   )
+                      val permissionComparisonResult: PermissionComparisonResult =
+                        PermissionUtilADM.comparePermissionsADM(
+                          entityCreator = createValueRequest.requestingUser.id,
+                          entityProject = resourceInfo.projectADM.id,
+                          permissionLiteralA = validatedCustomPermissions,
+                          permissionLiteralB = defaultValuePermissions,
+                          requestingUser = createValueRequest.requestingUser
+                        )
 
-                                                 if (permissionComparisonResult == AGreaterThanB) {
-                                                   throw ForbiddenException(
-                                                     s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
-                                                   )
-                                                 }
-                                               }
-                                         } yield validatedCustomPermissions
+                      if (permissionComparisonResult == AGreaterThanB) {
+                        throw ForbiddenException(
+                          s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
+                        )
+                      }
+                    }
+              } yield validatedCustomPermissions
 
-                                       case None =>
-                                         // No. Use the default permissions.
-                                         FastFuture.successful(defaultValuePermissions)
-                                     }
+            case None =>
+              // No. Use the default permissions.
+              FastFuture.successful(defaultValuePermissions)
+          }
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
@@ -339,12 +356,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Check that the value was written correctly to the triplestore.
 
-        verifiedValue: VerifiedValueV2 <- verifyValue(
-                                            resourceIri = createValueRequest.createValue.resourceIri,
-                                            propertyIri = submittedInternalPropertyIri,
-                                            unverifiedValue = unverifiedValue,
-                                            requestingUser = createValueRequest.requestingUser
-                                          )
+        verifiedValue: VerifiedValueV2 <-
+          verifyValue(
+            resourceIri = createValueRequest.createValue.resourceIri,
+            propertyIri = submittedInternalPropertyIri,
+            unverifiedValue = unverifiedValue,
+            requestingUser = createValueRequest.requestingUser
+          )
 
       } yield CreateValueResponseV2(
         valueIri = verifiedValue.newValueIri,
@@ -374,18 +392,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     )
     } yield taskResult
 
-    // Since PR #1230, the cardinalities in knora-base don't allow you to create a file value
-    // without creating a new resource, but we leave this line here in case it's needed again
-    // someday:
-    //
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
-    ResourceUtilV2.doSipiPostUpdate(
-      updateFuture = triplestoreUpdateFuture,
-      valueContent = createValueRequest.createValue.valueContent,
-      requestingUser = createValueRequest.requestingUser,
-      appActor = appActor,
-      log = log
+    UnsafeZioRun.runToFuture(
+      ZIO.serviceWithZIO[ResourceUtilV2](
+        _.doSipiPostUpdate(
+          updateFuture = ZIO.fromFuture(ec => triplestoreUpdateFuture),
+          valueContent = createValueRequest.createValue.valueContent,
+          requestingUser = createValueRequest.requestingUser,
+          log = log
+        )
+      )
     )
   }
 
@@ -483,7 +500,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       newValueUUID: UUID <- Future.successful(makeNewValueUUID(maybeValueIri, maybeValueUUID))
 
       // Make an IRI for the new value.
-      newValueIri: IRI <- checkOrCreateEntityIri(
+      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                             maybeValueIri,
                             stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
                           )
@@ -711,7 +728,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                               makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
                             )
 
-      newValueIri: IRI <- checkOrCreateEntityIri(
+      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                             valueToCreate.customValueIri,
                             stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
                           )
@@ -1018,6 +1035,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     ): Future[UpdateValueResponseV2] =
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
+
         resourcePropertyValue: ResourcePropertyValue <-
           getResourcePropertyValue(
             resourceIri = updateValuePermissionsV2.resourceIri,
@@ -1034,11 +1052,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Validate and reformat the submitted permissions.
 
         newValuePermissionLiteral: String <-
-          PermissionUtilADM.validatePermissions(
-            permissionLiteral = updateValuePermissionsV2.permissions,
-            appActor = appActor
+          UnsafeZioRun.runToFuture(
+            ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(updateValuePermissionsV2.permissions))
           )
-
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
         // different from the current ones.
 
@@ -1046,7 +1062,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           PermissionUtilADM.parsePermissions(
             currentValue.permissions
           )
-
         newPermissionsParsed: Map[EntityPermission, Set[IRI]] =
           PermissionUtilADM.parsePermissions(
             updateValuePermissionsV2.permissions,
@@ -1059,17 +1074,22 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
               throw BadRequestException(s"The submitted permissions are the same as the current ones")
             }
 
-        _ = ResourceUtilV2.checkValuePermission(
-              resourceInfo = resourceInfo,
-              valueInfo = currentValue,
-              permissionNeeded = ChangeRightsPermission,
-              requestingUser = updateValueRequest.requestingUser
-            )
+        _ <- UnsafeZioRun.runToFuture(
+               ZIO
+                 .serviceWithZIO[ResourceUtilV2](
+                   _.checkValuePermission(
+                     resourceInfo = resourceInfo,
+                     valueInfo = currentValue,
+                     permissionNeeded = ChangeRightsPermission,
+                     requestingUser = updateValueRequest.requestingUser
+                   )
+                 )
+             )
 
         // Do the update.
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
-        newValueIri: IRI <- checkOrCreateEntityIri(
+        newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                               updateValuePermissionsV2.newValueVersionIri,
                               stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
                             )
@@ -1148,9 +1168,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           updateValueContentV2.permissions match {
             case Some(permissions) =>
               // Yes. Validate them.
-              PermissionUtilADM.validatePermissions(
-                permissionLiteral = permissions,
-                appActor = appActor
+              UnsafeZioRun.runToFuture(
+                ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissions))
               )
 
             case None =>
@@ -1181,12 +1200,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             ModifyPermission
           }
 
-        _ = ResourceUtilV2.checkValuePermission(
-              resourceInfo = resourceInfo,
-              valueInfo = currentValue,
-              permissionNeeded = permissionNeeded,
-              requestingUser = updateValueRequest.requestingUser
-            )
+        _ <- UnsafeZioRun.runToFuture(
+               ZIO
+                 .serviceWithZIO[ResourceUtilV2](
+                   _.checkValuePermission(
+                     resourceInfo = resourceInfo,
+                     valueInfo = currentValue,
+                     permissionNeeded = permissionNeeded,
+                     requestingUser = updateValueRequest.requestingUser
+                   )
+                 )
+             )
 
         // Convert the submitted value content to the internal schema.
         submittedInternalValueContent: ValueContentV2 =
@@ -1208,7 +1232,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                case listValue: HierarchicalListValueContentV2 =>
                  for {
                    checkNode <-
-                     ResourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode, appActor)
+                     UnsafeZioRun.runToFuture(
+                       ZIO.serviceWithZIO[ResourceUtilV2](
+                         _.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
+                       )
+                     )
 
                    _ = checkNode match {
                          // it doesn't have isRootNode property - it's a child node
@@ -1265,13 +1293,16 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                case _: LinkValueContentV2 =>
                  // We're updating a link. This means deleting an existing link and creating a new one, so
                  // check that the user has permission to modify the resource.
-                 Future {
-                   ResourceUtilV2.checkResourcePermission(
-                     resourceInfo = resourceInfo,
-                     permissionNeeded = ModifyPermission,
-                     requestingUser = updateValueRequest.requestingUser
-                   )
-                 }
+                 UnsafeZioRun.runToFuture(
+                   ZIO
+                     .serviceWithZIO[ResourceUtilV2](
+                       _.checkResourcePermission(
+                         resourceInfo = resourceInfo,
+                         permissionNeeded = ModifyPermission,
+                         requestingUser = updateValueRequest.requestingUser
+                       )
+                     )
+                 )
 
                case _ => FastFuture.successful(())
              }
@@ -1344,12 +1375,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             () => makeTaskFutureToUpdateValueContent(updateValueContentV2)
           )
 
-          ResourceUtilV2.doSipiPostUpdate(
-            updateFuture = triplestoreUpdateFuture,
-            valueContent = updateValueContentV2.valueContent,
-            requestingUser = updateValueRequest.requestingUser,
-            appActor = appActor,
-            log = log
+          UnsafeZioRun.runToFuture(
+            ZIO.serviceWithZIO[ResourceUtilV2](
+              _.doSipiPostUpdate(
+                updateFuture = ZIO.fromFuture(_ => triplestoreUpdateFuture),
+                valueContent = updateValueContentV2.valueContent,
+                requestingUser = updateValueRequest.requestingUser,
+                log = log
+              )
+            )
           )
 
         case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
@@ -1391,7 +1425,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     requestingUser: UserADM
   ): Future[UnverifiedValueV2] =
     for {
-      newValueIri: IRI <- checkOrCreateEntityIri(
+      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
                             newValueVersionIri,
                             stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
                           )
@@ -1738,13 +1772,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           }
 
         // Check the user's permissions on the value.
-
-        _ = ResourceUtilV2.checkValuePermission(
-              resourceInfo = resourceInfo,
-              valueInfo = currentValue,
-              permissionNeeded = DeletePermission,
-              requestingUser = deleteValueRequest.requestingUser
-            )
+        _ <- UnsafeZioRun.runToFuture(
+               ZIO
+                 .serviceWithZIO[ResourceUtilV2](
+                   _.checkValuePermission(
+                     resourceInfo = resourceInfo,
+                     valueInfo = currentValue,
+                     permissionNeeded = DeletePermission,
+                     requestingUser = deleteValueRequest.requestingUser
+                   )
+                 )
+             )
 
         // Get the definition of the resource class.
 
@@ -1775,7 +1813,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ =
           if (
-            (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome) && currentValuesForProp.size == 1
+            (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.size == 1
           ) {
             throw OntologyConstraintException(
               s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValueRequest.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValueRequest.resourceIri}>"
@@ -2447,7 +2485,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
     for {
       // Make an IRI for the new LinkValue.
-      newLinkValueIri: IRI <- checkOrCreateEntityIri(
+      newLinkValueIri: IRI <- iriService.checkOrCreateEntityIri(
                                 customNewLinkValueIri,
                                 stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
                               )
@@ -2603,7 +2641,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         for {
           // If no custom IRI was provided, generate an IRI for the new LinkValue.
-          newLinkValueIri: IRI <- checkOrCreateEntityIri(
+          newLinkValueIri: IRI <- iriService.checkOrCreateEntityIri(
                                     customNewLinkValueIri,
                                     stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
                                   )

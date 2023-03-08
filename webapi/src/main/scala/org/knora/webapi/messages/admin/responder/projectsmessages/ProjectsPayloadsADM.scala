@@ -1,9 +1,11 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
+
+import zio.json._
 
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
@@ -22,3 +24,24 @@ final case class ProjectCreatePayloadADM(
   status: ProjectStatus,
   selfjoin: ProjectSelfJoin
 )
+
+object ProjectCreatePayloadADM {
+  implicit val codec: JsonCodec[ProjectCreatePayloadADM] = DeriveJsonCodec.gen[ProjectCreatePayloadADM]
+}
+
+/**
+ * Project update payload
+ */
+final case class ProjectUpdatePayloadADM(
+  shortname: Option[ShortName] = None,
+  longname: Option[Name] = None,
+  description: Option[ProjectDescription] = None,
+  keywords: Option[Keywords] = None,
+  logo: Option[Logo] = None,
+  status: Option[ProjectStatus] = None,
+  selfjoin: Option[ProjectSelfJoin] = None
+)
+
+object ProjectUpdatePayloadADM {
+  implicit val codec: JsonCodec[ProjectUpdatePayloadADM] = DeriveJsonCodec.gen[ProjectUpdatePayloadADM]
+}

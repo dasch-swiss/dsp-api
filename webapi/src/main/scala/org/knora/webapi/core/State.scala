@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,8 +13,7 @@ import org.knora.webapi.core.domain.AppState
 @accessible
 trait State {
   def set(v: AppState): UIO[Unit]
-  val get: UIO[AppState]
-
+  val getAppState: UIO[AppState]
 }
 
 object State {
@@ -31,7 +30,7 @@ object State {
     override def set(v: AppState): UIO[Unit] =
       state.set(v) *> ZIO.logInfo(s"AppState set to ${v.toString()}")
 
-    override val get: UIO[AppState] =
+    override val getAppState: UIO[AppState] =
       state.get
 
   }

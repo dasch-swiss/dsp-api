@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
@@ -12,7 +17,6 @@ import scala.reflect.io.Directory
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.IRI
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -23,28 +27,28 @@ import org.knora.webapi.util.FileUtil
 trait RepositoryUpdater {
 
   /**
-   * Upgrades the repository, if necessary, to work with the current version of dsp-api.
+   * Upgrades the repository, if necessary, to work with the current version of DSP-API.
    *
    * @return a response indicating what was done.
    */
-  val maybeUpgradeRepository: UIO[RepositoryUpdatedResponse]
+  val maybeUpgradeRepository: Task[RepositoryUpdatedResponse]
 }
 
 /**
  * Updates a DSP repository to work with the current version of DSP-API.
  *
- * Depends on [[TriplestoreService]] and [[AppConfig]].
+ * Depends on [[TriplestoreService]].
  */
 object RepositoryUpdater {
-  val layer: ZLayer[TriplestoreService & AppConfig, Nothing, RepositoryUpdater] =
+  val layer: ZLayer[TriplestoreService, Nothing, RepositoryUpdater] =
     ZLayer {
       for {
-        ts     <- ZIO.service[TriplestoreService]
-        config <- ZIO.service[AppConfig]
+        ts <- ZIO.service[TriplestoreService]
       } yield new RepositoryUpdaterImpl(ts) {}
     }
 
-  sealed abstract private class RepositoryUpdaterImpl(ts: TriplestoreService) extends RepositoryUpdater {
+  sealed abstract private class RepositoryUpdaterImpl(triplestoreService: TriplestoreService)
+      extends RepositoryUpdater {
     private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
     // A SPARQL query to find out the knora-base version in a repository.
@@ -60,14 +64,14 @@ object RepositoryUpdater {
      */
     private val log: Logger = Logger(LoggerFactory.getLogger(getClass.getName))
 
-    private val tempDirNamePrefix: String = "knora"
+    private val tmpDirNamePrefix: String = "knora"
 
     /**
-     * Updates the repository, if necessary, to work with the current version of dsp-api.
+     * Updates the repository, if necessary, to work with the current version of DSP-API.
      *
      * @return a response indicating what was done.
      */
-    override val maybeUpgradeRepository: UIO[RepositoryUpdatedResponse] =
+    override val maybeUpgradeRepository: Task[RepositoryUpdatedResponse] =
       for {
         foundRepositoryVersion    <- getRepositoryVersion()
         requiredRepositoryVersion <- ZIO.succeed(org.knora.webapi.KnoraBaseVersion)
@@ -83,10 +87,17 @@ object RepositoryUpdater {
             for {
               // No. Construct the list of updates that it needs.
               _ <-
-                ZIO.logInfo(
-                  s"Repository not up-to-date. Found: ${foundRepositoryVersion.getOrElse("None")}, Required: $requiredRepositoryVersion"
-                )
-              _               <- deleteTempDirectories()
+                foundRepositoryVersion match {
+                  case Some(foundRepositoryVersion) =>
+                    ZIO.logInfo(
+                      s"Repository not up to date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion"
+                    )
+                  case None =>
+                    ZIO.logWarning(
+                      s"Repository not up to date. Found: None, Required: $requiredRepositoryVersion"
+                    )
+                }
+              _               <- deleteTmpDirectories()
               selectedPlugins <- selectPluginsForNeededUpdates(foundRepositoryVersion)
               _ <-
                 ZIO.logInfo(
@@ -100,18 +111,18 @@ object RepositoryUpdater {
       } yield repositoryUpdatedResponse
 
     /**
-     * Deletes directories inside temp directory starting with `tempDirNamePrefix`.
+     * Deletes directories inside tmp directory starting with `tmpDirNamePrefix`.
      */
-    private def deleteTempDirectories(): UIO[Unit] = ZIO.attempt {
-      val rootDir         = new File("/tmp/")
-      val getTempToDelete = rootDir.listFiles.filter(_.getName.startsWith(tempDirNamePrefix))
+    private def deleteTmpDirectories(): UIO[Unit] = ZIO.attempt {
+      val rootDir        = new File("/tmp/")
+      val getTmpToDelete = rootDir.listFiles.filter(_.getName.startsWith(tmpDirNamePrefix))
 
-      if (getTempToDelete.length != 0) {
-        getTempToDelete.foreach { dir =>
+      if (getTmpToDelete.length != 0) {
+        getTmpToDelete.foreach { dir =>
           val dirToDelete = new Directory(dir)
           dirToDelete.deleteRecursively()
         }
-        log.info(s"Deleted temp directories: ${getTempToDelete.map(_.getName()).mkString(", ")}")
+        log.info(s"Deleted tmp directories: ${getTmpToDelete.map(_.getName()).mkString(", ")}")
       }
       ()
     }.orDie
@@ -121,9 +132,9 @@ object RepositoryUpdater {
      *
      * @return the `knora-base` version string, if any, in the repository.
      */
-    private def getRepositoryVersion(): UIO[Option[String]] =
+    private def getRepositoryVersion(): Task[Option[String]] =
       for {
-        repositoryVersionResponse <- ts.sparqlHttpSelect(knoraBaseVersionQuery)
+        repositoryVersionResponse <- triplestoreService.sparqlHttpSelect(knoraBaseVersionQuery)
         bindings                  <- ZIO.succeed(repositoryVersionResponse.results.bindings)
         versionString <-
           if (bindings.nonEmpty) {
@@ -184,7 +195,7 @@ object RepositoryUpdater {
       pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]
     ): UIO[RepositoryUpdatedResponse] =
       (for {
-        downloadDir <- ZIO.attempt(Files.createTempDirectory(tempDirNamePrefix))
+        downloadDir <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
         _           <- ZIO.logInfo(s"Repository update using download directory $downloadDir")
 
         // The file to save the repository in.
@@ -193,7 +204,7 @@ object RepositoryUpdater {
 
         // Ask the store actor to download the repository to the file.
         _ <- ZIO.logInfo("Downloading repository file...")
-        _ <- ts.downloadRepository(downloadedRepositoryFile)
+        _ <- triplestoreService.downloadRepository(downloadedRepositoryFile)
 
         // Run the transformations to produce an output file.
         _ <- doTransformations(
@@ -203,12 +214,11 @@ object RepositoryUpdater {
              )
 
         // Empty the repository.
-        _ <- ZIO.logInfo("Emptying the repository...")
-        _ <- ts.dropAllTriplestoreContent()
+        _ <- triplestoreService.dropDataGraphByGraph()
 
         // Upload the transformed repository.
         _ <- ZIO.logInfo("Uploading transformed repository data...")
-        _ <- ts.uploadRepository(transformedRepositoryFile)
+        _ <- triplestoreService.uploadRepository(transformedRepositoryFile)
       } yield RepositoryUpdatedResponse(
         message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}"
       )).orDie

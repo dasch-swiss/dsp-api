@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -113,16 +113,6 @@ object OntologyConstants {
     val DateTimeStamp: IRI = XsdPrefixExpansion + "dateTimeStamp"
   }
 
-  object Shacl {
-    val ShaclPrefixExpansion: IRI = "http://www.w3.org/ns/shacl#"
-
-    val Conforms: IRI                    = ShaclPrefixExpansion + "conforms"
-    val Result: IRI                      = ShaclPrefixExpansion + "result"
-    val SourceConstraintComponent: IRI   = ShaclPrefixExpansion + "sourceConstraintComponent"
-    val DatatypeConstraintComponent: IRI = ShaclPrefixExpansion + "DatatypeConstraintComponent"
-    val MaxCountConstraintComponent: IRI = ShaclPrefixExpansion + "MaxCountConstraintComponent"
-  }
-
   /**
    * http://schema.org
    */
@@ -217,6 +207,7 @@ object OntologyConstants {
     val HasLinkToValue: IRI    = KnoraBasePrefixExpansion + "hasLinkToValue"
     val IsPartOf: IRI          = KnoraBasePrefixExpansion + "isPartOf"
     val IsPartOfValue: IRI     = KnoraBasePrefixExpansion + "isPartOfValue"
+    val Seqnum: IRI            = KnoraBasePrefixExpansion + "seqnum"
     val IsSequenceOf: IRI      = KnoraBasePrefixExpansion + "isSequenceOf"
     val IsSequenceOfValue: IRI = KnoraBasePrefixExpansion + "isSequenceOfValue"
     val HasSequenceBounds: IRI = KnoraBasePrefixExpansion + "hasSequenceBounds"
@@ -684,6 +675,8 @@ object OntologyConstants {
     val Result: IRI             = KnoraApiV2PrefixExpansion + "result"
     val Error: IRI              = KnoraApiV2PrefixExpansion + "error"
     val CanDo: IRI              = KnoraApiV2PrefixExpansion + "canDo"
+    val CannotDoReason: IRI     = KnoraApiV2PrefixExpansion + "cannotDoReason"
+    val CannotDoContext: IRI    = KnoraApiV2PrefixExpansion + "cannotDoContext"
     val MayHaveMoreResults: IRI = KnoraApiV2PrefixExpansion + "mayHaveMoreResults"
     val EventType: IRI          = KnoraApiV2PrefixExpansion + "eventType"
     val EventBody: IRI          = KnoraApiV2PrefixExpansion + "eventBody"
@@ -830,6 +823,7 @@ object OntologyConstants {
 
     val IsPartOf: IRI                = KnoraApiV2PrefixExpansion + "isPartOf"
     val IsPartOfValue: IRI           = KnoraApiV2PrefixExpansion + "isPartOfValue"
+    val Seqnum: IRI                  = KnoraApiV2PrefixExpansion + "seqnum"
     val IsSequenceOf: IRI            = KnoraApiV2PrefixExpansion + "isSequenceOf"
     val IsSequenceOfValue: IRI       = KnoraApiV2PrefixExpansion + "isSequenceOfValue"
     val HasSequenceBounds: IRI       = KnoraApiV2PrefixExpansion + "hasSequenceBounds"
@@ -894,10 +888,6 @@ object OntologyConstants {
     val StillImageFileValueHasDimX: IRI        = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimX"
     val StillImageFileValueHasDimY: IRI        = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
     val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
-
-    val DocumentFileValueHasPageCount: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasPageCount"
-    val DocumentFileValueHasDimX: IRI      = KnoraApiV2PrefixExpansion + "documentFileValueHasDimX"
-    val DocumentFileValueHasDimY: IRI      = KnoraApiV2PrefixExpansion + "documentFileValueHasDimY"
 
     val AudioFileValueHasDuration: IRI = KnoraApiV2PrefixExpansion + "audioFileValueHasDuration"
 
@@ -985,6 +975,7 @@ object OntologyConstants {
 
     val IsPartOf: IRI          = KnoraApiV2PrefixExpansion + "isPartOf"
     val IsRegionOf: IRI        = KnoraApiV2PrefixExpansion + "isRegionOf"
+    val Seqnum: IRI            = KnoraApiV2PrefixExpansion + "seqnum"
     val IsSequenceOf: IRI      = KnoraApiV2PrefixExpansion + "isSequenceOf"
     val IsSequenceOfValue: IRI = KnoraApiV2PrefixExpansion + "isSequenceOfValue"
     val HasSequenceBounds: IRI = KnoraApiV2PrefixExpansion + "hasSequenceBounds"
@@ -1080,7 +1071,6 @@ object OntologyConstants {
       KnoraBase.ValueHasGeonameCode      -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
       KnoraBase.ValueHasColor            -> KnoraApiV2Complex.ColorValueAsColor,
       KnoraBase.ValueHasStandoff         -> KnoraApiV2Complex.TextValueHasStandoff,
-      KnoraBase.PageCount                -> KnoraApiV2Complex.DocumentFileValueHasPageCount,
       KnoraAdmin.KnoraProject            -> Xsd.Uri,
       KnoraAdmin.User                    -> Xsd.Uri
     ),
@@ -1107,22 +1097,21 @@ object OntologyConstants {
       KnoraApiV2Simple.ListNode           -> KnoraBase.ListValue
     ),
     (ApiV2Complex, InternalSchema) -> Map(
-      KnoraApiV2Complex.SubjectType                   -> KnoraBase.SubjectClassConstraint,
-      KnoraApiV2Complex.ObjectType                    -> KnoraBase.ObjectClassConstraint,
-      KnoraApiV2Complex.UriValueAsUri                 -> KnoraBase.ValueHasUri,
-      KnoraApiV2Complex.IntValueAsInt                 -> KnoraBase.ValueHasInteger,
-      KnoraApiV2Complex.DecimalValueAsDecimal         -> KnoraBase.ValueHasDecimal,
-      KnoraApiV2Complex.BooleanValueAsBoolean         -> KnoraBase.ValueHasBoolean,
-      KnoraApiV2Complex.IntervalValueHasStart         -> KnoraBase.ValueHasIntervalStart,
-      KnoraApiV2Complex.IntervalValueHasEnd           -> KnoraBase.ValueHasIntervalEnd,
-      KnoraApiV2Complex.TimeValueAsTimeStamp          -> KnoraBase.ValueHasTimeStamp,
-      KnoraApiV2Complex.ValueAsString                 -> KnoraBase.ValueHasString,
-      KnoraApiV2Complex.TextValueHasLanguage          -> KnoraBase.ValueHasLanguage,
-      KnoraApiV2Complex.ListValueAsListNode           -> KnoraBase.ValueHasListNode,
-      KnoraApiV2Complex.GeonameValueAsGeonameCode     -> KnoraBase.ValueHasGeonameCode,
-      KnoraApiV2Complex.ColorValueAsColor             -> KnoraBase.ValueHasColor,
-      KnoraApiV2Complex.TextValueHasStandoff          -> KnoraBase.ValueHasStandoff,
-      KnoraApiV2Complex.DocumentFileValueHasPageCount -> KnoraBase.PageCount
+      KnoraApiV2Complex.SubjectType               -> KnoraBase.SubjectClassConstraint,
+      KnoraApiV2Complex.ObjectType                -> KnoraBase.ObjectClassConstraint,
+      KnoraApiV2Complex.UriValueAsUri             -> KnoraBase.ValueHasUri,
+      KnoraApiV2Complex.IntValueAsInt             -> KnoraBase.ValueHasInteger,
+      KnoraApiV2Complex.DecimalValueAsDecimal     -> KnoraBase.ValueHasDecimal,
+      KnoraApiV2Complex.BooleanValueAsBoolean     -> KnoraBase.ValueHasBoolean,
+      KnoraApiV2Complex.IntervalValueHasStart     -> KnoraBase.ValueHasIntervalStart,
+      KnoraApiV2Complex.IntervalValueHasEnd       -> KnoraBase.ValueHasIntervalEnd,
+      KnoraApiV2Complex.TimeValueAsTimeStamp      -> KnoraBase.ValueHasTimeStamp,
+      KnoraApiV2Complex.ValueAsString             -> KnoraBase.ValueHasString,
+      KnoraApiV2Complex.TextValueHasLanguage      -> KnoraBase.ValueHasLanguage,
+      KnoraApiV2Complex.ListValueAsListNode       -> KnoraBase.ValueHasListNode,
+      KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
+      KnoraApiV2Complex.ColorValueAsColor         -> KnoraBase.ValueHasColor,
+      KnoraApiV2Complex.TextValueHasStandoff      -> KnoraBase.ValueHasStandoff
     )
   )
 
