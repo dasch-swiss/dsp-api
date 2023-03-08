@@ -40,15 +40,14 @@ object SipiTestContainer {
 
     sipiContainer.withCommand("--config=/sipi/config/sipi.docker-config.lua")
 
-    // TODO: Needs https://github.com/scalameta/metals/issues/3623 to be resolved
     sipiContainer.withClasspathResourceMapping(
-      // "/sipi/config/sipi.docker-config.lua"
       "/sipi.docker-config.lua",
       "/sipi/config/sipi.docker-config.lua",
       BindMode.READ_ONLY
     )
 
-    val incunabulaImageDirPath = Paths.get("..", "sipi/images/0803/incunabula_0000000002.jp2")
+    val incunabulaImageDirPath =
+      Paths.get("..", "sipi/images/0803/incunabula_0000000002.jp2")
     sipiContainer.withFileSystemBind(
       incunabulaImageDirPath.toString(),
       "/sipi/images/0803/incunabula_0000000002.jp2",
@@ -56,17 +55,22 @@ object SipiTestContainer {
     )
 
     sipiContainer.start()
+
+    // Create '/sipi/images/tmp' folder inside running container
+    sipiContainer.execInContainer("mkdir", "/sipi/images/tmp")
+    sipiContainer.execInContainer("chmod", "777", "/sipi/images/tmp")
+
     sipiContainer
-  }.orDie.tap(_ => ZIO.logInfo(">>> Acquire Sipi TestContainer <<<"))
+  }.orDie.zipLeft(ZIO.logInfo(">>> Acquire Sipi TestContainer <<<"))
 
   def release(container: GenericContainer[Nothing]): UIO[Unit] = ZIO.attemptBlocking {
     container.stop()
-  }.orDie.tap(_ => ZIO.logInfo(">>> Release Sipi TestContainer <<<"))
+  }.orDie.zipLeft(ZIO.logInfo(">>> Release Sipi TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, SipiTestContainer] =
     ZLayer.scoped {
       for {
-        tc <- ZIO.acquireRelease(acquire)(release(_))
+        tc <- ZIO.acquireRelease(acquire)(release)
       } yield SipiTestContainer(tc)
     }
 }
