@@ -7,9 +7,10 @@ import zio.logging.slf4j.bridge.Slf4jBridge
 object Logger {
 
   private val logFilter: LogFilter[String] = LogFilter.logLevelByName(
-    LogLevel.Info,
-    "zio.logging.slf4j" -> LogLevel.Debug,
-    "SLF4J-LOGGER"      -> LogLevel.Warning
+    LogLevel.Info
+      // Example of how to change log levels for loggers by name
+      // "zio.logging.slf4j" -> LogLevel.Debug,
+      // "SLF4J-LOGGER"      -> LogLevel.Warning
   )
 
   private val logFormatText: LogFormat =
