@@ -7,6 +7,8 @@ package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
@@ -84,7 +86,7 @@ object KnoraCredentialsV2 {
  *
  * @param token is the returned json web token.
  */
-case class LoginResponse(token: String)
+final case class LoginResponse(token: String)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -96,4 +98,8 @@ trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions 
   implicit val loginApiRequestPayloadV2Format: RootJsonFormat[LoginApiRequestPayloadV2] =
     jsonFormat(LoginApiRequestPayloadV2, "iri", "email", "username", "password")
   implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] = jsonFormat1(LoginResponse.apply)
+}
+
+trait AuthenticationV2Serialization {
+  implicit val codec: JsonCodec[LoginResponse] = DeriveJsonCodec.gen[LoginResponse]
 }
