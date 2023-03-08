@@ -1,8 +1,8 @@
 package org.knora.webapi.util
-import zio.logging.slf4j.bridge.Slf4jBridge
-import zio.logging._
-import zio.logging.LogFormat._
 import zio._
+import zio.logging.LogFormat._
+import zio.logging._
+import zio.logging.slf4j.bridge.Slf4jBridge
 
 object Logger {
 
