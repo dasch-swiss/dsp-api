@@ -13,7 +13,6 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
-import zio.logging.backend.SLF4J
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -59,11 +58,7 @@ abstract class R2RSpec
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  private val bootstrap: ZLayer[
-    Any,
-    Any,
-    Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
+  private val bootstrap = util.Logger.textLogger() >>> effectLayers
 
   // create a configured runtime
   val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))

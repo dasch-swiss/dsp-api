@@ -21,7 +21,6 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
-import zio.logging.backend.SLF4J
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.responders.ActorDeps
@@ -51,11 +50,7 @@ abstract class CoreSpec
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  private val bootstrap: ZLayer[
-    Any,
-    Any,
-    Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
+  private val bootstrap = util.Logger.textLogger() >>> effectLayers
 
   // create a configured runtime
   implicit val runtime = Unsafe.unsafe { implicit u =>
