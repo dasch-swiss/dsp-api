@@ -20,60 +20,32 @@
         "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|V knora-admin:ProjectMember",
-    "anything:hasText": [
-        {
-            "knora-api:textValueHasMapping": {
-                "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
-            },
-            "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws.20160302T150554Z",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:userHasPermission": "CR",
-            "knora-api:valueCreationDate": {
-                "@value": "2016-03-02T15:05:54Z",
-                "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:attachedToUser": {
-                "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-            },
-            "knora-api:valueHasUUID": "000000000000000000000w",
-            "knora-api:hasPermissions": "CR knora-admin:Creator",
-            "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
-            "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
-            "@type": "knora-api:TextValue"
+    "anything:hasText": {
+        "knora-api:textValueHasMapping": {
+            "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
         },
-        {
-            "knora-api:textValueHasMapping": {
-                "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
-            },
-            "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws.20160302T150554Z",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:userHasPermission": "CR",
-            "knora-api:valueCreationDate": {
-                "@value": "2016-03-02T15:05:54Z",
-                "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:attachedToUser": {
-                "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-            },
-            "knora-api:valueHasUUID": "000000000000000000000w",
-            "knora-api:hasPermissions": "CR knora-admin:Creator",
-            "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
-            "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
-            "@type": "knora-api:TextValue"
-        }
-    ],
+        "knora-api:arkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws.20160302T150554Z",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:userHasPermission": "CR",
+        "knora-api:valueCreationDate": {
+            "@value": "2016-03-02T15:05:54Z",
+            "@type": "xsd:dateTimeStamp"
+        },
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        },
+        "knora-api:valueHasUUID": "000000000000000000000w",
+        "knora-api:hasPermissions": "CR knora-admin:Creator",
+        "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
+        "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
+        "@type": "knora-api:TextValue"
+    },
     "@type": "anything:Thing",
     "@id": "http://rdfh.ch/0001/a-thing-with-text-values",
     "@context": {

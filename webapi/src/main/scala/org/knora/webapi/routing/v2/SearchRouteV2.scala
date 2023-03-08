@@ -427,7 +427,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
   private def searchByLabel(): Route = path(
     "v2" / "searchbylabel" / Segment
-  ) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+  ) { searchval =>
     get { requestContext =>
       val sparqlEncodedSearchString =
         stringFormatter.toSparqlEncodedString(
