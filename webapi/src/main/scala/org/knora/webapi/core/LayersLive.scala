@@ -12,6 +12,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.messages.util.ConstructResponseUtilV2Live
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
@@ -107,6 +109,7 @@ object LayersLive {
       with CardinalityHandler
       with CardinalityService
       with CkanResponderV1
+      with ConstructResponseUtilV2
       with GroupsResponderADM
       with HttpServer
       with IIIFService
@@ -160,6 +163,7 @@ object LayersLive {
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
+      ConstructResponseUtilV2Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer

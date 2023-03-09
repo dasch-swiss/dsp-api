@@ -5,16 +5,10 @@
 
 package org.knora.webapi.messages.util
 
-import akka.actor.ActorRef
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern.ask
-import akka.util.Timeout
-import zio.ZIO
+import zio._
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -22,6 +16,7 @@ import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -32,6 +27,20 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatPredicateObjects
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatStatements
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.MainResourcesAndValueRdfData
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfData
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfPropertyValues
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfResources
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfWithUserPermission
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueRdfData
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.Statements
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.ValueRdfData
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyFlatStatements
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfPropertyValues
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfResources
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
@@ -42,37 +51,67 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequ
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetRemainingStandoffFromTextValueRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.util.ActorUtil
+import org.knora.webapi.util.ZioHelper
 
+trait ConstructResponseUtilV2 {
+
+  /**
+   * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
+   * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values,
+   * i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
+   * The resource Iris represent main resources, dependent resources are contained in the link values as nested structures.
+   *
+   * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
+   * @return an instance of [[MainResourcesAndValueRdfData]].
+   */
+  def splitMainResourcesAndValueRdfData(
+    constructQueryResults: SparqlExtendedConstructResponse,
+    requestingUser: UserADM
+  ): MainResourcesAndValueRdfData
+
+  /**
+   * Collect all mapping Iris referred to in the given value assertions.
+   *
+   * @param valuePropertyAssertions the given assertions (property -> value object).
+   * @return a set of mapping Iris.
+   */
+  def getMappingIrisFromValuePropertyAssertions(valuePropertyAssertions: RdfPropertyValues): Set[IRI]
+
+  /**
+   * Creates an API response.
+   *
+   * @param mainResourcesAndValueRdfData the query results.
+   * @param orderByResourceIri           the order in which the resources should be returned. This sequence
+   *                                     contains the resource IRIs received from the triplestore before filtering
+   *                                     for permissions, but after filtering for duplicates.
+   * @param pageSizeBeforeFiltering      the number of resources returned before filtering for permissions and duplicates.
+   * @param mappings                     the mappings to convert standoff to XML, if any.
+   * @param queryStandoff                if `true`, make separate queries to get the standoff for text values.
+   * @param calculateMayHaveMoreResults  if `true`, calculate whether there may be more results for the query.
+   * @param versionDate                  if defined, represents the requested time in the the resources' version history.
+   * @param targetSchema                 the schema of response.
+   * @param requestingUser               the user making the request.
+   * @return a collection of [[ReadResourceV2]] representing the search results.
+   */
+  def createApiResponse(
+    mainResourcesAndValueRdfData: MainResourcesAndValueRdfData,
+    orderByResourceIri: Seq[IRI],
+    pageSizeBeforeFiltering: Int,
+    mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
+    queryStandoff: Boolean,
+    calculateMayHaveMoreResults: Boolean,
+    versionDate: Option[Instant],
+    targetSchema: ApiV2Schema,
+    requestingUser: UserADM
+  ): Task[ReadResourcesSequenceV2]
+}
 object ConstructResponseUtilV2 {
-
-  private val InferredPredicates = Set(
-    OntologyConstants.KnoraBase.HasValue,
-    OntologyConstants.KnoraBase.IsMainResource
-  )
 
   /**
    * A map of resource IRIs to resource RDF data.
    */
   type RdfResources = Map[IRI, ResourceWithValueRdfData]
-
-  /**
-   * Makes an empty instance of [[RdfResources]].
-   */
-  def emptyRdfResources: RdfResources = Map.empty
-
-  /**
-   * A map of property IRIs to value RDF data.
-   */
-  type RdfPropertyValues = Map[SmartIri, Seq[ValueRdfData]]
-
-  /**
-   * Makes an empty instance of [[RdfPropertyValues]].
-   */
-  def emptyRdfPropertyValues: RdfPropertyValues = Map.empty
 
   /**
    * A map of subject IRIs to [[ConstructPredicateObjects]] instances.
@@ -91,9 +130,24 @@ object ConstructResponseUtilV2 {
   type FlatStatements = Map[IRI, Map[SmartIri, LiteralV2]]
 
   /**
+   * A map of property IRIs to value RDF data.
+   */
+  type RdfPropertyValues = Map[SmartIri, Seq[ValueRdfData]]
+
+  /**
+   * Makes an empty instance of [[RdfResources]].
+   */
+  val emptyRdfResources: RdfResources = Map.empty
+
+  /**
+   * Makes an empty instance of [[RdfPropertyValues]].
+   */
+  val emptyRdfPropertyValues: RdfPropertyValues = Map.empty
+
+  /**
    * Makes an empty instance of [[FlatStatements]].
    */
-  def emptyFlatStatements: FlatStatements = Map.empty
+  val emptyFlatStatements: FlatStatements = Map.empty
 
   /**
    * Represents assertions about an RDF subject.
@@ -343,6 +397,20 @@ object ConstructResponseUtilV2 {
    */
   case class RdfWithUserPermission(assertions: ConstructPredicateObjects, maybeUserPermission: Option[EntityPermission])
 
+}
+
+final case class ConstructResponseUtilV2Live(
+  appConfig: AppConfig,
+  messageRelay: MessageRelay,
+  standoffTagUtilV2: StandoffTagUtilV2,
+  implicit val stringFormatter: StringFormatter
+) extends ConstructResponseUtilV2 {
+
+  private val InferredPredicates = Set(
+    OntologyConstants.KnoraBase.HasValue,
+    OntologyConstants.KnoraBase.IsMainResource
+  )
+
   /**
    * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
    * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values,
@@ -352,10 +420,10 @@ object ConstructResponseUtilV2 {
    * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
    * @return an instance of [[MainResourcesAndValueRdfData]].
    */
-  def splitMainResourcesAndValueRdfData(
+  override def splitMainResourcesAndValueRdfData(
     constructQueryResults: SparqlExtendedConstructResponse,
     requestingUser: UserADM
-  )(implicit stringFormatter: StringFormatter): MainResourcesAndValueRdfData = {
+  ): MainResourcesAndValueRdfData = {
 
     // Make sure all the subjects are IRIs, because blank nodes are not used in resources.
     val resultsWithIriSubjects: Statements = constructQueryResults.statements.map {
@@ -883,9 +951,9 @@ object ConstructResponseUtilV2 {
    * @param valuePropertyAssertions the given assertions (property -> value object).
    * @return a set of mapping Iris.
    */
-  def getMappingIrisFromValuePropertyAssertions(
+  override def getMappingIrisFromValuePropertyAssertions(
     valuePropertyAssertions: RdfPropertyValues
-  )(implicit stringFormatter: StringFormatter): Set[IRI] =
+  ): Set[IRI] =
     valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], (_: SmartIri, valObjs: Seq[ValueRdfData])) =>
         val mappings: Seq[String] = valObjs.filter { valObj: ValueRdfData =>
@@ -919,7 +987,6 @@ object ConstructResponseUtilV2 {
    * @param valueCommentOption        the value's comment, if any.
    * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
    * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
-   * @param responderManager          the Knora responder manager.
    * @param requestingUser            the user making the request.
    * @return a [[TextValueContentV2]].
    */
@@ -930,14 +997,8 @@ object ConstructResponseUtilV2 {
     valueCommentOption: Option[String],
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
-    appActor: ActorRef,
     requestingUser: UserADM
-  )(implicit
-    stringFormatter: StringFormatter,
-    timeout: Timeout,
-    executionContext: ExecutionContext,
-    runtime: zio.Runtime[StandoffTagUtilV2]
-  ): Future[TextValueContentV2] = {
+  ): Task[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
     val valueLanguageOption: Option[String] =
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
@@ -952,14 +1013,10 @@ object ConstructResponseUtilV2 {
         mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
 
       for {
-        standoff: Vector[StandoffTagV2] <- UnsafeZioRun.runToFuture(
-                                             ZIO.serviceWithZIO[StandoffTagUtilV2](
-                                               _.createStandoffTagsV2FromConstructResults(
-                                                 standoffAssertions = valueObject.standoff,
-                                                 requestingUser = requestingUser
-                                               )
-                                             )
-                                           )
+        standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
+                      standoffAssertions = valueObject.standoff,
+                      requestingUser = requestingUser
+                    )
 
         valueHasMaxStandoffStartIndex: Int = valueObject.requireIntObject(
                                                OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri
@@ -975,20 +1032,19 @@ object ConstructResponseUtilV2 {
 
             for {
               standoffResponse <-
-                appActor
-                  .ask(
+                messageRelay
+                  .ask[GetStandoffResponseV2](
                     GetRemainingStandoffFromTextValueRequestV2(
                       resourceIri = resourceIri,
                       valueIri = valueObject.subjectIri,
                       requestingUser = requestingUser
                     )
                   )
-                  .mapTo[GetStandoffResponseV2]
             } yield standoff ++ standoffResponse.standoff
           } else {
             // We're not supposed to get any more standoff here, either because we have all of it already,
             // or because we're just supposed to return one page.
-            FastFuture.successful(standoff)
+            ZIO.succeed(standoff)
           }
       } yield TextValueContentV2(
         ontologySchema = InternalSchema,
@@ -1003,7 +1059,7 @@ object ConstructResponseUtilV2 {
     } else {
       // The query returned no standoff markup.
 
-      FastFuture.successful(
+      ZIO.succeed(
         TextValueContentV2(
           ontologySchema = InternalSchema,
           maybeValueHasString = valueObjectValueHasString,
@@ -1022,7 +1078,6 @@ object ConstructResponseUtilV2 {
    * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
    * @param valueCommentOption        the value's comment, if any.
    * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
-   * @param responderManager          the Knora responder manager.
    * @param requestingUser            the user making the request.
    * @return a [[FileValueContentV2]].
    */
@@ -1032,13 +1087,8 @@ object ConstructResponseUtilV2 {
     valueObjectValueHasString: String,
     valueCommentOption: Option[String],
     mappings: Map[IRI, MappingAndXSLTransformation],
-    appActor: ActorRef,
     requestingUser: UserADM
-  )(implicit
-    stringFormatter: StringFormatter,
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[FileValueContentV2] = {
+  ): Task[FileValueContentV2] = {
     val fileValue = FileValueV2(
       internalMimeType = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalMimeType.toSmartIri),
       internalFilename = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalFilename.toSmartIri),
@@ -1048,7 +1098,7 @@ object ConstructResponseUtilV2 {
 
     valueType match {
       case OntologyConstants.KnoraBase.StillImageFileValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           StillImageFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
@@ -1059,7 +1109,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.DocumentFileValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           DocumentFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
@@ -1071,7 +1121,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.TextFileValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           TextFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
@@ -1080,7 +1130,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.AudioFileValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           AudioFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
@@ -1089,7 +1139,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.MovingImageFileValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           MovingImageFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
@@ -1098,7 +1148,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.ArchiveFileValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           ArchiveFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
@@ -1119,9 +1169,7 @@ object ConstructResponseUtilV2 {
    * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
    * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
    * @param versionDate               if defined, represents the requested time in the the resources' version history.
-   * @param responderManager          the Knora responder manager.
    * @param targetSchema              the schema of the response.
-   * @param appConfig                 the application's configuration.
    * @param requestingUser            the user making the request.
    * @return a [[LinkValueContentV2]].
    */
@@ -1132,16 +1180,9 @@ object ConstructResponseUtilV2 {
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant],
-    appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    appConfig: AppConfig,
     requestingUser: UserADM
-  )(implicit
-    stringFormatter: StringFormatter,
-    timeout: Timeout,
-    executionContext: ExecutionContext,
-    runtime: zio.Runtime[StandoffTagUtilV2]
-  ): Future[LinkValueContentV2] = {
+  ): Task[LinkValueContentV2] = {
     val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
       valueObject.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
     } else {
@@ -1167,10 +1208,8 @@ object ConstructResponseUtilV2 {
                               mappings = mappings,
                               queryStandoff = queryStandoff,
                               versionDate = versionDate,
-                              appActor = appActor,
                               requestingUser = requestingUser,
-                              targetSchema = targetSchema,
-                              appConfig = appConfig
+                              targetSchema = targetSchema
                             )
         } yield linkValue.copy(
           nestedResource = Some(nestedResource)
@@ -1178,7 +1217,7 @@ object ConstructResponseUtilV2 {
 
       case None =>
         // There is no nested resource.
-        FastFuture.successful(linkValue)
+        ZIO.succeed(linkValue)
     }
   }
 
@@ -1189,9 +1228,7 @@ object ConstructResponseUtilV2 {
    * @param mappings             the mappings needed for standoff conversions and XSL transformations.
    * @param queryStandoff        if `true`, make separate queries to get the standoff for text values.
    * @param versionDate          if defined, represents the requested time in the the resources' version history.
-   * @param responderManager     the Knora responder manager.
    * @param targetSchema         the schema of the response.
-   * @param appConfig            the application's configuration.
    * @param requestingUser       the user making the request.
    * @return a [[ValueContentV2]] representing a value.
    */
@@ -1201,16 +1238,9 @@ object ConstructResponseUtilV2 {
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant] = None,
-    appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    appConfig: AppConfig,
     requestingUser: UserADM
-  )(implicit
-    stringFormatter: StringFormatter,
-    timeout: Timeout,
-    executionContext: ExecutionContext,
-    runtime: zio.Runtime[StandoffTagUtilV2]
-  ): Future[ValueContentV2] = {
+  ): Task[ValueContentV2] = {
     // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
     val valueObjectValueHasString: Option[String] =
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasString.toSmartIri)
@@ -1230,7 +1260,6 @@ object ConstructResponseUtilV2 {
           valueCommentOption = valueCommentOption,
           mappings = mappings,
           queryStandoff = queryStandoff,
-          appActor = appActor,
           requestingUser = requestingUser
         )
 
@@ -1241,7 +1270,7 @@ object ConstructResponseUtilV2 {
           valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasEndPrecision.toSmartIri)
         val calendarNameStr = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasCalendar.toSmartIri)
 
-        FastFuture.successful(
+        ZIO.succeed(
           DateValueContentV2(
             ontologySchema = InternalSchema,
             valueHasStartJDN = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri),
@@ -1263,7 +1292,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.IntValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           IntegerValueContentV2(
             ontologySchema = InternalSchema,
             valueHasInteger = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri),
@@ -1272,7 +1301,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.DecimalValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           DecimalValueContentV2(
             ontologySchema = InternalSchema,
             valueHasDecimal = valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasDecimal.toSmartIri),
@@ -1281,7 +1310,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.BooleanValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           BooleanValueContentV2(
             ontologySchema = InternalSchema,
             valueHasBoolean = valueObject.requireBooleanObject(OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri),
@@ -1290,7 +1319,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.UriValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           UriValueContentV2(
             ontologySchema = InternalSchema,
             valueHasUri = valueObject.requireIriObject(OntologyConstants.KnoraBase.ValueHasUri.toSmartIri),
@@ -1299,7 +1328,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.ColorValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           ColorValueContentV2(
             ontologySchema = InternalSchema,
             valueHasColor = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasColor.toSmartIri),
@@ -1308,7 +1337,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.GeomValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           GeomValueContentV2(
             ontologySchema = InternalSchema,
             valueHasGeometry = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasGeometry.toSmartIri),
@@ -1317,7 +1346,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.GeonameValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           GeonameValueContentV2(
             ontologySchema = InternalSchema,
             valueHasGeonameCode =
@@ -1342,25 +1371,17 @@ object ConstructResponseUtilV2 {
         targetSchema match {
           case ApiV2Simple =>
             for {
-              nodeResponse <-
-                appActor
-                  .ask(
-                    NodeGetRequestV2(
-                      nodeIri = listNodeIri,
-                      requestingUser = requestingUser
-                    )
-                  )
-                  .mapTo[NodeGetResponseV2]
+              nodeResponse <- messageRelay.ask[NodeGetResponseV2](NodeGetRequestV2(listNodeIri, requestingUser))
             } yield listNode.copy(
               listNodeLabel = nodeResponse.node
                 .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = appConfig.fallbackLanguage)
             )
 
-          case ApiV2Complex => FastFuture.successful(listNode)
+          case ApiV2Complex => ZIO.succeed(listNode)
         }
 
       case OntologyConstants.KnoraBase.IntervalValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           IntervalValueContentV2(
             ontologySchema = InternalSchema,
             valueHasIntervalStart =
@@ -1372,7 +1393,7 @@ object ConstructResponseUtilV2 {
         )
 
       case OntologyConstants.KnoraBase.TimeValue =>
-        FastFuture.successful(
+        ZIO.succeed(
           TimeValueContentV2(
             ontologySchema = InternalSchema,
             valueHasTimeStamp =
@@ -1391,10 +1412,8 @@ object ConstructResponseUtilV2 {
           mappings = mappings,
           queryStandoff = queryStandoff,
           versionDate = versionDate,
-          appActor = appActor,
           requestingUser = requestingUser,
-          targetSchema = targetSchema,
-          appConfig = appConfig
+          targetSchema = targetSchema
         )
 
       case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
@@ -1406,7 +1425,6 @@ object ConstructResponseUtilV2 {
           ),
           valueCommentOption = valueCommentOption,
           mappings = mappings,
-          appActor = appActor,
           requestingUser = requestingUser
         )
 
@@ -1422,9 +1440,7 @@ object ConstructResponseUtilV2 {
    * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
    * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
    * @param versionDate              if defined, represents the requested time in the the resources' version history.
-   * @param responderManager         the Knora responder manager.
    * @param targetSchema             the schema of the response.
-   * @param appConfig                the application's configuration.
    * @param requestingUser           the user making the request.
    * @return a [[ReadResourceV2]].
    */
@@ -1434,16 +1450,9 @@ object ConstructResponseUtilV2 {
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant],
-    appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    appConfig: AppConfig,
     requestingUser: UserADM
-  )(implicit
-    stringFormatter: StringFormatter,
-    timeout: Timeout,
-    executionContext: ExecutionContext,
-    runtime: zio.Runtime[StandoffTagUtilV2]
-  ): Future[ReadResourceV2] = {
+  ): Task[ReadResourceV2] = {
     def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
       val mayHaveDeletedStatements: Option[Boolean] =
         rdfData.maybeBooleanObject(OntologyConstants.KnoraBase.IsDeleted.toSmartIri)
@@ -1486,9 +1495,9 @@ object ConstructResponseUtilV2 {
     val resourceDeletionInfo = getDeletionInfo(resourceWithValueRdfData)
 
     // get the resource's values
-    val valueObjectFutures: Map[SmartIri, Seq[Future[ReadValueV2]]] =
+    val valueObjectFutures: Map[SmartIri, Seq[Task[ReadValueV2]]] =
       resourceWithValueRdfData.valuePropertyAssertions.map { case (property: SmartIri, valObjs: Seq[ValueRdfData]) =>
-        val readValues: Seq[Future[ReadValueV2]] = valObjs
+        val readValues: Seq[Task[ReadValueV2]] = valObjs
           .sortBy(_.subjectIri)
           .sortBy { // order values by value IRI, then by knora-base:valueHasOrder
             valObj: ValueRdfData =>
@@ -1497,16 +1506,14 @@ object ConstructResponseUtilV2 {
           }
           .map { valObj: ValueRdfData =>
             for {
-              valueContent: ValueContentV2 <-
+              valueContent <-
                 createValueContentV2FromValueRdfData(
                   resourceIri = resourceIri,
                   valueObject = valObj,
                   mappings = mappings,
                   queryStandoff = queryStandoff,
-                  appActor = appActor,
                   requestingUser = requestingUser,
-                  targetSchema = targetSchema,
-                  appConfig = appConfig
+                  targetSchema = targetSchema
                 )
 
               attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
@@ -1576,18 +1583,17 @@ object ConstructResponseUtilV2 {
       }
 
     for {
-      projectResponse: ProjectGetResponseADM <-
-        appActor
-          .ask(
+      projectResponse <-
+        messageRelay
+          .ask[ProjectGetResponseADM](
             ProjectGetRequestADM(identifier =
               IriIdentifier
                 .fromString(resourceAttachedToProject)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
-          .mapTo[ProjectGetResponseADM]
 
-      valueObjects <- ActorUtil.sequenceSeqFuturesInMap(valueObjectFutures)
+      valueObjects <- ZioHelper.sequence(valueObjectFutures.map { case (k, v) => k -> ZIO.collectAll(v) })
     } yield ReadResourceV2(
       resourceIri = resourceIri,
       resourceClassIri = resourceClass,
@@ -1616,13 +1622,11 @@ object ConstructResponseUtilV2 {
    * @param queryStandoff                if `true`, make separate queries to get the standoff for text values.
    * @param calculateMayHaveMoreResults  if `true`, calculate whether there may be more results for the query.
    * @param versionDate                  if defined, represents the requested time in the the resources' version history.
-   * @param responderManager             the Knora responder manager.
    * @param targetSchema                 the schema of response.
-   * @param appConfig                    the application's configuration.
    * @param requestingUser               the user making the request.
    * @return a collection of [[ReadResourceV2]] representing the search results.
    */
-  def createApiResponse(
+  override def createApiResponse(
     mainResourcesAndValueRdfData: MainResourcesAndValueRdfData,
     orderByResourceIri: Seq[IRI],
     pageSizeBeforeFiltering: Int,
@@ -1630,22 +1634,15 @@ object ConstructResponseUtilV2 {
     queryStandoff: Boolean,
     calculateMayHaveMoreResults: Boolean,
     versionDate: Option[Instant],
-    appActor: ActorRef,
     targetSchema: ApiV2Schema,
-    appConfig: AppConfig,
     requestingUser: UserADM
-  )(implicit
-    stringFormatter: StringFormatter,
-    timeout: Timeout,
-    executionContext: ExecutionContext,
-    runtime: zio.Runtime[StandoffTagUtilV2]
-  ): Future[ReadResourcesSequenceV2] = {
+  ): Task[ReadResourcesSequenceV2] = {
 
     val visibleResourceIris: Seq[IRI] =
       orderByResourceIri.filter(resourceIri => mainResourcesAndValueRdfData.resources.keySet.contains(resourceIri))
 
     // iterate over visibleResourceIris and construct the response in the correct order
-    val readResourceFutures: Vector[Future[ReadResourceV2]] = visibleResourceIris.map { resourceIri: IRI =>
+    val readResourceFutures: Vector[Task[ReadResourceV2]] = visibleResourceIris.map { resourceIri: IRI =>
       val data = mainResourcesAndValueRdfData.resources(resourceIri)
       constructReadResourceV2(
         resourceIri = resourceIri,
@@ -1653,15 +1650,13 @@ object ConstructResponseUtilV2 {
         mappings = mappings,
         queryStandoff = queryStandoff,
         versionDate = versionDate,
-        appActor = appActor,
         targetSchema = targetSchema,
-        appConfig = appConfig,
         requestingUser = requestingUser
       )
     }.toVector
 
     for {
-      resources <- Future.sequence(readResourceFutures)
+      resources <- ZIO.collectAll(readResourceFutures)
 
       // If we got a full page of results from the triplestore (before filtering for permissions), there
       // might be at least one more page of results that the user could request.
@@ -1673,4 +1668,11 @@ object ConstructResponseUtilV2 {
       mayHaveMoreResults = mayHaveMoreResults
     )
   }
+}
+
+object ConstructResponseUtilV2Live {
+  val layer: URLayer[
+    AppConfig with MessageRelay with StandoffTagUtilV2 with StringFormatter,
+    ConstructResponseUtilV2
+  ] = ZLayer.fromFunction(ConstructResponseUtilV2Live.apply _)
 }
