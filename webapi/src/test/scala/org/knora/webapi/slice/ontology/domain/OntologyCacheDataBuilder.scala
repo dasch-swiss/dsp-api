@@ -15,13 +15,13 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.responders.v2.ontology.Cache._
 import org.knora.webapi.slice.ontology.domain.ReadClassInfoV2Builder.ClassInfoContentV2Builder.BuilderClassInfoContentV2Builder
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIriKeyMap
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromInternalIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromString
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object SmartIriConversion {

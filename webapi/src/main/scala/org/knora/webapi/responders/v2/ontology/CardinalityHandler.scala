@@ -20,6 +20,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -70,10 +71,10 @@ trait CardinalityHandler {
 }
 
 final case class CardinalityHandlerLive(
+  ontologyCache: OntologyCache,
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
   ontologyHelpers: OntologyHelpers,
-  ontologyCache: OntologyCache,
   implicit val stringFormatter: StringFormatter
 ) extends CardinalityHandler {
 
@@ -90,7 +91,7 @@ final case class CardinalityHandlerLive(
   ): Task[CanDoResponseV2] = {
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
-      cacheData <- ontologyCache.get
+      cacheData <- ontologyCache.getCacheData
 
       _ <- // Check that the ontology exists and has not been updated by another user since the client last read it.
         ontologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
@@ -168,7 +169,7 @@ final case class CardinalityHandlerLive(
           .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-      _ = Cache.checkOntologyReferencesInClassDef(
+      _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
@@ -236,7 +237,7 @@ final case class CardinalityHandlerLive(
   ): Task[ReadOntologyV2] = {
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
-      cacheData <- ontologyCache.get
+      cacheData <- ontologyCache.getCacheData
       ontology   = cacheData.ontologies(internalOntologyIri)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
@@ -320,7 +321,7 @@ final case class CardinalityHandlerLive(
           .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-      _ = Cache.checkOntologyReferencesInClassDef(
+      _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
@@ -397,9 +398,7 @@ final case class CardinalityHandlerLive(
                           classes = ontology.classes + (internalClassIri -> readClassInfo)
                         )
 
-      _ <- ZIO.fromFuture(implicit ec =>
-             Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
-           )
+      _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
       // Read the data back from the cache.
 
@@ -436,7 +435,7 @@ final case class CardinalityHandlerLive(
    * @return `true` if the class is defined inside the ontology found in the cache, otherwise throws an exception.
    */
   private def classExists(
-    cacheData: Cache.OntologyCacheData,
+    cacheData: OntologyCacheData,
     submittedClassInfoContentV2: ClassInfoContentV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
@@ -459,7 +458,7 @@ final case class CardinalityHandlerLive(
    * @return `true` if the cardinality is defined on the class, `false` otherwise
    */
   private def isCardinalityDefinedOnClass(
-    cacheData: Cache.OntologyCacheData,
+    cacheData: OntologyCacheData,
     propertyIri: SmartIri,
     cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
     internalClassIri: SmartIri,
@@ -503,7 +502,7 @@ final case class CardinalityHandlerLive(
 
 object CardinalityHandlerLive {
   val layer: URLayer[
-    TriplestoreService with MessageRelay with OntologyHelpers with OntologyCache with StringFormatter,
+    OntologyCache with TriplestoreService with MessageRelay with OntologyHelpers with StringFormatter,
     CardinalityHandler
   ] = ZLayer.fromFunction(CardinalityHandlerLive.apply _)
 }

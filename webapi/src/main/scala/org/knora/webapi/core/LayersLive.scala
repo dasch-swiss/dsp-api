@@ -67,6 +67,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
@@ -98,6 +99,7 @@ object LayersLive {
       with AppConfig
       with AppRouter
       with AppRouterRelayingMessageHandler
+      with OntologyCache
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
@@ -167,7 +169,7 @@ object LayersLive {
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
-      OntologyCache.layer,
+      OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
