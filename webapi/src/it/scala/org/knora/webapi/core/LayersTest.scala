@@ -80,6 +80,8 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
+import org.knora.webapi.responders.v2.OntologyResponderV2
+import org.knora.webapi.responders.v2.OntologyResponderV2Live
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 object LayersTest {
 
@@ -111,6 +113,7 @@ object LayersTest {
     with ListsResponderV1
     with MessageRelay
     with OntologyResponderV1
+    with OntologyResponderV2
     with OntologyHelpers
     with PermissionUtilADM
     with PermissionsResponderADM
@@ -161,6 +164,7 @@ object LayersTest {
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
+      OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,

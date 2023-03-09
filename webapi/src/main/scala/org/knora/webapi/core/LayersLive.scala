@@ -54,6 +54,8 @@ import org.knora.webapi.responders.v1.ValuesResponderV1
 import org.knora.webapi.responders.v1.ValuesResponderV1Live
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
+import org.knora.webapi.responders.v2.OntologyResponderV2
+import org.knora.webapi.responders.v2.OntologyResponderV2Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
@@ -116,6 +118,7 @@ object LayersLive {
       with ListsResponderV1
       with MessageRelay
       with OntologyResponderV1
+      with OntologyResponderV2
       with OntologyHelpers
       with PermissionUtilADM
       with PermissionsResponderADM
@@ -173,6 +176,7 @@ object LayersLive {
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
+      OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
