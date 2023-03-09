@@ -31,6 +31,26 @@ final case class IriService(
 ) extends LazyLogging {
 
   /**
+   * Checks whether an entity is used in the triplestore.
+   *
+   * @param entityIri                 the IRI of the entity.
+   * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
+   * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
+   *
+   * @return `true` if the entity is used.
+   */
+  def isEntityUsed(
+    entityIri: SmartIri,
+    ignoreKnoraConstraints: Boolean = false,
+    ignoreRdfSubjectAndObject: Boolean = false
+  ): Task[Boolean] = {
+    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      .isEntityUsed(entityIri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
+      .toString()
+    triplestoreService.sparqlHttpSelect(query).map(_.results.bindings.nonEmpty)
+  }
+
+  /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
    * If no custom IRI was given, creates a random unused IRI.
    *
