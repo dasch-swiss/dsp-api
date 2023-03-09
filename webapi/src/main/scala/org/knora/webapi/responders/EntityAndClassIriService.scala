@@ -77,10 +77,7 @@ final case class EntityAndClassIriService(
   ): Future[Unit] =
     for {
       entityIsUsed: Boolean <- isEntityUsed(entityIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
-
-      _ = if (entityIsUsed) {
-            errorFun
-          }
+      _ = if (entityIsUsed) { errorFun }
     } yield ()
 
   /**

@@ -69,7 +69,7 @@ final case class IriService(
    * @param iriFormatter the stringFormatter method that must be used to create a random IRI.
    * @return IRI of the entity.
    */
-  def checkOrCreateEntityIriTask(entityIri: Option[SmartIri], iriFormatter: => IRI): Task[IRI] =
+  def checkOrCreateEntityIri(entityIri: Option[SmartIri], iriFormatter: => IRI): Task[IRI] =
     entityIri match {
       case Some(customEntityIri: SmartIri) =>
         val entityIriAsString = customEntityIri.toString

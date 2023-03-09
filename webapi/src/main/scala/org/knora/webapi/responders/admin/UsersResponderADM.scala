@@ -1669,7 +1669,7 @@ final case class UsersResponderADMLive(
 
         // check the custom IRI; if not given, create an unused IRI
         customUserIri: Option[SmartIri] = userCreatePayloadADM.id.map(_.value.toSmartIri)
-        userIri                        <- iriService.checkOrCreateEntityIriTask(customUserIri, stringFormatter.makeRandomPersonIri)
+        userIri                        <- iriService.checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password
         encoder        = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)

@@ -952,7 +952,7 @@ final case class ListsResponderADMLive(
       customListIri          = id.map(_.value).map(_.toSmartIri)
       maybeShortcode: String = project.shortcode
       newListNodeIri <-
-        iriService.checkOrCreateEntityIriTask(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
+        iriService.checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
       // Create the new list node depending on type
       createNewListSparqlString: String = createNodeRequest match {
