@@ -13,11 +13,11 @@ import org.knora.webapi.responders.v2.ontology.Cache
 
 @accessible
 trait OntologyCache {
-  def get: Task[Cache.OntologyCacheData]
+  def getCacheData: Task[Cache.OntologyCacheData]
 }
 
 final case class OntologyCacheLive(cache: Cache) extends OntologyCache {
-  def get: Task[Cache.OntologyCacheData] = cache.getCacheData
+  def getCacheData: Task[Cache.OntologyCacheData] = cache.getCacheData
 }
 
 object OntologyCache {

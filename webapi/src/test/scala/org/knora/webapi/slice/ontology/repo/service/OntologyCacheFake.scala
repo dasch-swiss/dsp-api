@@ -14,7 +14,7 @@ import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
 
 case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache {
-  override def get: Task[Cache.OntologyCacheData] = ref.get
+  override def getCacheData: Task[Cache.OntologyCacheData] = ref.get
   def set(data: OntologyCacheData): UIO[Unit]     = ref.set(data)
 }
 

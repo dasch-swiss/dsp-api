@@ -35,7 +35,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   private def toSmartIris(iris: List[InternalIri]) = ZIO.foreach(iris)(converter.asInternalSmartIri)
 
-  private def getCache = ontologyCache.get
+  private def getCache = ontologyCache.getCacheData
 
   private def findById(ontologyIri: SmartIri, cache: OntologyCacheData): Option[ReadOntologyV2] =
     cache.ontologies.get(ontologyIri)
@@ -84,7 +84,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   override def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] = for {
     classSmartIri <- toSmartIri(classIri)
-    cache         <- ontologyCache.get
+    cache         <- ontologyCache.getCacheData
   } yield findDirectSuperClassesBy(classSmartIri, cache)
 
   private def findDirectSuperClassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =

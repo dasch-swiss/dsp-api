@@ -1802,7 +1802,7 @@ final case class OntologyHelpersLive(
     requestingUser: UserADM
   ): Task[EntityInfoGetResponseV2] = {
     for {
-      cacheData <- ontologyCache.get
+      cacheData <- ontologyCache.getCacheData
 
       // See if any of the requested entities are not Knora entities.
 
@@ -2020,7 +2020,7 @@ final case class OntologyHelpersLive(
     requestingUser: UserADM
   ): Task[ReadOntologyV2] =
     for {
-      cacheData <- ontologyCache.get
+      cacheData <- ontologyCache.getCacheData
 
       ontologyIris = classIris.map(_.getOntologyFromEntity)
 
@@ -2154,7 +2154,7 @@ final case class OntologyHelpersLive(
    */
   override def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: UserADM): Task[Boolean] =
     for {
-      cacheData <- ontologyCache.get
+      cacheData <- ontologyCache.getCacheData
 
       projectIri =
         cacheData.ontologies
@@ -2179,7 +2179,7 @@ final case class OntologyHelpersLive(
     requestingUser: UserADM
   ): Task[SmartIri] =
     for {
-      cacheData <- ontologyCache.get
+      cacheData <- ontologyCache.getCacheData
 
       projectIri =
         cacheData.ontologies
