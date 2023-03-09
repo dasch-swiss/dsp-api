@@ -100,7 +100,7 @@ final case class OntologyResponderV2Live(
     case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) =>
       getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser)
     case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) =>
-      getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser)
+      ontologyHelpers.getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser)
     case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) =>
       getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser)
     case OntologyMetadataGetByProjectRequestV2(projectIris, requestingUser) =>
@@ -454,20 +454,6 @@ final case class OntologyResponderV2Live(
     } yield ontology.copy(
       userLang = userLang
     )
-
-  /**
-   * Requests information about OWL classes in a single ontology.
-   *
-   * @param classIris      the IRIs (internal or external) of the classes to query for.
-   * @param requestingUser the user making the request.
-   * @return a [[ReadOntologyV2]].
-   */
-  private def getClassDefinitionsFromOntologyV2(
-    classIris: Set[SmartIri],
-    allLanguages: Boolean,
-    requestingUser: UserADM
-  ): Task[ReadOntologyV2] =
-    ontologyHelpers.getClassDefinitionsFromOntologyV2(classIris, allLanguages, requestingUser)
 
   /**
    * Requests information about properties in a single ontology.
@@ -1008,7 +994,7 @@ final case class OntologyResponderV2Live(
         _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
-        response <- getClassDefinitionsFromOntologyV2(
+        response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
                       requestingUser = createClassRequest.requestingUser
@@ -1163,7 +1149,7 @@ final case class OntologyResponderV2Live(
         _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
-        response <- getClassDefinitionsFromOntologyV2(
+        response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
                       requestingUser = changeGuiOrderRequest.requestingUser
@@ -1377,7 +1363,7 @@ final case class OntologyResponderV2Live(
         _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
-        response <- getClassDefinitionsFromOntologyV2(
+        response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
                       requestingUser = addCardinalitiesRequest.requestingUser
@@ -1553,7 +1539,7 @@ final case class OntologyResponderV2Live(
       _ <- replaceClassCardinalitiesInTripleStore(request, newReadClassInfo, timeOfUpdate)
       _ <- replaceClassCardinalitiesInOntologyCache(request, newReadClassInfo, timeOfUpdate)
       // Return the response with the new data from the cache
-      response <- getClassDefinitionsFromOntologyV2(
+      response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
                     classIris = Set(classIri),
                     allLanguages = true,
                     requestingUser = request.requestingUser
@@ -2826,7 +2812,7 @@ final case class OntologyResponderV2Live(
 
         // Read the data back from the cache.
 
-        response <- getClassDefinitionsFromOntologyV2(
+        response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
                       requestingUser = changeClassLabelsOrCommentsRequest.requestingUser
@@ -3127,7 +3113,7 @@ final case class OntologyResponderV2Live(
         _ <- ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
-        response <- getClassDefinitionsFromOntologyV2(
+        response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
                       requestingUser = deleteClassCommentRequest.requestingUser
@@ -3177,7 +3163,7 @@ final case class OntologyResponderV2Live(
         } yield taskResult
         else {
           // not change anything if class has no comment
-          getClassDefinitionsFromOntologyV2(
+          ontologyHelpers.getClassDefinitionsFromOntologyV2(
             classIris = Set(internalClassIri),
             allLanguages = true,
             requestingUser = deleteClassCommentRequest.requestingUser
