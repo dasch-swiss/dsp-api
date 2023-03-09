@@ -34,14 +34,15 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.v2.ontology.Cache
-import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyCacheService
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.util._
 
 /**
@@ -65,7 +66,7 @@ import org.knora.webapi.util._
  */
 final case class OntologyResponderV2(
   responderData: ResponderData,
-  implicit val runtime: zio.Runtime[Cache with CardinalityService with CardinalityHandler with OntologyHelpers]
+  implicit val runtime: zio.Runtime[OntologyCache with CardinalityService with CardinalityHandler with OntologyHelpers]
 ) extends Responder(responderData.actorDeps) {
 
   /**
@@ -73,7 +74,7 @@ final case class OntologyResponderV2(
    */
   def receive(msg: OntologiesResponderRequestV2): Future[Any] = msg match {
     case LoadOntologiesRequestV2(requestingUser) =>
-      UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Cache](_.loadOntologies(requestingUser)))
+      UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(requestingUser)))
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
       getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
     case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) =>
@@ -918,7 +919,7 @@ final case class OntologyResponderV2(
             .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-        _ = Cache.checkOntologyReferencesInClassDef(
+        _ = OntologyCache.checkOntologyReferencesInClassDef(
               cache = cacheData,
               classDef = internalClassDefWithLinkValueProps,
               errorFun = { msg: String =>
@@ -1298,7 +1299,7 @@ final case class OntologyResponderV2(
             .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-        _ = Cache.checkOntologyReferencesInClassDef(
+        _ = OntologyCache.checkOntologyReferencesInClassDef(
               cache = cacheData,
               classDef = newInternalClassDefWithLinkValueProps,
               errorFun = { msg: String =>
@@ -1470,7 +1471,7 @@ final case class OntologyResponderV2(
           .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-      _ = Cache.checkOntologyReferencesInClassDef(
+      _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
@@ -2032,7 +2033,7 @@ final case class OntologyResponderV2(
             }
 
         // Remove the ontology from the cache.
-        _ <- UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Cache](_.deleteOntology(internalOntologyIri)))
+        _ <- UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[OntologyCache](_.deleteOntology(internalOntologyIri)))
       } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been deleted")
 
     for {
@@ -2218,7 +2219,7 @@ final case class OntologyResponderV2(
 
         _ = maybeSubjectClassConstraint match {
               case Some(subjectClassConstraint) =>
-                Cache.checkPropertyConstraint(
+                OntologyCache.checkPropertyConstraint(
                   cacheData = cacheData,
                   internalPropertyIri = internalPropertyIri,
                   constraintPredicateIri = OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
@@ -2235,7 +2236,7 @@ final case class OntologyResponderV2(
 
         // Check that the object class is a subclass of the object classes of the base properties.
 
-        _ = Cache.checkPropertyConstraint(
+        _ = OntologyCache.checkPropertyConstraint(
               cacheData = cacheData,
               internalPropertyIri = internalPropertyIri,
               constraintPredicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
@@ -2248,7 +2249,7 @@ final case class OntologyResponderV2(
             )
 
         // Check that the property definition doesn't refer to any non-shared ontologies in other projects.
-        _ = Cache.checkOntologyReferencesInPropertyDef(
+        _ = OntologyCache.checkOntologyReferencesInPropertyDef(
               ontologyCacheData = cacheData,
               propertyDef = internalPropertyDef,
               errorFun = { msg: String =>
@@ -2889,7 +2890,7 @@ final case class OntologyResponderV2(
     deletePropertyCommentRequest: DeletePropertyCommentRequestV2
   ): Future[ReadOntologyV2] = {
     def makeTaskFuture(
-      cacheData: Cache.OntologyCacheData,
+      cacheData: OntologyCacheData,
       internalPropertyIri: SmartIri,
       internalOntologyIri: SmartIri,
       ontology: ReadOntologyV2,
@@ -3038,7 +3039,7 @@ final case class OntologyResponderV2(
       internalPropertyIri: SmartIri = externalPropertyIri.toOntologySchema(InternalSchema)
       internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-      cacheData: Cache.OntologyCacheData <- OntologyCacheService.getCacheData
+      cacheData: OntologyCacheData <- OntologyCacheService.getCacheData
 
       ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
 
@@ -3089,7 +3090,7 @@ final case class OntologyResponderV2(
     deleteClassCommentRequest: DeleteClassCommentRequestV2
   ): Future[ReadOntologyV2] = {
     def makeTaskFuture(
-      cacheData: Cache.OntologyCacheData,
+      cacheData: OntologyCacheData,
       internalClassIri: SmartIri,
       internalOntologyIri: SmartIri,
       ontology: ReadOntologyV2,
@@ -3175,7 +3176,7 @@ final case class OntologyResponderV2(
       internalClassIri: SmartIri    = externalClassIri.toOntologySchema(InternalSchema)
       internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-      cacheData: Cache.OntologyCacheData <- OntologyCacheService.getCacheData
+      cacheData: OntologyCacheData <- OntologyCacheService.getCacheData
 
       ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
 

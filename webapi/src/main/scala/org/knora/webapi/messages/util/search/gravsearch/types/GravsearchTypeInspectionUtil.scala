@@ -13,7 +13,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.responders.v2.ontology.Cache
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
  * Utilities for Gravsearch type inspection.
@@ -162,7 +162,7 @@ object GravsearchTypeInspectionUtil {
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion],
       limitInferenceToOntologies: Option[Set[SmartIri]] = None
-    )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): Seq[QueryPattern] =
+    )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern] =
       if (mustBeAnnotationStatement(statementPattern)) {
         Seq.empty[QueryPattern]
       } else {
@@ -189,7 +189,7 @@ object GravsearchTypeInspectionUtil {
    */
   def removeTypeAnnotations(
     whereClause: WhereClause
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): WhereClause =
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): WhereClause =
     whereClause.copy(
       patterns = QueryTraverser.transformWherePatterns(
         patterns = whereClause.patterns,

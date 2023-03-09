@@ -19,8 +19,8 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 private object CountQueryHandler {
 
@@ -33,7 +33,7 @@ private object CountQueryHandler {
     appActor: ActorRef,
     responderData: ResponderData,
     appConfig: AppConfig
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): SelectQuery = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 

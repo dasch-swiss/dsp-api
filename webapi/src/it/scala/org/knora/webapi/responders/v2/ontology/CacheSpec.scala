@@ -24,6 +24,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].
@@ -58,8 +59,8 @@ class CacheSpec extends CoreSpec {
       val iri: SmartIri       = stringFormatter.toSmartIri(rdfDataObjects.head.name)
       val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
-      val previousCacheDataFuture: Future[Cache.OntologyCacheData] = OntologyCacheService.getCacheData
-      val previousCacheData: Cache.OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
+      val previousCacheDataFuture: Future[OntologyCacheData] = OntologyCacheService.getCacheData
+      val previousCacheData: OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
 
       val previousBooksMaybe = previousCacheData.ontologies.get(iri)
 

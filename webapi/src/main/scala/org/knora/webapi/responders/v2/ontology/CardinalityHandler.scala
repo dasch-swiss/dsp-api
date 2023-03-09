@@ -6,10 +6,11 @@
 package org.knora.webapi.responders.v2.ontology
 
 import zio._
+
 import java.time.Instant
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
@@ -19,6 +20,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -68,7 +71,7 @@ trait CardinalityHandler {
 }
 
 final case class CardinalityHandlerLive(
-  cache: Cache,
+  cache: OntologyCache,
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
   ontologyHelpers: OntologyHelpers,
@@ -166,7 +169,7 @@ final case class CardinalityHandlerLive(
           .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-      _ = Cache.checkOntologyReferencesInClassDef(
+      _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
@@ -318,7 +321,7 @@ final case class CardinalityHandlerLive(
           .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-      _ = Cache.checkOntologyReferencesInClassDef(
+      _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
             errorFun = { msg: String =>
@@ -432,7 +435,7 @@ final case class CardinalityHandlerLive(
    * @return `true` if the class is defined inside the ontology found in the cache, otherwise throws an exception.
    */
   private def classExists(
-    cacheData: Cache.OntologyCacheData,
+    cacheData: OntologyCacheData,
     submittedClassInfoContentV2: ClassInfoContentV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
@@ -455,7 +458,7 @@ final case class CardinalityHandlerLive(
    * @return `true` if the cardinality is defined on the class, `false` otherwise
    */
   private def isCardinalityDefinedOnClass(
-    cacheData: Cache.OntologyCacheData,
+    cacheData: OntologyCacheData,
     propertyIri: SmartIri,
     cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
     internalClassIri: SmartIri,
@@ -499,7 +502,7 @@ final case class CardinalityHandlerLive(
 
 object CardinalityHandlerLive {
   val layer: URLayer[
-    Cache with TriplestoreService with MessageRelay with OntologyHelpers with StringFormatter,
+    OntologyCache with TriplestoreService with MessageRelay with OntologyHelpers with StringFormatter,
     CardinalityHandler
   ] = ZLayer.fromFunction(CardinalityHandlerLive.apply _)
 }

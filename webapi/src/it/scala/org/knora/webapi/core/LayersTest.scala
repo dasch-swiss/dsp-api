@@ -70,8 +70,6 @@ import org.knora.webapi.responders.v1.ValuesResponderV1
 import org.knora.webapi.responders.v1.ValuesResponderV1Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
-import org.knora.webapi.responders.v2.ontology.Cache
-import org.knora.webapi.responders.v2.ontology.CacheLive
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
@@ -82,6 +80,7 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 object LayersTest {
 
   /**
@@ -96,7 +95,7 @@ object LayersTest {
     with ApiRoutes
     with AppRouter
     with AppRouterRelayingMessageHandler
-    with Cache
+    with OntologyCache
     with CacheService
     with CacheServiceRequestMessageHandler
     with CardinalityHandler
@@ -144,7 +143,6 @@ object LayersTest {
       ApiRoutes.layer,
       AppRouter.layer,
       AppRouterRelayingMessageHandler.layer,
-      CacheLive.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
@@ -159,7 +157,7 @@ object LayersTest {
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
-      OntologyCache.layer,
+      OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,

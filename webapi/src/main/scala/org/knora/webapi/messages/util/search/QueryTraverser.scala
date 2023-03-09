@@ -22,8 +22,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.OntologyCacheService
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -87,7 +87,7 @@ trait WhereTransformer {
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): Seq[QueryPattern]
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern]
 
   /**
    * Transforms a [[FilterPattern]] in a WHERE clause into zero or more query patterns.
@@ -272,7 +272,7 @@ object QueryTraverser {
   def getOntologiesRelevantForInference(
     whereClause: WhereClause,
     storeManager: ActorRef
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): Future[Option[Set[SmartIri]]] = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Future[Option[Set[SmartIri]]] = {
     // internal function for easy recursion
     // gets a sequence of [[QueryPattern]] and returns the set of entities that the patterns consist of
     def getEntities(patterns: Seq[QueryPattern]): Seq[Entity] =
@@ -328,7 +328,7 @@ object QueryTraverser {
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): Seq[QueryPattern] = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern] = {
 
     // Optimization has to be called before WhereTransformer.transformStatementInWhere, because optimisation might
     // remove statements that would otherwise be expanded by transformStatementInWhere
@@ -466,7 +466,7 @@ object QueryTraverser {
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit
     executionContext: ExecutionContext,
-    runtime: zio.Runtime[Cache]
+    runtime: zio.Runtime[OntologyCache]
   ): SelectQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
@@ -500,7 +500,7 @@ object QueryTraverser {
     limitInferenceToOntologies: Option[Set[SmartIri]]
   )(implicit
     executionContext: ExecutionContext,
-    runtime: zio.Runtime[Cache]
+    runtime: zio.Runtime[OntologyCache]
   ): SelectQuery =
     inputQuery.copy(
       fromClause = transformer.getFromClause,
@@ -526,7 +526,7 @@ object QueryTraverser {
     inputQuery: ConstructQuery,
     transformer: ConstructToConstructTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[Cache]): ConstructQuery = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): ConstructQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
       patterns = inputQuery.whereClause.patterns,
