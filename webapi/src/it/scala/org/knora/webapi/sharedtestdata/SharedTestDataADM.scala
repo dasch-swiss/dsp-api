@@ -403,11 +403,11 @@ object SharedTestDataADM {
       )
     )
 
-  /* represents 'root-alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
+  /* represents 'root_alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
   def incunabulaCreatorUser: UserADM =
     UserADM(
       id = "http://rdfh.ch/users/91e19f1e01",
-      username = "root-alt",
+      username = "root_alt",
       email = "root-alt@example.com",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       token = None,
@@ -430,7 +430,7 @@ object SharedTestDataADM {
       )
     )
 
-  /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
+  /* represents 'root_alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
   def incunabulaMemberUser: UserADM =
     UserADM(
       id = "http://rdfh.ch/users/incunabulaMemberUser",

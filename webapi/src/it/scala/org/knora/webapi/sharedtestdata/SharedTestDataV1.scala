@@ -237,7 +237,7 @@ object SharedTestDataV1 {
     )
   )
 
-  /* represents 'root-alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
+  /* represents 'root_alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
   def incunabulaCreatorUser = UserProfileV1(
     userData = UserDataV1(
       user_id = Some("http://rdfh.ch/users/91e19f1e01"),
@@ -264,7 +264,7 @@ object SharedTestDataV1 {
     )
   )
 
-  /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
+  /* represents 'root_alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
   def incunabulaMemberUser = UserProfileV1(
     userData = UserDataV1(
       user_id = Some("http://rdfh.ch/users/incunabulaMemberUser"),
