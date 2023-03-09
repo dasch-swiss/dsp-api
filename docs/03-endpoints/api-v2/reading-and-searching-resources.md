@@ -504,6 +504,14 @@ Full-text search supports the
 [Lucene Query Parser syntax](../../07-lucene/lucene-query-parser-syntax.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
+The search index used by DSP transforms all text into lower case characters and splits text into tokens by whitespace. 
+For example, if a text value is: `The cake needs flour, sugar, and butter.`, 
+the tokens are `the`, `cake`, `needs`, `flour,`, `sugar,`, `and`, `butter.`.
+Note that punctuation marks like `,` and `.` are left with the word where they occurred.
+Therefore, if you search for `sugar` you would have to use `sugar*` or `sugar?` to get results that contain `sugar,` or `sugar.` as well.
+The reason for this kind of tokenization is that some users need to be able to search explicitly for special characters including
+punctuation marks.
+
 Please note that the search terms have to be URL-encoded.
 
 ```
@@ -550,16 +558,6 @@ mark `?`, any following parameter by an ampersand `&`.
 
 The response to a count query request is an object with one predicate,
 `http://schema.org/numberOfItems`, with an integer value.
-
-### Search Index
-
-The search index used by DSP transforms all text into lower case characters and splits text into tokens by whitespace. 
-For example, if a text value is: `The cake needs flour, sugar, and butter.`, 
-the tokens are `the`, `cake`, `needs`, `flour,`, `sugar,`, `and`, `butter.`.
-Note that punctuation marks like `,` and `.` are left with the word where they occurred.
-Therefore, if you search for `sugar` you would have to use `sugar*` or `sugar?` to get results that contain `sugar,` or `sugar.` as well.
-The reason for this kind of tokenization is that some users need to be able to search explicitly for special characters including
-punctuation marks.
 
 ### Gravsearch
 
