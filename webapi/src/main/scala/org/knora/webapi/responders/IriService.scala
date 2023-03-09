@@ -31,6 +31,37 @@ final case class IriService(
 ) extends LazyLogging {
 
   /**
+   * Checks whether an entity is used in the triplestore (in data or ontologies).
+   *
+   * @param entityIri                 the IRI of the entity.
+   * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
+   * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
+   *
+   * @return `true` if the entity is used.
+   */
+  def isEntityUsed(
+    entityIri: SmartIri,
+    ignoreKnoraConstraints: Boolean = false,
+    ignoreRdfSubjectAndObject: Boolean = false
+  ): Task[Boolean] = {
+    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      .isEntityUsed(entityIri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
+      .toString()
+    triplestoreService.sparqlHttpSelect(query).map(_.results.bindings.nonEmpty)
+  }
+
+  /**
+   * Checks whether an instance of a class (or any of its sub-classes) exists.
+   *
+   * @param classIri  the IRI of the class.
+   * @return `true` if the class is used.
+   */
+  def isClassUsedInData(classIri: SmartIri): Task[Boolean] = {
+    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isClassUsedInData(classIri).toString()
+    triplestoreService.sparqlHttpSelect(query).map(_.results.bindings.nonEmpty)
+  }
+
+  /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
    * If no custom IRI was given, creates a random unused IRI.
    *
@@ -38,7 +69,7 @@ final case class IriService(
    * @param iriFormatter the stringFormatter method that must be used to create a random IRI.
    * @return IRI of the entity.
    */
-  def checkOrCreateEntityIriTask(entityIri: Option[SmartIri], iriFormatter: => IRI): Task[IRI] =
+  def checkOrCreateEntityIri(entityIri: Option[SmartIri], iriFormatter: => IRI): Task[IRI] =
     entityIri match {
       case Some(customEntityIri: SmartIri) =>
         val entityIriAsString = customEntityIri.toString
