@@ -11,16 +11,16 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
-case class OntologyCacheFake(ref: Ref[OntologyCacheData], implicit val stringFormatter: StringFormatter)
-    extends OntologyCache {
+case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache {
+
   override def getCacheData: Task[OntologyCacheData] = ref.get
-  def set(data: OntologyCacheData): UIO[Unit]        = ref.set(data)
+
+  def set(data: OntologyCacheData): UIO[Unit] = ref.set(data)
 
   /**
    * Loads and caches all ontology information.
@@ -83,15 +83,14 @@ object OntologyCacheFake {
   def set(data: OntologyCacheData): ZIO[OntologyCacheFake, Nothing, Unit] =
     ZIO.service[OntologyCacheFake].flatMap(_.set(data))
 
-  def withCache(data: OntologyCacheData): ZLayer[StringFormatter, Nothing, OntologyCacheFake] = ZLayer.fromZIO {
+  def withCache(data: OntologyCacheData): ZLayer[Any, Nothing, OntologyCacheFake] = ZLayer.fromZIO {
     for {
-      sf  <- ZIO.service[StringFormatter]
       ref <- Ref.make[OntologyCacheData](data)
-    } yield OntologyCacheFake(ref, sf)
+    } yield OntologyCacheFake(ref)
   }
 
   val emptyData: OntologyCacheData =
     OntologyCacheData(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Set.empty)
 
-  val emptyCache: ZLayer[StringFormatter, Nothing, OntologyCacheFake] = withCache(emptyData)
+  val emptyCache: ZLayer[Any, Nothing, OntologyCacheFake] = withCache(emptyData)
 }
