@@ -8,7 +8,6 @@ package org.knora.webapi.messages.util.search
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
-import zio.ZIO
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent._
@@ -24,7 +23,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.responders.v2.ontology.Cache
-import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.responders.v2.ontology.OntologyCacheService
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -295,7 +294,7 @@ object QueryTraverser {
     val entities = getEntities(whereClause.patterns)
 
     for {
-      ontoCache <- getCacheData
+      ontoCache <- OntologyCacheService.getCacheData
       // from the cache, get the map from entity to the ontology where the entity is defined
       entityMap = ontoCache.entityDefinedInOntology
       // resolve all entities from the WHERE clause to the ontology where they are defined
@@ -547,6 +546,4 @@ object QueryTraverser {
     )
   }
 
-  def getCacheData(implicit runtime: zio.Runtime[Cache]) =
-    UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Cache](_.getCacheData))
 }

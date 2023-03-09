@@ -240,7 +240,7 @@ object Cache {
    *
    * @param ontologyCacheData the ontology cache data.
    */
-  private def checkReferencesBetweenOntologies(
+  def checkReferencesBetweenOntologies(
     ontologyCacheData: OntologyCacheData
   )(implicit stringFormatter: StringFormatter): Unit =
     for (ontology <- ontologyCacheData.ontologies.values) {
@@ -432,15 +432,200 @@ object Cache {
   }
 
   /**
-   * Given ontology metdata and ontology graphs read from the triplestore, constructs the ontology cache.
+   * Checks that a property's `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint` is compatible with (i.e. a subclass of)
+   * the ones in all its base properties.
+   *
+   * @param internalPropertyIri        the internal IRI of the property to be checked.
+   * @param constraintPredicateIri     the internal IRI of the constraint, i.e. `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`.
+   * @param constraintValueToBeChecked the constraint value to be checked.
+   * @param allSuperPropertyIris       the IRIs of all the base properties of the property, including indirect base properties and the property itself.
+   * @param errorSchema                the ontology schema to be used for error messages.
+   * @param errorFun                   a function that throws an exception. It will be called with an error message argument if the property constraint is invalid.
+   */
+  def checkPropertyConstraint(
+    cacheData: OntologyCacheData,
+    internalPropertyIri: SmartIri,
+    constraintPredicateIri: SmartIri,
+    constraintValueToBeChecked: SmartIri,
+    allSuperPropertyIris: Set[SmartIri],
+    errorSchema: OntologySchema,
+    errorFun: String => Nothing
+  ): Unit = {
+    // The property constraint value must be a Knora class, or one of a limited set of classes defined in OWL.
+    val superClassesOfConstraintValueToBeChecked: Set[SmartIri] =
+      if (OntologyConstants.Owl.ClassesThatCanBeKnoraClassConstraints.contains(constraintValueToBeChecked.toString)) {
+        Set(constraintValueToBeChecked)
+      } else {
+        cacheData.classToSuperClassLookup
+          .getOrElse(
+            constraintValueToBeChecked,
+            errorFun(
+              s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
+                  .toOntologySchema(errorSchema)} of " +
+                s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}"
+            )
+          )
+          .toSet
+      }
+
+    // Get the definitions of all the Knora superproperties of the property.
+    val superPropertyInfos: Set[ReadPropertyInfoV2] = (allSuperPropertyIris - internalPropertyIri).collect {
+      case superPropertyIri if superPropertyIri.isKnoraDefinitionIri =>
+        cacheData
+          .ontologies(superPropertyIri.getOntologyFromEntity)
+          .properties
+          .getOrElse(
+            superPropertyIri,
+            errorFun(
+              s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} is a subproperty of $superPropertyIri, which is undefined"
+            )
+          )
+    }
+
+    // For each superproperty definition, get the value of the specified constraint in that definition, if any. Here we
+    // make a map of superproperty IRIs to superproperty constraint values.
+    val superPropertyConstraintValues: Map[SmartIri, SmartIri] = superPropertyInfos.flatMap { superPropertyInfo =>
+      superPropertyInfo.entityInfoContent.predicates
+        .get(constraintPredicateIri)
+        .map(
+          _.requireIriObject(
+            throw InconsistentRepositoryDataException(
+              s"Property ${superPropertyInfo.entityInfoContent.propertyIri} has an invalid object for $constraintPredicateIri"
+            )
+          )
+        )
+        .map { superPropertyConstraintValue =>
+          superPropertyInfo.entityInfoContent.propertyIri -> superPropertyConstraintValue
+        }
+    }.toMap
+
+    // Check that the constraint value to be checked is a subclass of the constraint value in every superproperty.
+
+    superPropertyConstraintValues.foreach { case (superPropertyIri, superPropertyConstraintValue) =>
+      if (!superClassesOfConstraintValueToBeChecked.contains(superPropertyConstraintValue)) {
+        errorFun(
+          s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
+              .toOntologySchema(errorSchema)} of " +
+            s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}, because that is not a subclass of " +
+            s"${superPropertyConstraintValue.toOntologySchema(errorSchema)}, which is the ${constraintPredicateIri
+                .toOntologySchema(errorSchema)} of " +
+            s"a base property, ${superPropertyIri.toOntologySchema(errorSchema)}"
+        )
+      }
+    }
+  }
+
+  /**
+   * Updates the ontology cache.
+   *
+   * @param cacheData the updated data to be cached.
+   */
+  def storeCacheData(cacheData: OntologyCacheData): Unit =
+    CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = cacheData)
+}
+
+final case class CacheLive(triplestoreService: TriplestoreService, implicit val stringFormatter: StringFormatter)
+    extends Cache
+    with LazyLogging {
+
+  /**
+   * Loads and caches all ontology information.
+   *
+   * @param requestingUser the user making the request.
+   * @return a [[SuccessResponseV2]].
+   */
+  override def loadOntologies(requestingUser: UserADM): Task[SuccessResponseV2] =
+    for {
+      _ <-
+        ZIO
+          .fail(ForbiddenException(s"Only a system administrator can reload ontologies"))
+          .when(
+            !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)
+          )
+
+      // Get all ontology metadata.
+      allOntologyMetadataSparql <- ZIO.succeed(
+                                     org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                                       .getAllOntologyMetadata()
+                                       .toString()
+                                   )
+      allOntologyMetadataResponse <- triplestoreService.sparqlHttpSelect(allOntologyMetadataSparql)
+      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] =
+        OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
+
+      knoraBaseOntologyMetadata: OntologyMetadataV2 =
+        allOntologyMetadata.getOrElse(
+          OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
+          throw InconsistentRepositoryDataException(s"No knora-base ontology found")
+        )
+      knoraBaseOntologyVersion: String =
+        knoraBaseOntologyMetadata.ontologyVersion.getOrElse(
+          throw InconsistentRepositoryDataException(
+            "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."
+          )
+        )
+
+      _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
+            throw InconsistentRepositoryDataException(
+              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates."
+            )
+          }
+
+      // Get the contents of each named graph containing an ontology.
+      ontologyGraphResponseFutures: Iterable[Task[OntologyGraph]] =
+        allOntologyMetadata.keys.map { ontologyIri =>
+          val ontology: OntologyMetadataV2 =
+            allOntologyMetadata(ontologyIri)
+          val lastModificationDate: Option[Instant] =
+            ontology.lastModificationDate
+          val attachedToProject: Option[SmartIri] =
+            ontology.projectIri
+
+          // throw an exception if ontology doesn't have lastModificationDate property and isn't attached to system project
+          lastModificationDate match {
+            case None =>
+              attachedToProject match {
+                case Some(iri: SmartIri) =>
+                  if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
+                    throw MissingLastModificationDateOntologyException(
+                      s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
+                    )
+                  }
+                case _ => ()
+              }
+            case _ => ()
+          }
+
+          val ontologyGraphConstructQuery =
+            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              .getOntologyGraph(
+                ontologyGraph = ontologyIri
+              )
+              .toString
+
+          triplestoreService.sparqlHttpExtendedConstruct(ontologyGraphConstructQuery).map { response =>
+            OntologyGraph(
+              ontologyIri = ontologyIri,
+              constructResponse = response
+            )
+          }
+        }
+
+      ontologyGraphs <- ZIO.collectAll(ontologyGraphResponseFutures)
+
+      _ = makeOntologyCache(allOntologyMetadata, ontologyGraphs)
+    } yield SuccessResponseV2("Ontologies loaded.")
+
+  /**
+   * Given ontology metadata and ontology graphs read from the triplestore, constructs the ontology cache.
    *
    * @param allOntologyMetadata a map of ontology IRIs to ontology metadata.
    * @param ontologyGraphs      a list of ontology graphs.
    */
-  def makeOntologyCache(
+  private def makeOntologyCache(
     allOntologyMetadata: Map[SmartIri, OntologyMetadataV2],
     ontologyGraphs: Iterable[OntologyGraph]
-  )(implicit stringFormatter: StringFormatter): Unit = {
+  ): Unit = {
     // Get the IRIs of all the entities in each ontology.
 
     // A map of ontology IRIs to class IRIs in each ontology.
@@ -693,7 +878,7 @@ object Cache {
       ) match {
         case Some(subjectClassConstraint) =>
           // Each property's subject class constraint, if provided, must be a subclass of the subject class constraints of all its base properties.
-          checkPropertyConstraint(
+          Cache.checkPropertyConstraint(
             cacheData = ontologyCacheData,
             internalPropertyIri = propertyIri,
             constraintPredicateIri = OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
@@ -727,7 +912,7 @@ object Cache {
       ) match {
         case Some(objectClassConstraint) =>
           // Each property's object class constraint, if provided, must be a subclass of the object class constraints of all its base properties.
-          checkPropertyConstraint(
+          Cache.checkPropertyConstraint(
             cacheData = ontologyCacheData,
             internalPropertyIri = propertyIri,
             constraintPredicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
@@ -755,192 +940,6 @@ object Cache {
     // Update the cache.
     storeCacheData(ontologyCacheData)
   }
-
-  /**
-   * Checks that a property's `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint` is compatible with (i.e. a subclass of)
-   * the ones in all its base properties.
-   *
-   * @param internalPropertyIri        the internal IRI of the property to be checked.
-   * @param constraintPredicateIri     the internal IRI of the constraint, i.e. `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`.
-   * @param constraintValueToBeChecked the constraint value to be checked.
-   * @param allSuperPropertyIris       the IRIs of all the base properties of the property, including indirect base properties and the property itself.
-   * @param errorSchema                the ontology schema to be used for error messages.
-   * @param errorFun                   a function that throws an exception. It will be called with an error message argument if the property constraint is invalid.
-   */
-  def checkPropertyConstraint(
-    cacheData: OntologyCacheData,
-    internalPropertyIri: SmartIri,
-    constraintPredicateIri: SmartIri,
-    constraintValueToBeChecked: SmartIri,
-    allSuperPropertyIris: Set[SmartIri],
-    errorSchema: OntologySchema,
-    errorFun: String => Nothing
-  ): Unit = {
-    // The property constraint value must be a Knora class, or one of a limited set of classes defined in OWL.
-    val superClassesOfConstraintValueToBeChecked: Set[SmartIri] =
-      if (OntologyConstants.Owl.ClassesThatCanBeKnoraClassConstraints.contains(constraintValueToBeChecked.toString)) {
-        Set(constraintValueToBeChecked)
-      } else {
-        cacheData.classToSuperClassLookup
-          .getOrElse(
-            constraintValueToBeChecked,
-            errorFun(
-              s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
-                  .toOntologySchema(errorSchema)} of " +
-                s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}"
-            )
-          )
-          .toSet
-      }
-
-    // Get the definitions of all the Knora superproperties of the property.
-    val superPropertyInfos: Set[ReadPropertyInfoV2] = (allSuperPropertyIris - internalPropertyIri).collect {
-      case superPropertyIri if superPropertyIri.isKnoraDefinitionIri =>
-        cacheData
-          .ontologies(superPropertyIri.getOntologyFromEntity)
-          .properties
-          .getOrElse(
-            superPropertyIri,
-            errorFun(
-              s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} is a subproperty of $superPropertyIri, which is undefined"
-            )
-          )
-    }
-
-    // For each superproperty definition, get the value of the specified constraint in that definition, if any. Here we
-    // make a map of superproperty IRIs to superproperty constraint values.
-    val superPropertyConstraintValues: Map[SmartIri, SmartIri] = superPropertyInfos.flatMap { superPropertyInfo =>
-      superPropertyInfo.entityInfoContent.predicates
-        .get(constraintPredicateIri)
-        .map(
-          _.requireIriObject(
-            throw InconsistentRepositoryDataException(
-              s"Property ${superPropertyInfo.entityInfoContent.propertyIri} has an invalid object for $constraintPredicateIri"
-            )
-          )
-        )
-        .map { superPropertyConstraintValue =>
-          superPropertyInfo.entityInfoContent.propertyIri -> superPropertyConstraintValue
-        }
-    }.toMap
-
-    // Check that the constraint value to be checked is a subclass of the constraint value in every superproperty.
-
-    superPropertyConstraintValues.foreach { case (superPropertyIri, superPropertyConstraintValue) =>
-      if (!superClassesOfConstraintValueToBeChecked.contains(superPropertyConstraintValue)) {
-        errorFun(
-          s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
-              .toOntologySchema(errorSchema)} of " +
-            s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}, because that is not a subclass of " +
-            s"${superPropertyConstraintValue.toOntologySchema(errorSchema)}, which is the ${constraintPredicateIri
-                .toOntologySchema(errorSchema)} of " +
-            s"a base property, ${superPropertyIri.toOntologySchema(errorSchema)}"
-        )
-      }
-    }
-  }
-
-  /**
-   * Updates the ontology cache.
-   *
-   * @param cacheData the updated data to be cached.
-   */
-  def storeCacheData(cacheData: OntologyCacheData): Unit =
-    CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = cacheData)
-
-}
-
-final case class CacheLive(triplestoreService: TriplestoreService, implicit val stringFormatter: StringFormatter)
-    extends Cache
-    with LazyLogging {
-
-  /**
-   * Loads and caches all ontology information.
-   *
-   * @param requestingUser the user making the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  override def loadOntologies(requestingUser: UserADM): Task[SuccessResponseV2] =
-    for {
-      _ <-
-        ZIO
-          .fail(ForbiddenException(s"Only a system administrator can reload ontologies"))
-          .when(
-            !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)
-          )
-
-      // Get all ontology metadata.
-      allOntologyMetadataSparql <- ZIO.succeed(
-                                     org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                       .getAllOntologyMetadata()
-                                       .toString()
-                                   )
-      allOntologyMetadataResponse <- triplestoreService.sparqlHttpSelect(allOntologyMetadataSparql)
-      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] =
-        OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
-
-      knoraBaseOntologyMetadata: OntologyMetadataV2 =
-        allOntologyMetadata.getOrElse(
-          OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
-          throw InconsistentRepositoryDataException(s"No knora-base ontology found")
-        )
-      knoraBaseOntologyVersion: String =
-        knoraBaseOntologyMetadata.ontologyVersion.getOrElse(
-          throw InconsistentRepositoryDataException(
-            "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."
-          )
-        )
-
-      _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
-            throw InconsistentRepositoryDataException(
-              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates."
-            )
-          }
-
-      // Get the contents of each named graph containing an ontology.
-      ontologyGraphResponseFutures: Iterable[Task[OntologyGraph]] =
-        allOntologyMetadata.keys.map { ontologyIri =>
-          val ontology: OntologyMetadataV2 =
-            allOntologyMetadata(ontologyIri)
-          val lastModificationDate: Option[Instant] =
-            ontology.lastModificationDate
-          val attachedToProject: Option[SmartIri] =
-            ontology.projectIri
-
-          // throw an exception if ontology doesn't have lastModificationDate property and isn't attached to system project
-          lastModificationDate match {
-            case None =>
-              attachedToProject match {
-                case Some(iri: SmartIri) =>
-                  if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
-                    throw MissingLastModificationDateOntologyException(
-                      s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
-                    )
-                  }
-                case _ => ()
-              }
-            case _ => ()
-          }
-
-          val ontologyGraphConstructQuery =
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-              .getOntologyGraph(
-                ontologyGraph = ontologyIri
-              )
-              .toString
-
-          triplestoreService.sparqlHttpExtendedConstruct(ontologyGraphConstructQuery).map { response =>
-            OntologyGraph(
-              ontologyIri = ontologyIri,
-              constructResponse = response
-            )
-          }
-        }
-
-      ontologyGraphs <- ZIO.collectAll(ontologyGraphResponseFutures)
-
-      _ = Cache.makeOntologyCache(allOntologyMetadata, ontologyGraphs)
-    } yield SuccessResponseV2("Ontologies loaded.")
 
   /**
    * Gets the ontology data from the cache.
