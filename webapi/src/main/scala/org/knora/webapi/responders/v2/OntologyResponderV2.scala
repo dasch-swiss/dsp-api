@@ -1259,7 +1259,6 @@ final case class OntologyResponderV2Live(
           }
 
         _ <- hasCardinality match {
-               // If there is, check that the class isn't used in data.
                case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
                  ZIO
                    .fail(
@@ -1267,7 +1266,7 @@ final case class OntologyResponderV2Live(
                        s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data"
                      )
                    )
-                   .whenZIO(iriService.isEntityUsed(internalOntologyIri))
+                   .whenZIO(iriService.isClassUsedInData(internalClassIri))
                case None => ZIO.unit
              }
 

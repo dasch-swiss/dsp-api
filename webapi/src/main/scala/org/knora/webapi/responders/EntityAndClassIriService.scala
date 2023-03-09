@@ -84,29 +84,6 @@ final case class EntityAndClassIriService(
     } yield ()
 
   /**
-   * Throws an exception if a class is used in data.
-   *
-   * @param classIri  the IRI of the class.
-   * @param errorFun  a function that throws an exception. It will be called if the class is used.
-   */
-  def throwIfClassIsUsedInData(classIri: SmartIri, errorFun: => Nothing): Future[Unit] =
-    for {
-      classIsUsed: Boolean <- isClassUsedInData(classIri)
-      _                     = if (classIsUsed) { errorFun }
-    } yield ()
-
-  /**
-   * Checks whether an instance of a class (or any of its sub-classes) exists.
-   *
-   * @param classIri  the IRI of the class.
-   * @return `true` if the class is used.
-   */
-  def isClassUsedInData(classIri: SmartIri): Future[Boolean] = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isClassUsedInData(classIri = classIri).toString()
-    appActor.ask(SparqlSelectRequest(query)).mapTo[SparqlSelectResult].map(_.results.bindings.nonEmpty)
-  }
-
-  /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
    * If no custom IRI was given, creates a random unused IRI.
    *

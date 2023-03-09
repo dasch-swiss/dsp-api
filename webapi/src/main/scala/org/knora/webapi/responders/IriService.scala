@@ -31,7 +31,7 @@ final case class IriService(
 ) extends LazyLogging {
 
   /**
-   * Checks whether an entity is used in the triplestore.
+   * Checks whether an entity is used in the triplestore (in data or ontologies).
    *
    * @param entityIri                 the IRI of the entity.
    * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
@@ -47,6 +47,17 @@ final case class IriService(
     val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .isEntityUsed(entityIri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
       .toString()
+    triplestoreService.sparqlHttpSelect(query).map(_.results.bindings.nonEmpty)
+  }
+
+  /**
+   * Checks whether an instance of a class (or any of its sub-classes) exists.
+   *
+   * @param classIri  the IRI of the class.
+   * @return `true` if the class is used.
+   */
+  def isClassUsedInData(classIri: SmartIri): Task[Boolean] = {
+    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isClassUsedInData(classIri).toString()
     triplestoreService.sparqlHttpSelect(query).map(_.results.bindings.nonEmpty)
   }
 
