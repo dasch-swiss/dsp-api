@@ -71,7 +71,7 @@ trait CardinalityHandler {
 }
 
 final case class CardinalityHandlerLive(
-  cache: OntologyCache,
+  ontologyCache: OntologyCache,
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
   ontologyHelpers: OntologyHelpers,
@@ -91,7 +91,7 @@ final case class CardinalityHandlerLive(
   ): Task[CanDoResponseV2] = {
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
-      cacheData <- cache.getCacheData
+      cacheData <- ontologyCache.getCacheData
 
       _ <- // Check that the ontology exists and has not been updated by another user since the client last read it.
         ontologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
@@ -237,7 +237,7 @@ final case class CardinalityHandlerLive(
   ): Task[ReadOntologyV2] = {
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
-      cacheData <- cache.getCacheData
+      cacheData <- ontologyCache.getCacheData
       ontology   = cacheData.ontologies(internalOntologyIri)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
@@ -398,7 +398,7 @@ final case class CardinalityHandlerLive(
                           classes = ontology.classes + (internalClassIri -> readClassInfo)
                         )
 
-      _ <- cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+      _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
       // Read the data back from the cache.
 
