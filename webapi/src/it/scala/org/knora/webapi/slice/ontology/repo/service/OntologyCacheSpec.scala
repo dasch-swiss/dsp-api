@@ -19,7 +19,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.routing.UnsafeZioRun
@@ -50,11 +49,7 @@ class OntologyCacheSpec extends CoreSpec {
   "The cache" should {
 
     "successfully load the cache data" in {
-      val ontologiesFromCacheFuture = UnsafeZioRun.runToFuture(OntologyCache.getCacheData.map(_.ontologies))
-
-      ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] =>
-        res.size should equal(13)
-      }
+      UnsafeZioRun.runOrThrow(OntologyCache.getCacheData.map(_.ontologies)).size should equal(13)
     }
 
     "when a property was removed from an ontology, remove it from the cache as well." in {
