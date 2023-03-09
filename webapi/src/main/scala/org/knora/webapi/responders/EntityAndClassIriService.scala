@@ -47,7 +47,7 @@ final case class EntityAndClassIriService(
    *
    * @return `true` if the entity is used.
    */
-  def isEntityUsed(
+  private def isEntityUsed(
     entityIri: SmartIri,
     ignoreKnoraConstraints: Boolean = false,
     ignoreRdfSubjectAndObject: Boolean = false
