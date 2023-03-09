@@ -9,12 +9,11 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import zio.RIO
 import zio.ZIO
-
 import java.time.Instant
 import scala.concurrent.Future
-
 import dsp.constants.SalsahGui
 import dsp.errors._
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
@@ -77,7 +76,7 @@ final case class OntologyResponderV2(
    */
   def receive(msg: OntologiesResponderRequestV2): Future[Any] = msg match {
     case LoadOntologiesRequestV2(requestingUser) =>
-      UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(requestingUser)))
+      UnsafeZioRun.runToFuture(OntologyCache.loadOntologies(requestingUser))
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
       getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
     case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) =>
@@ -2042,7 +2041,7 @@ final case class OntologyResponderV2(
             }
 
         // Remove the ontology from the cache.
-        _ <- UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[OntologyCache](_.deleteOntology(internalOntologyIri)))
+        _ <- UnsafeZioRun.runToFuture(OntologyCache.deleteOntology(internalOntologyIri))
       } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been deleted")
 
     for {
