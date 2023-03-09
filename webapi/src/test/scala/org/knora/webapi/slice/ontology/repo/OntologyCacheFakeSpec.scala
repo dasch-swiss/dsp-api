@@ -20,7 +20,7 @@ object OntologyCacheFakeSpec extends ZIOSpecDefault {
       for {
         actual <- OntologyCache.getCacheData
       } yield assertTrue(actual == OntologyCacheFake.emptyData)
-    }).provide(OntologyCacheFake.emptyCache),
+    }).provide(OntologyCacheFake.emptyCache, StringFormatter.test),
     suite("with empty cache when setting new data")(test("should return set cache") {
       val somePropertyIri = InternalIri("http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute")
       for {

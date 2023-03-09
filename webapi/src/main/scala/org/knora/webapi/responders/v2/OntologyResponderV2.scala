@@ -40,6 +40,7 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.CanSetCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
@@ -66,7 +67,9 @@ import org.knora.webapi.util._
  */
 final case class OntologyResponderV2(
   responderData: ResponderData,
-  implicit val runtime: zio.Runtime[OntologyCache with CardinalityService with CardinalityHandler with OntologyHelpers]
+  implicit val runtime: zio.Runtime[
+    OntologyCache with OntologyRepo with CardinalityService with CardinalityHandler with OntologyHelpers
+  ]
 ) extends Responder(responderData.actorDeps) {
 
   /**
@@ -1446,9 +1449,12 @@ final case class OntologyResponderV2(
     for {
       cacheData <- OntologyCacheService.getCacheData
       oldClassInfo <-
-        OntologyCacheService
-          .findClassBy(classIri)
-          .map(_.getOrElse(throw BadRequestException(s"Class $ontologyIriExternal does not exist")).entityInfoContent)
+        UnsafeZioRun.runToFuture(
+          OntologyRepo
+            .findClassBy(classIri.toInternalIri)
+            .flatMap(ZIO.fromOption(_))
+            .mapBoth(_ => BadRequestException(s"Class $ontologyIriExternal does not exist"), _.entityInfoContent)
+        )
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
       newInternalClassDef = oldClassInfo.copy(directCardinalities = newClassInfo.directCardinalities)
@@ -1605,9 +1611,12 @@ final case class OntologyResponderV2(
     val ontologyIriExternal = classIriExternal.getOntologyFromEntity
     val ontologyIri         = classIri.getOntologyFromEntity
     for {
-      ontology <- OntologyCacheService
-                    .findOntologyBy(ontologyIri)
-                    .map(_.getOrElse(throw BadRequestException(s"Ontology $ontologyIriExternal does not exist.")))
+      ontology <- UnsafeZioRun.runToFuture(
+                    OntologyRepo
+                      .findById(ontologyIri.toInternalIri)
+                      .flatMap(ZIO.fromOption(_))
+                      .orElseFail(BadRequestException(s"Ontology $ontologyIriExternal does not exist."))
+                  )
       updatedOntologyMetaData = ontology.ontologyMetadata.copy(lastModificationDate = Some(timeOfUpdate))
       updatedOntologyClasses  = ontology.classes + (classIri -> newReadClassInfo)
       updatedOntology         = ontology.copy(ontologyMetadata = updatedOntologyMetaData, classes = updatedOntologyClasses)

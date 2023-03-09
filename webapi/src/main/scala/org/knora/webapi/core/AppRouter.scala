@@ -26,6 +26,7 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.settings._
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 @accessible
@@ -39,11 +40,12 @@ object AppRouter {
   val layer: ZLayer[
     core.ActorSystem
       with AppConfig
-      with OntologyCache
       with CardinalityHandler
       with CardinalityService
       with MessageRelay
+      with OntologyCache
       with OntologyHelpers
+      with OntologyRepo
       with PermissionUtilADM
       with ResourceUtilV2
       with StandoffTagUtilV2
@@ -58,11 +60,12 @@ object AppRouter {
         messageRelay <- ZIO.service[MessageRelay]
         runtime <-
           ZIO.runtime[
-            OntologyCache
-              with CardinalityHandler
+            CardinalityHandler
               with CardinalityService
-              with PermissionUtilADM
+              with OntologyCache
               with OntologyHelpers
+              with OntologyRepo
+              with PermissionUtilADM
               with ResourceUtilV2
               with StandoffTagUtilV2
               with ValueUtilV1
