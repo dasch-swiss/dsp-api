@@ -22,7 +22,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.responders.v2.ontology.OntologyCacheService
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
@@ -294,7 +294,7 @@ object QueryTraverser {
     val entities = getEntities(whereClause.patterns)
 
     for {
-      ontoCache <- OntologyCacheService.getCacheData
+      ontoCache <- UnsafeZioRun.runToFuture(OntologyCache.getCacheData)
       // from the cache, get the map from entity to the ontology where the entity is defined
       entityMap = ontoCache.entityDefinedInOntology
       // resolve all entities from the WHERE clause to the ontology where they are defined
