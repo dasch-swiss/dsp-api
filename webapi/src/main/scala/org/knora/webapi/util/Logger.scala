@@ -17,6 +17,7 @@ object Logger {
     timestamp.fixed(32).color(LogColor.BLUE) |-|
       level.fixed(5).highlight |-|
       line.highlight |-|
+      LoggerNameExtractor.loggerNameAnnotationOrTrace.toLogFormat() |-|
       label("annotations", bracketed(annotations)) |-|
       label("spans", bracketed(spans)) +
       (space + label("cause", cause).highlight).filter(LogFilter.causeNonEmpty)
