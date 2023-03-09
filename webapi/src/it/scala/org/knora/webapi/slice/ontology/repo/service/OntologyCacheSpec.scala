@@ -3,12 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.v2.ontology
+package org.knora.webapi.slice.ontology.repo.service
 
 import java.time.Instant
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.language.postfixOps
 import dsp.constants.SalsahGui
 
@@ -24,12 +21,16 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
 /**
- * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].
+ * This spec is used to test [[org.knora.webapi.slice.ontology.repo.service.OntologyCache]].
  */
-class CacheSpec extends CoreSpec {
+class OntologyCacheSpec extends CoreSpec {
+
+  private def getCacheData = UnsafeZioRun.runOrThrow(OntologyCache.getCacheData)
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -49,7 +50,8 @@ class CacheSpec extends CoreSpec {
   "The cache" should {
 
     "successfully load the cache data" in {
-      val ontologiesFromCacheFuture = OntologyCacheService.getCacheData.map(_.ontologies)
+      val ontologiesFromCacheFuture = UnsafeZioRun.runToFuture(OntologyCache.getCacheData.map(_.ontologies))
+
       ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] =>
         res.size should equal(13)
       }
@@ -59,8 +61,7 @@ class CacheSpec extends CoreSpec {
       val iri: SmartIri       = stringFormatter.toSmartIri(rdfDataObjects.head.name)
       val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
-      val previousCacheDataFuture: Future[OntologyCacheData] = OntologyCacheService.getCacheData
-      val previousCacheData: OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
+      val previousCacheData: OntologyCacheData = getCacheData
 
       val previousBooksMaybe = previousCacheData.ontologies.get(iri)
 
@@ -74,14 +75,11 @@ class CacheSpec extends CoreSpec {
             properties = previousBooks.properties.view.filterKeys(_ != hasTitlePropertyIri).toMap
           )
 
-          val updatedCacheFuture = OntologyCacheService.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
-          Await.ready(updatedCacheFuture, 1.second)
+          // update cache
+          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks))
 
           // read back the cache
-          val newCachedCacheDataFuture = for {
-            cacheData <- OntologyCacheService.getCacheData
-          } yield cacheData
-          val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+          val newCachedCacheData = getCacheData
 
           // ensure that the cache updated correctly
           val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
@@ -107,8 +105,7 @@ class CacheSpec extends CoreSpec {
       val iri: SmartIri             = stringFormatter.toSmartIri(rdfDataObjects.head.name)
       val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
 
-      val previousCacheDataFuture = OntologyCacheService.getCacheData
-      val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
+      val previousCacheData = getCacheData
 
       val previousBooksMaybe = previousCacheData.ontologies.get(iri)
       previousBooksMaybe match {
@@ -163,14 +160,11 @@ class CacheSpec extends CoreSpec {
             properties = newProps
           )
 
-          val updatedCacheFuture = OntologyCacheService.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
-          Await.ready(updatedCacheFuture, 1.second)
+          // update cache
+          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks))
 
           // read back the cache
-          val newCachedCacheDataFuture = for {
-            cacheData <- OntologyCacheService.getCacheData
-          } yield cacheData
-          val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+          val newCachedCacheData = getCacheData
 
           // ensure that the cache updated correctly
           val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
@@ -200,7 +194,7 @@ class CacheSpec extends CoreSpec {
         stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPageValue")
       val bookIri = stringFormatter.toSmartIri("http://rdfh.ch/0001/book-instance-01")
 
-      val previousCacheData = Await.result(OntologyCacheService.getCacheData, 2 seconds)
+      val previousCacheData = getCacheData
       previousCacheData.ontologies.get(ontologyIri) match {
         case Some(previousBooks) =>
           // copy books-ontology but add link from book to page
@@ -256,11 +250,11 @@ class CacheSpec extends CoreSpec {
             properties = newProps
           )
 
-          val updatedCacheFuture = OntologyCacheService.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)
-          Await.ready(updatedCacheFuture, 1.second)
+          // update cache
+          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks))
 
           // read back the cache
-          val newCachedCacheData = Await.result(OntologyCacheService.getCacheData, 2 seconds)
+          val newCachedCacheData = getCacheData
 
           // ensure that the cache updated correctly
           newCachedCacheData.ontologies.get(ontologyIri) match {
@@ -295,4 +289,5 @@ class CacheSpec extends CoreSpec {
       }
     }
   }
+
 }
