@@ -208,12 +208,12 @@ you receive a response without `knora-api:nextStandoffStartIndex`.
 ### Get a Full Representation of a Resource by IRI
 
 A full representation of resource can be obtained by making a GET
-request to the API providing its IRI. Because a Knora IRI has the format
+request to the API providing its IRI. Because a DSP IRI has the format
 of a URL, its IRI has to be URL-encoded.
 
 To get the resource with the IRI `http://rdfh.ch/c5058f3a` (a
-book from the sample Incunabula project, which is included in the Knora
-API server's test data), make a HTTP GET request to the `resources`
+book from the sample Incunabula project, which is included in the DSP-API 
+server's test data), make a HTTP GET request to the `resources`
 route (path segment `resources` in the API call) and append the
 URL-encoded IRI:
 
@@ -240,10 +240,10 @@ and add the URL parameter `?version=TIMESTAMP`, where `TIMESTAMP` is an
 [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp) in the
 UTC timezone. The timestamp can either be URL-encoded, or submitted with all
 punctuation (`-`, `:`, and `.`) removed (this is to accept timestamps
-from Knora's [ARK URLs](permalinks.md)).
+from DSP's [ARK URLs](permalinks.md)).
 
 The resource will be returned with the values that it had at the specified
-time. Since Knora only versions values, not resource metadata (e.g.
+time. Since DSP only versions values, not resource metadata (e.g.
 `rdfs:label`), the current metadata will be returned.
 
 Each value will be returned with the permissions that are attached to
@@ -278,13 +278,13 @@ and add the URL parameter `?version=TIMESTAMP`, where `TIMESTAMP` is an
 [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp) in the
 UTC timezone. The timestamp can either be URL-encoded, or submitted with all
 punctuation (`-`, `:`, and `.`) removed (this is to accept timestamps
-from Knora's [ARK URLs](permalinks.md)).
+from DSP's [ARK URLs](permalinks.md)).
 
 The value will be returned within its containing resource, in the same format
 as for [Responses Describing Resources](#responses-describing-resources),
 but without any of the resource's other values.
 
-Since Knora only versions values, not resource metadata (e.g.
+Since DSP only versions values, not resource metadata (e.g.
 `rdfs:label`), the current resource metadata will be returned.
 
 The value will be returned with the permissions that are attached to
@@ -349,7 +349,7 @@ Each entry has the properties `knora-api:author` (the IRI of the user who made t
 
 The entries include all the dates when the resource's values were created or modified (within
 the requested date range), as well as the date when the resource was created (if the requested
-date range allows it). Each date is included only once. Since Knora only versions values, not
+date range allows it). Each date is included only once. Since DSP only versions values, not
 resource metadata (e.g. `rdfs:label`), changes to a resource's metadata are not included in its
 version history.
 
@@ -372,7 +372,7 @@ HTTP GET to http://host/v2/resourcespreview/resourceIRI(/anotherResourceIri)*
 
 ## Get a Graph of Resources
 
-Knora can return a graph of connections between resources, e.g. for generating
+DSP can return a graph of connections between resources, e.g. for generating
 a network diagram.
 
 ```
@@ -383,7 +383,7 @@ HTTP GET to http://host/v2/graph/resourceIRI[depth=Integer]
 The first parameter must be preceded by a question mark `?`, any
 following parameter by an ampersand `&`.
 
-- `depth` must be at least 1. The maximum depth is an Knora configuration setting.
+- `depth` must be at least 1. The maximum depth is a DSP configuration setting.
   The default is 4.
 - `direction` specifies the direction of the links to be queried, i.e. links to
   and/or from the given resource. The default is `outbound`.
@@ -448,7 +448,7 @@ class, and label. Direct links are shown instead of link values. For example:
 
 ### Search for a Resource by its `rdfs:label`
 
-Knora offers the possibility to search for resources by their
+DSP offers the possibility to search for resources by their
 `rdfs:label`. The use case for this search is to find a specific
 resource as you type. E.g., the user wants to get a list of resources
 whose `rdfs:label` contain some search terms separated by a whitespace
@@ -467,12 +467,9 @@ make this kind of "search as you type" possible, a wildcard character is
 automatically added to the last search term. 
 
 Characters provided by the user that have a special meaning in the Lucene Query Parser 
-syntax are replaced by a whitespace character for this search. If a user types "Zeit-Glöcklein" 
-it is interpreted as "Zeit Glöcklein". Whitespace is normalized afterwards. The special
-characters that are replaced are: 
+syntax need to be escaped. If a user wants to search for the string "Zeit-Glöcklein", she
+needs to type "Zeit\-Glöcklein". The special characters that need escaping are: 
 `+`, `-`, `&`, `|`, `!`, `(`, `)`, `[`, `]`, `{`, `}`, `^`, `"`, `~`, `*`, `?`, `:`, `\`, `/`
-
-If the `rdfs:label` of a resource contains a special character, it is found nonetheless.
 
 ```
 HTTP GET to http://host/v2/searchbylabel/searchValue[limitToResourceClass=resourceClassIRI]
@@ -501,24 +498,22 @@ The response to a count query request is an object with one predicate,
 
 ### Full-text Search
 
-Knora offers a full-text search that searches through all textual
+DSP offers a full-text search that searches through all textual
 representations of values and `rdfs:label` of resources. 
 Full-text search supports the 
 [Lucene Query Parser syntax](../../07-lucene/lucene-query-parser-syntax.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
-Please note that the search
-terms have to be URL-encoded.
+Please note that the search terms have to be URL-encoded.
 
 ```
 HTTP GET to http://host/v2/search/searchValue[limitToResourceClass=resourceClassIRI]
 [limitToStandoffClass=standoffClassIri][limitToProject=projectIRI][offset=Integer]
 ```
 
-The first parameter has to be preceded by a question
-mark `?`, any following parameter by an ampersand `&`.
+The first parameter has to be preceded by a question mark `?`, any following parameter by an ampersand `&`.
 
-A search value must have a minimal length of three characters (default value) as defined in `app/v2` in `application.conf`.
+A search value must have a minimal length of three characters (default value) as defined in `search-value-min-length` in `application.conf`.
 
 A search term may contain wildcards. A `?` represents a single character. It has to be URL-encoded as `%3F` since it has a special meaning in the URL syntax. For example, the term `Uniform` can be search for like this:
 
@@ -535,12 +530,12 @@ HTTP GET to http://host/v2/search/Uni*m
 The default value for the parameter `offset` is 0 which returns the
 first page of search results. Subsequent pages of results can be fetched
 by increasing `offset` by one. The amount of results per page is defined
-in `app/v2` in `application.conf`.
+in `results-per-page` in `application.conf`.
 
-If the parameter `limitToStandoffClass` is provided, Knora will look for search terms
+If the parameter `limitToStandoffClass` is provided, DSP will look for search terms
 that are marked up with the indicated standoff class.
 
-If the parameter `returnFiles=true` is provided, Knora will return any
+If the parameter `returnFiles=true` is provided, DSP will return any
 file value attached to each matching resource.
 
 To request the number of results rather than the results themselves, you can
@@ -556,9 +551,19 @@ mark `?`, any following parameter by an ampersand `&`.
 The response to a count query request is an object with one predicate,
 `http://schema.org/numberOfItems`, with an integer value.
 
+### Search Index
+
+The search index used by DSP transforms all text into lower case characters and splits text into tokens by whitespace. 
+For example, if a text value is: `The cake needs flour, sugar, and butter.`, 
+the tokens are `the`, `cake`, `needs`, `flour,`, `sugar,`, `and`, `butter.`.
+Note that punctuation marks like `,` and `.` are left with the word where they occurred.
+Therefore, if you search for `sugar` you would have to use `sugar*` or `sugar?` to get results that contain `sugar,` or `sugar.` as well.
+The reason for this kind of tokenization is that some users need to be able to search explicitly for special characters including
+punctuation marks.
+
 ### Gravsearch
 
-For more complex queries than a full-text search, Knora offers a query language
+For more complex queries than a full-text search, DSP offers a query language
 called [Gravsearch: Virtual Graph Search](query-language.md)).
 
 ### Support of TEI/XML
@@ -595,7 +600,7 @@ The specified class and property are used without inference; they will not
 match subclasses or subproperties.
 
 The HTTP header `X-Knora-Accept-Project` must be submitted; its value is
-a Knora project IRI. In the request URL, the values of `resourceClass` and `orderByProperty`
+a DSP project IRI. In the request URL, the values of `resourceClass` and `orderByProperty`
 are URL-encoded IRIs in the [complex schema](introduction.md#api-schema).
 The `orderByProperty` parameter is optional; if it is not supplied, resources will
 be sorted alphabetically by resource IRI (an arbitrary but consistent order).
