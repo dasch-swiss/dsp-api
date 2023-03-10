@@ -306,7 +306,7 @@ class SearchResponderV1Spec extends CoreSpec with ImplicitSender {
       }
     }
 
-    "return 2 results when we do a simple search for the words 'Olympius AND Methodius' in the Incunabula test data" in {
+    "return 1 result when we do a simple search for the words 'Olympius AND Methodius' in the Incunabula test data" in {
       appActor ! FulltextSearchGetRequestV1(
         searchValue = "Olympius AND Methodius",
         userProfile = incunabulaUser,
