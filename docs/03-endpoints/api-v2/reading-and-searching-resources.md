@@ -512,7 +512,8 @@ Therefore, if you search for `sugar` you would have to use `sugar*` or `sugar?` 
 The reason for this kind of tokenization is that some users need to be able to search explicitly for special characters including
 punctuation marks.
 
-Alphabetic, numeric, symbolic, and diacritical Unicode characters which are not in the first 127 ASCII characters (the "Basic Latin" Unicode block) are converted into their ASCII equivalents, if one exists, e.g. é or ä are converted into e and a .
+Alphabetic, numeric, symbolic, and diacritical Unicode characters which are not in the first 127 ASCII characters (the "Basic Latin" Unicode block) 
+are converted into their ASCII equivalents, if one exists, e.g. `é` or `ä` are converted into `e` and `a`.
 
 Please note that the search terms have to be URL-encoded.
 
