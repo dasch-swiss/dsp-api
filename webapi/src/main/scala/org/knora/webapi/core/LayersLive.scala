@@ -62,6 +62,8 @@ import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.responders.v2.OntologyResponderV2Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.responders.v2.ResourcesResponderV2
+import org.knora.webapi.responders.v2.ResourcesResponderV2Live
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
@@ -131,7 +133,9 @@ object LayersLive {
       with ProjectsResponderV1
       with RepositoryUpdater
       with ResourceUtilV2
+      with ResourceUtilV2
       with ResourcesResponderV1
+      with ResourcesResponderV2
       with RestCardinalityService
       with RestResourceInfoService
       with SearchResponderV1
@@ -196,6 +200,7 @@ object LayersLive {
       ResourceInfoRoute.layer,
       ResourceUtilV2Live.layer,
       ResourcesResponderV1Live.layer,
+      ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,

@@ -87,7 +87,7 @@ trait ResourceUtilV2 {
    * Checks whether a list node exists and if is a root node.
    *
    * @param nodeIri the IRI of the list node.
-   * @return Future of Either None for nonexistent, true for root and false for child node.
+   * @return Task of Either None for nonexistent, true for root and false for child node.
    */
   def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]]
 

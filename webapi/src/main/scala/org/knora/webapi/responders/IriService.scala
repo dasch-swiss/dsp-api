@@ -111,7 +111,7 @@ final case class IriService(
     makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
   }
 
-  private def checkIriExists(entityIriAsString: IRI): Task[Boolean] = {
+  def checkIriExists(entityIriAsString: IRI): Task[Boolean] = {
     val query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(entityIriAsString).toString
     triplestoreService.sparqlHttpAsk(query).map(_.result)
   }
