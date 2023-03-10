@@ -14,6 +14,7 @@ import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.ValueUtilV1
@@ -39,6 +40,7 @@ final case class RoutingActor(
   implicit val runtime: zio.Runtime[
     CardinalityHandler
       with CardinalityService
+      with ConstructResponseUtilV2
       with OntologyCache
       with OntologyHelpers
       with OntologyRepo

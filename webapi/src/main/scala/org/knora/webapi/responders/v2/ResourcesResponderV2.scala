@@ -69,8 +69,10 @@ import org.knora.webapi.util._
 
 class ResourcesResponderV2(
   responderData: ResponderData,
-  implicit val runtime: zio.Runtime[StandoffTagUtilV2 with ResourceUtilV2 with PermissionUtilADM]
-) extends ResponderWithStandoffV2(responderData) {
+  implicit val runtime: zio.Runtime[
+    ConstructResponseUtilV2 with StandoffTagUtilV2 with ResourceUtilV2 with PermissionUtilADM
+  ]
+) extends ResponderWithStandoffV2(responderData, runtime) {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -1552,12 +1554,16 @@ class ResourcesResponderV2(
           .mapTo[SparqlExtendedConstructResponse]
 
       // separate resources and values
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2
-          .splitMainResourcesAndValueRdfData(
-            constructQueryResults = resourceRequestResponse,
-            requestingUser = requestingUser
-          )
+      mainResourcesAndValueRdfData <- UnsafeZioRun.runToFuture(
+                                        ZIO
+                                          .service[ConstructResponseUtilV2]
+                                          .map(
+                                            _.splitMainResourcesAndValueRdfData(
+                                              constructQueryResults = resourceRequestResponse,
+                                              requestingUser = requestingUser
+                                            )
+                                          )
+                                      )
     } yield mainResourcesAndValueRdfData
 
   }
@@ -1620,20 +1626,22 @@ class ResourcesResponderV2(
           FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                orderByResourceIri = resourceIrisDistinct,
-                                                pageSizeBeforeFiltering =
-                                                  resourceIris.size, // doesn't matter because we're not doing paging
-                                                mappings = mappingsAsMap,
-                                                queryStandoff = queryStandoff,
-                                                versionDate = versionDate,
-                                                calculateMayHaveMoreResults = false,
-                                                appActor = appActor,
-                                                targetSchema = targetSchema,
-                                                appConfig = responderData.appConfig,
-                                                requestingUser = requestingUser
-                                              )
+      apiResponse: ReadResourcesSequenceV2 <-
+        UnsafeZioRun.runToFuture(
+          ZIO.serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = resourceIrisDistinct,
+              pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
+              mappings = mappingsAsMap,
+              queryStandoff = queryStandoff,
+              versionDate = versionDate,
+              calculateMayHaveMoreResults = false,
+              targetSchema = targetSchema,
+              requestingUser = requestingUser
+            )
+          )
+        )
 
       _ = apiResponse.checkResourceIris(
             targetResourceIris = resourceIris.toSet,
@@ -1711,19 +1719,21 @@ class ResourcesResponderV2(
                                                                                                 requestingUser
                                                                                             )
 
-      apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                orderByResourceIri = resourceIrisDistinct,
-                                                pageSizeBeforeFiltering =
-                                                  resourceIris.size, // doesn't matter because we're not doing paging
-                                                mappings = Map.empty[IRI, MappingAndXSLTransformation],
-                                                queryStandoff = false,
-                                                versionDate = None,
-                                                calculateMayHaveMoreResults = false,
-                                                appActor = appActor,
-                                                targetSchema = targetSchema,
-                                                appConfig = responderData.appConfig,
-                                                requestingUser = requestingUser
+      apiResponse: ReadResourcesSequenceV2 <- UnsafeZioRun.runToFuture(
+                                                ZIO.serviceWithZIO[ConstructResponseUtilV2](
+                                                  _.createApiResponse(
+                                                    mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                                                    orderByResourceIri = resourceIrisDistinct,
+                                                    pageSizeBeforeFiltering =
+                                                      resourceIris.size, // doesn't matter because we're not doing paging
+                                                    mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                                                    queryStandoff = false,
+                                                    versionDate = None,
+                                                    calculateMayHaveMoreResults = false,
+                                                    targetSchema = targetSchema,
+                                                    requestingUser = requestingUser
+                                                  )
+                                                )
                                               )
 
       _ = apiResponse.checkResourceIris(
@@ -1889,43 +1899,36 @@ class ResourcesResponderV2(
     def convertDateToGregorian(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, Seq[ReadValueV2]] =
       values.map { case (propIri: SmartIri, valueObjs: Seq[ReadValueV2]) =>
         propIri -> valueObjs.map {
-
-          // convert all dates to Gregorian calendar dates (standardization)
-          valueObj: ReadValueV2 =>
-            valueObj match {
-              case readNonLinkValueV2: ReadOtherValueV2 =>
-                readNonLinkValueV2.valueContent match {
-                  case dateContent: DateValueContentV2 =>
-                    // date value
-
-                    readNonLinkValueV2.copy(
-                      valueContent = dateContent.copy(
-                        // act as if this was a Gregorian date
-                        valueHasCalendar = CalendarNameGregorian
-                      )
-                    )
-
-                  case _ => valueObj
-                }
-
-              case readLinkValueV2: ReadLinkValueV2 if readLinkValueV2.valueContent.nestedResource.nonEmpty =>
-                // recursively process the values of the nested resource
-
-                val linkContent = readLinkValueV2.valueContent
-
-                readLinkValueV2.copy(
-                  valueContent = linkContent.copy(
-                    nestedResource = Some(
-                      linkContent.nestedResource.get.copy(
-                        // recursive call
-                        values = convertDateToGregorian(linkContent.nestedResource.get.values)
-                      )
-                    )
+          case valueObj @ (readNonLinkValueV2: ReadOtherValueV2) =>
+            readNonLinkValueV2.valueContent match {
+              case dateContent: DateValueContentV2 =>
+                // date value
+                readNonLinkValueV2.copy(
+                  valueContent = dateContent.copy(
+                    // act as if this was a Gregorian date
+                    valueHasCalendar = CalendarNameGregorian
                   )
                 )
-
               case _ => valueObj
             }
+
+          case readLinkValueV2: ReadLinkValueV2 if readLinkValueV2.valueContent.nestedResource.nonEmpty =>
+            // recursively process the values of the nested resource
+
+            val linkContent = readLinkValueV2.valueContent
+
+            readLinkValueV2.copy(
+              valueContent = linkContent.copy(
+                nestedResource = Some(
+                  linkContent.nestedResource.get.copy(
+                    // recursive call
+                    values = convertDateToGregorian(linkContent.nestedResource.get.values)
+                  )
+                )
+              )
+            )
+
+          case valueObj => valueObj
         }
       }
 

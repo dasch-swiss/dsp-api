@@ -8,6 +8,7 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import akka.util.Timeout
 import org.xml.sax.SAXException
+import zio.ZIO
 
 import java.io._
 import java.util.UUID
@@ -53,6 +54,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.util._
@@ -61,8 +63,10 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
  */
-class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
-    extends Responder(responderData.actorDeps) {
+class StandoffResponderV2(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[ConstructResponseUtilV2 with StandoffTagUtilV2]
+) extends Responder(responderData.actorDeps) {
 
   private def xmlMimeTypes = Set(
     "text/xml",
@@ -72,7 +76,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
   /**
    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
    */
-  def receive(msg: StandoffResponderRequestV2) = msg match {
+  def receive(msg: StandoffResponderRequestV2): Future[Any] = msg match {
     case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
     case getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2 =>
       getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2)
@@ -134,27 +138,28 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
       // _ = println(s"Got a page of standoff in ${standoffPageEndTime - standoffPageStartTime} ms")
 
       // separate resources and values
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2
-          .splitMainResourcesAndValueRdfData(
-            constructQueryResults = resourceRequestResponse,
-            requestingUser = getStandoffRequestV2.requestingUser
-          )
+      mainResourcesAndValueRdfData <-
+        UnsafeZioRun.runToFuture(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(_.splitMainResourcesAndValueRdfData(resourceRequestResponse, getStandoffRequestV2.requestingUser))
+        )
 
-      readResourcesSequenceV2: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                            mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                            orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
-                                                            pageSizeBeforeFiltering =
-                                                              1, // doesn't matter because we're not doing paging
-                                                            mappings = Map.empty,
-                                                            queryStandoff = false,
-                                                            calculateMayHaveMoreResults = false,
-                                                            versionDate = None,
-                                                            appActor = appActor,
-                                                            targetSchema = getStandoffRequestV2.targetSchema,
-                                                            appConfig = responderData.appConfig,
-                                                            requestingUser = getStandoffRequestV2.requestingUser
-                                                          )
+      readResourcesSequenceV2 <- UnsafeZioRun.runToFuture(
+                                   ZIO.serviceWithZIO[ConstructResponseUtilV2](
+                                     _.createApiResponse(
+                                       mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                                       orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
+                                       pageSizeBeforeFiltering = 1, // doesn't matter because we're not doing paging
+                                       mappings = Map.empty,
+                                       queryStandoff = false,
+                                       calculateMayHaveMoreResults = false,
+                                       versionDate = None,
+                                       targetSchema = getStandoffRequestV2.targetSchema,
+                                       requestingUser = getStandoffRequestV2.requestingUser
+                                     )
+                                   )
+                                 )
 
       readResourceV2 = readResourcesSequenceV2.toResource(getStandoffRequestV2.resourceIri)
 
@@ -760,7 +765,7 @@ class StandoffResponderV2(responderData: ResponderData, implicit val runtime: zi
               val attrName = attrEle.attributeName
 
               // check if the current attribute already exists in this namespace
-              if (acc.get(attrName).nonEmpty) {
+              if (acc.contains(attrName)) {
                 throw BadRequestException("Duplicate attribute name in namespace")
               }
 
