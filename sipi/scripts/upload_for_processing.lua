@@ -3,7 +3,7 @@
 
 --
 -- Local-only upload route for preprocessing of binary files.
--- Should never be enabled in production!
+-- Should never be enabled in production. Authentication is turned off!
 --
 
 require "file_info"
