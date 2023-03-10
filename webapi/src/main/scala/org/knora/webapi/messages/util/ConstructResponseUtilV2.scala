@@ -278,7 +278,7 @@ object ConstructResponseUtilV2 {
      * @param predicateIri the predicate.
      * @return the decimal object of the predicate.
      */
-    def maybeDecimalObject(predicateIri: SmartIri): Option[BigDecimal] =
+    private def maybeDecimalObject(predicateIri: SmartIri): Option[BigDecimal] =
       assertions.get(predicateIri).map { literal =>
         literal
           .asDecimalLiteral(
@@ -406,7 +406,7 @@ final case class ConstructResponseUtilV2Live(
   implicit val stringFormatter: StringFormatter
 ) extends ConstructResponseUtilV2 {
 
-  private val InferredPredicates = Set(
+  private val inferredPredicates = Set(
     OntologyConstants.KnoraBase.HasValue,
     OntologyConstants.KnoraBase.IsMainResource
   )
@@ -451,7 +451,7 @@ final case class ConstructResponseUtilV2Live(
         // - every value property is a subproperty of knora-base:hasValue
         // - every resource that's a main resource (not a dependent resource) in the query result has knora-base:isMainResource true
         val assertionsExplicit: ConstructPredicateObjects = assertions.filterNot { case (pred: SmartIri, _) =>
-          InferredPredicates(pred.toString)
+          inferredPredicates(pred.toString)
         }.map { case (pred: SmartIri, objs: Seq[LiteralV2]) =>
           if (pred.toString == OntologyConstants.Rdf.Type) {
             pred -> objs.filterNot {
@@ -751,7 +751,7 @@ final case class ConstructResponseUtilV2Live(
                   // add link value to the existing values
                   acc + (prop -> incomingLinkValues)
                 } else {
-                  // it does not already exists therefore add the new oone
+                  // it does not already exists therefore add the new one
                   acc
                 }
             }
