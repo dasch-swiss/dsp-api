@@ -37,7 +37,12 @@
 # Text index description
 :indexLucene            a                                   text:TextIndexLucene ;
                         text:directory                      "/fuseki/lucene/@REPOSITORY@" ;
-                        text:entityMap                      :entMap .
+                        text:entityMap                      :entMap ;
+                        text:analyzer                       [ a text:ConfigurableAnalyzer ;
+                                                               text:tokenizer text:WhitespaceTokenizer ;
+                                                               text:filters ( text:ASCIIFoldingFilter text:LowerCaseFilter)
+                                                            ] ;
+                        text:queryParser                    text:AnalyzingQueryParser .
 
 # Mapping in the index
 # URI stored in field "uri"

@@ -37,6 +37,8 @@ import zio._
 
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.messages.util.ConstructResponseUtilV2Live
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
@@ -103,6 +105,7 @@ object LayersTest {
     with CardinalityHandler
     with CardinalityService
     with CkanResponderV1
+    with ConstructResponseUtilV2
     with GroupsResponderADM
     with HttpServer
     with IIIFRequestMessageHandler
@@ -151,6 +154,7 @@ object LayersTest {
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
+      ConstructResponseUtilV2Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
