@@ -166,7 +166,7 @@ class SearchResponderV2(
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   private def fulltextSearchCountV2(
@@ -218,11 +218,12 @@ class SearchResponderV2(
    * @param offset               the offset to be used for paging.
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
+   * @param limitToStandoffClass limit search to given standoff class.
    * @param returnFiles          if true, return any file value attached to each matching resource.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
-   *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
+   * @param appConfig            the application config
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def fulltextSearchV2(
@@ -385,7 +386,7 @@ class SearchResponderV2(
    *
    * @param inputQuery           a Gravsearch query provided by the client.
    *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   private def gravsearchCountV2(
@@ -482,7 +483,7 @@ class SearchResponderV2(
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
    *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def gravsearchV2(
@@ -959,7 +960,7 @@ class SearchResponderV2(
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def searchResourcesByLabelCountV2(
@@ -1010,7 +1011,7 @@ class SearchResponderV2(
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    * @param targetSchema         the schema of the response.
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def searchResourcesByLabelV2(
