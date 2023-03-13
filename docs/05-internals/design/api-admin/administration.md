@@ -3,89 +3,67 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 
-# Administration (Users, Projects, Groups, Institutions, Permissions)
-
-## Scope
-
-This Section includes management (creation, updating, deletion) of
-*Users*, *Projects*, *Groups*, *Institutions*, and *Permissions*.
-
-## Implementation
-
-All administration functions will be implemented as part of the Knora
-API in the `webapi` codebase. There is also a separate web-application
-as part of [DSP-APP](https://github.com/dasch-swiss/dsp-app) and
-[DSP-TOOLS]{https://github.com/dasch-swiss/dsp-tools} using this API,
-allowing basic management operations.
-
-## Overview
-
-During the initial deployment of a Knora server, the main administration
-user (*root*) is created. This *root* user has the right to do anything.
-
-DSP’s concept of access control is that permissions can only be
-granted to groups and not to individual users. There are two distinct ways
-of granting permission. Firstly, an object (a resource or value) can grant
-permissions to groups of users, and secondly, permissions can be granted
-directly to a group of users (not bound to a specific object). There are
-six built-in groups: *UnknownUser*, *KnownUser*, *Creator*,
-*ProjectMember*, *ProjectAdmin*, and *SystemAdmin*. These groups can be
-used in the same way as normal user created groups for permission
-management, i.e. can be used to give certain groups of users, certain
-permissions, without the need to explicitly create them.
-
-A user becomes implicitly a member of such a group by satisfying certain
-conditions:
-
-  - **knora-admin:UnknownUser**:  
-    Any user who has not logged into Knora is
-    automatically assigned to this group.
-
-  - **knora-admin:KnownUser**:  
-    Any user who has logged into Knora is automatically
-    assigned to this group.
-
-  - **knora-admin:Creator**:  
-    When checking a user’s permissions on an object, the user is
-    automatically assigned to this group if he is the creator of the
-    object.
-
-  - **knora-admin:ProjectMember**:  
-    When checking a user’s permissions, the user is automatically
-    assigned to this group by being a member of a project designated by
-    the `knora-admin:isInProject` property.
-
-  - **knora-admin:ProjectAdmin**:  
-    When checking a user's permission, the user is automatically
-    assigned to this group through the
-    `knora-admin:isInProjectAdminGroup` property, which points to the
-    project in question.
-
-  - **knora-admin:SystemAdmin**:  
-    Membership is received by setting the property
-    `knora-admin:isInSystemAdminGroup` to `true` on a `knora-admin:User`.
-
-To use these build-in groups as values for properties (Object Access and
-Default Permissions), the IRI is constructed by appending the name of
-the built-in group to `knora-admin`, e.g., `knora-admin:KnownUser` where
-`knora-admin` corresponds to `http://www.knora.org/ontology/knora-admin#`.
+# Administration
 
 ## Permissions
+
 
 The permissions API endpoint is described [here](../../../03-endpoints/api-admin/permissions.md).
 
 The default permissions when a project is created are described
 [here](../../../03-endpoints/api-admin/projects.md#default-set-of-permissions-for-a-new-project).
 
-Up until know, we have mentioned two groups of permissions. The first
-called *object access permissions*, which contains permissions that
-point from explicit **objects** (resources/values) to groups. The second
-group of permissions called *administrative permissions*, and which
-contains permissions that are put on instances of
-**knora-admin:Permission** objects directly affecting groups. There is
-another, third group of permissions, called *default object access
-permissions* which is also put on instances of *knora-admin:Permission*,
-and which also directly affect groups.
+DSP’s concept of access control is that permissions 
+can only be granted to groups and not to individual users.
+There are two distinct ways of granting permission.
+
+1. An object (a resource or value) can grant permissions to groups of users.
+2. Permissions can be granted directly to a group of users (not bound to a specific object).
+
+There are six built-in groups: 
+*UnknownUser*, *KnownUser*, *Creator*, *ProjectMember*, *ProjectAdmin*, and *SystemAdmin*. 
+These groups can be used in the same way as normal user created groups for permission
+management, i.e. can be used to give certain groups of users, certain
+permissions, without the need to explicitly create them.
+
+A user becomes implicitly a member of such a group by satisfying certain conditions:
+
+- **knora-admin:UnknownUser**:  
+  Any user who has not logged into Knora is automatically assigned to this group.  
+  Group IRI: `http://www.knora.org/ontology/knora-admin#UnknownUser`
+
+- **knora-admin:KnownUser**:  
+  Any user who has logged into Knora is automatically assigned to this group.  
+  Group IRI: `http://www.knora.org/ontology/knora-admin#KnownUser`
+
+
+- **knora-admin:Creator**:  
+  When checking a user’s permissions on an object, the user is automatically assigned to this group 
+  if they are the creator of the object.  
+  Group IRI: `http://www.knora.org/ontology/knora-admin#Creator`
+
+- **knora-admin:ProjectMember**:  
+  When checking a user’s permissions, the user is automatically assigned to this group 
+  by being a member of a project designated by the `knora-admin:isInProject` property.  
+  Group IRI: `http://www.knora.org/ontology/knora-admin#ProjectMember`
+
+- **knora-admin:ProjectAdmin**:  
+  When checking a user's permission, the user is automatically assigned to this group 
+  through the `knora-admin:isInProjectAdminGroup` property, which points to the  project in question.  
+  Group IRI: `http://www.knora.org/ontology/knora-admin#ProjectAdmin`
+
+- **knora-admin:SystemAdmin**:  
+  Membership is received by setting the property `knora-admin:isInSystemAdminGroup` to `true` on a `knora-admin:User`.  
+  Group IRI: `http://www.knora.org/ontology/knora-admin#SystemAdmin`
+
+There are three kinds of permissions:
+
+1. *object access permissions*, which contain permissions 
+   that point from explicit **objects** (resources/values) to groups.
+2. *administrative permissions*, which contain permissions 
+   that are put on instances of `knora-admin:Permission` objects directly affecting groups. 
+3. *default object access permissions* which are also put on instances of `knora-admin:Permission`,
+   and which also directly affect groups.
 
 ### Object Access Permissions
 
