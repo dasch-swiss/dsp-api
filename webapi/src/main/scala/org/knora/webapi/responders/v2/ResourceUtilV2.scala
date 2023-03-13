@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import com.typesafe.scalalogging.Logger
 import zio.Task
 import zio._
 
@@ -31,7 +30,6 @@ import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
@@ -94,21 +92,24 @@ trait ResourceUtilV2 {
   def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]]
 
   /**
-   * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether
-   * the updated value was a file value. If not, this method returns the same future. If it was a file value, this
-   * method checks whether the update was successful. If so, it asks Sipi to move the file to permanent storage.
-   * If not, it asks Sipi to delete the temporary file.
+   * Given an update task which changes [[FileValueContentV2]] values the related files need to be finalized.
+   * If the update was successful the temporary file is moved to permanent storage.
+   * If the update was not successful the temporary file is deleted.
    *
-   * @param updateFuture   the future that should have updated the triplestore.
-   * @param valueContent   the value that should have been created or updated.
+   * @param updateTask     the [[Task]] that updates the triplestore.
+   * @param fileValues     the values which the task updates.
    * @param requestingUser the user making the request.
    */
   def doSipiPostUpdate[T <: UpdateResultInProject](
-    updateFuture: Task[T],
-    valueContent: ValueContentV2,
-    requestingUser: UserADM,
-    log: Logger
+    updateTask: Task[T],
+    fileValues: Seq[FileValueContentV2],
+    requestingUser: UserADM
   ): Task[T]
+  def doSipiPostUpdate[T <: UpdateResultInProject](
+    updateTask: Task[T],
+    fileValue: FileValueContentV2,
+    requestingUser: UserADM
+  ): Task[T] = doSipiPostUpdate(updateTask, List(fileValue), requestingUser)
 }
 
 final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, messageRelay: MessageRelay)
@@ -253,58 +254,35 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
    * If not, it asks Sipi to delete the temporary file.
    *
    * @param updateFuture   the future that should have updated the triplestore.
-   * @param valueContent   the value that should have been created or updated.
+   * @param valueContents: Seq[FileValueContentV2],   the value that should have been created or updated.
    * @param requestingUser the user making the request.
    */
   override def doSipiPostUpdate[T <: UpdateResultInProject](
     updateFuture: Task[T],
-    valueContent: ValueContentV2,
-    requestingUser: UserADM,
-    log: Logger
+    valueContents: Seq[FileValueContentV2],
+    requestingUser: UserADM
   ): Task[T] =
-    // Was this a file value update?
-    valueContent match {
-      case fileValueContent: FileValueContentV2 =>
-        // Yes. Did it succeed?
-        updateFuture.foldZIO(
-          (_: Throwable) => {
-            // The file value update failed. Ask Sipi to delete the temporary file.
-            val sipiRequest = DeleteTemporaryFileRequest(
-              internalFilename = fileValueContent.fileValue.internalFilename,
-              requestingUser = requestingUser
-            )
-            // Did Sipi successfully delete the temporary file?
-            messageRelay
-              .ask[SuccessResponseV2](sipiRequest)
-              .foldZIO(
-                (sipiException: Throwable) => {
-                  // No. Log Sipi's error, and return the future we were given.
-                  log.error("Sipi error", sipiException)
-                  updateFuture
-                },
-                (_: SuccessResponseV2) =>
-                  // Yes. Return the future we were given.
-                  updateFuture
-              )
-          },
-          (updateInProject: T) => {
-            // Yes. Ask Sipi to move the file to permanent storage.
-            val sipiRequest = MoveTemporaryFileToPermanentStorageRequest(
-              internalFilename = fileValueContent.fileValue.internalFilename,
-              prefix = updateInProject.projectADM.shortcode,
-              requestingUser = requestingUser
-            )
-
-            // If Sipi succeeds, return the future we were given. Otherwise, return a failed future.
-            messageRelay.ask[SuccessResponseV2](sipiRequest) *> updateFuture
-          }
-        )
-
-      case _ =>
-        // This wasn't a file value update. Return the future we were given.
-        updateFuture
-    }
+    // Was this update a success?
+    updateFuture.foldZIO(
+      (e: Throwable) => {
+        // The update failed. Ask Sipi to delete the temporary files and return the original failure.
+        val deleteRequests =
+          valueContents.map(value => DeleteTemporaryFileRequest(value.fileValue.internalFilename, requestingUser))
+        val sipiResults = ZIO.foreachDiscard(deleteRequests)(messageRelay.ask[SuccessResponseV2](_).logError)
+        sipiResults.ignore *> ZIO.fail(e)
+      },
+      (updateInProject: T) => {
+        // Yes. Ask Sipi to move the file to permanent storage.
+        // If Sipi succeeds, return the future we were given.
+        // Otherwise, return a failed future from Sipi.
+        val moveRequests = valueContents
+          .map(_.fileValue.internalFilename)
+          .map(MoveTemporaryFileToPermanentStorageRequest(_, updateInProject.projectADM.shortcode, requestingUser))
+        ZIO.foreachDiscard(moveRequests)(messageRelay.ask[SuccessResponseV2](_)) *> ZIO.succeed(updateInProject)
+      }
+    )
 }
+
 object ResourceUtilV2Live {
   val layer: URLayer[TriplestoreService with MessageRelay, ResourceUtilV2] =
     ZLayer.fromFunction(ResourceUtilV2Live.apply _)
