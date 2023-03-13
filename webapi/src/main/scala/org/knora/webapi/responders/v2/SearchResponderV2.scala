@@ -11,8 +11,6 @@ import zio.ZIO
 
 import scala.concurrent.Future
 import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -558,18 +556,19 @@ class SearchResponderV2(
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
 
       start = System.currentTimeMillis()
-      tryPrequeryResponseNotMerged =
-        Try(appActor.ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql, isGravsearch = true)))
       prequeryResponseNotMerged <-
-        (tryPrequeryResponseNotMerged match {
-          case Failure(exception) =>
-            exception match {
-              case _: TriplestoreTimeoutException =>
-                log.error(s"Gravsearch timed out for query: $inputQuery")
+        appActor
+          .ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql, isGravsearch = true))
+          .mapTo[SparqlSelectResult]
+          .transform(t =>
+            t match {
+              case Failure(err) if err.isInstanceOf[TriplestoreTimeoutException] =>
+                log.error(s"Gravsearch timed out for prequery:\n$triplestoreSpecificPrequerySparql")
+                throw err
+              case Failure(err) => throw err
+              case success      => success
             }
-            throw exception
-          case Success(value) => value
-        }).mapTo[SparqlSelectResult]
+          )
       duration = (System.currentTimeMillis() - start) / 1000.0
       _ =
         if (duration < 3) {
