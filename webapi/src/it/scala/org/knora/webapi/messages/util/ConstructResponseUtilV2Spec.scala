@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util
+package org.knora.webapi.messages.util
 
 import akka.testkit.ImplicitSender
-import akka.util.Timeout
 import zio.FiberFailure
 import zio.Unsafe
-
+import zio.ZIO
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.Future
@@ -18,18 +17,18 @@ import scala.concurrent.duration._
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2SpecFullData
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.FileUtil
 
 /**
  * Tests [[ConstructResponseUtilV2]].
  */
 class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = 10.seconds
   private val incunabulaUser                            = SharedTestDataADM.incunabulaProjectAdminUser
   private val anythingAdminUser                         = SharedTestDataADM.anythingAdminUser
   private val anonymousUser                             = SharedTestDataADM.anonymousUser
@@ -52,23 +51,32 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         }
 
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = resourceRequestResponse,
-          requestingUser = incunabulaUser
+        UnsafeZioRun.runOrThrow(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(
+              _.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = incunabulaUser
+              )
+            )
         )
 
-      val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
-        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-        orderByResourceIri = Seq(resourceIri),
-        pageSizeBeforeFiltering = 1,
-        mappings = Map.empty,
-        queryStandoff = false,
-        versionDate = None,
-        calculateMayHaveMoreResults = false,
-        appActor = appActor,
-        targetSchema = ApiV2Complex,
-        appConfig = appConfig,
-        requestingUser = incunabulaUser
+      val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
+        ZIO
+          .serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = Seq(resourceIri),
+              pageSizeBeforeFiltering = 1,
+              mappings = Map.empty,
+              queryStandoff = false,
+              versionDate = None,
+              calculateMayHaveMoreResults = false,
+              targetSchema = ApiV2Complex,
+              requestingUser = incunabulaUser
+            )
+          )
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -93,23 +101,32 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         }
 
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = resourceRequestResponse,
-          requestingUser = anythingAdminUser
+        UnsafeZioRun.runOrThrow(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(
+              _.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = anythingAdminUser
+              )
+            )
         )
 
-      val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
-        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-        orderByResourceIri = Seq(resourceIri),
-        pageSizeBeforeFiltering = 1,
-        mappings = Map.empty,
-        queryStandoff = false,
-        versionDate = None,
-        calculateMayHaveMoreResults = false,
-        appActor = appActor,
-        targetSchema = ApiV2Complex,
-        appConfig = appConfig,
-        requestingUser = anythingAdminUser
+      val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
+        ZIO
+          .serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = Seq(resourceIri),
+              pageSizeBeforeFiltering = 1,
+              mappings = Map.empty,
+              queryStandoff = false,
+              versionDate = None,
+              calculateMayHaveMoreResults = false,
+              targetSchema = ApiV2Complex,
+              requestingUser = anythingAdminUser
+            )
+          )
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -135,23 +152,32 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         }
 
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = resourceRequestResponse,
-          requestingUser = incunabulaUser
+        UnsafeZioRun.runOrThrow(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(
+              _.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = incunabulaUser
+              )
+            )
         )
 
-      val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
-        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-        orderByResourceIri = Seq(resourceIri),
-        pageSizeBeforeFiltering = 1,
-        mappings = Map.empty,
-        queryStandoff = false,
-        versionDate = None,
-        calculateMayHaveMoreResults = false,
-        appActor = appActor,
-        targetSchema = ApiV2Complex,
-        appConfig = appConfig,
-        requestingUser = incunabulaUser
+      val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
+        ZIO
+          .serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = Seq(resourceIri),
+              pageSizeBeforeFiltering = 1,
+              mappings = Map.empty,
+              queryStandoff = false,
+              versionDate = None,
+              calculateMayHaveMoreResults = false,
+              targetSchema = ApiV2Complex,
+              requestingUser = incunabulaUser
+            )
+          )
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -177,23 +203,32 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         }
 
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = resourceRequestResponse,
-          requestingUser = anythingAdminUser
+        UnsafeZioRun.runOrThrow(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(
+              _.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = anythingAdminUser
+              )
+            )
         )
 
-      val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
-        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-        orderByResourceIri = Seq(resourceIri),
-        pageSizeBeforeFiltering = 1,
-        mappings = Map.empty,
-        queryStandoff = false,
-        versionDate = None,
-        calculateMayHaveMoreResults = false,
-        appActor = appActor,
-        targetSchema = ApiV2Complex,
-        appConfig = appConfig,
-        requestingUser = anythingAdminUser
+      val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
+        ZIO
+          .serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = Seq(resourceIri),
+              pageSizeBeforeFiltering = 1,
+              mappings = Map.empty,
+              queryStandoff = false,
+              versionDate = None,
+              calculateMayHaveMoreResults = false,
+              targetSchema = ApiV2Complex,
+              requestingUser = anythingAdminUser
+            )
+          )
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -219,23 +254,32 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         }
 
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = resourceRequestResponse,
-          requestingUser = anonymousUser
+        UnsafeZioRun.runOrThrow(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(
+              _.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = anonymousUser
+              )
+            )
         )
 
-      val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
-        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-        orderByResourceIri = Seq(resourceIri),
-        pageSizeBeforeFiltering = 1,
-        mappings = Map.empty,
-        queryStandoff = false,
-        versionDate = None,
-        calculateMayHaveMoreResults = false,
-        appActor = appActor,
-        targetSchema = ApiV2Complex,
-        appConfig = appConfig,
-        requestingUser = anonymousUser
+      val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
+        ZIO
+          .serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = Seq(resourceIri),
+              pageSizeBeforeFiltering = 1,
+              mappings = Map.empty,
+              queryStandoff = false,
+              versionDate = None,
+              calculateMayHaveMoreResults = false,
+              targetSchema = ApiV2Complex,
+              requestingUser = anonymousUser
+            )
+          )
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -261,23 +305,32 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         }
 
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = resourceRequestResponse,
-          requestingUser = anythingAdminUser
+        UnsafeZioRun.runOrThrow(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(
+              _.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = anythingAdminUser
+              )
+            )
         )
 
-      val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
-        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-        orderByResourceIri = Seq(resourceIri),
-        pageSizeBeforeFiltering = 1,
-        mappings = Map.empty,
-        queryStandoff = false,
-        versionDate = None,
-        calculateMayHaveMoreResults = false,
-        appActor = appActor,
-        targetSchema = ApiV2Complex,
-        appConfig = appConfig,
-        requestingUser = anythingAdminUser
+      val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
+        ZIO
+          .serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = Seq(resourceIri),
+              pageSizeBeforeFiltering = 1,
+              mappings = Map.empty,
+              queryStandoff = false,
+              versionDate = None,
+              calculateMayHaveMoreResults = false,
+              targetSchema = ApiV2Complex,
+              requestingUser = anythingAdminUser
+            )
+          )
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -333,23 +386,32 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         }
 
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = resourceRequestResponse,
-          requestingUser = incunabulaUser
+        UnsafeZioRun.runOrThrow(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(
+              _.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = incunabulaUser
+              )
+            )
         )
 
-      val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
-        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-        orderByResourceIri = resourceIris,
-        pageSizeBeforeFiltering = 1,
-        mappings = Map.empty,
-        queryStandoff = false,
-        versionDate = None,
-        calculateMayHaveMoreResults = false,
-        appActor = appActor,
-        targetSchema = ApiV2Complex,
-        appConfig = appConfig,
-        requestingUser = incunabulaUser
+      val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
+        ZIO
+          .serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = resourceIris,
+              pageSizeBeforeFiltering = 1,
+              mappings = Map.empty,
+              queryStandoff = false,
+              versionDate = None,
+              calculateMayHaveMoreResults = false,
+              targetSchema = ApiV2Complex,
+              requestingUser = incunabulaUser
+            )
+          )
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -406,23 +468,32 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         }
 
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = resourceRequestResponse,
-          requestingUser = incunabulaUser
+        UnsafeZioRun.runOrThrow(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(
+              _.splitMainResourcesAndValueRdfData(
+                constructQueryResults = resourceRequestResponse,
+                requestingUser = incunabulaUser
+              )
+            )
         )
 
-      val apiResponseFuture: Future[ReadResourcesSequenceV2] = ConstructResponseUtilV2.createApiResponse(
-        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-        orderByResourceIri = resourceIris,
-        pageSizeBeforeFiltering = 1,
-        mappings = Map.empty,
-        queryStandoff = false,
-        versionDate = None,
-        calculateMayHaveMoreResults = false,
-        appActor = appActor,
-        targetSchema = ApiV2Complex,
-        appConfig = appConfig,
-        requestingUser = incunabulaUser
+      val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
+        ZIO
+          .serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = resourceIris,
+              pageSizeBeforeFiltering = 1,
+              mappings = Map.empty,
+              queryStandoff = false,
+              versionDate = None,
+              calculateMayHaveMoreResults = false,
+              targetSchema = ApiV2Complex,
+              requestingUser = incunabulaUser
+            )
+          )
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)

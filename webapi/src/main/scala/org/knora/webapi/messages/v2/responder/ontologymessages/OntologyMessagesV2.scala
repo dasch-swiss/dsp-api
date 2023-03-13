@@ -24,6 +24,7 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -41,7 +42,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
  */
-sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
+sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage {
 
   def requestingUser: UserADM
 }

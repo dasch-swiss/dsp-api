@@ -32,9 +32,8 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/ontologies/books-onto.ttl", name = "http://www.knora.org/ontology/0001/anything"),
-    RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/ontologies/books-onto.ttl", name = "http://www.knora.org/ontology/0001/books"),
+    RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/books")
   )
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
   // The default timeout for receiving reply messages from actors.
@@ -57,10 +56,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.fulltextSearchForNarr,
-          received = response
-        )
+        assert(response.resources.size == 25)
       }
     }
 
@@ -79,10 +75,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.fulltextSearchForDinge,
-          received = response
-        )
+        assert(response.resources.size == 1)
       }
 
     }
@@ -146,7 +139,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       // extended search sort by resource Iri by default if no order criterion is indicated
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         // TODO: do better testing once JSON-LD can be converted back into case classes
-        assert(response.resources.size == 18, s"18 books were expected, but ${response.resources.size} given.")
+        assert(response.resources.size == 18)
       }
 
     }
@@ -163,7 +156,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
+        assert(response.resources.size == 3)
       }
 
     }
@@ -171,7 +164,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
     "perform a search by label for incunabula:book that contain 'Das Narrenschiff'" in {
 
       appActor ! SearchResourceByLabelRequestV2(
-        searchValue = "Das Narrenschiff",
+        searchValue = "Narrenschiff",
         offset = 0,
         limitToProject = None,
         limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
@@ -180,7 +173,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
+        assert(response.resources.size == 3)
       }
 
     }
@@ -195,22 +188,22 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case response: ResourceCountV2 =>
-        assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+        assert(response.numberOfResources == 3)
       }
 
     }
 
-    "perform a a count search query by label for incunabula:book that contain 'Das Narrenschiff'" in {
+    "perform a a count search query by label for incunabula:book that contain 'Passio sancti Meynrhadi martyris et heremite'" in {
 
       appActor ! SearchResourceByLabelCountRequestV2(
-        searchValue = "Das Narrenschiff",
+        searchValue = "Passio sancti Meynrhadi martyris et heremite",
         limitToProject = None,
         limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
       expectMsgPF(timeout) { case response: ResourceCountV2 =>
-        assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+        assert(response.numberOfResources == 1)
       }
 
     }

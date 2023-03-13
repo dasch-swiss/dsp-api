@@ -29,11 +29,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
-import zio.Runtime
-import zio.ZIO
-import zio.ZLayer
 import zio._
-import zio.logging.backend.SLF4J
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -74,11 +70,7 @@ abstract class E2ESpec
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  private val bootstrap: ZLayer[
-    Any,
-    Any,
-    Environment
-  ] = ZLayer.empty ++ Runtime.removeDefaultLoggers ++ SLF4J.slf4j ++ effectLayers
+  private val bootstrap = util.Logger.text() >>> effectLayers
 
   // create a configured runtime
   implicit val runtime: Runtime.Scoped[Environment] =

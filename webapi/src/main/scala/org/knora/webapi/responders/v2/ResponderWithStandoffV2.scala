@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import zio.ZIO
 
 import scala.concurrent.Future
 
@@ -22,12 +23,16 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRespons
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
  * An abstract class with standoff utility methods for v2 responders.
  */
-abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Responder(responderData.actorDeps) {
+abstract class ResponderWithStandoffV2(
+  responderData: ResponderData,
+  runtime: zio.Runtime[ConstructResponseUtilV2]
+) extends Responder(responderData.actorDeps) {
 
   /**
    * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
@@ -44,7 +49,11 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
 
     // collect the Iris of the mappings referred to in the resources' text values
     val mappingIris: Set[IRI] = queryResultsSeparated.flatMap { case (_, assertions: ResourceWithValueRdfData) =>
-      ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
+      UnsafeZioRun.runOrThrow(
+        ZIO
+          .service[ConstructResponseUtilV2]
+          .map(_.getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions))
+      )(runtime)
     }.toSet
 
     // get all the mappings

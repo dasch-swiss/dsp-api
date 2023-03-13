@@ -3,17 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.v2.ontology
-
-import akka.util.Timeout
+package org.knora.webapi.slice.ontology.repo.service
 
 import java.time.Instant
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.language.postfixOps
-
 import dsp.constants.SalsahGui
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.OntologyConstants
@@ -24,18 +19,21 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
 /**
- * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].
+ * This spec is used to test [[org.knora.webapi.slice.ontology.repo.service.OntologyCache]].
  */
-class CacheSpec extends CoreSpec {
+class OntologyCacheSpec extends CoreSpec {
+
+  private def getCacheData = UnsafeZioRun.runOrThrow(OntologyCache.getCacheData)
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = appConfig.defaultTimeoutAsDuration
 
-  override lazy val rdfDataObjects = List(
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/ontologies/books-onto.ttl",
       name = "http://www.knora.org/ontology/0001/books"
@@ -50,22 +48,15 @@ class CacheSpec extends CoreSpec {
 
   "The cache" should {
 
-    "successfully load the cache cata" in {
-      val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
-        cacheData: Cache.OntologyCacheData <- Cache.getCacheData
-      } yield cacheData.ontologies
-
-      ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] =>
-        res.size should equal(13)
-      }
+    "successfully load the cache data" in {
+      UnsafeZioRun.runOrThrow(OntologyCache.getCacheData.map(_.ontologies)).size should equal(13)
     }
 
     "when a property was removed from an ontology, remove it from the cache as well." in {
       val iri: SmartIri       = stringFormatter.toSmartIri(rdfDataObjects.head.name)
       val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
-      val previousCacheDataFuture: Future[Cache.OntologyCacheData] = Cache.getCacheData
-      val previousCacheData: Cache.OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
+      val previousCacheData: OntologyCacheData = getCacheData
 
       val previousBooksMaybe = previousCacheData.ontologies.get(iri)
 
@@ -79,18 +70,11 @@ class CacheSpec extends CoreSpec {
             properties = previousBooks.properties.view.filterKeys(_ != hasTitlePropertyIri).toMap
           )
 
-          // store new ontology to cache
-          val newCacheData = previousCacheData.copy(
-            ontologies = previousCacheData.ontologies + (iri -> newBooks)
-          )
-          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
-          Await.ready(updatedCacheFuture, 1.second)
+          // update cache
+          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks))
 
           // read back the cache
-          val newCachedCacheDataFuture = for {
-            cacheData <- Cache.getCacheData
-          } yield cacheData
-          val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+          val newCachedCacheData = getCacheData
 
           // ensure that the cache updated correctly
           val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
@@ -116,8 +100,7 @@ class CacheSpec extends CoreSpec {
       val iri: SmartIri             = stringFormatter.toSmartIri(rdfDataObjects.head.name)
       val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
 
-      val previousCacheDataFuture = Cache.getCacheData
-      val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
+      val previousCacheData = getCacheData
 
       val previousBooksMaybe = previousCacheData.ontologies.get(iri)
       previousBooksMaybe match {
@@ -172,18 +155,11 @@ class CacheSpec extends CoreSpec {
             properties = newProps
           )
 
-          // store new ontology to cache
-          val newCacheData = previousCacheData.copy(
-            ontologies = previousCacheData.ontologies + (iri -> newBooks)
-          )
-          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
-          Await.ready(updatedCacheFuture, 1.second)
+          // update cache
+          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks))
 
           // read back the cache
-          val newCachedCacheDataFuture = for {
-            cacheData <- Cache.getCacheData
-          } yield cacheData
-          val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+          val newCachedCacheData = getCacheData
 
           // ensure that the cache updated correctly
           val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
@@ -213,7 +189,7 @@ class CacheSpec extends CoreSpec {
         stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPageValue")
       val bookIri = stringFormatter.toSmartIri("http://rdfh.ch/0001/book-instance-01")
 
-      val previousCacheData = Await.result(Cache.getCacheData, 2 seconds)
+      val previousCacheData = getCacheData
       previousCacheData.ontologies.get(ontologyIri) match {
         case Some(previousBooks) =>
           // copy books-ontology but add link from book to page
@@ -269,15 +245,11 @@ class CacheSpec extends CoreSpec {
             properties = newProps
           )
 
-          // store new ontology to cache
-          val newCacheData = previousCacheData.copy(
-            ontologies = previousCacheData.ontologies + (ontologyIri -> newBooks)
-          )
-          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)
-          Await.ready(updatedCacheFuture, 1.second)
+          // update cache
+          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks))
 
           // read back the cache
-          val newCachedCacheData = Await.result(Cache.getCacheData, 2 seconds)
+          val newCachedCacheData = getCacheData
 
           // ensure that the cache updated correctly
           newCachedCacheData.ontologies.get(ontologyIri) match {
@@ -289,12 +261,12 @@ class CacheSpec extends CoreSpec {
               // check actual property
               previousBooks.properties should not contain key(hasPagePropertyIri)
               previousBooks.properties should not contain key(hasPageValuePropertyIri)
-              newCachedBooks.properties should contain key (hasPagePropertyIri)
-              newCachedBooks.properties should contain key (hasPageValuePropertyIri)
+              newCachedBooks.properties should contain key hasPagePropertyIri
+              newCachedBooks.properties should contain key hasPageValuePropertyIri
 
               // check isEditable == true
               val newHasPageValuePropertyMaybe = newCachedBooks.properties.get(hasPageValuePropertyIri)
-              newHasPageValuePropertyMaybe should not equal (None)
+              newHasPageValuePropertyMaybe should not equal None
               newHasPageValuePropertyMaybe match {
                 case Some(newHasPageValueProperty) =>
                   assert(newHasPageValueProperty.isEditable)
@@ -311,7 +283,6 @@ class CacheSpec extends CoreSpec {
         case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
       }
     }
-
   }
 
 }

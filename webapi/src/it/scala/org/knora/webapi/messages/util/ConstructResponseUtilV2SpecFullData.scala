@@ -1,4 +1,4 @@
-package org.knora.webapi.util
+package org.knora.webapi.messages.util
 
 import java.time.Instant
 

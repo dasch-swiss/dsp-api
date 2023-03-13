@@ -1057,7 +1057,7 @@ final case class ProjectsResponderADMLive(
 
         // check the custom IRI; if not given, create an unused IRI
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(_.value).map(_.toSmartIri)
-        newProjectIRI <- iriService.checkOrCreateEntityIriTask(
+        newProjectIRI <- iriService.checkOrCreateEntityIri(
                            customProjectIri,
                            stringFormatter.makeRandomProjectIri
                          )

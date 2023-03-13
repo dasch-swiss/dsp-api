@@ -12,6 +12,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.messages.util.ConstructResponseUtilV2Live
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
@@ -54,6 +56,8 @@ import org.knora.webapi.responders.v1.ValuesResponderV1
 import org.knora.webapi.responders.v1.ValuesResponderV1Live
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.responders.v2.ListsResponderV2Live
+import org.knora.webapi.responders.v2.OntologyResponderV2
+import org.knora.webapi.responders.v2.OntologyResponderV2Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
@@ -67,6 +71,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
@@ -98,11 +103,13 @@ object LayersLive {
       with AppConfig
       with AppRouter
       with AppRouterRelayingMessageHandler
+      with OntologyCache
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with CardinalityService
       with CkanResponderV1
+      with ConstructResponseUtilV2
       with GroupsResponderADM
       with HttpServer
       with IIIFService
@@ -114,6 +121,7 @@ object LayersLive {
       with ListsResponderV1
       with MessageRelay
       with OntologyResponderV1
+      with OntologyResponderV2
       with OntologyHelpers
       with PermissionUtilADM
       with PermissionsResponderADM
@@ -155,6 +163,7 @@ object LayersLive {
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
+      ConstructResponseUtilV2Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
@@ -167,10 +176,11 @@ object LayersLive {
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
-      OntologyCache.layer,
+      OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
+      OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
