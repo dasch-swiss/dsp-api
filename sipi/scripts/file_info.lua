@@ -50,44 +50,44 @@ local VIDEO_MP4 = "video/mp4"
 
 local image_mime_types = {
     IMAGE_JP2,
+    IMAGE_JPG,
     IMAGE_JPX,
-    IMAGE_TIFF,
     IMAGE_PNG,
-    IMAGE_JPG
+    IMAGE_TIFF
 }
 
 local audio_mime_types = {
     AUDIO_MP3,
+    AUDIO_VND_WAVE,
     AUDIO_WAV,
-    AUDIO_X_WAV,
-    AUDIO_VND_WAVE
+    AUDIO_X_WAV
 }
 
 local text_mime_types = {
-    TEXT_PLAIN,
-    APPLICATION_XML,
-    TEXT_XML,
     APPLICATION_CSV,
-    TEXT_CSV
+    APPLICATION_XML,
+    TEXT_CSV,
+    TEXT_PLAIN,
+    TEXT_XML
 }
 
 local document_mime_types = {
-    APPLICATION_PDF,
     APPLICATION_DOC,
     APPLICATION_DOCX,
-    APPLICATION_XLS,
-    APPLICATION_XLSX,
+    APPLICATION_PDF,
     APPLICATION_PPT,
-    APPLICATION_PPTX
+    APPLICATION_PPTX,
+    APPLICATION_XLS,
+    APPLICATION_XLSX
 }
 
 local archive_mime_types = {
-    APPLICATION_TAR,
-    APPLICATION_ZIP,
-    APPLICATION_GZIP,
     APPLICATION_7Z,
+    APPLICATION_GZIP,
+    APPLICATION_TAR,
     APPLICATION_TGZ,
-    APPLICATION_Z
+    APPLICATION_Z,
+    APPLICATION_ZIP
 }
 
 local video_mime_types = {
@@ -100,33 +100,33 @@ local audio_extensions = {
 }
 
 local text_extensions = {
-    "xml",
-    "xsl",
-    "xsd",
-    "txt",
     "csv",
     "odd",
-    "rng"
+    "rng",
+    "txt",
+    "xml",
+    "xsd",
+    "xsl"
 }
 
 local document_extensions = {
-    "pdf",
     "doc",
     "docx",
-    "xls",
-    "xlsx",
+    "pdf",
     "ppt",
-    "pptx"
+    "pptx",
+    "xls",
+    "xlsx"
 }
 
 local archive_extensions = {
-    "zip",
-    "tar",
+    "7z",
     "gz",
     "gzip",
-    "7z",
+    "tar",
     "tgz",
-    "z"
+    "z",
+    "zip"
 }
 
 local video_extensions = {
