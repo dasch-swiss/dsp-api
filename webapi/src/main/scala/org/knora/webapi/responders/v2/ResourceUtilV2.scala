@@ -93,8 +93,8 @@ trait ResourceUtilV2 {
 
   /**
    * Given an update task which changes [[FileValueContentV2]] values the related files need to be finalized.
-   * If the update was successful the temporary file is moved to permanent storage.
-   * If the update was not successful the temporary file is deleted.
+   * If the update was successful the temporary files are moved to permanent storage.
+   * If the update was not successful the temporary files are deleted.
    *
    * @param updateTask     the [[Task]] that updates the triplestore.
    * @param fileValues     the values which the task updates.
