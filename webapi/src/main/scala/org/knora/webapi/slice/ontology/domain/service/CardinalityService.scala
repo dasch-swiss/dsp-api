@@ -122,9 +122,9 @@ object ChangeCardinalityCheckResult {
       override val failureAffectedIris: List[InternalIri] = subClasses
     }
 
-    final case class CurrentClassFailure(currentClassIri: InternalIri) extends CanSetCardinalityCheckResult.Failure {
-      val reason: String                                  = "The cardinality of the current class is not included in the new cardinality."
-      override val failureAffectedIris: List[InternalIri] = List(currentClassIri)
+    final case class CurrentClassFailure(override val failureAffectedIris: List[InternalIri])
+        extends CanSetCardinalityCheckResult.Failure {
+      val reason: String = "The cardinality of the current class is not included in the new cardinality."
     }
 
     final case object KnoraOntologyCheckFailure
@@ -234,14 +234,14 @@ final case class CardinalityServiceLive(
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     ZIO
       .ifZIO(checkIsCurrentCardinalityIncluded(check))(
-        onTrue = ZIO.succeed(true),
-        onFalse = checkPersistentEntitiesAreCompatible(check)
+        onTrue = ZIO.succeed(List.empty),
+        onFalse = getInstancesWhichAreNonCompliantWithNewCardinality(check)
       )
-      .map(checkIsSuccessful =>
-        if (checkIsSuccessful) {
+      .map(nonCompliantInstances =>
+        if (nonCompliantInstances.isEmpty) {
           Right(CanSetCardinalityCheckResult.Success)
         } else {
-          Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(check.classIri)))
+          Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(check.classIri :: nonCompliantInstances)))
         }
       )
 
@@ -253,9 +253,9 @@ final case class CardinalityServiceLive(
       isIncluded         = currentCardinality.isIncludedIn(check.newCardinality)
     } yield isIncluded
 
-  private def checkPersistentEntitiesAreCompatible(
+  private def getInstancesWhichAreNonCompliantWithNewCardinality(
     check: CheckCardinalitySubject
-  ): Task[Boolean] =
+  ): Task[List[InternalIri]] =
     for {
       subclassIris <- ontologyRepo.findAllSubclassesBy(check.classIri).map(toClassIris)
       instancesAndTheirUsage <-
@@ -263,8 +263,10 @@ final case class CardinalityServiceLive(
           check.propertyIri,
           check.classIri :: subclassIris
         )
-      isCompatible = instancesAndTheirUsage.forall { case (_, count) => check.newCardinality.isCountIncluded(count) }
-    } yield isCompatible
+      nonCompliantInstances = instancesAndTheirUsage.filter { case (_, count) =>
+                                !check.newCardinality.isCountIncluded(count)
+                              }.map(_._1)
+    } yield nonCompliantInstances
 
   /**
    * Checks if a specific cardinality may be replaced.
