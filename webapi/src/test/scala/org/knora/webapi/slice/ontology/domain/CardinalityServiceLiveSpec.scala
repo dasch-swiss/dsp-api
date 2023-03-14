@@ -442,7 +442,19 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   Anything.Property.hasOtherThing,
                   newCardinality
                 )
-            } yield assertTrue(actual == Left(List(CurrentClassFailure(Anything.Class.Thing))))
+            } yield assertTrue(
+              actual == Left(
+                List(
+                  CurrentClassFailure(
+                    List(
+                      Anything.Class.Thing,
+                      InternalIri(value = "http://anotherThing"),
+                      InternalIri(value = "http://aThing")
+                    )
+                  )
+                )
+              )
+            )
           }
         }
       ).provide(
