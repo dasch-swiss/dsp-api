@@ -121,15 +121,9 @@ trait ConstructResponseUtilV2 {
    * @return the referred mappings.
    */
   def getMappingsFromQueryResultsSeparated(
-    queryResultsSeparated: _root_.scala.collection.immutable.Map[
-      _root_.org.knora.webapi.IRI,
-      _root_.org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueRdfData
-    ],
-    requestingUser: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-  ): zio.Task[_root_.scala.collection.immutable.Map[
-    _root_.org.knora.webapi.IRI,
-    _root_.org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-  ]]
+    queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
+    requestingUser: UserADM
+  ): zio.Task[Map[IRI, MappingAndXSLTransformation]]
 }
 object ConstructResponseUtilV2 {
 
