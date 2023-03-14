@@ -29,11 +29,11 @@ permissions, without the need to explicitly create them.
 A user becomes implicitly a member of such a group by satisfying certain conditions:
 
 - **knora-admin:UnknownUser**:  
-  Any user who has not logged into Knora is automatically assigned to this group.  
+  Any user who has not logged into the DSP is automatically assigned to this group.  
   Group IRI: `http://www.knora.org/ontology/knora-admin#UnknownUser`
 
 - **knora-admin:KnownUser**:  
-  Any user who has logged into Knora is automatically assigned to this group.  
+  Any user who has logged into the DSP is automatically assigned to this group.  
   Group IRI: `http://www.knora.org/ontology/knora-admin#KnownUser`
 
 
