@@ -12,8 +12,6 @@ import zio.ZIO
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
 
 import dsp.errors._
 import org.knora.webapi._
@@ -58,6 +56,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequest
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.routing.UnsafeZioRun
@@ -1474,25 +1473,17 @@ class ResourcesResponderV2(
     createResources: Seq[CreateResourceV2],
     requestingUser: UserADM
   ): Future[T] = {
-    val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
+    val fileValues: Seq[FileValueContentV2] = createResources
+      .flatMap(_.flatValues)
+      .map(_.valueContent)
+      .filter(_.isInstanceOf[FileValueContentV2])
+      .map(_.asInstanceOf[FileValueContentV2])
 
-    val resultFutures: Seq[Future[T]] = allValues.map { valueContent =>
-      UnsafeZioRun.runToFuture(
-        ZIO.serviceWithZIO[ResourceUtilV2](
-          _.doSipiPostUpdate(
-            updateFuture = ZIO.fromFuture(_ => updateFuture),
-            valueContent = valueContent,
-            requestingUser = requestingUser,
-            log = log
-          )
-        )
+    UnsafeZioRun.runToFuture(
+      ZIO.serviceWithZIO[ResourceUtilV2](
+        _.doSipiPostUpdate(ZIO.fromFuture(_ => updateFuture), fileValues, requestingUser)
       )
-    }
-
-    Future.sequence(resultFutures).transformWith {
-      case Success(_) => updateFuture
-      case Failure(e) => Future.failed(e)
-    }
+    )
   }
 
   /**
