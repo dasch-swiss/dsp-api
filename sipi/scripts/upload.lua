@@ -2,7 +2,7 @@
 -- * SPDX-License-Identifier: Apache-2.0
 
 --
--- Upload route for binary files (currently only images) to be used with Knora.
+-- Upload route for binary files.
 --
 
 require "file_info"

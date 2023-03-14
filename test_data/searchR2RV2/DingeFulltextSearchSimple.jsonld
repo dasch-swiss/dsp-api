@@ -1,14 +1,10 @@
-
 {
     "rdfs:label": "Ein Ding für jemanden, dem die Dinge gefallen",
     "knora-api:versionArkUrl": {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv.20160302T150510Z",
         "@type": "xsd:anyURI"
     },
-    "anything:hasText": [
-        "Ich liebe die Dinge, sie sind alles für mich.",
-        "Na ja, die Dinge sind OK."
-    ],
+    "anything:hasText": "Na ja, die Dinge sind OK.",
     "knora-api:arkUrl": {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv",
         "@type": "xsd:anyURI"

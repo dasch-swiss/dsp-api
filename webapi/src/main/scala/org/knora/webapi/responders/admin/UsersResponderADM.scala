@@ -1591,7 +1591,7 @@ final case class UsersResponderADMLive(
             throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
           }
       // we are changing the user, so lets get rid of the cached copy
-      _ = invalidateCachedUserADM(maybeCurrentUser)
+      _ <- invalidateCachedUserADM(maybeCurrentUser)
 
       // update the password
       updateUserSparqlString <- ZIO.attempt(
@@ -1669,7 +1669,7 @@ final case class UsersResponderADMLive(
 
         // check the custom IRI; if not given, create an unused IRI
         customUserIri: Option[SmartIri] = userCreatePayloadADM.id.map(_.value.toSmartIri)
-        userIri                        <- iriService.checkOrCreateEntityIriTask(customUserIri, stringFormatter.makeRandomPersonIri)
+        userIri                        <- iriService.checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password
         encoder        = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)

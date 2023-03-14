@@ -14,8 +14,8 @@ import scala.annotation.tailrec
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
@@ -35,7 +35,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   private def toSmartIris(iris: List[InternalIri]) = ZIO.foreach(iris)(converter.asInternalSmartIri)
 
-  private def getCache = ontologyCache.get
+  private def getCache = ontologyCache.getCacheData
 
   private def findById(ontologyIri: SmartIri, cache: OntologyCacheData): Option[ReadOntologyV2] =
     cache.ontologies.get(ontologyIri)
@@ -84,7 +84,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   override def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]] = for {
     classSmartIri <- toSmartIri(classIri)
-    cache         <- ontologyCache.get
+    cache         <- ontologyCache.getCacheData
   } yield findDirectSuperClassesBy(classSmartIri, cache)
 
   private def findDirectSuperClassesBy(classIri: SmartIri, cache: OntologyCacheData): List[ReadClassInfoV2] =
