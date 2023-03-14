@@ -86,6 +86,9 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.responders.v2.OntologyResponderV2Live
+import org.knora.webapi.responders.v2.ResourcesResponderV2
+import org.knora.webapi.responders.v2.ResourcesResponderV2Live
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 object LayersTest {
 
@@ -102,6 +105,7 @@ object LayersTest {
     with AppRouter
     with AppRouterRelayingMessageHandler
     with OntologyCache
+    with OntologyRepo
     with CacheService
     with CacheServiceRequestMessageHandler
     with CardinalityHandler
@@ -128,6 +132,7 @@ object LayersTest {
     with ResourceInfoRepo
     with ResourceUtilV2
     with ResourcesResponderV1
+    with ResourcesResponderV2
     with RestCardinalityService
     with RestResourceInfoService
     with SearchResponderV1
@@ -181,6 +186,7 @@ object LayersTest {
       ResourceInfoRepo.layer,
       ResourceUtilV2Live.layer,
       ResourcesResponderV1Live.layer,
+      ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
