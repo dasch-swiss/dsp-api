@@ -5,10 +5,10 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.pattern._
-import akka.util.Timeout
+import com.typesafe.scalalogging.LazyLogging
 import org.xml.sax.SAXException
 import zio.ZIO
+import zio._
 
 import java.io._
 import java.util.UUID
@@ -17,8 +17,6 @@ import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.Schema
 import javax.xml.validation.SchemaFactory
 import javax.xml.validation.{Validator => JValidator}
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.NodeSeq
@@ -26,8 +24,12 @@ import scala.xml.XML
 
 import dsp.errors._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -42,7 +44,6 @@ import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
 import org.knora.webapi.messages.twirl.MappingXMLAttribute
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
@@ -54,22 +55,12 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-// import org.knora.webapi.util._
-import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.messages.ResponderRequest
-import zio.ZIO
-import zio._
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.TaskResult
 import org.knora.webapi.util.NextExecutionStep
 import org.knora.webapi.util.ResultAndNext
-import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.

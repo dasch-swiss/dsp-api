@@ -18,6 +18,7 @@ import scala.concurrent.Future
 import dsp.errors.AssertionException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -29,7 +30,6 @@ import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDRequestReaderV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.core.RelayedMessage
 
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
