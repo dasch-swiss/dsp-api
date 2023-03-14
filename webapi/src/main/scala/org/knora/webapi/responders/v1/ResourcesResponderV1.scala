@@ -12,8 +12,6 @@ import zio.ZIO
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
 import scala.util.Try
 
 import dsp.constants.SalsahGui
@@ -43,7 +41,6 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByIriRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
@@ -1932,44 +1929,11 @@ class ResourcesResponderV1(
         }
     } yield MultipleResourceCreateResponseV1(responses, projectADM)
 
-    doSipiPostUpdateForResources(
-      updateFuture = updateFuture,
-      fileValueContentV2s = fileValueContentV2s,
-      requestingUser = requestingUser
-    )
-  }
-
-  /**
-   * Asks Sipi to to move temporary image files to permanent storage if a triplestore update was successful,
-   * or to delete the temporary files if the triplestore update failed.
-   *
-   * @param updateFuture        the future resulting from the triplestore update.
-   * @param fileValueContentV2s the file values that were created, if any.
-   * @param requestingUser      the user making the request.
-   * @return `updateFuture`, or a failed future (if Sipi failed to move a file to permanent storage).
-   */
-  private def doSipiPostUpdateForResources[T <: UpdateResultInProject](
-    updateFuture: Future[T],
-    fileValueContentV2s: Seq[FileValueContentV2],
-    requestingUser: UserADM
-  ): Future[T] = {
-    val resultFutures: Seq[Future[T]] = fileValueContentV2s.map { valueContent =>
-      UnsafeZioRun.runToFuture(
-        ZIO.serviceWithZIO[ResourceUtilV2](
-          _.doSipiPostUpdate(
-            updateFuture = ZIO.fromFuture(_ => updateFuture),
-            valueContent = valueContent,
-            requestingUser = requestingUser,
-            log = log
-          )
-        )
+    UnsafeZioRun.runToFuture(
+      ZIO.serviceWithZIO[ResourceUtilV2](
+        _.doSipiPostUpdate(ZIO.fromFuture(_ => updateFuture), fileValueContentV2s, requestingUser)
       )
-    }
-
-    Future.sequence(resultFutures).transformWith {
-      case Success(_) => updateFuture
-      case Failure(e) => Future.failed(e)
-    }
+    )
   }
 
   /**
@@ -2459,10 +2423,10 @@ class ResourcesResponderV1(
                      )
     } yield apiResponse
 
-    doSipiPostUpdateForResources(
-      updateFuture = updateFuture,
-      fileValueContentV2s = fileValueContent.toSeq,
-      requestingUser = requestingUser
+    UnsafeZioRun.runToFuture(
+      ZIO.serviceWithZIO[ResourceUtilV2](
+        _.doSipiPostUpdate(ZIO.fromFuture(_ => updateFuture), fileValueContent.toSeq, requestingUser)
+      )
     )
   }
 

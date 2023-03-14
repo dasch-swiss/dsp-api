@@ -397,10 +397,11 @@ class ValuesResponderV2(
     UnsafeZioRun.runToFuture(
       ZIO.serviceWithZIO[ResourceUtilV2](
         _.doSipiPostUpdate(
-          updateFuture = ZIO.fromFuture(ec => triplestoreUpdateFuture),
-          valueContent = createValueRequest.createValue.valueContent,
-          requestingUser = createValueRequest.requestingUser,
-          log = log
+          ZIO.fromFuture(ec => triplestoreUpdateFuture),
+          List(createValueRequest.createValue.valueContent)
+            .filter(_.isInstanceOf[FileValueContentV2])
+            .map(_.asInstanceOf[FileValueContentV2]),
+          createValueRequest.requestingUser
         )
       )
     )
@@ -1378,10 +1379,11 @@ class ValuesResponderV2(
           UnsafeZioRun.runToFuture(
             ZIO.serviceWithZIO[ResourceUtilV2](
               _.doSipiPostUpdate(
-                updateFuture = ZIO.fromFuture(_ => triplestoreUpdateFuture),
-                valueContent = updateValueContentV2.valueContent,
-                requestingUser = updateValueRequest.requestingUser,
-                log = log
+                ZIO.fromFuture(_ => triplestoreUpdateFuture),
+                List(updateValueContentV2.valueContent)
+                  .filter(_.isInstanceOf[FileValueContentV2])
+                  .map(_.asInstanceOf[FileValueContentV2]),
+                updateValueRequest.requestingUser
               )
             )
           )
