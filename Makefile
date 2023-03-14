@@ -10,11 +10,6 @@ include vars.mk
 # Documentation targets
 #################################
 
-.PHONY: docs-publish
-docs-publish: ## build and publish docs to Github Pages
-	@$(MAKE) -C docs graphvizfigures
-	mkdocs gh-deploy
-
 .PHONY: docs-build
 docs-build: ## build docs into the local 'site' folder
 	@$(MAKE) -C docs graphvizfigures
