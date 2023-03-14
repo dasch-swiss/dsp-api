@@ -6,11 +6,12 @@
 package org.knora.webapi.responders.v1
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+
 import java.time.Instant
 import java.util.UUID
+
 import dsp.constants.SalsahGui
 import dsp.errors._
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
