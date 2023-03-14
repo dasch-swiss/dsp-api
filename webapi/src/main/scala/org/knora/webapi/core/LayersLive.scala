@@ -46,6 +46,8 @@ import org.knora.webapi.responders.v1.OntologyResponderV1
 import org.knora.webapi.responders.v1.OntologyResponderV1Live
 import org.knora.webapi.responders.v1.ProjectsResponderV1
 import org.knora.webapi.responders.v1.ProjectsResponderV1Live
+import org.knora.webapi.responders.v1.ResourcesResponderV1
+import org.knora.webapi.responders.v1.ResourcesResponderV1Live
 import org.knora.webapi.responders.v1.SearchResponderV1
 import org.knora.webapi.responders.v1.SearchResponderV1Live
 import org.knora.webapi.responders.v1.StandoffResponderV1
@@ -128,9 +130,10 @@ object LayersLive {
       with ProjectsResponderADM
       with ProjectsResponderV1
       with RepositoryUpdater
+      with ResourceUtilV2
+      with ResourcesResponderV1
       with RestCardinalityService
       with RestResourceInfoService
-      with ResourceUtilV2
       with SearchResponderV1
       with SipiResponderADM
       with StandoffResponderV1
@@ -191,9 +194,10 @@ object LayersLive {
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
+      ResourceUtilV2Live.layer,
+      ResourcesResponderV1Live.layer,
       RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
-      ResourceUtilV2Live.layer,
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV1Live.layer,

@@ -17,6 +17,7 @@ import dsp.errors.DataConversionException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.InvalidApiJsonException
 import org.knora.webapi._
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -150,7 +151,7 @@ case class ChangeResourceLabelApiRequestV1(label: String)
 /**
  * An abstract trait representing a request message that can be sent to `ResourcesResponderV1`.
  */
-sealed trait ResourcesResponderRequestV1 extends KnoraRequestV1
+sealed trait ResourcesResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
 
 /**
  * Requests a description of a resource. A successful response will be a [[ResourceInfoResponseV1]].
