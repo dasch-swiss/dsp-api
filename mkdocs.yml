@@ -65,6 +65,7 @@ nav:
               - 0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer: 05-internals/design/adr/ADR-0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer.md
               - 0005 Change ResponderManager to a simple case class: 05-internals/design/adr/ADR-0005-change-respondermanager-to-a-simple-case-class.md
               - 0006 Gradually Replace AKKA-HTTP with ZIO-HTTP: 05-internals/design/adr/ADR-0006-use-zio-http.md
+              - 0007 ZIO-fication of Responders: 05-internals/design/adr/ADR-0007-zio-fication-of-responders.md
           - DSP-API Design Principles:
               - Design Overview: 05-internals/design/principles/design-overview.md
               - Futures with Akka: 05-internals/design/principles/futures-with-akka.md
@@ -90,8 +91,7 @@ nav:
               - Standoff Markup: 05-internals/design/api-v2/standoff.md
               - Archival Resource Key (ARK): 05-internals/design/api-v2/ark.md
               - SPARQL Query Design: 05-internals/design/api-v2/query-design.md
-          - Admin API Design:
-              - Administration: 05-internals/design/api-admin/administration.md
+          - Admin API Design: 05-internals/design/api-admin/administration.md
           - DSP Domain:
               - Domain Entities and Relations: 05-internals/design/domain/domain-entities-and-relations.md
               - System Instances: 05-internals/design/domain/system-instances.md
