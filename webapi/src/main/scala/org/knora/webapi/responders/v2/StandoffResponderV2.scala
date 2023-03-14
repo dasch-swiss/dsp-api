@@ -63,7 +63,7 @@ import org.knora.webapi.util.ResultAndNext
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
- * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
+ * Responds to requests relating to the creation of mappings from XML elementsand attributes to standoff classes and properties.
  */
 trait StandoffResponderV2
 final case class StandoffResponderV2Live(
@@ -76,10 +76,8 @@ final case class StandoffResponderV2Live(
     with MessageHandler
     with LazyLogging {
 
-  private def xmlMimeTypes = Set(
-    "text/xml",
-    "application/xml"
-  )
+  private val xmlMimeTypes  = Set("text/xml", "application/xml")
+  private val xsltCacheName = "xsltCache"
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[StandoffResponderRequestV2]
 
@@ -106,8 +104,6 @@ final case class StandoffResponderV2Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
-  private val xsltCacheName = "xsltCache"
-
   private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Task[GetStandoffResponseV2] = {
     val requestMaxStartIndex = getStandoffRequestV2.offset + appConfig.standoffPerPage - 1
 
@@ -130,11 +126,6 @@ final case class StandoffResponderV2Live(
             .toString()
         )
 
-      // _ = println("=================================")
-      // _ = println(resourceRequestSparql)
-
-      // standoffPageStartTime = System.currentTimeMillis()
-
       resourceRequestResponse <-
         messageRelay
           .ask[SparqlExtendedConstructResponse](
@@ -143,20 +134,12 @@ final case class StandoffResponderV2Live(
             )
           )
 
-      // standoffPageEndTime = System.currentTimeMillis()
-
-      // _ = println(s"Got a page of standoff in ${standoffPageEndTime - standoffPageStartTime} ms")
-
       // separate resources and values
       mainResourcesAndValueRdfData =
         constructResponseUtilV2.splitMainResourcesAndValueRdfData(
           resourceRequestResponse,
           getStandoffRequestV2.requestingUser
         )
-      // splitMainResourcesAndValueRdfData(
-      //   resourceRequestResponse,
-      //   getStandoffRequestV2.requestingUser
-      // )
 
       readResourcesSequenceV2 <-
         constructResponseUtilV2.createApiResponse(
@@ -182,24 +165,26 @@ final case class StandoffResponderV2Live(
             )
           )
 
-      textValueObj: ReadTextValueV2 = valueObj match {
-                                        case textVal: ReadTextValueV2 => textVal
-                                        case _ =>
-                                          throw BadRequestException(
-                                            s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value"
-                                          )
-                                      }
+      textValueObj: ReadTextValueV2 =
+        valueObj match {
+          case textVal: ReadTextValueV2 => textVal
+          case _ =>
+            throw BadRequestException(
+              s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value"
+            )
+        }
 
-      nextOffset: Option[Int] = textValueObj.valueHasMaxStandoffStartIndex match {
-                                  case Some(definedMaxIndex) =>
-                                    if (requestMaxStartIndex >= definedMaxIndex) {
-                                      None
-                                    } else {
-                                      Some(requestMaxStartIndex + 1)
-                                    }
+      nextOffset: Option[Int] =
+        textValueObj.valueHasMaxStandoffStartIndex match {
+          case Some(definedMaxIndex) =>
+            if (requestMaxStartIndex >= definedMaxIndex) {
+              None
+            } else {
+              Some(requestMaxStartIndex + 1)
+            }
 
-                                  case None => None
-                                }
+          case None => None
+        }
     } yield GetStandoffResponseV2(
       valueIri = textValueObj.valueIri,
       standoff = textValueObj.valueContent.standoff,
@@ -211,7 +196,6 @@ final case class StandoffResponderV2Live(
    * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
    *
    * @param xslTransformationIri the IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
-   *
    * @param requestingUser       the user making the request.
    * @return a [[GetXSLTransformationResponseV2]].
    */
@@ -304,8 +288,7 @@ final case class StandoffResponderV2Live(
           } yield response.content
         }
 
-    } yield GetXSLTransformationResponseV2(xslt = xslt)
-
+    } yield GetXSLTransformationResponseV2(xslt)
   }
 
   /**
@@ -313,7 +296,6 @@ final case class StandoffResponderV2Live(
    * The mapping is used to convert XML documents to texts with standoff and back.
    *
    * @param xml                  the provided mapping.
-   *
    * @param requestingUser       the client that made the request.
    */
   private def createMappingV2(
@@ -360,14 +342,10 @@ final case class StandoffResponderV2Live(
               val transIri = stringFormatter.validateAndEscapeIri(
                 defaultTrans.headOption
                   .getOrElse(
-                    throw BadRequestException(
-                      "could not access <defaultXSLTransformation>"
-                    )
+                    throw BadRequestException("could not access <defaultXSLTransformation>")
                   )
                   .text,
-                throw BadRequestException(
-                  s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"
-                )
+                throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI")
               )
 
               // try to obtain the XSL transformation to make sure that it really exists
@@ -384,199 +362,149 @@ final case class StandoffResponderV2Live(
         // create a collection of a all elements mappingElement
         mappingElementsXML: NodeSeq = mappingXML \ "mappingElement"
 
-        mappingElements: Seq[MappingElement] = mappingElementsXML.map { curMappingEle: Node =>
-                                                 // get the name of the XML tag
-                                                 val tagName = (curMappingEle \ "tag" \ "name").headOption
-                                                   .getOrElse(
-                                                     throw BadRequestException(
-                                                       s"no '<name>' given for node $curMappingEle"
-                                                     )
-                                                   )
-                                                   .text
+        mappingElements: Seq[MappingElement] =
+          mappingElementsXML.map { curMappingEle: Node =>
+            // get the name of the XML tag
+            val tagName = (curMappingEle \ "tag" \ "name").headOption
+              .getOrElse(throw BadRequestException(s"no '<name>' given for node $curMappingEle"))
+              .text
 
-                                                 // get the namespace the tag is defined in
-                                                 val tagNamespace = (curMappingEle \ "tag" \ "namespace").headOption
-                                                   .getOrElse(
-                                                     throw BadRequestException(
-                                                       s"no '<namespace>' given for node $curMappingEle"
-                                                     )
-                                                   )
-                                                   .text
+            // get the namespace the tag is defined in
+            val tagNamespace = (curMappingEle \ "tag" \ "namespace").headOption
+              .getOrElse(throw BadRequestException(s"no '<namespace>' given for node $curMappingEle"))
+              .text
 
-                                                 // get the class the tag is combined with
-                                                 val className = (curMappingEle \ "tag" \ "class").headOption
-                                                   .getOrElse(
-                                                     throw BadRequestException(
-                                                       s"no '<classname>' given for node $curMappingEle"
-                                                     )
-                                                   )
-                                                   .text
+            // get the class the tag is combined with
+            val className = (curMappingEle \ "tag" \ "class").headOption
+              .getOrElse(throw BadRequestException(s"no '<classname>' given for node $curMappingEle"))
+              .text
 
-                                                 // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
-                                                 val separatorBooleanAsString =
-                                                   (curMappingEle \ "tag" \ "separatesWords").headOption
-                                                     .getOrElse(
-                                                       throw BadRequestException(
-                                                         s"no '<separatesWords>' given for node $curMappingEle"
-                                                       )
-                                                     )
-                                                     .text
+            // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
+            val separatorBooleanAsString =
+              (curMappingEle \ "tag" \ "separatesWords").headOption
+                .getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle"))
+                .text
 
-                                                 val separatorRequired: Boolean = stringFormatter.validateBoolean(
-                                                   separatorBooleanAsString,
-                                                   throw BadRequestException(
-                                                     s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"
-                                                   )
-                                                 )
+            val separatorRequired: Boolean = stringFormatter.validateBoolean(
+              separatorBooleanAsString,
+              throw BadRequestException(
+                s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"
+              )
+            )
 
-                                                 // get the standoff class IRI
-                                                 val standoffClassIri =
-                                                   (curMappingEle \ "standoffClass" \ "classIri").headOption
-                                                     .getOrElse(
-                                                       throw BadRequestException(
-                                                         s"no '<classIri>' given for node $curMappingEle"
-                                                       )
-                                                     )
-                                                     .text
+            // get the standoff class IRI
+            val standoffClassIri =
+              (curMappingEle \ "standoffClass" \ "classIri").headOption
+                .getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle"))
+                .text
 
-                                                 // get a collection containing all the attributes
-                                                 val attributeNodes: NodeSeq =
-                                                   curMappingEle \ "standoffClass" \ "attributes" \ "attribute"
+            // get a collection containing all the attributes
+            val attributeNodes: NodeSeq =
+              curMappingEle \ "standoffClass" \ "attributes" \ "attribute"
 
-                                                 val attributes: Seq[MappingXMLAttribute] = attributeNodes.map {
-                                                   curAttributeNode =>
-                                                     // get the current attribute's name
-                                                     val attrName = (curAttributeNode \ "attributeName").headOption
-                                                       .getOrElse(
-                                                         throw BadRequestException(
-                                                           s"no '<attributeName>' given for attribute $curAttributeNode"
-                                                         )
-                                                       )
-                                                       .text
+            val attributes: Seq[MappingXMLAttribute] = attributeNodes.map { curAttributeNode =>
+              // get the current attribute's name
+              val attrName = (curAttributeNode \ "attributeName").headOption
+                .getOrElse(throw BadRequestException(s"no '<attributeName>' given for attribute $curAttributeNode"))
+                .text
 
-                                                     val attributeNamespace =
-                                                       (curAttributeNode \ "namespace").headOption
-                                                         .getOrElse(
-                                                           throw BadRequestException(
-                                                             s"no '<namespace>' given for attribute $curAttributeNode"
-                                                           )
-                                                         )
-                                                         .text
+              val attributeNamespace =
+                (curAttributeNode \ "namespace").headOption
+                  .getOrElse(throw BadRequestException(s"no '<namespace>' given for attribute $curAttributeNode"))
+                  .text
 
-                                                     // get the standoff property IRI for the current attribute
-                                                     val propIri = (curAttributeNode \ "propertyIri").headOption
-                                                       .getOrElse(
-                                                         throw BadRequestException(
-                                                           s"no '<propertyIri>' given for attribute $curAttributeNode"
-                                                         )
-                                                       )
-                                                       .text
+              // get the standoff property IRI for the current attribute
+              val propIri = (curAttributeNode \ "propertyIri").headOption
+                .getOrElse(throw BadRequestException(s"no '<propertyIri>' given for attribute $curAttributeNode"))
+                .text
 
-                                                     MappingXMLAttribute(
-                                                       attributeName = stringFormatter.toSparqlEncodedString(
-                                                         attrName,
-                                                         throw BadRequestException(
-                                                           s"tagname $attrName contains invalid characters"
-                                                         )
-                                                       ),
-                                                       namespace = stringFormatter.toSparqlEncodedString(
-                                                         attributeNamespace,
-                                                         throw BadRequestException(
-                                                           s"tagname $attributeNamespace contains invalid characters"
-                                                         )
-                                                       ),
-                                                       standoffProperty = stringFormatter.validateAndEscapeIri(
-                                                         propIri,
-                                                         throw BadRequestException(
-                                                           s"standoff class IRI $standoffClassIri is not a valid IRI"
-                                                         )
-                                                       ),
-                                                       mappingXMLAttributeElementIri =
-                                                         stringFormatter.makeRandomMappingElementIri(mappingIri)
-                                                     )
+              MappingXMLAttribute(
+                attributeName = stringFormatter.toSparqlEncodedString(
+                  attrName,
+                  throw BadRequestException(s"tagname $attrName contains invalid characters")
+                ),
+                namespace = stringFormatter.toSparqlEncodedString(
+                  attributeNamespace,
+                  throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")
+                ),
+                standoffProperty = stringFormatter.validateAndEscapeIri(
+                  propIri,
+                  throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")
+                ),
+                mappingXMLAttributeElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri)
+              )
 
-                                                 }
+            }
 
-                                                 // get the optional element datatype
-                                                 val datatypeMaybe: NodeSeq =
-                                                   curMappingEle \ "standoffClass" \ "datatype"
+            // get the optional element datatype
+            val datatypeMaybe: NodeSeq =
+              curMappingEle \ "standoffClass" \ "datatype"
 
-                                                 // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
-                                                 val standoffDataTypeOption: Option[MappingStandoffDatatypeClass] =
-                                                   if (datatypeMaybe.nonEmpty) {
-                                                     val dataTypeXML = (datatypeMaybe \ "type").headOption
-                                                       .getOrElse(
-                                                         throw BadRequestException(s"no '<type>' given for datatype")
-                                                       )
-                                                       .text
+            // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
+            val standoffDataTypeOption: Option[MappingStandoffDatatypeClass] =
+              if (datatypeMaybe.nonEmpty) {
+                val dataTypeXML = (datatypeMaybe \ "type").headOption
+                  .getOrElse(
+                    throw BadRequestException(s"no '<type>' given for datatype")
+                  )
+                  .text
 
-                                                     val dataType: StandoffDataTypeClasses.Value =
-                                                       StandoffDataTypeClasses.lookup(
-                                                         dataTypeXML,
-                                                         throw BadRequestException(
-                                                           s"Invalid data type provided for $tagName"
-                                                         )
-                                                       )
-                                                     val dataTypeAttribute: String =
-                                                       (datatypeMaybe \ "attributeName").headOption
-                                                         .getOrElse(
-                                                           throw BadRequestException(
-                                                             s"no '<attributeName>' given for datatype"
-                                                           )
-                                                         )
-                                                         .text
+                val dataType: StandoffDataTypeClasses.Value =
+                  StandoffDataTypeClasses.lookup(
+                    dataTypeXML,
+                    throw BadRequestException(s"Invalid data type provided for $tagName")
+                  )
+                val dataTypeAttribute: String =
+                  (datatypeMaybe \ "attributeName").headOption
+                    .getOrElse(throw BadRequestException(s"no '<attributeName>' given for datatype"))
+                    .text
 
-                                                     Some(
-                                                       MappingStandoffDatatypeClass(
-                                                         datatype =
-                                                           dataType.toString, // safe because it is an enumeration
-                                                         attributeName = stringFormatter.toSparqlEncodedString(
-                                                           dataTypeAttribute,
-                                                           throw BadRequestException(
-                                                             s"tagname $dataTypeAttribute contains invalid characters"
-                                                           )
-                                                         ),
-                                                         mappingStandoffDataTypeClassElementIri =
-                                                           stringFormatter.makeRandomMappingElementIri(mappingIri)
-                                                       )
-                                                     )
-                                                   } else {
-                                                     None
-                                                   }
+                Some(
+                  MappingStandoffDatatypeClass(
+                    datatype = dataType.toString, // safe because it is an enumeration
+                    attributeName = stringFormatter.toSparqlEncodedString(
+                      dataTypeAttribute,
+                      throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")
+                    ),
+                    mappingStandoffDataTypeClassElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri)
+                  )
+                )
+              } else {
+                None
+              }
 
-                                                 MappingElement(
-                                                   tagName = stringFormatter.toSparqlEncodedString(
-                                                     tagName,
-                                                     throw BadRequestException(
-                                                       s"tagname $tagName contains invalid characters"
-                                                     )
-                                                   ),
-                                                   namespace = stringFormatter.toSparqlEncodedString(
-                                                     tagNamespace,
-                                                     throw BadRequestException(
-                                                       s"namespace $tagNamespace contains invalid characters"
-                                                     )
-                                                   ),
-                                                   className = stringFormatter.toSparqlEncodedString(
-                                                     className,
-                                                     throw BadRequestException(
-                                                       s"classname $className contains invalid characters"
-                                                     )
-                                                   ),
-                                                   standoffClass = stringFormatter.validateAndEscapeIri(
-                                                     standoffClassIri,
-                                                     throw BadRequestException(
-                                                       s"standoff class IRI $standoffClassIri is not a valid IRI"
-                                                     )
-                                                   ),
-                                                   attributes = attributes,
-                                                   standoffDataTypeClass = standoffDataTypeOption,
-                                                   mappingElementIri =
-                                                     stringFormatter.makeRandomMappingElementIri(mappingIri),
-                                                   separatorRequired = separatorRequired
-                                                 )
+            MappingElement(
+              tagName = stringFormatter.toSparqlEncodedString(
+                tagName,
+                throw BadRequestException(
+                  s"tagname $tagName contains invalid characters"
+                )
+              ),
+              namespace = stringFormatter.toSparqlEncodedString(
+                tagNamespace,
+                throw BadRequestException(
+                  s"namespace $tagNamespace contains invalid characters"
+                )
+              ),
+              className = stringFormatter.toSparqlEncodedString(
+                className,
+                throw BadRequestException(
+                  s"classname $className contains invalid characters"
+                )
+              ),
+              standoffClass = stringFormatter.validateAndEscapeIri(
+                standoffClassIri,
+                throw BadRequestException(
+                  s"standoff class IRI $standoffClassIri is not a valid IRI"
+                )
+              ),
+              attributes = attributes,
+              standoffDataTypeClass = standoffDataTypeOption,
+              mappingElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
+              separatorRequired = separatorRequired
+            )
 
-                                               }
+          }
 
         // transform mappingElements to the structure that is used internally to convert to or from standoff
         // in order to check for duplicates (checks are done during transformation)
@@ -812,9 +740,8 @@ final case class StandoffResponderV2Live(
       val newNamespaceMap: Map[String, Map[String, XMLTag]] = namespaceMap.get(tagname) match {
         case Some(tagMap: Map[String, XMLTag]) =>
           tagMap.get(classname) match {
-            case Some(_) =>
-              throw BadRequestException("Duplicate tag and classname combination in the same namespace")
-            case None =>
+            case Some(_) => throw BadRequestException("Duplicate tag and classname combination in the same namespace")
+            case None    =>
               // create the definition for the current element
               val xmlElementDef = XMLTag(
                 name = tagname,
@@ -872,7 +799,6 @@ final case class StandoffResponderV2Live(
    * Gets a mapping either from the cache or by making a request to the triplestore.
    *
    * @param mappingIri           the IRI of the mapping to retrieve.
-   *
    * @param requestingUser       the user making the request.
    * @return a [[MappingXMLtoStandoff]].
    */
@@ -924,7 +850,6 @@ final case class StandoffResponderV2Live(
    * Gets a mapping from the triplestore.
    *
    * @param mappingIri           the IRI of the mapping to retrieve.
-   *
    * @param requestingUser       the user making the request.
    * @return a [[MappingXMLtoStandoff]].
    */
@@ -960,94 +885,92 @@ final case class StandoffResponderV2Live(
           assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.MappingElement))
         }
 
-      mappingElements: Seq[MappingElement] = mappingElementStatements.map {
-                                               case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
-                                                 // for convenience (works only for props with cardinality one)
-                                                 val assertionsAsMap: Map[IRI, String] = assertions.toMap
+      mappingElements: Seq[MappingElement] =
+        mappingElementStatements.map { case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
+          // for convenience (works only for props with cardinality one)
+          val assertionsAsMap: Map[IRI, String] = assertions.toMap
 
-                                                 // check for attributes
-                                                 val attributes: Seq[MappingXMLAttribute] = assertions.filter {
-                                                   case (propIri, _) =>
-                                                     propIri == OntologyConstants.KnoraBase.MappingHasXMLAttribute
-                                                 }.map { case (_: IRI, attributeElementIri: String) =>
-                                                   val attributeStatementsAsMap: Map[IRI, String] =
-                                                     otherStatements(attributeElementIri).toMap
+          // check for attributes
+          val attributes: Seq[MappingXMLAttribute] = assertions.filter { case (propIri, _) =>
+            propIri == OntologyConstants.KnoraBase.MappingHasXMLAttribute
+          }.map { case (_: IRI, attributeElementIri: String) =>
+            val attributeStatementsAsMap: Map[IRI, String] =
+              otherStatements(attributeElementIri).toMap
 
-                                                   MappingXMLAttribute(
-                                                     attributeName = attributeStatementsAsMap(
-                                                       OntologyConstants.KnoraBase.MappingHasXMLAttributename
-                                                     ),
-                                                     namespace = attributeStatementsAsMap(
-                                                       OntologyConstants.KnoraBase.MappingHasXMLNamespace
-                                                     ),
-                                                     standoffProperty = attributeStatementsAsMap(
-                                                       OntologyConstants.KnoraBase.MappingHasStandoffProperty
-                                                     ),
-                                                     mappingXMLAttributeElementIri = attributeElementIri
-                                                   )
-                                                 }
+            MappingXMLAttribute(
+              attributeName = attributeStatementsAsMap(
+                OntologyConstants.KnoraBase.MappingHasXMLAttributename
+              ),
+              namespace = attributeStatementsAsMap(
+                OntologyConstants.KnoraBase.MappingHasXMLNamespace
+              ),
+              standoffProperty = attributeStatementsAsMap(
+                OntologyConstants.KnoraBase.MappingHasStandoffProperty
+              ),
+              mappingXMLAttributeElementIri = attributeElementIri
+            )
+          }
 
-                                                 // check for standoff data type class
-                                                 val dataTypeOption: Option[IRI] =
-                                                   assertionsAsMap.get(
-                                                     OntologyConstants.KnoraBase.MappingHasStandoffDataTypeClass
-                                                   )
+          // check for standoff data type class
+          val dataTypeOption: Option[IRI] =
+            assertionsAsMap.get(
+              OntologyConstants.KnoraBase.MappingHasStandoffDataTypeClass
+            )
 
-                                                 MappingElement(
-                                                   tagName =
-                                                     assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLTagname),
-                                                   namespace = assertionsAsMap(
-                                                     OntologyConstants.KnoraBase.MappingHasXMLNamespace
-                                                   ),
-                                                   className =
-                                                     assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLClass),
-                                                   standoffClass = assertionsAsMap(
-                                                     OntologyConstants.KnoraBase.MappingHasStandoffClass
-                                                   ),
-                                                   mappingElementIri = subjectIri,
-                                                   standoffDataTypeClass = dataTypeOption match {
-                                                     case Some(dataTypeElementIri: IRI) =>
-                                                       val dataTypeAssertionsAsMap: Map[IRI, String] =
-                                                         otherStatements(dataTypeElementIri).toMap
+          MappingElement(
+            tagName = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLTagname),
+            namespace = assertionsAsMap(
+              OntologyConstants.KnoraBase.MappingHasXMLNamespace
+            ),
+            className = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLClass),
+            standoffClass = assertionsAsMap(
+              OntologyConstants.KnoraBase.MappingHasStandoffClass
+            ),
+            mappingElementIri = subjectIri,
+            standoffDataTypeClass = dataTypeOption match {
+              case Some(dataTypeElementIri: IRI) =>
+                val dataTypeAssertionsAsMap: Map[IRI, String] =
+                  otherStatements(dataTypeElementIri).toMap
 
-                                                       Some(
-                                                         MappingStandoffDatatypeClass(
-                                                           datatype = dataTypeAssertionsAsMap(
-                                                             OntologyConstants.KnoraBase.MappingHasStandoffClass
-                                                           ),
-                                                           attributeName = dataTypeAssertionsAsMap(
-                                                             OntologyConstants.KnoraBase.MappingHasXMLAttributename
-                                                           ),
-                                                           mappingStandoffDataTypeClassElementIri = dataTypeElementIri
-                                                         )
-                                                       )
-                                                     case None => None
-                                                   },
-                                                   attributes = attributes,
-                                                   separatorRequired = assertionsAsMap(
-                                                     OntologyConstants.KnoraBase.MappingElementRequiresSeparator
-                                                   ).toBoolean
-                                                 )
+                Some(
+                  MappingStandoffDatatypeClass(
+                    datatype = dataTypeAssertionsAsMap(
+                      OntologyConstants.KnoraBase.MappingHasStandoffClass
+                    ),
+                    attributeName = dataTypeAssertionsAsMap(
+                      OntologyConstants.KnoraBase.MappingHasXMLAttributename
+                    ),
+                    mappingStandoffDataTypeClassElementIri = dataTypeElementIri
+                  )
+                )
+              case None => None
+            },
+            attributes = attributes,
+            separatorRequired = assertionsAsMap(
+              OntologyConstants.KnoraBase.MappingElementRequiresSeparator
+            ).toBoolean
+          )
 
-                                             }.toSeq
+        }.toSeq
 
       // check if there is a default XSL transformation
-      defaultXSLTransformationOption: Option[IRI] = otherStatements(mappingIri).find { case (pred: IRI, _: String) =>
-                                                      pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
-                                                    }.map { case (_: IRI, xslTransformationIri: IRI) =>
-                                                      xslTransformationIri
-                                                    }
+      defaultXSLTransformationOption: Option[IRI] =
+        otherStatements(mappingIri).find { case (pred: IRI, _: String) =>
+          pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
+        }.map { case (_: IRI, xslTransformationIri: IRI) =>
+          xslTransformationIri
+        }
 
-      mappingXMLToStandoff = transformMappingElementsToMappingXMLtoStandoff(
-                               mappingElements,
-                               defaultXSLTransformationOption
-                             )
+      mappingXMLToStandoff =
+        transformMappingElementsToMappingXMLtoStandoff(
+          mappingElements,
+          defaultXSLTransformationOption
+        )
 
       // add the mapping to the cache
       _ = CacheUtil.put(cacheName = mappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
 
     } yield mappingXMLToStandoff
-
   }
 
   /**
@@ -1209,10 +1132,10 @@ final case class StandoffResponderV2Live(
   }
 
   /**
-   * A [[TaskResult]] containing a page of standoff queried from a text value.
+   * A [[ResultAndNext]] containing a page of standoff queried from a text value.
    *
-   * @param underlyingResult the underlying standoff result.
-   * @param nextTask         the next task, or `None` if there is no more standoff to query in the text value.
+   * @param result the standoff result.
+   * @param nextStep the next task/step, or `None` if there is no more standoff to query in the text value.
    */
   case class StandoffTaskResult(
     override val result: StandoffTaskUnderlyingResult,
@@ -1232,7 +1155,6 @@ final case class StandoffResponderV2Live(
    * @param resourceIri          the IRI of the resource containing the value.
    * @param valueIri             the IRI of the value.
    * @param offset               the start index of the first standoff tag to be returned.
-   *
    * @param requestingUser       the user making the request.
    */
   case class GetStandoffTask(
@@ -1271,7 +1193,6 @@ final case class StandoffResponderV2Live(
             StandoffTaskUnderlyingResult(collectedStandoff),
             Some(copy(offset = definedNextOffset))
           )
-
         case None =>
           // There is no more standoff to query. Just return the collected standoff.
           StandoffTaskResult(
