@@ -5,9 +5,9 @@
 
 package org.knora.webapi.messages.util.search
 
-import scala.concurrent.Await
+import zio.ZIO
+
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
@@ -16,7 +16,9 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.responders.v2.ontology.Cache
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
  * Methods and classes for transforming generated SPARQL.
@@ -38,7 +40,7 @@ object SparqlTransformer {
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion],
       limitInferenceToOntologies: Option[Set[SmartIri]] = None
-    )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
+    )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
         simulateInference = simulateInference,
@@ -73,7 +75,7 @@ object SparqlTransformer {
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion],
       limitInferenceToOntologies: Option[Set[SmartIri]] = None
-    )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
+    )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
         simulateInference = true,
@@ -244,10 +246,10 @@ object SparqlTransformer {
     statementPattern: StatementPattern,
     simulateInference: Boolean,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern] = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val ontoCache: Cache.OntologyCacheData        = Await.result(Cache.getCacheData, 1.second)
+    val ontoCache: OntologyCacheData              = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.getCacheData))
 
     statementPattern.pred match {
       case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>

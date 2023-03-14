@@ -343,6 +343,8 @@ final case class ValueUtilV1Live(
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"         -> "XLSX",
       "application/xml"                                                           -> "XML",
       "text/xml"                                                                  -> "XML",
+      "text/xml"                                                                  -> "ODD",
+      "text/xml"                                                                  -> "RNG",
       "text/csv"                                                                  -> "CSV",
       "text/plain"                                                                -> "TEXT",
       "application/zip"                                                           -> "ZIP",

@@ -230,7 +230,9 @@ final case class InstrumentationServerConfig(
 
 final case class HttpServer(
   corsAllowedOrigins: Set[String]
-)
+) {
+  val corsAllowedOriginsLowerCase = corsAllowedOrigins.map(_.toLowerCase())
+}
 
 /**
  * Loads the application configuration using ZIO-Config from a Typesafe-Config format in `application.conf`.

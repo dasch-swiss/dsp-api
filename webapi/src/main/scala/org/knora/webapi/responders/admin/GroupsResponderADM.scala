@@ -369,7 +369,7 @@ final case class GroupsResponderADMLive(
 
         // check the custom IRI; if not given, create an unused IRI
         customGroupIri: Option[SmartIri] = createRequest.id.map(_.value).map(iri => iri.toSmartIri)
-        groupIri <- iriService.checkOrCreateEntityIriTask(
+        groupIri <- iriService.checkOrCreateEntityIri(
                       customGroupIri,
                       stringFormatter.makeRandomGroupIri(projectADM.shortcode)
                     )

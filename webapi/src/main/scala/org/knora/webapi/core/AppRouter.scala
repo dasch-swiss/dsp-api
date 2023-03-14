@@ -15,6 +15,7 @@ import zio.macros.accessible
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ValueUtilV1
@@ -24,8 +25,10 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
-import org.knora.webapi.settings._
+import org.knora.webapi.settings.APPLICATION_MANAGER_ACTOR_NAME
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 @accessible
 trait AppRouter {
@@ -40,8 +43,11 @@ object AppRouter {
       with AppConfig
       with CardinalityHandler
       with CardinalityService
+      with ConstructResponseUtilV2
       with MessageRelay
+      with OntologyCache
       with OntologyHelpers
+      with OntologyRepo
       with PermissionUtilADM
       with ResourceUtilV2
       with StandoffTagUtilV2
@@ -58,8 +64,11 @@ object AppRouter {
           ZIO.runtime[
             CardinalityHandler
               with CardinalityService
-              with PermissionUtilADM
+              with ConstructResponseUtilV2
+              with OntologyCache
               with OntologyHelpers
+              with OntologyRepo
+              with PermissionUtilADM
               with ResourceUtilV2
               with StandoffTagUtilV2
               with ValueUtilV1

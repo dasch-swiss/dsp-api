@@ -37,6 +37,8 @@ import zio._
 
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.messages.util.ConstructResponseUtilV2Live
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
@@ -76,13 +78,15 @@ import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
-
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
+import org.knora.webapi.responders.v2.OntologyResponderV2
+import org.knora.webapi.responders.v2.OntologyResponderV2Live
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 object LayersTest {
 
   /**
@@ -97,11 +101,13 @@ object LayersTest {
     with ApiRoutes
     with AppRouter
     with AppRouterRelayingMessageHandler
+    with OntologyCache
     with CacheService
     with CacheServiceRequestMessageHandler
     with CardinalityHandler
     with CardinalityService
     with CkanResponderV1
+    with ConstructResponseUtilV2
     with GroupsResponderADM
     with HttpServer
     with IIIFRequestMessageHandler
@@ -112,6 +118,7 @@ object LayersTest {
     with ListsResponderV1
     with MessageRelay
     with OntologyResponderV1
+    with OntologyResponderV2
     with OntologyHelpers
     with PermissionUtilADM
     with PermissionsResponderADM
@@ -150,6 +157,7 @@ object LayersTest {
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
+      ConstructResponseUtilV2Live.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -159,10 +167,11 @@ object LayersTest {
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
       MessageRelayLive.layer,
-      OntologyCache.layer,
+      OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV1Live.layer,
+      OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,

@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import zio.ZIO
 
 import scala.concurrent.Future
 import scala.util.Failure
@@ -46,11 +47,17 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport._
 
-class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.Runtime[StandoffTagUtilV2])
-    extends ResponderWithStandoffV2(responderData) {
+class SearchResponderV2(
+  responderData: ResponderData,
+  implicit val runtime: zio.Runtime[
+    ConstructResponseUtilV2 with OntologyCache with StandoffTagUtilV2 with StandoffTagUtilV2
+  ]
+) extends ResponderWithStandoffV2(responderData, runtime) {
 
   // A Gravsearch type inspection runner.
   private val gravsearchTypeInspectionRunner =
@@ -159,7 +166,7 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   private def fulltextSearchCountV2(
@@ -211,11 +218,12 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
    * @param offset               the offset to be used for paging.
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
+   * @param limitToStandoffClass limit search to given standoff class.
    * @param returnFiles          if true, return any file value attached to each matching resource.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
-   *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
+   * @param appConfig            the application config
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def fulltextSearchV2(
@@ -320,12 +328,12 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
                 .mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and value objects
-            queryResultsSep: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-              ConstructResponseUtilV2
-                .splitMainResourcesAndValueRdfData(
-                  constructQueryResults = searchResponse,
-                  requestingUser = requestingUser
-                )
+            queryResultsSep <-
+              UnsafeZioRun.runToFuture(
+                ZIO
+                  .service[ConstructResponseUtilV2]
+                  .map(_.splitMainResourcesAndValueRdfData(searchResponse, requestingUser))
+              )
           } yield queryResultsSep
         } else {
 
@@ -353,19 +361,21 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
           FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse: ReadResourcesSequenceV2 <-
-        ConstructResponseUtilV2.createApiResponse(
-          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-          orderByResourceIri = resourceIris,
-          pageSizeBeforeFiltering = resourceIris.size,
-          mappings = mappingsAsMap,
-          queryStandoff = queryStandoff,
-          calculateMayHaveMoreResults = true,
-          versionDate = None,
-          appActor = appActor,
-          appConfig = appConfig,
-          targetSchema = targetSchema,
-          requestingUser = requestingUser
+      apiResponse <-
+        UnsafeZioRun.runToFuture(
+          ZIO.serviceWithZIO[ConstructResponseUtilV2](
+            _.createApiResponse(
+              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+              orderByResourceIri = resourceIris,
+              pageSizeBeforeFiltering = resourceIris.size,
+              mappings = mappingsAsMap,
+              queryStandoff = queryStandoff,
+              calculateMayHaveMoreResults = true,
+              versionDate = None,
+              targetSchema = targetSchema,
+              requestingUser = requestingUser
+            )
+          )
         )
 
     } yield apiResponse
@@ -376,7 +386,7 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
    *
    * @param inputQuery           a Gravsearch query provided by the client.
    *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   private def gravsearchCountV2(
@@ -473,7 +483,7 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
    *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def gravsearchV2(
@@ -552,13 +562,12 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
         Try(appActor.ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql, isGravsearch = true)))
       prequeryResponseNotMerged <-
         (tryPrequeryResponseNotMerged match {
-          case Failure(exception) => {
+          case Failure(exception) =>
             exception match {
               case _: TriplestoreTimeoutException =>
                 log.error(s"Gravsearch timed out for query: $inputQuery")
             }
             throw exception
-          }
           case Success(value) => value
         }).mapTo[SparqlSelectResult]
       duration = (System.currentTimeMillis() - start) / 1000.0
@@ -667,12 +676,17 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
                 .mapTo[SparqlExtendedConstructResponse]
 
             // Filter out values that the user doesn't have permission to see.
-            queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-              ConstructResponseUtilV2
-                .splitMainResourcesAndValueRdfData(
-                  constructQueryResults = mainQueryResponse,
-                  requestingUser = requestingUser
-                )
+            queryResultsFilteredForPermissions <-
+              UnsafeZioRun.runToFuture(
+                ZIO
+                  .service[ConstructResponseUtilV2]
+                  .map(
+                    _.splitMainResourcesAndValueRdfData(
+                      mainQueryResponse,
+                      requestingUser
+                    )
+                  )
+              )
 
             // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
             queryResWithFullGraphPatternOnlyRequestedValues: Map[
@@ -715,20 +729,21 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
           FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse: ReadResourcesSequenceV2 <-
-        ConstructResponseUtilV2.createApiResponse(
-          mainResourcesAndValueRdfData = mainQueryResults,
-          orderByResourceIri = mainResourceIris,
-          pageSizeBeforeFiltering = pageSizeBeforeFiltering,
-          mappings = mappingsAsMap,
-          queryStandoff = queryStandoff,
-          versionDate = None,
-          calculateMayHaveMoreResults = true,
-          appActor = appActor,
-          appConfig = responderData.appConfig,
-          targetSchema = targetSchema,
-          requestingUser = requestingUser
-        )
+      apiResponse <- UnsafeZioRun.runToFuture(
+                       ZIO.serviceWithZIO[ConstructResponseUtilV2](
+                         _.createApiResponse(
+                           mainResourcesAndValueRdfData = mainQueryResults,
+                           orderByResourceIri = mainResourceIris,
+                           pageSizeBeforeFiltering = pageSizeBeforeFiltering,
+                           mappings = mappingsAsMap,
+                           queryStandoff = queryStandoff,
+                           versionDate = None,
+                           calculateMayHaveMoreResults = true,
+                           targetSchema = targetSchema,
+                           requestingUser = requestingUser
+                         )
+                       )
+                     )
 
     } yield apiResponse
   }
@@ -892,12 +907,17 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
                 .mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and values
-            mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-              ConstructResponseUtilV2
-                .splitMainResourcesAndValueRdfData(
-                  constructQueryResults = resourceRequestResponse,
-                  requestingUser = resourcesInProjectGetRequestV2.requestingUser
-                )
+            mainResourcesAndValueRdfData <-
+              UnsafeZioRun.runToFuture(
+                ZIO
+                  .service[ConstructResponseUtilV2]
+                  .map(
+                    _.splitMainResourcesAndValueRdfData(
+                      resourceRequestResponse,
+                      resourcesInProjectGetRequestV2.requestingUser
+                    )
+                  )
+              )
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappings: Map[IRI, MappingAndXSLTransformation] <-
@@ -911,20 +931,21 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
               }
 
             // Construct a ReadResourceV2 for each resource that the user has permission to see.
-            readResourcesSequence: ReadResourcesSequenceV2 <-
-              ConstructResponseUtilV2.createApiResponse(
-                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                orderByResourceIri = mainResourceIris,
-                pageSizeBeforeFiltering = mainResourceIris.size,
-                mappings = mappings,
-                queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
-                versionDate = None,
-                calculateMayHaveMoreResults = true,
-                appActor = appActor,
-                targetSchema = resourcesInProjectGetRequestV2.targetSchema,
-                appConfig = responderData.appConfig,
-                requestingUser = resourcesInProjectGetRequestV2.requestingUser
-              )
+            readResourcesSequence <- UnsafeZioRun.runToFuture(
+                                       ZIO.serviceWithZIO[ConstructResponseUtilV2](
+                                         _.createApiResponse(
+                                           mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                                           orderByResourceIri = mainResourceIris,
+                                           pageSizeBeforeFiltering = mainResourceIris.size,
+                                           mappings = mappings,
+                                           queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
+                                           versionDate = None,
+                                           calculateMayHaveMoreResults = true,
+                                           targetSchema = resourcesInProjectGetRequestV2.targetSchema,
+                                           requestingUser = resourcesInProjectGetRequestV2.requestingUser
+                                         )
+                                       )
+                                     )
           } yield readResourcesSequence
         } else {
           FastFuture.successful(ReadResourcesSequenceV2(Vector.empty[ReadResourceV2]))
@@ -939,7 +960,7 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    *
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def searchResourcesByLabelCountV2(
@@ -990,7 +1011,7 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    * @param targetSchema         the schema of the response.
-   * @param requestingUser       the the client making the request.
+   * @param requestingUser       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def searchResourcesByLabelV2(
@@ -1052,25 +1073,27 @@ class SearchResponderV2(responderData: ResponderData, implicit val runtime: zio.
         }
 
       // separate resources and value objects
-      mainResourcesAndValueRdfData =
-        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          constructQueryResults = searchResourceByLabelResponse,
-          requestingUser = requestingUser
+      mainResourcesAndValueRdfData <-
+        UnsafeZioRun.runToFuture(
+          ZIO
+            .service[ConstructResponseUtilV2]
+            .map(_.splitMainResourcesAndValueRdfData(searchResourceByLabelResponse, requestingUser))
         )
 
-      apiResponse: ReadResourcesSequenceV2 <-
-        ConstructResponseUtilV2.createApiResponse(
-          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-          orderByResourceIri = mainResourceIris.toSeq.sorted,
-          pageSizeBeforeFiltering = mainResourceIris.size,
-          queryStandoff = false,
-          versionDate = None,
-          calculateMayHaveMoreResults = true,
-          appActor = appActor,
-          targetSchema = targetSchema,
-          appConfig = responderData.appConfig,
-          requestingUser = requestingUser
-        )
+      apiResponse <- UnsafeZioRun.runToFuture(
+                       ZIO.serviceWithZIO[ConstructResponseUtilV2](
+                         _.createApiResponse(
+                           mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                           orderByResourceIri = mainResourceIris.toSeq.sorted,
+                           pageSizeBeforeFiltering = mainResourceIris.size,
+                           queryStandoff = false,
+                           versionDate = None,
+                           calculateMayHaveMoreResults = true,
+                           targetSchema = targetSchema,
+                           requestingUser = requestingUser
+                         )
+                       )
+                     )
 
     } yield apiResponse
   }

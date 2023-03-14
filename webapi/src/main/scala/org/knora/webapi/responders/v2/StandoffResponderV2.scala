@@ -8,6 +8,7 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import akka.util.Timeout
 import org.xml.sax.SAXException
+import zio.ZIO
 
 import java.io._
 import java.util.UUID
@@ -53,6 +54,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 // import org.knora.webapi.util._
@@ -66,6 +68,7 @@ import zio._
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.TaskResult
 import org.knora.webapi.util.NextExecutionStep
+import org.knora.webapi.util.ResultAndNext
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -75,6 +78,8 @@ trait StandoffResponderV2
 final case class StandoffResponderV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
+  constructResponseUtilV2: ConstructResponseUtilV2,
+  standoffTagUtilV2: StandoffTagUtilV2,
   implicit val stringFormatter: StringFormatter
 ) extends StandoffResponderV2
     with MessageHandler
@@ -152,27 +157,28 @@ final case class StandoffResponderV2Live(
       // _ = println(s"Got a page of standoff in ${standoffPageEndTime - standoffPageStartTime} ms")
 
       // separate resources and values
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
-        ConstructResponseUtilV2
-          .splitMainResourcesAndValueRdfData(
-            constructQueryResults = resourceRequestResponse,
-            requestingUser = getStandoffRequestV2.requestingUser
-          )
+      mainResourcesAndValueRdfData =
+        constructResponseUtilV2.splitMainResourcesAndValueRdfData(
+          resourceRequestResponse,
+          getStandoffRequestV2.requestingUser
+        )
+      // splitMainResourcesAndValueRdfData(
+      //   resourceRequestResponse,
+      //   getStandoffRequestV2.requestingUser
+      // )
 
-      readResourcesSequenceV2: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                            mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                            orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
-                                                            pageSizeBeforeFiltering =
-                                                              1, // doesn't matter because we're not doing paging
-                                                            mappings = Map.empty,
-                                                            queryStandoff = false,
-                                                            calculateMayHaveMoreResults = false,
-                                                            versionDate = None,
-                                                            appActor = appActor,
-                                                            targetSchema = getStandoffRequestV2.targetSchema,
-                                                            appConfig = appConfig,
-                                                            requestingUser = getStandoffRequestV2.requestingUser
-                                                          )
+      readResourcesSequenceV2 <-
+        constructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+          orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
+          pageSizeBeforeFiltering = 1, // doesn't matter because we're not doing paging
+          mappings = Map.empty,
+          queryStandoff = false,
+          calculateMayHaveMoreResults = false,
+          versionDate = None,
+          targetSchema = getStandoffRequestV2.targetSchema,
+          requestingUser = getStandoffRequestV2.requestingUser
+        )
 
       readResourceV2 = readResourcesSequenceV2.toResource(getStandoffRequestV2.resourceIri)
 
@@ -775,7 +781,7 @@ final case class StandoffResponderV2Live(
               val attrName = attrEle.attributeName
 
               // check if the current attribute already exists in this namespace
-              if (acc.get(attrName).nonEmpty) {
+              if (acc.contains(attrName)) {
                 throw BadRequestException("Duplicate attribute name in namespace")
               }
 
@@ -1217,8 +1223,10 @@ final case class StandoffResponderV2Live(
    * @param underlyingResult the underlying standoff result.
    * @param nextTask         the next task, or `None` if there is no more standoff to query in the text value.
    */
-  case class StandoffTaskResult(underlyingResult: StandoffTaskUnderlyingResult, nextTask: Option[GetStandoffTask])
-      extends TaskResult[StandoffTaskUnderlyingResult]
+  case class StandoffTaskResult(
+    override val result: StandoffTaskUnderlyingResult,
+    override val nextStep: Option[GetStandoffTask]
+  ) extends ResultAndNext[StandoffTaskUnderlyingResult]
 
   /**
    * The underlying result type contained in a [[StandoffTaskResult]].
@@ -1242,40 +1250,42 @@ final case class StandoffResponderV2Live(
     offset: Int,
     requestingUser: UserADM
   ) extends NextExecutionStep[StandoffTaskUnderlyingResult] {
-    override def runTask(
-      previousResult: Option[TaskResult[StandoffTaskUnderlyingResult]]
-    )(implicit timeout: Timeout, executionContext: ExecutionContext): Task[TaskResult[StandoffTaskUnderlyingResult]] =
+    override def run(
+      previousResult: Option[ResultAndNext[StandoffTaskUnderlyingResult]]
+    ): zio.Task[ResultAndNext[StandoffTaskUnderlyingResult]] =
       for {
         // Get a page of standoff.
-        standoffResponse <- getStandoffV2(
-                              GetStandoffPageRequestV2(
-                                resourceIri = resourceIri,
-                                valueIri = valueIri,
-                                offset = offset,
-                                targetSchema = ApiV2Complex,
-                                requestingUser = requestingUser
-                              )
-                            )
+        standoffResponse <-
+          getStandoffV2(
+            GetStandoffPageRequestV2(
+              resourceIri = resourceIri,
+              valueIri = valueIri,
+              offset = offset,
+              targetSchema = ApiV2Complex,
+              requestingUser = requestingUser
+            )
+          )
 
         // Add it to the standoff that has already been collected.
-        collectedStandoff = previousResult match {
-                              case Some(definedPreviousResult) =>
-                                definedPreviousResult.underlyingResult.standoff ++ standoffResponse.standoff
-                              case None => standoffResponse.standoff.toVector
-                            }
+        collectedStandoff =
+          previousResult match {
+            case Some(definedPreviousResult) =>
+              definedPreviousResult.result.standoff ++ standoffResponse.standoff
+            case None => standoffResponse.standoff.toVector
+          }
       } yield standoffResponse.nextOffset match {
         case Some(definedNextOffset) =>
           // There is more standoff to query. Return the collected standoff and the next task.
           StandoffTaskResult(
-            underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
-            nextTask = Some(copy(offset = definedNextOffset))
+            StandoffTaskUnderlyingResult(collectedStandoff),
+            Some(copy(offset = definedNextOffset))
           )
 
         case None =>
           // There is no more standoff to query. Just return the collected standoff.
           StandoffTaskResult(
-            underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
-            nextTask = None
+            StandoffTaskUnderlyingResult(collectedStandoff),
+            None
           )
       }
   }
@@ -1307,13 +1317,18 @@ final case class StandoffResponderV2Live(
 }
 
 object StandoffResponderV2Live {
-  val layer: URLayer[AppConfig with MessageRelay with StringFormatter, StandoffResponderV2] =
+  val layer: URLayer[
+    AppConfig with MessageRelay with ConstructResponseUtilV2 with StandoffTagUtilV2 with StringFormatter,
+    StandoffResponderV2
+  ] =
     ZLayer.fromZIO {
       for {
         ac      <- ZIO.service[AppConfig]
         mr      <- ZIO.service[MessageRelay]
+        cru     <- ZIO.service[ConstructResponseUtilV2]
+        stu     <- ZIO.service[StandoffTagUtilV2]
         sf      <- ZIO.service[StringFormatter]
-        handler <- mr.subscribe(StandoffResponderV2Live(ac, mr, sf))
+        handler <- mr.subscribe(StandoffResponderV2Live(ac, mr, cru, stu, sf))
       } yield handler
     }
 }

@@ -715,7 +715,7 @@ final case class PermissionsResponderADMLive(
           }
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        newPermissionIri <- iriService.checkOrCreateEntityIriTask(
+        newPermissionIri <- iriService.checkOrCreateEntityIri(
                               customPermissionIri,
                               stringFormatter.makeRandomPermissionIri(project.shortcode)
                             )
@@ -1598,7 +1598,7 @@ final case class PermissionsResponderADMLive(
           )
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        newPermissionIri <- iriService.checkOrCreateEntityIriTask(
+        newPermissionIri <- iriService.checkOrCreateEntityIri(
                               customPermissionIri,
                               stringFormatter.makeRandomPermissionIri(project.shortcode)
                             )

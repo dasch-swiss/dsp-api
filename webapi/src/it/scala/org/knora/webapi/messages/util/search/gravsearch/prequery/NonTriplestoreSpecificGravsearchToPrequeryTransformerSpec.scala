@@ -1,13 +1,12 @@
 package org.knora.webapi.util.search.gravsearch.prequery
 
 import akka.actor.ActorRef
-
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-
 import dsp.errors.AssertionException
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -21,6 +20,7 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreS
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 private object QueryHandler {
@@ -34,7 +34,7 @@ private object QueryHandler {
     appActor: ActorRef,
     responderData: ResponderData,
     appConfig: AppConfig
-  )(implicit executionContext: ExecutionContext): SelectQuery = {
+  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 

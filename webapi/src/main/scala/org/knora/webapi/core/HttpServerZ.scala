@@ -29,7 +29,7 @@ object HttpServerZ {
           anyMethod = false,
           allowedMethods = Some(Set(Method.GET, Method.PUT, Method.DELETE, Method.POST)),
           allowedOrigins = { origin =>
-            config.httpServer.corsAllowedOrigins.contains(origin)
+            config.httpServer.corsAllowedOriginsLowerCase.contains(origin.toLowerCase())
           }
         )
     } yield Middleware.cors(corsConfig)
