@@ -816,10 +816,9 @@ final case class ValuesResponderV1Live(
         projectADM = projectADM
       )
       resourceUtilV2.doSipiPostUpdate(
-        updateFuture = triplestoreUpdateFuture,
-        valueContent = fileValueContent,
-        requestingUser = changeFileValueRequest.userProfile,
-        log = logger
+        triplestoreUpdateFuture,
+        List(fileValueContent),
+        changeFileValueRequest.userProfile
       )
     }
 
