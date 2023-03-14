@@ -562,20 +562,17 @@ class SearchResponderV2(
           .mapTo[SparqlSelectResult]
           .transform(t =>
             t match {
-              case Failure(err) if err.isInstanceOf[TriplestoreTimeoutException] =>
-                log.error(s"Gravsearch timed out for prequery:\n$triplestoreSpecificPrequerySparql")
+              case Failure(err) =>
+                if (err.isInstanceOf[TriplestoreTimeoutException])
+                  log.error(s"Gravsearch timed out for prequery:\n$triplestoreSpecificPrequerySparql")
                 throw err
-              case Failure(err) => throw err
-              case success      => success
+              case success => success
             }
           )
       duration = (System.currentTimeMillis() - start) / 1000.0
-      _ =
-        if (duration < 3) {
-          log.debug(s"Prequery took: ${duration}s")
-        } else {
-          log.warn(s"Slow Prequery ($duration):\n$triplestoreSpecificPrequerySparql\nInitial Query:\n$inputQuery")
-        }
+      _ = if (duration < 3) log.debug(s"Prequery took: ${duration}s")
+          else log.warn(s"Slow Prequery ($duration):\n$triplestoreSpecificPrequerySparql")
+
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
       // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
