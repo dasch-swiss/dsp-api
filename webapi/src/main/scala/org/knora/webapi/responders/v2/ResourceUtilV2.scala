@@ -8,8 +8,8 @@ package org.knora.webapi.responders.v2
 import com.typesafe.scalalogging.LazyLogging
 import zio.Task
 import zio._
-
 import dsp.errors.ForbiddenException
+
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -99,6 +99,9 @@ trait ResourceUtilV2 {
    * @param updateTask     the [[Task]] that updates the triplestore.
    * @param fileValues     the values which the task updates.
    * @param requestingUser the user making the request.
+   *
+   * @return The result of the updateTask, unless this task was successful and the subsequent move to permanent storage failed.
+   *         In the latter case the failure from Sipi is returned.
    */
   def doSipiPostUpdate[T <: UpdateResultInProject](
     updateTask: Task[T],
@@ -273,8 +276,8 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
       },
       (updateInProject: T) => {
         // Yes. Ask Sipi to move the file to permanent storage.
-        // If Sipi succeeds, return the future we were given.
-        // Otherwise, return a failed future from Sipi.
+        // If Sipi succeeds, return the original result.
+        // Otherwise, return the failures from Sipi.
         val moveRequests = valueContents
           .map(_.fileValue.internalFilename)
           .map(MoveTemporaryFileToPermanentStorageRequest(_, updateInProject.projectADM.shortcode, requestingUser))
