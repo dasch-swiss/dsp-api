@@ -18,6 +18,7 @@ import scala.concurrent.Future
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -41,7 +42,7 @@ import org.knora.webapi.util._
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
  */
-sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
+sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage {
 
   /**
    * The user that made the request.
