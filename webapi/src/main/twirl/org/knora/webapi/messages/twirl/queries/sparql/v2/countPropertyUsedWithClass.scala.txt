@@ -20,16 +20,18 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?subject (COUNT(?o) as ?count)
+SELECT ?subject (COUNT(?object) as ?count)
 WHERE {
 
    BIND(IRI("@{propertyIri.value}") AS ?propertyIri)
    BIND(IRI("@{classIri.value}") AS ?classIri)
 
-   ?subject  a                     ?classIri .
+   ?subject a ?classIri .
+   MINUS { ?subject knora-base:isDeleted true }.
 
-   OPTIONAL { ?subject  ?propertyIri          ?o . }.
-   MINUS    { ?subject  knora-base:isDeleted  true }.
-   MINUS    { ?o        knora-base:isDeleted  true }.
+   OPTIONAL {
+     ?subject ?propertyIri ?object .
+     MINUS { ?object knora-base:isDeleted true }.
+   }.
 }
 GROUP by ?subject
