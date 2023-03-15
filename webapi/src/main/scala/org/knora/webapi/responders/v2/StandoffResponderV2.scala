@@ -350,11 +350,10 @@ final case class StandoffResponderV2Live(
 
               // try to obtain the XSL transformation to make sure that it really exists
               for {
-                transform <-
-                  getXSLTransformation(
-                    xslTransformationIri = transIri,
-                    requestingUser = requestingUser
-                  )
+                _ <- getXSLTransformation(
+                       xslTransformationIri = transIri,
+                       requestingUser = requestingUser
+                     )
               } yield Some(transIri)
             case _ => ZIO.attempt(None)
           }
@@ -585,12 +584,12 @@ final case class StandoffResponderV2Live(
 
       createMappingFuture.mapError {
         case validationException: SAXException =>
-          throw BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
+          BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
 
-        case _: IOException => throw NotFoundException(s"The schema could not be found")
+        case _: IOException => NotFoundException(s"The schema could not be found")
 
         case unknown: Exception =>
-          throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
+          BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
 
       }
     }
@@ -1057,78 +1056,80 @@ final case class StandoffResponderV2Live(
         standoffPropertyEntities.standoffPropertyInfoMap.keySet
           .intersect(standoffPropertyIrisFromMapping.map(_.toSmartIri))
 
-      _ = if (standoffPropertyIrisFromMapping.map(_.toSmartIri) != propertyDefinitionsFromMappingFoundInOntology) {
-            throw NotFoundException(
-              s"the ontology responder could not find information about these standoff properties: " +
-                s"${(standoffPropertyIrisFromMapping.map(_.toSmartIri) -- propertyDefinitionsFromMappingFoundInOntology)
-                    .mkString(", ")}"
-            )
-          }
+      _ <- ZIO.fail {
+             NotFoundException(
+               s"the ontology responder could not find information about these standoff properties: " +
+                 s"${(standoffPropertyIrisFromMapping.map(_.toSmartIri) -- propertyDefinitionsFromMappingFoundInOntology)
+                     .mkString(", ")}"
+             )
+           }.when(standoffPropertyIrisFromMapping.map(_.toSmartIri) != propertyDefinitionsFromMappingFoundInOntology)
 
       // check that for each standoff property defined in the mapping element for a standoff class, a corresponding cardinality exists in the ontology
-      _ = mappingStandoffToXML.foreach { case (standoffClass: IRI, xmlTag: XMLTagItem) =>
-            // collect all the standoff properties defined for this standoff class
-            val standoffPropertiesForStandoffClass: Set[SmartIri] = xmlTag.attributes.keySet.map(_.toSmartIri)
+      _ <- ZIO.attempt {
+             mappingStandoffToXML.foreach { case (standoffClass: IRI, xmlTag: XMLTagItem) =>
+               // collect all the standoff properties defined for this standoff class
+               val standoffPropertiesForStandoffClass: Set[SmartIri] = xmlTag.attributes.keySet.map(_.toSmartIri)
 
-            // check that the current standoff class has cardinalities for all the properties defined
-            val cardinalitiesFound = standoffClassEntities
-              .standoffClassInfoMap(standoffClass.toSmartIri)
-              .allCardinalities
-              .keySet
-              .intersect(standoffPropertiesForStandoffClass)
+               // check that the current standoff class has cardinalities for all the properties defined
+               val cardinalitiesFound = standoffClassEntities
+                 .standoffClassInfoMap(standoffClass.toSmartIri)
+                 .allCardinalities
+                 .keySet
+                 .intersect(standoffPropertiesForStandoffClass)
 
-            if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
-              throw NotFoundException(
-                s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound)
-                    .mkString(", ")}"
-              )
-            }
+               if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
+                 throw NotFoundException(
+                   s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound)
+                       .mkString(", ")}"
+                 )
+               }
 
-            // collect the required standoff properties for the standoff class
-            val requiredPropsForClass: Set[SmartIri] = standoffClassEntities
-              .standoffClassInfoMap(standoffClass.toSmartIri)
-              .allCardinalities
-              .filter { case (property: SmartIri, card: KnoraCardinalityInfo) =>
-                card.cardinality == ExactlyOne || card.cardinality == AtLeastOne
-              }
-              .keySet -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dataTypeProperties
-              .map(_.toSmartIri)
+               // collect the required standoff properties for the standoff class
+               val requiredPropsForClass: Set[SmartIri] = standoffClassEntities
+                 .standoffClassInfoMap(standoffClass.toSmartIri)
+                 .allCardinalities
+                 .filter { case (property: SmartIri, card: KnoraCardinalityInfo) =>
+                   card.cardinality == ExactlyOne || card.cardinality == AtLeastOne
+                 }
+                 .keySet -- StandoffProperties.systemProperties.map(
+                 _.toSmartIri
+               ) -- StandoffProperties.dataTypeProperties
+                 .map(_.toSmartIri)
 
-            // check that all the required standoff properties exist in the mapping
-            if (standoffPropertiesForStandoffClass.intersect(requiredPropsForClass) != requiredPropsForClass) {
-              throw NotFoundException(
-                s"the following required standoff properties are not defined for the standoff class $standoffClass: ${(requiredPropsForClass -- standoffPropertiesForStandoffClass)
-                    .mkString(", ")}"
-              )
-            }
+               // check that all the required standoff properties exist in the mapping
+               if (standoffPropertiesForStandoffClass.intersect(requiredPropsForClass) != requiredPropsForClass) {
+                 throw NotFoundException(
+                   s"the following required standoff properties are not defined for the standoff class $standoffClass: ${(requiredPropsForClass -- standoffPropertiesForStandoffClass)
+                       .mkString(", ")}"
+                 )
+               }
 
-            // check if the standoff class's data type is correct in the mapping
-            standoffClassEntities.standoffClassInfoMap(standoffClass.toSmartIri).standoffDataType match {
-              case Some(dataType: StandoffDataTypeClasses.Value) =>
-                // check if this corresponds to the datatype in the mapping
-                val dataTypeFromMapping: XMLStandoffDataTypeClass = xmlTag.tagItem.mapping.dataType.getOrElse(
-                  throw InvalidStandoffException(s"no data type provided for $standoffClass, but $dataType required")
-                )
-                if (dataTypeFromMapping.standoffDataTypeClass != dataType) {
-                  throw InvalidStandoffException(
-                    s"wrong data type ${dataTypeFromMapping.standoffDataTypeClass} provided for $standoffClass, but $dataType required"
-                  )
-                }
-              case None =>
-                if (xmlTag.tagItem.mapping.dataType.nonEmpty) {
-                  throw InvalidStandoffException(
-                    s"no data type expected for $standoffClass, but ${xmlTag.tagItem.mapping.dataType.get.standoffDataTypeClass} given"
-                  )
-                }
-            }
-
-          }
+               // check if the standoff class's data type is correct in the mapping
+               standoffClassEntities.standoffClassInfoMap(standoffClass.toSmartIri).standoffDataType match {
+                 case Some(dataType: StandoffDataTypeClasses.Value) =>
+                   // check if this corresponds to the datatype in the mapping
+                   val dataTypeFromMapping: XMLStandoffDataTypeClass = xmlTag.tagItem.mapping.dataType.getOrElse(
+                     throw InvalidStandoffException(s"no data type provided for $standoffClass, but $dataType required")
+                   )
+                   if (dataTypeFromMapping.standoffDataTypeClass != dataType) {
+                     throw InvalidStandoffException(
+                       s"wrong data type ${dataTypeFromMapping.standoffDataTypeClass} provided for $standoffClass, but $dataType required"
+                     )
+                   }
+                 case None =>
+                   if (xmlTag.tagItem.mapping.dataType.nonEmpty) {
+                     throw InvalidStandoffException(
+                       s"no data type expected for $standoffClass, but ${xmlTag.tagItem.mapping.dataType.get.standoffDataTypeClass} given"
+                     )
+                   }
+               }
+             }
+           }
 
     } yield StandoffEntityInfoGetResponseV2(
       standoffClassInfoMap = standoffClassEntities.standoffClassInfoMap,
       standoffPropertyInfoMap = standoffPropertyEntities.standoffPropertyInfoMap
     )
-
   }
 
   /**
