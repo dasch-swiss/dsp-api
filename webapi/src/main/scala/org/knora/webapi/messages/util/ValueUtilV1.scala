@@ -124,10 +124,7 @@ trait ValueUtilV1 {
    * @param objRows  SPARQL results.
    * @return a [[ValueProps]] representing the SPARQL results.
    */
-  def createValueProps(
-    valueIri: IRI,
-    objRows: _root_.scala.collection.immutable.Seq[_root_.org.knora.webapi.messages.util.rdf.VariableResultsRow]
-  ): _root_.org.knora.webapi.messages.util.GroupedProps.ValueProps
+  def createValueProps(valueIri: IRI, objRows: Seq[VariableResultsRow]): ValueProps
 
   /**
    * Converts three lists of SPARQL query results representing all the properties of a resource into a [[GroupedPropertiesByType]].
@@ -147,14 +144,10 @@ trait ValueUtilV1 {
    * @return a [[GroupedPropertiesByType]] representing the SPARQL results.
    */
   def createGroupedPropsByType(
-    rowsWithOrdinaryValues: _root_.scala.collection.immutable.Seq[
-      _root_.org.knora.webapi.messages.util.rdf.VariableResultsRow
-    ],
-    rowsWithLinkValues: _root_.scala.collection.immutable.Seq[
-      _root_.org.knora.webapi.messages.util.rdf.VariableResultsRow
-    ],
-    rowsWithLinks: _root_.scala.collection.immutable.Seq[_root_.org.knora.webapi.messages.util.rdf.VariableResultsRow]
-  ): _root_.org.knora.webapi.messages.util.GroupedProps.GroupedPropertiesByType
+    rowsWithOrdinaryValues: Seq[VariableResultsRow],
+    rowsWithLinkValues: Seq[VariableResultsRow],
+    rowsWithLinks: Seq[VariableResultsRow]
+  ): GroupedPropertiesByType
 
   /**
    * Checks that a value type is valid for the `knora-base:objectClassConstraint` of a property.
@@ -168,8 +161,8 @@ trait ValueUtilV1 {
     propertyIri: IRI,
     valueType: IRI,
     propertyObjectClassConstraint: IRI,
-    userProfile: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-  ): zio.Task[Unit]
+    userProfile: UserADM
+  ): Task[Unit]
 
   /**
    * Converts a [[CreateValueResponseV1]] returned by the values responder on value creation
@@ -186,8 +179,8 @@ trait ValueUtilV1 {
     resourceIri: IRI,
     creatorIri: IRI,
     propertyIri: IRI,
-    valueResponse: _root_.org.knora.webapi.messages.v1.responder.valuemessages.CreateValueResponseV1
-  ): _root_.org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateValueResponseV1
+    valueResponse: CreateValueResponseV1
+  ): ResourceCreateValueResponseV1
 
   /**
    * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -197,10 +190,10 @@ trait ValueUtilV1 {
    * @return a [[ApiValueV1]] representing the `Value`.
    */
   def makeValueV1(
-    valueProps: _root_.org.knora.webapi.messages.util.GroupedProps.ValueProps,
+    valueProps: ValueProps,
     projectShortcode: String,
-    userProfile: _root_.org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-  ): zio.Task[_root_.org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1]
+    userProfile: UserADM
+  ): Task[ApiValueV1]
 
   /**
    * Creates an attribute segment for the Salsah GUI from the given resource class.

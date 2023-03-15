@@ -70,6 +70,8 @@ import org.knora.webapi.responders.v1.StandoffResponderV1
 import org.knora.webapi.responders.v1.StandoffResponderV1Live
 import org.knora.webapi.responders.v1.ValuesResponderV1
 import org.knora.webapi.responders.v1.ValuesResponderV1Live
+import org.knora.webapi.responders.v1.ResourcesResponderV1
+import org.knora.webapi.responders.v1.ResourcesResponderV1Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.responders.v2.StandoffResponderV2
@@ -86,6 +88,9 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.responders.v2.OntologyResponderV2Live
+import org.knora.webapi.responders.v2.ResourcesResponderV2
+import org.knora.webapi.responders.v2.ResourcesResponderV2Live
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 object LayersTest {
 
@@ -102,6 +107,7 @@ object LayersTest {
     with AppRouter
     with AppRouterRelayingMessageHandler
     with OntologyCache
+    with OntologyRepo
     with CacheService
     with CacheServiceRequestMessageHandler
     with CardinalityHandler
@@ -126,9 +132,11 @@ object LayersTest {
     with ProjectsResponderV1
     with RepositoryUpdater
     with ResourceInfoRepo
+    with ResourceUtilV2
+    with ResourcesResponderV1
+    with ResourcesResponderV2
     with RestCardinalityService
     with RestResourceInfoService
-    with ResourceUtilV2
     with SearchResponderV1
     with SipiResponderADM
     with StandoffResponderV1
@@ -179,9 +187,11 @@ object LayersTest {
       ProjectsResponderV1Live.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
+      ResourceUtilV2Live.layer,
+      ResourcesResponderV1Live.layer,
+      ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
-      ResourceUtilV2Live.layer,
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV1Live.layer,

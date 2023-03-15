@@ -61,8 +61,10 @@ trait StandoffTagUtilV2 {
   ): Task[Vector[StandoffTagV2]]
 }
 
-final case class StandoffTagUtilV2Live(messageRelay: MessageRelay, implicit val stringFormatter: StringFormatter)
-    extends StandoffTagUtilV2 {
+final case class StandoffTagUtilV2Live(
+  messageRelay: MessageRelay,
+  implicit val stringFormatter: StringFormatter
+) extends StandoffTagUtilV2 {
 
   /**
    * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL CONSTRUCT query.
@@ -264,7 +266,6 @@ final case class StandoffTagUtilV2Live(messageRelay: MessageRelay, implicit val 
                        .sortBy(_.startIndex)
     } yield standoffTags
   }
-
 }
 
 object StandoffTagUtilV2Live {
