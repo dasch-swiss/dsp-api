@@ -74,7 +74,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   private def getProjects(): Route = path(projectsBasePath) {
     get { requestContext =>
-      log.info("All projects requested.")
       RouteUtilADM.runJsonRoute(
         requestMessageF = FastFuture.successful(ProjectsGetRequestADM()),
         requestContext = requestContext,
