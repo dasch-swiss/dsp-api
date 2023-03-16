@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.Files
@@ -15,10 +14,10 @@ import java.util.UUID
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -46,6 +45,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetad
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.service.ProjectRepo
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
@@ -182,6 +182,7 @@ final case class ProjectsResponderADMLive(
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
   iriService: IriService,
+  projectRepo: ProjectRepo,
   cacheServiceSettings: CacheServiceSettings,
   implicit val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
@@ -297,11 +298,12 @@ final case class ProjectsResponderADMLive(
    *         NotFoundException if no projects are found.
    */
   override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
-    for {
-      projects <- projectsGetADM()
-      result <- if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
-                else { ZIO.fail(NotFoundException(s"No projects found")) }
-    } yield result
+    projectRepo
+      .findAll()
+      .flatMap(projects =>
+        if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
+        else { ZIO.fail(NotFoundException(s"No projects found")) }
+      )
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
@@ -1255,18 +1257,18 @@ final case class ProjectsResponderADMLive(
 }
 
 object ProjectsResponderADMLive {
-  val layer: ZLayer[
-    MessageRelay with TriplestoreService with StringFormatter with IriService with AppConfig,
-    Nothing,
-    ProjectsResponderADM
+  val layer: URLayer[
+    MessageRelay with TriplestoreService with StringFormatter with ProjectRepo with IriService with AppConfig,
+    ProjectsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
       c       <- ZIO.service[AppConfig].map(new CacheServiceSettings(_))
       iris    <- ZIO.service[IriService]
+      pr      <- ZIO.service[ProjectRepo]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, c, sf))
+      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, pr, c, sf))
     } yield handler
   }
 }
