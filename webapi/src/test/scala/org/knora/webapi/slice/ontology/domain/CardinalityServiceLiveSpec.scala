@@ -475,6 +475,49 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |
                                   |""".stripMargin)
       ),
+      suite("canSetCardinality with deleted object in property reference")(
+        test("given a deleted property was used") {
+          val propertyCardinality =
+            OntologyCacheDataBuilder.cardinalitiesMap(Anything.Property.hasOtherThing, Unbounded)
+          val data = OntologyCacheDataBuilder.builder
+            .addOntology(
+              ReadOntologyV2Builder
+                .builder(Anything.Ontology)
+                .addClassInfo(
+                  ReadClassInfoV2Builder
+                    .builder(Anything.Class.Thing)
+                    .setDirectCardinalities(propertyCardinality)
+                )
+            )
+          check(cardinalitiesGen(AtLeastOne)) { newCardinality =>
+            for {
+              _ <- OntologyCacheFake.set(data.build)
+              actual <-
+                CardinalityService.canSetCardinality(
+                  Anything.Class.Thing,
+                  Anything.Property.hasOtherThing,
+                  newCardinality
+                )
+            } yield assertTrue(actual.isLeft)
+          }
+        }.provide(
+          commonLayers,
+          datasetLayerFromTurtle(s"""
+                                    |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                                    |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+                                    |@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+                                    |
+                                    |<http://aThing>
+                                    |  a <${Anything.Class.Thing.value}> ;
+                                    |  <${Anything.Property.hasOtherThing.value}> <http://aDeletedThing>.
+                                    |
+                                    |<http://aDeletedThing>
+                                    |  a <${Anything.Class.Thing.value}> ;
+                                    |  knora-base:isDeleted true .
+                                    |
+                                    |""".stripMargin)
+        )
+      ),
       suite("canSetCardinality with property in use once")(
         test(s"""
                 |Given the previous cardinality on the class/property
