@@ -505,13 +505,8 @@ final case class GroupsResponderADMLive(
                  !userPermissions.isSystemAdmin
                }
 
-        maybeStatus = changeGroupRequest.status match {
-                        case Some(value) =>
-                          Some(GroupStatus.make(value).fold(e => throw e.head, v => v))
-                        case None => None
-                      }
-
         /* create the update request */
+        maybeStatus       <- GroupStatus.make(changeGroupRequest.status).toZIO
         groupUpdatePayload = GroupUpdatePayloadADM(status = maybeStatus)
 
         // update group status
