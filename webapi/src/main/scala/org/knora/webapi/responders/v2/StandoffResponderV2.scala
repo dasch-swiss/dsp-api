@@ -1136,11 +1136,11 @@ final case class StandoffResponderV2Live(
    * A [[ResultAndNext]] containing a page of standoff queried from a text value.
    *
    * @param result the standoff result.
-   * @param nextStep the next task/step, or `None` if there is no more standoff to query in the text value.
+   * @param next the next task/step, or `None` if there is no more standoff to query in the text value.
    */
   case class StandoffTaskResult(
     override val result: StandoffTaskUnderlyingResult,
-    override val nextStep: Option[GetStandoffTask]
+    override val next: Option[GetStandoffTask]
   ) extends ResultAndNext[StandoffTaskUnderlyingResult]
 
   /**
@@ -1166,7 +1166,7 @@ final case class StandoffResponderV2Live(
   ) extends NextExecutionStep[StandoffTaskUnderlyingResult] {
     override def run(
       previousResult: Option[ResultAndNext[StandoffTaskUnderlyingResult]]
-    ): zio.Task[ResultAndNext[StandoffTaskUnderlyingResult]] =
+    ): Task[ResultAndNext[StandoffTaskUnderlyingResult]] =
       for {
         // Get a page of standoff.
         standoffResponse <-

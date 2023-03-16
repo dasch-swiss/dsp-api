@@ -176,7 +176,7 @@ final case class OntologyResponderV2Live(
         (standoffClassIris ++ standoffPropertyIris).filter(_.getOntologySchema.contains(ApiV2Simple))
 
       _ <- ZIO.fail {
-             throw NotFoundException(
+             NotFoundException(
                s"Some requested standoff classes were not found: ${entitiesInWrongSchema.mkString(", ")}"
              )
            }.when(entitiesInWrongSchema.nonEmpty)
