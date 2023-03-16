@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import akka.pattern.ask
 import akka.testkit.ImplicitSender
 import dsp.constants.SalsahGui
 import dsp.errors._
@@ -26,7 +27,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
@@ -6072,13 +6072,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingAdminUser,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgType[ReadResourcesSequenceV2](timeout)
+      appActor.ask(
+        CreateResourceRequestV2(
+          createResource = inputResource,
+          requestingUser = anythingAdminUser,
+          apiRequestID = UUID.randomUUID
+        )
+      )(timeout)
 
       // Successfully check if the cardinality can be deleted
 
