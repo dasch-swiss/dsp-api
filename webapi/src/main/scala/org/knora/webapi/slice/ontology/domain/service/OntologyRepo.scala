@@ -20,6 +20,8 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   override def findAll(): Task[List[ReadOntologyV2]]
 
+  def findByProject(projectId: InternalIri): Task[List[ReadOntologyV2]]
+
   def findClassBy(classIri: InternalIri): Task[Option[ReadClassInfoV2]]
 
   def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]

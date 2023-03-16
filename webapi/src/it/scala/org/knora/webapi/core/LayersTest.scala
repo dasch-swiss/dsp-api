@@ -90,6 +90,8 @@ import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.responders.v2.OntologyResponderV2Live
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2Live
+import org.knora.webapi.slice.admin.domain.service.ProjectRepo
+import org.knora.webapi.slice.admin.repo.service.ProjectRepoLive
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 object LayersTest {
@@ -124,10 +126,11 @@ object LayersTest {
     with ListsResponderV1
     with MessageRelay
     with OntologyResponderV1
-    with OntologyResponderV2
     with OntologyHelpers
+    with OntologyResponderV2
     with PermissionUtilADM
     with PermissionsResponderADM
+    with ProjectRepo
     with ProjectsResponderADM
     with ProjectsResponderV1
     with RepositoryUpdater
@@ -183,6 +186,7 @@ object LayersTest {
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
+      ProjectRepoLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
       RepositoryUpdater.layer,
