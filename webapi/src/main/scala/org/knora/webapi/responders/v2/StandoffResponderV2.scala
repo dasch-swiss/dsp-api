@@ -38,7 +38,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.MappingElement
 import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
 import org.knora.webapi.messages.twirl.MappingXMLAttribute
@@ -57,18 +56,21 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.NextExecutionStep
 import org.knora.webapi.util.ResultAndNext
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
- * Responds to requests relating to the creation of mappings from XML elementsand attributes to standoff classes and properties.
+ * Responds to requests relating to the creation of mappings from XML elements
+ * and attributes to standoff classes and properties.
  */
 trait StandoffResponderV2
 final case class StandoffResponderV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   implicit val stringFormatter: StringFormatter
@@ -126,13 +128,7 @@ final case class StandoffResponderV2Live(
             .toString()
         )
 
-      resourceRequestResponse <-
-        messageRelay
-          .ask[SparqlExtendedConstructResponse](
-            SparqlExtendedConstructRequest(
-              sparql = resourceRequestSparql
-            )
-          )
+      resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
 
       // separate resources and values
       mainResourcesAndValueRdfData =
@@ -519,46 +515,33 @@ final case class StandoffResponderV2Live(
         _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, requestingUser)
 
         // check if the mapping IRI already exists
-        getExistingMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                     .getMapping(
-                                       mappingIri = mappingIri
-                                     )
-                                     .toString()
+        getExistingMappingSparql =
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .getMapping(mappingIri)
+            .toString()
 
-        existingMappingResponse <-
-          messageRelay
-            .ask[SparqlConstructResponse](
-              SparqlConstructRequest(
-                sparql = getExistingMappingSparql
-              )
-            )
+        existingMappingResponse <- triplestoreService.sparqlHttpConstruct(getExistingMappingSparql)
 
         _ = if (existingMappingResponse.statements.nonEmpty) {
               throw BadRequestException(s"mapping IRI $mappingIri already exists")
             }
 
-        createNewMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                   .createNewMapping(
-                                     dataNamedGraph = namedGraph,
-                                     mappingIri = mappingIri,
-                                     label = label,
-                                     defaultXSLTransformation = defaultXSLTransformation,
-                                     mappingElements = mappingElements
-                                   )
-                                   .toString()
+        createNewMappingSparql =
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .createNewMapping(
+              dataNamedGraph = namedGraph,
+              mappingIri = mappingIri,
+              label = label,
+              defaultXSLTransformation = defaultXSLTransformation,
+              mappingElements = mappingElements
+            )
+            .toString()
 
         // Do the update.
-        createResourceResponse <-
-          messageRelay.ask[SparqlUpdateResponse](SparqlUpdateRequest(createNewMappingSparql))
+        createResourceResponse <- triplestoreService.sparqlHttpUpdate(createNewMappingSparql)
 
         // check if the mapping has been created
-        newMappingResponse <-
-          messageRelay
-            .ask[SparqlConstructResponse](
-              SparqlConstructRequest(
-                sparql = getExistingMappingSparql
-              )
-            )
+        newMappingResponse <- triplestoreService.sparqlHttpConstruct(getExistingMappingSparql)
 
         _ = if (newMappingResponse.statements.isEmpty) {
               logger.error(
@@ -864,14 +847,7 @@ final case class StandoffResponderV2Live(
       .toString()
 
     for {
-
-      mappingResponse <-
-        messageRelay
-          .ask[SparqlConstructResponse](
-            SparqlConstructRequest(
-              sparql = getMappingSparql
-            )
-          )
+      mappingResponse <- triplestoreService.sparqlHttpConstruct(getMappingSparql)
 
       // if the result is empty, the mapping does not exist
       _ = if (mappingResponse.statements.isEmpty) {
@@ -1231,17 +1207,23 @@ final case class StandoffResponderV2Live(
 
 object StandoffResponderV2Live {
   val layer: URLayer[
-    AppConfig with MessageRelay with ConstructResponseUtilV2 with StandoffTagUtilV2 with StringFormatter,
+    AppConfig
+      with MessageRelay
+      with TriplestoreService
+      with ConstructResponseUtilV2
+      with StandoffTagUtilV2
+      with StringFormatter,
     StandoffResponderV2
   ] =
     ZLayer.fromZIO {
       for {
         ac      <- ZIO.service[AppConfig]
         mr      <- ZIO.service[MessageRelay]
+        ts      <- ZIO.service[TriplestoreService]
         cru     <- ZIO.service[ConstructResponseUtilV2]
         stu     <- ZIO.service[StandoffTagUtilV2]
         sf      <- ZIO.service[StringFormatter]
-        handler <- mr.subscribe(StandoffResponderV2Live(ac, mr, cru, stu, sf))
+        handler <- mr.subscribe(StandoffResponderV2Live(ac, mr, ts, cru, stu, sf))
       } yield handler
     }
 }
