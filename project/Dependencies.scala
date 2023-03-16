@@ -27,7 +27,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.0.7"
   val ZioPreludeVersion           = "1.0.0-RC17"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.9"
+  val ZioVersion                  = "2.0.10"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio" %% "zio"                       % ZioVersion
@@ -51,7 +51,7 @@ object Dependencies {
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.1.3"          // Scala 3 incompatible
+  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.2.0"          // Scala 3 incompatible
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion  // Scala 3 incompatible
   val akkaSlf4j         = "com.typesafe.akka" %% "akka-slf4j"           % AkkaActorVersion // Scala 3 compatible
   val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % AkkaActorVersion // Scala 3 compatible
