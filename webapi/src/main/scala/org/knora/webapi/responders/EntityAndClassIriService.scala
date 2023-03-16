@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders
 import akka.actor.ActorRef
-import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 
@@ -17,8 +16,6 @@ import dsp.errors.DuplicateValueException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 
 /**
  * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
@@ -37,48 +34,6 @@ final case class EntityAndClassIriService(
   private implicit val timeout: Timeout     = actorDeps.timeout
 
   private val appActor: ActorRef = actorDeps.appActor
-
-  /**
-   * Checks whether an entity is used in the triplestore.
-   *
-   * @param entityIri                 the IRI of the entity.
-   * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
-   * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
-   *
-   * @return `true` if the entity is used.
-   */
-  private def isEntityUsed(
-    entityIri: SmartIri,
-    ignoreKnoraConstraints: Boolean = false,
-    ignoreRdfSubjectAndObject: Boolean = false
-  ): Future[Boolean] = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-      .isEntityUsed(entityIri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
-      .toString()
-    appActor
-      .ask(SparqlSelectRequest(query))
-      .mapTo[SparqlSelectResult]
-      .map(_.results.bindings.nonEmpty)
-  }
-
-  /**
-   * Throws an exception if an entity is used in the triplestore.
-   *
-   * @param entityIri the IRI of the entity.
-   * @param errorFun                  a function that throws an exception. It will be called if the entity is used.
-   * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
-   * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
-   */
-  def throwIfEntityIsUsed(
-    entityIri: SmartIri,
-    ignoreKnoraConstraints: Boolean = false,
-    ignoreRdfSubjectAndObject: Boolean = false,
-    errorFun: => Nothing
-  ): Future[Unit] =
-    for {
-      entityIsUsed: Boolean <- isEntityUsed(entityIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
-      _                      = if (entityIsUsed) { errorFun }
-    } yield ()
 
   /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
