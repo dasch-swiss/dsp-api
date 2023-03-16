@@ -164,21 +164,6 @@ object Dependencies {
     zioPrelude
   )
 
-  // schema project dependencies
-  val schemaApiLibraryDependencies = Seq(
-    zioHttpOld
-  )
-
-  val schemaCoreLibraryDependencies = Seq(
-    zioPrelude,
-    zioTest    % Test,
-    zioTestSbt % Test
-  )
-
-  val schemaRepoLibraryDependencies                  = Seq()
-  val schemaRepoEventStoreServiceLibraryDependencies = Seq()
-  val schemaRepoSearchServiceLibraryDependencies     = Seq()
-
   // shared project dependencies
   val sharedLibraryDependencies = Seq(
     bouncyCastle,

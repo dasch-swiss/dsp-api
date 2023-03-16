@@ -40,8 +40,7 @@ lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
     sipi,
-    shared,
-    schemaCore
+    shared
   )
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
@@ -195,7 +194,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     IntegrationTest / testForkedParallel := false, // not run forked tests in parallel
     IntegrationTest / parallelExecution  := false, // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
-    // IntegrationTest / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
+    // IntegrationTest / javaOptions ++= Seq("-Daakka.log-config-on-start=on"), // prints out akka config
     // IntegrationTest / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     // IntegrationTest / javaOptions += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", // starts sbt with debug port
     IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
@@ -250,22 +249,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
-  .dependsOn(shared, schemaCore)
+  .dependsOn(shared)
 
 //////////////////////////////////////
 // DSP's new codebase
 //////////////////////////////////////
-
-// schema project
-lazy val schemaCore = project
-  .in(file("dsp-schema/core"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "schemaCore",
-    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared)
 
 // shared project
 lazy val shared = project
