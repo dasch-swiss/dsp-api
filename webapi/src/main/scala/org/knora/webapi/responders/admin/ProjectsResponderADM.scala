@@ -791,9 +791,9 @@ final case class ProjectsResponderADMLive(
     else {
       val projectId = IriIdentifier(projectIri)
       for {
-        maybeCurrentProject <- getSingleProjectADM(projectId, skipCache = true)
-        _ <- ZIO
-               .fromOption(maybeCurrentProject)
+        _ <- projectRepo
+               .findByProjectIdentifier(projectId)
+               .flatMap(ZIO.fromOption(_))
                .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request."))
 
         // we are changing the project, so lets get rid of the cached copy
@@ -816,11 +816,10 @@ final case class ProjectsResponderADMLive(
         _ <- triplestoreService.sparqlHttpUpdate(updateQuery.toString)
 
         /* Verify that the project was updated. */
-        maybeUpdatedProject <- getSingleProjectADM(projectId, skipCache = true)
-
         updatedProject <-
-          ZIO
-            .fromOption(maybeUpdatedProject)
+          projectRepo
+            .findByProjectIdentifier(projectId)
+            .flatMap(ZIO.fromOption(_))
             .orElseFail(UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
         _ <- ZIO.logDebug(
@@ -1099,7 +1098,9 @@ final case class ProjectsResponderADMLive(
         // try to retrieve newly created project (will also add to cache)
         id <- IriIdentifier.fromString(newProjectIRI).toZIO.mapError(e => BadRequestException(e.getMessage))
         // check to see if we could retrieve the new project
-        newProjectADM <- getSingleProjectADM(id, skipCache = true)
+
+        newProjectADM <- projectRepo
+                           .findByProjectIdentifier(id)
                            .flatMap(ZIO.fromOption(_))
                            .orElseFail(
                              UpdateNotPerformedException(
