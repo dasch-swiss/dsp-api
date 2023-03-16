@@ -398,11 +398,21 @@ final case class ValuesResponderV2Live(
 
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
-    resourceUtilV2.doSipiPostUpdate(
-      updateFuture = triplestoreUpdateFuture,
-      valueContent = createValueRequest.createValue.valueContent,
-      requestingUser = createValueRequest.requestingUser,
-      logger
+    // resourceUtilV2.doSipiPostUpdate(
+    //   updateFuture = triplestoreUpdateFuture,
+    //   valueContent = createValueRequest.createValue.valueContent,
+    //   requestingUser = createValueRequest.requestingUser,
+    //   logger
+    UnsafeZioRun.runToFuture(
+      ZIO.serviceWithZIO[ResourceUtilV2](
+        _.doSipiPostUpdate(
+          ZIO.fromFuture(ec => triplestoreUpdateFuture),
+          List(createValueRequest.createValue.valueContent)
+            .filter(_.isInstanceOf[FileValueContentV2])
+            .map(_.asInstanceOf[FileValueContentV2]),
+          createValueRequest.requestingUser
+        )
+      )
     )
   }
 
@@ -1341,11 +1351,21 @@ final case class ValuesResponderV2Live(
             makeTaskFutureToUpdateValueContent(updateValueContentV2)
           )
 
-          resourceUtilV2.doSipiPostUpdate(
-            updateFuture = triplestoreUpdateFuture,
-            valueContent = updateValueContentV2.valueContent,
-            requestingUser = updateValueRequest.requestingUser,
-            logger
+          // resourceUtilV2.doSipiPostUpdate(
+          //   updateFuture = triplestoreUpdateFuture,
+          //   valueContent = updateValueContentV2.valueContent,
+          //   requestingUser = updateValueRequest.requestingUser,
+          //   logger
+          UnsafeZioRun.runToFuture(
+            ZIO.serviceWithZIO[ResourceUtilV2](
+              _.doSipiPostUpdate(
+                ZIO.fromFuture(_ => triplestoreUpdateFuture),
+                List(updateValueContentV2.valueContent)
+                  .filter(_.isInstanceOf[FileValueContentV2])
+                  .map(_.asInstanceOf[FileValueContentV2]),
+                updateValueRequest.requestingUser
+              )
+            )
           )
 
         case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
