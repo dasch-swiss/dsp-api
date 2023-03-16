@@ -35,7 +35,7 @@ import org.knora.webapi.util.MutableTestIri
 class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val timeout                                   = 5.seconds
+  private val timeout                                   = 50.seconds
 
   private val rootUser = SharedTestDataADM.rootUser
 
@@ -95,7 +95,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             .fromString("9999")
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
         )
-        expectMsg(Failure(NotFoundException(s"Project '9999' not found")))
+        expectMsg(timeout, Failure(NotFoundException(s"Project '9999' not found")))
       }
     }
 

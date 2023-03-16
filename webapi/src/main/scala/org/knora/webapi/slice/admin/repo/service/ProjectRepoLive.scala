@@ -3,9 +3,9 @@ import play.twirl.api.TxtFormat
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.V2
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectDescription
@@ -40,9 +40,10 @@ final case class ProjectRepoLive(
   override def findByProjectIdentifier(id: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     findByQuery(
       twirl.queries.sparql.admin.txt
-        .getProjects(id.asIriIdentifierOption, id.asShortnameIdentifierOption, id.asShortnameIdentifierOption)
+        .getProjects(id.asIriIdentifierOption, id.asShortnameIdentifierOption, id.asShortcodeIdentifierOption)
     )
-  private def findByQuery(query: TxtFormat.Appendable) =
+
+  private def findByQuery(query: TxtFormat.Appendable): Task[Option[ProjectADM]] =
     for {
       construct <- triplestore.sparqlHttpExtendedConstruct(query.toString).map(_.statements.headOption)
       project   <- ZIO.foreach(construct)(it => assembleProjectADM(InternalIri(it._1.toString), it._2))

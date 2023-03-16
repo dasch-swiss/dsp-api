@@ -326,7 +326,7 @@ final case class ProjectsResponderADMLive(
     for {
       maybeProjectADM <-
         if (skipCache) {
-          getProjectFromTriplestore(identifier = id)
+          projectRepo.findByProjectIdentifier(id)
         } else {
           // getting from cache or triplestore
           getProjectFromCacheOrTriplestore(identifier = id)
@@ -1131,7 +1131,7 @@ final case class ProjectsResponderADMLive(
       getProjectFromCache(identifier).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          getProjectFromTriplestore(identifier = identifier).flatMap {
+          projectRepo.findByProjectIdentifier(identifier).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               logger.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
@@ -1153,42 +1153,8 @@ final case class ProjectsResponderADMLive(
     } else {
       // caching disabled
       logger.debug("getProjectFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      getProjectFromTriplestore(identifier = identifier)
+      projectRepo.findByProjectIdentifier(identifier)
     }
-
-  /**
-   * Tries to retrieve a [[ProjectADM]] from the triplestore.
-   */
-  private def getProjectFromTriplestore(
-    identifier: ProjectIdentifierADM
-  ): Task[Option[ProjectADM]] = {
-    val query = twirl.queries.sparql.admin.txt
-      .getProjects(
-        maybeIri = identifier.asIriIdentifierOption,
-        maybeShortname = identifier.asShortnameIdentifierOption,
-        maybeShortcode = identifier.asShortcodeIdentifierOption
-      )
-    for {
-      projectResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
-
-      projectIris = projectResponse.statements.keySet.map(_.toString)
-      ontologies <- if (projectResponse.statements.nonEmpty) {
-                      getOntologiesForProjects(projectIris)
-                    } else {
-                      ZIO.succeed(Map.empty[IRI, Seq[IRI]])
-                    }
-
-      maybeProjectADM: Option[ProjectADM] =
-        if (projectResponse.statements.nonEmpty) {
-          logger.debug("getProjectFromTriplestore - triplestore hit for: {}", getId(identifier))
-          val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
-          Some(convertStatementsToProjectADM(projectResponse.statements.head, projectOntologies))
-        } else {
-          logger.debug("getProjectFromTriplestore - no triplestore hit for: {}", getId(identifier))
-          None
-        }
-    } yield maybeProjectADM
-  }
 
   /**
    * Helper method that turns SPARQL result rows into a [[ProjectADM]].
