@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.Files
@@ -14,10 +15,10 @@ import java.util.UUID
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -415,10 +416,8 @@ final case class ProjectsResponderADMLive(
   override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
     for {
       projects <- projectRepo.findAll()
-
-      keywords: Seq[String] = projects.flatMap(_.keywords).distinct.sorted
-
-    } yield ProjectsKeywordsGetResponseADM(keywords = keywords)
+      keywords  = projects.flatMap(_.keywords).distinct.sorted
+    } yield ProjectsKeywordsGetResponseADM(keywords)
 
   /**
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.

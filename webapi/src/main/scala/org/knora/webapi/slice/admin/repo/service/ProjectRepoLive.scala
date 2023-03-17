@@ -3,9 +3,9 @@ import play.twirl.api.TxtFormat
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.V2
-
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectDescription
