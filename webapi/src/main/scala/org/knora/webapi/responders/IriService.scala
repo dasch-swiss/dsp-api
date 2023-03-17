@@ -62,7 +62,7 @@ final case class IriService(
   }
 
   /**
-   * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
+   * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, fails with an exception.
    * If no custom IRI was given, creates a random unused IRI.
    *
    * @param entityIri    the optional custom IRI of the entity.
@@ -77,16 +77,7 @@ final case class IriService(
           _ <- ZIO
                  .fail(DuplicateValueException(s"IRI: '$entityIriAsString' already exists, try another one."))
                  .whenZIO(checkIriExists(entityIriAsString))
-
-          // Check that given entityIRI ends with a UUID
-          ending: String = entityIriAsString.split('/').last
-          _ <- ZIO.attempt(
-                 stringFormatter.validateBase64EncodedUuid(
-                   ending,
-                   throw BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID.")
-                 )
-               )
-
+          _ <- stringFormatter.iriEndsWithUuid(entityIriAsString)
         } yield entityIriAsString
 
       case None => makeUnusedIri(iriFormatter)

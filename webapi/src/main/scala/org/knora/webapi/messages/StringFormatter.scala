@@ -13,7 +13,7 @@ import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import spray.json._
-import zio.ZLayer
+import zio._
 
 import java.nio.ByteBuffer
 import java.time._
@@ -2584,19 +2584,21 @@ class StringFormatter private (
    * Validates and decodes a Base64-encoded UUID.
    *
    * @param base64Uuid the UUID to be validated.
-   * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return the decoded UUID.
+   * @return the decoded UUID if valid, None otherwise.
    */
-  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = {
-    val decodeTry = Try {
-      base64DecodeUuid(base64Uuid)
-    }
+  def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
+    Try(base64DecodeUuid(base64Uuid)).toOption
 
-    decodeTry match {
-      case Success(uuid) => uuid
-      case Failure(_)    => errorFun
-    }
-  }
+  /**
+   * Validates that an IRI ends on a valid Base64-encoded UUID.
+   *
+   * @param iri the IRI to be validated
+   * @return the decoded UUID
+   */
+  def iriEndsWithUuid(iri: String): Task[UUID] =
+    ZIO
+      .fromOption(validateBase64EncodedUuid(iri.split('/').last))
+      .orElseFail(BadRequestException(s"IRI: '$iri' must end with a valid base 64 UUID."))
 
   /**
    * Encodes a [[UUID]] as a string in one of two formats:
