@@ -92,6 +92,8 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2Live
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
+import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.responders.v2.ValuesResponderV2Live
 object LayersTest {
 
   /**
@@ -152,6 +154,7 @@ object LayersTest {
     with UsersResponderV1
     with ValueUtilV1
     with ValuesResponderV1
+    with ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -206,7 +209,8 @@ object LayersTest {
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,
-      ValuesResponderV1Live.layer
+      ValuesResponderV1Live.layer,
+      ValuesResponderV2.layer
     )
 
   private val fusekiAndSipiTestcontainers =

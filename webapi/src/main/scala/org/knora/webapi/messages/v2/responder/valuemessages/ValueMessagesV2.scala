@@ -41,11 +41,12 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util._
+import org.knora.webapi.core.MessageRelay
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
  */
-sealed trait ValuesResponderRequestV2 extends KnoraRequestV2
+sealed trait ValuesResponderRequestV2 extends KnoraRequestV2 with MessageRelay
 
 /**
  * Requests the creation of a value.

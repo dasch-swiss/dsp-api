@@ -98,6 +98,8 @@ import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.responders.v2.ValuesResponderV2Live
 
 object LayersLive {
 
@@ -154,6 +156,7 @@ object LayersLive {
       with UsersResponderADM
       with UsersResponderV1
       with ValuesResponderV1
+      with ValuesResponderV2
       with ValueUtilV1
 
   /**
@@ -221,6 +224,7 @@ object LayersLive {
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValuesResponderV1Live.layer,
+      ValuesResponderV2Live.layer,
       ValueUtilV1Live.layer
     )
 }
