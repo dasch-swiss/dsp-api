@@ -10,11 +10,10 @@ import zio.http._
 import zio.http.model.Status
 import zio.mock.Expectation
 import zio.test._
-
 import java.net.URLEncoder
 import java.nio.file
-
 import dsp.valueobjects.V2
+
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
@@ -23,8 +22,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywor
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.responders.admin.ProjectsService
 import org.knora.webapi.responders.admin.ProjectsServiceMock
+import org.knora.webapi.slice.admin.api.service.ProjectADMREstService
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
@@ -54,12 +53,12 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     )
 
   /**
-   * Returns a ZIO effect that requires a [[ProjectsService]] (so that a mock can be provided) that applies the
+   * Returns a ZIO effect that requires a [[ProjectADMREstService]] (so that a mock can be provided) that applies the
    * provided [[Request]] to the `routes` of a [[ProjectsRouteZ]], returning a [[Response]].
    */
-  private def applyRoutes(request: Request): ZIO[ProjectsService, Option[Nothing], Response] = ZIO
+  private def applyRoutes(request: Request): ZIO[ProjectADMREstService, Option[Nothing], Response] = ZIO
     .serviceWithZIO[ProjectsRouteZ](_.route.apply(request))
-    .provideSome[ProjectsService](
+    .provideSome[ProjectADMREstService](
       AppConfig.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.mock(Some(KnoraSystemInstances.Users.SystemUser)),
@@ -100,7 +99,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri)))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
@@ -128,7 +127,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val shortname  = "someProject"
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val request    = Request.get(url = URL(basePathProjectsShortname / shortname))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
@@ -156,7 +155,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val shortcode  = "0001"
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
@@ -281,7 +280,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request        = Request.delete(url = URL(basePathProjectsIri / encode(projectIri.value)))
       val user           = KnoraSystemInstances.Users.SystemUser
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .DeleteProject(
           assertion = Assertion.equalTo(projectIri, user),
           result = expectedResult
@@ -402,7 +401,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val path       = file.Paths.get("getAllDataFile.trig")
       val testFile   = file.Files.createFile(path)
 
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetAllProjectData(
           assertion = Assertion.equalTo(identifier, user),
           result = Expectation.value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(testFile))
@@ -433,7 +432,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectMembersGetResponseADM](
@@ -462,7 +461,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode / "members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectMembersGetResponseADM](
@@ -491,7 +490,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsShortname / shortname / "members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectMembersGetResponseADM](
@@ -523,7 +522,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "admin-members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetProjectAdmins(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectAdminMembersGetResponseADM](
@@ -552,7 +551,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode / "admin-members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetProjectAdmins(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectAdminMembersGetResponseADM](
@@ -581,7 +580,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsShortname / shortname / "admin-members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetProjectAdmins(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectAdminMembersGetResponseADM](
@@ -623,7 +622,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val iri        = "http://rdfh.ch/projects/0001"
       val projectIri = TestDataFactory.projectIri(iri)
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "Keywords"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetKeywordsByProjectIri(
           assertion = Assertion.equalTo(projectIri),
           result = Expectation.value[ProjectKeywordsGetResponseADM](
@@ -654,7 +653,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "RestrictedViewSettings"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetRestrictedViewSettings(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
@@ -683,7 +682,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val request    = Request.get(url = URL(basePathProjectsShortname / shortname / "RestrictedViewSettings"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetRestrictedViewSettings(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
@@ -712,7 +711,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode / "RestrictedViewSettings"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMREstService] = ProjectsServiceMock
         .GetRestrictedViewSettings(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.admin
+package org.knora.webapi.slice.admin.api.service
 
 import zio.Task
 import zio._
@@ -15,9 +15,10 @@ import dsp.valueobjects.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.responders.admin.ProjectsResponderADM
 
 @accessible
-trait ProjectsService {
+trait ProjectADMREstService {
   def getProjectsADMRequest(): Task[ProjectsGetResponseADM]
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM]
   def createProjectADMRequest(
@@ -51,7 +52,7 @@ trait ProjectsService {
   ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 }
 
-final case class ProjectsServiceLive(responder: ProjectsResponderADM) extends ProjectsService {
+final case class ProjectsADMRestServiceLive(responder: ProjectsResponderADM) extends ProjectADMREstService {
 
   /**
    * Returns all projects as a [[ProjectsGetResponseADM]].
@@ -218,6 +219,7 @@ final case class ProjectsServiceLive(responder: ProjectsResponderADM) extends Pr
 
 }
 
-object ProjectsServiceLive {
-  val layer: URLayer[ProjectsResponderADM, ProjectsService] = ZLayer.fromFunction(ProjectsServiceLive.apply _)
+object ProjectsADMRestServiceLive {
+  val layer: URLayer[ProjectsResponderADM, ProjectADMREstService] =
+    ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }
