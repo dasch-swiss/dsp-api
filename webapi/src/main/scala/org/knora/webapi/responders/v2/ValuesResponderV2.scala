@@ -52,6 +52,7 @@ import org.knora.webapi.messages.ResponderRequest
 import zio.Task
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.util.ZioHelper
 
 /**
  * Handles requests to read and write Knora values.
@@ -665,10 +666,10 @@ final case class ValuesResponderV2Live(
         )
 
       // Generate SPARQL for each value.
-      sparqlForPropertyValueFutures: Map[SmartIri, Seq[Task[InsertSparqlWithUnverifiedValue]]] =
+      sparqlForPropertyValueFutures =
         createMultipleValuesRequest.values.map {
-          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
-            propertyIri -> valuesToCreate.zipWithIndex.map {
+          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) => {
+            val values = valuesToCreate.zipWithIndex.map {
               case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
                 generateInsertSparqlWithUnverifiedValue(
                   resourceIri = createMultipleValuesRequest.resourceIri,
@@ -679,11 +680,11 @@ final case class ValuesResponderV2Live(
                   requestingUser = createMultipleValuesRequest.requestingUser
                 )
             }
+            (propertyIri -> ZIO.collectAll(values))
+          }
         }
 
-      sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] <- ActorUtil.sequenceSeqFuturesInMap(
-                                                                                        sparqlForPropertyValueFutures
-                                                                                      )
+      sparqlForPropertyValues <- ZioHelper.sequence(sparqlForPropertyValueFutures)
 
       // Concatenate all the generated SPARQL.
       allInsertSparql: String =
@@ -2221,8 +2222,8 @@ final case class ValuesResponderV2Live(
       permissions = unverifiedValue.permissions
     )
 
-    verifiedValueFuture.recover { case _: NotFoundException =>
-      throw UpdateNotPerformedException(s"Resource <$resourceIri> was not found. Please report this as a possible bug.")
+    verifiedValueFuture.mapError { case _: NotFoundException =>
+      UpdateNotPerformedException(s"Resource <$resourceIri> was not found. Please report this as a possible bug.")
     }
   }
 
@@ -2643,7 +2644,7 @@ final case class ValuesResponderV2Live(
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    stringFormatter.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri), appActor, logger)
+    iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
 
   /**
    * Make a new value UUID considering optional custom value UUID and custom value IRI.
