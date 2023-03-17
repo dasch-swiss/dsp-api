@@ -10,10 +10,11 @@ import zio.http._
 import zio.http.model.Status
 import zio.mock.Expectation
 import zio.test._
+
 import java.net.URLEncoder
 import java.nio.file
-import dsp.valueobjects.V2
 
+import dsp.valueobjects.V2
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
