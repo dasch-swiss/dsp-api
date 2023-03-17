@@ -6,7 +6,6 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorRef
-import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import zio._
@@ -191,75 +190,56 @@ object ActorUtil {
       case Some(f) => f.map(Some(_))
       case None    => Future.successful(None)
     }
-
-  /**
-   * Runs a sequence of tasks.
-   *
-   * @param firstTask the first task in the sequence.
-   * @tparam T the type of the underlying task result.
-   * @return the result of the last task in the sequence.
-   */
-  def runTasks[T](
-    firstTask: Task[T]
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[T]] =
-    runTasksRec(previousResult = None, nextTask = firstTask)
-
-  /**
-   * Recursively runs a sequence of tasks.
-   *
-   * @param previousResult the previous result or `None` if this is the first task in the sequence.
-   * @param nextTask       the next task to be run.
-   * @tparam T the type of the underlying task result.
-   * @return the result of the last task in the sequence.
-   */
-  private def runTasksRec[T](previousResult: Option[TaskResult[T]], nextTask: Task[T])(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[TaskResult[T]] =
-    // This function doesn't need to be tail recursive: https://stackoverflow.com/a/16986416
-    for {
-      taskResult: TaskResult[T] <- nextTask.runTask(previousResult)
-
-      recResult: TaskResult[T] <- taskResult.nextTask match {
-                                    case Some(definedNextTask) =>
-                                      runTasksRec(previousResult = Some(taskResult), nextTask = definedNextTask)
-                                    case None => FastFuture.successful(taskResult)
-                                  }
-    } yield recResult
 }
 
 /**
  * Represents the result of a task in a sequence of tasks.
- *
- * @tparam T the type of the underlying task result.
  */
-trait TaskResult[T] {
+trait ResultAndNext[T] {
 
   /**
    * Returns the underlying result of this task.
    */
-  def underlyingResult: T
+  def result: T
 
   /**
    * Returns the next task, or `None` if this was the last task.
    */
-  def nextTask: Option[Task[T]]
+  def next: Option[NextExecutionStep[T]]
 }
 
 /**
  * Represents a task in a sequence of tasks.
- *
- * @tparam T the type of the underlying task result.
  */
-trait Task[T] {
+trait NextExecutionStep[T] {
 
   /**
    * Runs the task.
    *
-   * @param previousResult the result of the previous task, or `None` if this is the first task in the sequence.
+   * @param params the result of the previous task, or `None` if this is the first task in the sequence.
    * @return the result of this task.
    */
-  def runTask(
-    previousResult: Option[TaskResult[T]]
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[T]]
+  def run(params: Option[ResultAndNext[T]]): Task[ResultAndNext[T]]
+}
+object NextExecutionStep {
+
+  /**
+   * Recursively runs a sequence of tasks.
+   *
+   * @param nextTask       the next task to be run.
+   * @param previousResult the previous result or `None` if this is the first task in the sequence.
+   * @return the result of the last task in the sequence.
+   */
+  def runSteps[T](
+    nextTask: NextExecutionStep[T],
+    previousResult: Option[ResultAndNext[T]] = None
+  ): Task[ResultAndNext[T]] =
+    for {
+      taskResult <- nextTask.run(previousResult)
+      recResult <-
+        ZIO
+          .fromOption(taskResult.next)
+          .flatMap(runSteps(_, Some(taskResult)))
+          .orElse(ZIO.succeed(taskResult))
+    } yield recResult
 }
