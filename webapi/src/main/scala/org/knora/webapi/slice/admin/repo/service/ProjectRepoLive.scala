@@ -35,15 +35,15 @@ final case class ProjectRepoLive(
 ) extends ProjectRepo {
 
   override def findById(id: InternalIri): Task[Option[ProjectADM]] =
-    findByQuery(twirl.queries.sparql.admin.txt.getProjects(maybeIri = Some(id.toString), None, None))
+    findOneByQuery(twirl.queries.sparql.admin.txt.getProjects(maybeIri = Some(id.value), None, None))
 
   override def findByProjectIdentifier(id: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    findByQuery(
+    findOneByQuery(
       twirl.queries.sparql.admin.txt
         .getProjects(id.asIriIdentifierOption, id.asShortnameIdentifierOption, id.asShortcodeIdentifierOption)
     )
 
-  private def findByQuery(query: TxtFormat.Appendable): Task[Option[ProjectADM]] =
+  private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[ProjectADM]] =
     for {
       construct <- triplestore.sparqlHttpExtendedConstruct(query.toString).map(_.statements.headOption)
       project   <- ZIO.foreach(construct)(it => assembleProjectADM(InternalIri(it._1.toString), it._2))
