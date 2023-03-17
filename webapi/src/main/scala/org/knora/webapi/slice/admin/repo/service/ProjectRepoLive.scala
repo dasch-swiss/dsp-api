@@ -1,11 +1,10 @@
 package org.knora.webapi.slice.admin.repo.service
-import play.twirl.api.TxtFormat
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
 
+import play.twirl.api.TxtFormat
+import zio._
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.V2
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectDescription
@@ -93,5 +92,6 @@ final case class ProjectRepoLive(
 }
 
 object ProjectRepoLive {
-  val layer = ZLayer.fromFunction(ProjectRepoLive.apply _)
+  val layer: URLayer[TriplestoreService with OntologyRepo with IriConverter, ProjectRepoLive] =
+    ZLayer.fromFunction(ProjectRepoLive.apply _)
 }
