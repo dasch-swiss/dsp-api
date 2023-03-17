@@ -500,25 +500,26 @@ final case class ValuesResponderV2Live(
                               }
 
       // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
-      standoffLinkUpdates <- value match {
-                               case textValueContent: TextValueContentV2 =>
-                                 // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-                                 val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
-                                   textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
-                                     incrementLinkValue(
-                                       sourceResourceInfo = resourceInfo,
-                                       linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                                       targetResourceIri = targetResourceIri,
-                                       valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                                       valuePermissions = standoffLinkValuePermissions,
-                                       requestingUser = requestingUser
-                                     )
-                                   }.toVector
+      standoffLinkUpdates <-
+        value match {
+          case textValueContent: TextValueContentV2 =>
+            // Construct a SparqlTemplateLinkUpdate for each reference that was added.
+            val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
+              textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
+                incrementLinkValue(
+                  sourceResourceInfo = resourceInfo,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                  targetResourceIri = targetResourceIri,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  requestingUser = requestingUser
+                )
+              }.toVector
 
-                                 ZIO.collectAll(linkUpdateFutures)
+            ZIO.collectAll(linkUpdateFutures)
 
-                               case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
-                             }
+          case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
+        }
 
       // Generate a SPARQL update string.
       sparqlUpdate =
@@ -537,12 +538,6 @@ final case class ValuesResponderV2Live(
             stringFormatter = stringFormatter
           )
           .toString()
-
-      /*
-            _ = println("================ Create value ================")
-            _ = println(sparqlUpdate)
-            _ = println("==============================================")
-       */
 
       // Do the update.
       _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
@@ -614,12 +609,6 @@ final case class ValuesResponderV2Live(
             stringFormatter = stringFormatter
           )
           .toString()
-
-      /*
-            _ = println("================ Create link ===============")
-            _ = println(sparqlUpdate)
-            _ = println("=============================================")
-       */
 
       // Do the update.
       _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
@@ -1473,12 +1462,6 @@ final case class ValuesResponderV2Live(
           )
           .toString()
 
-      /*
-            _ = println("================ Update value ================")
-            _ = println(sparqlUpdate)
-            _ = println("==============================================")
-       */
-
       // Do the update.
       _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
@@ -1567,12 +1550,6 @@ final case class ValuesResponderV2Live(
               )
               .toString()
           )
-
-        /*
-                _ = println("================ Update link ================")
-                _ = println(sparqlUpdate)
-                _ = println("==============================================")
-         */
 
         _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
       } yield UnverifiedValueV2(
@@ -2194,16 +2171,7 @@ final case class ValuesResponderV2Live(
               valueInTriplestore.permissions == unverifiedValue.permissions &&
               valueInTriplestore.attachedToUser == requestingUser.id)
           ) {
-            /*
-                import org.knora.webapi.util.MessageUtil
-                println("==============================")
-                println("Submitted value:")
-                println(MessageUtil.toSource(unverifiedValue.valueContent))
-                println
-                println("==============================")
-                println("Saved value:")
-                println(MessageUtil.toSource(valueInTriplestore.valueContent))
-             */
+
             throw AssertionException(
               s"The value saved as ${unverifiedValue.newValueIri} is not the same as the one that was submitted"
             )
