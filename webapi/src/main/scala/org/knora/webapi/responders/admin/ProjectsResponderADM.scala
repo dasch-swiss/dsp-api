@@ -734,7 +734,7 @@ final case class ProjectsResponderADMLive(
                s"updateProjectADM - projectUpdatePayload: $projectUpdatePayload /  updatedProject: $updatedProject"
              )
 
-        _ = checkProjectUpdate(updatedProject, projectUpdatePayload)
+        _ <- checkProjectUpdate(updatedProject, projectUpdatePayload)
 
       } yield ProjectOperationResponseADM(project = updatedProject)
     }
@@ -752,7 +752,7 @@ final case class ProjectsResponderADMLive(
   private def checkProjectUpdate(
     updatedProject: ProjectADM,
     projectUpdatePayload: ProjectUpdatePayloadADM
-  ): Unit = {
+  ): Task[Unit] = ZIO.attempt {
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.shortname
         .map(_.value)
