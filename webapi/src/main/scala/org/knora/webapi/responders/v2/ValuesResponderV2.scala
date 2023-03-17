@@ -540,7 +540,7 @@ final case class ValuesResponderV2Live(
                                      )
                                    }.toVector
 
-                                 Future.sequence(linkUpdateFutures)
+                                 ZIO.collectAll(linkUpdateFutures)
 
                                case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
                              }
@@ -894,16 +894,17 @@ final case class ValuesResponderV2Live(
           )
       }
       for {
-        standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- Future.sequence(standoffLinkUpdatesFutures)
+        standoffLinkUpdates <- ZIO.collectAll(standoffLinkUpdatesFutures)
         // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
-        sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .generateInsertStatementsForStandoffLinks(
-                           resourceIri = createMultipleValuesRequest.resourceIri,
-                           linkUpdates = standoffLinkUpdates,
-                           creationDate = createMultipleValuesRequest.creationDate,
-                           stringFormatter = stringFormatter
-                         )
-                         .toString()
+        sparqlInsert =
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .generateInsertStatementsForStandoffLinks(
+              resourceIri = createMultipleValuesRequest.resourceIri,
+              linkUpdates = standoffLinkUpdates,
+              creationDate = createMultipleValuesRequest.creationDate,
+              stringFormatter = stringFormatter
+            )
+            .toString()
       } yield Some(sparqlInsert)
     } else {
       ZIO.succeed(None)
@@ -1449,7 +1450,7 @@ final case class ValuesResponderV2Live(
         )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
-      standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <-
+      standoffLinkUpdates <-
         (currentValue.valueContent, newValueVersion) match {
           case (
                 currentTextValue: TextValueContentV2,
@@ -1476,9 +1477,7 @@ final case class ValuesResponderV2Live(
               }
 
             val standoffLinkUpdatesForAddedResourceRefsFuture: Task[Seq[SparqlTemplateLinkUpdate]] =
-              Future.sequence(
-                standoffLinkUpdatesForAddedResourceRefFutures
-              )
+              ZIO.collectAll(standoffLinkUpdatesForAddedResourceRefFutures)
 
             // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
             val standoffLinkUpdatesForRemovedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
@@ -1494,9 +1493,7 @@ final case class ValuesResponderV2Live(
               }
 
             val standoffLinkUpdatesForRemovedResourceRefFuture =
-              Future.sequence(
-                standoffLinkUpdatesForRemovedResourceRefFutures
-              )
+              ZIO.collectAll(standoffLinkUpdatesForRemovedResourceRefFutures)
 
             for {
               standoffLinkUpdatesForAddedResourceRefs <-
@@ -2048,14 +2045,14 @@ final case class ValuesResponderV2Live(
       case _ => Seq.empty[Task[SparqlTemplateLinkUpdate]]
     }
 
-    val linkUpdateFuture = Future.sequence(linkUpdateFutures)
+    val linkUpdateFuture = ZIO.collectAll(linkUpdateFutures)
 
     // If no custom delete date was provided, make a timestamp to indicate when the value was
     // marked as deleted.
     val currentTime: Instant = deleteDate.getOrElse(Instant.now)
 
     for {
-      linkUpdates: Seq[SparqlTemplateLinkUpdate] <- linkUpdateFuture
+      linkUpdates <- linkUpdateFuture
 
       sparqlUpdate =
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -2072,7 +2069,7 @@ final case class ValuesResponderV2Live(
           )
           .toString()
 
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
     } yield currentValue.valueIri
   }
 
@@ -2111,11 +2108,12 @@ final case class ValuesResponderV2Live(
       for {
         internalLinkPropertyIri <- ZIO.attempt(submittedInternalPropertyIri.fromLinkValuePropToLinkProp)
 
-        propertyInfoRequestForLinkProperty = PropertiesGetRequestV2(
-                                               propertyIris = Set(internalLinkPropertyIri),
-                                               allLanguages = false,
-                                               requestingUser = requestingUser
-                                             )
+        propertyInfoRequestForLinkProperty =
+          PropertiesGetRequestV2(
+            propertyIris = Set(internalLinkPropertyIri),
+            allLanguages = false,
+            requestingUser = requestingUser
+          )
 
         linkPropertyInfoResponse <- messageRelay.ask[ReadOntologyV2](propertyInfoRequestForLinkProperty)
 
