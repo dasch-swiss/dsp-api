@@ -90,8 +90,10 @@ import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.responders.v2.OntologyResponderV2Live
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2Live
-import org.knora.webapi.slice.admin.domain.service.ProjectRepo
-import org.knora.webapi.slice.admin.repo.service.ProjectRepoLive
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.DspProjectRepo
+import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
+import org.knora.webapi.slice.admin.repo.service.DspProjectRepoLive
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 
@@ -109,29 +111,30 @@ object LayersTest {
     with ApiRoutes
     with AppRouter
     with AppRouterRelayingMessageHandler
-    with OntologyCache
-    with OntologyRepo
     with CacheService
     with CacheServiceRequestMessageHandler
     with CardinalityHandler
     with CardinalityService
     with CkanResponderV1
     with ConstructResponseUtilV2
+    with DspProjectRepo
     with GroupsResponderADM
     with HttpServer
     with IIIFRequestMessageHandler
     with IriConverter
     with IriService
-    with ListsResponderV2
     with ListsResponderADM
     with ListsResponderV1
+    with ListsResponderV2
     with MessageRelay
-    with OntologyResponderV1
+    with OntologyCache
     with OntologyHelpers
+    with OntologyRepo
+    with OntologyResponderV1
     with OntologyResponderV2
     with PermissionUtilADM
     with PermissionsResponderADM
-    with ProjectRepo
+    with ProjectADMService
     with ProjectsResponderADM
     with ProjectsResponderV1
     with RepositoryUpdater
@@ -150,8 +153,8 @@ object LayersTest {
     with StoresResponderADM
     with StringFormatter
     with TestClientService
-    with TriplestoreService
     with TriplestoreRequestMessageHandler
+    with TriplestoreService
     with UsersResponderADM
     with UsersResponderV1
     with ValueUtilV1
@@ -170,14 +173,15 @@ object LayersTest {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      DspProjectRepoLive.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       IriConverter.layer,
       IriService.layer,
-      ListsResponderV2Live.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
+      ListsResponderV2Live.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
@@ -187,7 +191,7 @@ object LayersTest {
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
-      ProjectRepoLive.layer,
+      ProjectADMServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
       RepositoryUpdater.layer,
@@ -206,8 +210,8 @@ object LayersTest {
       StoresResponderADMLive.layer,
       StringFormatter.test,
       TestClientService.layer,
-      TriplestoreServiceLive.layer,
       TriplestoreRequestMessageHandlerLive.layer,
+      TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,

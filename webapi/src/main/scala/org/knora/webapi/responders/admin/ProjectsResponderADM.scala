@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.Files
@@ -15,10 +14,10 @@ import java.util.UUID
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -42,7 +41,9 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.domain.service.ProjectRepo
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.AdminConstants.adminDataGraph
+import org.knora.webapi.slice.admin.AdminConstants.permissionsDataGraph
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
@@ -177,7 +178,7 @@ final case class ProjectsResponderADMLive(
   private val triplestoreService: TriplestoreService,
   private val messageRelay: MessageRelay,
   private val iriService: IriService,
-  private val projectRepo: ProjectRepo,
+  private val projectService: ProjectADMService,
   private val cacheServiceSettings: CacheServiceSettings,
   implicit private val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
@@ -187,9 +188,6 @@ final case class ProjectsResponderADMLive(
 
   // Global lock IRI used for project creation and update
   private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
-
-  private val ADMIN_DATA_GRAPH       = "http://www.knora.org/data/admin"
-  private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ProjectsResponderRequestADM]
 
@@ -238,8 +236,7 @@ final case class ProjectsResponderADMLive(
    *         [[NotFoundException]] if no projects are found.
    */
   override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
-    projectRepo
-      .findAll()
+    projectService.findAll
       .flatMap(projects =>
         if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
         else { ZIO.fail(NotFoundException(s"No projects found")) }
@@ -384,7 +381,7 @@ final case class ProjectsResponderADMLive(
    */
   override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
     for {
-      projects <- projectRepo.findAll()
+      projects <- projectService.findAll
       keywords  = projects.flatMap(_.keywords).distinct.sorted
     } yield ProjectsKeywordsGetResponseADM(keywords)
 
@@ -543,7 +540,7 @@ final case class ProjectsResponderADMLive(
 
       // Download the project's admin data.
 
-      adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = ADMIN_DATA_GRAPH, tempDir = tempDir)
+      adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = adminDataGraph, tempDir = tempDir)
 
       adminDataSparql = twirl.queries.sparql.admin.txt.getProjectAdminData(project.id)
       _ <- triplestoreService.sparqlHttpConstructFile(
@@ -555,7 +552,7 @@ final case class ProjectsResponderADMLive(
 
       // Download the project's permission data.
 
-      permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = PERMISSIONS_DATA_GRAPH, tempDir = tempDir)
+      permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = permissionsDataGraph, tempDir = tempDir)
 
       permissionDataSparql = twirl.queries.sparql.admin.txt.getProjectPermissions(project.id)
       _ <- triplestoreService.sparqlHttpConstructFile(
@@ -700,7 +697,7 @@ final case class ProjectsResponderADMLive(
     else {
       val projectId = IriIdentifier(projectIri)
       for {
-        _ <- projectRepo
+        _ <- projectService
                .findByProjectIdentifier(projectId)
                .flatMap(ZIO.fromOption(_))
                .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request."))
@@ -726,7 +723,7 @@ final case class ProjectsResponderADMLive(
 
         /* Verify that the project was updated. */
         updatedProject <-
-          projectRepo
+          projectService
             .findByProjectIdentifier(projectId)
             .flatMap(ZIO.fromOption(_))
             .orElseFail(UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
@@ -967,20 +964,9 @@ final case class ProjectsResponderADMLive(
 
         // check the custom IRI; if not given, create an unused IRI
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(_.value).map(_.toSmartIri)
-        newProjectIRI <- iriService.checkOrCreateEntityIri(
-                           customProjectIri,
-                           stringFormatter.makeRandomProjectIri
-                         )
-
-        maybeLongname = createProjectRequest.longname match {
-                          case Some(value) => Some(value.value)
-                          case None        => None
-                        }
-
-        maybeLogo = createProjectRequest.logo match {
-                      case Some(value) => Some(value.value)
-                      case None        => None
-                    }
+        newProjectIRI                     <- iriService.checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri)
+        maybeLongname                      = createProjectRequest.longname.map(_.value)
+        maybeLogo                          = createProjectRequest.logo.map(_.value)
 
         createNewProjectSparqlString = twirl.queries.sparql.admin.txt
                                          .createNewProject(
@@ -1008,7 +994,7 @@ final case class ProjectsResponderADMLive(
         id <- IriIdentifier.fromString(newProjectIRI).toZIO.mapError(e => BadRequestException(e.getMessage))
         // check to see if we could retrieve the new project
 
-        newProjectADM <- projectRepo
+        newProjectADM <- projectService
                            .findByProjectIdentifier(id)
                            .flatMap(ZIO.fromOption(_))
                            .orElseFail(
@@ -1041,7 +1027,7 @@ final case class ProjectsResponderADMLive(
       getProjectFromCache(identifier).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          projectRepo.findByProjectIdentifier(identifier).flatMap {
+          projectService.findByProjectIdentifier(identifier).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               logger.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
@@ -1063,7 +1049,7 @@ final case class ProjectsResponderADMLive(
     } else {
       // caching disabled
       logger.debug("getProjectFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      projectRepo.findByProjectIdentifier(identifier)
+      projectService.findByProjectIdentifier(identifier)
     }
 
   /**
@@ -1094,17 +1080,17 @@ final case class ProjectsResponderADMLive(
 
 object ProjectsResponderADMLive {
   val layer: URLayer[
-    MessageRelay with TriplestoreService with StringFormatter with ProjectRepo with IriService with AppConfig,
+    MessageRelay with TriplestoreService with StringFormatter with ProjectADMService with IriService with AppConfig,
     ProjectsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
       c       <- ZIO.service[AppConfig].map(new CacheServiceSettings(_))
       iris    <- ZIO.service[IriService]
-      pr      <- ZIO.service[ProjectRepo]
+      ps      <- ZIO.service[ProjectADMService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, pr, c, sf))
+      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, ps, c, sf))
     } yield handler
   }
 }

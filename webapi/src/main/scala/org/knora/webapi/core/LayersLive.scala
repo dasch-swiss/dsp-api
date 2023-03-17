@@ -73,8 +73,10 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
-import org.knora.webapi.slice.admin.domain.service.ProjectRepo
-import org.knora.webapi.slice.admin.repo.service.ProjectRepoLive
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.DspProjectRepo
+import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
+import org.knora.webapi.slice.admin.repo.service.DspProjectRepoLive
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -112,30 +114,31 @@ object LayersLive {
       with AppConfig
       with AppRouter
       with AppRouterRelayingMessageHandler
-      with OntologyCache
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
+      with DspProjectRepo
       with GroupsResponderADM
       with HttpServer
-      with IIIFService
       with IIIFRequestMessageHandler
+      with IIIFService
       with IriService
       with JWTService
-      with ListsResponderV2
       with ListsResponderADM
       with ListsResponderV1
+      with ListsResponderV2
       with MessageRelay
+      with OntologyCache
+      with OntologyHelpers
       with OntologyRepo
       with OntologyResponderV1
-      with OntologyHelpers
       with OntologyResponderV2
       with PermissionUtilADM
       with PermissionsResponderADM
-      with ProjectRepo
+      with ProjectADMService
       with ProjectsResponderADM
       with ProjectsResponderV1
       with RepositoryUpdater
@@ -152,12 +155,12 @@ object LayersLive {
       with StandoffTagUtilV2
       with State
       with StoresResponderADM
-      with TriplestoreService
       with TriplestoreRequestMessageHandler
+      with TriplestoreService
       with UsersResponderADM
       with UsersResponderV1
-      with ValuesResponderV1
       with ValueUtilV1
+      with ValuesResponderV1
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -179,6 +182,7 @@ object LayersLive {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      DspProjectRepoLive.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
@@ -187,9 +191,9 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       JWTService.layer,
-      ListsResponderV2Live.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
+      ListsResponderV2Live.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
@@ -199,7 +203,7 @@ object LayersLive {
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateRepositoryLive.layer,
-      ProjectRepoLive.layer,
+      ProjectADMServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
       ProjectsRouteZ.layer,
@@ -220,11 +224,11 @@ object LayersLive {
       State.layer,
       StoresResponderADMLive.layer,
       StringFormatter.live,
-      TriplestoreServiceLive.layer,
       TriplestoreRequestMessageHandlerLive.layer,
+      TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
-      ValuesResponderV1Live.layer,
-      ValueUtilV1Live.layer
+      ValueUtilV1Live.layer,
+      ValuesResponderV1Live.layer
     )
 }
