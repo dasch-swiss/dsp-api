@@ -210,7 +210,7 @@ object LayersTest {
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,
       ValuesResponderV1Live.layer,
-      ValuesResponderV2.layer
+      ValuesResponderV2Live.layer
     )
 
   private val fusekiAndSipiTestcontainers =
