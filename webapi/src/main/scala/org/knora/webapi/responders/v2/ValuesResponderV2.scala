@@ -105,22 +105,25 @@ final case class ValuesResponderV2Live(
         submittedInternalPropertyIri <-
           ZIO.attempt(createValueRequest.createValue.propertyIri.toOntologySchema(InternalSchema))
 
-        submittedInternalValueContent: ValueContentV2 = createValueRequest.createValue.valueContent
-                                                          .toOntologySchema(InternalSchema)
+        submittedInternalValueContent: ValueContentV2 =
+          createValueRequest.createValue.valueContent
+            .toOntologySchema(InternalSchema)
 
         // Get ontology information about the submitted property.
-        propertyInfoRequestForSubmittedProperty = PropertiesGetRequestV2(
-                                                    propertyIris = Set(submittedInternalPropertyIri),
-                                                    allLanguages = false,
-                                                    requestingUser = createValueRequest.requestingUser
-                                                  )
+        propertyInfoRequestForSubmittedProperty =
+          PropertiesGetRequestV2(
+            propertyIris = Set(submittedInternalPropertyIri),
+            allLanguages = false,
+            requestingUser = createValueRequest.requestingUser
+          )
 
         propertyInfoResponseForSubmittedProperty <-
           messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
 
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
-                                                                 submittedInternalPropertyIri
-                                                               )
+        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
+          propertyInfoResponseForSubmittedProperty.properties(
+            submittedInternalPropertyIri
+          )
 
         // Don't accept link properties.
         _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
@@ -154,7 +157,6 @@ final case class ValuesResponderV2Live(
 
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
         // so we can see objects that the user doesn't have permission to see.
-
         resourceInfo <-
           getResourceWithPropertyValues(
             resourceIri = createValueRequest.createValue.resourceIri,
@@ -163,7 +165,6 @@ final case class ValuesResponderV2Live(
           )
 
         // Check that the user has permission to modify the resource.
-
         _ <- UnsafeZioRun.runToFuture(
                ZIO
                  .serviceWithZIO[ResourceUtilV2](
@@ -176,7 +177,6 @@ final case class ValuesResponderV2Live(
              )
 
         // Check that the resource has the rdf:type that the client thinks it has.
-
         _ =
           if (
             resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri
@@ -188,7 +188,6 @@ final case class ValuesResponderV2Live(
           }
 
         // Get the definition of the resource class.
-
         classInfoRequest =
           ClassesGetRequestV2(
             classIris = Set(resourceInfo.resourceClassIri),
@@ -275,7 +274,6 @@ final case class ValuesResponderV2Live(
           }
 
         // Check that the new value would not duplicate an existing value.
-
         unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
 
         _ = if (
@@ -288,7 +286,6 @@ final case class ValuesResponderV2Live(
 
         // If this is a text value, check that the resources pointed to by any standoff link tags exist
         // and that the user has permission to see them.
-
         _ <- submittedInternalValueContent match {
                case textValueContent: TextValueContentV2 =>
                  checkResourceIris(
@@ -515,10 +512,11 @@ final case class ValuesResponderV2Live(
       newValueUUID <- ZIO.succeed(makeNewValueUUID(maybeValueIri, maybeValueUUID))
 
       // Make an IRI for the new value.
-      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                            maybeValueIri,
-                            stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
-                          )
+      newValueIri <-
+        iriService.checkOrCreateEntityIri(
+          maybeValueIri,
+          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
+        )
 
       // Make a creation date for the new value
       creationDate: Instant = maybeValueCreationDate match {
@@ -706,17 +704,18 @@ final case class ValuesResponderV2Live(
                                                                                       )
 
       // Concatenate all the generated SPARQL.
-      allInsertSparql: String = sparqlForPropertyValues.values.flatten
-                                  .map(_.insertSparql)
-                                  .mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
+      allInsertSparql: String =
+        sparqlForPropertyValues.values.flatten
+          .map(_.insertSparql)
+          .mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
 
       // Collect all the unverified values.
-      unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]] = sparqlForPropertyValues.map {
-                                                                  case (propertyIri, unverifiedValuesWithSparql) =>
-                                                                    propertyIri -> unverifiedValuesWithSparql.map(
-                                                                      _.unverifiedValue
-                                                                    )
-                                                                }
+      unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]] =
+        sparqlForPropertyValues.map { case (propertyIri, unverifiedValuesWithSparql) =>
+          propertyIri -> unverifiedValuesWithSparql.map(
+            _.unverifiedValue
+          )
+        }
     } yield GenerateSparqlToCreateMultipleValuesResponseV2(
       insertSparql = allInsertSparql,
       unverifiedValues = unverifiedValues,
@@ -744,77 +743,81 @@ final case class ValuesResponderV2Live(
   ): Task[InsertSparqlWithUnverifiedValue] =
     for {
       // Make new value UUID.
-      newValueUUID <- ZIO.succeed(
-                        makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
-                      )
+      newValueUUID <-
+        ZIO.succeed(
+          makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
+        )
 
-      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                            valueToCreate.customValueIri,
-                            stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
-                          )
+      newValueIri <-
+        iriService.checkOrCreateEntityIri(
+          valueToCreate.customValueIri,
+          stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
+        )
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
-      valueCreationDate: Instant = valueToCreate.customValueCreationDate match {
-                                     case Some(customValueCreationDate) => customValueCreationDate
-                                     case None                          => resourceCreationDate
-                                   }
+      valueCreationDate: Instant =
+        valueToCreate.customValueCreationDate match {
+          case Some(customValueCreationDate) => customValueCreationDate
+          case None                          => resourceCreationDate
+        }
 
       // Generate the SPARQL.
-      insertSparql: String = valueToCreate.valueContent match {
-                               case linkValueContentV2: LinkValueContentV2 =>
-                                 // We're creating a link.
+      insertSparql: String =
+        valueToCreate.valueContent match {
+          case linkValueContentV2: LinkValueContentV2 =>
+            // We're creating a link.
 
-                                 // Construct a SparqlTemplateLinkUpdate to tell the SPARQL template how to create
-                                 // the link and its LinkValue.
-                                 val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
-                                   linkPropertyIri = propertyIri.fromLinkValuePropToLinkProp,
-                                   directLinkExists = false,
-                                   insertDirectLink = true,
-                                   deleteDirectLink = false,
-                                   linkValueExists = false,
-                                   linkTargetExists = linkValueContentV2.referredResourceExists,
-                                   newLinkValueIri = newValueIri,
-                                   linkTargetIri = linkValueContentV2.referredResourceIri,
-                                   currentReferenceCount = 0,
-                                   newReferenceCount = 1,
-                                   newLinkValueCreator = requestingUser.id,
-                                   newLinkValuePermissions = valueToCreate.permissions
-                                 )
+            // Construct a SparqlTemplateLinkUpdate to tell the SPARQL template how to create
+            // the link and its LinkValue.
+            val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
+              linkPropertyIri = propertyIri.fromLinkValuePropToLinkProp,
+              directLinkExists = false,
+              insertDirectLink = true,
+              deleteDirectLink = false,
+              linkValueExists = false,
+              linkTargetExists = linkValueContentV2.referredResourceExists,
+              newLinkValueIri = newValueIri,
+              linkTargetIri = linkValueContentV2.referredResourceIri,
+              currentReferenceCount = 0,
+              newReferenceCount = 1,
+              newLinkValueCreator = requestingUser.id,
+              newLinkValuePermissions = valueToCreate.permissions
+            )
 
-                                 // Generate SPARQL for the link.
-                                 org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                   .generateInsertStatementsForCreateLink(
-                                     resourceIri = resourceIri,
-                                     linkUpdate = sparqlTemplateLinkUpdate,
-                                     creationDate = valueCreationDate,
-                                     newValueUUID = newValueUUID,
-                                     maybeComment = valueToCreate.valueContent.comment,
-                                     maybeValueHasOrder = Some(valueHasOrder),
-                                     stringFormatter = stringFormatter
-                                   )
-                                   .toString()
+            // Generate SPARQL for the link.
+            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              .generateInsertStatementsForCreateLink(
+                resourceIri = resourceIri,
+                linkUpdate = sparqlTemplateLinkUpdate,
+                creationDate = valueCreationDate,
+                newValueUUID = newValueUUID,
+                maybeComment = valueToCreate.valueContent.comment,
+                maybeValueHasOrder = Some(valueHasOrder),
+                stringFormatter = stringFormatter
+              )
+              .toString()
 
-                               case otherValueContentV2 =>
-                                 // We're creating an ordinary value. Generate SPARQL for it.
-                                 org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                   .generateInsertStatementsForCreateValue(
-                                     resourceIri = resourceIri,
-                                     propertyIri = propertyIri,
-                                     value = otherValueContentV2,
-                                     newValueIri = newValueIri,
-                                     newValueUUID = newValueUUID,
-                                     linkUpdates = Seq.empty[
-                                       SparqlTemplateLinkUpdate
-                                     ], // This is empty because we have to generate SPARQL for standoff links separately.
-                                     valueCreator = requestingUser.id,
-                                     valuePermissions = valueToCreate.permissions,
-                                     creationDate = valueCreationDate,
-                                     maybeValueHasOrder = Some(valueHasOrder),
-                                     stringFormatter = stringFormatter
-                                   )
-                                   .toString()
-                             }
+          case otherValueContentV2 =>
+            // We're creating an ordinary value. Generate SPARQL for it.
+            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              .generateInsertStatementsForCreateValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                value = otherValueContentV2,
+                newValueIri = newValueIri,
+                newValueUUID = newValueUUID,
+                linkUpdates = Seq.empty[
+                  SparqlTemplateLinkUpdate
+                ], // This is empty because we have to generate SPARQL for standoff links separately.
+                valueCreator = requestingUser.id,
+                valuePermissions = valueToCreate.permissions,
+                creationDate = valueCreationDate,
+                maybeValueHasOrder = Some(valueHasOrder),
+                stringFormatter = stringFormatter
+              )
+              .toString()
+        }
     } yield InsertSparqlWithUnverifiedValue(
       insertSparql = insertSparql,
       unverifiedValue = UnverifiedValueV2(
@@ -1107,10 +1110,11 @@ final case class ValuesResponderV2Live(
         // Do the update.
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
-        newValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                              updateValuePermissionsV2.newValueVersionIri,
-                              stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
-                            )
+        newValueIri <-
+          iriService.checkOrCreateEntityIri(
+            updateValuePermissionsV2.newValueVersionIri,
+            stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+          )
 
         currentTime: Instant =
           updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
@@ -1141,7 +1145,7 @@ final case class ValuesResponderV2Live(
             creationDate = currentTime
           )
 
-        verifiedValue: VerifiedValueV2 <-
+        verifiedValue <-
           verifyValue(
             resourceIri = resourceInfo.resourceIri,
             propertyIri = submittedInternalPropertyIri,
@@ -1237,7 +1241,6 @@ final case class ValuesResponderV2Live(
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
-
         _ <- checkPropertyObjectClassConstraint(
                propertyInfo = adjustedInternalPropertyInfo,
                valueContent = submittedInternalValueContent,
@@ -1275,16 +1278,13 @@ final case class ValuesResponderV2Live(
              }
 
         // Check that the updated value would not duplicate the current value version.
-
-        unescapedSubmittedInternalValueContent =
-          submittedInternalValueContent.unescape
+        unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
 
         _ = if (unescapedSubmittedInternalValueContent.wouldDuplicateCurrentVersion(currentValue.valueContent)) {
               throw DuplicateValueException("The submitted value is the same as the current version")
             }
 
         // Check that the updated value would not duplicate another existing value of the resource.
-
         currentValuesForProp: Seq[ReadValueV2] =
           resourceInfo.values
             .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
@@ -1327,7 +1327,6 @@ final case class ValuesResponderV2Live(
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
         // Create the new value version.
-
         unverifiedValue: UnverifiedValueV2 <-
           (currentValue, submittedInternalValueContent) match {
             case (
@@ -1443,10 +1442,11 @@ final case class ValuesResponderV2Live(
     requestingUser: UserADM
   ): Task[UnverifiedValueV2] =
     for {
-      newValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                            newValueVersionIri,
-                            stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
-                          )
+      newValueIri <-
+        iriService.checkOrCreateEntityIri(
+          newValueVersionIri,
+          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+        )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
       standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <-
@@ -2507,48 +2507,50 @@ final case class ValuesResponderV2Live(
 
     for {
       // Make an IRI for the new LinkValue.
-      newLinkValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                                customNewLinkValueIri,
-                                stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-                              )
+      newLinkValueIri <-
+        iriService.checkOrCreateEntityIri(
+          customNewLinkValueIri,
+          stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
+        )
 
-      linkUpdate = maybeLinkValueInfo match {
-                     case Some(linkValueInfo) =>
-                       // There's already a LinkValue for links between these two resources. Increment
-                       // its reference count.
-                       SparqlTemplateLinkUpdate(
-                         linkPropertyIri = linkPropertyIri,
-                         directLinkExists = true,
-                         insertDirectLink = false,
-                         deleteDirectLink = false,
-                         linkValueExists = true,
-                         linkTargetExists = true,
-                         newLinkValueIri = newLinkValueIri,
-                         linkTargetIri = targetResourceIri,
-                         currentReferenceCount = linkValueInfo.valueHasRefCount,
-                         newReferenceCount = linkValueInfo.valueHasRefCount + 1,
-                         newLinkValueCreator = valueCreator,
-                         newLinkValuePermissions = valuePermissions
-                       )
+      linkUpdate =
+        maybeLinkValueInfo match {
+          case Some(linkValueInfo) =>
+            // There's already a LinkValue for links between these two resources. Increment
+            // its reference count.
+            SparqlTemplateLinkUpdate(
+              linkPropertyIri = linkPropertyIri,
+              directLinkExists = true,
+              insertDirectLink = false,
+              deleteDirectLink = false,
+              linkValueExists = true,
+              linkTargetExists = true,
+              newLinkValueIri = newLinkValueIri,
+              linkTargetIri = targetResourceIri,
+              currentReferenceCount = linkValueInfo.valueHasRefCount,
+              newReferenceCount = linkValueInfo.valueHasRefCount + 1,
+              newLinkValueCreator = valueCreator,
+              newLinkValuePermissions = valuePermissions
+            )
 
-                     case None =>
-                       // There's no LinkValue for links between these two resources, so create one, and give it
-                       // a reference count of 1.
-                       SparqlTemplateLinkUpdate(
-                         linkPropertyIri = linkPropertyIri,
-                         directLinkExists = false,
-                         insertDirectLink = true,
-                         deleteDirectLink = false,
-                         linkValueExists = false,
-                         linkTargetExists = true,
-                         newLinkValueIri = newLinkValueIri,
-                         linkTargetIri = targetResourceIri,
-                         currentReferenceCount = 0,
-                         newReferenceCount = 1,
-                         newLinkValueCreator = valueCreator,
-                         newLinkValuePermissions = valuePermissions
-                       )
-                   }
+          case None =>
+            // There's no LinkValue for links between these two resources, so create one, and give it
+            // a reference count of 1.
+            SparqlTemplateLinkUpdate(
+              linkPropertyIri = linkPropertyIri,
+              directLinkExists = false,
+              insertDirectLink = true,
+              deleteDirectLink = false,
+              linkValueExists = false,
+              linkTargetExists = true,
+              newLinkValueIri = newLinkValueIri,
+              linkTargetIri = targetResourceIri,
+              currentReferenceCount = 0,
+              newReferenceCount = 1,
+              newLinkValueCreator = valueCreator,
+              newLinkValuePermissions = valuePermissions
+            )
+        }
     } yield linkUpdate
   }
 
@@ -2663,10 +2665,11 @@ final case class ValuesResponderV2Live(
 
         for {
           // If no custom IRI was provided, generate an IRI for the new LinkValue.
-          newLinkValueIri: IRI <- iriService.checkOrCreateEntityIri(
-                                    customNewLinkValueIri,
-                                    stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-                                  )
+          newLinkValueIri <-
+            iriService.checkOrCreateEntityIri(
+              customNewLinkValueIri,
+              stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
+            )
 
         } yield SparqlTemplateLinkUpdate(
           linkPropertyIri = linkPropertyIri,
