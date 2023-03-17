@@ -175,11 +175,11 @@ final case class OntologyResponderV2Live(
       entitiesInWrongSchema =
         (standoffClassIris ++ standoffPropertyIris).filter(_.getOntologySchema.contains(ApiV2Simple))
 
-      _ = if (entitiesInWrongSchema.nonEmpty) {
-            throw NotFoundException(
-              s"Some requested standoff classes were not found: ${entitiesInWrongSchema.mkString(", ")}"
-            )
-          }
+      _ <- ZIO.fail {
+             NotFoundException(
+               s"Some requested standoff classes were not found: ${entitiesInWrongSchema.mkString(", ")}"
+             )
+           }.when(entitiesInWrongSchema.nonEmpty)
 
       classIrisForCache    = standoffClassIris.map(_.toOntologySchema(InternalSchema))
       propertyIrisForCache = standoffPropertyIris.map(_.toOntologySchema(InternalSchema))
@@ -212,24 +212,21 @@ final case class OntologyResponderV2Live(
       missingClassDefs    = classIrisForCache -- classDefsAvailable.keySet
       missingPropertyDefs = propertyIrisForCache -- propertyDefsAvailable.keySet
 
-      _ = if (missingClassDefs.nonEmpty) {
-            throw NotFoundException(
-              s"Some requested standoff classes were not found: ${missingClassDefs.mkString(", ")}"
-            )
-          }
+      _ <- ZIO.fail {
+             NotFoundException(s"Some requested standoff classes were not found: ${missingClassDefs.mkString(", ")}")
+           }.when(missingClassDefs.nonEmpty)
 
-      _ = if (missingPropertyDefs.nonEmpty) {
-            throw NotFoundException(
-              s"Some requested standoff properties were not found: ${missingPropertyDefs.mkString(", ")}"
-            )
-          }
+      _ <- ZIO.fail {
+             NotFoundException(
+               s"Some requested standoff properties were not found: ${missingPropertyDefs.mkString(", ")}"
+             )
+           }.when(missingPropertyDefs.nonEmpty)
 
-      response = StandoffEntityInfoGetResponseV2(
-                   standoffClassInfoMap =
-                     new ErrorHandlingMap(classDefsAvailable, key => s"Resource class $key not found"),
-                   standoffPropertyInfoMap =
-                     new ErrorHandlingMap(propertyDefsAvailable, key => s"Property $key not found")
-                 )
+      response =
+        StandoffEntityInfoGetResponseV2(
+          standoffClassInfoMap = new ErrorHandlingMap(classDefsAvailable, key => s"Resource class $key not found"),
+          standoffPropertyInfoMap = new ErrorHandlingMap(propertyDefsAvailable, key => s"Property $key not found")
+        )
     } yield response
 
   /**

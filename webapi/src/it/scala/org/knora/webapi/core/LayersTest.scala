@@ -74,6 +74,8 @@ import org.knora.webapi.responders.v1.ResourcesResponderV1
 import org.knora.webapi.responders.v1.ResourcesResponderV1Live
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
+import org.knora.webapi.responders.v2.StandoffResponderV2
+import org.knora.webapi.responders.v2.StandoffResponderV2Live
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
@@ -138,6 +140,7 @@ object LayersTest {
     with SearchResponderV1
     with SipiResponderADM
     with StandoffResponderV1
+    with StandoffResponderV2
     with StandoffTagUtilV2
     with State
     with StoresResponderADM
@@ -192,6 +195,7 @@ object LayersTest {
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV1Live.layer,
+      StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,

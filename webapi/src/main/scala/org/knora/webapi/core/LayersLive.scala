@@ -64,6 +64,8 @@ import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2Live
+import org.knora.webapi.responders.v2.StandoffResponderV2
+import org.knora.webapi.responders.v2.StandoffResponderV2Live
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
@@ -143,6 +145,7 @@ object LayersLive {
       with SearchResponderV1
       with SipiResponderADM
       with StandoffResponderV1
+      with StandoffResponderV2
       with StandoffTagUtilV2
       with State
       with StoresResponderADM
@@ -208,6 +211,7 @@ object LayersLive {
       SearchResponderV1Live.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV1Live.layer,
+      StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
