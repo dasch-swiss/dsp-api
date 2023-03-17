@@ -4,12 +4,16 @@ import zio._
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.DspProject
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 trait ProjectADMService {
   def findAll: Task[List[ProjectADM]]
   def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]]
+  def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM]
+  def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]]
 }
 
 final case class ProjectADMServiceLive(private val ontologyRepo: OntologyRepo, private val projectRepo: DspProjectRepo)
@@ -34,6 +38,15 @@ final case class ProjectADMServiceLive(private val ontologyRepo: OntologyRepo, p
       selfjoin = dspProject.selfjoin,
       ontologies = ontologyIris
     ).unescape
+
+  override def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =
+    for {
+      projects <- projectRepo.findAll()
+      keywords  = projects.flatMap(_.keywords).distinct.sorted
+    } yield ProjectsKeywordsGetResponseADM(keywords)
+
+  override def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]] =
+    projectRepo.findByProjectIdentifier(id).map(_.map(_.keywords).map(ProjectKeywordsGetResponseADM))
 }
 
 object ProjectADMServiceLive {

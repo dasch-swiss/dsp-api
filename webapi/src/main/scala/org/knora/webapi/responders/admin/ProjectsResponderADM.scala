@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.Files
@@ -15,10 +14,10 @@ import java.util.UUID
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -381,10 +380,7 @@ final case class ProjectsResponderADMLive(
    * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
    */
   override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
-    for {
-      projects <- projectService.findAll
-      keywords  = projects.flatMap(_.keywords).distinct.sorted
-    } yield ProjectsKeywordsGetResponseADM(keywords)
+    projectService.findAllProjectsKeywords
 
   /**
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
@@ -394,14 +390,12 @@ final case class ProjectsResponderADMLive(
    */
   override def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM] =
     for {
-      id <- IriIdentifier
-              .fromString(projectIri.value)
-              .toZIO
-              .mapError(e => BadRequestException(e.getMessage))
-      keywords <- getProjectFromCacheOrTriplestore(id)
+      id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
+      keywords <- projectService
+                    .findProjectKeywordsBy(id)
                     .flatMap(ZIO.fromOption(_))
-                    .mapBoth(_ => NotFoundException(s"Project '${projectIri.value}' not found."), _.keywords)
-    } yield ProjectKeywordsGetResponseADM(keywords)
+                    .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found."))
+    } yield keywords
 
   override def projectDataGetRequestADM(
     id: ProjectIdentifierADM,
