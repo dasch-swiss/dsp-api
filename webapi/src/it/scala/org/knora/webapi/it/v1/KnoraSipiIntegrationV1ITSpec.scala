@@ -745,7 +745,7 @@ class KnoraSipiIntegrationV1ITSpec
       )
 
       val response: HttpResponse = singleAwaitingRequest(letterTEIRequest)
-      assert(response.status.intValue == 500)
+      assert(response.status.intValue == 404)
       val responseBodyStr: String =
         Await.result(response.entity.toStrict(2.seconds).map(_.data.decodeString("UTF-8")), 2.seconds)
       assert(responseBodyStr.contains("Unable to get file"))
