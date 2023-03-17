@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.Files
@@ -14,10 +15,10 @@ import java.util.UUID
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -61,15 +62,6 @@ trait ProjectsResponderADM {
   def projectsGetRequestADM(): Task[ProjectsGetResponseADM]
 
   /**
-   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
-   *
-   * @param id the IRI, shortname, shortcode or UUID of the project.
-   * @param skipCache  if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
-   * @return information about the project as an optional [[ProjectADM]].
-   */
-  def getSingleProjectADM(id: ProjectIdentifierADM, skipCache: Boolean = false): Task[Option[ProjectADM]]
-
-  /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
    * as a [[ProjectGetResponseADM]].
    *
@@ -79,6 +71,12 @@ trait ProjectsResponderADM {
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
   def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
+
+  /**
+   * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
+   * If project is not found in cache but in triplestore, then project is written to cache.
+   */
+  def getProjectFromCacheOrTriplestore(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -172,6 +170,7 @@ trait ProjectsResponderADM {
   ): Task[ProjectOperationResponseADM]
 
   def projectDataGetRequestADM(id: ProjectIdentifierADM, user: UserADM): Task[ProjectDataGetResponseADM]
+
 }
 
 final case class ProjectsResponderADMLive(
@@ -199,7 +198,7 @@ final case class ProjectsResponderADMLive(
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ProjectsGetRequestADM()          => projectsGetRequestADM()
-    case ProjectGetADM(identifier)        => getSingleProjectADM(identifier)
+    case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
     case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
     case ProjectMembersGetRequestADM(identifier, requestingUser) =>
       projectMembersGetRequestADM(identifier, requestingUser)
@@ -245,17 +244,6 @@ final case class ProjectsResponderADMLive(
         if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
         else { ZIO.fail(NotFoundException(s"No projects found")) }
       )
-
-  /**
-   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
-   *
-   * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @param skipCache    if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
-   * @return information about the project as an optional [[ProjectADM]].
-   */
-  override def getSingleProjectADM(id: ProjectIdentifierADM, skipCache: Boolean = false): Task[Option[ProjectADM]] =
-    if (skipCache) { projectRepo.findByProjectIdentifier(id) }
-    else { getProjectFromCacheOrTriplestore(identifier = id) }
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -1045,7 +1033,7 @@ final case class ProjectsResponderADMLive(
    * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
    * If project is not found in cache but in triplestore, then project is written to cache.
    */
-  private def getProjectFromCacheOrTriplestore(
+  override def getProjectFromCacheOrTriplestore(
     identifier: ProjectIdentifierADM
   ): Task[Option[ProjectADM]] =
     if (cacheServiceSettings.cacheServiceEnabled) {
