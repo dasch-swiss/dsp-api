@@ -55,10 +55,9 @@ final case class EntityAndClassIriService(
               }
           // Check that given entityIRI ends with a UUID
           ending: String = entityIriAsString.split('/').last
-          _ = stringFormatter.validateBase64EncodedUuid(
-                ending,
-                throw BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID.")
-              )
+          _ = stringFormatter
+                .validateBase64EncodedUuid(ending)
+                .getOrElse(BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID."))
 
         } yield entityIriAsString
 

@@ -25,6 +25,9 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 /*
 
@@ -761,9 +764,14 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return an optional validated decoded UUID.
    */
-  def maybeUUID(key: String): Option[UUID] = {
+  def maybeUUID(key: String): Option[Try[UUID]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    maybeStringWithValidation(key, stringFormatter.validateBase64EncodedUuid)
+    maybeString(key).map(str =>
+      stringFormatter
+        .validateBase64EncodedUuid(str)
+        .map(Success(_))
+        .getOrElse(Failure(new BadRequestException(s"Invalid $key: $str")))
+    )
   }
 
   /**
@@ -1061,7 +1069,7 @@ case class JsonLDDocument(
   /**
    * A convenience function that calls `body.maybeUUID`.
    */
-  def maybeUUID(key: String): Option[UUID] = body.maybeUUID(key: String)
+  def maybeUUID(key: String): Option[Try[UUID]] = body.maybeUUID(key: String)
 
   /**
    * Flattens this JSON-LD document by moving inlined entities with IRIs to the top level.

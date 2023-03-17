@@ -120,7 +120,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
               // Get the custom value UUID if provided.
               maybeCustomUUID: Option[UUID] =
-                jsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+                jsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID).flatMap(_.toOption)
 
               // Get the value's creation date.
               // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.

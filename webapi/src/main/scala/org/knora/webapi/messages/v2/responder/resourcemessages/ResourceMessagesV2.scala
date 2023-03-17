@@ -780,39 +780,36 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             }
 
             for {
-              valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
-                                                jsonLDObject = valueJsonLDObject,
-                                                requestingUser = requestingUser,
-                                                appActor = appActor,
-                                                log = log
-                                              )
+              valueContent <-
+                ValueContentV2.fromJsonLDObject(
+                  jsonLDObject = valueJsonLDObject,
+                  requestingUser = requestingUser,
+                  appActor = appActor,
+                  log = log
+                )
 
-              maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
-              maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID(
-                                                     OntologyConstants.KnoraApiV2Complex.ValueHasUUID
-                                                   )
+              maybeCustomValueIri = valueJsonLDObject.maybeIDAsKnoraDataIri
+              maybeCustomValueUUID =
+                valueJsonLDObject
+                  .maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+                  .flatMap(_.toOption)
 
               // Get the value's creation date.
               // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-              maybeCustomValueCreationDate: Option[Instant] = valueJsonLDObject
-                                                                .maybeDatatypeValueInObject(
-                                                                  key =
-                                                                    OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
-                                                                  expectedDatatype =
-                                                                    OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                                  validationFun =
-                                                                    stringFormatter.xsdDateTimeStampToInstant
-                                                                )
-                                                                .orElse(
-                                                                  valueJsonLDObject.maybeDatatypeValueInObject(
-                                                                    key =
-                                                                      OntologyConstants.KnoraApiV2Complex.CreationDate,
-                                                                    expectedDatatype =
-                                                                      OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                                    validationFun =
-                                                                      stringFormatter.xsdDateTimeStampToInstant
-                                                                  )
-                                                                )
+              maybeCustomValueCreationDate =
+                valueJsonLDObject
+                  .maybeDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                  )
+                  .orElse(
+                    valueJsonLDObject.maybeDatatypeValueInObject(
+                      key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                      expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                      validationFun = stringFormatter.xsdDateTimeStampToInstant
+                    )
+                  )
 
               maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(
                                                    OntologyConstants.KnoraApiV2Complex.HasPermissions,
