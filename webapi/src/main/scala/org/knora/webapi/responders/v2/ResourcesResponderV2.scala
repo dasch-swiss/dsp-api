@@ -5,21 +5,24 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
+import com.typesafe.scalalogging.LazyLogging
 import zio.ZIO
+import zio._
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
 
 import dsp.errors._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
@@ -28,7 +31,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -43,13 +45,11 @@ import org.knora.webapi.messages.util.rdf.JsonLDInt
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -58,21 +58,34 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequest
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
-import org.knora.webapi.util._
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.ZioHelper
 
-class ResourcesResponderV2(
-  responderData: ResponderData,
-  implicit val runtime: zio.Runtime[
-    ConstructResponseUtilV2 with StandoffTagUtilV2 with ResourceUtilV2 with PermissionUtilADM
-  ]
-) extends ResponderWithStandoffV2(responderData, runtime) {
+trait ResourcesResponderV2
+
+final case class ResourcesResponderV2Live(
+  appConfig: AppConfig,
+  iriService: IriService,
+  messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService,
+  constructResponseUtilV2: ConstructResponseUtilV2,
+  standoffTagUtilV2: StandoffTagUtilV2,
+  resourceUtilV2: ResourceUtilV2,
+  permissionUtilADM: PermissionUtilADM,
+  implicit val stringFormatter: StringFormatter
+) extends ResourcesResponderV2
+    with MessageHandler
+    with LazyLogging {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -88,10 +101,10 @@ class ResourcesResponderV2(
     hasStandoffLink: Boolean
   )
 
-  /**
-   * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
-   */
-  def receive(msg: ResourcesResponderRequestV2): Future[Any] = msg match {
+  override def isResponsibleFor(message: ResponderRequest): Boolean =
+    message.isInstanceOf[ResourcesResponderRequestV2]
+
+  override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ResourcesGetRequestV2(
           resIris,
           propertyIri,
@@ -159,7 +172,7 @@ class ResourcesResponderV2(
       getProjectResourceHistoryEvents(projectHistoryEventsRequestV2)
 
     case other =>
-      handleUnexpectedMessage(other, log, this.getClass.getName)
+      Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -168,22 +181,17 @@ class ResourcesResponderV2(
    * @param createResourceRequestV2 the request to create the resource.
    * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
    */
-  private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
+  private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] = {
 
-    def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
+    def makeTaskFuture(resourceIri: IRI): Task[ReadResourcesSequenceV2] = {
       for {
-        // check if resourceIri already exists holding a lock on the IRI
-        result <- stringFormatter.checkIriExists(resourceIri, appActor)
-
-        _ = if (result) {
-              throw DuplicateValueException(s"Resource IRI: '$resourceIri' already exists.")
-            }
+        _ <- // check if resourceIri already exists holding a lock on the IRI
+          ZIO
+            .fail(DuplicateValueException(s"Resource IRI: '$resourceIri' already exists."))
+            .whenZIO(iriService.checkIriExists(resourceIri))
 
         // Convert the resource to the internal ontology schema.
-        internalCreateResource: CreateResourceV2 <-
-          Future(
-            createResourceRequestV2.createResource.toOntologySchema(InternalSchema)
-          )
+        internalCreateResource <- ZIO.attempt(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
         // Check link targets and list nodes that should exist.
         _ <- checkStandoffLinkTargets(
@@ -194,37 +202,35 @@ class ResourcesResponderV2(
         _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
 
         // Get the class IRIs of all the link targets in the request.
-        linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
-                                                   resourceIri: IRI,
-                                                   internalCreateResources = Seq(internalCreateResource),
-                                                   requestingUser = createResourceRequestV2.requestingUser
-                                                 )
+        linkTargetClasses <- getLinkTargetClasses(
+                               resourceIri: IRI,
+                               internalCreateResources = Seq(internalCreateResource),
+                               requestingUser = createResourceRequestV2.requestingUser
+                             )
 
         // Get the definitions of the resource class and its properties, as well as of the classes of all
         // resources that are link targets.
-        resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <-
-          appActor
-            .ask(
+        resourceClassEntityInfoResponse <-
+          messageRelay
+            .ask[EntityInfoGetResponseV2](
               EntityInfoGetRequestV2(
                 classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
                 requestingUser = createResourceRequestV2.requestingUser
               )
             )
-            .mapTo[EntityInfoGetResponseV2]
 
         resourceClassInfo: ReadClassInfoV2 = resourceClassEntityInfoResponse.classInfoMap(
                                                internalCreateResource.resourceClassIri
                                              )
 
-        propertyEntityInfoResponse: EntityInfoGetResponseV2 <-
-          appActor
-            .ask(
+        propertyEntityInfoResponse <-
+          messageRelay
+            .ask[EntityInfoGetResponseV2](
               EntityInfoGetRequestV2(
                 propertyIris = resourceClassInfo.knoraResourceProperties,
                 requestingUser = createResourceRequestV2.requestingUser
               )
             )
-            .mapTo[EntityInfoGetResponseV2]
 
         allEntityInfo = EntityInfoGetResponseV2(
                           classInfoMap = resourceClassEntityInfoResponse.classInfoMap,
@@ -243,16 +249,13 @@ class ResourcesResponderV2(
 
         // Get the default permissions of each property used.
 
-        defaultPropertyPermissionsMap: Map[SmartIri, Map[SmartIri, String]] <- getDefaultPropertyPermissions(
-                                                                                 projectIri =
-                                                                                   createResourceRequestV2.createResource.projectADM.id,
-                                                                                 resourceClassProperties = Map(
-                                                                                   internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet
-                                                                                 ),
-                                                                                 requestingUser =
-                                                                                   createResourceRequestV2.requestingUser
-                                                                               )
-
+        defaultPropertyPermissionsMap <- getDefaultPropertyPermissions(
+                                           projectIri = createResourceRequestV2.createResource.projectADM.id,
+                                           resourceClassProperties = Map(
+                                             internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet
+                                           ),
+                                           requestingUser = createResourceRequestV2.requestingUser
+                                         )
         defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(
                                                               internalCreateResource.resourceClassIri
                                                             )
@@ -262,17 +265,17 @@ class ResourcesResponderV2(
 
         // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
         // for creating the resource.
-        resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
-                                                          resourceIri = resourceIri,
-                                                          internalCreateResource = internalCreateResource,
-                                                          linkTargetClasses = linkTargetClasses,
-                                                          entityInfo = allEntityInfo,
-                                                          clientResourceIDs = Map.empty[IRI, String],
-                                                          defaultResourcePermissions = defaultResourcePermissions,
-                                                          defaultPropertyPermissions = defaultPropertyPermissions,
-                                                          creationDate = creationDate,
-                                                          requestingUser = createResourceRequestV2.requestingUser
-                                                        )
+        resourceReadyToCreate <- generateResourceReadyToCreate(
+                                   resourceIri = resourceIri,
+                                   internalCreateResource = internalCreateResource,
+                                   linkTargetClasses = linkTargetClasses,
+                                   entityInfo = allEntityInfo,
+                                   clientResourceIDs = Map.empty[IRI, String],
+                                   defaultResourcePermissions = defaultResourcePermissions,
+                                   defaultPropertyPermissions = defaultPropertyPermissions,
+                                   creationDate = creationDate,
+                                   requestingUser = createResourceRequestV2.requestingUser
+                                 )
 
         // Get the IRI of the named graph in which the resource will be created.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
@@ -288,21 +291,20 @@ class ResourcesResponderV2(
                          .toString()
 
         // Do the update.
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
         // Verify that the resource was created correctly.
-        previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
-                                                               resourceReadyToCreate = resourceReadyToCreate,
-                                                               projectIri =
-                                                                 createResourceRequestV2.createResource.projectADM.id,
-                                                               requestingUser = createResourceRequestV2.requestingUser
-                                                             )
+        previewOfCreatedResource <- verifyResource(
+                                      resourceReadyToCreate = resourceReadyToCreate,
+                                      projectIri = createResourceRequestV2.createResource.projectADM.id,
+                                      requestingUser = createResourceRequestV2.requestingUser
+                                    )
       } yield previewOfCreatedResource
     }
 
-    val triplestoreUpdateFuture: Future[ReadResourcesSequenceV2] = for {
+    val triplestoreUpdateFuture: Task[ReadResourcesSequenceV2] = for {
       // Don't allow anonymous users to create resources.
-      _ <- Future {
+      _ <- ZIO.attempt {
              if (createResourceRequestV2.requestingUser.isAnonymousUser) {
                throw ForbiddenException("Anonymous users aren't allowed to create resources")
              } else {
@@ -324,14 +326,13 @@ class ResourcesResponderV2(
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
       resourceClassOntologyIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity
-      readOntologyMetadataV2: ReadOntologyMetadataV2 <- appActor
-                                                          .ask(
-                                                            OntologyMetadataGetByIriRequestV2(
-                                                              Set(resourceClassOntologyIri),
-                                                              createResourceRequestV2.requestingUser
-                                                            )
-                                                          )
-                                                          .mapTo[ReadOntologyMetadataV2]
+      readOntologyMetadataV2 <- messageRelay
+                                  .ask[ReadOntologyMetadataV2](
+                                    OntologyMetadataGetByIriRequestV2(
+                                      Set(resourceClassOntologyIri),
+                                      createResourceRequestV2.requestingUser
+                                    )
+                                  )
       ontologyMetadata: OntologyMetadataV2 =
         readOntologyMetadataV2.ontologies.headOption
           .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
@@ -367,7 +368,7 @@ class ResourcesResponderV2(
             )
           }
 
-      resourceIri: IRI <-
+      resourceIri <-
         iriService.checkOrCreateEntityIri(
           createResourceRequestV2.createResource.resourceIri,
           stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode)
@@ -377,17 +378,18 @@ class ResourcesResponderV2(
       taskResult <- IriLocker.runWithIriLock(
                       createResourceRequestV2.apiRequestID,
                       resourceIri,
-                      () => makeTaskFuture(resourceIri)
+                      makeTaskFuture(resourceIri)
                     )
     } yield taskResult
 
     // If the request includes file values, tell Sipi to move the files to permanent storage if the update
     // succeeded, or to delete the temporary files if the update failed.
-    doSipiPostUpdateForResources(
-      updateFuture = triplestoreUpdateFuture,
-      createResources = Seq(createResourceRequestV2.createResource),
-      requestingUser = createResourceRequestV2.requestingUser
-    )
+    val fileValues = Seq(createResourceRequestV2.createResource)
+      .flatMap(_.flatValues)
+      .map(_.valueContent)
+      .filter(_.isInstanceOf[FileValueContentV2])
+      .map(_.asInstanceOf[FileValueContentV2])
+    resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValues, createResourceRequestV2.requestingUser)
   }
 
   /**
@@ -398,15 +400,15 @@ class ResourcesResponderV2(
    */
   private def updateResourceMetadataV2(
     updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2
-  ): Future[UpdateResourceMetadataResponseV2] = {
-    def makeTaskFuture: Future[UpdateResourceMetadataResponseV2] = {
+  ): Task[UpdateResourceMetadataResponseV2] = {
+    def makeTaskFuture: Task[UpdateResourceMetadataResponseV2] = {
       for {
         // Get the metadata of the resource to be updated.
-        resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                                                   resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
-                                                   targetSchema = ApiV2Complex,
-                                                   requestingUser = updateResourceMetadataRequestV2.requestingUser
-                                                 )
+        resourcesSeq <- getResourcePreviewV2(
+                          resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = updateResourceMetadataRequestV2.requestingUser
+                        )
 
         resource: ReadResourceV2 = resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
         internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
@@ -440,15 +442,10 @@ class ResourcesResponderV2(
             }
 
         // Check that the user has permission to modify the resource.
-        _ <- UnsafeZioRun.runToFuture(
-               ZIO
-                 .serviceWithZIO[ResourceUtilV2](
-                   _.checkResourcePermission(
-                     resourceInfo = resource,
-                     permissionNeeded = ModifyPermission,
-                     requestingUser = updateResourceMetadataRequestV2.requestingUser
-                   )
-                 )
+        _ <- resourceUtilV2.checkResourcePermission(
+               resource,
+               ModifyPermission,
+               updateResourceMetadataRequestV2.requestingUser
              )
 
         // Get the IRI of the named graph in which the resource is stored.
@@ -484,11 +481,11 @@ class ResourcesResponderV2(
                          .toString()
 
         // Do the update.
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
         // Verify that the resource was updated correctly.
 
-        updatedResourcesSeq: ReadResourcesSequenceV2 <-
+        updatedResourcesSeq <-
           getResourcePreviewV2(
             resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
             targetSchema = ApiV2Complex,
@@ -542,7 +539,7 @@ class ResourcesResponderV2(
       taskResult <- IriLocker.runWithIriLock(
                       updateResourceMetadataRequestV2.apiRequestID,
                       updateResourceMetadataRequestV2.resourceIri,
-                      () => makeTaskFuture
+                      makeTaskFuture
                     )
     } yield taskResult
   }
@@ -555,7 +552,7 @@ class ResourcesResponderV2(
    */
   private def deleteOrEraseResourceV2(
     deleteOrEraseResourceV2: DeleteOrEraseResourceRequestV2
-  ): Future[SuccessResponseV2] =
+  ): Task[SuccessResponseV2] =
     if (deleteOrEraseResourceV2.erase) {
       eraseResourceV2(deleteOrEraseResourceV2)
     } else {
@@ -567,15 +564,15 @@ class ResourcesResponderV2(
    *
    * @param deleteResourceV2 the request message.
    */
-  private def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Future[SuccessResponseV2] = {
-    def makeTaskFuture: Future[SuccessResponseV2] =
+  private def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
+    def makeTaskFuture: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
-        resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                                                   resourceIris = Seq(deleteResourceV2.resourceIri),
-                                                   targetSchema = ApiV2Complex,
-                                                   requestingUser = deleteResourceV2.requestingUser
-                                                 )
+        resourcesSeq <- getResourcePreviewV2(
+                          resourceIris = Seq(deleteResourceV2.resourceIri),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = deleteResourceV2.requestingUser
+                        )
 
         resource: ReadResourceV2 = resourcesSeq.toResource(deleteResourceV2.resourceIri)
         internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
@@ -606,16 +603,7 @@ class ResourcesResponderV2(
             }
 
         // Check that the user has permission to mark the resource as deleted.
-        _ <- UnsafeZioRun.runToFuture(
-               ZIO
-                 .serviceWithZIO[ResourceUtilV2](
-                   _.checkResourcePermission(
-                     resourceInfo = resource,
-                     permissionNeeded = DeletePermission,
-                     requestingUser = deleteResourceV2.requestingUser
-                   )
-                 )
-             )
+        _ <- resourceUtilV2.checkResourcePermission(resource, DeletePermission, deleteResourceV2.requestingUser)
 
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
@@ -632,7 +620,7 @@ class ResourcesResponderV2(
                          .toString()
 
         // Do the update.
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
         // Verify that the resource was deleted correctly.
 
@@ -642,7 +630,7 @@ class ResourcesResponderV2(
                         )
                         .toString()
 
-        sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+        sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
 
         rows = sparqlSelectResponse.results.bindings
 
@@ -669,7 +657,7 @@ class ResourcesResponderV2(
       taskResult <- IriLocker.runWithIriLock(
                       deleteResourceV2.apiRequestID,
                       deleteResourceV2.resourceIri,
-                      () => makeTaskFuture
+                      makeTaskFuture
                     )
     } yield taskResult
   }
@@ -679,15 +667,15 @@ class ResourcesResponderV2(
    *
    * @param eraseResourceV2 the request message.
    */
-  private def eraseResourceV2(eraseResourceV2: DeleteOrEraseResourceRequestV2): Future[SuccessResponseV2] = {
-    def makeTaskFuture: Future[SuccessResponseV2] =
+  private def eraseResourceV2(eraseResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
+    def makeTaskFuture: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
-        resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                                                   resourceIris = Seq(eraseResourceV2.resourceIri),
-                                                   targetSchema = ApiV2Complex,
-                                                   requestingUser = eraseResourceV2.requestingUser
-                                                 )
+        resourcesSeq <- getResourcePreviewV2(
+                          resourceIris = Seq(eraseResourceV2.resourceIri),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = eraseResourceV2.requestingUser
+                        )
 
         resource: ReadResourceV2 = resourcesSeq.toResource(eraseResourceV2.resourceIri)
 
@@ -723,13 +711,14 @@ class ResourcesResponderV2(
 
         resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
-        _ <- iriService.throwIfEntityIsUsed(
-               entityIri = resourceSmartIri,
-               ignoreRdfSubjectAndObject = true,
-               errorFun = throw BadRequestException(
-                 s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
-               )
-             )
+        _ <-
+          ZIO
+            .fail(
+              BadRequestException(
+                s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
+              )
+            )
+            .whenZIO(iriService.isEntityUsed(resourceSmartIri, ignoreRdfSubjectAndObject = true))
 
         // Get the IRI of the named graph from which the resource will be erased.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
@@ -742,20 +731,17 @@ class ResourcesResponderV2(
                          )
                          .toString()
 
-        // _ = println(sparqlUpdate)
-
         // Do the update.
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
-        // Verify that the resource was erased correctly.
-
-        resourceStillExists: Boolean <- stringFormatter.checkIriExists(resourceSmartIri.toString, appActor)
-
-        _ = if (resourceStillExists) {
-              throw UpdateNotPerformedException(
+        _ <- // Verify that the resource was erased correctly.
+          ZIO
+            .fail(
+              UpdateNotPerformedException(
                 s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug."
               )
-            }
+            )
+            .whenZIO(iriService.checkIriExists(resourceSmartIri.toString))
       } yield SuccessResponseV2("Resource erased")
 
     if (!eraseResourceV2.erase) {
@@ -767,7 +753,7 @@ class ResourcesResponderV2(
       taskResult <- IriLocker.runWithIriLock(
                       eraseResourceV2.apiRequestID,
                       eraseResourceV2.resourceIri,
-                      () => makeTaskFuture
+                      makeTaskFuture
                     )
     } yield taskResult
   }
@@ -801,13 +787,13 @@ class ResourcesResponderV2(
     defaultPropertyPermissions: Map[SmartIri, String],
     creationDate: Instant,
     requestingUser: UserADM
-  ): Future[ResourceReadyToCreate] = {
+  ): Task[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
       clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
     for {
       // Check that the resource class has a suitable cardinality for each submitted value.
-      resourceClassInfo <- Future(entityInfo.classInfoMap(internalCreateResource.resourceClassIri))
+      resourceClassInfo <- ZIO.attempt(entityInfo.classInfoMap(internalCreateResource.resourceClassIri))
 
       knoraPropertyCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
         resourceClassInfo.allCardinalities.view
@@ -877,12 +863,11 @@ class ResourcesResponderV2(
       // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
 
-      resourcePermissions: String <-
+      resourcePermissions <-
         internalCreateResource.permissions match {
           case Some(permissionStr) =>
             for {
-              validatedCustomPermissions: String <-
-                UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissionStr)))
+              validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
 
               // Is the requesting user a system admin, or an admin of this project?
               _ = if (
@@ -910,10 +895,10 @@ class ResourcesResponderV2(
                   }
             } yield validatedCustomPermissions
 
-          case None => FastFuture.successful(defaultResourcePermissions)
+          case None => ZIO.succeed(defaultResourcePermissions)
         }
 
-      valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <-
+      valuesWithValidatedPermissions <-
         validateAndFormatValuePermissions(
           project = internalCreateResource.projectADM,
           values = internalCreateResource.values,
@@ -923,9 +908,9 @@ class ResourcesResponderV2(
         )
 
       // Ask the values responder for SPARQL for generating the values.
-      sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <-
-        appActor
-          .ask(
+      sparqlForValuesResponse <-
+        messageRelay
+          .ask[GenerateSparqlToCreateMultipleValuesResponseV2](
             GenerateSparqlToCreateMultipleValuesRequestV2(
               resourceIri = resourceIri,
               values = valuesWithValidatedPermissions,
@@ -933,7 +918,6 @@ class ResourcesResponderV2(
               requestingUser = requestingUser
             )
           )
-          .mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
     } yield ResourceReadyToCreate(
       sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
         resourceIri = resourceIri,
@@ -962,7 +946,7 @@ class ResourcesResponderV2(
     resourceIri: IRI,
     internalCreateResources: Seq[CreateResourceV2],
     requestingUser: UserADM
-  ): Future[Map[IRI, SmartIri]] = {
+  ): Task[Map[IRI, SmartIri]] = {
     // Get the IRIs of the new and existing resources that are targets of links.
     val (existingTargetIris: Set[IRI], newTargets: Set[IRI]) =
       internalCreateResources.flatMap(_.flatValues).foldLeft((Set.empty[IRI], Set.empty[IRI])) {
@@ -988,11 +972,11 @@ class ResourcesResponderV2(
 
     for {
       // Get information about the existing resources that are targets of links.
-      existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                                                    resourceIris = existingTargetIris.toSeq,
-                                                    targetSchema = ApiV2Complex,
-                                                    requestingUser = requestingUser
-                                                  )
+      existingTargets <- getResourcePreviewV2(
+                           resourceIris = existingTargetIris.toSeq,
+                           targetSchema = ApiV2Complex,
+                           requestingUser = requestingUser
+                         )
 
       // Make a map of the IRIs of existing target resources to their class IRIs.
       classesOfExistingTargets: Map[IRI, SmartIri] =
@@ -1139,7 +1123,7 @@ class ResourcesResponderV2(
   private def checkStandoffLinkTargets(
     values: Iterable[CreateValueInNewResourceV2],
     requestingUser: UserADM
-  ): Future[Unit] = {
+  ): Task[Unit] = {
     val standoffLinkTargetsThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
         valueToCreate.valueContent match {
@@ -1153,7 +1137,7 @@ class ResourcesResponderV2(
       resourceIris = standoffLinkTargetsThatShouldExist.toSeq,
       targetSchema = ApiV2Complex,
       requestingUser = requestingUser
-    ).map(_ => ())
+    ).unit
   }
 
   /**
@@ -1163,7 +1147,7 @@ class ResourcesResponderV2(
    * @param values         the values to be checked.
    * @param requestingUser the user making the request.
    */
-  private def checkListNodes(values: Iterable[CreateValueInNewResourceV2], requestingUser: UserADM): Future[Unit] = {
+  private def checkListNodes(values: Iterable[CreateValueInNewResourceV2], requestingUser: UserADM): Task[Unit] = {
     val listNodesThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
         valueToCreate.valueContent match {
@@ -1173,13 +1157,11 @@ class ResourcesResponderV2(
         }
     }
 
-    Future
-      .sequence(
+    ZIO
+      .collectAll(
         listNodesThatShouldExist.map { listNodeIri =>
           for {
-            checkNode <- UnsafeZioRun.runToFuture(
-                           ZIO.serviceWithZIO[ResourceUtilV2](_.checkListNodeExistsAndIsRootNode(listNodeIri))
-                         )
+            checkNode <- resourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri)
 
             _ = checkNode match {
                   // it doesn't have isRootNode property - it's a child node
@@ -1189,7 +1171,7 @@ class ResourcesResponderV2(
                     throw BadRequestException(
                       s"<$listNodeIri> is a root node. Root nodes cannot be set as values."
                     )
-                  // it deosn't exists or isn't valid list
+                  // it doesn't exists or isn't valid list
                   case Left(_) =>
                     throw NotFoundException(
                       s"<$listNodeIri> does not exist, or is not a ListNode."
@@ -1198,7 +1180,7 @@ class ResourcesResponderV2(
           } yield ()
         }.toSeq
       )
-      .map(_ => ())
+      .unit
   }
 
   /**
@@ -1220,21 +1202,17 @@ class ResourcesResponderV2(
     defaultPropertyPermissions: Map[SmartIri, String],
     resourceIDForErrorMsg: String,
     requestingUser: UserADM
-  ): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
-    val propertyValuesWithValidatedPermissionsFutures
-      : Map[SmartIri, Seq[Future[GenerateSparqlForValueInNewResourceV2]]] = values.map {
-      case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
-        val validatedPermissionFutures: Seq[Future[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
+  ): Task[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
+    val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Task[GenerateSparqlForValueInNewResourceV2]]] =
+      values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+        val validatedPermissionFutures: Seq[Task[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
           valueToCreate =>
             // Does this value have custom permissions?
             valueToCreate.permissions match {
               case Some(permissionStr: String) =>
                 // Yes. Validate and reformat them.
                 for {
-                  validatedCustomPermissions <-
-                    UnsafeZioRun.runToFuture(
-                      ZIO.serviceWithZIO[PermissionUtilADM](_.validatePermissions(permissionStr))
-                    )
+                  validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
 
                   // Is the requesting user a system admin, or an admin of this project?
                   _ =
@@ -1270,7 +1248,7 @@ class ResourcesResponderV2(
 
               case None =>
                 // No. Use the default permissions.
-                FastFuture.successful {
+                ZIO.succeed {
                   GenerateSparqlForValueInNewResourceV2(
                     valueContent = valueToCreate.valueContent,
                     customValueIri = valueToCreate.customValueIri,
@@ -1283,9 +1261,9 @@ class ResourcesResponderV2(
         }
 
         propertyIri -> validatedPermissionFutures
-    }
+      }
 
-    ActorUtil.sequenceSeqFuturesInMap(propertyValuesWithValidatedPermissionsFutures)
+    ZioHelper.sequence(propertyValuesWithValidatedPermissionsFutures.map { case (k, v) => k -> ZIO.collectAll(v) })
   }
 
   /**
@@ -1300,8 +1278,8 @@ class ResourcesResponderV2(
     projectIri: IRI,
     resourceClassIris: Set[SmartIri],
     requestingUser: UserADM
-  ): Future[Map[SmartIri, String]] = {
-    val permissionsFutures: Map[SmartIri, Future[String]] = resourceClassIris.toSeq.map { resourceClassIri =>
+  ): Task[Map[SmartIri, String]] = {
+    val permissionsFutures: Map[SmartIri, Task[String]] = resourceClassIris.toSeq.map { resourceClassIri =>
       val requestMessage = DefaultObjectAccessPermissionsStringForResourceClassGetADM(
         projectIri = projectIri,
         resourceClassIri = resourceClassIri.toString,
@@ -1310,13 +1288,12 @@ class ResourcesResponderV2(
       )
 
       resourceClassIri ->
-        appActor
-          .ask(requestMessage)
-          .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+        messageRelay
+          .ask[DefaultObjectAccessPermissionsStringResponseADM](requestMessage)
           .map(_.permissionLiteral)
     }.toMap
 
-    ActorUtil.sequenceFuturesInMap(permissionsFutures)
+    ZioHelper.sequence(permissionsFutures)
   }
 
   /**
@@ -1331,27 +1308,22 @@ class ResourcesResponderV2(
     projectIri: IRI,
     resourceClassProperties: Map[SmartIri, Set[SmartIri]],
     requestingUser: UserADM
-  ): Future[Map[SmartIri, Map[SmartIri, String]]] = {
-    val permissionsFutures: Map[SmartIri, Future[Map[SmartIri, String]]] = resourceClassProperties.map {
+  ): Task[Map[SmartIri, Map[SmartIri, String]]] = {
+    val permissionsFutures: Map[SmartIri, Task[Map[SmartIri, String]]] = resourceClassProperties.map {
       case (resourceClassIri, propertyIris) =>
-        val propertyPermissionsFutures: Map[SmartIri, Future[String]] = propertyIris.toSeq.map { propertyIri =>
-          propertyIri -> UnsafeZioRun.runToFuture(
-            ZIO
-              .serviceWithZIO[ResourceUtilV2](
-                _.getDefaultValuePermissions(
-                  projectIri = projectIri,
-                  resourceClassIri = resourceClassIri,
-                  propertyIri = propertyIri,
-                  requestingUser = requestingUser
-                )
-              )
+        val propertyPermissionsFutures: Map[SmartIri, Task[String]] = propertyIris.toSeq.map { propertyIri =>
+          propertyIri -> resourceUtilV2.getDefaultValuePermissions(
+            projectIri = projectIri,
+            resourceClassIri = resourceClassIri,
+            propertyIri = propertyIri,
+            requestingUser = requestingUser
           )
         }.toMap
 
-        resourceClassIri -> ActorUtil.sequenceFuturesInMap(propertyPermissionsFutures)
+        resourceClassIri -> ZioHelper.sequence(propertyPermissionsFutures)
     }
 
-    ActorUtil.sequenceFuturesInMap(permissionsFutures)
+    ZioHelper.sequence(permissionsFutures)
   }
 
   /**
@@ -1367,16 +1339,16 @@ class ResourcesResponderV2(
     resourceReadyToCreate: ResourceReadyToCreate,
     projectIri: IRI,
     requestingUser: UserADM
-  ): Future[ReadResourcesSequenceV2] = {
+  ): Task[ReadResourcesSequenceV2] = {
     val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
 
-    val resourceFuture: Future[ReadResourcesSequenceV2] = for {
-      resourcesResponse: ReadResourcesSequenceV2 <- getResourcesV2(
-                                                      resourceIris = Seq(resourceIri),
-                                                      requestingUser = requestingUser,
-                                                      targetSchema = ApiV2Complex,
-                                                      schemaOptions = SchemaOptions.ForStandoffWithTextValues
-                                                    )
+    val resourceFuture: Task[ReadResourcesSequenceV2] = for {
+      resourcesResponse <- getResourcesV2(
+                             resourceIris = Seq(resourceIri),
+                             requestingUser = requestingUser,
+                             targetSchema = ApiV2Complex,
+                             schemaOptions = SchemaOptions.ForStandoffWithTextValues
+                           )
 
       resource: ReadResourceV2 = resourcesResponse.toResource(requestedResourceIri = resourceIri)
 
@@ -1453,45 +1425,10 @@ class ResourcesResponderV2(
       resources = Seq(resource.copy(values = Map.empty))
     )
 
-    resourceFuture.recover { case _: NotFoundException =>
-      throw UpdateNotPerformedException(
+    resourceFuture.mapError { case _: NotFoundException =>
+      UpdateNotPerformedException(
         s"Resource <$resourceIri> was not created. Please report this as a possible bug."
       )
-    }
-  }
-
-  /**
-   * After the attempted creation of one or more resources, looks for file values among the values that were supposed
-   * to be created, and tells Sipi to move those files to permanent storage if the update succeeded, or to delete the
-   * temporary files if the update failed.
-   *
-   * @param updateFuture    the operation that was supposed to create the resources.
-   * @param createResources the resources that were supposed to be created.
-   * @param requestingUser  the user making the request.
-   */
-  private def doSipiPostUpdateForResources[T <: UpdateResultInProject](
-    updateFuture: Future[T],
-    createResources: Seq[CreateResourceV2],
-    requestingUser: UserADM
-  ): Future[T] = {
-    val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
-
-    val resultFutures: Seq[Future[T]] = allValues.map { valueContent =>
-      UnsafeZioRun.runToFuture(
-        ZIO.serviceWithZIO[ResourceUtilV2](
-          _.doSipiPostUpdate(
-            updateFuture = ZIO.fromFuture(_ => updateFuture),
-            valueContent = valueContent,
-            requestingUser = requestingUser,
-            log = log
-          )
-        )
-      )
-    }
-
-    Future.sequence(resultFutures).transformWith {
-      case Success(_) => updateFuture
-      case Failure(e) => Future.failed(e)
     }
   }
 
@@ -1518,7 +1455,7 @@ class ResourcesResponderV2(
     versionDate: Option[Instant] = None,
     queryStandoff: Boolean,
     requestingUser: UserADM
-  ): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
+  ): Task[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
     // eliminate duplicate Iris
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
@@ -1527,11 +1464,11 @@ class ResourcesResponderV2(
     val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) =
       StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
         queryStandoff = queryStandoff,
-        appConfig = responderData.appConfig
+        appConfig = appConfig
       )
 
     for {
-      resourceRequestSparql <- Future(
+      resourceRequestSparql <- ZIO.attempt(
                                  org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                                    .getResourcePropertiesAndValues(
                                      resourceIris = resourceIrisDistinct,
@@ -1548,24 +1485,10 @@ class ResourcesResponderV2(
                                    .toString()
                                )
 
-      resourceRequestResponse: SparqlExtendedConstructResponse <-
-        appActor
-          .ask(SparqlExtendedConstructRequest(sparql = resourceRequestSparql))
-          .mapTo[SparqlExtendedConstructResponse]
+      resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
 
       // separate resources and values
-      mainResourcesAndValueRdfData <- UnsafeZioRun.runToFuture(
-                                        ZIO
-                                          .service[ConstructResponseUtilV2]
-                                          .map(
-                                            _.splitMainResourcesAndValueRdfData(
-                                              constructQueryResults = resourceRequestResponse,
-                                              requestingUser = requestingUser
-                                            )
-                                          )
-                                      )
-    } yield mainResourcesAndValueRdfData
-
+    } yield constructResponseUtilV2.splitMainResourcesAndValueRdfData(resourceRequestResponse, requestingUser)
   }
 
   /**
@@ -1592,7 +1515,7 @@ class ResourcesResponderV2(
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
     requestingUser: UserADM
-  ): Future[ReadResourcesSequenceV2] = {
+  ): Task[ReadResourcesSequenceV2] = {
     // eliminate duplicate Iris
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
@@ -1603,7 +1526,7 @@ class ResourcesResponderV2(
 
     for {
 
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <-
+      mainResourcesAndValueRdfData <-
         getResourcesFromTriplestore(
           resourceIris = resourceIris,
           preview = false,
@@ -1616,31 +1539,27 @@ class ResourcesResponderV2(
         )
 
       // If we're querying standoff, get XML-to standoff mappings.
-      mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <-
+      mappingsAsMap <-
         if (queryStandoff) {
-          getMappingsFromQueryResultsSeparated(
-            queryResultsSeparated = mainResourcesAndValueRdfData.resources,
-            requestingUser = requestingUser
+          constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
+            mainResourcesAndValueRdfData.resources,
+            requestingUser
           )
         } else {
-          FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+          ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse: ReadResourcesSequenceV2 <-
-        UnsafeZioRun.runToFuture(
-          ZIO.serviceWithZIO[ConstructResponseUtilV2](
-            _.createApiResponse(
-              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-              orderByResourceIri = resourceIrisDistinct,
-              pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
-              mappings = mappingsAsMap,
-              queryStandoff = queryStandoff,
-              versionDate = versionDate,
-              calculateMayHaveMoreResults = false,
-              targetSchema = targetSchema,
-              requestingUser = requestingUser
-            )
-          )
+      apiResponse <-
+        constructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+          orderByResourceIri = resourceIrisDistinct,
+          pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
+          mappings = mappingsAsMap,
+          queryStandoff = queryStandoff,
+          versionDate = versionDate,
+          calculateMayHaveMoreResults = false,
+          targetSchema = targetSchema,
+          requestingUser = requestingUser
         )
 
       _ = apiResponse.checkResourceIris(
@@ -1702,39 +1621,32 @@ class ResourcesResponderV2(
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
-  ): Future[ReadResourcesSequenceV2] = {
+  ): Task[ReadResourcesSequenceV2] = {
 
     // eliminate duplicate Iris
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
     for {
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
-                                                                                              resourceIris =
-                                                                                                resourceIris,
-                                                                                              preview = true,
-                                                                                              withDeleted = withDeleted,
-                                                                                              queryStandoff =
-                                                                                                false, // This has no effect, because we are not querying values.
-                                                                                              requestingUser =
-                                                                                                requestingUser
-                                                                                            )
+      mainResourcesAndValueRdfData <- getResourcesFromTriplestore(
+                                        resourceIris = resourceIris,
+                                        preview = true,
+                                        withDeleted = withDeleted,
+                                        queryStandoff =
+                                          false, // This has no effect, because we are not querying values.
+                                        requestingUser = requestingUser
+                                      )
 
-      apiResponse: ReadResourcesSequenceV2 <- UnsafeZioRun.runToFuture(
-                                                ZIO.serviceWithZIO[ConstructResponseUtilV2](
-                                                  _.createApiResponse(
-                                                    mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                    orderByResourceIri = resourceIrisDistinct,
-                                                    pageSizeBeforeFiltering =
-                                                      resourceIris.size, // doesn't matter because we're not doing paging
-                                                    mappings = Map.empty[IRI, MappingAndXSLTransformation],
-                                                    queryStandoff = false,
-                                                    versionDate = None,
-                                                    calculateMayHaveMoreResults = false,
-                                                    targetSchema = targetSchema,
-                                                    requestingUser = requestingUser
-                                                  )
-                                                )
-                                              )
+      apiResponse <- constructResponseUtilV2.createApiResponse(
+                       mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                       orderByResourceIri = resourceIrisDistinct,
+                       pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
+                       mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                       queryStandoff = false,
+                       versionDate = None,
+                       calculateMayHaveMoreResults = false,
+                       targetSchema = targetSchema,
+                       requestingUser = requestingUser
+                     )
 
       _ = apiResponse.checkResourceIris(
             targetResourceIris = resourceIris.toSet,
@@ -1774,15 +1686,15 @@ class ResourcesResponderV2(
   private def getGravsearchTemplate(
     gravsearchTemplateIri: IRI,
     requestingUser: UserADM
-  ): Future[String] = {
+  ): Task[String] = {
 
     val gravsearchUrlFuture = for {
-      resources: ReadResourcesSequenceV2 <- getResourcesV2(
-                                              resourceIris = Vector(gravsearchTemplateIri),
-                                              targetSchema = ApiV2Complex,
-                                              schemaOptions = Set(MarkupAsStandoff),
-                                              requestingUser = requestingUser
-                                            )
+      resources <- getResourcesV2(
+                     resourceIris = Vector(gravsearchTemplateIri),
+                     targetSchema = ApiV2Complex,
+                     schemaOptions = Set(MarkupAsStandoff),
+                     requestingUser = requestingUser
+                   )
 
       resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
@@ -1822,24 +1734,23 @@ class ResourcesResponderV2(
           }
 
       gravsearchUrl: String =
-        s"${responderData.appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
+        s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
     } yield gravsearchUrl
 
-    val recoveredGravsearchUrlFuture = gravsearchUrlFuture.recover { case notFound: NotFoundException =>
+    val recoveredGravsearchUrlFuture = gravsearchUrlFuture.mapError { case notFound: NotFoundException =>
       throw BadRequestException(s"Gravsearch template $gravsearchTemplateIri not found: ${notFound.message}")
     }
 
     for {
       gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
-      response: SipiGetTextFileResponse <- appActor
-                                             .ask(
-                                               SipiGetTextFileRequest(
-                                                 fileUrl = gravsearchTemplateUrl,
-                                                 requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                                 senderName = this.getClass.getName
-                                               )
-                                             )
-                                             .mapTo[SipiGetTextFileResponse]
+      response <- messageRelay
+                    .ask[SipiGetTextFileResponse](
+                      SipiGetTextFileRequest(
+                        fileUrl = gravsearchTemplateUrl,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser,
+                        senderName = this.getClass.getName
+                      )
+                    )
       gravsearchTemplate: String = response.content
 
     } yield gravsearchTemplate
@@ -1866,7 +1777,7 @@ class ResourcesResponderV2(
     gravsearchTemplateIri: Option[IRI],
     headerXSLTIri: Option[String],
     requestingUser: UserADM
-  ): Future[ResourceTEIGetResponseV2] = {
+  ): Task[ResourceTEIGetResponseV2] = {
 
     /**
      * Extract the text value to be converted to TEI/XML.
@@ -1935,7 +1846,7 @@ class ResourcesResponderV2(
     for {
 
       // get the requested resource
-      resource: ReadResourceV2 <-
+      resource <-
         if (gravsearchTemplateIri.nonEmpty) {
 
           // check that there is an XSLT to create the TEI header
@@ -1958,9 +1869,9 @@ class ResourcesResponderV2(
             constructQuery: ConstructQuery = GravsearchParser.parseQuery(gravsearchQuery)
 
             // do a request to the SearchResponder
-            gravSearchResponse: ReadResourcesSequenceV2 <-
-              appActor
-                .ask(
+            gravSearchResponse <-
+              messageRelay
+                .ask[ReadResourcesSequenceV2](
                   GravsearchRequestV2(
                     constructQuery = constructQuery,
                     targetSchema = ApiV2Complex,
@@ -1968,7 +1879,6 @@ class ResourcesResponderV2(
                     requestingUser = requestingUser
                   )
                 )
-                .mapTo[ReadResourcesSequenceV2]
           } yield gravSearchResponse.toResource(resourceIri)
 
         } else {
@@ -2004,31 +1914,25 @@ class ResourcesResponderV2(
                        )
 
       // get the XSL transformation for the TEI header
-      headerXSLT: Option[String] <- headerXSLTIri match {
-                                      case Some(headerIri) =>
-                                        val teiHeaderXsltRequest = GetXSLTransformationRequestV2(
-                                          xsltTextRepresentationIri = headerIri,
-                                          requestingUser = requestingUser
-                                        )
+      headerXSLT <- headerXSLTIri match {
+                      case Some(headerIri) =>
+                        val teiHeaderXsltRequest = GetXSLTransformationRequestV2(
+                          xsltTextRepresentationIri = headerIri,
+                          requestingUser = requestingUser
+                        )
 
-                                        val xslTransformationFuture = for {
-                                          xslTransformation: GetXSLTransformationResponseV2 <-
-                                            appActor
-                                              .ask(teiHeaderXsltRequest)
-                                              .mapTo[GetXSLTransformationResponseV2]
-                                        } yield Some(xslTransformation.xslt)
+                        val xslTransformationFuture = messageRelay
+                          .ask[GetXSLTransformationResponseV2](teiHeaderXsltRequest)
+                          .map(xslTransformation => Some(xslTransformation.xslt))
 
-                                        xslTransformationFuture.recover {
-                                          case notFound: NotFoundException =>
-                                            throw SipiException(
-                                              s"TEI header XSL transformation <$headerIri> not found: ${notFound.message}"
-                                            )
+                        xslTransformationFuture.mapError { case notFound: NotFoundException =>
+                          throw SipiException(
+                            s"TEI header XSL transformation <$headerIri> not found: ${notFound.message}"
+                          )
+                        }
 
-                                          case other => throw other
-                                        }
-
-                                      case None => Future(None)
-                                    }
+                      case None => ZIO.succeed(None)
+                    }
 
       // get the Iri of the mapping to convert standoff markup to TEI/XML
       mappingToBeApplied = mappingIri match {
@@ -2042,64 +1946,57 @@ class ResourcesResponderV2(
                            }
 
       // get mapping to convert standoff markup to TEI/XML
-      teiMapping: GetMappingResponseV2 <- appActor
-                                            .ask(
-                                              GetMappingRequestV2(
-                                                mappingIri = mappingToBeApplied,
-                                                requestingUser = requestingUser
-                                              )
-                                            )
-                                            .mapTo[GetMappingResponseV2]
+      teiMapping <- messageRelay
+                      .ask[GetMappingResponseV2](
+                        GetMappingRequestV2(
+                          mappingIri = mappingToBeApplied,
+                          requestingUser = requestingUser
+                        )
+                      )
 
       // get XSLT from mapping for the TEI body
-      bodyXslt: String <- teiMapping.mappingIri match {
-                            case OntologyConstants.KnoraBase.TEIMapping =>
-                              // standard standoff to TEI conversion
+      bodyXslt <- teiMapping.mappingIri match {
+                    case OntologyConstants.KnoraBase.TEIMapping =>
+                      // standard standoff to TEI conversion
 
-                              // use standard XSLT (built-in)
-                              val teiXSLTFile: String = FileUtil.readTextResource("standoffToTEI.xsl")
+                      // use standard XSLT (built-in)
+                      val teiXSLTFile: String = FileUtil.readTextResource("standoffToTEI.xsl")
 
-                              // return the file's content
-                              Future(teiXSLTFile)
+                      // return the file's content
+                      ZIO.attempt(teiXSLTFile)
 
-                            case otherMapping =>
-                              teiMapping.mapping.defaultXSLTransformation match {
-                                // custom standoff to TEI conversion
+                    case otherMapping =>
+                      teiMapping.mapping.defaultXSLTransformation match {
+                        // custom standoff to TEI conversion
 
-                                case Some(xslTransformationIri) =>
-                                  // get XSLT for the TEI body.
-                                  val teiBodyXsltRequest = GetXSLTransformationRequestV2(
-                                    xsltTextRepresentationIri = xslTransformationIri,
-                                    requestingUser = requestingUser
-                                  )
+                        case Some(xslTransformationIri) =>
+                          // get XSLT for the TEI body.
+                          val teiBodyXsltRequest = GetXSLTransformationRequestV2(
+                            xsltTextRepresentationIri = xslTransformationIri,
+                            requestingUser = requestingUser
+                          )
 
-                                  val xslTransformationFuture = for {
-                                    xslTransformation: GetXSLTransformationResponseV2 <-
-                                      appActor
-                                        .ask(teiBodyXsltRequest)
-                                        .mapTo[GetXSLTransformationResponseV2]
-                                  } yield xslTransformation.xslt
+                          val xslTransformationFuture = messageRelay
+                            .ask[GetXSLTransformationResponseV2](teiBodyXsltRequest)
+                            .map(_.xslt)
 
-                                  xslTransformationFuture.recover {
-                                    case notFound: NotFoundException =>
-                                      throw SipiException(
-                                        s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
-                                      )
-
-                                    case other => throw other
-                                  }
-                                case None =>
-                                  throw BadRequestException(
-                                    s"Default XSL Transformation expected for mapping $otherMapping"
-                                  )
-                              }
+                          xslTransformationFuture.mapError { case notFound: NotFoundException =>
+                            throw SipiException(
+                              s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
+                            )
                           }
+                        case None =>
+                          throw BadRequestException(
+                            s"Default XSL Transformation expected for mapping $otherMapping"
+                          )
+                      }
+                  }
 
       tei = ResourceTEIGetResponseV2(
               header = TEIHeader(
                 headerInfo = headerResource,
                 headerXSLT = headerXSLT,
-                appConfig = responderData.appConfig
+                appConfig = appConfig
               ),
               body = TEIBody(
                 bodyInfo = bodyTextValue,
@@ -2117,7 +2014,7 @@ class ResourcesResponderV2(
    * @param graphDataGetRequest a [[GraphDataGetRequestV2]] specifying the characteristics of the graph.
    * @return a [[GraphDataGetResponseV2]] representing the requested graph.
    */
-  private def getGraphDataResponseV2(graphDataGetRequest: GraphDataGetRequestV2): Future[GraphDataGetResponseV2] = {
+  private def getGraphDataResponseV2(graphDataGetRequest: GraphDataGetRequestV2): Task[GraphDataGetResponseV2] = {
     val excludePropertyInternal = graphDataGetRequest.excludeProperty.map(_.toOntologySchema(InternalSchema))
 
     /**
@@ -2186,33 +2083,31 @@ class ResourcesResponderV2(
       outbound: Boolean,
       depth: Int,
       traversedEdges: Set[QueryResultEdge] = Set.empty[QueryResultEdge]
-    ): Future[GraphQueryResults] = {
+    ): Task[GraphQueryResults] = {
       if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
 
       for {
         // Get the direct links from/to the start node.
-        sparql <- Future(
+        sparql <- ZIO.attempt(
                     org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                       .getGraphData(
                         startNodeIri = startNode.nodeIri,
                         startNodeOnly = false,
                         maybeExcludeLinkProperty = excludePropertyInternal,
                         outbound = outbound, // true to query outbound edges, false to query inbound edges
-                        limit = responderData.appConfig.v2.graphRoute.maxGraphBreadth
+                        limit = appConfig.v2.graphRoute.maxGraphBreadth
                       )
                       .toString()
                   )
 
-        // _ = println(sparql)
-
-        response: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
+        response                     <- triplestoreService.sparqlHttpSelect(sparql)
         rows: Seq[VariableResultsRow] = response.results.bindings
 
         // Did we get any results?
-        recursiveResults: GraphQueryResults <-
+        recursiveResults <-
           if (rows.isEmpty) {
             // No. Return nothing.
-            Future(GraphQueryResults())
+            ZIO.attempt(GraphQueryResults())
           } else {
             // Yes. Get the nodes from the query results.
             val otherNodes: Seq[QueryResultNode] = rows.map { row: VariableResultsRow =>
@@ -2298,13 +2193,13 @@ class ResourcesResponderV2(
             // Have we reached the maximum depth?
             if (depth == 1) {
               // Yes. Just return the results we have.
-              Future(results)
+              ZIO.attempt(results)
             } else {
               // No. Recursively get results for each of the nodes we found.
 
               val traversedEdgesForRecursion: Set[QueryResultEdge] = traversedEdges ++ edges
 
-              val lowerResultFutures: Seq[Future[GraphQueryResults]] = filteredOtherNodes.map { node =>
+              val lowerResultFutures: Seq[Task[GraphQueryResults]] = filteredOtherNodes.map { node =>
                 traverseGraph(
                   startNode = node,
                   outbound = outbound,
@@ -2313,7 +2208,7 @@ class ResourcesResponderV2(
                 )
               }
 
-              val lowerResultsFuture: Future[Seq[GraphQueryResults]] = Future.sequence(lowerResultFutures)
+              val lowerResultsFuture: Task[Seq[GraphQueryResults]] = ZIO.collectAll(lowerResultFutures)
 
               // Return those results plus the ones we found.
 
@@ -2332,21 +2227,19 @@ class ResourcesResponderV2(
 
     for {
       // Get the start node.
-      sparql <- Future(
+      sparql <- ZIO.attempt(
                   org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                     .getGraphData(
                       startNodeIri = graphDataGetRequest.resourceIri,
                       maybeExcludeLinkProperty = excludePropertyInternal,
                       startNodeOnly = true,
                       outbound = true,
-                      limit = responderData.appConfig.v2.graphRoute.maxGraphBreadth
+                      limit = appConfig.v2.graphRoute.maxGraphBreadth
                     )
                     .toString()
                 )
 
-      // _ = println(sparql)
-
-      response: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
+      response                     <- triplestoreService.sparqlHttpSelect(sparql)
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       _ = if (rows.isEmpty) {
@@ -2383,7 +2276,7 @@ class ResourcesResponderV2(
           }
 
       // Recursively get the graph containing outbound links.
-      outboundQueryResults: GraphQueryResults <-
+      outboundQueryResults <-
         if (graphDataGetRequest.outbound) {
           traverseGraph(
             startNode = startNode,
@@ -2391,11 +2284,11 @@ class ResourcesResponderV2(
             depth = graphDataGetRequest.depth
           )
         } else {
-          FastFuture.successful(GraphQueryResults())
+          ZIO.succeed(GraphQueryResults())
         }
 
       // Recursively get the graph containing inbound links.
-      inboundQueryResults: GraphQueryResults <-
+      inboundQueryResults <-
         if (graphDataGetRequest.inbound) {
           traverseGraph(
             startNode = startNode,
@@ -2403,7 +2296,7 @@ class ResourcesResponderV2(
             depth = graphDataGetRequest.depth
           )
         } else {
-          FastFuture.successful(GraphQueryResults())
+          ZIO.succeed(GraphQueryResults())
         }
 
       // Combine the outbound and inbound graphs into a single graph.
@@ -2441,18 +2334,18 @@ class ResourcesResponderV2(
    * @param resourceHistoryRequest the version history request.
    * @return the resource's version history.
    */
-  def getResourceHistoryV2(
+  private def getResourceHistoryV2(
     resourceHistoryRequest: ResourceVersionHistoryGetRequestV2
-  ): Future[ResourceVersionHistoryResponseV2] =
+  ): Task[ResourceVersionHistoryResponseV2] =
     for {
       // Get the resource preview, to make sure the user has permission to see the resource, and to get
       // its creation date.
-      resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                                                            resourceIris = Seq(resourceHistoryRequest.resourceIri),
-                                                            withDeleted = resourceHistoryRequest.withDeletedResource,
-                                                            targetSchema = ApiV2Complex,
-                                                            requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                          )
+      resourcePreviewResponse <- getResourcePreviewV2(
+                                   resourceIris = Seq(resourceHistoryRequest.resourceIri),
+                                   withDeleted = resourceHistoryRequest.withDeletedResource,
+                                   targetSchema = ApiV2Complex,
+                                   requestingUser = KnoraSystemInstances.Users.SystemUser
+                                 )
 
       resourcePreview: ReadResourceV2 = resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
 
@@ -2467,9 +2360,7 @@ class ResourcesResponderV2(
                                )
                                .toString()
 
-      valueHistoryResponse: SparqlSelectResult <- appActor
-                                                    .ask(SparqlSelectRequest(historyRequestSparql))
-                                                    .mapTo[SparqlSelectResult]
+      valueHistoryResponse <- triplestoreService.sparqlHttpSelect(historyRequestSparql)
 
       valueHistoryEntries: Seq[ResourceHistoryEntry] =
         valueHistoryResponse.results.bindings.map { row: VariableResultsRow =>
@@ -2509,7 +2400,7 @@ class ResourcesResponderV2(
       historyEntriesWithResourceCreation
     )
 
-  def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Future[ResourceIIIFManifestGetResponseV2] = {
+  private def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Task[ResourceIIIFManifestGetResponseV2] = {
     // The implementation here is experimental. If we had a way of streaming the canvas URLs to the IIIF viewer,
     // it would be better to write the Gravsearch query differently, so that ?representation was the main resource.
     // Then the Gravsearch query could return pages of results.
@@ -2519,19 +2410,19 @@ class ResourcesResponderV2(
 
     for {
       // Make a Gravsearch query from a template.
-      gravsearchQueryForIncomingLinks: String <- Future(
-                                                   org.knora.webapi.messages.twirl.queries.gravsearch.txt
-                                                     .getIncomingImageLinks(
-                                                       resourceIri = request.resourceIri
-                                                     )
-                                                     .toString()
-                                                 )
+      gravsearchQueryForIncomingLinks <- ZIO.attempt(
+                                           org.knora.webapi.messages.twirl.queries.gravsearch.txt
+                                             .getIncomingImageLinks(
+                                               resourceIri = request.resourceIri
+                                             )
+                                             .toString()
+                                         )
 
       // Run the query.
 
-      parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
-      searchResponse <- appActor
-                          .ask(
+      parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
+      searchResponse <- messageRelay
+                          .ask[ReadResourcesSequenceV2](
                             GravsearchRequestV2(
                               constructQuery = parsedGravsearchQuery,
                               targetSchema = ApiV2Complex,
@@ -2539,7 +2430,6 @@ class ResourcesResponderV2(
                               requestingUser = request.requestingUser
                             )
                           )
-                          .mapTo[ReadResourcesSequenceV2]
 
       resource: ReadResourceV2 = searchResponse.toResource(request.resourceIri)
 
@@ -2590,7 +2480,7 @@ class ResourcesResponderV2(
                 val fileUrl: String =
                   imageValueContent.makeFileUrl(
                     projectADM = representation.projectADM,
-                    responderData.appConfig.sipi.externalBaseUrl
+                    appConfig.sipi.externalBaseUrl
                   )
 
                 JsonLDObject(
@@ -2632,7 +2522,7 @@ class ResourcesResponderV2(
                                           Seq(
                                             JsonLDObject(
                                               Map(
-                                                "id"      -> JsonLDString(responderData.appConfig.sipi.externalBaseUrl),
+                                                "id"      -> JsonLDString(appConfig.sipi.externalBaseUrl),
                                                 "type"    -> JsonLDString("ImageService3"),
                                                 "profile" -> JsonLDString("level1")
                                               )
@@ -2666,11 +2556,11 @@ class ResourcesResponderV2(
    * @param resourceHistoryEventsGetRequest the request for events describing history of a resource.
    * @return the events extracted from full representation of a resource at each time point in its history ordered by version date.
    */
-  def getResourceHistoryEvents(
+  private def getResourceHistoryEvents(
     resourceHistoryEventsGetRequest: ResourceHistoryEventsGetRequestV2
-  ): Future[ResourceAndValueVersionHistoryResponseV2] =
+  ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
-      resourceHistory: ResourceVersionHistoryResponseV2 <-
+      resourceHistory <-
         getResourceHistoryV2(
           ResourceVersionHistoryGetRequestV2(
             resourceIri = resourceHistoryEventsGetRequest.resourceIri,
@@ -2678,13 +2568,11 @@ class ResourcesResponderV2(
             requestingUser = resourceHistoryEventsGetRequest.requestingUser
           )
         )
-      resourceFullHist: Seq[ResourceAndValueHistoryEvent] <- extractEventsFromHistory(
-                                                               resourceIri =
-                                                                 resourceHistoryEventsGetRequest.resourceIri,
-                                                               resourceHistory = resourceHistory.history,
-                                                               requestingUser =
-                                                                 resourceHistoryEventsGetRequest.requestingUser
-                                                             )
+      resourceFullHist <- extractEventsFromHistory(
+                            resourceIri = resourceHistoryEventsGetRequest.resourceIri,
+                            resourceHistory = resourceHistory.history,
+                            requestingUser = resourceHistoryEventsGetRequest.requestingUser
+                          )
       sortedResourceHistory = resourceFullHist.sortBy(_.versionDate)
     } yield ResourceAndValueVersionHistoryResponseV2(historyEvents = sortedResourceHistory)
 
@@ -2694,21 +2582,20 @@ class ResourcesResponderV2(
    * @param projectResourceHistoryEventsGetRequest the request for history events of a project.
    * @return the all history events of resources of a project ordered by version date.
    */
-  def getProjectResourceHistoryEvents(
+  private def getProjectResourceHistoryEvents(
     projectResourceHistoryEventsGetRequest: ProjectResourcesWithHistoryGetRequestV2
-  ): Future[ResourceAndValueVersionHistoryResponseV2] =
+  ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectInfoResponse: ProjectGetResponseADM <-
-        appActor
-          .ask(
+      projectInfoResponse <-
+        messageRelay
+          .ask[ProjectGetResponseADM](
             ProjectGetRequestADM(identifier =
               IriIdentifier
                 .fromString(projectResourceHistoryEventsGetRequest.projectIri)
                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
             )
           )
-          .mapTo[ProjectGetResponseADM]
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -2717,13 +2604,13 @@ class ResourcesResponderV2(
                    )
                    .toString
 
-      sparqlSelectResponse      <- appActor.ask(SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
+      sparqlSelectResponse      <- triplestoreService.sparqlHttpSelect(prequery)
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
       // For each resource IRI return history events
-      historyOfResourcesAsSeqOfFutures: Seq[Future[Seq[ResourceAndValueHistoryEvent]]] =
+      historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
         mainResourceIris.map { resourceIri =>
           for {
-            resourceHistory: ResourceVersionHistoryResponseV2 <-
+            resourceHistory <-
               getResourceHistoryV2(
                 ResourceVersionHistoryGetRequestV2(
                   resourceIri = resourceIri,
@@ -2731,7 +2618,7 @@ class ResourcesResponderV2(
                   requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
                 )
               )
-            resourceFullHist: Seq[ResourceAndValueHistoryEvent] <-
+            resourceFullHist <-
               extractEventsFromHistory(
                 resourceIri = resourceIri,
                 resourceHistory = resourceHistory.history,
@@ -2740,7 +2627,7 @@ class ResourcesResponderV2(
           } yield resourceFullHist
         }
 
-      projectHistory: Seq[Seq[ResourceAndValueHistoryEvent]] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
+      projectHistory                                         <- ZIO.collectAll(historyOfResourcesAsSeqOfFutures)
       sortedProjectHistory: Seq[ResourceAndValueHistoryEvent] = projectHistory.flatten.sortBy(_.versionDate)
 
     } yield ResourceAndValueVersionHistoryResponseV2(historyEvents = sortedProjectHistory)
@@ -2754,23 +2641,23 @@ class ResourcesResponderV2(
    * @param requestingUser             the user making the request.
    * @return the full history of resource as sequence of [[ResourceAndValueHistoryEvent]].
    */
-  def extractEventsFromHistory(
+  private def extractEventsFromHistory(
     resourceIri: IRI,
     resourceHistory: Seq[ResourceHistoryEntry],
     requestingUser: UserADM
-  ): Future[Seq[ResourceAndValueHistoryEvent]] =
+  ): Task[Seq[ResourceAndValueHistoryEvent]] =
     for {
-      resourceHist: Seq[ResourceHistoryEntry] <- Future.successful(resourceHistory.reverse)
+      resourceHist <- ZIO.succeed(resourceHistory.reverse)
       // Collect the full representations of the resource for each version date
-      histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
-                                                                         getResourceAtGivenTime(
-                                                                           resourceIri = resourceIri,
-                                                                           versionHist = hist,
-                                                                           requestingUser = requestingUser
-                                                                         )
-                                                                       }
+      histories: Seq[Task[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
+                                                                       getResourceAtGivenTime(
+                                                                         resourceIri = resourceIri,
+                                                                         versionHist = hist,
+                                                                         requestingUser = requestingUser
+                                                                       )
+                                                                     }
 
-      fullReps: Seq[(ResourceHistoryEntry, ReadResourceV2)] <- Future.sequence(histories)
+      fullReps <- ZIO.collectAll(histories)
 
       // Create an event for the resource at creation time
       (creationTimeHist, resourceAtCreation) = fullReps.head
@@ -2818,16 +2705,16 @@ class ResourcesResponderV2(
     resourceIri: IRI,
     versionHist: ResourceHistoryEntry,
     requestingUser: UserADM
-  ): Future[(ResourceHistoryEntry, ReadResourceV2)] =
+  ): Task[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
-      resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- getResourcesV2(
-                                                                  resourceIris = Seq(resourceIri),
-                                                                  versionDate = Some(versionHist.versionDate),
-                                                                  showDeletedValues = true,
-                                                                  targetSchema = ApiV2Complex,
-                                                                  schemaOptions = Set.empty[SchemaOption],
-                                                                  requestingUser = requestingUser
-                                                                )
+      resourceFullRepAtCreationTime <- getResourcesV2(
+                                         resourceIris = Seq(resourceIri),
+                                         versionDate = Some(versionHist.versionDate),
+                                         showDeletedValues = true,
+                                         targetSchema = ApiV2Complex,
+                                         schemaOptions = Set.empty[SchemaOption],
+                                         requestingUser = requestingUser
+                                       )
       resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head
     } yield versionHist -> resourceAtCreationTime
 
@@ -3149,5 +3036,34 @@ class ResourcesResponderV2(
         }
         updateMetadataEvent
     }
+  }
+}
+
+object ResourcesResponderV2Live {
+
+  val layer: URLayer[
+    StringFormatter
+      with PermissionUtilADM
+      with ResourceUtilV2
+      with StandoffTagUtilV2
+      with ConstructResponseUtilV2
+      with TriplestoreService
+      with MessageRelay
+      with IriService
+      with AppConfig,
+    ResourcesResponderV2
+  ] = ZLayer.fromZIO {
+    for {
+      config  <- ZIO.service[AppConfig]
+      iriS    <- ZIO.service[IriService]
+      mr      <- ZIO.service[MessageRelay]
+      ts      <- ZIO.service[TriplestoreService]
+      cu      <- ZIO.service[ConstructResponseUtilV2]
+      su      <- ZIO.service[StandoffTagUtilV2]
+      ru      <- ZIO.service[ResourceUtilV2]
+      pu      <- ZIO.service[PermissionUtilADM]
+      sf      <- ZIO.service[StringFormatter]
+      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, sf))
+    } yield handler
   }
 }

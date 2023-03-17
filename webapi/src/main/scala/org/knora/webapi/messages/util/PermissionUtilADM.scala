@@ -898,8 +898,6 @@ object PermissionUtilADM extends LazyLogging {
         }
       }
 
-    // println(s"getUserPermissionV1: $maybePermissionLevel, $userProfile")
-
     maybePermissionLevel.map(_.toInt)
   }
 }
@@ -912,7 +910,7 @@ trait PermissionUtilADM {
    * @param permissionLiteral the permission literal.
    * @return the validated permission literal, normalised and reformatted.
    */
-  def validatePermissions(permissionLiteral: _root_.java.lang.String): zio.Task[_root_.java.lang.String]
+  def validatePermissions(permissionLiteral: String): Task[String]
 }
 
 final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatter: StringFormatter)

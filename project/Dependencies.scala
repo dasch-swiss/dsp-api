@@ -27,7 +27,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.0.7"
   val ZioPreludeVersion           = "1.0.0-RC17"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.9"
+  val ZioVersion                  = "2.0.10"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio" %% "zio"                       % ZioVersion
@@ -51,7 +51,7 @@ object Dependencies {
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.1.3"          // Scala 3 incompatible
+  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.2.0"          // Scala 3 incompatible
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion  // Scala 3 incompatible
   val akkaSlf4j         = "com.typesafe.akka" %% "akka-slf4j"           % AkkaActorVersion // Scala 3 compatible
   val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % AkkaActorVersion // Scala 3 compatible
@@ -164,25 +164,6 @@ object Dependencies {
     zioPrelude
   )
 
-  val valueObjectsLibraryDependencies = Seq(
-    commonsLang3,
-    commonsValidator,
-    gwtServlet,
-    zioPrelude,
-    zioTest    % Test,
-    zioTestSbt % Test
-  )
-
-  val dspApiMainLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioHttpOld,
-    zioJson,
-    zioMetricsConnectors,
-    zioLogging,
-    zioLoggingSlf4jBridge
-  )
-
   // schema project dependencies
   val schemaApiLibraryDependencies = Seq(
     zioHttpOld
@@ -197,87 +178,6 @@ object Dependencies {
   val schemaRepoLibraryDependencies                  = Seq()
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
-
-  // user projects dependencies
-  val userInterfaceLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge,
-    zioJson,
-    zioHttpOld
-  )
-  val userHandlerLibraryDependencies = Seq(
-    bouncyCastle,
-    springSecurityCore,
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge,
-    zioJson
-  )
-  val userCoreLibraryDependencies = Seq(
-    bouncyCastle,
-    springSecurityCore,
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge,
-    zioJson
-  )
-  val userRepoLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge,
-    zioJson
-  )
-
-  // role projects dependencies
-  val roleInterfaceLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge
-  )
-  val roleHandlerLibraryDependencies = Seq(
-    bouncyCastle,
-    springSecurityCore,
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge
-  )
-  val roleCoreLibraryDependencies = Seq(
-    bouncyCastle,
-    springSecurityCore,
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge
-  )
-  val roleRepoLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge
-  )
 
   // shared project dependencies
   val sharedLibraryDependencies = Seq(
@@ -296,31 +196,5 @@ object Dependencies {
     zioLogging,
     zioLoggingSlf4jBridge,
     zioJson
-  )
-
-  // project project dependencies
-  val projectInterfaceLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test
-  )
-  val projectHandlerLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test
-  )
-  val projectCoreLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test
-  )
-  val projectRepoLibraryDependencies = Seq(
-    zio,
-    zioMacros,
-    zioTest    % Test,
-    zioTestSbt % Test
   )
 }

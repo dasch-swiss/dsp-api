@@ -13,6 +13,7 @@ import java.util.UUID
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.NotFoundException
 import dsp.errors.NotImplementedException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -48,10 +49,15 @@ import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetRemainingStandoffFromTextValueRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
 trait ConstructResponseUtilV2 {
@@ -105,6 +111,19 @@ trait ConstructResponseUtilV2 {
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2]
+
+  /**
+   * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
+   *
+   * @param queryResultsSeparated query results referring to mappings.
+   *
+   * @param requestingUser        the user making the request.
+   * @return the referred mappings.
+   */
+  def getMappingsFromQueryResultsSeparated(
+    queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
+    requestingUser: UserADM
+  ): zio.Task[Map[IRI, MappingAndXSLTransformation]]
 }
 object ConstructResponseUtilV2 {
 
@@ -1667,6 +1686,67 @@ final case class ConstructResponseUtilV2Live(
       hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris,
       mayHaveMoreResults = mayHaveMoreResults
     )
+  }
+
+  /**
+   * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
+   *
+   * @param queryResultsSeparated query results referring to mappings.
+   *
+   * @param requestingUser        the user making the request.
+   * @return the referred mappings.
+   */
+  override def getMappingsFromQueryResultsSeparated(
+    queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
+    requestingUser: UserADM
+  ): Task[Map[IRI, MappingAndXSLTransformation]] = {
+
+    // collect the Iris of the mappings referred to in the resources' text values
+    val mappingIris = queryResultsSeparated.flatMap { case (_, assertions: ResourceWithValueRdfData) =>
+      getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
+    }.toSet
+
+    // get all the mappings
+    val mappingResponsesFuture = mappingIris.map { mappingIri: IRI =>
+      messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser))
+    }
+
+    for {
+      mappingResponses <- ZIO.collectAll(mappingResponsesFuture)
+
+      // get the default XSL transformations
+      mappingsWithFuture =
+        mappingResponses.map { mapping: GetMappingResponseV2 =>
+          for {
+            // if given, get the default XSL transformation
+            xsltOption <-
+              if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
+                val xslTransformationFuture = for {
+                  xslTransformation <- messageRelay.ask[GetXSLTransformationResponseV2](
+                                         GetXSLTransformationRequestV2(
+                                           mapping.mapping.defaultXSLTransformation.get,
+                                           requestingUser = requestingUser
+                                         )
+                                       )
+                } yield Some(xslTransformation.xslt)
+
+                xslTransformationFuture.mapError { case notFound: NotFoundException =>
+                  throw SipiException(
+                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>: ${notFound.message}"
+                  )
+                }
+              } else {
+                ZIO.succeed(None)
+              }
+          } yield mapping.mappingIri -> MappingAndXSLTransformation(
+            mapping = mapping.mapping,
+            standoffEntities = mapping.standoffEntities,
+            XSLTransformation = xsltOption
+          )
+
+        }
+      mappings <- ZIO.collectAll(mappingsWithFuture)
+    } yield mappings.toMap
   }
 }
 
