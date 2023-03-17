@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.Files
@@ -15,10 +14,10 @@ import java.util.UUID
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -176,12 +175,12 @@ trait ProjectsResponderADM {
 }
 
 final case class ProjectsResponderADMLive(
-  triplestoreService: TriplestoreService,
-  messageRelay: MessageRelay,
-  iriService: IriService,
-  projectRepo: ProjectRepo,
-  cacheServiceSettings: CacheServiceSettings,
-  implicit val stringFormatter: StringFormatter
+  private val triplestoreService: TriplestoreService,
+  private val messageRelay: MessageRelay,
+  private val iriService: IriService,
+  private val projectRepo: ProjectRepo,
+  private val cacheServiceSettings: CacheServiceSettings,
+  implicit private val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
     with MessageHandler
     with LazyLogging
@@ -237,7 +236,7 @@ final case class ProjectsResponderADMLive(
    *
    * @return all the projects as a [[ProjectADM]].
    *
-   *         NotFoundException if no projects are found.
+   *         [[NotFoundException]] if no projects are found.
    */
   override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
     projectRepo
@@ -251,30 +250,12 @@ final case class ProjectsResponderADMLive(
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
    *
    * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @param skipCache            if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
+   * @param skipCache    if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
    * @return information about the project as an optional [[ProjectADM]].
    */
-  override def getSingleProjectADM(
-    id: ProjectIdentifierADM,
-    skipCache: Boolean = false
-  ): Task[Option[ProjectADM]] = {
-
-    logger.debug(
-      s"getSingleProjectADM - id: {}, skipCache: {}",
-      getId(id),
-      skipCache
-    )
-
-    for {
-      maybeProjectADM <-
-        if (skipCache) {
-          projectRepo.findByProjectIdentifier(id)
-        } else {
-          // getting from cache or triplestore
-          getProjectFromCacheOrTriplestore(identifier = id)
-        }
-    } yield maybeProjectADM
-  }
+  override def getSingleProjectADM(id: ProjectIdentifierADM, skipCache: Boolean = false): Task[Option[ProjectADM]] =
+    if (skipCache) { projectRepo.findByProjectIdentifier(id) }
+    else { getProjectFromCacheOrTriplestore(identifier = id) }
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -286,7 +267,7 @@ final case class ProjectsResponderADMLive(
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
   override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
-    getSingleProjectADM(id)
+    getProjectFromCacheOrTriplestore(id)
       .flatMap(ZIO.fromOption(_))
       .mapBoth(_ => NotFoundException(s"Project '${getId(id)}' not found"), ProjectGetResponseADM)
 
@@ -304,7 +285,7 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- getSingleProjectADM(id)
+      project <- getProjectFromCacheOrTriplestore(id)
                    .flatMap(ZIO.fromOption(_))
                    .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
@@ -364,7 +345,7 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectAdminMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- getSingleProjectADM(id)
+      project <- getProjectFromCacheOrTriplestore(id)
                    .flatMap(ZIO.fromOption(_))
                    .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
@@ -431,7 +412,7 @@ final case class ProjectsResponderADMLive(
               .fromString(projectIri.value)
               .toZIO
               .mapError(e => BadRequestException(e.getMessage))
-      keywords <- getSingleProjectADM(id)
+      keywords <- getProjectFromCacheOrTriplestore(id)
                     .flatMap(ZIO.fromOption(_))
                     .mapBoth(_ => NotFoundException(s"Project '${projectIri.value}' not found."), _.keywords)
     } yield ProjectKeywordsGetResponseADM(keywords)
@@ -532,7 +513,7 @@ final case class ProjectsResponderADMLive(
 
     for {
       // Get the project info.
-      project <- getSingleProjectADM(id)
+      project <- getProjectFromCacheOrTriplestore(id)
                    .flatMap(ZIO.fromOption(_))
                    .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
 
