@@ -18,7 +18,7 @@ import dsp.errors._
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List.ListName
 import dsp.valueobjects.ListErrorMessages
-import org.knora.webapi._
+import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -139,7 +139,7 @@ final case class ListsResponderADMLive(
       // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
       statements = listsResponse.statements.toList
 
-      lists: Seq[ListNodeInfoADM] =
+      listTasks: Seq[Task[ListNodeInfoADM]] =
         statements.map { case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
           val name: Option[String] = propsMap
             .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
@@ -157,24 +157,31 @@ final case class ListsResponderADMLive(
             )
             .map(_.asInstanceOf[StringLiteralV2])
 
-          ListRootNodeInfoADM(
-            id = listIri.toString,
-            projectIri = propsMap
-              .getOrElse(
-                OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
-                throw InconsistentRepositoryDataException(
-                  "The required property 'attachedToProject' not found."
-                )
+          val projectIriMaybe: Option[IRI] = propsMap
+            .get(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri)
+            .map(
+              _.head
+                .asInstanceOf[IriLiteralV2]
+                .value
+            )
+          val listRootMaybe = projectIriMaybe.map(projectIri =>
+            ListRootNodeInfoADM(
+              id = listIri.toString,
+              projectIri = projectIri,
+              name = name,
+              labels = StringLiteralSequenceV2(labels.toVector),
+              comments = StringLiteralSequenceV2(comments.toVector)
+            ).unescape
+          )
+          ZIO
+            .fromOption(listRootMaybe)
+            .orElseFail(
+              InconsistentRepositoryDataException(
+                "The required property 'attachedToProject' not found."
               )
-              .head
-              .asInstanceOf[IriLiteralV2]
-              .value,
-            name = name,
-            labels = StringLiteralSequenceV2(labels.toVector),
-            comments = StringLiteralSequenceV2(comments.toVector)
-          ).unescape
+            )
         }
-
+      lists <- ZioHelper.sequence(listTasks)
     } yield ListsGetResponseADM(lists = lists)
 
   /**
