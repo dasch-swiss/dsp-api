@@ -798,9 +798,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
       valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
-      integerValueUUID = responseJsonDoc.body.requireStringWithValidation(
-        OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-        stringFormatter.validateBase64EncodedUuid
+      assert(
+        stringFormatter
+          .validateBase64EncodedUuid(
+            responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+          )
+          .isDefined
       )
 
       val savedValue: JsonLDObject = getValue(
@@ -3352,9 +3355,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
       valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
-      linkValueUUID = responseJsonDoc.body.requireStringWithValidation(
-        OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-        stringFormatter.validateBase64EncodedUuid
+      assert(
+        stringFormatter
+          .validateBase64EncodedUuid(
+            responseJsonDoc.body.requireString(
+              OntologyConstants.KnoraApiV2Complex.ValueHasUUID
+            )
+          )
+          .isDefined
       )
 
       val savedValue: JsonLDObject = getValue(
@@ -3480,12 +3488,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
       valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
-      val newIntegerValueUUID: UUID =
-        responseJsonDoc.body.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-          stringFormatter.validateBase64EncodedUuid
+      val newIntegerValueUUID: Option[UUID] = stringFormatter.validateBase64EncodedUuid(
+        responseJsonDoc.body.requireString(
+          OntologyConstants.KnoraApiV2Complex.ValueHasUUID
         )
-      assert(newIntegerValueUUID == integerValueUUID) // The new version should have the same UUID.
+      )
+      assert(newIntegerValueUUID == Some(integerValueUUID)) // The new version should have the same UUID.
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -5048,11 +5056,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
 
       // When you change a link value's target, it gets a new UUID.
-      val newLinkValueUUID: UUID =
-        responseJsonDoc.body.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-          stringFormatter.validateBase64EncodedUuid
+      val newLinkValueUUID: UUID = stringFormatter
+        .validateBase64EncodedUuid(
+          responseJsonDoc.body.requireString(
+            OntologyConstants.KnoraApiV2Complex.ValueHasUUID
+          )
         )
+        .get
       assert(newLinkValueUUID != linkValueUUID)
       linkValueUUID = newLinkValueUUID
 
@@ -5119,12 +5129,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
 
       // Since we only changed metadata, the UUID should be the same.
-      val newLinkValueUUID: UUID =
-        responseJsonDoc.body.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-          stringFormatter.validateBase64EncodedUuid
-        )
-      assert(newLinkValueUUID == linkValueUUID)
+      val newLinkValueUUID: Option[UUID] = stringFormatter.validateBase64EncodedUuid(
+        responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      )
+      assert(newLinkValueUUID == Some(linkValueUUID))
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -5170,12 +5178,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
 
       // Since we only changed metadata, the UUID should be the same.
-      val newLinkValueUUID: UUID =
-        responseJsonDoc.body.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-          stringFormatter.validateBase64EncodedUuid
+      val newLinkValueUUID: Option[UUID] = stringFormatter.validateBase64EncodedUuid(
+        responseJsonDoc.body.requireString(
+          OntologyConstants.KnoraApiV2Complex.ValueHasUUID
         )
-      assert(newLinkValueUUID == linkValueUUID)
+      )
+      assert(newLinkValueUUID == Some(linkValueUUID))
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
