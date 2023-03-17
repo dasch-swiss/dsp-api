@@ -103,24 +103,20 @@ final case class ValuesResponderV2Live(
       for {
         // Convert the submitted value to the internal schema.
         submittedInternalPropertyIri <-
-          ZIO.attempt(
-            createValueRequest.createValue.propertyIri.toOntologySchema(InternalSchema)
-          )
+          ZIO.attempt(createValueRequest.createValue.propertyIri.toOntologySchema(InternalSchema))
+
         submittedInternalValueContent: ValueContentV2 = createValueRequest.createValue.valueContent
                                                           .toOntologySchema(InternalSchema)
 
         // Get ontology information about the submitted property.
-
         propertyInfoRequestForSubmittedProperty = PropertiesGetRequestV2(
                                                     propertyIris = Set(submittedInternalPropertyIri),
                                                     allLanguages = false,
                                                     requestingUser = createValueRequest.requestingUser
                                                   )
 
-        propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          appActor
-            .ask(propertyInfoRequestForSubmittedProperty)
-            .mapTo[ReadOntologyV2]
+        propertyInfoResponseForSubmittedProperty <-
+          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
 
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
                                                                  submittedInternalPropertyIri
@@ -146,7 +142,6 @@ final case class ValuesResponderV2Live(
         // Make an adjusted version of the submitted property: if it's a link value property, substitute the
         // corresponding link property, whose objects we will need to query. Get ontology information about the
         // adjusted property.
-
         adjustedInternalPropertyInfo <-
           getAdjustedInternalPropertyInfo(
             submittedPropertyIri = createValueRequest.createValue.propertyIri,
@@ -194,24 +189,25 @@ final case class ValuesResponderV2Live(
 
         // Get the definition of the resource class.
 
-        classInfoRequest = ClassesGetRequestV2(
-                             classIris = Set(resourceInfo.resourceClassIri),
-                             allLanguages = false,
-                             requestingUser = createValueRequest.requestingUser
-                           )
+        classInfoRequest =
+          ClassesGetRequestV2(
+            classIris = Set(resourceInfo.resourceClassIri),
+            allLanguages = false,
+            requestingUser = createValueRequest.requestingUser
+          )
 
-        classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
+        classInfoResponse <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
 
         // Check that the resource class has a cardinality for the submitted property.
-
         classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-        cardinalityInfo: KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(
-                                                  submittedInternalPropertyIri,
-                                                  throw BadRequestException(
-                                                    s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                                                        .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
-                                                  )
-                                                )
+        cardinalityInfo: KnoraCardinalityInfo =
+          classInfo.allCardinalities.getOrElse(
+            submittedInternalPropertyIri,
+            throw BadRequestException(
+              s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
+            )
+          )
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -359,7 +355,6 @@ final case class ValuesResponderV2Live(
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
         // Create the new value.
-
         unverifiedValue <- createValueV2AfterChecks(
                              dataNamedGraph = dataNamedGraph,
                              projectIri = resourceInfo.projectADM.id,
@@ -375,7 +370,6 @@ final case class ValuesResponderV2Live(
                            )
 
         // Check that the value was written correctly to the triplestore.
-
         verifiedValue <-
           verifyValue(
             resourceIri = createValueRequest.createValue.resourceIri,
@@ -408,7 +402,7 @@ final case class ValuesResponderV2Live(
       taskResult <- IriLocker.runWithIriLock(
                       createValueRequest.apiRequestID,
                       createValueRequest.createValue.resourceIri,
-                      () => makeTaskFuture
+                      makeTaskFuture
                     )
     } yield taskResult
 
@@ -554,21 +548,22 @@ final case class ValuesResponderV2Live(
                              }
 
       // Generate a SPARQL update string.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                       .createValue(
-                         dataNamedGraph = dataNamedGraph,
-                         resourceIri = resourceInfo.resourceIri,
-                         propertyIri = propertyIri,
-                         newValueIri = newValueIri,
-                         newValueUUID = newValueUUID,
-                         value = value,
-                         linkUpdates = standoffLinkUpdates,
-                         valueCreator = valueCreator,
-                         valuePermissions = valuePermissions,
-                         creationDate = creationDate,
-                         stringFormatter = stringFormatter
-                       )
-                       .toString()
+      sparqlUpdate =
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .createValue(
+            dataNamedGraph = dataNamedGraph,
+            resourceIri = resourceInfo.resourceIri,
+            propertyIri = propertyIri,
+            newValueIri = newValueIri,
+            newValueUUID = newValueUUID,
+            value = value,
+            linkUpdates = standoffLinkUpdates,
+            valueCreator = valueCreator,
+            valuePermissions = valuePermissions,
+            creationDate = creationDate,
+            stringFormatter = stringFormatter
+          )
+          .toString()
 
       /*
             _ = println("================ Create value ================")
@@ -577,7 +572,7 @@ final case class ValuesResponderV2Live(
        */
 
       // Do the update.
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = newValueUUID,
@@ -616,33 +611,36 @@ final case class ValuesResponderV2Live(
     val newValueUUID: UUID = makeNewValueUUID(maybeValueIri, maybeValueUUID)
 
     for {
-      sparqlTemplateLinkUpdate <- incrementLinkValue(
-                                    sourceResourceInfo = resourceInfo,
-                                    linkPropertyIri = linkPropertyIri,
-                                    targetResourceIri = linkValueContent.referredResourceIri,
-                                    customNewLinkValueIri = maybeValueIri,
-                                    valueCreator = valueCreator,
-                                    valuePermissions = valuePermissions,
-                                    requestingUser = requestingUser
-                                  )
+      sparqlTemplateLinkUpdate <-
+        incrementLinkValue(
+          sourceResourceInfo = resourceInfo,
+          linkPropertyIri = linkPropertyIri,
+          targetResourceIri = linkValueContent.referredResourceIri,
+          customNewLinkValueIri = maybeValueIri,
+          valueCreator = valueCreator,
+          valuePermissions = valuePermissions,
+          requestingUser = requestingUser
+        )
 
-      creationDate: Instant = maybeCreationDate match {
-                                case Some(customValueCreationDate) => customValueCreationDate
-                                case None                          => Instant.now
-                              }
+      creationDate: Instant =
+        maybeCreationDate match {
+          case Some(customValueCreationDate) => customValueCreationDate
+          case None                          => Instant.now
+        }
 
       // Generate a SPARQL update string.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                       .createLink(
-                         dataNamedGraph = dataNamedGraph,
-                         resourceIri = resourceInfo.resourceIri,
-                         linkUpdate = sparqlTemplateLinkUpdate,
-                         newValueUUID = newValueUUID,
-                         creationDate = creationDate,
-                         maybeComment = linkValueContent.comment,
-                         stringFormatter = stringFormatter
-                       )
-                       .toString()
+      sparqlUpdate =
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .createLink(
+            dataNamedGraph = dataNamedGraph,
+            resourceIri = resourceInfo.resourceIri,
+            linkUpdate = sparqlTemplateLinkUpdate,
+            newValueUUID = newValueUUID,
+            creationDate = creationDate,
+            maybeComment = linkValueContent.comment,
+            stringFormatter = stringFormatter
+          )
+          .toString()
 
       /*
             _ = println("================ Create link ===============")
@@ -651,7 +649,7 @@ final case class ValuesResponderV2Live(
        */
 
       // Do the update.
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
     } yield UnverifiedValueV2(
       newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
       newValueUUID = newValueUUID,
@@ -965,10 +963,8 @@ final case class ValuesResponderV2Live(
             requestingUser = updateValueRequest.requestingUser
           )
 
-        propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          appActor
-            .ask(propertyInfoRequestForSubmittedProperty)
-            .mapTo[ReadOntologyV2]
+        propertyInfoResponseForSubmittedProperty <-
+          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
 
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
           propertyInfoResponseForSubmittedProperty.properties(
@@ -1133,10 +1129,9 @@ final case class ValuesResponderV2Live(
             )
             .toString()
 
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
         // Check that the value was written correctly to the triplestore.
-
         unverifiedValue =
           UnverifiedValueV2(
             newValueIri = newValueIri,
@@ -1548,7 +1543,7 @@ final case class ValuesResponderV2Live(
        */
 
       // Do the update.
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
 
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
@@ -1642,7 +1637,7 @@ final case class ValuesResponderV2Live(
                 _ = println("==============================================")
          */
 
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
         newValueUUID = newLinkValueUUID,
@@ -1679,8 +1674,7 @@ final case class ValuesResponderV2Live(
             )
             .toString()
 
-        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-
+        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
         newValueUUID = currentLinkValue.valueHasUUID,
@@ -1710,10 +1704,9 @@ final case class ValuesResponderV2Live(
             requestingUser = deleteValueRequest.requestingUser
           )
 
-        propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          appActor
-            .ask(propertyInfoRequestForSubmittedProperty)
-            .mapTo[ReadOntologyV2]
+        propertyInfoResponseForSubmittedProperty <-
+          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
+
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
           propertyInfoResponseForSubmittedProperty.properties(
             submittedInternalPropertyIri
@@ -1813,7 +1806,7 @@ final case class ValuesResponderV2Live(
             requestingUser = deleteValueRequest.requestingUser
           )
 
-        classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
+        classInfoResponse: ReadOntologyV2 <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
         classInfo: ReadClassInfoV2         = classInfoResponse.classes(resourceInfo.resourceClassIri)
 
         cardinalityInfo: KnoraCardinalityInfo =
@@ -1869,7 +1862,7 @@ final case class ValuesResponderV2Live(
             )
             .toString()
 
-        sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+        sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
         rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
@@ -1902,7 +1895,7 @@ final case class ValuesResponderV2Live(
         IriLocker.runWithIriLock(
           deleteValueRequest.apiRequestID,
           deleteValueRequest.resourceIri,
-          () => makeTaskFuture
+          makeTaskFuture
         )
     } yield taskResult
   }
@@ -1988,27 +1981,29 @@ final case class ValuesResponderV2Live(
 
     for {
       // Delete the existing link and decrement its LinkValue's reference count.
-      sparqlTemplateLinkUpdate <- decrementLinkValue(
-                                    sourceResourceInfo = resourceInfo,
-                                    linkPropertyIri = propertyIri,
-                                    targetResourceIri = currentLinkValueContent.referredResourceIri,
-                                    valueCreator = currentValue.attachedToUser,
-                                    valuePermissions = currentValue.permissions,
-                                    requestingUser = requestingUser
-                                  )
+      sparqlTemplateLinkUpdate <-
+        decrementLinkValue(
+          sourceResourceInfo = resourceInfo,
+          linkPropertyIri = propertyIri,
+          targetResourceIri = currentLinkValueContent.referredResourceIri,
+          valueCreator = currentValue.attachedToUser,
+          valuePermissions = currentValue.permissions,
+          requestingUser = requestingUser
+        )
 
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                       .deleteLink(
-                         dataNamedGraph = dataNamedGraph,
-                         linkSourceIri = resourceInfo.resourceIri,
-                         linkUpdate = sparqlTemplateLinkUpdate,
-                         maybeComment = deleteComment,
-                         currentTime = currentTime,
-                         requestingUser = requestingUser.id
-                       )
-                       .toString()
+      sparqlUpdate =
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .deleteLink(
+            dataNamedGraph = dataNamedGraph,
+            linkSourceIri = resourceInfo.resourceIri,
+            linkUpdate = sparqlTemplateLinkUpdate,
+            maybeComment = deleteComment,
+            currentTime = currentTime,
+            requestingUser = requestingUser.id
+          )
+          .toString()
 
-      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
     } yield sparqlTemplateLinkUpdate.newLinkValueIri
   }
 
@@ -2062,19 +2057,20 @@ final case class ValuesResponderV2Live(
     for {
       linkUpdates: Seq[SparqlTemplateLinkUpdate] <- linkUpdateFuture
 
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                       .deleteValue(
-                         dataNamedGraph = dataNamedGraph,
-                         resourceIri = resourceInfo.resourceIri,
-                         propertyIri = propertyIri,
-                         valueIri = currentValue.valueIri,
-                         maybeDeleteComment = deleteComment,
-                         linkUpdates = linkUpdates,
-                         currentTime = currentTime,
-                         requestingUser = requestingUser.id,
-                         stringFormatter = stringFormatter
-                       )
-                       .toString()
+      sparqlUpdate =
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .deleteValue(
+            dataNamedGraph = dataNamedGraph,
+            resourceIri = resourceInfo.resourceIri,
+            propertyIri = propertyIri,
+            valueIri = currentValue.valueIri,
+            maybeDeleteComment = deleteComment,
+            linkUpdates = linkUpdates,
+            currentTime = currentTime,
+            requestingUser = requestingUser.id,
+            stringFormatter = stringFormatter
+          )
+          .toString()
 
       _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield currentValue.valueIri
@@ -2121,9 +2117,8 @@ final case class ValuesResponderV2Live(
                                                requestingUser = requestingUser
                                              )
 
-        linkPropertyInfoResponse: ReadOntologyV2 <- appActor
-                                                      .ask(propertyInfoRequestForLinkProperty)
-                                                      .mapTo[ReadOntologyV2]
+        linkPropertyInfoResponse <- messageRelay.ask[ReadOntologyV2](propertyInfoRequestForLinkProperty)
+
       } yield linkPropertyInfoResponse.properties(internalLinkPropertyIri)
     } else if (propertyInfoForSubmittedProperty.isLinkProp) {
       throw BadRequestException(
@@ -2150,17 +2145,18 @@ final case class ValuesResponderV2Live(
       ZIO.succeed(())
     } else {
       for {
-        resourcePreviewRequest <- ZIO.succeed(
-                                    ResourcesPreviewGetRequestV2(
-                                      resourceIris = targetResourceIris.toSeq,
-                                      targetSchema = ApiV2Complex,
-                                      requestingUser = requestingUser
-                                    )
-                                  )
+        resourcePreviewRequest <-
+          ZIO.succeed(
+            ResourcesPreviewGetRequestV2(
+              resourceIris = targetResourceIris.toSeq,
+              targetSchema = ApiV2Complex,
+              requestingUser = requestingUser
+            )
+          )
 
         // If any of the resources are not found, or the user doesn't have permission to see them, this will throw an exception.
 
-        _ <- appActor.ask(resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
+        _ <- messageRelay.ask[ReadResourcesSequenceV2](resourcePreviewRequest)
       } yield ()
     }
 
@@ -2203,32 +2199,34 @@ final case class ValuesResponderV2Live(
         }
 
       // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
-      propertyIrisForGravsearchQuery: Seq[SmartIri] = (Seq(
-                                                        propertyInfo.entityInfoContent.propertyIri
-                                                      ) ++ maybeStandoffLinkToPropertyIri)
-                                                        .map(_.toOntologySchema(ApiV2Complex))
+      propertyIrisForGravsearchQuery: Seq[SmartIri] =
+        (Seq(
+          propertyInfo.entityInfoContent.propertyIri
+        ) ++ maybeStandoffLinkToPropertyIri)
+          .map(_.toOntologySchema(ApiV2Complex))
 
       // Make a Gravsearch query from a template.
-      gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
-                                  .getResourceWithSpecifiedProperties(
-                                    resourceIri = resourceIri,
-                                    propertyIris = propertyIrisForGravsearchQuery
-                                  )
-                                  .toString()
+      gravsearchQuery: String =
+        org.knora.webapi.messages.twirl.queries.gravsearch.txt
+          .getResourceWithSpecifiedProperties(
+            resourceIri = resourceIri,
+            propertyIris = propertyIrisForGravsearchQuery
+          )
+          .toString()
 
       // Run the query.
 
       parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <- appActor
-                          .ask(
-                            GravsearchRequestV2(
-                              constructQuery = parsedGravsearchQuery,
-                              targetSchema = ApiV2Complex,
-                              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                              requestingUser = requestingUser
-                            )
-                          )
-                          .mapTo[ReadResourcesSequenceV2]
+      searchResponse <-
+        messageRelay
+          .ask[ReadResourcesSequenceV2](
+            GravsearchRequestV2(
+              constructQuery = parsedGravsearchQuery,
+              targetSchema = ApiV2Complex,
+              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+              requestingUser = requestingUser
+            )
+          )
     } yield searchResponse.toResource(resourceIri)
 
   /**
@@ -2260,7 +2258,7 @@ final case class ValuesResponderV2Live(
           )
         }
 
-      resourcesResponse <- appActor.ask(resourcesRequest).mapTo[ReadResourcesSequenceV2]
+      resourcesResponse <- messageRelay.ask[ReadResourcesSequenceV2](resourcesRequest)
       resource           = resourcesResponse.toResource(resourceIri)
 
       propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
@@ -2323,7 +2321,7 @@ final case class ValuesResponderV2Live(
                                   )
                                 )
 
-      resourcePreviewResponse <- appActor.ask(resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
+      resourcePreviewResponse <- messageRelay.ask[ReadResourcesSequenceV2](resourcePreviewRequest)
 
       // If we get a resource, we know the user has permission to view it.
       resource: ReadResourceV2 = resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
@@ -2336,7 +2334,7 @@ final case class ValuesResponderV2Live(
                           requestingUser = requestingUser
                         )
 
-      subClassResponse <- appActor.ask(subClassRequest).mapTo[CheckSubClassResponseV2]
+      subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
 
       // If it isn't, throw an exception.
       _ = if (!subClassResponse.isSubClass) {
@@ -2375,7 +2373,7 @@ final case class ValuesResponderV2Live(
                              )
                            )
 
-        subClassResponse <- appActor.ask(subClassRequest).mapTo[CheckSubClassResponseV2]
+        subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
 
         // If it isn't, throw an exception.
         _ = if (!subClassResponse.isSubClass) {
@@ -2604,7 +2602,7 @@ final case class ValuesResponderV2Live(
 
         for {
           // Generate an IRI for the new LinkValue.
-          newLinkValueIri: IRI <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
+          newLinkValueIri <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
         } yield SparqlTemplateLinkUpdate(
           linkPropertyIri = linkPropertyIri,
           directLinkExists = true,
