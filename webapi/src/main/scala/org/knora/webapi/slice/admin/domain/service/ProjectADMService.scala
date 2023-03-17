@@ -1,8 +1,8 @@
 package org.knora.webapi.slice.admin.domain.service
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import zio._
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.DspProject
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo

@@ -2,9 +2,9 @@ package org.knora.webapi.slice.admin.repo.service
 
 import play.twirl.api.TxtFormat
 import zio._
+
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.V2
-
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectDescription
