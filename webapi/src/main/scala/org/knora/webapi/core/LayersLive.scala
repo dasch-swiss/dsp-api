@@ -66,6 +66,8 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2Live
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2Live
+import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.responders.v2.ValuesResponderV2Live
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
@@ -98,8 +100,6 @@ import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.responders.v2.ValuesResponderV2
-import org.knora.webapi.responders.v2.ValuesResponderV2Live
 
 object LayersLive {
 
