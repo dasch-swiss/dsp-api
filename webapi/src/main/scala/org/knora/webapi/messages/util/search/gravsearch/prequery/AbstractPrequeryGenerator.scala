@@ -34,7 +34,8 @@ abstract class AbstractPrequeryGenerator(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema
-) extends WhereTransformer {
+) extends WhereTransformer
+    with ConstructToSelectTransformer {
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed

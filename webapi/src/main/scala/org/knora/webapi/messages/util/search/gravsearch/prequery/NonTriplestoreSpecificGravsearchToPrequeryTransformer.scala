@@ -38,8 +38,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
       querySchema = querySchema
-    )
-    with ConstructToSelectTransformer {
+    ) {
 
   import AbstractPrequeryGenerator._
 
