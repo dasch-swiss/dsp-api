@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scala.concurrent.ExecutionContext
+import zio.Task
+import zio.ZIO
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
@@ -17,7 +18,6 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo
 import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -54,7 +54,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern] =
+  ): Task[Seq[QueryPattern]] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
     processStatementPatternFromWhereClause(
@@ -69,7 +69,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
    * @param filterPattern the filter to be transformed.
    * @return the result of the transformation.
    */
-  override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
+  override def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.attempt {
 
     val filterExpression: TransformedFilterPattern =
       transformFilterPattern(filterPattern.expression, typeInspectionResult = typeInspectionResult, isTopLevel = true)
@@ -287,8 +287,8 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
   /**
    * Returns the columns to be specified in the SELECT query.
    */
-  override def getSelectColumns: Seq[SelectQueryColumn] =
-    Seq(mainResourceVariable) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat
+  override def getSelectColumns: Task[Seq[SelectQueryColumn]] =
+    ZIO.succeed(Seq(mainResourceVariable) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat)
 
   /**
    * Returns the variables that were used in [[GroupConcat]] expressions in the prequery to represent values
@@ -303,7 +303,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
    *
    * @return the ORDER BY criteria, if any.
    */
-  override def getOrderBy(inputOrderBy: Seq[OrderCriterion]): TransformedOrderBy = {
+  override def getOrderBy(inputOrderBy: Seq[OrderCriterion]): Task[TransformedOrderBy] = ZIO.attempt {
 
     val transformedOrderBy = inputOrderBy.foldLeft(TransformedOrderBy()) { case (acc, criterion) =>
       // A unique variable for the literal value of this value object should already have been created
@@ -344,19 +344,19 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
    * @param orderByCriteria the criteria used to sort the query results. They have to be included in the GROUP BY statement, otherwise they are unbound.
    * @return a list of variables that the result rows are grouped by.
    */
-  def getGroupBy(orderByCriteria: TransformedOrderBy): Seq[QueryVariable] =
+  def getGroupBy(orderByCriteria: TransformedOrderBy): Task[Seq[QueryVariable]] =
     // get they query variables form the order by criteria and return them in reverse order:
     // main resource variable first, followed by other sorting criteria, if any.
-    orderByCriteria.orderBy.map(_.queryVariable).reverse
+    ZIO.succeed(orderByCriteria.orderBy.map(_.queryVariable).reverse)
 
   /**
    * Gets the maximal amount of result rows to be returned by the prequery.
    *
    * @return the LIMIT, if any.
    */
-  def getLimit: Int =
+  def getLimit: Task[Int] =
     // get LIMIT from appConfig
-    appConfig.v2.resourcesSequence.resultsPerPage
+    ZIO.succeed(appConfig.v2.resourcesSequence.resultsPerPage)
 
   /**
    * Gets the OFFSET to be used in the prequery (needed for paging).
@@ -365,17 +365,17 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
    * @param limit            the maximum amount of result rows to be returned by the prequery.
    * @return the OFFSET.
    */
-  def getOffset(inputQueryOffset: Long, limit: Int): Long = {
+  def getOffset(inputQueryOffset: Long, limit: Int): Task[Long] =
+    ZIO
+      .fail(AssertionException("Negative OFFSET is illegal."))
+      .when(inputQueryOffset < 0)
+      .as(
+        // determine offset for paging -> multiply given offset with limit (indicating the maximum amount of results per page).
+        inputQueryOffset * limit
+      )
 
-    if (inputQueryOffset < 0) throw AssertionException("Negative OFFSET is illegal.")
-
-    // determine offset for paging -> multiply given offset with limit (indicating the maximum amount of results per page).
-    inputQueryOffset * limit
-
-  }
-
-  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
-    Seq(luceneQueryPattern)
+  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
+    ZIO.succeed(Seq(luceneQueryPattern))
 
   /**
    * Runs optimisations that take a Gravsearch query as input. An optimisation needs to be run here if
@@ -384,11 +384,13 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
    * @param patterns the query patterns to be optimised.
    * @return the optimised query patterns.
    */
-  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
-    GravsearchQueryOptimisationFactory
-      .getGravsearchQueryOptimisationFeature(
-        typeInspectionResult = typeInspectionResult,
-        querySchema = querySchema
-      )
-      .optimiseQueryPatterns(patterns)
+  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
+    ZIO.attempt(
+      GravsearchQueryOptimisationFactory
+        .getGravsearchQueryOptimisationFeature(
+          typeInspectionResult = typeInspectionResult,
+          querySchema = querySchema
+        )
+        .optimiseQueryPatterns(patterns)
+    )
 }

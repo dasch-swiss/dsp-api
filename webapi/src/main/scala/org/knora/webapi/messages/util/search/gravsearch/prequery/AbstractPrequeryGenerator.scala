@@ -5,6 +5,9 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import zio.Task
+import zio.ZIO
+
 import scala.collection.mutable
 
 import dsp.errors._
@@ -74,7 +77,7 @@ abstract class AbstractPrequeryGenerator(
    * When we enter a UNION block, pushes an empty collection of generated variables on to the stack
    * valueVariablesAutomaticallyGenerated.
    */
-  override def enteringUnionBlock(): Unit = {
+  override def enteringUnionBlock(): Task[Unit] = ZIO.attempt {
     valueVariablesAutomaticallyGenerated = Map
       .empty[QueryVariable, Set[GeneratedQueryVariable]] :: valueVariablesAutomaticallyGenerated
 
@@ -85,7 +88,7 @@ abstract class AbstractPrequeryGenerator(
    * When we leave a UNION block, pops that block's collection of generated variables off the
    * stack valueVariablesAutomaticallyGenerated.
    */
-  override def leavingUnionBlock(): Unit = {
+  override def leavingUnionBlock(): Task[Unit] = ZIO.attempt {
     valueVariablesAutomaticallyGenerated = valueVariablesAutomaticallyGenerated.tail
 
     variablesInUnionBlocks = variablesInUnionBlocks.tail
@@ -577,7 +580,7 @@ abstract class AbstractPrequeryGenerator(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  ): Seq[QueryPattern] =
+  ): Task[Seq[QueryPattern]] = ZIO.attempt(
     // Does this statement set a Gravsearch option?
     statementPattern.subj match {
       case iriRef: IriRef if OntologyConstants.KnoraApi.GravsearchOptionsIris.contains(iriRef.iri.toString) =>
@@ -618,6 +621,7 @@ abstract class AbstractPrequeryGenerator(
 
         additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
     }
+  )
 
   /**
    * Creates additional statements for a given [[Entity]] based on type information using `conversionFuncForNonPropertyType`

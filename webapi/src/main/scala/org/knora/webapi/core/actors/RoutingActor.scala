@@ -19,7 +19,6 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v2._
@@ -54,15 +53,12 @@ final case class RoutingActor(
 
   // V2 responders
   private val valuesResponderV2: ValuesResponderV2 = new ValuesResponderV2(responderData, runtime)
-  private val searchResponderV2: SearchResponderV2 = new SearchResponderV2(responderData, runtime)
 
   def receive: Receive = {
     // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
     case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
 
     // V2 request messages
-    case searchResponderRequestV2: SearchResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), searchResponderV2.receive(searchResponderRequestV2), log)
     case valuesResponderRequestV2: ValuesResponderRequestV2 =>
       ActorUtil.future2Message(sender(), valuesResponderV2.receive(valuesResponderRequestV2), log)
 
