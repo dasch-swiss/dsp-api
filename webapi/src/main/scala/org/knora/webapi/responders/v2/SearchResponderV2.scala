@@ -33,6 +33,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
+import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
@@ -444,25 +445,16 @@ final case class SearchResponderV2Live(
     schemaOptions: Set[SchemaOption],
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
-    import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
-      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(
-                                         inputQuery.whereClause
-                                       )
+      typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
+      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ <- ZIO.attempt(
-             GravsearchQueryChecker.checkConstructClause(
-               constructClause = inputQuery.constructClause,
-               typeInspectionResult = typeInspectionResult
-             )
-           )
+      _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
 
       // Create a Select prequery
-
       querySchema <-
         ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer =
