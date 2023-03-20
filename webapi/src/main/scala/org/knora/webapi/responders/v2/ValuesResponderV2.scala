@@ -226,7 +226,7 @@ final case class ValuesResponderV2Live(
                        }
                  } yield ()
 
-               case _ => ZIO.succeed(())
+               case _ => ZIO.unit
              }
 
         // Check that the resource class's cardinality for the submitted property allows another value to be added
@@ -274,7 +274,7 @@ final case class ValuesResponderV2Live(
                    requestingUser = createValueRequest.requestingUser
                  )
 
-               case _ => ZIO.succeed(())
+               case _ => ZIO.unit
              }
 
         // Get the default permissions for the new value.
@@ -1209,7 +1209,7 @@ final case class ValuesResponderV2Live(
                        }
                  } yield ()
 
-               case _ => ZIO.succeed(())
+               case _ => ZIO.unit
              }
 
         // Check that the updated value would not duplicate the current value version.
@@ -1251,7 +1251,7 @@ final case class ValuesResponderV2Live(
                    requestingUser = updateValueRequest.requestingUser
                  )
 
-               case _ => ZIO.succeed(())
+               case _ => ZIO.unit
              }
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
@@ -2037,7 +2037,7 @@ final case class ValuesResponderV2Live(
     requestingUser: UserADM
   ): Task[Unit] =
     if (targetResourceIris.isEmpty) {
-      ZIO.succeed(())
+      ZIO.unit
     } else {
       for {
         resourcePreviewRequest <-
@@ -2244,7 +2244,7 @@ final case class ValuesResponderV2Live(
     // Is the value type the same as the property's object class constraint?
     if (objectClassConstraint == valueContent.valueType) {
       // Yes. Nothing more to do here.
-      ZIO.succeed(())
+      ZIO.unit
     } else {
       // No. Ask the ontology responder whether it's a subclass of the property's object class constraint.
       for {
