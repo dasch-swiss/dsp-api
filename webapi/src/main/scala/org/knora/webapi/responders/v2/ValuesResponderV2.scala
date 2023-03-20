@@ -58,7 +58,6 @@ final case class ValuesResponderV2Live(
   resourceUtilV2: ResourceUtilV2,
   triplestoreService: TriplestoreService,
   implicit val stringFormatter: StringFormatter
-  // implicit val runtime: zio.Runtime[ResourceUtilV2 with PermissionUtilADM]
 ) extends ValuesResponderV2
     with MessageHandler {
 
@@ -198,7 +197,6 @@ final case class ValuesResponderV2Live(
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
-
         _ <- checkPropertyObjectClassConstraint(
                propertyInfo = adjustedInternalPropertyInfo,
                valueContent = submittedInternalValueContent,
@@ -233,7 +231,6 @@ final case class ValuesResponderV2Live(
 
         // Check that the resource class's cardinality for the submitted property allows another value to be added
         // for that property.
-
         currentValuesForProp: Seq[ReadValueV2] =
           resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
@@ -923,7 +920,6 @@ final case class ValuesResponderV2Live(
         submittedInternalPropertyIri <- ZIO.attempt(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
 
         // Get ontology information about the submitted property.
-
         propertyInfoRequestForSubmittedProperty =
           PropertiesGetRequestV2(
             propertyIris = Set(submittedInternalPropertyIri),
@@ -954,7 +950,6 @@ final case class ValuesResponderV2Live(
         // Make an adjusted version of the submitted property: if it's a link value property, substitute the
         // corresponding link property, whose objects we will need to query. Get ontology information about the
         // adjusted property.
-
         adjustedInternalPropertyInfo <-
           getAdjustedInternalPropertyInfo(
             submittedPropertyIri = submittedExternalPropertyIri,
@@ -965,7 +960,6 @@ final case class ValuesResponderV2Live(
 
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
         // so we can see objects that the user doesn't have permission to see.
-
         resourceInfo <-
           getResourceWithPropertyValues(
             resourceIri = resourceIri,
@@ -1152,7 +1146,6 @@ final case class ValuesResponderV2Live(
 
         // Check that the user has permission to do the update. If they want to change the permissions
         // on the value, they need ChangeRightsPermission, otherwise they need ModifyPermission.
-
         currentPermissionsParsed: Map[EntityPermission, Set[IRI]] =
           PermissionUtilADM.parsePermissions(
             currentValue.permissions
@@ -2218,7 +2211,6 @@ final case class ValuesResponderV2Live(
       resource: ReadResourceV2 = resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
 
       // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
-
       subClassRequest = CheckSubClassRequestV2(
                           subClassIri = resource.resourceClassIri,
                           superClassIri = objectClassConstraint,
