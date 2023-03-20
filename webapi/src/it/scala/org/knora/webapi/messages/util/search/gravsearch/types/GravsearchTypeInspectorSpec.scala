@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util.search.gravsearch.types
+package org.knora.webapi.messages.util.search.gravsearch.types
 
 import akka.testkit.ImplicitSender
 import dsp.errors.GravsearchException
@@ -17,7 +17,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
