@@ -94,6 +94,8 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2Live
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.AuthenticatorLive
 object LayersTest {
 
   /**
@@ -108,6 +110,7 @@ object LayersTest {
     with ApiRoutes
     with AppRouter
     with AppRouterRelayingMessageHandler
+    with Authenticator
     with OntologyCache
     with OntologyRepo
     with CacheService
@@ -163,6 +166,7 @@ object LayersTest {
       ApiRoutes.layer,
       AppRouter.layer,
       AppRouterRelayingMessageHandler.layer,
+      AuthenticatorLive.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,

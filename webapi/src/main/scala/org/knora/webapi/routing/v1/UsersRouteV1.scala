@@ -21,7 +21,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides a spray-routing function for API routes that deal with lists.
  */
-class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class UsersRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   private val schemes = Array("http", "https")
   new UrlValidator(schemes)
@@ -36,7 +39,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         /* return all users */
         requestContext =>
           val requestMessage = for {
-            userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
+            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
           } yield UsersGetRequestV1(userProfile)
 
           RouteUtilV1.runJsonRouteWithFuture(
@@ -54,7 +57,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             /* check if email or iri was supplied */
             val requestMessage = if (identifier == "email") {
               for {
-                userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
+                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
               } yield UserProfileByEmailGetRequestV1(
                 email = value,
                 userProfileType = UserProfileTypeV1.RESTRICTED,
@@ -62,7 +65,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               )
             } else {
               for {
-                userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
+                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                 userIri = stringFormatter.validateAndEscapeIri(
                             value,
                             throw BadRequestException(s"Invalid user IRI $value")
@@ -88,7 +91,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           /* get user's project memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")
@@ -112,7 +115,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           /* get user's project admin memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")
@@ -136,7 +139,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           /* get user's group memberships */
           requestContext =>
             val requestMessage = for {
-              userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
+              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                                  userIri,
                                  throw BadRequestException(s"Invalid user IRI $userIri")

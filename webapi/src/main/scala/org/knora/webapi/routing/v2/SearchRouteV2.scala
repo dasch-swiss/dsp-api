@@ -7,7 +7,6 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import zio.ZIO
 
 import scala.concurrent.Future
 
@@ -27,7 +26,10 @@ import org.knora.webapi.routing.RouteUtilV2
 /**
  * Provides a function for API routes that deal with search.
  */
-class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class SearchRouteV2(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"
   private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
@@ -184,7 +186,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
           val requestMessage: Future[FullTextSearchCountRequestV2] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield FullTextSearchCountRequestV2(
             searchValue = escapedSearchStr,
             limitToProject = limitToProject,
@@ -208,8 +210,6 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   private def fullTextSearch(): Route = path("v2" / "search" / Segment) {
     searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
       get { requestContext =>
-        ZIO.logInfo(s"Full-text Search for string: $searchStr")
-
         if (searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname)) {
           throw BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route")
         }
@@ -245,7 +245,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
         val requestMessage: Future[FulltextSearchRequestV2] = for {
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield FulltextSearchRequestV2(
           searchValue = escapedSearchStr,
           offset = offset,
@@ -277,7 +277,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
 
           val requestMessage: Future[GravsearchCountRequestV2] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield GravsearchCountRequestV2(
             constructQuery = constructQuery,
             requestingUser = requestingUser
@@ -302,7 +302,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           {
             val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
             val requestMessage: Future[GravsearchCountRequestV2] = for {
-              requestingUser <- getUserADM(requestContext, routeData.appConfig)
+              requestingUser <- getUserADM(requestContext)
             } yield GravsearchCountRequestV2(
               constructQuery = constructQuery,
               requestingUser = requestingUser
@@ -331,7 +331,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
       val requestMessage: Future[GravsearchRequestV2] = for {
-        requestingUser <- getUserADM(requestContext, routeData.appConfig)
+        requestingUser <- getUserADM(requestContext)
       } yield GravsearchRequestV2(
         constructQuery = constructQuery,
         targetSchema = targetSchema,
@@ -360,7 +360,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
           val requestMessage: Future[GravsearchRequestV2] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield GravsearchRequestV2(
             constructQuery = constructQuery,
             targetSchema = targetSchema,
@@ -405,7 +405,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
           val requestMessage: Future[SearchResourceByLabelCountRequestV2] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield SearchResourceByLabelCountRequestV2(
             searchValue = searchString,
             limitToProject = limitToProject,
@@ -452,7 +452,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
       val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
-        requestingUser <- getUserADM(requestContext, routeData.appConfig)
+        requestingUser <- getUserADM(requestContext)
       } yield SearchResourceByLabelRequestV2(
         searchValue = sparqlEncodedSearchString,
         offset = offset,

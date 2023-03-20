@@ -26,7 +26,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * A route used to convert XML to standoff.
  */
-class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class StandoffRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -67,7 +70,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-            userProfile <- getUserADM(requestContext, routeData.appConfig)
+            userProfile <- getUserADM(requestContext)
 
             allParts: Map[Name, String] <- allPartsFuture
 

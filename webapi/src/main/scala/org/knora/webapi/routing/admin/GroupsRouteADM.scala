@@ -25,12 +25,13 @@ import org.knora.webapi.routing.RouteUtilADM
  * Provides a routing function for API routes that deal with groups.
  */
 
-class GroupsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class GroupsRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with GroupsADMJsonProtocol {
 
-  val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
+  private val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
   override def makeRoute: Route =
     getGroups() ~
@@ -47,7 +48,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   private def getGroups(): Route = path(groupsBasePath) {
     get { requestContext =>
       val requestMessage = for {
-        _ <- getUserADM(requestContext, routeData.appConfig)
+        _ <- getUserADM(requestContext)
       } yield GroupsGetRequestADM()
 
       RouteUtilADM.runJsonRoute(
@@ -68,7 +69,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
         stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid custom group IRI $value"))
 
       val requestMessage = for {
-        requestingUser <- getUserADM(requestContext, routeData.appConfig)
+        requestingUser <- getUserADM(requestContext)
       } yield GroupGetRequestADM(
         groupIri = checkedGroupIri
       )
@@ -92,7 +93,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield GroupMembersGetRequestADM(
           groupIri = checkedGroupIri,
           requestingUser = requestingUser
@@ -125,7 +126,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage = for {
           payload        <- toFuture(validatedGroupCreatePayload)
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield GroupCreateRequestADM(
           createRequest = payload,
           requestingUser = requestingUser,
@@ -172,7 +173,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage = for {
           payload        <- toFuture(validatedGroupUpdatePayload)
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield GroupChangeRequestADM(
           groupIri = checkedGroupIri,
           changeGroupRequest = payload,
@@ -212,7 +213,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           }
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield GroupChangeStatusRequestADM(
             groupIri = checkedGroupIri,
             changeGroupRequest = apiRequest,
@@ -239,7 +240,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
         stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
       val requestMessage = for {
-        requestingUser <- getUserADM(requestContext, routeData.appConfig)
+        requestingUser <- getUserADM(requestContext)
       } yield GroupChangeStatusRequestADM(
         groupIri = checkedGroupIri,
         changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),

@@ -50,11 +50,12 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastM
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
-class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runtime[RestResourceInfoService])
-    extends KnoraRoute(routeData)
-    with Authenticator {
+final case class ResourcesRouteV2(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: zio.Runtime[Authenticator with RestResourceInfoService]
+) extends KnoraRoute(routeData, runtime) {
 
-  val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
+  private val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
 
   private val Text_Property          = "textProperty"
   private val Mapping_Iri            = "mappingIri"
@@ -96,10 +97,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           )
 
         val requestMessageFuture: Future[ResourceIIIFManifestGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield ResourceIIIFManifestGetRequestV2(
           resourceIri = resourceIri,
           requestingUser = requestingUser
@@ -124,10 +122,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[CreateResourceRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
 
             requestMessage: CreateResourceRequestV2 <- CreateResourceRequestV2.fromJsonLD(
                                                          requestDoc,
@@ -164,10 +159,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[UpdateResourceMetadataRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
 
             requestMessage: UpdateResourceMetadataRequestV2 <- UpdateResourceMetadataRequestV2.fromJsonLD(
                                                                  requestDoc,
@@ -233,10 +225,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
       val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
       val requestMessageFuture: Future[SearchResourcesByProjectAndClassRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
+        requestingUser <- getUserADM(requestContext)
       } yield SearchResourcesByProjectAndClassRequestV2(
         projectIri = projectIri,
         resourceClass = resourceClass.toOntologySchema(ApiV2Complex),
@@ -281,10 +270,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           )
 
         val requestMessageFuture: Future[ResourceVersionHistoryGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield ResourceVersionHistoryGetRequestV2(
           resourceIri = resourceIri,
           startDate = startDate,
@@ -308,10 +294,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
     path(resourcesBasePath / "resourceHistoryEvents" / Segment) { resourceIri: IRI =>
       get { requestContext =>
         val requestMessageFuture: Future[ResourceHistoryEventsGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield ResourceHistoryEventsGetRequestV2(
           resourceIri = resourceIri,
           requestingUser = requestingUser
@@ -333,10 +316,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
     path(resourcesBasePath / "projectHistoryEvents" / Segment) { projectIri: IRI =>
       get { requestContext =>
         val requestMessageFuture: Future[ProjectResourcesWithHistoryGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield ProjectResourcesWithHistoryGetRequestV2(
           projectIri = projectIri,
           requestingUser = requestingUser
@@ -422,10 +402,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
       val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
+        requestingUser <- getUserADM(requestContext)
       } yield ResourcesGetRequestV2(
         resourceIris = resourceIris,
         versionDate = versionDate,
@@ -461,10 +438,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
         val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
         val requestMessageFuture: Future[ResourcesPreviewGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield ResourcesPreviewGetRequestV2(
           resourceIris = resourceIris,
           targetSchema = targetSchema,
@@ -500,10 +474,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
       val headerXSLTIri = getHeaderXSLTIriFromParams(params)
 
       val requestMessageFuture: Future[ResourceTEIGetRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
+        requestingUser <- getUserADM(requestContext)
       } yield ResourceTEIGetRequestV2(
         resourceIri = resourceIri,
         textProperty = textProperty,
@@ -556,10 +527,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
       }
 
       val requestMessageFuture: Future[GraphDataGetRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
+        requestingUser <- getUserADM(requestContext)
       } yield GraphDataGetRequestV2(
         resourceIri = resourceIri,
         depth = depth,
@@ -588,10 +556,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
             requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
                                                                 requestDoc,
                                                                 apiRequestID = UUID.randomUUID,
@@ -622,10 +587,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
 
             requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
                                                                 requestDoc,
@@ -751,36 +713,30 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
         )
       values.foreach { value =>
         value.valueContent match {
-          case fileValueContent: StillImageFileValueContentV2 => {
+          case fileValueContent: StillImageFileValueContentV2 =>
             if (!routeData.appConfig.sipi.imageMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: DocumentFileValueContentV2 => {
+          case fileValueContent: DocumentFileValueContentV2 =>
             if (!routeData.appConfig.sipi.documentMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: ArchiveFileValueContentV2 => {
+          case fileValueContent: ArchiveFileValueContentV2 =>
             if (!routeData.appConfig.sipi.archiveMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: TextFileValueContentV2 => {
+          case fileValueContent: TextFileValueContentV2 =>
             if (!routeData.appConfig.sipi.textMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: AudioFileValueContentV2 => {
+          case fileValueContent: AudioFileValueContentV2 =>
             if (!routeData.appConfig.sipi.audioMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: MovingImageFileValueContentV2 => {
+          case fileValueContent: MovingImageFileValueContentV2 =>
             if (!routeData.appConfig.sipi.videoMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
           case _ => ()
 
         }

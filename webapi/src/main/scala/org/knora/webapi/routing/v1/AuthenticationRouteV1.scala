@@ -7,15 +7,20 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio.ZIO
 
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
  */
-class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class AuthenticationRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -24,7 +29,7 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
     path("v1" / "authenticate") {
       get { requestContext =>
         requestContext.complete {
-          doAuthenticateV1(requestContext, routeData.appConfig)
+          UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.doAuthenticateV1(requestContext)))
         }
       }
     } ~ path("v1" / "session") {
@@ -32,20 +37,20 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
         requestContext.complete {
           val params = requestContext.request.uri.query().toMap
           if (params.contains("logout")) {
-            doLogoutV2(requestContext, routeData.appConfig)
+            UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.doLogoutV2(requestContext)))
           } else if (params.contains("login")) {
-            doLoginV1(requestContext, routeData.appConfig)
+            UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.doLoginV1(requestContext)))
           } else {
-            doAuthenticateV1(requestContext, routeData.appConfig)
+            UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.doAuthenticateV1(requestContext)))
           }
         }
       } ~ post { requestContext =>
         requestContext.complete {
-          doLoginV1(requestContext, routeData.appConfig)
+          UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.doLoginV1(requestContext)))
         }
       } ~ delete { requestContext =>
         requestContext.complete {
-          doLogoutV2(requestContext, routeData.appConfig)
+          UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.doLogoutV2(requestContext)))
         }
       }
     }

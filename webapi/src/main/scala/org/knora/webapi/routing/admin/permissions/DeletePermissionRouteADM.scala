@@ -16,9 +16,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-class DeletePermissionRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class DeletePermissionRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with PermissionsADMJsonProtocol {
 
   val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
@@ -36,7 +37,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
     path(permissionsBasePath / Segment) { iri =>
       delete { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield PermissionDeleteRequestADM(
           permissionIri = iri,
           requestingUser = requestingUser,

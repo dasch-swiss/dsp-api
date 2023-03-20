@@ -6,7 +6,6 @@
 package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
-
 import scala.collection.Map
 
 import org.knora.webapi._
@@ -15,11 +14,10 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM._
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
-class PermissionUtilADMSpec extends CoreSpec with ImplicitSender with Authenticator {
+class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
 
   val permissionLiteral =
     "RV knora-admin:UnknownUser|V knora-admin:KnownUser|M knora-admin:ProjectMember|CR knora-admin:Creator"

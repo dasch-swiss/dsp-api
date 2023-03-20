@@ -7,7 +7,6 @@ package org.knora.webapi.it.v2
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-
 import java.nio.file.Files
 import java.nio.file.Paths
 import scala.concurrent.Await
@@ -18,6 +17,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
@@ -66,7 +66,7 @@ class KnoraSipiAuthenticationITSpec
     "successfuly get an image with provided credentials inside cookie" in {
 
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)
-      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
+      val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
       val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, loginToken)
 
       // Request the permanently stored image from Sipi.

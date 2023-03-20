@@ -7,16 +7,15 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-
 import java.util.UUID
 import scala.concurrent.duration._
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
+
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
@@ -30,12 +29,13 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
  */
-class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authenticator {
+class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
   private val timeout: FiniteDuration = 8.seconds
 
@@ -363,17 +363,16 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         expectMsgType[UserOperationResponseADM](timeout)
 
         // need to be able to authenticate credentials with new password
-        val resF = Authenticator.authenticateCredentialsV2(
-          credentials = Some(
-            KnoraCredentialsV2
-              .KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456")
-          ),
-          appConfig
-        )(system, appActor, executionContext)
+        val resF = UnsafeZioRun.runToFuture(
+          Authenticator.authenticateCredentialsV2(
+            credentials = Some(
+              KnoraCredentialsV2
+                .KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456")
+            )
+          )
+        )
 
-        resF map { res =>
-          assert(res)
-        }
+        resF map { res => assert(res) }
       }
 
       "UPDATE the user's password (by a system admin)" in {
@@ -393,17 +392,16 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authentica
         expectMsgType[UserOperationResponseADM](timeout)
 
         // need to be able to authenticate credentials with new password
-        val resF = Authenticator.authenticateCredentialsV2(
-          credentials = Some(
-            KnoraCredentialsV2
-              .KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321")
-          ),
-          appConfig
-        )(system, appActor, executionContext)
+        val resF = UnsafeZioRun.runToFuture(
+          Authenticator.authenticateCredentialsV2(
+            credentials = Some(
+              KnoraCredentialsV2
+                .KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321")
+            )
+          )
+        )
 
-        resF map { res =>
-          assert(res)
-        }
+        resF map { res => assert(res) }
       }
 
       "UPDATE the user's status, (deleting) making him inactive " in {

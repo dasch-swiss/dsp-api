@@ -18,7 +18,10 @@ import org.knora.webapi.routing.RouteUtilADM
 /**
  * Provides a routing function for the API that Sipi connects to.
  */
-class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class FilesRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * A routing function for the API that Sipi connects to.
@@ -30,7 +33,7 @@ class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
           projectID = stringFormatter.validateProjectShortcode(
                         projectIDAndFile.head,
                         throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'")

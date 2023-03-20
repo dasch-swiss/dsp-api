@@ -18,7 +18,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides a spray-routing function for API routes that deal with resource types.
  */
-class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class ResourceTypesRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -28,7 +31,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     path("v1" / "resourcetypes" / Segment) { iri =>
       get { requestContext =>
         val requestMessage = for {
-          userProfile <- getUserADM(requestContext, routeData.appConfig)
+          userProfile <- getUserADM(requestContext)
 
           // TODO: Check that this is the IRI of a resource type and not just any IRI
           resourceTypeIri =
@@ -49,7 +52,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "resourcetypes") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext, routeData.appConfig)
+          userADM <- getUserADM(requestContext)
           params   = requestContext.request.uri.query().toMap
 
           vocabularyId = params.getOrElse(
@@ -84,7 +87,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "propertylists") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext, routeData.appConfig)
+          userADM <- getUserADM(requestContext)
           params   = requestContext.request.uri.query().toMap
 
           vocabularyId: Option[String]   = params.get("vocabulary")
@@ -137,7 +140,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "vocabularies") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext, routeData.appConfig)
+          userADM <- getUserADM(requestContext)
         } yield NamedGraphsGetRequestV1(userADM = userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
@@ -151,7 +154,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "vocabularies" / "reload") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext, routeData.appConfig)
+          userADM <- getUserADM(requestContext)
         } yield LoadOntologiesRequestV1(userADM = userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
@@ -164,7 +167,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "subclasses" / Segment) { iri =>
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext, routeData.appConfig)
+          userADM <- getUserADM(requestContext)
 
           // TODO: Check that this is the IRI of a resource type and not just any IRI
           resourceClassIri = stringFormatter.validateAndEscapeIri(

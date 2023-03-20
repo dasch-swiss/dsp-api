@@ -26,7 +26,10 @@ import org.knora.webapi.routing.KnoraRouteData
 /**
  * A route used for faking the image server.
  */
-class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class AssetsRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.

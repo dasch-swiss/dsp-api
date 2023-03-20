@@ -17,7 +17,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
  */
-class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class CkanRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -26,7 +29,7 @@ class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
     path("v1" / "ckan") {
       get { requestContext =>
         val requestMessage = for {
-          userProfile                 <- getUserADM(requestContext, routeData.appConfig)
+          userProfile                 <- getUserADM(requestContext)
           params                       = requestContext.request.uri.query().toMap
           project: Option[Seq[String]] = params.get("project").map(_.split(",").toSeq)
           limit: Option[Int]           = params.get("limit").map(_.toInt)

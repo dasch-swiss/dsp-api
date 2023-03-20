@@ -23,9 +23,10 @@ import org.knora.webapi.routing.RouteUtilADM
  * A route used to send requests which can directly affect the data stored inside the triplestore.
  */
 
-class StoreRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class StoreRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with StoresADMJsonProtocol {
 
   /**

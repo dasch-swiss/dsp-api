@@ -38,9 +38,10 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-class ProjectsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class ProjectsRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: zio.Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with ProjectsADMJsonProtocol {
 
   private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
@@ -106,7 +107,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ProjectCreateRequestADM] = for {
           projectCreatePayload <- toFuture(projectCreatePayload)
-          requestingUser       <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser       <- getUserADM(requestContext)
         } yield ProjectCreateRequestADM(
           createRequest = projectCreatePayload,
           requestingUser = requestingUser,
@@ -148,10 +149,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
             .make(value)
             .getOrElse(throw BadRequestException(s"Invalid project IRI $value"))
         val requestMessage: Future[ProjectKeywordsGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield ProjectKeywordsGetRequestADM(
           projectIri = projectIri
         )
@@ -259,10 +257,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
 
           val requestMessage: Future[ProjectChangeRequestADM] = for {
             projectUpdatePayload <- toFuture(projectUpdatePayloadValidation)
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser       <- getUserADM(requestContext)
           } yield ProjectChangeRequestADM(
             projectIri = projectIri,
             projectUpdatePayload = projectUpdatePayload,
@@ -290,10 +285,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         val projectStatus =
           ProjectStatus.make(false).getOrElse(throw BadRequestException(s"Invalid Project Status"))
         val requestMessage: Future[ProjectChangeRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield ProjectChangeRequestADM(
           projectIri = projectIri,
           projectUpdatePayload = ProjectUpdatePayloadADM(status = Some(projectStatus)),
@@ -317,10 +309,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     path(projectsBasePath / "iri" / Segment / "members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
 
         } yield ProjectMembersGetRequestADM(
           identifier = IriIdentifier
@@ -345,10 +334,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     path(projectsBasePath / "shortname" / Segment / "members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
 
         } yield ProjectMembersGetRequestADM(
           identifier = ShortnameIdentifier
@@ -373,10 +359,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     path(projectsBasePath / "shortcode" / Segment / "members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
 
         } yield ProjectMembersGetRequestADM(
           identifier = ShortcodeIdentifier
@@ -401,10 +384,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     path(projectsBasePath / "iri" / Segment / "admin-members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
 
         } yield ProjectAdminMembersGetRequestADM(
           identifier = IriIdentifier
@@ -429,10 +409,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     path(projectsBasePath / "shortname" / Segment / "admin-members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
 
         } yield ProjectAdminMembersGetRequestADM(
           identifier = ShortnameIdentifier
@@ -457,10 +434,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     path(projectsBasePath / "shortcode" / Segment / "admin-members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
 
         } yield ProjectAdminMembersGetRequestADM(
           identifier = ShortcodeIdentifier
@@ -566,10 +540,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
 
   private def getProjectDataEntity(projectIri: IRI): Route = { requestContext =>
     val httpEntityFuture: Future[HttpEntity.Chunked] = for {
-      requestingUser <- getUserADM(
-                          requestContext = requestContext,
-                          routeData.appConfig
-                        )
+      requestingUser <- getUserADM(requestContext)
 
       requestMessage = ProjectDataGetRequestADM(
                          projectIdentifier = IriIdentifier

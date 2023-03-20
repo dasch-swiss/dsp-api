@@ -73,6 +73,8 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.AuthenticatorLive
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -112,6 +114,7 @@ object LayersLive {
       with AppConfig
       with AppRouter
       with AppRouterRelayingMessageHandler
+      with Authenticator
       with OntologyCache
       with CacheService
       with CacheServiceRequestMessageHandler
@@ -172,6 +175,7 @@ object LayersLive {
       AppRouter.layer,
       AppRouterRelayingMessageHandler.layer,
       AuthenticationMiddleware.layer,
+      AuthenticatorLive.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,

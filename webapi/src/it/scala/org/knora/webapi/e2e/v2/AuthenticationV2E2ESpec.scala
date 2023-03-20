@@ -8,7 +8,6 @@ package org.knora.webapi.e2e.v2
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -17,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestString
 
@@ -44,7 +44,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       /* Correct username and password */
       val request                = Get(baseApiUrl + s"/v2/authentication?iri=$rootIriEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
-      logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.OK)
     }
 
@@ -52,7 +51,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       /* Correct username and password */
       val request                = Get(baseApiUrl + s"/v2/authentication?email=$rootEmailEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
-      logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.OK)
     }
 
@@ -60,7 +58,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       /* Correct username and password */
       val request                = Get(baseApiUrl + s"/v2/authentication?username=$rootUsernameEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
-      logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.OK)
     }
 
@@ -68,14 +65,12 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       /* Correct email / wrong password */
       val request                = Get(baseApiUrl + s"/v2/authentication?email=$rootEmail&password=$wrongPass")
       val response: HttpResponse = singleAwaitingRequest(request)
-      logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.Unauthorized)
     }
     "fail authentication with the user set as 'not active' " in {
       /* User not active */
       val request                = Get(baseApiUrl + s"/v2/authentication?email=$inactiveUserEmailEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
-      logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.Unauthorized)
     }
   }
@@ -101,7 +96,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request =
         Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(BasicHttpCredentials(inactiveUserEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
-      logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.Unauthorized)
     }
   }
@@ -124,12 +118,9 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
-      // println(response.toString)
-
       val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
       lr.token.nonEmpty should be(true)
-      logger.debug("token: {}", lr.token)
 
       token.set(lr.token)
     }
@@ -148,12 +139,9 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
-      // println(response.toString)
-
       val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
       lr.token.nonEmpty should be(true)
-      logger.debug("token: {}", lr.token)
     }
 
     "login with username" in {
@@ -170,12 +158,9 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
-      // println(response.toString)
-
       val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
       lr.token.nonEmpty should be(true)
-      logger.debug("token: {}", lr.token)
     }
 
     "authenticate with token in header" in {
@@ -183,7 +168,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request =
         Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
-      logger.debug("response: {}", response.toString())
       assert(response.status === StatusCodes.OK)
     }
 
@@ -191,12 +175,11 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       // authenticate by calling '/v2/authenticate' with parameters providing the token (from earlier login)
       val request  = Get(baseApiUrl + s"/v2/authentication?token=${token.get}")
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
     }
 
     "authenticate with token in cookie" in {
-      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
+      val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
       val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, token.get)
 
       val request  = Get(baseApiUrl + "/v2/authentication") ~> addHeader(cookieHeader)
@@ -205,7 +188,7 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
     }
 
     "fail authentication with invalid token in cookie" in {
-      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
+      val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
       val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, "not_a_valid_token")
 
       val request  = Get(baseApiUrl + "/v2/authentication") ~> addHeader(cookieHeader)
@@ -218,7 +201,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request =
         Delete(baseApiUrl + "/v2/authentication?") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
     }
 
@@ -239,7 +221,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
 
       val request2  = Delete(baseApiUrl + s"/v2/authentication?token=$token")
       val response2 = singleAwaitingRequest(request2)
-      // logger.debug("==>> " + responseAs[String])
       assert(response2.status === StatusCodes.OK)
     }
 
@@ -247,7 +228,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request =
         Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -264,7 +244,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
 
       val request  = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response = singleAwaitingRequest(request)
-      // log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -280,21 +259,18 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
 
       val request  = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response = singleAwaitingRequest(request)
-      // log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "fail authentication with wrong token in header" in {
       val request  = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
       val response = singleAwaitingRequest(request)
-      // log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "fail authentication with wrong token as parameter" in {
       val request  = Get(baseApiUrl + "/v2/authentication?token=123456")
       val response = singleAwaitingRequest(request)
-      // log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
   }
@@ -318,12 +294,9 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
-      // println(response.toString)
-
       val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
       lr.token.nonEmpty should be(true)
-      logger.debug("token: {}", lr.token)
 
       token.set(lr.token)
     }
@@ -332,7 +305,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       /* Correct email / correct password */
       val request  = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=${token.get}")
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
     }
 
@@ -341,7 +313,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=wrong")
 
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -350,7 +321,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request =
         Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
     }
 
@@ -359,14 +329,12 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request =
         Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "not return sensitive information (token, password) in the response " in {
       val request  = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=${token.get}")
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       // assert(status === StatusCodes.OK)
 
       /* check for sensitive information leakage */
@@ -395,12 +363,9 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
-      // println(response.toString)
-
       val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
       lr.token.nonEmpty should be(true)
-      // logger.debug("token: {}", lr.token)
 
       token.set(lr.token)
     }
@@ -409,7 +374,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       /* Correct token */
       val request  = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
       val response = singleAwaitingRequest(request)
-      // logger.debug(response.toString())
       assert(response.status === StatusCodes.OK)
     }
 
@@ -418,7 +382,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=wrong")
 
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -427,7 +390,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request =
         Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
     }
 
@@ -436,15 +398,12 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       val request =
         Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "not return sensitive information (token, password) in the response " in {
       val request  = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
       val response = singleAwaitingRequest(request)
-      // logger.debug("==>> " + responseAs[String])
-      // assert(status === StatusCodes.OK)
 
       /* check for sensitive information leakage */
       val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)

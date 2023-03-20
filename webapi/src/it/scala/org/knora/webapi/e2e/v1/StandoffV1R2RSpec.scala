@@ -14,15 +14,14 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json._
-
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.Future
 import scala.concurrent.duration._
-
 import dsp.errors.InvalidApiJsonException
+
 import org.knora.webapi._
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
@@ -43,9 +42,9 @@ import org.knora.webapi.util.MutableTestIri
 class StandoffV1R2RSpec extends R2RSpec {
 
   private val standoffPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new StandoffRouteV1(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(StandoffRouteV1(routeData, runtime).makeRoute)
   private val valuesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1(routeData, runtime).makeRoute)
 
   private val anythingUser      = SharedTestDataV1.anythingUser1
   private val anythingUserEmail = anythingUser.userData.email.get
