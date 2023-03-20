@@ -57,16 +57,12 @@ class AnnotationReadingGravsearchTypeInspector(
   ): Task[IntermediateTypeInspectionResult] =
     for {
       // Get all the type annotations.
+      querySchema <-
+        ZIO.fromOption(whereClause.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       typeAnnotations <- ZIO.attempt {
                            queryTraverser.visitWherePatterns(
                              patterns = whereClause.patterns,
-                             whereVisitor = new AnnotationCollectingWhereVisitor(
-                               whereClause.querySchema.getOrElse(
-                                 throw AssertionException(
-                                   s"WhereClause has no querySchema"
-                                 )
-                               )
-                             ),
+                             whereVisitor = new AnnotationCollectingWhereVisitor(querySchema),
                              initialAcc = Vector.empty[GravsearchTypeAnnotation]
                            )
                          }
