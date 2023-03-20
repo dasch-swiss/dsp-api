@@ -9,11 +9,11 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -182,15 +182,12 @@ final case class SearchResponderV2Live(
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
     requestingUser: UserADM
-  ): Task[ResourceCountV2] = {
-
-    val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
-
+  ): Task[ResourceCountV2] =
     for {
       countSparql <- ZIO.attempt(
                        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                          .searchFulltext(
-                           searchTerms = searchTerms,
+                           searchTerms = LuceneQueryString(searchValue),
                            limitToProject = limitToProject,
                            limitToResourceClass = limitToResourceClass.map(_.toString),
                            limitToStandoffClass = limitToStandoffClass.map(_.toString),
@@ -200,24 +197,16 @@ final case class SearchResponderV2Live(
                            offset = 0,
                            countQuery = true // do not get the resources themselves, but the sum of results
                          )
-                         .toString()
                      )
-
-      countResponse <- triplestoreService.sparqlHttpSelect(countSparql)
-
-      _ <- // query response should contain one result with one row with the name "count"
-        ZIO
-          .fail(
-            GravsearchException(
-              s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
-            )
-          )
-          .when(countResponse.results.bindings.length != 1)
-
-      count = countResponse.results.bindings.head.rowMap("count")
-
+      bindings <- triplestoreService.sparqlHttpSelect(countSparql.toString()).map(_.results.bindings)
+      count <- // query response should contain one result with one row with the name "count"
+        ZIO.fail {
+          val msg = s"Fulltext count query is expected to return exactly one row, but ${bindings.size} given"
+          GravsearchException(msg)
+        }
+          .when(bindings.length != 1)
+          .as(bindings.head.rowMap("count"))
     } yield ResourceCountV2(numberOfResources = count.toInt)
-  }
 
   /**
    * Performs a fulltext search (simple search).
@@ -386,12 +375,7 @@ final case class SearchResponderV2Live(
       whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ <- ZIO.attempt(
-             GravsearchQueryChecker.checkConstructClause(
-               constructClause = inputQuery.constructClause,
-               typeInspectionResult = typeInspectionResult
-             )
-           )
+      _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
 
       // Create a Select prequery
       querySchema <-
