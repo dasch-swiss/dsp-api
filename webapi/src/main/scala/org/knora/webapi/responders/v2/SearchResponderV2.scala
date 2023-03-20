@@ -9,11 +9,11 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
+
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -205,12 +205,14 @@ final case class SearchResponderV2Live(
 
       countResponse <- triplestoreService.sparqlHttpSelect(countSparql)
 
-      // query response should contain one result with one row with the name "count"
-      _ = if (countResponse.results.bindings.length != 1) {
-            throw GravsearchException(
+      _ <- // query response should contain one result with one row with the name "count"
+        ZIO
+          .fail(
+            GravsearchException(
               s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
             )
-          }
+          )
+          .when(countResponse.results.bindings.length != 1)
 
       count = countResponse.results.bindings.head.rowMap("count")
 
@@ -371,13 +373,12 @@ final case class SearchResponderV2Live(
   private def gravsearchCountV2(
     inputQuery: ConstructQuery,
     requestingUser: UserADM
-  ): Task[ResourceCountV2] = {
-
-    // make sure that OFFSET is 0
-    if (inputQuery.offset != 0)
-      throw GravsearchException(s"OFFSET must be 0 for a count query, but ${inputQuery.offset} given")
-
+  ): Task[ResourceCountV2] =
     for {
+      _ <- // make sure that OFFSET is 0
+        ZIO
+          .fail(GravsearchException(s"OFFSET must be 0 for a count query, but ${inputQuery.offset} given"))
+          .when(inputQuery.offset != 0)
 
       // Do type inspection and remove type annotations from the WHERE clause.
       typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
@@ -393,11 +394,13 @@ final case class SearchResponderV2Live(
            )
 
       // Create a Select prequery
+      querySchema <-
+        ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer =
         new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
-          querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
+          querySchema = querySchema
         )
 
       nonTriplestoreSpecificPrequery <-
@@ -428,18 +431,18 @@ final case class SearchResponderV2Live(
 
       countResponse <- triplestoreService.sparqlHttpSelect(triplestoreSpecificCountQuery.toSparql, isGravsearch = true)
 
-      // query response should contain one result with one row with the name "count"
-      _ = if (countResponse.results.bindings.length != 1) {
-            throw GravsearchException(
+      _ <- // query response should contain one result with one row with the name "count"
+        ZIO
+          .fail(
+            GravsearchException(
               s"Count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
             )
-          }
+          )
+          .when(countResponse.results.bindings.size != 1)
 
       count: String = countResponse.results.bindings.head.rowMap("count")
 
     } yield ResourceCountV2(numberOfResources = count.toInt)
-
-  }
 
   /**
    * Performs a search using a Gravsearch query provided by the client.
@@ -476,11 +479,13 @@ final case class SearchResponderV2Live(
 
       // Create a Select prequery
 
+      querySchema <-
+        ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer =
         new NonTriplestoreSpecificGravsearchToPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
-          querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
+          querySchema = querySchema,
           appConfig = appConfig
         )
 
@@ -700,69 +705,71 @@ final case class SearchResponderV2Live(
 
       // If an ORDER BY property was specified, determine which subproperty of knora-base:valueHas to use to get the
       // literal value to sort by.
-      maybeOrderByValuePredicate: Option[SmartIri] =
-        maybeInternalOrderByPropertyIri match {
-          case Some(internalOrderByPropertyIri) =>
-            val internalOrderByPropertyDef: ReadPropertyInfoV2 =
-              entityInfoResponse.propertyInfoMap(
-                internalOrderByPropertyIri
-              )
+      maybeOrderByValuePredicate <- ZIO.attempt {
+                                      maybeInternalOrderByPropertyIri match {
+                                        case Some(internalOrderByPropertyIri) =>
+                                          val internalOrderByPropertyDef: ReadPropertyInfoV2 =
+                                            entityInfoResponse.propertyInfoMap(
+                                              internalOrderByPropertyIri
+                                            )
 
-            // Ensure that the ORDER BY property is one that we can sort by.
-            if (
-              !internalOrderByPropertyDef.isResourceProp || internalOrderByPropertyDef.isLinkProp || internalOrderByPropertyDef.isLinkValueProp || internalOrderByPropertyDef.isFileValueProp
-            ) {
-              throw BadRequestException(
-                s"Cannot sort by property <${resourcesInProjectGetRequestV2.orderByProperty}>"
-              )
-            }
+                                          // Ensure that the ORDER BY property is one that we can sort by.
+                                          if (
+                                            !internalOrderByPropertyDef.isResourceProp || internalOrderByPropertyDef.isLinkProp || internalOrderByPropertyDef.isLinkValueProp || internalOrderByPropertyDef.isFileValueProp
+                                          ) {
+                                            throw BadRequestException(
+                                              s"Cannot sort by property <${resourcesInProjectGetRequestV2.orderByProperty}>"
+                                            )
+                                          }
 
-            // Ensure that the resource class has a cardinality on the ORDER BY property.
-            if (
-              !classDef.knoraResourceProperties.contains(
-                internalOrderByPropertyIri
-              )
-            ) {
-              throw BadRequestException(
-                s"Class <${resourcesInProjectGetRequestV2.resourceClass}> has no cardinality on property <${resourcesInProjectGetRequestV2.orderByProperty}>"
-              )
-            }
+                                          // Ensure that the resource class has a cardinality on the ORDER BY property.
+                                          if (
+                                            !classDef.knoraResourceProperties.contains(
+                                              internalOrderByPropertyIri
+                                            )
+                                          ) {
+                                            throw BadRequestException(
+                                              s"Class <${resourcesInProjectGetRequestV2.resourceClass}> has no cardinality on property <${resourcesInProjectGetRequestV2.orderByProperty}>"
+                                            )
+                                          }
 
-            // Get the value class that's the object of the knora-base:objectClassConstraint of the ORDER BY property.
-            val orderByValueType: SmartIri =
-              internalOrderByPropertyDef.entityInfoContent
-                .requireIriObject(
-                  OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                  throw InconsistentRepositoryDataException(
-                    s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"
-                  )
-                )
+                                          // Get the value class that's the object of the knora-base:objectClassConstraint of the ORDER BY property.
+                                          val orderByValueType: SmartIri =
+                                            internalOrderByPropertyDef.entityInfoContent
+                                              .requireIriObject(
+                                                OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
+                                                throw InconsistentRepositoryDataException(
+                                                  s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"
+                                                )
+                                              )
 
-            // Determine which subproperty of knora-base:valueHas corresponds to that value class.
-            val orderByValuePredicate = orderByValueType.toString match {
-              case OntologyConstants.KnoraBase.IntValue =>
-                OntologyConstants.KnoraBase.ValueHasInteger
-              case OntologyConstants.KnoraBase.DecimalValue =>
-                OntologyConstants.KnoraBase.ValueHasDecimal
-              case OntologyConstants.KnoraBase.BooleanValue =>
-                OntologyConstants.KnoraBase.ValueHasBoolean
-              case OntologyConstants.KnoraBase.DateValue =>
-                OntologyConstants.KnoraBase.ValueHasStartJDN
-              case OntologyConstants.KnoraBase.ColorValue =>
-                OntologyConstants.KnoraBase.ValueHasColor
-              case OntologyConstants.KnoraBase.GeonameValue =>
-                OntologyConstants.KnoraBase.ValueHasGeonameCode
-              case OntologyConstants.KnoraBase.IntervalValue =>
-                OntologyConstants.KnoraBase.ValueHasIntervalStart
-              case OntologyConstants.KnoraBase.UriValue =>
-                OntologyConstants.KnoraBase.ValueHasUri
-              case _ => OntologyConstants.KnoraBase.ValueHasString
-            }
+                                          // Determine which subproperty of knora-base:valueHas corresponds to that value class.
+                                          val orderByValuePredicate =
+                                            orderByValueType.toString match {
+                                              case OntologyConstants.KnoraBase.IntValue =>
+                                                OntologyConstants.KnoraBase.ValueHasInteger
+                                              case OntologyConstants.KnoraBase.DecimalValue =>
+                                                OntologyConstants.KnoraBase.ValueHasDecimal
+                                              case OntologyConstants.KnoraBase.BooleanValue =>
+                                                OntologyConstants.KnoraBase.ValueHasBoolean
+                                              case OntologyConstants.KnoraBase.DateValue =>
+                                                OntologyConstants.KnoraBase.ValueHasStartJDN
+                                              case OntologyConstants.KnoraBase.ColorValue =>
+                                                OntologyConstants.KnoraBase.ValueHasColor
+                                              case OntologyConstants.KnoraBase.GeonameValue =>
+                                                OntologyConstants.KnoraBase.ValueHasGeonameCode
+                                              case OntologyConstants.KnoraBase.IntervalValue =>
+                                                OntologyConstants.KnoraBase.ValueHasIntervalStart
+                                              case OntologyConstants.KnoraBase.UriValue =>
+                                                OntologyConstants.KnoraBase.ValueHasUri
+                                              case _ => OntologyConstants.KnoraBase.ValueHasString
+                                            }
 
-            Some(orderByValuePredicate.toSmartIri)
+                                          Some(orderByValuePredicate.toSmartIri)
 
-          case None => None
-        }
+                                        case None => None
+                                      }
+                                    }
 
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -891,19 +898,17 @@ final case class SearchResponderV2Live(
 
       countResponse <- triplestoreService.sparqlHttpSelect(countSparql)
 
-      // query response should contain one result with one row with the name "count"
-      _ = if (countResponse.results.bindings.length != 1) {
-            throw GravsearchException(
+      count <- // query response should contain one result with one row with the name "count"
+        ZIO
+          .fail(
+            GravsearchException(
               s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
             )
-          }
+          )
+          .when(countResponse.results.bindings.length != 1)
+          .as(countResponse.results.bindings.head.rowMap("count"))
 
-      count = countResponse.results.bindings.head.rowMap("count")
-
-    } yield ResourceCountV2(
-      numberOfResources = count.toInt
-    )
-
+    } yield ResourceCountV2(count.toInt)
   }
 
   /**
@@ -946,27 +951,39 @@ final case class SearchResponderV2Live(
       searchResourceByLabelResponse <- triplestoreService.sparqlHttpExtendedConstruct(searchResourceByLabelSparql)
 
       // collect the IRIs of main resources returned
-      mainResourceIris: Set[IRI] =
-        searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
-          case (acc: Set[IRI], (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]])) =>
-            // check if the assertions represent a main resource and include its IRI if so
-            val subjectIsMainResource: Boolean =
-              assertions.getOrElse(OntologyConstants.KnoraBase.IsMainResource.toSmartIri, Seq.empty).headOption match {
-                case Some(BooleanLiteralV2(booleanVal)) => booleanVal
-                case _                                  => false
-              }
+      mainResourceIris <- ZIO.attempt {
+                            searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
+                              case (
+                                    acc: Set[IRI],
+                                    (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]])
+                                  ) =>
+                                // check if the assertions represent a main resource and include its IRI if so
+                                val subjectIsMainResource: Boolean =
+                                  assertions
+                                    .getOrElse(
+                                      OntologyConstants.KnoraBase.IsMainResource.toSmartIri,
+                                      Seq.empty
+                                    )
+                                    .headOption match {
+                                    case Some(BooleanLiteralV2(booleanVal)) => booleanVal
+                                    case _                                  => false
+                                  }
 
-            if (subjectIsMainResource) {
-              val subjIri: IRI = subject match {
-                case IriSubjectV2(value) => value
-                case other               => throw InconsistentRepositoryDataException(s"Unexpected subject of resource: $other")
-              }
+                                if (subjectIsMainResource) {
+                                  val subjIri: IRI = subject match {
+                                    case IriSubjectV2(value) => value
+                                    case other =>
+                                      throw InconsistentRepositoryDataException(
+                                        s"Unexpected subject of resource: $other"
+                                      )
+                                  }
 
-              acc + subjIri
-            } else {
-              acc
-            }
-        }
+                                  acc + subjIri
+                                } else {
+                                  acc
+                                }
+                            }
+                          }
 
       // separate resources and value objects
       mainResourcesAndValueRdfData =
