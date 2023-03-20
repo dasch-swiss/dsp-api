@@ -6,15 +6,18 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
+import zio._
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-
-import org.knora.webapi._
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.IRI
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.SchemaOption
+import org.knora.webapi.SchemaOptions
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -498,13 +501,14 @@ final case class SearchResponderV2Live(
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
 
-      start = System.currentTimeMillis()
+      start <- Clock.instant.map(_.toEpochMilli)
       prequeryResponseNotMerged <-
         triplestoreService
           .sparqlHttpSelect(triplestoreSpecificPrequerySparql, isGravsearch = true)
           .logError(s"Gravsearch timed out for prequery:\n$triplestoreSpecificPrequerySparql")
 
-      duration = (System.currentTimeMillis() - start) / 1000.0
+      end     <- Clock.instant.map(_.toEpochMilli)
+      duration = (end - start) / 1000.0
       _ = if (duration < 3) logger.debug(s"Prequery took: ${duration}s")
           else logger.warn(s"Slow Prequery ($duration):\n$triplestoreSpecificPrequerySparql")
 
