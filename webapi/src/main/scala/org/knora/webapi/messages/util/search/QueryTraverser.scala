@@ -478,7 +478,7 @@ final case class QueryTraverser(
                     whereTransformer = transformer,
                     limitInferenceToOntologies = limitInferenceToOntologies
                   )
-      whereClause = WhereClause(patterns = patterns)
+      whereClause = WhereClause(patterns)
     } yield inputQuery.copy(fromClause = fromClause, whereClause = whereClause)
 
   /**
