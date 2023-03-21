@@ -414,18 +414,13 @@ final case class OntologiesRouteV2(
     // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
       get { requestContext =>
-        val appConfig = routeData.appConfig
-        val responseZio = ZIO
-          .serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          .flatMap(user =>
-            RestCardinalityService.canChangeCardinality(
-              classIri,
-              user,
-              propertyIri = getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey),
-              newCardinality = getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey)
-            )
-          )
-        completeZioApiV2ComplexResponse(responseZio, requestContext, appConfig)
+        val response = for {
+          user           <- Authenticator.getUserADM(requestContext)
+          property       <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey))
+          newCardinality <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey))
+          canChange      <- RestCardinalityService.canChangeCardinality(classIri, user, property, newCardinality)
+        } yield canChange
+        completeZioApiV2ComplexResponse(response, requestContext, routeData.appConfig)
       }
     }
 

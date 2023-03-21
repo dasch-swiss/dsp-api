@@ -11,7 +11,6 @@ import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import zio.ZIO
 import zio.prelude.Validation
 
 import scala.concurrent.ExecutionContext
@@ -67,6 +66,5 @@ abstract class KnoraRoute(routeData: KnoraRouteData, protected implicit val runt
       Future.successful
     )
 
-  def getUserADM(ctx: RequestContext) =
-    UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx)))
+  def getUserADM(ctx: RequestContext) = UnsafeZioRun.runToFuture(Authenticator.getUserADM(ctx))
 }

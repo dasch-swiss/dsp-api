@@ -7,7 +7,6 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import zio.ZIO
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
@@ -34,9 +33,7 @@ final case class AuthenticationRouteV2(
     path("v2" / "authentication") {
       get { // authenticate credentials
         requestContext =>
-          requestContext.complete {
-            UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.doAuthenticateV2(requestContext)))
-          }
+          requestContext.complete(UnsafeZioRun.runToFuture(Authenticator.doAuthenticateV2(requestContext)))
       } ~
         post { // login
           /* send iri, email, or username, and password in body as:
@@ -55,16 +52,10 @@ final case class AuthenticationRouteV2(
           entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
             requestContext.complete {
               UnsafeZioRun.runToFuture(
-                ZIO.serviceWithZIO[Authenticator](
-                  _.doLoginV2(
-                    credentials = KnoraPasswordCredentialsV2(
-                      UserIdentifierADM(
-                        maybeIri = apiRequest.iri,
-                        maybeEmail = apiRequest.email,
-                        maybeUsername = apiRequest.username
-                      ),
-                      password = apiRequest.password
-                    )
+                Authenticator.doLoginV2(
+                  KnoraPasswordCredentialsV2(
+                    UserIdentifierADM(apiRequest.iri, apiRequest.email, apiRequest.username),
+                    apiRequest.password
                   )
                 )
               )
@@ -73,32 +64,21 @@ final case class AuthenticationRouteV2(
         } ~
         delete { // logout
           requestContext =>
-            requestContext.complete {
-              UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.doLogoutV2(requestContext)))
-            }
+            requestContext.complete(UnsafeZioRun.runToFuture(Authenticator.doLogoutV2(requestContext)))
         }
     } ~
       path("v2" / "login") {
         get { // html login interface (necessary for IIIF Authentication API support)
           requestContext =>
-            requestContext.complete {
-              UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.presentLoginFormV2(requestContext)))
-            }
+            requestContext.complete(UnsafeZioRun.runToFuture(Authenticator.presentLoginFormV2(requestContext)))
         } ~
           post { // called by html login interface (necessary for IIIF Authentication API support)
             formFields(Symbol("username"), Symbol("password")) { (username, password) => requestContext =>
               {
                 requestContext.complete {
                   UnsafeZioRun.runToFuture(
-                    ZIO.serviceWithZIO[Authenticator](
-                      _.doLoginV2(
-                        credentials = KnoraPasswordCredentialsV2(
-                          UserIdentifierADM(
-                            maybeUsername = Some(username)
-                          ),
-                          password = password
-                        )
-                      )
+                    Authenticator.doLoginV2(
+                      KnoraPasswordCredentialsV2(UserIdentifierADM(maybeUsername = Some(username)), password)
                     )
                   )
                 }
