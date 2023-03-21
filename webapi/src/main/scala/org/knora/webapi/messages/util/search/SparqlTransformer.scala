@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.util.search
 
-import zio._
 import zio.ZLayer
+import zio._
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
