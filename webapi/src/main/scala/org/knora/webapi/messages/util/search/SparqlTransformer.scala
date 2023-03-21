@@ -5,9 +5,7 @@
 
 package org.knora.webapi.messages.util.search
 
-import zio.Task
-import zio.UIO
-import zio.ZIO
+import zio._
 import zio.ZLayer
 
 import dsp.errors.AssertionException
