@@ -23,6 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import zio._
 import scala.concurrent.ExecutionContext
 
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
 import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.routing.UnsafeZioRun
 
@@ -53,9 +54,8 @@ abstract class CoreSpec
   private val bootstrap = util.Logger.text() >>> effectLayers
 
   // create a configured runtime
-  implicit val runtime = Unsafe.unsafe { implicit u =>
-    Runtime.unsafe
-      .fromLayer(bootstrap)
+  implicit val runtime: Runtime.Scoped[DefaultTestEnvironmentWithoutSipi] = Unsafe.unsafe { implicit u =>
+    Runtime.unsafe.fromLayer(bootstrap)
   }
 
   def getService[R: Tag](implicit runtime: Runtime[R]): R = UnsafeZioRun.runOrThrow(ZIO.service[R])

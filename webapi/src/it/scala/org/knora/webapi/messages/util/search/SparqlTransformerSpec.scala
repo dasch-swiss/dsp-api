@@ -10,6 +10,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
@@ -27,38 +28,26 @@ class SparqlTransformerSpec extends CoreSpec {
   "SparqlTransformer" should {
 
     "create a syntactically valid base name from a given variable" in {
-
       val baseName = SparqlTransformer.escapeEntityForVariable(QueryVariable("book"))
-
       baseName should ===("book")
-
     }
 
     "create a syntactically valid base name from a given data IRI" in {
-
       val baseName = SparqlTransformer.escapeEntityForVariable(IriRef("http://rdfh.ch/users/91e19f1e01".toSmartIri))
-
       baseName should ===("httprdfhchusers91e19f1e01")
-
     }
 
     "create a syntactically valid base name from a given ontology IRI" in {
-
       val baseName = SparqlTransformer.escapeEntityForVariable(
         IriRef("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
       )
-
       baseName should ===("httpwwwknoraorgontology0803incunabulabook")
-
     }
 
     "create a syntactically valid base name from a given string literal" in {
-
       val baseName =
         SparqlTransformer.escapeEntityForVariable(XsdLiteral("dumm", OntologyConstants.Xsd.String.toSmartIri))
-
       baseName should ===("dumm")
-
     }
 
     "create a unique variable name based on an entity and a property" in {
@@ -67,7 +56,6 @@ class SparqlTransformerSpec extends CoreSpec {
           QueryVariable("linkingProp1"),
           OntologyConstants.KnoraBase.HasLinkToValue
         )
-
       generatedQueryVar should ===(QueryVariable("linkingProp1__hasLinkToValue"))
     }
 
@@ -87,15 +75,12 @@ class SparqlTransformerSpec extends CoreSpec {
         pred = IriRef(hasOtherThingIRI),
         obj = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri)
       )
-
       val patterns: Seq[StatementPattern] = Seq(
         typeStatement,
         isDeletedStatement,
         linkStatement
       )
-
       val optimisedPatterns = SparqlTransformer.optimiseIsDeletedWithFilter(patterns)
-
       val expectedPatterns = Seq(
         typeStatement,
         linkStatement,
@@ -109,7 +94,6 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-
       optimisedPatterns should ===(expectedPatterns)
     }
 
@@ -127,21 +111,17 @@ class SparqlTransformerSpec extends CoreSpec {
         )
       val bindPattern =
         BindPattern(variable = QueryVariable("foo"), expression = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri))
-
       val patterns: Seq[QueryPattern] = Seq(
         typeStatement,
         hasValueStatement,
         bindPattern
       )
-
       val optimisedPatterns = SparqlTransformer.moveBindToBeginning(patterns)
-
       val expectedPatterns: Seq[QueryPattern] = Seq(
         bindPattern,
         typeStatement,
         hasValueStatement
       )
-
       optimisedPatterns should ===(expectedPatterns)
     }
 
@@ -158,28 +138,23 @@ class SparqlTransformerSpec extends CoreSpec {
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
           QueryVariable("text__valueHasString")
         )
-
       val luceneQueryPattern = LuceneQueryPattern(
         subj = QueryVariable("text"),
         obj = QueryVariable("text__valueHasString"),
         queryString = LuceneQueryString("Zeitglöcklein"),
         literalStatement = Some(valueHasStringStatement)
       )
-
       val patterns: Seq[QueryPattern] = Seq(
         hasValueStatement,
         valueHasStringStatement,
         luceneQueryPattern
       )
-
       val optimisedPatterns = SparqlTransformer.moveLuceneToBeginning(patterns)
-
       val expectedPatterns: Seq[QueryPattern] = Seq(
         luceneQueryPattern,
         hasValueStatement,
         valueHasStringStatement
       )
-
       optimisedPatterns should ===(expectedPatterns)
     }
 
@@ -189,7 +164,8 @@ class SparqlTransformerSpec extends CoreSpec {
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(blueThingIRI)
       )
-      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
+
+      val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
         statementPattern = typeStatement,
         simulateInference = true
       )
@@ -203,7 +179,7 @@ class SparqlTransformerSpec extends CoreSpec {
         )
       )
 
-      expandedStatements should equal(expectedStatements)
+      UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
 
     "create a union pattern to simulate RDF inference for a class, if there are known subclasses" in {
@@ -212,11 +188,6 @@ class SparqlTransformerSpec extends CoreSpec {
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(thingIRI)
       )
-      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
-        statementPattern = typeStatement,
-        simulateInference = true
-      )
-
       val expectedUnionPattern = UnionPattern(
         Seq(
           Seq(
@@ -253,8 +224,11 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-
-      expandedStatements match {
+      val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
+        statementPattern = typeStatement,
+        simulateInference = true
+      )
+      UnsafeZioRun.runOrThrow(expandedStatements) match {
         case (head: UnionPattern) :: Nil =>
           head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
         case _ => throw new AssertionError("Simulated RDF inference should have resulted in exactly one Union Pattern")
@@ -268,11 +242,6 @@ class SparqlTransformerSpec extends CoreSpec {
           pred = IriRef(hasTextIRI),
           obj = QueryVariable("text")
         )
-      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
-        statementPattern = hasValueStatement,
-        simulateInference = true
-      )
-
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(
           subj = QueryVariable(variableName = "foo"),
@@ -284,8 +253,11 @@ class SparqlTransformerSpec extends CoreSpec {
           namedGraph = None
         )
       )
-
-      expandedStatements should equal(expectedStatements)
+      val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
+        statementPattern = hasValueStatement,
+        simulateInference = true
+      )
+      UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
 
     "create a union pattern to simulate RDF inference for a property, if there are known subproperties" in {
@@ -295,11 +267,6 @@ class SparqlTransformerSpec extends CoreSpec {
           pred = IriRef(hasOtherThingIRI),
           obj = QueryVariable("text")
         )
-      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
-        statementPattern = hasValueStatement,
-        simulateInference = true
-      )
-
       val expectedUnionPattern: UnionPattern = UnionPattern(
         Seq(
           Seq(
@@ -337,7 +304,11 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-      expandedStatements match {
+      val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
+        statementPattern = hasValueStatement,
+        simulateInference = true
+      )
+      UnsafeZioRun.runOrThrow(expandedStatements) match {
         case (head: UnionPattern) :: Nil =>
           head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
         case _ => throw new AssertionError("Simulated RDF inference should have resulted in exactly one Union Pattern")
