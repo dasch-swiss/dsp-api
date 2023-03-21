@@ -9,6 +9,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import zio._
 
 import java.time.Instant
 import java.util.UUID
@@ -38,7 +39,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class ValuesRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: zio.Runtime[Authenticator]
+  override protected val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**

@@ -8,6 +8,7 @@ package org.knora.webapi.routing.admin.permissions
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 
 import java.util.UUID
 
@@ -18,7 +19,7 @@ import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 final case class DeletePermissionRouteADM(
   private val routeData: KnoraRouteData,
-  override protected val runtime: zio.Runtime[Authenticator]
+  override protected val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime)
     with PermissionsADMJsonProtocol {
 

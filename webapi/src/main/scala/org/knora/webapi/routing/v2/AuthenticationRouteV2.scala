@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
@@ -22,7 +23,7 @@ import org.knora.webapi.routing.UnsafeZioRun
  */
 final case class AuthenticationRouteV2(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: zio.Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime)
     with AuthenticationV2JsonProtocol {
 

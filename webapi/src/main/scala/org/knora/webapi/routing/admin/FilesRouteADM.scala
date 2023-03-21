@@ -7,6 +7,7 @@ package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
@@ -20,7 +21,7 @@ import org.knora.webapi.routing.RouteUtilADM
  */
 final case class FilesRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: zio.Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**

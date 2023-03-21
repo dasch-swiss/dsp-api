@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.MediaTypes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import java.awt.Color
 import java.awt.Font
@@ -28,7 +29,7 @@ import org.knora.webapi.routing.KnoraRouteData
  */
 final case class AssetsRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: zio.Runtime[Authenticator]
+  override protected val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**

@@ -7,6 +7,7 @@ package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import org.knora.webapi.routing
 import org.knora.webapi.routing.KnoraRoute
@@ -18,7 +19,7 @@ import org.knora.webapi.routing.admin.permissions._
  */
 final case class PermissionsRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: zio.Runtime[routing.Authenticator]
+  override protected implicit val runtime: Runtime[routing.Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
   private val createPermissionRoute: CreatePermissionRouteADM = CreatePermissionRouteADM(routeData, runtime)
   private val getPermissionRoute: GetPermissionsRouteADM      = GetPermissionsRouteADM(routeData, runtime)

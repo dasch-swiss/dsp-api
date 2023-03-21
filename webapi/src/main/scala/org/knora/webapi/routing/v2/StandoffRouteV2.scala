@@ -9,6 +9,7 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio.Runtime
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -33,7 +34,7 @@ import org.knora.webapi.routing.RouteUtilV2
  */
 final case class StandoffRouteV2(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: zio.Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**

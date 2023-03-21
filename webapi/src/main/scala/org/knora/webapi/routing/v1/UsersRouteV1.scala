@@ -8,6 +8,7 @@ package org.knora.webapi.routing.v1
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
+import zio._
 
 import java.util.UUID
 
@@ -23,7 +24,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class UsersRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: zio.Runtime[Authenticator]
+  override protected val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
 
   private val schemes = Array("http", "https")

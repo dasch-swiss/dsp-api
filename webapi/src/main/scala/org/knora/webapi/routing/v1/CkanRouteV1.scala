@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.Authenticator
@@ -19,7 +20,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class CkanRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: zio.Runtime[Authenticator]
+  override protected val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**

@@ -14,12 +14,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
-import zio.Exit
 import zio.Exit.Failure
 import zio.Exit.Success
-import zio.Runtime
-import zio.Unsafe
-import zio.ZIO
+import zio._
 import zio.json._
 
 import java.time.Instant
@@ -52,7 +49,7 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastM
  */
 final case class ResourcesRouteV2(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: zio.Runtime[Authenticator with RestResourceInfoService]
+  override protected implicit val runtime: Runtime[Authenticator with RestResourceInfoService]
 ) extends KnoraRoute(routeData, runtime) {
 
   private val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")

@@ -8,7 +8,7 @@ package org.knora.webapi.routing.v2
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import zio.ZIO
+import zio._
 import zio.prelude.Validation
 
 import java.util.UUID.randomUUID
@@ -45,7 +45,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
  */
 final case class OntologiesRouteV2(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: zio.Runtime[Authenticator with RestCardinalityService]
+  override protected implicit val runtime: Runtime[Authenticator with RestCardinalityService]
 ) extends KnoraRoute(routeData, runtime) {
 
   val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")

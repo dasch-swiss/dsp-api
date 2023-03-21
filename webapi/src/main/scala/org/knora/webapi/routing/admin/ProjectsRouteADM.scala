@@ -19,6 +19,7 @@ import akka.stream.IOResult
 import akka.stream.scaladsl.FileIO
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import zio._
 import zio.prelude.Validation
 
 import java.nio.file.Files
@@ -40,7 +41,7 @@ import org.knora.webapi.routing.RouteUtilADM
 
 final case class ProjectsRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: zio.Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime)
     with ProjectsADMJsonProtocol {
 

@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import scala.concurrent.Future
 
@@ -28,7 +29,7 @@ import org.knora.webapi.routing.RouteUtilV2
  */
 final case class SearchRouteV2(
   private val routeData: KnoraRouteData,
-  override protected val runtime: zio.Runtime[Authenticator]
+  override protected val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"

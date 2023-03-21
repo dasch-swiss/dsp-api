@@ -14,6 +14,7 @@ import akka.pattern._
 import org.w3c.dom.ls.LSInput
 import org.w3c.dom.ls.LSResourceResolver
 import org.xml.sax.SAXException
+import zio._
 
 import java.io._
 import java.nio.charset.StandardCharsets
@@ -65,7 +66,7 @@ import org.knora.webapi.util.FileUtil
  */
 final case class ResourcesRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: zio.Runtime[Authenticator]
+  override protected val runtime: Runtime[Authenticator]
 ) extends KnoraRoute(routeData, runtime) {
   // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
   private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
