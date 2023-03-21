@@ -21,14 +21,15 @@ import pdi.jwt.JwtSprayJson
 import spray.json._
 import zio._
 import zio.macros.accessible
+
 import java.util.Base64
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
-
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
