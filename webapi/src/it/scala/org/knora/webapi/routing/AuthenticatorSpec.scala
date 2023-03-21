@@ -87,28 +87,28 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
         resF map { _ => assertThrows(BadCredentialsException) }
       }
       "succeed with correct token" in {
-        val token = JWTHelper.createToken(
-          "http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA",
-          appConfig.jwtSecretKey,
-          appConfig.jwtLongevityAsDuration,
-          appConfig.knoraApi.externalKnoraApiHostPort
+        val resF = UnsafeZioRun.runToFuture(
+          for {
+            token     <- JwtService.createToken("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")
+            tokenCreds = KnoraJWTTokenCredentialsV2(token)
+            result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
+          } yield result
         )
-        val tokenCreds = KnoraJWTTokenCredentialsV2(token)
-        val resF       = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(tokenCreds)))
         resF map { res => assert(res) }
       }
       "fail with invalidated token" in {
-        val token = JWTHelper.createToken(
-          "http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA",
-          appConfig.jwtSecretKey,
-          appConfig.jwtLongevityAsDuration,
-          appConfig.knoraApi.externalKnoraApiHostPort
-        )
-        val tokenCreds = KnoraJWTTokenCredentialsV2(token)
-        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
 
         assertThrows[BadCredentialsException] {
-          throw UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(tokenCreds))).causeOption.get.squash
+          throw UnsafeZioRun
+            .run(for {
+              token     <- JwtService.createToken("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")
+              tokenCreds = KnoraJWTTokenCredentialsV2(token)
+              _          = CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
+              result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
+            } yield result)
+            .causeOption
+            .get
+            .squash
         }
       }
       "fail with wrong token" in {

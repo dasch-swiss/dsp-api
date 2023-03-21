@@ -21,16 +21,14 @@ import pdi.jwt.JwtSprayJson
 import spray.json._
 import zio._
 import zio.macros.accessible
-
 import java.util.Base64
-import java.util.UUID
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
+
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -184,6 +182,7 @@ object Authenticator {
 final case class AuthenticatorLive(
   private val appConfig: AppConfig,
   private val messageRelay: MessageRelay,
+  private val jwtService: JwtService,
   private implicit val stringFormatter: StringFormatter
 ) extends Authenticator {
 
@@ -201,15 +200,10 @@ final case class AuthenticatorLive(
     val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
     for {
-      userADM     <- getUserADMThroughCredentialsV2(credentials)
-      userProfile  = userADM.asUserProfileV1
-      cookieDomain = Some(appConfig.cookieDomain)
-      sessionToken = JWTHelper.createToken(
-                       userProfile.userData.user_id.get,
-                       appConfig.jwtSecretKey,
-                       appConfig.jwtLongevityAsDuration,
-                       appConfig.knoraApi.externalKnoraApiHostPort
-                     )
+      userADM      <- getUserADMThroughCredentialsV2(credentials)
+      userProfile   = userADM.asUserProfileV1
+      cookieDomain  = Some(appConfig.cookieDomain)
+      sessionToken <- jwtService.createToken(userProfile.userData.user_id.get)
       httpResponse = HttpResponse(
                        headers = List(
                          headers.`Set-Cookie`(
@@ -248,12 +242,7 @@ final case class AuthenticatorLive(
       _           <- authenticateCredentialsV2(credentials = Some(credentials))
       userADM     <- getUserByIdentifier(credentials.identifier)
       cookieDomain = Some(appConfig.cookieDomain)
-      token = JWTHelper.createToken(
-                userADM.id,
-                appConfig.jwtSecretKey,
-                appConfig.jwtLongevityAsDuration,
-                appConfig.knoraApi.externalKnoraApiHostPort
-              )
+      token       <- jwtService.createToken(userADM.id)
 
       httpResponse = HttpResponse(
                        headers = List(
@@ -504,27 +493,13 @@ final case class AuthenticatorLive(
                   case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
                     ZIO
                       .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-                      .whenZIO(
-                        ZIO.attempt(
-                          !JWTHelper.validateToken(
-                            jwtToken,
-                            appConfig.jwtSecretKey,
-                            appConfig.knoraApi.externalKnoraApiHostPort
-                          )
-                        )
-                      )
+                      .whenZIO(jwtService.validateToken(jwtToken).map(!_))
                       .as(true)
                   case Some(KnoraSessionCredentialsV2(sessionToken)) =>
                     ZIO
                       .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
                       .whenZIO(
-                        ZIO.attempt(
-                          !JWTHelper.validateToken(
-                            sessionToken,
-                            appConfig.jwtSecretKey,
-                            appConfig.knoraApi.externalKnoraApiHostPort
-                          )
-                        )
+                        jwtService.validateToken(sessionToken).map(!_)
                       )
                       .as(true)
                   case None =>
@@ -717,14 +692,8 @@ final case class AuthenticatorLive(
                 case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
                   for {
                     userIri <-
-                      ZIO
-                        .attempt(
-                          JWTHelper.extractUserIriFromToken(
-                            jwtToken,
-                            appConfig.jwtSecretKey,
-                            appConfig.knoraApi.externalKnoraApiHostPort
-                          )
-                        )
+                      jwtService
+                        .extractUserIriFromToken(jwtToken)
                         .flatMap(ZIO.fromOption(_))
                         .orElseFail(
                           AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
@@ -734,14 +703,8 @@ final case class AuthenticatorLive(
                 case Some(KnoraSessionCredentialsV2(sessionToken)) =>
                   for {
                     userIri <-
-                      ZIO
-                        .attempt(
-                          JWTHelper.extractUserIriFromToken(
-                            sessionToken,
-                            appConfig.jwtSecretKey,
-                            appConfig.knoraApi.externalKnoraApiHostPort
-                          )
-                        )
+                      jwtService
+                        .extractUserIriFromToken(sessionToken)
                         .flatMap(ZIO.fromOption(_))
                         .orElseFail(
                           AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
@@ -788,15 +751,48 @@ final case class AuthenticatorLive(
 }
 
 object AuthenticatorLive {
-  val layer: URLayer[AppConfig with MessageRelay with StringFormatter, AuthenticatorLive] =
+  val layer: URLayer[AppConfig with JwtService with MessageRelay with StringFormatter, AuthenticatorLive] =
     ZLayer.fromFunction(AuthenticatorLive.apply _)
 }
 
 /**
  * Provides functions for creating, decoding, and validating JWT tokens.
  */
-object JWTHelper {
+@accessible
+trait JwtService {
 
+  /**
+   * Creates a JWT.
+   *
+   * @param userIri   the user IRI that will be encoded into the token.
+   * @param content   any other content to be included in the token.
+   * @return a [[String]] containing the JWT.
+   */
+  def createToken(userIri: IRI, content: Map[String, JsValue] = Map.empty): Task[String]
+
+  /**
+   * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
+   * tokens, which would otherwise validate. This method also makes sure that the required headers and claims are
+   * present.
+   *
+   * @param token  the JWT.
+   * @return a [[Boolean]].
+   */
+  def validateToken(token: String): Task[Boolean]
+
+  /**
+   * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
+   *
+   * @param token  the JWT.
+   * @return an optional [[IRI]].
+   */
+  def extractUserIriFromToken(token: String): Task[Option[IRI]]
+}
+
+final case class JwtServiceLive(private val config: AppConfig, stringFormatter: StringFormatter) extends JwtService {
+  private val secret                  = config.jwtSecretKey
+  private val longevity               = config.jwtLongevityAsDuration
+  private val issuer                  = config.knoraApi.externalKnoraApiHostPort
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
 
   private val header: String = """{"typ":"JWT","alg":"HS256"}"""
@@ -807,46 +803,24 @@ object JWTHelper {
    * Creates a JWT.
    *
    * @param userIri   the user IRI that will be encoded into the token.
-   * @param secret    the secret key used for encoding.
-   * @param longevity the token's longevity.
-   * @param issuer    the principal that issued the JWT.
-   * @param content   any other content to be included in the token.
    * @return a [[String]] containing the JWT.
    */
-  def createToken(
-    userIri: IRI,
-    secret: String,
-    longevity: scala.concurrent.duration.Duration,
-    issuer: String,
-    content: Map[String, JsValue] = Map.empty
-  ): String = {
-    val stringFormatter = StringFormatter.getGeneralInstance
-
-    // now in seconds
-    val now: Long = java.lang.System.currentTimeMillis() / 1000L
-
-    // calculate expiration time (seconds)
-    val nowPlusLongevity: Long = now + longevity.toSeconds
-
-    val identifier: String = stringFormatter.base64EncodeUuid(UUID.randomUUID)
-
-    val claim: String = JwtClaim(
-      content = JsObject(content).compactPrint,
-      issuer = Some(issuer),
-      subject = Some(userIri),
-      audience = Some(Set("Knora", "Sipi")),
-      issuedAt = Some(now),
-      expiration = Some(nowPlusLongevity),
-      jwtId = Some(identifier)
-    ).toJson
-
-    JwtSprayJson.encode(
-      header = header,
-      claim = claim,
-      key = secret,
-      algorithm = algorithm
-    )
-  }
+  override def createToken(userIri: IRI, content: Map[String, JsValue] = Map.empty): Task[String] =
+    for {
+      now  <- Clock.instant
+      uuid <- ZIO.random.flatMap(_.nextUUID)
+      exp   = now.plusSeconds(longevity.toSeconds).getEpochSecond
+      jwtId = Some(stringFormatter.base64EncodeUuid(uuid))
+      claim = JwtClaim(
+                content = JsObject(content).compactPrint,
+                issuer = Some(issuer),
+                subject = Some(userIri),
+                audience = Some(Set("Knora", "Sipi")),
+                issuedAt = Some(now.getEpochSecond),
+                expiration = Some(exp),
+                jwtId = jwtId
+              ).toJson
+    } yield JwtSprayJson.encode(header, claim, secret, algorithm)
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
@@ -854,65 +828,33 @@ object JWTHelper {
    * present.
    *
    * @param token  the JWT.
-   * @param secret the secret used to encode the token.
-   * @param issuer the principal that issued the JWT.
    * @return a [[Boolean]].
    */
-  def validateToken(token: String, secret: String, issuer: String): Boolean =
-    if (CacheUtil.get[UserADM](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
+  override def validateToken(token: String): Task[Boolean] =
+    ZIO.attempt(if (CacheUtil.get[UserADM](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
       // token invalidated so no need to decode
       logger.debug("validateToken - token found in invalidation cache, so not valid")
       false
     } else {
-      decodeToken(token, secret, issuer).isDefined
-    }
+      decodeToken(token).isDefined
+    })
 
   /**
    * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
    *
    * @param token  the JWT.
-   * @param secret the secret used to encode the token.
-   * @param issuer the principal that issued the JWT.
    * @return an optional [[IRI]].
    */
-  def extractUserIriFromToken(token: String, secret: String, issuer: String): Option[IRI] =
-    decodeToken(token, secret, issuer) match {
-      case Some((_: JwtHeader, claim: JwtClaim)) => claim.subject
-      case None                                  => None
-    }
-
-  /**
-   * Extracts application-specific content from a JWT token.  This method also makes sure that the required headers
-   * and claims are present.
-   *
-   * @param token       the JWT.
-   * @param secret      the secret used to encode the token.
-   * @param contentName the name of the content field to be extracted.
-   * @param issuer      the principal that issued the JWT.
-   * @return the [[String]] value of the specified content field.
-   */
-  def extractContentFromToken(token: String, secret: String, contentName: String, issuer: String): Option[String] =
-    decodeToken(token, secret, issuer) match {
-      case Some((_: JwtHeader, claim: JwtClaim)) =>
-        claim.content.parseJson.asJsObject.fields.get(contentName) match {
-          case Some(jsString: JsString) => Some(jsString.value)
-          case _                        => None
-        }
-
-      case None => None
-    }
+  override def extractUserIriFromToken(token: String): Task[Option[IRI]] =
+    ZIO.attempt(decodeToken(token)).map(_.flatMap(_._2.subject))
 
   /**
    * Decodes and validates a JWT token.
    *
    * @param token  the token to be decoded.
-   * @param secret the secret used to encode the token.
-   * @param issuer      the principal that issued the JWT.
    * @return the token's header and claim, or `None` if the token is invalid.
    */
-  private def decodeToken(token: String, secret: String, issuer: String): Option[(JwtHeader, JwtClaim)] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
+  def decodeToken(token: String): Option[(JwtHeader, JwtClaim)] =
     JwtSprayJson.decodeAll(token, secret, Seq(JwtAlgorithm.HS256)) match {
       case Success((header: JwtHeader, claim: JwtClaim, _)) =>
         val missingRequiredContent: Boolean = Set(
@@ -941,5 +883,7 @@ object JWTHelper {
         logger.debug("Invalid JWT")
         None
     }
-  }
+}
+object JwtServiceLive {
+  val layer: URLayer[AppConfig with StringFormatter, JwtServiceLive] = ZLayer.fromFunction(JwtServiceLive.apply _)
 }

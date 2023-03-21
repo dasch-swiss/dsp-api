@@ -8,7 +8,6 @@ package org.knora.webapi.core
 import zio.ULayer
 import zio.ZLayer
 
-import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
@@ -80,6 +79,8 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.ApiRoutes
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.AuthenticatorLive
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -132,7 +133,7 @@ object LayersLive {
       with IIIFService
       with IIIFRequestMessageHandler
       with IriService
-      with JWTService
+      with JwtService
       with ListsResponderV2
       with ListsResponderADM
       with ListsResponderV1
@@ -200,7 +201,7 @@ object LayersLive {
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       IriService.layer,
-      JWTService.layer,
+      JwtServiceLive.layer,
       ListsResponderV2Live.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,

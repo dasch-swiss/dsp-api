@@ -1,6 +1,5 @@
 package org.knora.webapi.core
 
-import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
@@ -101,6 +100,8 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2Live
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.AuthenticatorLive
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.routing.JwtServiceLive
 object LayersTest {
 
   /**
@@ -109,7 +110,7 @@ object LayersTest {
   type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
-  type CommonR0 = ActorSystem with IIIFService with AppConfig
+  type CommonR0 = ActorSystem with AppConfig with IIIFService with JwtService with StringFormatter
   type CommonR = ActorDeps
     with ActorToZioBridge
     with ApiRoutes
@@ -158,7 +159,6 @@ object LayersTest {
     with StandoffTagUtilV2
     with State
     with StoresResponderADM
-    with StringFormatter
     with TestClientService
     with TriplestoreService
     with TriplestoreRequestMessageHandler
@@ -219,7 +219,6 @@ object LayersTest {
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
-      StringFormatter.test,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       TriplestoreRequestMessageHandlerLive.layer,
@@ -231,20 +230,24 @@ object LayersTest {
     )
 
   private val fusekiAndSipiTestcontainers =
-    ZLayer.make[FusekiTestContainer with SipiTestContainer with AppConfig with JWTService with IIIFService](
+    ZLayer.make[
+      FusekiTestContainer with SipiTestContainer with AppConfig with JwtService with IIIFService with StringFormatter
+    ](
       AppConfigForTestContainers.testcontainers,
       FusekiTestContainer.layer,
       SipiTestContainer.layer,
       IIIFServiceSipiImpl.layer,
-      JWTService.layer
+      JwtServiceLive.layer,
+      StringFormatter.test
     )
 
   private val fusekiTestcontainers =
-    ZLayer.make[FusekiTestContainer with AppConfig with JWTService with IIIFService](
+    ZLayer.make[FusekiTestContainer with AppConfig with JwtService with IIIFService with StringFormatter](
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
       IIIFServiceMockImpl.layer,
-      JWTService.layer
+      JwtServiceLive.layer,
+      StringFormatter.test
     )
 
   /**
