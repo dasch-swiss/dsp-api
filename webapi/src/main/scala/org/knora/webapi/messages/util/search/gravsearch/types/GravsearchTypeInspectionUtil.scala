@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import scala.concurrent.ExecutionContext
+import zio._
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
@@ -13,12 +13,15 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.AnnotationRemovingWhereTransformer
 
 /**
  * Utilities for Gravsearch type inspection.
  */
 object GravsearchTypeInspectionUtil {
+
+  val layer: ZLayer[QueryTraverser, Nothing, GravsearchTypeInspectionUtil] =
+    ZLayer.fromFunction(GravsearchTypeInspectionUtil.apply _)
 
   /**
    * A trait for case objects representing type annotation properties.
@@ -162,41 +165,26 @@ object GravsearchTypeInspectionUtil {
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion],
       limitInferenceToOntologies: Option[Set[SmartIri]] = None
-    )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern] =
+    ): Task[Seq[QueryPattern]] = ZIO.attempt {
       if (mustBeAnnotationStatement(statementPattern)) {
         Seq.empty[QueryPattern]
       } else {
         Seq(statementPattern)
       }
+    }
 
-    override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+    override def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] =
+      ZIO.succeed(Seq(filterPattern))
 
-    override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
+    override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.succeed(patterns)
 
-    override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
-      Seq(luceneQueryPattern)
+    override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
+      ZIO.succeed(Seq(luceneQueryPattern))
 
-    override def enteringUnionBlock(): Unit = {}
+    override def enteringUnionBlock(): Task[Unit] = ZIO.unit
 
-    override def leavingUnionBlock(): Unit = {}
+    override def leavingUnionBlock(): Task[Unit] = ZIO.unit
   }
-
-  /**
-   * Removes Gravsearch type annotations from a WHERE clause.
-   *
-   * @param whereClause the WHERE clause.
-   * @return the same WHERE clause, minus any type annotations.
-   */
-  def removeTypeAnnotations(
-    whereClause: WhereClause
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): WhereClause =
-    whereClause.copy(
-      patterns = QueryTraverser.transformWherePatterns(
-        patterns = whereClause.patterns,
-        inputOrderBy = Seq.empty[OrderCriterion],
-        whereTransformer = new AnnotationRemovingWhereTransformer
-      )
-    )
 
   /**
    * Determines whether a statement pattern must represent a Gravsearch type annotation.
@@ -228,12 +216,6 @@ object GravsearchTypeInspectionUtil {
     canBeAnnotationStatement(statementPattern) && !hasRdfTypeKnoraApiResource
   }
 
-  /**
-   * Determines whether a statement pattern can represent a Gravsearch type annotation.
-   *
-   * @param statementPattern the statement pattern.
-   * @return `true` if the statement pattern can represent a type annotation.
-   */
   def canBeAnnotationStatement(statementPattern: StatementPattern): Boolean = {
 
     /**
@@ -275,4 +257,22 @@ object GravsearchTypeInspectionUtil {
       case _ => false
     }
   }
+}
+
+final case class GravsearchTypeInspectionUtil(queryTraverser: QueryTraverser) {
+
+  /**
+   * Removes Gravsearch type annotations from a WHERE clause.
+   *
+   * @param whereClause the WHERE clause.
+   * @return the same WHERE clause, minus any type annotations.
+   */
+  def removeTypeAnnotations(whereClause: WhereClause): Task[WhereClause] =
+    for {
+      wherePatterns <- queryTraverser.transformWherePatterns(
+                         patterns = whereClause.patterns,
+                         inputOrderBy = Seq.empty[OrderCriterion],
+                         whereTransformer = new AnnotationRemovingWhereTransformer
+                       )
+    } yield whereClause.copy(patterns = wherePatterns)
 }

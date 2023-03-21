@@ -5,13 +5,13 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scala.concurrent.ExecutionContext
+import zio.Task
+import zio.ZIO
 
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -30,14 +30,13 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
       querySchema = querySchema
-    )
-    with ConstructToSelectTransformer {
+    ) {
 
-  def transformStatementInWhere(
+  override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): Seq[QueryPattern] =
+  ): Task[Seq[QueryPattern]] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
     processStatementPatternFromWhereClause(
@@ -45,7 +44,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
       inputOrderBy = inputOrderBy
     )
 
-  def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
+  override def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.attempt {
     val filterExpression: TransformedFilterPattern =
       transformFilterPattern(filterPattern.expression, typeInspectionResult = typeInspectionResult, isTopLevel = true)
 
@@ -57,31 +56,33 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
 
   }
 
-  def getSelectColumns: Seq[SelectQueryColumn] =
+  override def getSelectColumns: Task[Seq[SelectQueryColumn]] =
     // return count aggregation function for main variable
-    Seq(Count(inputVariable = mainResourceVariable, distinct = true, outputVariableName = "count"))
+    ZIO.succeed(Seq(Count(inputVariable = mainResourceVariable, distinct = true, outputVariableName = "count")))
 
-  def getGroupBy(orderByCriteria: TransformedOrderBy): Seq[QueryVariable] =
-    Seq.empty[QueryVariable]
+  override def getGroupBy(orderByCriteria: TransformedOrderBy): Task[Seq[QueryVariable]] =
+    ZIO.succeed(Seq.empty[QueryVariable])
 
-  def getOrderBy(inputOrderBy: Seq[OrderCriterion]): TransformedOrderBy =
+  override def getOrderBy(inputOrderBy: Seq[OrderCriterion]): Task[TransformedOrderBy] =
     // empty by default
-    TransformedOrderBy()
+    ZIO.succeed(TransformedOrderBy())
 
-  def getLimit: Int = 1 // one row expected for count query
+  override def getLimit: Task[Int] = ZIO.succeed(1) // one row expected for count query
 
-  def getOffset(inputQueryOffset: Long, limit: Int): Long =
+  override def getOffset(inputQueryOffset: Long, limit: Int): Task[Long] =
     // count queries do not consider offsets since there is only one result row
-    0
+    ZIO.succeed(0L)
 
-  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
-    GravsearchQueryOptimisationFactory
-      .getGravsearchQueryOptimisationFeature(
-        typeInspectionResult = typeInspectionResult,
-        querySchema = querySchema
-      )
-      .optimiseQueryPatterns(patterns)
+  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
+    ZIO.attempt(
+      GravsearchQueryOptimisationFactory
+        .getGravsearchQueryOptimisationFeature(
+          typeInspectionResult = typeInspectionResult,
+          querySchema = querySchema
+        )
+        .optimiseQueryPatterns(patterns)
+    )
 
-  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
-    Seq(luceneQueryPattern)
+  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
+    ZIO.succeed(Seq(luceneQueryPattern))
 }
