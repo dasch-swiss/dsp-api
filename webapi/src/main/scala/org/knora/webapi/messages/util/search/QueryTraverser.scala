@@ -5,10 +5,7 @@
 
 package org.knora.webapi.messages.util.search
 
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
+import zio._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.InternalSchema
