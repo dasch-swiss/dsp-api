@@ -18,6 +18,9 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
+import org.knora.webapi.messages.util.search.QueryTraverser
+import org.knora.webapi.messages.util.search.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.ActorDeps
@@ -64,6 +67,8 @@ import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2Live
+import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.responders.v2.SearchResponderV2Live
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2Live
 import org.knora.webapi.responders.v2.ValuesResponderV2
@@ -145,12 +150,17 @@ object LayersLive {
       with RestCardinalityService
       with RestResourceInfoService
       with SearchResponderV1
+      with SearchResponderV2
+      with SparqlTransformerLive
+      with QueryTraverser
+      with GravsearchTypeInspectionUtil
       with SipiResponderADM
       with StandoffResponderV1
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
       with StoresResponderADM
+      with StringFormatter
       with TriplestoreService
       with TriplestoreRequestMessageHandler
       with UsersResponderADM
@@ -212,6 +222,10 @@ object LayersLive {
       RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
+      SearchResponderV2Live.layer,
+      SparqlTransformerLive.layer,
+      QueryTraverser.layer,
+      GravsearchTypeInspectionUtil.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV1Live.layer,
       StandoffResponderV2Live.layer,

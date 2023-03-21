@@ -6,9 +6,6 @@
 package org.knora.webapi.core.actors
 
 import akka.actor.Actor
-import com.typesafe.scalalogging.Logger
-
-import scala.concurrent.ExecutionContext
 
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
@@ -16,11 +13,8 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
-import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
@@ -45,23 +39,8 @@ final case class RoutingActor(
       with ValueUtilV1
   ]
 ) extends Actor {
-
-  private val log: Logger                                 = Logger(this.getClass)
-  private val actorDeps: ActorDeps                        = ActorDeps(context.system, self, appConfig.defaultTimeoutAsDuration)
-  private val responderData: ResponderData                = ResponderData(actorDeps, appConfig)
-  private implicit val executionContext: ExecutionContext = actorDeps.executionContext
-
-  // V2 responders
-  private val searchResponderV2: SearchResponderV2 = new SearchResponderV2(responderData, runtime)
-
   def receive: Receive = {
-    // RelayedMessages have a corresponding MessageHandler registered with the MessageRelay
     case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
-
-    // V2 request messages
-    case searchResponderRequestV2: SearchResponderRequestV2 =>
-      ActorUtil.future2Message(sender(), searchResponderV2.receive(searchResponderRequestV2), log)
-
     case other =>
       throw UnexpectedMessageException(
         s"RoutingActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"

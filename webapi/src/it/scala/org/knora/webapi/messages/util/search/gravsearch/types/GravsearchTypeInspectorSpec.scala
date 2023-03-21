@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util.search.gravsearch.types
+package org.knora.webapi.messages.util.search.gravsearch.types
 
 import akka.testkit.ImplicitSender
-
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
 import dsp.errors.GravsearchException
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import zio.RIO
+import zio.ZIO
+
 import org.knora.webapi._
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.util.search.gravsearch.types._
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
@@ -27,8 +27,6 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  private val timeout = 10.seconds
 
   val QueryWithExplicitTypeAnnotations: String =
     """
@@ -1332,26 +1330,42 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     entitiesInferredFromProperties = Map()
   )
 
+  def gravsearchTypeInspectionRunner(
+    inferTypes: Boolean
+  ): RIO[StringFormatter with MessageRelay with QueryTraverser, GravsearchTypeInspectionRunner] =
+    for {
+      qt <- ZIO.service[QueryTraverser]
+      mr <- ZIO.service[MessageRelay]
+      sf <- ZIO.service[StringFormatter]
+    } yield new GravsearchTypeInspectionRunner(inferTypes = inferTypes, qt, mr, sf)
+
+  def inspectTypes(
+    inferTypes: Boolean,
+    query: String
+  ): ZIO[StringFormatter with MessageRelay with QueryTraverser, Throwable, GravsearchTypeInspectionResult] =
+    for {
+      parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(query))
+      runner      <- gravsearchTypeInspectionRunner(inferTypes)
+      result      <- runner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+    } yield result
+
   "The type inspection utility" should {
     "remove the type annotations from a WHERE clause" in {
-      val parsedQuery                   = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
-      val whereClauseWithoutAnnotations = GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
+      val whereClauseWithoutAnnotations = UnsafeZioRun.runOrThrow {
+        for {
+          parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations))
+          util        <- ZIO.service[GravsearchTypeInspectionUtil]
+          result      <- util.removeTypeAnnotations(parsedQuery.whereClause)
+        } yield result
+      }
       whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
     }
   }
 
   "The annotation-reading type inspector" should {
     "get type information from a simple query" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = false
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
+      val runZio = inspectTypes(false, QueryWithExplicitTypeAnnotations)
+      val result = UnsafeZioRun.runOrThrow(runZio)
       assert(result == SimpleTypeInspectionResult)
     }
   }
@@ -1427,13 +1441,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
       val typeInspectionRunner =
         new InferringGravsearchTypeInspector(
           nextInspector = None,
-          appActor,
-          responderData = responderData
+          getService[MessageRelay],
+          getService[QueryTraverser]
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
-      val (_, entityInfo) = Await.result(
-        typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
-        timeout
+      val (_, entityInfo) = UnsafeZioRun.runOrThrow(
+        typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser)
       )
       val multipleDetectedTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(
         entities = Map(
@@ -1483,13 +1496,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
       val typeInspectionRunner =
         new InferringGravsearchTypeInspector(
           nextInspector = None,
-          appActor,
-          responderData = responderData
+          getService[MessageRelay],
+          getService[QueryTraverser]
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
-      val (usageIndex, entityInfo) = Await.result(
-        typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
-        timeout
+      val (usageIndex, entityInfo) = UnsafeZioRun.runOrThrow(
+        typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser)
       )
       val inconsistentTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(
         entities = Map(
@@ -1565,13 +1577,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
       val typeInspectionRunner =
         new InferringGravsearchTypeInspector(
           nextInspector = None,
-          appActor,
-          responderData = responderData
+          getService[MessageRelay],
+          getService[QueryTraverser]
         )
       val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
-      val (usageIndex, entityInfo) = Await.result(
-        typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser),
-        timeout
+      val (usageIndex, entityInfo) = UnsafeZioRun.runOrThrow(
+        typeInspectionRunner.getUsageIndexAndEntityInfos(parsedQuery.whereClause, requestingUser = anythingAdminUser)
       )
       val inconsistentTypes: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(
         entities = Map(
@@ -1628,16 +1639,8 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     }
 
     "sanitize inconsistent types resulted from a union" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes3)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
+      val runZio = inspectTypes(inferTypes = true, QueryWithInconsistentTypes3)
+      val result = UnsafeZioRun.runOrThrow(runZio)
 
       val expectedResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
         entities = Map(
@@ -1691,17 +1694,8 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
           |}
           |}
                 """.stripMargin
-
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(queryWithOptional)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
+      val runZio = inspectTypes(inferTypes = true, queryWithOptional)
+      val result = UnsafeZioRun.runOrThrow(runZio)
 
       // From property "beol:hasRecipient" the type of ?document is inferred to be beol:basicLetter, and
       // since writtenSource is a base class of basicLetter, it is ignored and type "beol:basicLetter" is considered for ?document.
@@ -1758,31 +1752,15 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     }
 
     "infer the most specific type from redundant ones given in a query" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithRedundantTypes)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
+      val runZio = inspectTypes(inferTypes = true, QueryWithRedundantTypes)
+      val result = UnsafeZioRun.runOrThrow(runZio)
       assert(result.entities.size == 5)
       result.entitiesInferredFromProperties.keySet should not contain TypeableVariable("letter")
     }
 
     "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
+      val runZio = inspectTypes(inferTypes = true, QueryRdfTypeRule)
+      val result = UnsafeZioRun.runOrThrow(runZio)
       assert(result.entities == TypeInferenceResult1.entities)
       result.entitiesInferredFromProperties.keySet should contain(TypeableVariable("date"))
       result.entitiesInferredFromProperties.keySet should contain(
@@ -1792,300 +1770,109 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     }
 
     "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryKnoraObjectTypeFromPropertyIriRule)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResult1.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryKnoraObjectTypeFromPropertyIriRule)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult1.entities)
     }
 
     "infer an entity's type if the entity is used as the object of a statement and the predicate's knora-api:objectType is known" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfObjectFromPropertyRule)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResult1.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryTypeOfObjectFromPropertyRule)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult1.entities)
     }
 
     "infer the knora-api:objectType of a property variable if it's used with an object whose type is known" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryKnoraObjectTypeFromObjectRule)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResult1.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryKnoraObjectTypeFromObjectRule)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult1.entities)
     }
 
     "infer an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and the predicate's knora-api:subjectType is known" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResultNoSubject.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryTypeOfSubjectFromPropertyRule)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResultNoSubject.entities)
     }
 
     "infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromFilterRule)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResult2.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryPropertyVarTypeFromFilterRule)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult2.entities)
     }
 
     "infer the type of a non-property variable if it's compared to an XSD literal in a FILTER" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryNonPropertyVarTypeFromFilterRule)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResult4.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryNonPropertyVarTypeFromFilterRule)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult4.entities)
     }
 
     "infer the type of a non-property variable used as the argument of a function in a FILTER" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryVarTypeFromFunction)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResult5.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryVarTypeFromFunction)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult5.entities)
     }
 
     "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryIriTypeFromFunction)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResult6.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryIriTypeFromFunction)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult6.entities)
     }
 
     "infer the types in a query that requires 6 iterations" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == PathologicalTypeInferenceResult.entities)
+      val runZio = inspectTypes(inferTypes = true, PathologicalQuery)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == PathologicalTypeInferenceResult.entities)
     }
 
     "know the object type of rdfs:label" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndLiteral)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == RdfsLabelWithLiteralResult.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryWithRdfsLabelAndLiteral)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == RdfsLabelWithLiteralResult.entities)
     }
 
     "infer the type of a variable used as the object of rdfs:label" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithRdfsLabelAndVariable)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == RdfsLabelWithVariableResult.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryWithRdfsLabelAndVariable)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == RdfsLabelWithVariableResult.entities)
     }
 
     "infer the type of a variable when it is compared with another variable in a FILTER (in the simple schema)" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourcesInSimpleSchema)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == QueryComparingResourcesInSimpleSchemaResult.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryComparingResourcesInSimpleSchema)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryComparingResourcesInSimpleSchemaResult.entities)
     }
 
     "infer the type of a variable when it is compared with another variable in a FILTER (in the complex schema)" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourcesInComplexSchema)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == QueryComparingResourcesInComplexSchemaResult.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryComparingResourcesInComplexSchema)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryComparingResourcesInComplexSchemaResult.entities)
     }
 
     "infer the type of a resource IRI when it is compared with a variable in a FILTER (in the simple schema)" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourceIriInSimpleSchema)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == QueryComparingResourceIriInSimpleSchemaResult.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryComparingResourceIriInSimpleSchema)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryComparingResourceIriInSimpleSchemaResult.entities)
     }
 
     "infer the type of a resource IRI when it is compared with a variable in a FILTER (in the complex schema)" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryComparingResourceIriInComplexSchema)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
+      val runZio = inspectTypes(inferTypes = true, QueryComparingResourceIriInComplexSchema)
+      val result = UnsafeZioRun.runOrThrow(runZio)
       assert(result.entities == QueryComparingResourceIriInComplexSchemaResult.entities)
     }
 
     "infer knora-api:Resource as the subject type of a subproperty of knora-api:hasLinkTo" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithFilterComparison)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == QueryWithFilterComparisonResult.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryWithFilterComparison)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryWithFilterComparisonResult.entities)
     }
 
     "reject a query with a non-Knora property whose type cannot be inferred" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithoutAnnotation)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      assertThrows[GravsearchException] {
-        Await.result(resultFuture, timeout)
-      }
+      val runZio = inspectTypes(inferTypes = true, QueryNonKnoraTypeWithoutAnnotation)
+      UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
 
     "accept a query with a non-Knora property whose type can be inferred" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithAnnotation)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == TypeInferenceResult3.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryNonKnoraTypeWithAnnotation)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult3.entities)
     }
 
     "ignore Gravsearch options" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithGravsearchOptions)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      val result = Await.result(resultFuture, timeout)
-      assert(result.entities == GravsearchOptionsResult.entities)
+      val runZio = inspectTypes(inferTypes = true, QueryWithGravsearchOptions)
+      assert(UnsafeZioRun.runOrThrow(runZio).entities == GravsearchOptionsResult.entities)
     }
 
     "reject a query with inconsistent types inferred from statements" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes1)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      assertThrows[GravsearchException] {
-        Await.result(resultFuture, timeout)
-      }
+      val runZio = inspectTypes(inferTypes = true, QueryWithInconsistentTypes1)
+      UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
 
     "reject a query with inconsistent types inferred from a FILTER" in {
-      val typeInspectionRunner =
-        new GravsearchTypeInspectionRunner(
-          appActor,
-          responderData = responderData,
-          inferTypes = true
-        )
-      val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes2)
-      val resultFuture: Future[GravsearchTypeInspectionResult] =
-        typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
-      assertThrows[GravsearchException] {
-        Await.result(resultFuture, timeout)
-      }
+      val runZio = inspectTypes(inferTypes = true, QueryWithInconsistentTypes2)
+      UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
   }
 }

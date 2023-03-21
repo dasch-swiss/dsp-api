@@ -5,21 +5,25 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
-import zio.ZIO
-
-import scala.concurrent.Future
-import scala.util.Failure
+import com.typesafe.scalalogging.LazyLogging
+import zio._
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi._
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.IRI
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.SchemaOption
+import org.knora.webapi.SchemaOptions
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -27,15 +31,16 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
+import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
@@ -45,26 +50,34 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport._
 
-class SearchResponderV2(
-  responderData: ResponderData,
-  implicit val runtime: zio.Runtime[
-    ConstructResponseUtilV2 with OntologyCache with StandoffTagUtilV2 with StandoffTagUtilV2
-  ]
-) extends ResponderWithStandoffV2(responderData, runtime) {
+trait SearchResponderV2
+final case class SearchResponderV2Live(
+  private val appConfig: AppConfig,
+  private val triplestoreService: TriplestoreService,
+  private val gravsearchTypeInspectionUtil: GravsearchTypeInspectionUtil,
+  private val messageRelay: MessageRelay,
+  private val constructResponseUtilV2: ConstructResponseUtilV2,
+  private val ontologyCache: OntologyCache,
+  private val standoffTagUtilV2: StandoffTagUtilV2,
+  private val queryTraverser: QueryTraverser,
+  private val sparqlTransformerLive: SparqlTransformerLive,
+  implicit private val stringFormatter: StringFormatter
+) extends SearchResponderV2
+    with MessageHandler
+    with LazyLogging {
 
   // A Gravsearch type inspection runner.
   private val gravsearchTypeInspectionRunner =
-    new GravsearchTypeInspectionRunner(appActor = appActor, responderData = responderData)
+    new GravsearchTypeInspectionRunner(inferTypes = true, queryTraverser, messageRelay, stringFormatter)
 
-  /**
-   * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
-   */
-  def receive(msg: SearchResponderRequestV2): Future[KnoraJsonLDResponseV2] = msg match {
+  override def isResponsibleFor(message: ResponderRequest): Boolean =
+    message.isInstanceOf[SearchResponderRequestV2]
+  override def handle(msg: ResponderRequest): Task[KnoraJsonLDResponseV2] = msg match {
     case FullTextSearchCountRequestV2(
           searchValue,
           limitToProject,
@@ -101,7 +114,7 @@ class SearchResponderV2(
         targetSchema,
         schemaOptions,
         requestingUser,
-        responderData.appConfig
+        appConfig
       )
 
     case GravsearchCountRequestV2(query, requestingUser) =>
@@ -151,7 +164,7 @@ class SearchResponderV2(
     case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 =>
       searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
 
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -173,41 +186,31 @@ class SearchResponderV2(
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
     requestingUser: UserADM
-  ): Future[ResourceCountV2] = {
-
-    val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
-
+  ): Task[ResourceCountV2] =
     for {
-      countSparql <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .searchFulltext(
-              searchTerms = searchTerms,
-              limitToProject = limitToProject,
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limitToStandoffClass = limitToStandoffClass.map(_.toString),
-              returnFiles = false, // not relevant for a count query
-              separator = None,    // no separator needed for count query
-              limit = 1,
-              offset = 0,
-              countQuery = true // do not get the resources themselves, but the sum of results
-            )
-            .toString()
-        )
-
-      countResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
-
-      // query response should contain one result with one row with the name "count"
-      _ = if (countResponse.results.bindings.length != 1) {
-            throw GravsearchException(
-              s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
-            )
-          }
-
-      count = countResponse.results.bindings.head.rowMap("count")
-
+      countSparql <- ZIO.attempt(
+                       org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                         .searchFulltext(
+                           searchTerms = LuceneQueryString(searchValue),
+                           limitToProject = limitToProject,
+                           limitToResourceClass = limitToResourceClass.map(_.toString),
+                           limitToStandoffClass = limitToStandoffClass.map(_.toString),
+                           returnFiles = false, // not relevant for a count query
+                           separator = None,    // no separator needed for count query
+                           limit = 1,
+                           offset = 0,
+                           countQuery = true // do not get the resources themselves, but the sum of results
+                         )
+                     )
+      bindings <- triplestoreService.sparqlHttpSelect(countSparql.toString()).map(_.results.bindings)
+      count <- // query response should contain one result with one row with the name "count"
+        ZIO.fail {
+          val msg = s"Fulltext count query is expected to return exactly one row, but ${bindings.size} given"
+          GravsearchException(msg)
+        }
+          .when(bindings.length != 1)
+          .as(bindings.head.rowMap("count"))
     } yield ResourceCountV2(numberOfResources = count.toInt)
-  }
 
   /**
    * Performs a fulltext search (simple search).
@@ -235,7 +238,7 @@ class SearchResponderV2(
     schemaOptions: Set[SchemaOption],
     requestingUser: UserADM,
     appConfig: AppConfig
-  ): Future[ReadResourcesSequenceV2] = {
+  ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
 
     val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
@@ -244,7 +247,7 @@ class SearchResponderV2(
 
     for {
       searchSparql <-
-        Future(
+        ZIO.attempt(
           org.knora.webapi.messages.twirl.queries.sparql.v2.txt
             .searchFulltext(
               searchTerms = searchTerms,
@@ -260,9 +263,7 @@ class SearchResponderV2(
             .toString()
         )
 
-      prequeryResponseNotMerged: SparqlSelectResult <- appActor
-                                                         .ask(SparqlSelectRequest(searchSparql))
-                                                         .mapTo[SparqlSelectResult]
+      prequeryResponseNotMerged <- triplestoreService.sparqlHttpSelect(searchSparql)
 
       mainResourceVar = QueryVariable("resource")
 
@@ -276,7 +277,7 @@ class SearchResponderV2(
                                }
 
       // If the prequery returned some results, prepare a main query.
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <-
+      mainResourcesAndValueRdfData <-
         if (resourceIris.nonEmpty) {
 
           // for each resource, create a Set of value object IRIs
@@ -307,38 +308,17 @@ class SearchResponderV2(
             appConfig = appConfig
           )
 
-          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
-            new SparqlTransformer.NoInferenceConstructToConstructTransformer
-
-          val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
-            inputQuery = mainQuery,
-            transformer = queryPatternTransformerConstruct
-          )
-
+          val queryPatternTransformerConstruct =
+            new SparqlTransformer.NoInferenceConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
           for {
-            searchResponse: SparqlExtendedConstructResponse <-
-              appActor
-                .ask(
-                  SparqlExtendedConstructRequest(
-                    sparql = triplestoreSpecificQuery.toSparql
-                  )
-                )
-                .mapTo[SparqlExtendedConstructResponse]
-
+            query          <- queryTraverser.transformConstructToConstruct(mainQuery, queryPatternTransformerConstruct)
+            searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
             // separate resources and value objects
-            queryResultsSep <-
-              UnsafeZioRun.runToFuture(
-                ZIO
-                  .service[ConstructResponseUtilV2]
-                  .map(_.splitMainResourcesAndValueRdfData(searchResponse, requestingUser))
-              )
+            queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
           } yield queryResultsSep
         } else {
-
           // the prequery returned no results, no further query is necessary
-          Future(
-            ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty)
-          )
+          ZIO.attempt(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty))
         }
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -349,31 +329,27 @@ class SearchResponderV2(
                                )
 
       // If we're querying standoff, get XML-to standoff mappings.
-      mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <-
+      mappingsAsMap <-
         if (queryStandoff) {
-          getMappingsFromQueryResultsSeparated(
-            queryResultsSeparated = mainResourcesAndValueRdfData.resources,
-            requestingUser = requestingUser
+          constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
+            mainResourcesAndValueRdfData.resources,
+            requestingUser
           )
         } else {
-          FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+          ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
       apiResponse <-
-        UnsafeZioRun.runToFuture(
-          ZIO.serviceWithZIO[ConstructResponseUtilV2](
-            _.createApiResponse(
-              mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-              orderByResourceIri = resourceIris,
-              pageSizeBeforeFiltering = resourceIris.size,
-              mappings = mappingsAsMap,
-              queryStandoff = queryStandoff,
-              calculateMayHaveMoreResults = true,
-              versionDate = None,
-              targetSchema = targetSchema,
-              requestingUser = requestingUser
-            )
-          )
+        constructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+          orderByResourceIri = resourceIris,
+          pageSizeBeforeFiltering = resourceIris.size,
+          mappings = mappingsAsMap,
+          queryStandoff = queryStandoff,
+          calculateMayHaveMoreResults = true,
+          versionDate = None,
+          targetSchema = targetSchema,
+          requestingUser = requestingUser
         )
 
     } yield apiResponse
@@ -390,48 +366,36 @@ class SearchResponderV2(
   private def gravsearchCountV2(
     inputQuery: ConstructQuery,
     requestingUser: UserADM
-  ): Future[ResourceCountV2] = {
-
-    // make sure that OFFSET is 0
-    if (inputQuery.offset != 0)
-      throw GravsearchException(s"OFFSET must be 0 for a count query, but ${inputQuery.offset} given")
-
+  ): Task[ResourceCountV2] =
     for {
+      _ <- // make sure that OFFSET is 0
+        ZIO
+          .fail(GravsearchException(s"OFFSET must be 0 for a count query, but ${inputQuery.offset} given"))
+          .when(inputQuery.offset != 0)
 
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult: GravsearchTypeInspectionResult <-
-        gravsearchTypeInspectionRunner.inspectTypes(
-          inputQuery.whereClause,
-          requestingUser
-        )
+      typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
 
-      whereClauseWithoutAnnotations: WhereClause =
-        GravsearchTypeInspectionUtil.removeTypeAnnotations(
-          inputQuery.whereClause
-        )
+      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ = GravsearchQueryChecker.checkConstructClause(
-            constructClause = inputQuery.constructClause,
-            typeInspectionResult = typeInspectionResult
-          )
+      _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
 
       // Create a Select prequery
-
+      querySchema <-
+        ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer =
         new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
-          querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
+          querySchema = querySchema
         )
 
-      nonTriplestoreSpecificPrequery: SelectQuery =
-        QueryTraverser.transformConstructToSelect(
+      nonTriplestoreSpecificPrequery <-
+        queryTraverser.transformConstructToSelect(
           inputQuery = inputQuery.copy(
             whereClause = whereClauseWithoutAnnotations,
-            orderBy = Seq.empty[
-              OrderCriterion
-            ] // count queries do not need any sorting criteria
+            orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
           ),
           transformer = nonTriplestoreSpecificConstructToSelectTransformer
         )
@@ -440,39 +404,33 @@ class SearchResponderV2(
 
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
         new SparqlTransformer.NoInferenceSelectToSelectTransformer(
-          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
+          sparqlTransformerLive,
+          stringFormatter
         )
 
-      ontologiesForInferenceMaybe <-
-        QueryTraverser.getOntologiesRelevantForInference(
-          inputQuery.whereClause,
-          appActor
-        )
+      ontologiesForInferenceMaybe <- queryTraverser.getOntologiesRelevantForInference(inputQuery.whereClause)
 
-      triplestoreSpecificCountQuery =
-        QueryTraverser.transformSelectToSelect(
-          inputQuery = nonTriplestoreSpecificPrequery,
-          transformer = triplestoreSpecificQueryPatternTransformerSelect,
-          ontologiesForInferenceMaybe
-        )
+      triplestoreSpecificCountQuery <- queryTraverser.transformSelectToSelect(
+                                         inputQuery = nonTriplestoreSpecificPrequery,
+                                         transformer = triplestoreSpecificQueryPatternTransformerSelect,
+                                         ontologiesForInferenceMaybe
+                                       )
 
-      countResponse: SparqlSelectResult <-
-        appActor
-          .ask(SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql, isGravsearch = true))
-          .mapTo[SparqlSelectResult]
+      countResponse <- triplestoreService.sparqlHttpSelect(triplestoreSpecificCountQuery.toSparql, isGravsearch = true)
 
-      // query response should contain one result with one row with the name "count"
-      _ = if (countResponse.results.bindings.length != 1) {
-            throw GravsearchException(
+      _ <- // query response should contain one result with one row with the name "count"
+        ZIO
+          .fail(
+            GravsearchException(
               s"Count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
             )
-          }
+          )
+          .when(countResponse.results.bindings.size != 1)
 
       count: String = countResponse.results.bindings.head.rowMap("count")
 
     } yield ResourceCountV2(numberOfResources = count.toInt)
-
-  }
 
   /**
    * Performs a search using a Gravsearch query provided by the client.
@@ -489,48 +447,34 @@ class SearchResponderV2(
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
     requestingUser: UserADM
-  ): Future[ReadResourcesSequenceV2] = {
-    import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
+  ): Task[ReadResourcesSequenceV2] = {
 
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult: GravsearchTypeInspectionResult <-
-        gravsearchTypeInspectionRunner.inspectTypes(
-          inputQuery.whereClause,
-          requestingUser
-        )
-      whereClauseWithoutAnnotations: WhereClause =
-        GravsearchTypeInspectionUtil.removeTypeAnnotations(
-          inputQuery.whereClause
-        )
+      typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
+      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ = GravsearchQueryChecker.checkConstructClause(
-            constructClause = inputQuery.constructClause,
-            typeInspectionResult = typeInspectionResult
-          )
+      _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
 
       // Create a Select prequery
-
+      querySchema <-
+        ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer =
         new NonTriplestoreSpecificGravsearchToPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
-          querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-          appConfig = responderData.appConfig
+          querySchema = querySchema,
+          appConfig = appConfig
         )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-      ontologiesForInferenceMaybe: Option[Set[SmartIri]] <-
-        QueryTraverser.getOntologiesRelevantForInference(
-          inputQuery.whereClause,
-          appActor
-        )
+      ontologiesForInferenceMaybe <- queryTraverser.getOntologiesRelevantForInference(inputQuery.whereClause)
 
-      nonTriplestoreSpecificPrequery: SelectQuery =
-        QueryTraverser.transformConstructToSelect(
+      nonTriplestoreSpecificPrequery <-
+        queryTraverser.transformConstructToSelect(
           inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
           transformer = nonTriplestoreSpecificConstructToSelectTransformer
         )
@@ -541,13 +485,15 @@ class SearchResponderV2(
       // Convert the non-triplestore-specific query to a triplestore-specific one.
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
         new SparqlTransformer.NoInferenceSelectToSelectTransformer(
-          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
+          sparqlTransformerLive,
+          stringFormatter
         )
 
       // Convert the preprocessed query to a non-triplestore-specific query.
 
-      triplestoreSpecificPrequery =
-        QueryTraverser.transformSelectToSelect(
+      triplestoreSpecificPrequery <-
+        queryTraverser.transformSelectToSelect(
           inputQuery = nonTriplestoreSpecificPrequery,
           transformer = triplestoreSpecificQueryPatternTransformerSelect,
           limitInferenceToOntologies = ontologiesForInferenceMaybe
@@ -555,23 +501,16 @@ class SearchResponderV2(
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
 
-      start = System.currentTimeMillis()
+      start <- Clock.instant.map(_.toEpochMilli)
       prequeryResponseNotMerged <-
-        appActor
-          .ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql, isGravsearch = true))
-          .mapTo[SparqlSelectResult]
-          .transform(t =>
-            t match {
-              case Failure(err) =>
-                if (err.isInstanceOf[TriplestoreTimeoutException])
-                  log.error(s"Gravsearch timed out for prequery:\n$triplestoreSpecificPrequerySparql")
-                throw err
-              case success => success
-            }
-          )
-      duration = (System.currentTimeMillis() - start) / 1000.0
-      _ = if (duration < 3) log.debug(s"Prequery took: ${duration}s")
-          else log.warn(s"Slow Prequery ($duration):\n$triplestoreSpecificPrequerySparql")
+        triplestoreService
+          .sparqlHttpSelect(triplestoreSpecificPrequerySparql, isGravsearch = true)
+          .logError(s"Gravsearch timed out for prequery:\n$triplestoreSpecificPrequerySparql")
+
+      end     <- Clock.instant.map(_.toEpochMilli)
+      duration = (end - start) / 1000.0
+      _ = if (duration < 3) logger.debug(s"Prequery took: ${duration}s")
+          else logger.warn(s"Slow Prequery ($duration):\n$triplestoreSpecificPrequerySparql")
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
@@ -589,7 +528,7 @@ class SearchResponderV2(
           resultRow.rowMap(mainResourceVar.variableName)
         }
 
-      mainQueryResults: ConstructResponseUtilV2.MainResourcesAndValueRdfData <-
+      mainQueryResults <-
         if (mainResourceIris.nonEmpty) {
           // at least one resource matched the prequery
 
@@ -644,45 +583,28 @@ class SearchResponderV2(
             valueObjectIris = allValueObjectIris,
             targetSchema = targetSchema,
             schemaOptions = schemaOptions,
-            appConfig = responderData.appConfig
+            appConfig = appConfig
           )
 
           val queryPatternTransformerConstruct: ConstructToConstructTransformer =
-            new SparqlTransformer.NoInferenceConstructToConstructTransformer
-
-          val triplestoreSpecificMainQuery = QueryTraverser.transformConstructToConstruct(
-            inputQuery = mainQuery,
-            transformer = queryPatternTransformerConstruct,
-            limitInferenceToOntologies = ontologiesForInferenceMaybe
-          )
-
-          // Convert the result to a SPARQL string and send it to the triplestore.
-          val triplestoreSpecificMainQuerySparql: String = triplestoreSpecificMainQuery.toSparql
-          log.debug(triplestoreSpecificMainQuerySparql)
+            new SparqlTransformer.NoInferenceConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
 
           for {
-            mainQueryResponse: SparqlExtendedConstructResponse <-
-              appActor
-                .ask(
-                  SparqlExtendedConstructRequest(
-                    sparql = triplestoreSpecificMainQuerySparql,
-                    isGravsearch = true
-                  )
-                )
-                .mapTo[SparqlExtendedConstructResponse]
+
+            triplestoreSpecificMainQuery <- queryTraverser.transformConstructToConstruct(
+                                              inputQuery = mainQuery,
+                                              transformer = queryPatternTransformerConstruct,
+                                              limitInferenceToOntologies = ontologiesForInferenceMaybe
+                                            )
+
+            // Convert the result to a SPARQL string and send it to the triplestore.
+            triplestoreSpecificMainQuerySparql = triplestoreSpecificMainQuery.toSparql
+            mainQueryResponse <-
+              triplestoreService.sparqlHttpExtendedConstruct(triplestoreSpecificMainQuerySparql, isGravsearch = true)
 
             // Filter out values that the user doesn't have permission to see.
-            queryResultsFilteredForPermissions <-
-              UnsafeZioRun.runToFuture(
-                ZIO
-                  .service[ConstructResponseUtilV2]
-                  .map(
-                    _.splitMainResourcesAndValueRdfData(
-                      mainQueryResponse,
-                      requestingUser
-                    )
-                  )
-              )
+            queryResultsFilteredForPermissions =
+              constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, requestingUser)
 
             // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
             queryResWithFullGraphPatternOnlyRequestedValues: Map[
@@ -704,7 +626,7 @@ class SearchResponderV2(
 
         } else {
           // the prequery returned no results, no further query is necessary
-          Future(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty))
+          ZIO.attempt(ConstructResponseUtilV2.MainResourcesAndValueRdfData(resources = Map.empty))
         }
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -715,32 +637,24 @@ class SearchResponderV2(
                                )
 
       // If we're querying standoff, get XML-to standoff mappings.
-      mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <-
+      mappingsAsMap <-
         if (queryStandoff) {
-          getMappingsFromQueryResultsSeparated(
-            queryResultsSeparated = mainQueryResults.resources,
-            requestingUser = requestingUser
-          )
+          constructResponseUtilV2.getMappingsFromQueryResultsSeparated(mainQueryResults.resources, requestingUser)
         } else {
-          FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+          ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse <- UnsafeZioRun.runToFuture(
-                       ZIO.serviceWithZIO[ConstructResponseUtilV2](
-                         _.createApiResponse(
-                           mainResourcesAndValueRdfData = mainQueryResults,
-                           orderByResourceIri = mainResourceIris,
-                           pageSizeBeforeFiltering = pageSizeBeforeFiltering,
-                           mappings = mappingsAsMap,
-                           queryStandoff = queryStandoff,
-                           versionDate = None,
-                           calculateMayHaveMoreResults = true,
-                           targetSchema = targetSchema,
-                           requestingUser = requestingUser
-                         )
-                       )
+      apiResponse <- constructResponseUtilV2.createApiResponse(
+                       mainResourcesAndValueRdfData = mainQueryResults,
+                       orderByResourceIri = mainResourceIris,
+                       pageSizeBeforeFiltering = pageSizeBeforeFiltering,
+                       mappings = mappingsAsMap,
+                       queryStandoff = queryStandoff,
+                       versionDate = None,
+                       calculateMayHaveMoreResults = true,
+                       targetSchema = targetSchema,
+                       requestingUser = requestingUser
                      )
-
     } yield apiResponse
   }
 
@@ -752,91 +666,90 @@ class SearchResponderV2(
    */
   private def searchResourcesByProjectAndClassV2(
     resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2
-  ): Future[ReadResourcesSequenceV2] = {
+  ): Task[ReadResourcesSequenceV2] = {
     val internalClassIri = resourcesInProjectGetRequestV2.resourceClass.toOntologySchema(InternalSchema)
     val maybeInternalOrderByPropertyIri: Option[SmartIri] =
       resourcesInProjectGetRequestV2.orderByProperty.map(_.toOntologySchema(InternalSchema))
 
     for {
       // Get information about the resource class, and about the ORDER BY property if specified.
-      entityInfoResponse: EntityInfoGetResponseV2 <-
-        appActor
-          .ask(
-            EntityInfoGetRequestV2(
-              classIris = Set(internalClassIri),
-              propertyIris = maybeInternalOrderByPropertyIri.toSet,
-              requestingUser = resourcesInProjectGetRequestV2.requestingUser
-            )
-          )
-          .mapTo[EntityInfoGetResponseV2]
+      entityInfoResponse <- messageRelay.ask[EntityInfoGetResponseV2](
+                              EntityInfoGetRequestV2(
+                                classIris = Set(internalClassIri),
+                                propertyIris = maybeInternalOrderByPropertyIri.toSet,
+                                requestingUser = resourcesInProjectGetRequestV2.requestingUser
+                              )
+                            )
 
       classDef: ReadClassInfoV2 = entityInfoResponse.classInfoMap(internalClassIri)
 
       // If an ORDER BY property was specified, determine which subproperty of knora-base:valueHas to use to get the
       // literal value to sort by.
-      maybeOrderByValuePredicate: Option[SmartIri] =
-        maybeInternalOrderByPropertyIri match {
-          case Some(internalOrderByPropertyIri) =>
-            val internalOrderByPropertyDef: ReadPropertyInfoV2 =
-              entityInfoResponse.propertyInfoMap(
-                internalOrderByPropertyIri
-              )
+      maybeOrderByValuePredicate <- ZIO.attempt {
+                                      maybeInternalOrderByPropertyIri match {
+                                        case Some(internalOrderByPropertyIri) =>
+                                          val internalOrderByPropertyDef: ReadPropertyInfoV2 =
+                                            entityInfoResponse.propertyInfoMap(
+                                              internalOrderByPropertyIri
+                                            )
 
-            // Ensure that the ORDER BY property is one that we can sort by.
-            if (
-              !internalOrderByPropertyDef.isResourceProp || internalOrderByPropertyDef.isLinkProp || internalOrderByPropertyDef.isLinkValueProp || internalOrderByPropertyDef.isFileValueProp
-            ) {
-              throw BadRequestException(
-                s"Cannot sort by property <${resourcesInProjectGetRequestV2.orderByProperty}>"
-              )
-            }
+                                          // Ensure that the ORDER BY property is one that we can sort by.
+                                          if (
+                                            !internalOrderByPropertyDef.isResourceProp || internalOrderByPropertyDef.isLinkProp || internalOrderByPropertyDef.isLinkValueProp || internalOrderByPropertyDef.isFileValueProp
+                                          ) {
+                                            throw BadRequestException(
+                                              s"Cannot sort by property <${resourcesInProjectGetRequestV2.orderByProperty}>"
+                                            )
+                                          }
 
-            // Ensure that the resource class has a cardinality on the ORDER BY property.
-            if (
-              !classDef.knoraResourceProperties.contains(
-                internalOrderByPropertyIri
-              )
-            ) {
-              throw BadRequestException(
-                s"Class <${resourcesInProjectGetRequestV2.resourceClass}> has no cardinality on property <${resourcesInProjectGetRequestV2.orderByProperty}>"
-              )
-            }
+                                          // Ensure that the resource class has a cardinality on the ORDER BY property.
+                                          if (
+                                            !classDef.knoraResourceProperties.contains(
+                                              internalOrderByPropertyIri
+                                            )
+                                          ) {
+                                            throw BadRequestException(
+                                              s"Class <${resourcesInProjectGetRequestV2.resourceClass}> has no cardinality on property <${resourcesInProjectGetRequestV2.orderByProperty}>"
+                                            )
+                                          }
 
-            // Get the value class that's the object of the knora-base:objectClassConstraint of the ORDER BY property.
-            val orderByValueType: SmartIri =
-              internalOrderByPropertyDef.entityInfoContent
-                .requireIriObject(
-                  OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                  throw InconsistentRepositoryDataException(
-                    s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"
-                  )
-                )
+                                          // Get the value class that's the object of the knora-base:objectClassConstraint of the ORDER BY property.
+                                          val orderByValueType: SmartIri =
+                                            internalOrderByPropertyDef.entityInfoContent
+                                              .requireIriObject(
+                                                OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
+                                                throw InconsistentRepositoryDataException(
+                                                  s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"
+                                                )
+                                              )
 
-            // Determine which subproperty of knora-base:valueHas corresponds to that value class.
-            val orderByValuePredicate = orderByValueType.toString match {
-              case OntologyConstants.KnoraBase.IntValue =>
-                OntologyConstants.KnoraBase.ValueHasInteger
-              case OntologyConstants.KnoraBase.DecimalValue =>
-                OntologyConstants.KnoraBase.ValueHasDecimal
-              case OntologyConstants.KnoraBase.BooleanValue =>
-                OntologyConstants.KnoraBase.ValueHasBoolean
-              case OntologyConstants.KnoraBase.DateValue =>
-                OntologyConstants.KnoraBase.ValueHasStartJDN
-              case OntologyConstants.KnoraBase.ColorValue =>
-                OntologyConstants.KnoraBase.ValueHasColor
-              case OntologyConstants.KnoraBase.GeonameValue =>
-                OntologyConstants.KnoraBase.ValueHasGeonameCode
-              case OntologyConstants.KnoraBase.IntervalValue =>
-                OntologyConstants.KnoraBase.ValueHasIntervalStart
-              case OntologyConstants.KnoraBase.UriValue =>
-                OntologyConstants.KnoraBase.ValueHasUri
-              case _ => OntologyConstants.KnoraBase.ValueHasString
-            }
+                                          // Determine which subproperty of knora-base:valueHas corresponds to that value class.
+                                          val orderByValuePredicate =
+                                            orderByValueType.toString match {
+                                              case OntologyConstants.KnoraBase.IntValue =>
+                                                OntologyConstants.KnoraBase.ValueHasInteger
+                                              case OntologyConstants.KnoraBase.DecimalValue =>
+                                                OntologyConstants.KnoraBase.ValueHasDecimal
+                                              case OntologyConstants.KnoraBase.BooleanValue =>
+                                                OntologyConstants.KnoraBase.ValueHasBoolean
+                                              case OntologyConstants.KnoraBase.DateValue =>
+                                                OntologyConstants.KnoraBase.ValueHasStartJDN
+                                              case OntologyConstants.KnoraBase.ColorValue =>
+                                                OntologyConstants.KnoraBase.ValueHasColor
+                                              case OntologyConstants.KnoraBase.GeonameValue =>
+                                                OntologyConstants.KnoraBase.ValueHasGeonameCode
+                                              case OntologyConstants.KnoraBase.IntervalValue =>
+                                                OntologyConstants.KnoraBase.ValueHasIntervalStart
+                                              case OntologyConstants.KnoraBase.UriValue =>
+                                                OntologyConstants.KnoraBase.ValueHasUri
+                                              case _ => OntologyConstants.KnoraBase.ValueHasString
+                                            }
 
-            Some(orderByValuePredicate.toSmartIri)
+                                          Some(orderByValuePredicate.toSmartIri)
 
-          case None => None
-        }
+                                        case None => None
+                                      }
+                                    }
 
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -845,13 +758,12 @@ class SearchResponderV2(
                      resourceClassIri = internalClassIri,
                      maybeOrderByProperty = maybeInternalOrderByPropertyIri,
                      maybeOrderByValuePredicate = maybeOrderByValuePredicate,
-                     limit = responderData.appConfig.v2.resourcesSequence.resultsPerPage,
-                     offset =
-                       resourcesInProjectGetRequestV2.page * responderData.appConfig.v2.resourcesSequence.resultsPerPage
+                     limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                     offset = resourcesInProjectGetRequestV2.page * appConfig.v2.resourcesSequence.resultsPerPage
                    )
                    .toString
 
-      sparqlSelectResponse      <- appActor.ask(SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
+      sparqlSelectResponse      <- triplestoreService.sparqlHttpSelect(prequery)
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -867,17 +779,17 @@ class SearchResponderV2(
         StandoffTagUtilV2
           .getStandoffMinAndMaxStartIndexesForTextValueQuery(
             queryStandoff = queryStandoff,
-            appConfig = responderData.appConfig
+            appConfig = appConfig
           )
 
       // Are there any matching resources?
-      apiResponse: ReadResourcesSequenceV2 <-
+      apiResponse <-
         if (mainResourceIris.nonEmpty) {
           for {
             // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
             // at most one page of standoff per text value.
             resourceRequestSparql <-
-              Future(
+              ZIO.attempt(
                 org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                   .getResourcePropertiesAndValues(
                     resourceIris = mainResourceIris,
@@ -893,58 +805,40 @@ class SearchResponderV2(
                   .toString()
               )
 
-            resourceRequestResponse: SparqlExtendedConstructResponse <-
-              appActor
-                .ask(
-                  SparqlExtendedConstructRequest(
-                    sparql = resourceRequestSparql
-                  )
-                )
-                .mapTo[SparqlExtendedConstructResponse]
+            resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
 
             // separate resources and values
-            mainResourcesAndValueRdfData <-
-              UnsafeZioRun.runToFuture(
-                ZIO
-                  .service[ConstructResponseUtilV2]
-                  .map(
-                    _.splitMainResourcesAndValueRdfData(
-                      resourceRequestResponse,
-                      resourcesInProjectGetRequestV2.requestingUser
-                    )
-                  )
-              )
+            mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                                             resourceRequestResponse,
+                                             resourcesInProjectGetRequestV2.requestingUser
+                                           )
 
             // If we're querying standoff, get XML-to standoff mappings.
-            mappings: Map[IRI, MappingAndXSLTransformation] <-
+            mappings <-
               if (queryStandoff) {
-                getMappingsFromQueryResultsSeparated(
+                constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
                   mainResourcesAndValueRdfData.resources,
                   resourcesInProjectGetRequestV2.requestingUser
                 )
               } else {
-                FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+                ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
               }
 
             // Construct a ReadResourceV2 for each resource that the user has permission to see.
-            readResourcesSequence <- UnsafeZioRun.runToFuture(
-                                       ZIO.serviceWithZIO[ConstructResponseUtilV2](
-                                         _.createApiResponse(
-                                           mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                           orderByResourceIri = mainResourceIris,
-                                           pageSizeBeforeFiltering = mainResourceIris.size,
-                                           mappings = mappings,
-                                           queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
-                                           versionDate = None,
-                                           calculateMayHaveMoreResults = true,
-                                           targetSchema = resourcesInProjectGetRequestV2.targetSchema,
-                                           requestingUser = resourcesInProjectGetRequestV2.requestingUser
-                                         )
-                                       )
+            readResourcesSequence <- constructResponseUtilV2.createApiResponse(
+                                       mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                                       orderByResourceIri = mainResourceIris,
+                                       pageSizeBeforeFiltering = mainResourceIris.size,
+                                       mappings = mappings,
+                                       queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
+                                       versionDate = None,
+                                       calculateMayHaveMoreResults = true,
+                                       targetSchema = resourcesInProjectGetRequestV2.targetSchema,
+                                       requestingUser = resourcesInProjectGetRequestV2.requestingUser
                                      )
           } yield readResourcesSequence
         } else {
-          FastFuture.successful(ReadResourcesSequenceV2(Vector.empty[ReadResourceV2]))
+          ZIO.succeed(ReadResourcesSequenceV2(Vector.empty[ReadResourceV2]))
         }
     } yield apiResponse
   }
@@ -964,12 +858,12 @@ class SearchResponderV2(
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],
     requestingUser: UserADM
-  ): Future[ResourceCountV2] = {
+  ): Task[ResourceCountV2] = {
     val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
     for {
       countSparql <-
-        Future(
+        ZIO.attempt(
           org.knora.webapi.messages.twirl.queries.sparql.v2.txt
             .searchResourceByLabel(
               searchTerm = searchPhrase,
@@ -982,21 +876,19 @@ class SearchResponderV2(
             .toString()
         )
 
-      countResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
+      countResponse <- triplestoreService.sparqlHttpSelect(countSparql)
 
-      // query response should contain one result with one row with the name "count"
-      _ = if (countResponse.results.bindings.length != 1) {
-            throw GravsearchException(
+      count <- // query response should contain one result with one row with the name "count"
+        ZIO
+          .fail(
+            GravsearchException(
               s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
             )
-          }
+          )
+          .when(countResponse.results.bindings.length != 1)
+          .as(countResponse.results.bindings.head.rowMap("count"))
 
-      count = countResponse.results.bindings.head.rowMap("count")
-
-    } yield ResourceCountV2(
-      numberOfResources = count.toInt
-    )
-
+    } yield ResourceCountV2(count.toInt)
   }
 
   /**
@@ -1017,78 +909,74 @@ class SearchResponderV2(
     limitToResourceClass: Option[SmartIri],
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
-  ): Future[ReadResourcesSequenceV2] = {
+  ): Task[ReadResourcesSequenceV2] = {
 
     val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
     for {
       searchResourceByLabelSparql <-
-        Future(
+        ZIO.attempt(
           org.knora.webapi.messages.twirl.queries.sparql.v2.txt
             .searchResourceByLabel(
               searchTerm = searchPhrase,
               limitToProject = limitToProject,
               limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = responderData.appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * responderData.appConfig.v2.resourcesSequence.resultsPerPage,
+              limit = appConfig.v2.resourcesSequence.resultsPerPage,
+              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
               countQuery = false
             )
             .toString()
         )
 
-      searchResourceByLabelResponse: SparqlExtendedConstructResponse <-
-        appActor
-          .ask(
-            SparqlExtendedConstructRequest(
-              sparql = searchResourceByLabelSparql
-            )
-          )
-          .mapTo[SparqlExtendedConstructResponse]
+      searchResourceByLabelResponse <- triplestoreService.sparqlHttpExtendedConstruct(searchResourceByLabelSparql)
 
       // collect the IRIs of main resources returned
-      mainResourceIris: Set[IRI] =
-        searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
-          case (acc: Set[IRI], (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]])) =>
-            // check if the assertions represent a main resource and include its IRI if so
-            val subjectIsMainResource: Boolean =
-              assertions.getOrElse(OntologyConstants.KnoraBase.IsMainResource.toSmartIri, Seq.empty).headOption match {
-                case Some(BooleanLiteralV2(booleanVal)) => booleanVal
-                case _                                  => false
-              }
+      mainResourceIris <- ZIO.attempt {
+                            searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
+                              case (
+                                    acc: Set[IRI],
+                                    (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]])
+                                  ) =>
+                                // check if the assertions represent a main resource and include its IRI if so
+                                val subjectIsMainResource: Boolean =
+                                  assertions
+                                    .getOrElse(
+                                      OntologyConstants.KnoraBase.IsMainResource.toSmartIri,
+                                      Seq.empty
+                                    )
+                                    .headOption match {
+                                    case Some(BooleanLiteralV2(booleanVal)) => booleanVal
+                                    case _                                  => false
+                                  }
 
-            if (subjectIsMainResource) {
-              val subjIri: IRI = subject match {
-                case IriSubjectV2(value) => value
-                case other               => throw InconsistentRepositoryDataException(s"Unexpected subject of resource: $other")
-              }
+                                if (subjectIsMainResource) {
+                                  val subjIri: IRI = subject match {
+                                    case IriSubjectV2(value) => value
+                                    case other =>
+                                      throw InconsistentRepositoryDataException(
+                                        s"Unexpected subject of resource: $other"
+                                      )
+                                  }
 
-              acc + subjIri
-            } else {
-              acc
-            }
-        }
+                                  acc + subjIri
+                                } else {
+                                  acc
+                                }
+                            }
+                          }
 
       // separate resources and value objects
-      mainResourcesAndValueRdfData <-
-        UnsafeZioRun.runToFuture(
-          ZIO
-            .service[ConstructResponseUtilV2]
-            .map(_.splitMainResourcesAndValueRdfData(searchResourceByLabelResponse, requestingUser))
-        )
-
-      apiResponse <- UnsafeZioRun.runToFuture(
-                       ZIO.serviceWithZIO[ConstructResponseUtilV2](
-                         _.createApiResponse(
-                           mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                           orderByResourceIri = mainResourceIris.toSeq.sorted,
-                           pageSizeBeforeFiltering = mainResourceIris.size,
-                           queryStandoff = false,
-                           versionDate = None,
-                           calculateMayHaveMoreResults = true,
-                           targetSchema = targetSchema,
-                           requestingUser = requestingUser
-                         )
-                       )
+      mainResourcesAndValueRdfData =
+        constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResourceByLabelResponse, requestingUser)
+      apiResponse <- constructResponseUtilV2.createApiResponse(
+                       mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                       orderByResourceIri = mainResourceIris.toSeq.sorted,
+                       pageSizeBeforeFiltering = mainResourceIris.size,
+                       queryStandoff = false,
+                       versionDate = None,
+                       calculateMayHaveMoreResults = true,
+                       targetSchema = targetSchema,
+                       requestingUser = requestingUser
                      )
 
     } yield apiResponse
@@ -1158,4 +1046,50 @@ class SearchResponderV2(
       results = SparqlSelectResultBody(prequeryRowsMerged)
     )
   }
+}
+
+object SearchResponderV2Live {
+  val layer: ZLayer[
+    AppConfig
+      with TriplestoreService
+      with GravsearchTypeInspectionUtil
+      with MessageRelay
+      with ConstructResponseUtilV2
+      with OntologyCache
+      with StandoffTagUtilV2
+      with QueryTraverser
+      with SparqlTransformerLive
+      with StringFormatter,
+    Nothing,
+    SearchResponderV2Live
+  ] =
+    ZLayer.fromZIO(
+      for {
+        appConfig                    <- ZIO.service[AppConfig]
+        triplestoreService           <- ZIO.service[TriplestoreService]
+        gravsearchTypeInspectionUtil <- ZIO.service[GravsearchTypeInspectionUtil]
+        messageRelay                 <- ZIO.service[MessageRelay]
+        constructResponseUtilV2      <- ZIO.service[ConstructResponseUtilV2]
+        ontologyCache                <- ZIO.service[OntologyCache]
+        standoffTagUtilV2            <- ZIO.service[StandoffTagUtilV2]
+        queryTraverser               <- ZIO.service[QueryTraverser]
+        sparqlTransformerLive        <- ZIO.service[SparqlTransformerLive]
+        stringFormatter              <- ZIO.service[StringFormatter]
+        mr                           <- ZIO.service[MessageRelay]
+        handler <- mr.subscribe(
+                     new SearchResponderV2Live(
+                       appConfig,
+                       triplestoreService,
+                       gravsearchTypeInspectionUtil,
+                       messageRelay,
+                       constructResponseUtilV2,
+                       ontologyCache,
+                       standoffTagUtilV2,
+                       queryTraverser,
+                       sparqlTransformerLive,
+                       stringFormatter
+                     )
+                   )
+      } yield handler
+    )
 }
