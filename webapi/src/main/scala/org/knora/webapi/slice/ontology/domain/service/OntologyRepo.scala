@@ -28,6 +28,15 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findAllSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]]
 
+  /**
+   * Finds all super-classes of a particular class up to the given class in a hierarchy.
+   *
+   * @param classIris the classes to find the super-classes for
+   * @param upToClass the class to stop the search at for the particular branch in the class hierarchy
+   * @return all the super-classes of all other branches in the class hierarchy
+   */
+  def findAllSuperClassesBy(classIris: List[InternalIri], upToClass: InternalIri): Task[List[ReadClassInfoV2]]
+
   def findDirectSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]

@@ -15,7 +15,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.slice.ontology.domain.ReadClassInfoV2Builder.ClassInfoContentV2Builder.BuilderClassInfoContentV2Builder
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIriKeyMap
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromInternalIri
@@ -116,9 +115,6 @@ object ReadClassInfoV2Builder {
 
     def setEntityInfoContent(builder: ClassInfoContentV2Builder.Builder): Builder = setEntityInfoContent(builder.build)
 
-    def setDirectCardinalities(c: Map[SmartIri, KnoraCardinalityInfo]): Builder =
-      setEntityInfoContent(rci.entityInfoContent.toBuilder.setDirectCardinalities(c))
-
     def setInheritedCardinalities(c: Map[SmartIri, KnoraCardinalityInfo]): Builder =
       copy(rci = rci.copy(inheritedCardinalities = c.internal))
 
@@ -127,6 +123,15 @@ object ReadClassInfoV2Builder {
 
     def addSuperClass(classIri: SmartIri): Builder =
       copy(rci = rci.copy(allBaseClasses = rci.allBaseClasses.prepended(classIri)))
+
+    def addProperty(propertyIri: InternalIri, cardinality: Cardinality): Builder =
+      copy(rci =
+        rci.copy(entityInfoContent =
+          rci.entityInfoContent.copy(directCardinalities =
+            rci.entityInfoContent.directCardinalities + (propertyIri.smartIri -> KnoraCardinalityInfo(cardinality))
+          )
+        )
+      )
   }
 
   implicit class BuilderReadClassInfoV2(rci: ReadClassInfoV2) {
@@ -143,9 +148,6 @@ object ReadClassInfoV2Builder {
 
     case class Builder(cic: ClassInfoContentV2) {
       def build: ClassInfoContentV2 = cic
-
-      def setDirectCardinalities(c: Map[SmartIri, KnoraCardinalityInfo]): Builder =
-        copy(cic = cic.copy(directCardinalities = c.internal))
     }
 
     implicit class BuilderClassInfoContentV2Builder(cic: ClassInfoContentV2) {
