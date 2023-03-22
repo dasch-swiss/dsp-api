@@ -10,6 +10,8 @@ import java.net.UnknownHostException
 import java.nio.file.Paths
 import scala.jdk.CollectionConverters._
 
+import org.knora.webapi.http.version.BuildInfo
+
 final case class SipiTestContainer(container: GenericContainer[Nothing])
 
 object SipiTestContainer {
