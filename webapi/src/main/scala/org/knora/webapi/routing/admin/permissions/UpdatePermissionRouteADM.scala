@@ -8,6 +8,7 @@ package org.knora.webapi.routing.admin.permissions
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 
 import java.util.UUID
 
@@ -17,9 +18,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-class UpdatePermissionRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class UpdatePermissionRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with PermissionsADMJsonProtocol {
 
   val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
@@ -44,7 +46,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield PermissionChangeGroupRequestADM(
             permissionIri = permissionIri,
             changePermissionGroupRequest = apiRequest,
@@ -73,7 +75,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield PermissionChangeHasPermissionsRequestADM(
             permissionIri = permissionIri,
             changePermissionHasPermissionsRequest = apiRequest,
@@ -102,7 +104,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield PermissionChangeResourceClassRequestADM(
             permissionIri = permissionIri,
             changePermissionResourceClassRequest = apiRequest,
@@ -131,7 +133,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
 
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield PermissionChangePropertyRequestADM(
             permissionIri = permissionIri,
             changePermissionPropertyRequest = apiRequest,

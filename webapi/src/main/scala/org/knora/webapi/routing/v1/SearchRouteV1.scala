@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import scala.language.postfixOps
 
@@ -27,7 +28,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides a spray-routing function for API routes that deal with search.
  */
-class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class SearchRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * The default number of rows to show in search results.
@@ -247,7 +251,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
       get { requestContext =>
         val requestMessage = for {
-          userADM                         <- getUserADM(requestContext, routeData.appConfig)
+          userADM                         <- getUserADM(requestContext)
           params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         } yield makeExtendedSearchRequestMessage(userADM, params)
 
@@ -263,7 +267,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
           get { requestContext =>
             val requestMessage = for {
-              userADM                    <- getUserADM(requestContext, routeData.appConfig)
+              userADM                    <- getUserADM(requestContext)
               params: Map[String, String] = requestContext.request.uri.query().toMap
             } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
 

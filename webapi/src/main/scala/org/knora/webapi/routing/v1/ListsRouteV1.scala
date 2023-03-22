@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
@@ -19,7 +20,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides API routes that deal with lists.
  */
-class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class ListsRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -31,7 +35,7 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     path("v1" / "hlists" / Segment) { iri =>
       get { requestContext =>
         val requestMessageFuture = for {
-          userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
+          userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
           listIri = stringFormatter.validateAndEscapeIri(
                       iri,
                       throw BadRequestException(s"Invalid param list IRI: $iri")
@@ -55,7 +59,7 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       path("v1" / "selections" / Segment) { iri =>
         get { requestContext =>
           val requestMessageFuture = for {
-            userProfile <- getUserADM(requestContext, routeData.appConfig).map(_.asUserProfileV1)
+            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
             selIri = stringFormatter.validateAndEscapeIri(
                        iri,
                        throw BadRequestException(s"Invalid param list IRI: $iri")

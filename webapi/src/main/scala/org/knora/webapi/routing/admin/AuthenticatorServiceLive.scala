@@ -5,36 +5,27 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
 import zio._
 import zio.http._
 
-import scala.concurrent.ExecutionContext
-
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
-import org.knora.webapi.responders.ActorDeps
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.admin.AuthenticatorServiceLive.extractCredentialsFromRequest
 
-final case class AuthenticatorServiceLive(actorDeps: ActorDeps, appConfig: AppConfig, stringFormatter: StringFormatter)
-    extends AuthenticatorService {
-  private implicit val sf: StringFormatter  = stringFormatter
-  private implicit val system: ActorSystem  = actorDeps.system
-  private implicit val appActor: ActorRef   = actorDeps.appActor
-  private implicit val ec: ExecutionContext = actorDeps.executionContext
+final case class AuthenticatorServiceLive(
+  private val authenticator: Authenticator,
+  private implicit val stringFormatter: StringFormatter
+) extends AuthenticatorService {
 
-  private val authCookieName = Authenticator.calculateCookieName(appConfig)
+  private val authCookieName = authenticator.calculateCookieName()
 
   override def getUser(request: Request): Task[UserADM] =
-    extractCredentialsFromRequest(request, authCookieName)
-      .flatMap(credentials => ZIO.fromFuture(_ => Authenticator.getUserADMThroughCredentialsV2(credentials, appConfig)))
+    extractCredentialsFromRequest(request, authCookieName).flatMap(authenticator.getUserADMThroughCredentialsV2)
 }
 
 object AuthenticatorServiceLive {

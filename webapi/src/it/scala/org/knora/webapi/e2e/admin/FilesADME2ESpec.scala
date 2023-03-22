@@ -8,7 +8,6 @@ package org.knora.webapi.e2e.admin
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Cookie
 import akka.http.scaladsl.unmarshalling.Unmarshal
-
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -20,6 +19,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 /**
@@ -35,7 +35,7 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
   private val normalUserEmailEnc    = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
   private val testPass              = java.net.URLEncoder.encode("test", "utf-8")
 
-  val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(appConfig)
+  val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

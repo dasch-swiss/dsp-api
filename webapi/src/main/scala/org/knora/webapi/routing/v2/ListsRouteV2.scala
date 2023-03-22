@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import scala.concurrent.Future
 
@@ -22,7 +23,10 @@ import org.knora.webapi.routing.RouteUtilV2
 /**
  * Provides a function for API routes that deal with lists and nodes.
  */
-class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class ListsRouteV2(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -36,10 +40,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       /* return a list (a graph with all list nodes) */
       requestContext =>
         val requestMessage: Future[ListGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
           listIri: IRI = stringFormatter.validateAndEscapeIri(
                            lIri,
                            throw BadRequestException(s"Invalid list IRI: '$lIri'")
@@ -66,10 +67,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       /* return a list node */
       requestContext =>
         val requestMessage: Future[NodeGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
           nodeIri: IRI = stringFormatter.validateAndEscapeIri(
                            nIri,
                            throw BadRequestException(s"Invalid list IRI: '$nIri'")

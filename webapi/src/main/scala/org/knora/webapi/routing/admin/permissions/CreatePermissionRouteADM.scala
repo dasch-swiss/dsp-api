@@ -8,6 +8,7 @@ package org.knora.webapi.routing.admin.permissions
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -17,9 +18,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-class CreatePermissionRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class CreatePermissionRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with PermissionsADMJsonProtocol {
 
   val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
@@ -40,7 +42,7 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
         /* create a new administrative permission */
         entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => requestContext =>
           val requestMessage = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield AdministrativePermissionCreateRequestADM(
             createRequest = apiRequest,
             requestingUser = requestingUser,
@@ -66,7 +68,7 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
         /* create a new default object access permission */
         entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest => requestContext =>
           val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield DefaultObjectAccessPermissionCreateRequestADM(
             createRequest = apiRequest,
             requestingUser = requestingUser,

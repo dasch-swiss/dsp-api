@@ -7,6 +7,7 @@ package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio.Runtime
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -23,9 +24,10 @@ import org.knora.webapi.routing.RouteUtilADM
  * A route used to send requests which can directly affect the data stored inside the triplestore.
  */
 
-class StoreRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class StoreRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with StoresADMJsonProtocol {
 
   /**

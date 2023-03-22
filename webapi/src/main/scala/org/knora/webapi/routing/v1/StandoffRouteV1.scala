@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import spray.json._
+import zio.Runtime
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -26,7 +27,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * A route used to convert XML to standoff.
  */
-class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class StandoffRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -67,7 +71,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-            userProfile <- getUserADM(requestContext, routeData.appConfig)
+            userProfile <- getUserADM(requestContext)
 
             allParts: Map[Name, String] <- allPartsFuture
 

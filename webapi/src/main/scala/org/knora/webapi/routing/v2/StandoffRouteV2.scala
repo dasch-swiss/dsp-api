@@ -9,6 +9,7 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio.Runtime
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -31,7 +32,10 @@ import org.knora.webapi.routing.RouteUtilV2
 /**
  * Provides a function for API routes that deal with search.
  */
-class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class StandoffRouteV2(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -62,10 +66,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
           val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
           } yield GetStandoffPageRequestV2(
             resourceIri = resourceIri.toString,
             valueIri = valueIri.toString,
@@ -121,10 +122,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             .runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
           val requestMessageFuture: Future[CreateMappingRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser              <- getUserADM(requestContext)
             allParts: Map[Name, String] <- allPartsFuture
             jsonldDoc =
               JsonLDUtil.parseJsonLD(

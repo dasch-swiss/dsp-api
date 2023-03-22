@@ -29,10 +29,10 @@ import java.util
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.routing.JwtService
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.domain._
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -47,7 +47,7 @@ import org.knora.webapi.util.SipiUtil
  */
 case class IIIFServiceSipiImpl(
   appConfig: AppConfig,
-  jwt: JWTService,
+  jwt: JwtService,
   httpClient: CloseableHttpClient
 ) extends IIIFService {
 
@@ -88,7 +88,7 @@ case class IIIFServiceSipiImpl(
   ): Task[SuccessResponseV2] = {
 
     // create the JWT token with the necessary permission
-    val jwtToken: Task[String] = jwt.newToken(
+    val jwtToken: Task[String] = jwt.createToken(
       moveTemporaryFileToPermanentStorageRequestV2.requestingUser.id,
       Map(
         "knora-data" -> JsObject(
@@ -135,7 +135,7 @@ case class IIIFServiceSipiImpl(
    */
   def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] = {
 
-    val jwtToken: Task[String] = jwt.newToken(
+    val jwtToken: Task[String] = jwt.createToken(
       deleteTemporaryFileRequestV2.requestingUser.id,
       Map(
         "knora-data" -> JsObject(
@@ -327,11 +327,11 @@ object IIIFServiceSipiImpl {
   private def release(httpClient: CloseableHttpClient): UIO[Unit] =
     ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
-  val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] =
+  val layer: URLayer[AppConfig with JwtService, IIIFService] =
     ZLayer.scoped {
       for {
         config     <- ZIO.service[AppConfig]
-        jwtService <- ZIO.service[JWTService]
+        jwtService <- ZIO.service[JwtService]
         httpClient <- ZIO.acquireRelease(acquire(config))(release)
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }
