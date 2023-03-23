@@ -6,24 +6,21 @@
 package org.knora.webapi.routing
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.RouteResult
-import zio._
-
-import scala.concurrent.Future
-import scala.util.control.Exception.catching
-
+import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import zio._
+
+import scala.concurrent.Future
+import scala.util.control.Exception.catching
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
@@ -252,9 +249,9 @@ object RouteUtilV2 {
     requestContext: RequestContext,
     targetSchema: OntologySchema,
     schemaOptionsOption: Option[Set[SchemaOption]] = None
-  )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] = {
-    val schemaOptions = schemaOptionsOption.getOrElse(RouteUtilV2.getSchemaOptions(requestContext))
+  )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
+      schemaOptions    <- ZIO.attempt(schemaOptionsOption.getOrElse(getSchemaOptions(requestContext)))
       appConfig        <- ZIO.service[AppConfig]
       knoraResponse    <- responseTask
       responseMediaType = chooseRdfMediaTypeForResponse(requestContext)
@@ -264,7 +261,6 @@ object RouteUtilV2 {
       response          = HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, content))
       routeResult      <- ZIO.fromFuture(_ => requestContext.complete(response))
     } yield routeResult)
-  }
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as TEI/XML.
