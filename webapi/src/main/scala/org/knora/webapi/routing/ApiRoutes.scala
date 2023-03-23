@@ -51,20 +51,14 @@ object ApiRoutes {
         sys       <- ZIO.service[ActorSystem]
         router    <- ZIO.service[AppRouter]
         appConfig <- ZIO.service[AppConfig]
-        routeData <- ZIO.succeed(
-                       KnoraRouteData(
-                         system = sys.system,
-                         appActor = router.ref,
-                         appConfig = appConfig
-                       )
-                     )
+        routeData <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
-                     routing.Authenticator
-                       with AppConfig
+                     AppConfig
                        with MessageRelay
-                       with core.State
-                       with RestResourceInfoService
                        with RestCardinalityService
+                       with RestResourceInfoService
+                       with core.State
+                       with routing.Authenticator
                    ]
       } yield ApiRoutesImpl(routeData, runtime, appConfig)
     }
@@ -81,11 +75,11 @@ private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
   runtime: Runtime[
     AppConfig
-      with routing.Authenticator
       with MessageRelay
-      with core.State
-      with RestResourceInfoService
       with RestCardinalityService
+      with RestResourceInfoService
+      with core.State
+      with routing.Authenticator
   ],
   appConfig: AppConfig
 ) extends ApiRoutes

@@ -243,11 +243,9 @@ object RouteUtilV2 {
    *
    * @return a [[Future]]     Containing the [[RouteResult]] for Akka HTTP.
    */
-  def completeZioApiV2ComplexResponse[R](
-    responseZio: ZIO[R, Throwable, KnoraResponseV2],
-    ctx: RequestContext
-  )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
-    completeResponse(responseZio, ctx, ApiV2Complex)
+  def completeZioApiV2ComplexResponse[R](responseZio: ZIO[R, Throwable, KnoraResponseV2], ctx: RequestContext)(implicit
+    runtime: Runtime[R with AppConfig]
+  ): Future[RouteResult] = completeResponse(responseZio, ctx, ApiV2Complex)
 
   private def completeResponse[R](
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
