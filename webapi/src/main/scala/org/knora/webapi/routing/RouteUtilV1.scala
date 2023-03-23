@@ -58,7 +58,7 @@ object RouteUtilV1 {
 
   private def createResponse(request: KnoraRequestV1): ZIO[MessageRelay, Throwable, HttpResponse] =
     for {
-      knoraResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseV1](request))
+      knoraResponse <- MessageRelay.ask[KnoraResponseV1](request)
       jsonBody       = JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
     } yield okResponse(`application/json`, jsonBody.compactPrint)
 
@@ -104,7 +104,7 @@ object RouteUtilV1 {
   ): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
       requestMessage <- requestTask
-      knoraResponse  <- ZIO.serviceWithZIO[MessageRelay](_.ask[ResourceFullResponseV1](requestMessage))
+      knoraResponse  <- MessageRelay.ask[ResourceFullResponseV1](requestMessage)
       html           <- ResourceHtmlView.propertiesHtmlView(knoraResponse)
       result         <- completeContext(requestContext, okResponse(`text/html(UTF-8)`, html))
     } yield result)
@@ -131,7 +131,7 @@ object RouteUtilV1 {
     UnsafeZioRun.runToFuture {
       val request = GetMappingRequestV2(mappingIri, userProfile)
       for {
-        mappingResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](request))
+        mappingResponse <- MessageRelay.ask[GetMappingResponseV2](request)
         textWithStandoffTagV1 <-
           ZIO.attempt(
             StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
