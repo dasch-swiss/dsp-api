@@ -3,8 +3,6 @@ package org.knora.webapi.core
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
@@ -111,70 +109,65 @@ object LayersTest {
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
   type CommonR0 = ActorSystem with AppConfig with IIIFService with JwtService with StringFormatter
-  type CommonR = ActorDeps
-    with ActorToZioBridge
-    with ApiRoutes
-    with AppRouter
-    with AppRouterRelayingMessageHandler
-    with Authenticator
-    with OntologyCache
-    with OntologyRepo
-    with CacheService
-    with CacheServiceRequestMessageHandler
-    with CardinalityHandler
-    with CardinalityService
-    with CkanResponderV1
-    with ConstructResponseUtilV2
-    with GroupsResponderADM
-    with HttpServer
-    with IIIFRequestMessageHandler
-    with IriConverter
-    with IriService
-    with ListsResponderV2
-    with ListsResponderADM
-    with ListsResponderV1
-    with MessageRelay
-    with OntologyResponderV1
-    with OntologyResponderV2
-    with OntologyHelpers
-    with PermissionUtilADM
-    with PermissionsResponderADM
-    with ProjectsResponderADM
-    with ProjectsResponderV1
-    with RepositoryUpdater
-    with ResourceInfoRepo
-    with ResourceUtilV2
-    with ResourcesResponderV1
-    with ResourcesResponderV2
-    with RestCardinalityService
-    with RestResourceInfoService
-    with SearchResponderV1
-    with SearchResponderV2
-    with SparqlTransformerLive
-    with QueryTraverser
-    with GravsearchTypeInspectionUtil
-    with SipiResponderADM
-    with StandoffResponderV1
-    with StandoffResponderV2
-    with StandoffTagUtilV2
-    with State
-    with StoresResponderADM
-    with TestClientService
-    with TriplestoreService
-    with TriplestoreRequestMessageHandler
-    with UsersResponderADM
-    with UsersResponderV1
-    with ValueUtilV1
-    with ValuesResponderV1
-    with ValuesResponderV2
+  type CommonR =
+    ApiRoutes
+      with AppRouter
+      with Authenticator
+      with OntologyCache
+      with OntologyRepo
+      with CacheService
+      with CacheServiceRequestMessageHandler
+      with CardinalityHandler
+      with CardinalityService
+      with CkanResponderV1
+      with ConstructResponseUtilV2
+      with GroupsResponderADM
+      with HttpServer
+      with IIIFRequestMessageHandler
+      with IriConverter
+      with IriService
+      with ListsResponderV2
+      with ListsResponderADM
+      with ListsResponderV1
+      with MessageRelay
+      with OntologyResponderV1
+      with OntologyResponderV2
+      with OntologyHelpers
+      with PermissionUtilADM
+      with PermissionsResponderADM
+      with ProjectsResponderADM
+      with ProjectsResponderV1
+      with RepositoryUpdater
+      with ResourceInfoRepo
+      with ResourceUtilV2
+      with ResourcesResponderV1
+      with ResourcesResponderV2
+      with RestCardinalityService
+      with RestResourceInfoService
+      with SearchResponderV1
+      with SearchResponderV2
+      with SparqlTransformerLive
+      with QueryTraverser
+      with GravsearchTypeInspectionUtil
+      with SipiResponderADM
+      with StandoffResponderV1
+      with StandoffResponderV2
+      with StandoffTagUtilV2
+      with State
+      with StoresResponderADM
+      with TestClientService
+      with TriplestoreService
+      with TriplestoreRequestMessageHandler
+      with UsersResponderADM
+      with UsersResponderV1
+      with ValueUtilV1
+      with ValuesResponderV1
+      with ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
-      ActorDeps.layer,
-      ActorToZioBridge.live,
       ApiRoutes.layer,
       AppRouter.layer,
-      AppRouterRelayingMessageHandler.layer,
       AuthenticatorLive.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,

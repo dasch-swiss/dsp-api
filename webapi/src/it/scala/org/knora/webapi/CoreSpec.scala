@@ -6,26 +6,20 @@
 package org.knora.webapi
 
 import akka.actor
-import akka.testkit.ImplicitSender
-import akka.testkit.TestKitBase
+import akka.testkit.{ImplicitSender, TestKitBase}
 import com.typesafe.scalalogging.Logger
-
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.AppServer
-import org.knora.webapi.core.TestStartupUtils
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
+import org.knora.webapi.core.{AppRouter, AppServer, TestStartupUtils}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.LogAspect
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
-import scala.concurrent.ExecutionContext
 
-import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
-import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.routing.UnsafeZioRun
+import scala.concurrent.ExecutionContext
 
 abstract class CoreSpec
     extends AnyWordSpec
@@ -89,8 +83,7 @@ abstract class CoreSpec
   val appActor                                         = router.ref
 
   // needed by some tests
-  val appConfig     = config
-  val responderData = ResponderData(ActorDeps(system, appActor, appConfig.defaultTimeoutAsDuration), appConfig)
+  val appConfig = config
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
