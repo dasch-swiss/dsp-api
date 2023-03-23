@@ -5,16 +5,10 @@
 
 package org.knora.webapi.routing
 
+import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.RouteResult
+import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import com.typesafe.scalalogging.Logger
-import spray.json.JsNumber
-import spray.json.JsObject
-import zio._
-
-import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
@@ -26,12 +20,14 @@ import org.knora.webapi.messages.twirl.ResourceHtmlView
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
-import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
-import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceFullResponseV1, ResourcesResponderRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
 import org.knora.webapi.store.iiif.errors.SipiException
+import spray.json.{JsNumber, JsObject}
+import zio._
+
+import scala.concurrent.Future
 
 /**
  * Convenience methods for Knora routes.
@@ -48,18 +44,20 @@ object RouteUtilV1 {
   def runJsonRoute(requestMessage: KnoraRequestV1, requestContext: RequestContext)(implicit
     runtime: zio.Runtime[MessageRelay]
   ): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(
-      for {
-        knoraResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseV1](requestMessage))
-        jsonResponseWithStatus =
-          JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
-        httpResponse = HttpResponse(
-                         status = StatusCodes.OK,
-                         entity = HttpEntity(ContentTypes.`application/json`, jsonResponseWithStatus.compactPrint)
-                       )
-        result <- ZIO.fromFuture(_ => requestContext.complete(httpResponse))
-      } yield result
-    )
+    UnsafeZioRun.runToFuture(doRunJsonRoute(requestMessage, requestContext))
+
+  private def doRunJsonRoute(request: KnoraRequestV1, ctx: RequestContext): ZIO[MessageRelay, Throwable, RouteResult] =
+    createResponse(request).flatMap(completeContext(ctx, _))
+
+  private def createResponse(request: KnoraRequestV1): ZIO[MessageRelay, Throwable, HttpResponse] =
+    for {
+      knoraResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseV1](request))
+      jsonBody       = JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
+      httpResponse   = HttpResponse(StatusCodes.OK, entity = HttpEntity(`application/json`, jsonBody.compactPrint))
+    } yield httpResponse
+
+  private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
+    ZIO.fromFuture(_ => ctx.complete(response))
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
@@ -72,12 +70,7 @@ object RouteUtilV1 {
     requestFuture: Future[RequestMessageT],
     requestContext: RequestContext
   )(implicit runtime: zio.Runtime[MessageRelay]): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(
-      for {
-        message <- ZIO.fromFuture(_ => requestFuture)
-        result  <- ZIO.fromFuture(_ => runJsonRoute(message, requestContext))
-      } yield result
-    )
+    UnsafeZioRun.runToFuture(ZIO.fromFuture(_ => requestFuture).flatMap(doRunJsonRoute(_, requestContext)))
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
@@ -86,11 +79,10 @@ object RouteUtilV1 {
    * @param requestContext The akka-http [[RequestContext]].
    * @return a [[Future]] containing a [[RouteResult]].
    */
-  def runJsonRouteZ[R, RequestMessageT <: KnoraRequestV1](
-    requestTask: ZIO[R, Throwable, RequestMessageT],
-    requestContext: RequestContext
-  )(implicit runtime: zio.Runtime[R with MessageRelay]): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(requestTask.flatMap(message => ZIO.fromFuture(_ => runJsonRoute(message, requestContext))))
+  def runJsonRouteZ[R](requestTask: ZIO[R, Throwable, KnoraRequestV1], requestContext: RequestContext)(implicit
+    runtime: zio.Runtime[R with MessageRelay]
+  ): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as HTML.
@@ -106,7 +98,7 @@ object RouteUtilV1 {
       knoraResponse  <- ZIO.serviceWithZIO[MessageRelay](_.ask[ResourceFullResponseV1](requestMessage))
       html           <- ResourceHtmlView.propertiesHtmlView(knoraResponse)
       httpResponse    = HttpResponse(status = StatusCodes.OK, entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, html))
-      result         <- ZIO.fromFuture(_ => requestContext.complete(httpResponse))
+      result         <- completeContext(requestContext, httpResponse)
     } yield result)
 
   /**
