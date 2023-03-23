@@ -8,6 +8,7 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -31,9 +32,10 @@ import org.knora.webapi.routing.RouteUtilADM
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-class CreateListItemsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class CreateListItemsRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with ListADMJsonProtocol {
 
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
@@ -61,7 +63,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedListRootNodeCreatePayload)
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
           _ =
@@ -115,7 +117,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedCreateChildNodePeyload)
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
           _ =

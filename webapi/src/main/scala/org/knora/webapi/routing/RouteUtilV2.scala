@@ -13,7 +13,7 @@ import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import zio.ZIO
+import zio._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -274,7 +274,7 @@ object RouteUtilV2 {
     responseZio: ZIO[R, Throwable, KnoraResponseV2],
     ctx: RequestContext,
     appConfig: AppConfig
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[R]): Future[RouteResult] = {
+  )(implicit executionContext: ExecutionContext, runtime: Runtime[R]): Future[RouteResult] = {
     val responseFuture = UnsafeZioRun.runToFuture(responseZio)
     completeResponse(responseFuture, ctx, appConfig, ApiV2Complex, RouteUtilV2.getSchemaOptions(ctx))
   }

@@ -6,6 +6,7 @@
 package org.knora.webapi.core.actors
 
 import akka.actor.Actor
+import zio._
 
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
@@ -26,7 +27,7 @@ import org.knora.webapi.util.ActorUtil
 final case class RoutingActor(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  implicit val runtime: zio.Runtime[
+  implicit val runtime: Runtime[
     CardinalityHandler
       with CardinalityService
       with ConstructResponseUtilV2

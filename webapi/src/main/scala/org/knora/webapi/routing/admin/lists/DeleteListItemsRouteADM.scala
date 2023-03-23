@@ -8,6 +8,7 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -24,9 +25,10 @@ import org.knora.webapi.routing.RouteUtilADM
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-class DeleteListItemsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class DeleteListItemsRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator]
+) extends KnoraRoute(routeData, runtime)
     with ListADMJsonProtocol {
 
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
@@ -45,7 +47,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list item Iri: $iri"))
 
         val requestMessage: Future[ListItemDeleteRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           requestingUser = requestingUser,
@@ -71,7 +73,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 
         val requestMessage: Future[CanDeleteListRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield CanDeleteListRequestADM(
           iri = listIri,
           requestingUser = requestingUser
@@ -96,7 +98,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListNodeCommentsDeleteRequestADM] =
           for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield ListNodeCommentsDeleteRequestADM(
             iri = listIri,
             requestingUser = requestingUser

@@ -15,12 +15,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
 import zio._
-
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
@@ -67,10 +67,7 @@ abstract class ITKnoraLiveSpec
   private val bootstrap = util.Logger.text() >>> effectLayers
 
   // create a configured runtime
-  val runtime = Unsafe.unsafe { implicit u =>
-    Runtime.unsafe
-      .fromLayer(bootstrap)
-  }
+  implicit val runtime = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
