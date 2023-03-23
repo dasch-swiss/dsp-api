@@ -22,8 +22,6 @@ import org.knora.webapi.messages.util.search.SparqlTransformerLive
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
-import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
@@ -119,7 +117,6 @@ object LayersLive {
       with ApiRoutes
       with AppConfig
       with AppRouter
-      with AppRouterRelayingMessageHandler
       with Authenticator
       with OntologyCache
       with CacheService
@@ -178,13 +175,10 @@ object LayersLive {
    */
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
-      ActorDeps.layer,
       ActorSystem.layer,
-      ActorToZioBridge.live,
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
-      AppRouterRelayingMessageHandler.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
