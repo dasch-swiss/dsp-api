@@ -82,17 +82,19 @@ final case class ValuesRouteV2(
         val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
-        val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield ResourcesGetRequestV2(
-          resourceIris = Seq(resourceIri.toString),
-          valueUuid = Some(valueUuid),
-          versionDate = versionDate,
-          targetSchema = targetSchema,
-          requestingUser = requestingUser
-        )
+        val requestTask = Authenticator
+          .getUserADM(requestContext)
+          .map(requestingUser =>
+            ResourcesGetRequestV2(
+              resourceIris = Seq(resourceIri.toString),
+              valueUuid = Some(valueUuid),
+              versionDate = versionDate,
+              targetSchema = targetSchema,
+              requestingUser = requestingUser
+            )
+          )
 
-        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, targetSchema, Some(schemaOptions))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema, Some(schemaOptions))
       }
   }
 
@@ -113,7 +115,7 @@ final case class ValuesRouteV2(
                                                     )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -136,7 +138,7 @@ final case class ValuesRouteV2(
                                                     )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -159,7 +161,7 @@ final case class ValuesRouteV2(
                                                     )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }

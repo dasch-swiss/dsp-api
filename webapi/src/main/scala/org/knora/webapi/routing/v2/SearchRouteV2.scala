@@ -188,21 +188,18 @@ final case class SearchRouteV2(
 
           val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
-          val requestMessage: Future[FullTextSearchCountRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield FullTextSearchCountRequestV2(
-            searchValue = escapedSearchStr,
-            limitToProject = limitToProject,
-            limitToResourceClass = limitToResourceClass,
-            limitToStandoffClass = limitToStandoffClass,
-            requestingUser = requestingUser
-          )
-
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessage,
-            requestContext,
-            RouteUtilV2.getOntologySchema(requestContext)
-          )
+          val requestTask = Authenticator
+            .getUserADM(requestContext)
+            .map(
+              FullTextSearchCountRequestV2(
+                escapedSearchStr,
+                limitToProject,
+                limitToResourceClass,
+                limitToStandoffClass,
+                _
+              )
+            )
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
     }
 
@@ -243,21 +240,22 @@ final case class SearchRouteV2(
         val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
-        val requestMessage: Future[FulltextSearchRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield FulltextSearchRequestV2(
-          searchValue = escapedSearchStr,
-          offset = offset,
-          limitToProject = limitToProject,
-          limitToResourceClass = limitToResourceClass,
-          limitToStandoffClass = limitToStandoffClass,
-          returnFiles = returnFiles,
-          requestingUser = requestingUser,
-          targetSchema = targetSchema,
-          schemaOptions = schemaOptions
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext, targetSchema, Some(schemaOptions))
+        val requestTask = Authenticator
+          .getUserADM(requestContext)
+          .map(requestingUser =>
+            FulltextSearchRequestV2(
+              searchValue = escapedSearchStr,
+              offset = offset,
+              limitToProject = limitToProject,
+              limitToResourceClass = limitToResourceClass,
+              limitToStandoffClass = limitToStandoffClass,
+              returnFiles = returnFiles,
+              requestingUser = requestingUser,
+              targetSchema = targetSchema,
+              schemaOptions = schemaOptions
+            )
+          )
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema, Some(schemaOptions))
       }
   }
 
@@ -266,19 +264,8 @@ final case class SearchRouteV2(
       gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
         get { requestContext =>
           val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-
-          val requestMessage: Future[GravsearchCountRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield GravsearchCountRequestV2(
-            constructQuery = constructQuery,
-            requestingUser = requestingUser
-          )
-
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessage,
-            requestContext,
-            RouteUtilV2.getOntologySchema(requestContext)
-          )
+          val requestTask    = Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _))
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
     }
 
@@ -288,18 +275,8 @@ final case class SearchRouteV2(
         entity(as[String]) { gravsearchQuery => requestContext =>
           {
             val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-            val requestMessage: Future[GravsearchCountRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-            } yield GravsearchCountRequestV2(
-              constructQuery = constructQuery,
-              requestingUser = requestingUser
-            )
-
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessage,
-              requestContext,
-              RouteUtilV2.getOntologySchema(requestContext)
-            )
+            val requestTask    = Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _))
+            RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
           }
         }
       }
@@ -312,17 +289,10 @@ final case class SearchRouteV2(
       val constructQuery                   = GravsearchParser.parseQuery(sparql)
       val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
-      val requestMessage: Future[GravsearchRequestV2] = for {
-        requestingUser <- getUserADM(requestContext)
-      } yield GravsearchRequestV2(
-        constructQuery = constructQuery,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions,
-        requestingUser = requestingUser
-      )
-
-      RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext, targetSchema, Some(schemaOptions))
+      val requestMessage = Authenticator
+        .getUserADM(requestContext)
+        .map(GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, _))
+      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchema, Some(schemaOptions))
     }
   }
 
@@ -333,17 +303,10 @@ final case class SearchRouteV2(
           val constructQuery                   = GravsearchParser.parseQuery(gravsearchQuery)
           val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
           val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
-          val requestMessage: Future[GravsearchRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield GravsearchRequestV2(
-            constructQuery = constructQuery,
-            targetSchema = targetSchema,
-            schemaOptions = schemaOptions,
-            requestingUser = requestingUser
-          )
-
-          RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext, targetSchema, Some(schemaOptions))
+          val requestTask = Authenticator
+            .getUserADM(requestContext)
+            .map(GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, _))
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema, Some(schemaOptions))
         }
       }
     }
@@ -380,7 +343,7 @@ final case class SearchRouteV2(
             requestingUser = requestingUser
           )
 
-          RouteUtilV2.runRdfRouteWithFuture(
+          RouteUtilV2.runRdfRouteF(
             requestMessage,
             requestContext,
             RouteUtilV2.getOntologySchema(requestContext)
@@ -425,7 +388,7 @@ final case class SearchRouteV2(
         requestingUser = requestingUser
       )
 
-      RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
+      RouteUtilV2.runRdfRouteF(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
   }
 }

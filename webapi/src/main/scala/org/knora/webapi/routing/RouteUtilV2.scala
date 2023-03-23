@@ -210,16 +210,34 @@ object RouteUtilV2 {
     )
 
   /**
-   * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
+   * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.
    *
-   * @param requestZio           a Task containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-   * @param requestContext       the akka-http [[RequestContext]].
-   * @param targetSchema         the API schema that should be used in the response, default is ApiV2Complex.
-   * @param schemaOptionsOption        the schema options that should be used when processing the request.
-   *                                   uses RouteUtilV2.getSchemaOptions if not present.
+   * @param requestMessageF     A [[Future]] containing a [[KnoraRequestV2]] message that should be evaluated.
+   * @param requestContext      The akka-http [[RequestContext]].
+   * @param targetSchema        The API schema that should be used in the response, default is [[ApiV2Complex]].
+   * @param schemaOptionsOption The schema options that should be used when processing the request.
+   *                            Uses RouteUtilV2.getSchemaOptions if not present.
    * @return a [[Future]] containing a [[RouteResult]].
    */
-  def runRdfRoute[R](
+  def runRdfRouteF(
+    requestMessageF: Future[KnoraRequestV2],
+    requestContext: RequestContext,
+    targetSchema: OntologySchema = ApiV2Complex,
+    schemaOptionsOption: Option[Set[SchemaOption]] = None
+  )(implicit runtime: Runtime[MessageRelay with AppConfig]): Future[RouteResult] =
+    runRdfRouteZ(ZIO.fromFuture(_ => requestMessageF), requestContext, targetSchema, schemaOptionsOption)
+
+  /**
+   * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
+   *
+   * @param requestZio           A Task containing a [[KnoraRequestV2]] message that should be evaluated.
+   * @param requestContext       The akka-http [[RequestContext]].
+   * @param targetSchema         The API schema that should be used in the response, default is [[ApiV2Complex]].
+   * @param schemaOptionsOption  The schema options that should be used when processing the request.
+   *                             Uses RouteUtilV2.getSchemaOptions if not present.
+   * @return a [[Future]] containing a [[RouteResult]].
+   */
+  def runRdfRouteZ[R](
     requestZio: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
     targetSchema: OntologySchema = ApiV2Complex,
@@ -287,24 +305,6 @@ object RouteUtilV2 {
         completed      <- ZIO.fromFuture(_ => requestContext.complete(response))
       } yield completed
     }
-
-  /**
-   * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.
-   *
-   * @param requestMessageF      a [[Future]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-   * @param requestContext       the akka-http [[RequestContext]].
-   * @param targetSchema         the API schema that should be used in the response, default is [[ApiV2Complex]].
-   * @param schemaOptionsOption  the schema options that should be used when processing the request, uses
-   *                             RouteUtilV2.getSchemaOptions(requestContext) to determine if not present.
-   * @return a [[Future]] containing a [[RouteResult]].
-   */
-  def runRdfRouteWithFuture(
-    requestMessageF: Future[KnoraRequestV2],
-    requestContext: RequestContext,
-    targetSchema: OntologySchema = ApiV2Complex,
-    schemaOptionsOption: Option[Set[SchemaOption]] = None
-  )(implicit runtime: Runtime[MessageRelay with AppConfig]): Future[RouteResult] =
-    runRdfRoute(ZIO.fromFuture(_ => requestMessageF), requestContext, targetSchema, schemaOptionsOption)
 
   /**
    * Chooses an RDF media type for the response, using content negotiation as per [[https://tools.ietf.org/html/rfc7231#section-5.3.2]].

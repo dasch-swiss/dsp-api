@@ -42,8 +42,7 @@ final case class StandoffRouteV2(
   /**
    * Returns the route.
    */
-  override def makeRoute: Route = {
-
+  override def makeRoute: Route =
     path("v2" / "standoff" / Segment / Segment / Segment) {
       (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>
         get { requestContext =>
@@ -63,21 +62,12 @@ final case class StandoffRouteV2(
 
           val offset: Int =
             stringFormatter.validateInt(offsetStr, throw BadRequestException(s"Invalid offset: $offsetStr"))
-
           val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-
-          val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield GetStandoffPageRequestV2(
-            resourceIri = resourceIri.toString,
-            valueIri = valueIri.toString,
-            offset = offset,
-            targetSchema = targetSchema,
-            requestingUser = requestingUser
-          )
-
+          val requestTask = Authenticator
+            .getUserADM(requestContext)
+            .map(GetStandoffPageRequestV2(resourceIri.toString, valueIri.toString, offset, targetSchema, _))
           val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex, Some(schemaOptions))
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, ApiV2Complex, Some(schemaOptions))
         }
     } ~ path("v2" / "mapping") {
       post {
@@ -150,10 +140,8 @@ final case class StandoffRouteV2(
             apiRequestID = apiRequestID
           )
 
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
-
     }
-  }
 }

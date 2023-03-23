@@ -97,7 +97,7 @@ final case class ResourcesRouteV2(
             throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
           )
         val requestTask = Authenticator.getUserADM(requestContext).map(ResourceIIIFManifestGetRequestV2(resourceIri, _))
-        RouteUtilV2.runRdfRoute(requestTask, requestContext)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
@@ -124,7 +124,7 @@ final case class ResourcesRouteV2(
                  )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -148,7 +148,7 @@ final case class ResourcesRouteV2(
                                                                )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -208,7 +208,7 @@ final case class ResourcesRouteV2(
           )
         )
 
-      RouteUtilV2.runRdfRoute(requestTask, requestContext)
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
     }
   }
 
@@ -244,7 +244,7 @@ final case class ResourcesRouteV2(
             )
           )
 
-        RouteUtilV2.runRdfRoute(requestTask, requestContext)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
@@ -254,7 +254,7 @@ final case class ResourcesRouteV2(
         val requestTask = Authenticator
           .getUserADM(requestContext)
           .map(ResourceHistoryEventsGetRequestV2(resourceIri, _))
-        RouteUtilV2.runRdfRoute(requestTask, requestContext)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
@@ -263,7 +263,7 @@ final case class ResourcesRouteV2(
       get { requestContext =>
         val requestTask =
           Authenticator.getUserADM(requestContext).map(ProjectResourcesWithHistoryGetRequestV2(projectIri, _))
-        RouteUtilV2.runRdfRoute(requestTask, requestContext)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
@@ -343,7 +343,7 @@ final case class ResourcesRouteV2(
             requestingUser = requestingUser
           )
         )
-      RouteUtilV2.runRdfRoute(requestTask, requestContext, targetSchema, Some(schemaOptions))
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema, Some(schemaOptions))
     }
   }
 
@@ -361,7 +361,7 @@ final case class ResourcesRouteV2(
         val requestTask = Authenticator
           .getUserADM(requestContext)
           .map(user => ResourcesPreviewGetRequestV2(resourceIris, targetSchema = targetSchema, requestingUser = user))
-        RouteUtilV2.runRdfRoute(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
       }
     }
 
@@ -415,7 +415,7 @@ final case class ResourcesRouteV2(
       val requestTask = Authenticator
         .getUserADM(requestContext)
         .map(GraphDataGetRequestV2(resourceIri, depth, inbound, outbound, excludeProperty, _))
-      RouteUtilV2.runRdfRoute(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
   }
 
@@ -436,7 +436,7 @@ final case class ResourcesRouteV2(
                                                               )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -460,7 +460,7 @@ final case class ResourcesRouteV2(
                                                               )
           } yield requestMessage.copy(erase = true)
 
-          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }

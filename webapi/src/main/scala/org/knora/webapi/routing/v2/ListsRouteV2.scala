@@ -51,7 +51,7 @@ final case class ListsRouteV2(
           listIri = listIri,
           requestingUser = requestingUser
         )
-        RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext)
+        RouteUtilV2.runRdfRouteF(requestMessage, requestContext)
     }
   }
 
@@ -70,7 +70,7 @@ final case class ListsRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext)
+        RouteUtilV2.runRdfRouteF(requestMessage, requestContext)
     }
   }
 }
