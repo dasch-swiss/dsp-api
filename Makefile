@@ -316,6 +316,26 @@ init-db-test-from-ls-test-server-trig-file: init-db-test-empty ## init local dat
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
+.PHONY: db-dump
+db-dump: ## Dump data from an env. Use as `make db_dump PW=database-password ENV=db.0000-test-server.dasch.swiss`
+	@echo $@
+	@echo dumping environment ${ENV}
+	@curl -X GET -H "Accept: application/trig" -u "admin:${PW}" "https://${ENV}/dsp-repo" > "${ENV}.trig"
+
+.PHONY: init-db-from-dump-file
+init-db-from-dump-file: ## init local database from a specified dump file. Use as `make init-db-from-dump-file DUMP=some-dump-file.trig`
+	@echo $@
+	@echo dump file: ${DUMP}
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/${DUMP}" -u "admin:test" "http://localhost:3030/knora-test"
+
+.PHONY: init-db-from-env
+init-db-from-env: ## ## Dump data from an env and upload it to the local DB. Use as `make init-db-from-env PW=database-password ENV=db.0000-test-server.dasch.swiss`
+	@echo $@
+	${MAKE} db-dump
+	${MAKE} init-db-from-dump-file DUMP=${ENV}.trig
+
+
 #################################
 ## Other
 #################################
