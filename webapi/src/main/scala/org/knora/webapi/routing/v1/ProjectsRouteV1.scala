@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -18,7 +19,7 @@ import org.knora.webapi.routing.RouteUtilV1
 
 final case class ProjectsRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with ProjectV1JsonProtocol {
 
@@ -30,18 +31,9 @@ final case class ProjectsRouteV1(
       get {
         /* returns all projects */
         requestContext =>
-          val requestMessage = for {
-            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-          } yield ProjectsGetRequestV1(
-            userProfile = Some(userProfile)
-          )
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            appActor,
-            log
-          )
+          val requestTask =
+            Authenticator.getUserADM(requestContext).map(user => ProjectsGetRequestV1(Some(user.asUserProfileV1)))
+          RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       }
     } ~ path("v1" / "projects" / Segment) { value =>
       get {
@@ -66,12 +58,7 @@ final case class ProjectsRouteV1(
             )
           }
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            appActor,
-            log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       }
     }

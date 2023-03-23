@@ -37,6 +37,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi._
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -49,7 +50,6 @@ import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.twirl.ResourceHtmlView
 import org.knora.webapi.messages.util.DateUtilV1
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -66,7 +66,7 @@ import org.knora.webapi.util.FileUtil
  */
 final case class ResourcesRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
   // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
   private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
@@ -171,21 +171,17 @@ final case class ResourcesRouteV1(
                   )
 
                   for {
-
-                    textWithStandoffTags: TextWithStandoffTagsV2 <- RouteUtilV1.convertXMLtoStandoffTagV1(
-                                                                      xml = richtext.xml.get,
-                                                                      mappingIri = mappingIri,
-                                                                      acceptStandoffLinksToClientIDs =
-                                                                        acceptStandoffLinksToClientIDs,
-                                                                      userProfile = userProfile,
-                                                                      appActor = appActor,
-                                                                      log = log
-                                                                    )
+                    textWithStandoffTags <- RouteUtilV1.convertXMLtoStandoffTagV1(
+                                              richtext.xml.get,
+                                              mappingIri,
+                                              acceptStandoffLinksToClientIDs,
+                                              userProfile,
+                                              log
+                                            )
 
                     // collect the resource references from the linking standoff nodes
-                    resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(
-                                                     textWithStandoffTags.standoffTagV2
-                                                   )
+                    resourceReferences =
+                      stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
 
                   } yield CreateValueV1WithComment(
                     TextValueWithStandoffV1(
@@ -1269,12 +1265,7 @@ final case class ResourcesRouteV1(
             userProfile = userProfile
           )
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       } ~ post {
         // Create a new resource with the given type and possibly a file.
         // The binary file is already managed by Sipi.
@@ -1288,12 +1279,7 @@ final case class ResourcesRouteV1(
                        )
           } yield request
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessageFuture, requestContext)
         }
       }
     } ~ path("v1" / "resources" / Segment) { resIri =>
@@ -1311,12 +1297,7 @@ final case class ResourcesRouteV1(
               userADM = userADM
             )
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       } ~ delete {
         parameters("deleteComment".?) { deleteCommentParam => requestContext =>
@@ -1324,12 +1305,7 @@ final case class ResourcesRouteV1(
             userADM <- getUserADM(requestContext)
           } yield makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userADM = userADM)
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "resources.html" / Segment) { iri =>
@@ -1370,13 +1346,7 @@ final case class ResourcesRouteV1(
                    )
         } yield makeGetPropertiesRequestMessage(resIri, userADM)
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
-
+        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "resources" / "label" / Segment) { iri =>
       put {
@@ -1398,12 +1368,7 @@ final case class ResourcesRouteV1(
             userADM = userADM
           )
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "graphdata" / Segment) { iri =>
@@ -1417,12 +1382,7 @@ final case class ResourcesRouteV1(
                           )
           } yield GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userADM)
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       }
 
@@ -1436,12 +1396,7 @@ final case class ResourcesRouteV1(
           InternalServerExceptionMessageRequest()
         }
 
-        RouteUtilV1.runJsonRoute(
-          requestMessage = msg,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        RouteUtilV1.runJsonRoute(msg, requestContext)
       }
     } ~ path("v1" / "resources" / "xmlimport" / Segment) { projectId =>
       post {
@@ -1496,12 +1451,7 @@ final case class ResourcesRouteV1(
                                                               )
           } yield updateRequest
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )(timeout = routeData.appConfig.defaultTimeoutAsDuration, executionContext = executionContext)
+          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>

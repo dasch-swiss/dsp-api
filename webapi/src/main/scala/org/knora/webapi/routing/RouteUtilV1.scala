@@ -14,6 +14,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import spray.json.JsNumber
 import spray.json.JsObject
+import zio._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -22,6 +23,7 @@ import scala.reflect.ClassTag
 import dsp.errors.BadRequestException
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -29,13 +31,7 @@ import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
-import org.knora.webapi.messages.v1.responder.valuemessages.ArchiveFileValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.AudioFileValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.DocumentFileValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.FileValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.MovingImageFileValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.TextFileValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -48,77 +44,56 @@ object RouteUtilV1 {
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
    *
-   * @param requestMessage   a [[KnoraRequestV1]] message that should be sent to the responder manager.
+   * @param requestMessage   a  [[KnoraRequestV1]] message that should be sent to the responder manager.
    * @param requestContext   the akka-http [[RequestContext]].
-   * @param appActor         a reference to the application actor.
-   * @param log              a logging adapter.
-   * @param timeout          a timeout for `ask` messages.
-   * @param executionContext an execution context for futures.
    * @return a [[Future]] containing a [[RouteResult]].
    */
-  def runJsonRoute(
-    requestMessage: KnoraRequestV1,
-    requestContext: RequestContext,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
-
-    val httpResponse: Future[HttpResponse] = for {
-      // Make sure the responder sent a reply of type KnoraResponseV1.
-      knoraResponse <- (appActor.ask(requestMessage)).map {
-                         case replyMessage: KnoraResponseV1 => replyMessage
-
-                         case other =>
-                           // The responder returned an unexpected message type (not an exception). This isn't the client's
-                           // fault, so log it and return an error message to the client.
-                           throw UnexpectedMessageException(
-                             s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
-                           )
-                       }
-
-      // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
-      jsonResponseWithStatus =
-        JsObject(
-          knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id))
-        )
-
-    } yield HttpResponse(
-      status = StatusCodes.OK,
-      entity = HttpEntity(
-        ContentTypes.`application/json`,
-        jsonResponseWithStatus.compactPrint
-      )
+  def runJsonRoute(requestMessage: KnoraRequestV1, requestContext: RequestContext)(implicit
+    runtime: zio.Runtime[MessageRelay]
+  ): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(
+      for {
+        knoraResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseV1](requestMessage))
+        jsonResponseWithStatus =
+          JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
+        httpResponse = HttpResponse(
+                         status = StatusCodes.OK,
+                         entity = HttpEntity(ContentTypes.`application/json`, jsonResponseWithStatus.compactPrint)
+                       )
+        result <- ZIO.fromFuture(_ => requestContext.complete(httpResponse))
+      } yield result
     )
-
-    requestContext.complete(httpResponse)
-  }
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
    *
-   * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
-   * @param requestContext   the akka-http [[RequestContext]].
-   * @param appActor         a reference to the application actor.
-   * @param log              a logging adapter.
-   * @param timeout          a timeout for `ask` messages.
-   * @param executionContext an execution context for futures.
+   * @param requestFuture    A [[Future]] containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
+   * @param requestContext   The akka-http [[RequestContext]].
    * @return a [[Future]] containing a [[RouteResult]].
    */
-  def runJsonRouteWithFuture[RequestMessageT <: KnoraRequestV1](
-    requestMessageF: Future[RequestMessageT],
-    requestContext: RequestContext,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] =
-    for {
-      requestMessage <- requestMessageF
-      routeResult <- runJsonRoute(
-                       requestMessage = requestMessage,
-                       requestContext = requestContext,
-                       appActor = appActor,
-                       log = log
-                     )
-    } yield routeResult
+  def runJsonRouteF[RequestMessageT <: KnoraRequestV1](
+    requestFuture: Future[RequestMessageT],
+    requestContext: RequestContext
+  )(implicit runtime: zio.Runtime[MessageRelay]): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(
+      for {
+        message <- ZIO.fromFuture(_ => requestFuture)
+        result  <- ZIO.fromFuture(_ => runJsonRoute(message, requestContext))
+      } yield result
+    )
+
+  /**
+   * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
+   *
+   * @param requestTask    A [[Task]] containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
+   * @param requestContext The akka-http [[RequestContext]].
+   * @return a [[Future]] containing a [[RouteResult]].
+   */
+  def runJsonRouteZ[R, RequestMessageT <: KnoraRequestV1](
+    requestTask: ZIO[R, Throwable, RequestMessageT],
+    requestContext: RequestContext
+  )(implicit runtime: zio.Runtime[R with MessageRelay]): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(requestTask.flatMap(message => ZIO.fromFuture(_ => runJsonRoute(message, requestContext))))
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as HTML.
@@ -128,7 +103,6 @@ object RouteUtilV1 {
    * @param requestMessageF  a [[Future]] containing the message that should be sent to the responder manager.
    * @param viewHandler      a function that can generate HTML from the responder's reply message.
    * @param requestContext   the [[RequestContext]].
-   * @param responderManager a reference to the responder manager.
    * @param log              a logging adapter.
    * @param timeout          a timeout for `ask` messages.
    * @param executionContext an execution context for futures.
@@ -146,7 +120,7 @@ object RouteUtilV1 {
       requestMessage <- requestMessageF
 
       // Make sure the responder sent a reply of type ReplyMessageT.
-      knoraResponse <- (appActor.ask(requestMessage)).map {
+      knoraResponse <- appActor.ask(requestMessage).map {
                          case replyMessage: ReplyMessageT => replyMessage
 
                          case other =>
@@ -176,10 +150,7 @@ object RouteUtilV1 {
    *                                       resources. In a bulk import, this allows standoff links to resources
    *                                       that are to be created by the import.
    * @param userProfile                    the user making the request.
-   * @param responderManager               a reference to the responder manager.
    * @param log                            a logging adapter.
-   * @param timeout                        a timeout for `ask` messages.
-   * @param executionContext               an execution context for futures.
    * @return a [[TextWithStandoffTagsV2]].
    */
   def convertXMLtoStandoffTagV1(
@@ -187,30 +158,16 @@ object RouteUtilV1 {
     mappingIri: IRI,
     acceptStandoffLinksToClientIDs: Boolean,
     userProfile: UserADM,
-    appActor: ActorRef,
     log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV2] =
-    for {
-
-      // get the mapping directly from v2 responder directly (to avoid useless back and forth conversions between v2 and v1 message formats)
-      mappingResponse: GetMappingResponseV2 <-
-        appActor
-          .ask(
-            GetMappingRequestV2(
-              mappingIri = mappingIri,
-              requestingUser = userProfile
-            )
-          )
-          .mapTo[GetMappingResponseV2]
-
-      textWithStandoffTagV1 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
-                                xml = xml,
-                                mapping = mappingResponse,
-                                acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs,
-                                log = log
-                              )
-
-    } yield textWithStandoffTagV1
+  )(implicit runtime: zio.Runtime[MessageRelay]): Future[TextWithStandoffTagsV2] =
+    UnsafeZioRun.runToFuture(
+      for {
+        mappingResponse <-
+          ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, userProfile)))
+        textWithStandoffTagV1 =
+          StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
+      } yield textWithStandoffTagV1
+    )
 
   /**
    * MIME types used in Sipi to store image files.
