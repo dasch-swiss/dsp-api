@@ -6,17 +6,15 @@
 package org.knora.webapi
 package responders
 
-import zio.Task
-import zio.ZIO
-
 import dsp.errors._
+import zio.{Task, ZIO}
 
 object Responder {
 
   def handleUnexpectedMessage(message: Any, who: String): Task[Nothing] =
-    ZIO.fail(unexpectedMessageException(message, who))
-  private def unexpectedMessageException(message: Any, who: IRI) =
-    UnexpectedMessageException(
-      s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}"
+    ZIO.fail(
+      UnexpectedMessageException(
+        s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}"
+      )
     )
 }
