@@ -102,14 +102,20 @@ abstract class E2ESpec
   val appActor                                         = router.ref
 
   // needed by some tests
-  val appConfig  = config
-  val routeData  = KnoraRouteData(system, appActor, appConfig)
-  val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val appConfig = config
+  val routeData = KnoraRouteData(system, appActor, appConfig)
+  val baseApiUrl =
+    if (sys.props.get("key") == Some("zio")) "http://0.0.0.0:5555"
+    else appConfig.knoraApi.internalKnoraApiBaseUrl
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
     UnsafeZioRun.runOrThrow(
-      AppServer.testWithoutSipi *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo"))
+      AppServer.testWithoutSipi
+      // .provide(testLayers)
+        *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan(
+          "prepare-repo"
+        ))
     )
 
   final override def afterAll(): Unit =
