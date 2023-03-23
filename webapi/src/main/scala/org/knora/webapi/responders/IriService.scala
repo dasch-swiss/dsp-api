@@ -6,12 +6,14 @@
 package org.knora.webapi.responders
 
 import com.typesafe.scalalogging.LazyLogging
+import zio._
+
 import dsp.errors._
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.MAX_IRI_ATTEMPTS
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import zio.{ZIO, _}
 
 /**
  * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
