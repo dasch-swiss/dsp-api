@@ -214,17 +214,17 @@ object RouteUtilV2 {
    *
    * @param requestZio           a Task containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param targetSchema         the API schema that should be used in the response.
+   * @param targetSchema         the API schema that should be used in the response, default is ApiV2Complex.
    * @param schemaOptionsOption        the schema options that should be used when processing the request.
    *                                   uses RouteUtilV2.getSchemaOptions if not present.
    * @return a [[Future]] containing a [[RouteResult]].
    */
-  private def runRdfRoute(
-    requestZio: Task[KnoraRequestV2],
+  def runRdfRoute[R](
+    requestZio: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
-    targetSchema: OntologySchema,
+    targetSchema: OntologySchema = ApiV2Complex,
     schemaOptionsOption: Option[Set[SchemaOption]] = None
-  )(implicit runtime: Runtime[MessageRelay with AppConfig]): Future[RouteResult] = {
+  )(implicit runtime: Runtime[R with MessageRelay with AppConfig]): Future[RouteResult] = {
     val responseZio = requestZio.flatMap(request => ZIO.serviceWithZIO[MessageRelay](_.ask(request)))
     completeResponse(responseZio, requestContext, targetSchema, schemaOptionsOption)
   }
