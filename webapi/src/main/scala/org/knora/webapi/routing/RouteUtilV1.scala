@@ -6,9 +6,18 @@
 package org.knora.webapi.routing
 
 import akka.http.scaladsl.model.ContentTypes.`application/json`
+import akka.http.scaladsl.model.ContentTypes.`text/html(UTF-8)`
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.{RequestContext, RouteResult}
+import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.server.RouteResult
+import akka.util.ByteString
 import com.typesafe.scalalogging.Logger
+import spray.json.JsNumber
+import spray.json.JsObject
+import zio._
+
+import scala.concurrent.Future
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
@@ -20,14 +29,12 @@ import org.knora.webapi.messages.twirl.ResourceHtmlView
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
-import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceFullResponseV1, ResourcesResponderRequestV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.store.iiif.errors.SipiException
-import spray.json.{JsNumber, JsObject}
-import zio._
-
-import scala.concurrent.Future
 
 /**
  * Convenience methods for Knora routes.
@@ -53,8 +60,10 @@ object RouteUtilV1 {
     for {
       knoraResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseV1](request))
       jsonBody       = JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
-      httpResponse   = HttpResponse(StatusCodes.OK, entity = HttpEntity(`application/json`, jsonBody.compactPrint))
-    } yield httpResponse
+    } yield okResponse(`application/json`, jsonBody.compactPrint)
+
+  private def okResponse(contentType: ContentType, body: String) =
+    HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, ByteString(body)))
 
   private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
     ZIO.fromFuture(_ => ctx.complete(response))
@@ -97,8 +106,7 @@ object RouteUtilV1 {
       requestMessage <- requestTask
       knoraResponse  <- ZIO.serviceWithZIO[MessageRelay](_.ask[ResourceFullResponseV1](requestMessage))
       html           <- ResourceHtmlView.propertiesHtmlView(knoraResponse)
-      httpResponse    = HttpResponse(status = StatusCodes.OK, entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, html))
-      result         <- completeContext(requestContext, httpResponse)
+      result         <- completeContext(requestContext, okResponse(`text/html(UTF-8)`, html))
     } yield result)
 
   /**
@@ -120,14 +128,16 @@ object RouteUtilV1 {
     userProfile: UserADM,
     log: Logger
   )(implicit runtime: zio.Runtime[MessageRelay]): Future[TextWithStandoffTagsV2] =
-    UnsafeZioRun.runToFuture(
+    UnsafeZioRun.runToFuture {
+      val request = GetMappingRequestV2(mappingIri, userProfile)
       for {
-        mappingResponse <-
-          ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, userProfile)))
-        textWithStandoffTagV1 =
-          StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
+        mappingResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](request))
+        textWithStandoffTagV1 <-
+          ZIO.attempt(
+            StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
+          )
       } yield textWithStandoffTagV1
-    )
+    }
 
   /**
    * MIME types used in Sipi to store image files.
