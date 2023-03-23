@@ -6,21 +6,24 @@
 package org.knora.webapi.routing
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.{RequestContext, RouteResult}
+import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.server.RouteResult
+import zio._
+
+import scala.concurrent.Future
+import scala.util.control.Exception.catching
+
 import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
-import zio._
-
-import scala.concurrent.Future
-import scala.util.control.Exception.catching
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
@@ -231,8 +234,11 @@ object RouteUtilV2 {
    * Determines the content type of the representation using content negotiation.
    * The response is calculated by _unsafely_ running the `responseZio` in the provided [[zio.Runtime]]
    *
-   * @param responseZio       A zio containing a [[KnoraResponseV2]] message that will be run unsafe.
-   * @param ctx               The akka-http [[RequestContext]].
+   * @param responseTask         A [[Task]] containing a [[KnoraResponseV2]] message that will be run unsafe.
+   * @param requestContext       The akka-http [[RequestContext]].
+   * @param targetSchema         The API schema that should be used in the response, default is ApiV2Complex.
+   * @param schemaOptionsOption  The schema options that should be used when processing the request.
+   *                             Uses RouteUtilV2.getSchemaOptions if not present.
    *
    * @param runtime           A [[zio.Runtime]] used for executing the response zio effect.
    *
@@ -240,14 +246,10 @@ object RouteUtilV2 {
    *
    * @return a [[Future]]     Containing the [[RouteResult]] for Akka HTTP.
    */
-  def completeZioApiV2ComplexResponse[R](responseZio: ZIO[R, Throwable, KnoraResponseV2], ctx: RequestContext)(implicit
-    runtime: Runtime[R with AppConfig]
-  ): Future[RouteResult] = completeResponse(responseZio, ctx, ApiV2Complex)
-
-  private def completeResponse[R](
+  def completeResponse[R](
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
     requestContext: RequestContext,
-    targetSchema: OntologySchema,
+    targetSchema: OntologySchema = ApiV2Complex,
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {

@@ -38,7 +38,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.RouteUtilV2.completeZioApiV2ComplexResponse
+import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 
@@ -352,7 +352,7 @@ final case class OntologiesRouteV2(
           newCardinality <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey))
           canChange      <- RestCardinalityService.canChangeCardinality(classIri, user, property, newCardinality)
         } yield canChange
-        completeZioApiV2ComplexResponse(response, requestContext)
+        completeResponse(response, requestContext)
       }
     }
 
