@@ -23,6 +23,8 @@ import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -45,7 +47,9 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
  */
 final case class OntologiesRouteV2(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with RestCardinalityService]
+  override protected implicit val runtime: Runtime[
+    AppConfig with Authenticator with MessageRelay with RestCardinalityService
+  ]
 ) extends KnoraRoute(routeData, runtime) {
 
   val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
@@ -130,15 +134,7 @@ final case class OntologiesRouteV2(
         requestingUser = requestingUser
       )
 
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = targetSchema,
-        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-      )
+      RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, targetSchema)
     }
   }
 
@@ -154,15 +150,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -185,15 +173,7 @@ final case class OntologiesRouteV2(
                                                                  )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -214,15 +194,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -255,15 +227,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = targetSchema,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, targetSchema)
       }
     }
 
@@ -286,15 +250,7 @@ final case class OntologiesRouteV2(
                                                     )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
         }
       }
     }
@@ -320,15 +276,7 @@ final case class OntologiesRouteV2(
                                 )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -363,15 +311,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -395,15 +335,7 @@ final case class OntologiesRouteV2(
                                                                   )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -420,7 +352,7 @@ final case class OntologiesRouteV2(
           newCardinality <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey))
           canChange      <- RestCardinalityService.canChangeCardinality(classIri, user, property, newCardinality)
         } yield canChange
-        completeZioApiV2ComplexResponse(response, requestContext, routeData.appConfig)
+        completeZioApiV2ComplexResponse(response, requestContext)
       }
     }
 
@@ -434,8 +366,7 @@ final case class OntologiesRouteV2(
               document = JsonLDUtil.parseJsonLD(reqBody)
               msg     <- ReplaceClassCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
             } yield msg
-            val options = RouteUtilV2.getSchemaOptions(requestContext)
-            RouteUtilV2.runRdfRouteWithFuture(messageF, requestContext, appConfig, appActor, log, ApiV2Complex, options)
+            RouteUtilV2.runRdfRouteWithFuture(messageF, requestContext, ApiV2Complex)
           }
         }
       }
@@ -461,15 +392,7 @@ final case class OntologiesRouteV2(
                 )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -496,15 +419,7 @@ final case class OntologiesRouteV2(
                                                                        )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -530,15 +445,7 @@ final case class OntologiesRouteV2(
                                                          )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -593,16 +500,7 @@ final case class OntologiesRouteV2(
           allLanguages = allLanguages,
           requestingUser = requestingUser
         )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = targetSchema,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, targetSchema)
       }
     }
 
@@ -624,13 +522,9 @@ final case class OntologiesRouteV2(
         )
 
         RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+          requestMessageFuture,
+          requestContext,
+          ApiV2Complex
         )
       }
     }
@@ -668,15 +562,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -708,15 +594,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -918,15 +796,7 @@ final case class OntologiesRouteV2(
                   .fold(e => throw e.head, v => v)
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -953,15 +823,7 @@ final case class OntologiesRouteV2(
                                                                            )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -996,15 +858,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -1076,15 +930,7 @@ final case class OntologiesRouteV2(
 
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
           }
         }
       }
@@ -1140,15 +986,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = targetSchema,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, targetSchema)
       }
     }
 
@@ -1169,15 +1007,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -1214,15 +1044,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -1245,15 +1067,7 @@ final case class OntologiesRouteV2(
                                                        )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
         }
       }
     }
@@ -1276,15 +1090,7 @@ final case class OntologiesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
       }
     }
 
@@ -1318,15 +1124,7 @@ final case class OntologiesRouteV2(
         requestingUser = requestingUser
       )
 
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = ApiV2Complex,
-        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-      )
+      RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex)
     }
   }
 }

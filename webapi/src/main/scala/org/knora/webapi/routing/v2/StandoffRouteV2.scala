@@ -17,6 +17,8 @@ import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -34,7 +36,7 @@ import org.knora.webapi.routing.RouteUtilV2
  */
 final case class StandoffRouteV2(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
+  override implicit protected val runtime: Runtime[AppConfig with Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**
@@ -61,7 +63,6 @@ final case class StandoffRouteV2(
 
           val offset: Int =
             stringFormatter.validateInt(offsetStr, throw BadRequestException(s"Invalid offset: $offsetStr"))
-          val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
 
           val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
@@ -75,15 +76,8 @@ final case class StandoffRouteV2(
             requestingUser = requestingUser
           )
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = schemaOptions
-          )
+          val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
+          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, ApiV2Complex, Some(schemaOptions))
         }
     } ~ path("v2" / "mapping") {
       post {
@@ -156,15 +150,7 @@ final case class StandoffRouteV2(
             apiRequestID = apiRequestID
           )
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
         }
       }
 

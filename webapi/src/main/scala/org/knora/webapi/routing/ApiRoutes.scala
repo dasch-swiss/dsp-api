@@ -15,7 +15,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.State
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.routing
@@ -35,13 +35,15 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    org.knora.webapi.routing.Authenticator
+    ActorSystem
+      with AppConfig
       with AppConfig
       with AppRouter
+      with MessageRelay
       with RestCardinalityService
       with RestResourceInfoService
-      with State
-      with ActorSystem,
+      with core.State
+      with routing.Authenticator,
     ApiRoutes
   ] =
     ZLayer {
@@ -57,7 +59,9 @@ object ApiRoutes {
                        )
                      )
         runtime <- ZIO.runtime[
-                     org.knora.webapi.routing.Authenticator
+                     routing.Authenticator
+                       with AppConfig
+                       with MessageRelay
                        with core.State
                        with RestResourceInfoService
                        with RestCardinalityService
@@ -75,7 +79,14 @@ object ApiRoutes {
  */
 private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
-  runtime: Runtime[routing.Authenticator with core.State with RestResourceInfoService with RestCardinalityService],
+  runtime: Runtime[
+    AppConfig
+      with routing.Authenticator
+      with MessageRelay
+      with core.State
+      with RestResourceInfoService
+      with RestCardinalityService
+  ],
   appConfig: AppConfig
 ) extends ApiRoutes
     with AroundDirectives {

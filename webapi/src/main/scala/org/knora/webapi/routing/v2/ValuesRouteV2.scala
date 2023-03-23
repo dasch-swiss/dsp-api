@@ -16,6 +16,8 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -32,7 +34,7 @@ import org.knora.webapi.routing.RouteUtilV2
  */
 final case class ValuesRouteV2(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[AppConfig with Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   private val valuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
@@ -90,15 +92,7 @@ final case class ValuesRouteV2(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = targetSchema,
-          schemaOptions = schemaOptions
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext, targetSchema, Some(schemaOptions))
       }
   }
 
@@ -119,15 +113,7 @@ final case class ValuesRouteV2(
                                                     )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
         }
       }
     }
@@ -150,15 +136,7 @@ final case class ValuesRouteV2(
                                                     )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
         }
       }
     }
@@ -181,15 +159,7 @@ final case class ValuesRouteV2(
                                                     )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteWithFuture(requestMessageFuture, requestContext)
         }
       }
     }

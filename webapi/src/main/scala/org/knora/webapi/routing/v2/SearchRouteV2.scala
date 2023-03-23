@@ -13,6 +13,8 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -29,7 +31,7 @@ import org.knora.webapi.routing.RouteUtilV2
  */
 final case class SearchRouteV2(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override implicit protected val runtime: Runtime[AppConfig with Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"
@@ -197,13 +199,9 @@ final case class SearchRouteV2(
           )
 
           RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+            requestMessage,
+            requestContext,
+            RouteUtilV2.getOntologySchema(requestContext)
           )
         }
     }
@@ -259,15 +257,7 @@ final case class SearchRouteV2(
           schemaOptions = schemaOptions
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = targetSchema,
-          schemaOptions = schemaOptions
-        )
+        RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext, targetSchema, Some(schemaOptions))
       }
   }
 
@@ -285,13 +275,9 @@ final case class SearchRouteV2(
           )
 
           RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+            requestMessage,
+            requestContext,
+            RouteUtilV2.getOntologySchema(requestContext)
           )
         }
     }
@@ -310,13 +296,9 @@ final case class SearchRouteV2(
             )
 
             RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessage,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+              requestMessage,
+              requestContext,
+              RouteUtilV2.getOntologySchema(requestContext)
             )
           }
         }
@@ -340,15 +322,7 @@ final case class SearchRouteV2(
         requestingUser = requestingUser
       )
 
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessage,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions
-      )
+      RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext, targetSchema, Some(schemaOptions))
     }
   }
 
@@ -369,15 +343,7 @@ final case class SearchRouteV2(
             requestingUser = requestingUser
           )
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = targetSchema,
-            schemaOptions = schemaOptions
-          )
+          RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext, targetSchema, Some(schemaOptions))
         }
       }
     }
@@ -415,13 +381,9 @@ final case class SearchRouteV2(
           )
 
           RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+            requestMessage,
+            requestContext,
+            RouteUtilV2.getOntologySchema(requestContext)
           )
         }
     }
@@ -463,16 +425,7 @@ final case class SearchRouteV2(
         requestingUser = requestingUser
       )
 
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessage,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-      )
+      RouteUtilV2.runRdfRouteWithFuture(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
   }
-
 }
