@@ -6,31 +6,27 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.Task
-import zio._
-
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  DefaultObjectAccessPermissionsStringForPropertyGetADM,
+  DefaultObjectAccessPermissionsStringResponseADM
+}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
-import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
-import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.store.sipimessages.{
+  DeleteTemporaryFileRequest,
+  MoveTemporaryFileToPermanentStorageRequest
+}
+import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SubjectV2}
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.UpdateResultInProject
+import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ReadValueV2}
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import zio.{Task, _}
 
 /**
  * Utility functions for working with Knora resources and their values.
@@ -221,7 +217,7 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
    * Checks whether a list node exists and if is a root node.
    *
    * @param nodeIri the IRI of the list node.
-   * @return Future of Either None for nonexistent, true for root and false for child node.
+   * @return [[Task]] of Either None for nonexistent, true for root and false for child node.
    */
   override def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -256,17 +252,17 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
    * method checks whether the update was successful. If so, it asks Sipi to move the file to permanent storage.
    * If not, it asks Sipi to delete the temporary file.
    *
-   * @param updateFuture   the future that should have updated the triplestore.
+   * @param updateTask     the Task that should have updated the triplestore.
    * @param valueContents: Seq[FileValueContentV2],   the value that should have been created or updated.
    * @param requestingUser the user making the request.
    */
   override def doSipiPostUpdate[T <: UpdateResultInProject](
-    updateFuture: Task[T],
+    updateTask: Task[T],
     valueContents: Seq[FileValueContentV2],
     requestingUser: UserADM
   ): Task[T] =
     // Was this update a success?
-    updateFuture.foldZIO(
+    updateTask.foldZIO(
       (e: Throwable) => {
         // The update failed. Ask Sipi to delete the temporary files and return the original failure.
         val deleteRequests =
