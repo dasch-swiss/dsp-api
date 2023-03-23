@@ -48,18 +48,19 @@ object RouteUtilV1 {
   def runJsonRoute(requestMessage: KnoraRequestV1, requestContext: RequestContext)(implicit
     runtime: zio.Runtime[MessageRelay]
   ): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(
-      for {
-        knoraResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseV1](requestMessage))
-        jsonResponseWithStatus =
-          JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
-        httpResponse = HttpResponse(
-                         status = StatusCodes.OK,
-                         entity = HttpEntity(ContentTypes.`application/json`, jsonResponseWithStatus.compactPrint)
-                       )
-        result <- ZIO.fromFuture(_ => requestContext.complete(httpResponse))
-      } yield result
-    )
+    UnsafeZioRun.runToFuture(doRunJsonRoute(requestMessage, requestContext))
+
+  private def doRunJsonRoute(request: KnoraRequestV1, ctx: RequestContext): ZIO[MessageRelay, Throwable, RouteResult] =
+    for {
+      knoraResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseV1](request))
+      jsonResponseWithStatus =
+        JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
+      httpResponse = HttpResponse(
+                       status = StatusCodes.OK,
+                       entity = HttpEntity(ContentTypes.`application/json`, jsonResponseWithStatus.compactPrint)
+                     )
+      result <- ZIO.fromFuture(_ => ctx.complete(httpResponse))
+    } yield result
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
@@ -72,12 +73,7 @@ object RouteUtilV1 {
     requestFuture: Future[RequestMessageT],
     requestContext: RequestContext
   )(implicit runtime: zio.Runtime[MessageRelay]): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(
-      for {
-        message <- ZIO.fromFuture(_ => requestFuture)
-        result  <- ZIO.fromFuture(_ => runJsonRoute(message, requestContext))
-      } yield result
-    )
+    UnsafeZioRun.runToFuture(ZIO.fromFuture(_ => requestFuture).flatMap(doRunJsonRoute(_, requestContext)))
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
@@ -86,11 +82,10 @@ object RouteUtilV1 {
    * @param requestContext The akka-http [[RequestContext]].
    * @return a [[Future]] containing a [[RouteResult]].
    */
-  def runJsonRouteZ[R, RequestMessageT <: KnoraRequestV1](
-    requestTask: ZIO[R, Throwable, RequestMessageT],
-    requestContext: RequestContext
-  )(implicit runtime: zio.Runtime[R with MessageRelay]): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(requestTask.flatMap(message => ZIO.fromFuture(_ => runJsonRoute(message, requestContext))))
+  def runJsonRouteZ[R](requestTask: ZIO[R, Throwable, KnoraRequestV1], requestContext: RequestContext)(implicit
+    runtime: zio.Runtime[R with MessageRelay]
+  ): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as HTML.
