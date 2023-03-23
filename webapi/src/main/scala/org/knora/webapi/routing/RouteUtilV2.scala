@@ -5,21 +5,15 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorRef
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
-import akka.pattern._
-import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
 import zio._
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
 
 import dsp.errors.BadRequestException
-import dsp.errors.UnexpectedMessageException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -277,50 +271,26 @@ object RouteUtilV2 {
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as TEI/XML.
    *
-   * @param requestMessageF      a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+   * @param requestTask          a [[Task]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param appActor             a reference to the [[org.knora.webapi.core.actors.RoutingActor]].
-   * @param log                  a logging adapter.
    * @param targetSchema         the API schema that should be used in the response.
-   * @param timeout              a timeout for `ask` messages.
-   * @param executionContext     an execution context for futures.
+   *
    * @return a [[Future]] containing a [[RouteResult]].
    */
-  def runTEIXMLRoute(
-    requestMessageF: Future[KnoraRequestV2],
+  def runTEIXMLRoute[R](
+    requestTask: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
-    appActor: ActorRef,
-    log: Logger,
     targetSchema: ApiV2Schema
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
-
-    val contentType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
-
-    val httpResponse: Future[HttpResponse] = for {
-
-      requestMessage <- requestMessageF
-
-      teiResponse <- appActor.ask(requestMessage).map {
-                       case replyMessage: ResourceTEIGetResponseV2 => replyMessage
-
-                       case other =>
-                         // The responder returned an unexpected message type (not an exception). This isn't the client's
-                         // fault, so log it and return an error message to the client.
-                         throw UnexpectedMessageException(
-                           s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
-                         )
-                     }
-
-    } yield HttpResponse(
-      status = StatusCodes.OK,
-      entity = HttpEntity(
-        contentType,
-        teiResponse.toXML
-      )
-    )
-
-    requestContext.complete(httpResponse)
-  }
+  )(implicit runtime: Runtime[R with MessageRelay]): Future[RouteResult] =
+    UnsafeZioRun.runToFuture {
+      for {
+        requestMessage <- requestTask
+        teiResponse    <- ZIO.serviceWithZIO[MessageRelay](_.ask[ResourceTEIGetResponseV2](requestMessage))
+        contentType     = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
+        response        = HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, teiResponse.toXML))
+        completed      <- ZIO.fromFuture(_ => requestContext.complete(response))
+      } yield completed
+    }
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.

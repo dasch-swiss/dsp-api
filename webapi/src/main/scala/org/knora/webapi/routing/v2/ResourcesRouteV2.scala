@@ -392,38 +392,18 @@ final case class ResourcesRouteV2(
 
   private def getResourcesTei(): Route = path("v2" / "tei" / Segment) { resIri: String =>
     get { requestContext =>
+      val params: Map[String, String] = requestContext.request.uri.query().toMap
       val resourceIri: IRI =
         stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
-
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-      // the the property that represents the text
-      val textProperty: SmartIri = getTextPropertyFromParams(params)
-
-      val mappingIri: Option[IRI] = getMappingIriFromParams(params)
-
+      val textProperty: SmartIri             = getTextPropertyFromParams(params)
+      val mappingIri: Option[IRI]            = getMappingIriFromParams(params)
       val gravsearchTemplateIri: Option[IRI] = getGravsearchTemplateIriFromParams(params)
-
-      val headerXSLTIri = getHeaderXSLTIriFromParams(params)
-
-      val requestMessageFuture: Future[ResourceTEIGetRequestV2] = for {
-        requestingUser <- getUserADM(requestContext)
-      } yield ResourceTEIGetRequestV2(
-        resourceIri = resourceIri,
-        textProperty = textProperty,
-        mappingIri = mappingIri,
-        gravsearchTemplateIri = gravsearchTemplateIri,
-        headerXSLTIri = headerXSLTIri,
-        requestingUser = requestingUser
-      )
-
-      RouteUtilV2.runTEIXMLRoute(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appActor = appActor,
-        log = log,
-        targetSchema = RouteUtilV2.getOntologySchema(requestContext)
-      )
+      val headerXSLTIri                      = getHeaderXSLTIriFromParams(params)
+      val requestTask = Authenticator
+        .getUserADM(requestContext)
+        .map(ResourceTEIGetRequestV2(resourceIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, _))
+      val targetSchema = RouteUtilV2.getOntologySchema(requestContext)
+      RouteUtilV2.runTEIXMLRoute(requestTask, requestContext, targetSchema)
     }
   }
 
