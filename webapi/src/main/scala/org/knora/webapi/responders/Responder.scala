@@ -6,8 +6,7 @@
 package org.knora.webapi
 package responders
 
-import zio.Task
-import zio.ZIO
+import zio._
 
 import dsp.errors._
 
