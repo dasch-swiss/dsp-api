@@ -48,7 +48,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
-import org.knora.webapi.messages.twirl.ResourceHtmlView
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
@@ -1313,28 +1312,21 @@ final case class ResourcesRouteV1(
         val params      = requestContext.request.uri.query().toMap
         val requestType = params.getOrElse("reqtype", "")
 
-        val requestMessage = requestType match {
+        val requestTask = requestType match {
           case "properties" =>
             for {
-              userADM <- getUserADM(requestContext)
-              resIri = stringFormatter.validateAndEscapeIri(
-                         iri,
-                         throw BadRequestException(s"Invalid param resource IRI: $iri")
-                       )
-            } yield ResourceFullGetRequestV1(
-              iri = resIri,
-              userADM = userADM
-            )
-          case other => throw BadRequestException(s"Invalid request type: $other")
+              userADM <- Authenticator.getUserADM(requestContext)
+              resIri <- ZIO.attempt(
+                          stringFormatter.validateAndEscapeIri(
+                            iri,
+                            throw BadRequestException(s"Invalid param resource IRI: $iri")
+                          )
+                        )
+            } yield ResourceFullGetRequestV1(resIri, userADM)
+          case other => ZIO.fail(BadRequestException(s"Invalid request type: $other"))
         }
 
-        RouteUtilV1.runHtmlRoute[ResourcesResponderRequestV1, ResourceFullResponseV1](
-          requestMessageF = requestMessage,
-          viewHandler = ResourceHtmlView.propertiesHtmlView,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        RouteUtilV1.runHtmlRoute(requestTask, requestContext)
       }
     } ~ path("v1" / "properties" / Segment) { iri =>
       get { requestContext =>

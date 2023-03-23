@@ -5,32 +5,29 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorRef
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
-import akka.pattern._
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import spray.json.JsNumber
 import spray.json.JsObject
 import zio._
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.reflect.ClassTag
 
 import dsp.errors.BadRequestException
-import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
+import org.knora.webapi.messages.twirl.ResourceHtmlView
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
@@ -98,48 +95,19 @@ object RouteUtilV1 {
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as HTML.
    *
-   * @tparam RequestMessageT the type of request message to be sent to the responder.
-   * @tparam ReplyMessageT   the type of reply message expected from the responder.
-   * @param requestMessageF  a [[Future]] containing the message that should be sent to the responder manager.
-   * @param viewHandler      a function that can generate HTML from the responder's reply message.
-   * @param requestContext   the [[RequestContext]].
-   * @param log              a logging adapter.
-   * @param timeout          a timeout for `ask` messages.
-   * @param executionContext an execution context for futures.
+   * @param requestTask      A [[Task]] containing the message that should be sent to the responder manager.
+   * @param requestContext   The [[RequestContext]].
    */
-  def runHtmlRoute[RequestMessageT <: KnoraRequestV1, ReplyMessageT <: KnoraResponseV1: ClassTag](
-    requestMessageF: Future[RequestMessageT],
-    viewHandler: (ReplyMessageT, ActorRef) => String,
-    requestContext: RequestContext,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
-
-    val httpResponse: Future[HttpResponse] = for {
-
-      requestMessage <- requestMessageF
-
-      // Make sure the responder sent a reply of type ReplyMessageT.
-      knoraResponse <- appActor.ask(requestMessage).map {
-                         case replyMessage: ReplyMessageT => replyMessage
-
-                         case other =>
-                           // The responder returned an unexpected message type. This isn't the client's fault, so
-                           // log the error and notify the client.
-                           val msg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
-                           throw UnexpectedMessageException(msg)
-                       }
-
-    } yield HttpResponse(
-      status = StatusCodes.OK,
-      entity = HttpEntity(
-        ContentTypes.`text/html(UTF-8)`,
-        viewHandler(knoraResponse, appActor)
-      )
-    )
-
-    requestContext.complete(httpResponse)
-  }
+  def runHtmlRoute[R](requestTask: ZIO[R, Throwable, ResourcesResponderRequestV1], requestContext: RequestContext)(
+    implicit runtime: Runtime[R with MessageRelay]
+  ): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(for {
+      requestMessage <- requestTask
+      knoraResponse  <- ZIO.serviceWithZIO[MessageRelay](_.ask[ResourceFullResponseV1](requestMessage))
+      html           <- ResourceHtmlView.propertiesHtmlView(knoraResponse)
+      httpResponse    = HttpResponse(status = StatusCodes.OK, entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, html))
+      result         <- ZIO.fromFuture(_ => requestContext.complete(httpResponse))
+    } yield result)
 
   /**
    * Converts XML to a [[TextWithStandoffTagsV2]], representing the text and its standoff markup.
