@@ -4,7 +4,7 @@ on:
   push:
     branches-ignore:
       - main
-      - 'release-*'
+      - "release-*"
 
 jobs:
   build-and-test:
@@ -15,7 +15,7 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Run all tests
         run: sbt -v coverage test coverageAggregate
-      - name:  WebApi Unit Test Report
+      - name: WebApi Unit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
@@ -40,7 +40,7 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Run all integration tests
         run: make integration-test
-      - name:  WebApi Integration Test Report
+      - name: WebApi Integration Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
@@ -56,6 +56,31 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
+
+  zio-http-test:
+    name: Build and zio-http-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Run all ZioHttp tests
+        run: make zio-http-test
+      # - name:  WebApi Integration Test Report
+      #   uses: dorny/test-reporter@v1
+      #   if: success() || failure()
+      #   with:
+      #     name: WebApi Integration Test Results
+      #     path: ./webapi/target/it-reports/TEST-*.xml
+      #     reporter: java-junit
+  #     - name: Upload coverage data to codacy
+  #       uses: codacy/codacy-coverage-reporter-action@v1
+  #       with:
+  #         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+  #         coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
+  #     - name: Upload coverage data to codecov
+  #       uses: codecov/codecov-action@v3
+  #       with:
+  #         files: ./target/scala-2.13/coverage-report/cobertura.xml
 
   test-client-test-data:
     name: Test client-test-data
