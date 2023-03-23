@@ -15,7 +15,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.State
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.routing
@@ -35,13 +35,15 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    org.knora.webapi.routing.Authenticator
+    ActorSystem
+      with AppConfig
       with AppConfig
       with AppRouter
+      with MessageRelay
       with RestCardinalityService
       with RestResourceInfoService
-      with State
-      with ActorSystem,
+      with core.State
+      with routing.Authenticator,
     ApiRoutes
   ] =
     ZLayer {
@@ -49,18 +51,14 @@ object ApiRoutes {
         sys       <- ZIO.service[ActorSystem]
         router    <- ZIO.service[AppRouter]
         appConfig <- ZIO.service[AppConfig]
-        routeData <- ZIO.succeed(
-                       KnoraRouteData(
-                         system = sys.system,
-                         appActor = router.ref,
-                         appConfig = appConfig
-                       )
-                     )
+        routeData <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
-                     org.knora.webapi.routing.Authenticator
-                       with core.State
-                       with RestResourceInfoService
+                     AppConfig
+                       with MessageRelay
                        with RestCardinalityService
+                       with RestResourceInfoService
+                       with core.State
+                       with routing.Authenticator
                    ]
       } yield ApiRoutesImpl(routeData, runtime, appConfig)
     }
@@ -75,7 +73,14 @@ object ApiRoutes {
  */
 private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
-  runtime: Runtime[routing.Authenticator with core.State with RestResourceInfoService with RestCardinalityService],
+  runtime: Runtime[
+    AppConfig
+      with MessageRelay
+      with RestCardinalityService
+      with RestResourceInfoService
+      with core.State
+      with routing.Authenticator
+  ],
   appConfig: AppConfig
 ) extends ApiRoutes
     with AroundDirectives {

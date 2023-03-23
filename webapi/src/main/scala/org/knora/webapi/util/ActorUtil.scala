@@ -8,11 +8,13 @@ package org.knora.webapi.util
 import akka.actor.ActorRef
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import dsp.errors._
 import zio._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.reflect.ClassTag
+
+import dsp.errors._
 
 object ActorUtil {
 
