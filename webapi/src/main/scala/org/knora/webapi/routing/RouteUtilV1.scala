@@ -49,7 +49,7 @@ object RouteUtilV1 {
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runJsonRoute(requestMessage: KnoraRequestV1, requestContext: RequestContext)(implicit
-    runtime: zio.Runtime[MessageRelay]
+    runtime: Runtime[MessageRelay]
   ): Future[RouteResult] =
     UnsafeZioRun.runToFuture(doRunJsonRoute(requestMessage, requestContext))
 
@@ -78,7 +78,7 @@ object RouteUtilV1 {
   def runJsonRouteF[RequestMessageT <: KnoraRequestV1](
     requestFuture: Future[RequestMessageT],
     requestContext: RequestContext
-  )(implicit runtime: zio.Runtime[MessageRelay]): Future[RouteResult] =
+  )(implicit runtime: Runtime[MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(ZIO.fromFuture(_ => requestFuture).flatMap(doRunJsonRoute(_, requestContext)))
 
   /**
@@ -89,7 +89,7 @@ object RouteUtilV1 {
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runJsonRouteZ[R](requestTask: ZIO[R, Throwable, KnoraRequestV1], requestContext: RequestContext)(implicit
-    runtime: zio.Runtime[R with MessageRelay]
+    runtime: Runtime[R with MessageRelay]
   ): Future[RouteResult] =
     UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
 
@@ -127,7 +127,7 @@ object RouteUtilV1 {
     acceptStandoffLinksToClientIDs: Boolean,
     userProfile: UserADM,
     log: Logger
-  )(implicit runtime: zio.Runtime[MessageRelay]): Future[TextWithStandoffTagsV2] =
+  )(implicit runtime: Runtime[MessageRelay]): Future[TextWithStandoffTagsV2] =
     UnsafeZioRun.runToFuture {
       val request = GetMappingRequestV2(mappingIri, userProfile)
       for {
