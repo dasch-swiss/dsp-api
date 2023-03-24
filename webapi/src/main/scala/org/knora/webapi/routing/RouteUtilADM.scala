@@ -5,19 +5,23 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorRef
+import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
-import akka.pattern._
-import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
+import akka.util.ByteString
+import zio.Runtime
+import zio.Task
+import zio.UIO
+import zio.ZIO
 
-import scala.concurrent.ExecutionContext
+import java.util.UUID
 import scala.concurrent.Future
 
-import dsp.errors.UnexpectedMessageException
+import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
@@ -89,47 +93,84 @@ object RouteUtilADM {
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
    *
-   * @param requestMessageF      a future containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
-   * @param requestContext       the akka-http [[RequestContext]].
-   * @param appActor             a reference to the application actor.
-   * @param log                  a logging adapter.
-   * @param timeout              a timeout for `ask` messages.
-   * @param executionContext     an execution context for futures.
+   * @param requestTask    A [[Task]] containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
+   * @param requestContext The akka-http [[RequestContext]].
    * @return a [[Future]] containing a [[RouteResult]].
    */
+  def runJsonRouteZ[R](
+    requestTask: ZIO[R, Throwable, KnoraRequestADM],
+    requestContext: RequestContext
+  )(implicit runtime: Runtime[R with MessageRelay]): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
+
+  /**
+   * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
+   *
+   * @param requestFuture    A [[Task]] containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
+   * @param requestContext The akka-http [[RequestContext]].
+   * @return a [[Future]] containing a [[RouteResult]].
+   */
+  def runJsonRouteF(
+    requestFuture: Future[KnoraRequestADM],
+    requestContext: RequestContext
+  )(implicit runtime: Runtime[MessageRelay]): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(ZIO.fromFuture(_ => requestFuture).flatMap(doRunJsonRoute(_, requestContext)))
+
   def runJsonRoute(
-    requestMessageF: Future[KnoraRequestADM],
-    requestContext: RequestContext,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+    request: KnoraRequestADM,
+    requestContext: RequestContext
+  )(implicit runtime: Runtime[MessageRelay]): Future[RouteResult] =
+    UnsafeZioRun.runToFuture(doRunJsonRoute(request, requestContext))
 
-    val httpResponse: Future[HttpResponse] = for {
+  private def doRunJsonRoute(request: KnoraRequestADM, ctx: RequestContext): ZIO[MessageRelay, Throwable, RouteResult] =
+    createResponse(request).flatMap(completeContext(ctx, _))
 
-      requestMessage <- requestMessageF
+  private def createResponse(request: KnoraRequestADM): ZIO[MessageRelay, Throwable, HttpResponse] =
+    for {
+      knoraResponse         <- MessageRelay.ask[KnoraResponseADM](request)
+      knoraResponseExternal <- ZIO.attempt(transformResponseIntoExternalFormat(knoraResponse))
+      jsonBody               = knoraResponseExternal.toJsValue.asJsObject.compactPrint
+    } yield okResponse(`application/json`, jsonBody)
 
-      // Make sure the responder sent a reply of type KnoraResponseADM.
-      knoraResponse <- (appActor.ask(requestMessage)).map {
-                         case replyMessage: KnoraResponseADM => replyMessage
+  private def okResponse(contentType: ContentType, body: String) =
+    HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, ByteString(body)))
 
-                         case other =>
-                           // The responder returned an unexpected message type (not an exception). This isn't the client's
-                           // fault, so log it and return an error message to the client.
-                           throw UnexpectedMessageException(
-                             s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
-                           )
-                       }
+  def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
+    ZIO.fromFuture(_ => ctx.complete(response))
 
-      knoraResponseExternal = transformResponseIntoExternalFormat(knoraResponse)
-      jsonResponse          = knoraResponseExternal.toJsValue.asJsObject
-    } yield HttpResponse(
-      status = StatusCodes.OK,
-      entity = HttpEntity(
-        ContentTypes.`application/json`,
-        jsonResponse.compactPrint
-      )
-    )
+  case class IriUserUuid(iri: IRI, user: UserADM, uuid: UUID)
+  case class IriUser(iri: IRI, user: UserADM)
+  case class Iri(iri: IRI)
+  case class UserUuid(user: UserADM, uuid: UUID)
 
-    requestContext.complete(httpResponse)
-  }
+  def getIriUserUuid(
+    iri: String,
+    requestContext: RequestContext
+  ): ZIO[Authenticator with StringFormatter, Throwable, IriUserUuid] =
+    for {
+      r    <- getIriUser(iri, requestContext)
+      uuid <- getApiRequestId
+    } yield IriUserUuid(r.iri, r.user, uuid)
+
+  def getApiRequestId: UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
+
+  def getIriUser(
+    iri: String,
+    requestContext: RequestContext
+  ): ZIO[Authenticator with StringFormatter, Throwable, IriUser] =
+    for {
+      validatedIri <- validateAndEscape(iri)
+      user         <- Authenticator.getUserADM(requestContext)
+    } yield IriUser(validatedIri, user)
+
+  def validateAndEscape(iri: String): ZIO[StringFormatter, Throwable, IRI] =
+    ZIO
+      .service[StringFormatter]
+      .flatMap(sf => ZIO.attempt(sf.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid IRI: $iri"))))
+
+  def getUserUuid(ctx: RequestContext): ZIO[Authenticator, Throwable, UserUuid] =
+    for {
+      user <- Authenticator.getUserADM(ctx)
+      uuid <- getApiRequestId
+    } yield UserUuid(user, uuid)
 }

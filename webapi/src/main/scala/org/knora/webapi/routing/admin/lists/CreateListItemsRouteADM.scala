@@ -19,13 +19,14 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM
+import org.knora.webapi.routing.RouteUtilADM._
 
 /**
  * Provides routes to create list items.
@@ -34,7 +35,7 @@ import org.knora.webapi.routing.RouteUtilADM
  */
 final case class CreateListItemsRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with ListADMJsonProtocol {
 
@@ -79,13 +80,7 @@ final case class CreateListItemsRouteADM(
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteF(requestMessage, requestContext)
       }
     }
   }
@@ -110,13 +105,13 @@ final case class CreateListItemsRouteADM(
         val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
         val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
         val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
-        val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
+        val validatedCreateChildNodePayload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
           Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
             ListChildNodeCreatePayloadADM
           )
 
         val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-          payload        <- toFuture(validatedCreateChildNodePeyload)
+          payload        <- toFuture(validatedCreateChildNodePayload)
           requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
@@ -134,12 +129,7 @@ final case class CreateListItemsRouteADM(
           apiRequestID = UUID.randomUUID()
         )
 
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteF(requestMessage, requestContext)
       }
     }
   }
