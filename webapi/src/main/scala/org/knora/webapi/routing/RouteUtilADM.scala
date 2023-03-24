@@ -6,21 +6,11 @@
 package org.knora.webapi.routing
 
 import akka.http.scaladsl.model.ContentTypes.`application/json`
+import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.RouteResult
+import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.util.ByteString
-import zio.Runtime
-import zio.Task
-import zio.UIO
-import zio.ZIO
-
-import java.util.UUID
-import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
@@ -28,6 +18,11 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.{ApiV2Complex, IRI}
+import zio.{Runtime, Task, UIO, ZIO}
+
+import java.util.UUID
+import scala.concurrent.Future
 
 /**
  * Convenience methods for Knora Admin routes.
@@ -129,14 +124,15 @@ object RouteUtilADM {
     for {
       knoraResponse         <- MessageRelay.ask[KnoraResponseADM](request)
       knoraResponseExternal <- ZIO.attempt(transformResponseIntoExternalFormat(knoraResponse))
-      jsonBody               = knoraResponseExternal.toJsValue.asJsObject.compactPrint
-    } yield okResponse(`application/json`, jsonBody)
+    } yield okResponse(knoraResponseExternal)
 
-  private def okResponse(contentType: ContentType, body: String) =
-    HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, ByteString(body)))
+  private def okResponse(response: KnoraResponseADM) = {
+    val body   = response.toJsValue.asJsObject.compactPrint
+    val entity = HttpEntity(`application/json`, ByteString(body))
+    HttpResponse(OK, entity = entity)
+  }
 
-  def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
-    ZIO.fromFuture(_ => ctx.complete(response))
+  def completeContext(ctx: RequestContext, response: HttpResponse) = ZIO.fromFuture(_ => ctx.complete(response))
 
   case class IriUserUuid(iri: IRI, user: UserADM, uuid: UUID)
   case class IriUser(iri: IRI, user: UserADM)
