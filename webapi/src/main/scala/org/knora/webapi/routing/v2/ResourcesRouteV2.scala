@@ -135,19 +135,10 @@ final case class ResourcesRouteV2(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
           val requestMessageFuture: Future[UpdateResourceMetadataRequestV2] = for {
             requestingUser <- getUserADM(requestContext)
-
-            requestMessage: UpdateResourceMetadataRequestV2 <- UpdateResourceMetadataRequestV2.fromJsonLD(
-                                                                 requestDoc,
-                                                                 apiRequestID = UUID.randomUUID,
-                                                                 requestingUser = requestingUser,
-                                                                 appActor = appActor,
-                                                                 log = log
-                                                               )
+            requestMessage <- UpdateResourceMetadataRequestV2.fromJsonLD(requestDoc, UUID.randomUUID, requestingUser)
           } yield requestMessage
-
           RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
@@ -424,18 +415,10 @@ final case class ResourcesRouteV2(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
           val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
             requestingUser <- getUserADM(requestContext)
-            requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
-                                                                requestDoc,
-                                                                apiRequestID = UUID.randomUUID,
-                                                                requestingUser = requestingUser,
-                                                                appActor = appActor,
-                                                                log = log
-                                                              )
+            requestMessage <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, UUID.randomUUID, requestingUser)
           } yield requestMessage
-
           RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
@@ -447,19 +430,10 @@ final case class ResourcesRouteV2(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
           val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
             requestingUser <- getUserADM(requestContext)
-
-            requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
-                                                                requestDoc,
-                                                                apiRequestID = UUID.randomUUID,
-                                                                requestingUser = requestingUser,
-                                                                appActor = appActor,
-                                                                log = log
-                                                              )
+            requestMessage <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, UUID.randomUUID, requestingUser)
           } yield requestMessage.copy(erase = true)
-
           RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }

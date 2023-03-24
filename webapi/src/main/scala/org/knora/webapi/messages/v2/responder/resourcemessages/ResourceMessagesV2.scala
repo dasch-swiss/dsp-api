@@ -565,7 +565,7 @@ case class ReadResourceV2(
       this.values.toList
         .foldLeft(Seq.empty[(SmartIri, ReadValueV2)])((aggregator, valueMap) =>
           valueMap match {
-            case (iri: SmartIri, valueSequence: Seq[ReadValueV2]) => {
+            case (iri: SmartIri, valueSequence: Seq[ReadValueV2]) =>
               val withDeletedSeq = valueSequence
                 .map(value =>
                   value.deletionInfo match {
@@ -576,7 +576,6 @@ case class ReadResourceV2(
                   }
                 )
               aggregator ++ withDeletedSeq
-            }
           }
         )
         .groupMap(_._1)(_._2)
@@ -666,7 +665,7 @@ object CreateResourceRequestV2 {
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
+   * @param appActor            a reference to the application actor.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
@@ -878,24 +877,14 @@ object UpdateResourceMetadataRequestV2 {
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
   def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        requestingUser = requestingUser,
-        apiRequestID = apiRequestID
-      )
-    }
+    requestingUser: UserADM
+  )(implicit executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] =
+    Future(fromJsonLDSync(jsonLDDocument, requestingUser, apiRequestID))
 
   def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
@@ -1063,24 +1052,14 @@ object DeleteOrEraseResourceRequestV2 {
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
   def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        requestingUser = requestingUser,
-        apiRequestID = apiRequestID
-      )
-    }
+    requestingUser: UserADM
+  )(implicit executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] =
+    Future(fromJsonLDSync(jsonLDDocument, requestingUser, apiRequestID))
 
   def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
@@ -1673,7 +1652,7 @@ case class ValueEventBody(
     }
 
     val previousValueAsJsonLD: Option[(IRI, JsonLDValue)] = previousValueIri.map { previousIri =>
-      OntologyConstants.KnoraBase.PreviousValue -> JsonLDString(previousIri.toString)
+      OntologyConstants.KnoraBase.PreviousValue -> JsonLDString(previousIri)
     }
     JsonLDObject(
       Map(
