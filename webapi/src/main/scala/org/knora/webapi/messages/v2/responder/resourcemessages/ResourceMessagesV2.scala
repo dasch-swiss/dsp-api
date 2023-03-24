@@ -658,7 +658,7 @@ case class CreateResourceRequestV2(
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
 
-object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResourceRequestV2] {
+object CreateResourceRequestV2 {
 
   /**
    * Converts JSON-LD input to a [[CreateResourceRequestV2]].
@@ -670,7 +670,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
@@ -870,7 +870,7 @@ case class UpdateResourceMetadataRequestV2(
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
 
-object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateResourceMetadataRequestV2] {
+object UpdateResourceMetadataRequestV2 {
 
   /**
    * Converts JSON-LD input into an instance of [[UpdateResourceMetadataRequestV2]].
@@ -882,7 +882,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
@@ -1055,7 +1055,7 @@ case class DeleteOrEraseResourceRequestV2(
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
 
-object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteOrEraseResourceRequestV2] {
+object DeleteOrEraseResourceRequestV2 {
 
   /**
    * Converts JSON-LD input into an instance of [[DeleteOrEraseResourceRequestV2]].
@@ -1067,7 +1067,7 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,

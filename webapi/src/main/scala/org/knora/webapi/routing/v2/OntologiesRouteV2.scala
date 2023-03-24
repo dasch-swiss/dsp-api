@@ -155,19 +155,10 @@ final case class OntologiesRouteV2(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
             val requestMessageFuture: Future[ChangeOntologyMetadataRequestV2] = for {
               requestingUser <- getUserADM(requestContext)
-
-              requestMessage: ChangeOntologyMetadataRequestV2 <- ChangeOntologyMetadataRequestV2.fromJsonLD(
-                                                                   jsonLDDocument = requestDoc,
-                                                                   apiRequestID = randomUUID,
-                                                                   requestingUser = requestingUser,
-                                                                   appActor = appActor,
-                                                                   log = log
-                                                                 )
+              requestMessage <- ChangeOntologyMetadataRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
             } yield requestMessage
-
             RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
@@ -233,18 +224,9 @@ final case class OntologiesRouteV2(
         {
           val requestMessageFuture: Future[CreateClassRequestV2] = for {
             requestingUser <- getUserADM(requestContext)
-
-            requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-            requestMessage: CreateClassRequestV2 <- CreateClassRequestV2.fromJsonLD(
-                                                      jsonLDDocument = requestDoc,
-                                                      apiRequestID = randomUUID,
-                                                      requestingUser = requestingUser,
-                                                      appActor = appActor,
-                                                      log = log
-                                                    )
+            requestDoc      = JsonLDUtil.parseJsonLD(jsonRequest)
+            requestMessage <- CreateClassRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
           } yield requestMessage
-
           RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
@@ -262,13 +244,7 @@ final case class OntologiesRouteV2(
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-              requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
-                                  jsonLDDocument = requestDoc,
-                                  apiRequestID = randomUUID,
-                                  requestingUser = requestingUser,
-                                  appActor = appActor,
-                                  log = log
-                                )
+              requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
@@ -321,13 +297,7 @@ final case class OntologiesRouteV2(
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-              requestMessage: AddCardinalitiesToClassRequestV2 <- AddCardinalitiesToClassRequestV2.fromJsonLD(
-                                                                    jsonLDDocument = requestDoc,
-                                                                    apiRequestID = randomUUID,
-                                                                    requestingUser = requestingUser,
-                                                                    appActor = appActor,
-                                                                    log = log
-                                                                  )
+              requestMessage <- AddCardinalitiesToClassRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
@@ -359,7 +329,7 @@ final case class OntologiesRouteV2(
             val messageF = for {
               user    <- getUserADM(requestContext)
               document = JsonLDUtil.parseJsonLD(reqBody)
-              msg     <- ReplaceClassCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
+              msg     <- ReplaceClassCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user)
             } yield msg
             RouteUtilV2.runRdfRouteF(messageF, requestContext)
           }
@@ -377,14 +347,8 @@ final case class OntologiesRouteV2(
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-              requestMessage: CanDeleteCardinalitiesFromClassRequestV2 <-
-                CanDeleteCardinalitiesFromClassRequestV2.fromJsonLD(
-                  jsonLDDocument = requestDoc,
-                  apiRequestID = randomUUID,
-                  requestingUser = requestingUser,
-                  appActor = appActor,
-                  log = log
-                )
+              requestMessage <-
+                CanDeleteCardinalitiesFromClassRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
@@ -401,19 +365,10 @@ final case class OntologiesRouteV2(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[DeleteCardinalitiesFromClassRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
+              requestingUser            <- getUserADM(requestContext)
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: DeleteCardinalitiesFromClassRequestV2 <- DeleteCardinalitiesFromClassRequestV2.fromJsonLD(
-                                                                         jsonLDDocument = requestDoc,
-                                                                         apiRequestID = randomUUID,
-                                                                         requestingUser = requestingUser,
-                                                                         appActor = appActor,
-                                                                         log = log
-                                                                       )
+              requestMessage            <- DeleteCardinalitiesFromClassRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
             } yield requestMessage
-
             RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
@@ -427,17 +382,9 @@ final case class OntologiesRouteV2(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangeGuiOrderRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
+              requestingUser            <- getUserADM(requestContext)
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: ChangeGuiOrderRequestV2 <- ChangeGuiOrderRequestV2.fromJsonLD(
-                                                           jsonLDDocument = requestDoc,
-                                                           apiRequestID = randomUUID,
-                                                           requestingUser = requestingUser,
-                                                           appActor = appActor,
-                                                           log = log
-                                                         )
+              requestMessage            <- ChangeGuiOrderRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
@@ -649,13 +596,7 @@ final case class OntologiesRouteV2(
                     v => v
                   )
 
-              requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
-                                                           jsonLDDocument = requestDoc,
-                                                           apiRequestID = randomUUID,
-                                                           requestingUser = requestingUser,
-                                                           appActor = appActor,
-                                                           log = log
-                                                         )
+              requestMessage <- CreatePropertyRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
 
               // get gui related values from request and validate them by making value objects from it
 
@@ -804,18 +745,10 @@ final case class OntologiesRouteV2(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangePropertyLabelsOrCommentsRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
+              requestingUser            <- getUserADM(requestContext)
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: ChangePropertyLabelsOrCommentsRequestV2 <- ChangePropertyLabelsOrCommentsRequestV2
-                                                                           .fromJsonLD(
-                                                                             jsonLDDocument = requestDoc,
-                                                                             apiRequestID = randomUUID,
-                                                                             requestingUser = requestingUser,
-                                                                             appActor = appActor,
-                                                                             log = log
-                                                                           )
+              requestMessage <-
+                ChangePropertyLabelsOrCommentsRequestV2.fromJsonLD(requestDoc, randomUUID, requestingUser)
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
@@ -1056,9 +989,7 @@ final case class OntologiesRouteV2(
             requestMessage: CreateOntologyRequestV2 <- CreateOntologyRequestV2.fromJsonLD(
                                                          jsonLDDocument = requestDoc,
                                                          apiRequestID = randomUUID,
-                                                         requestingUser = requestingUser,
-                                                         appActor = appActor,
-                                                         log = log
+                                                         requestingUser = requestingUser
                                                        )
           } yield requestMessage
 

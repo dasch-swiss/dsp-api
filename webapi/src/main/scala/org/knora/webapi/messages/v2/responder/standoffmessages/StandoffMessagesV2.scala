@@ -27,7 +27,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.KnoraJsonLDRequestReaderV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 
@@ -147,9 +146,9 @@ case class CreateMappingRequestV2(
 case class CreateMappingRequestMetadataV2(label: String, projectIri: SmartIri, mappingName: String)
     extends StandoffResponderRequestV2
 
-object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateMappingRequestMetadataV2] {
+object CreateMappingRequestMetadataV2 {
 
-  override def fromJsonLD(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,

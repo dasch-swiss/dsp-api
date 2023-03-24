@@ -65,7 +65,7 @@ case class CreateValueRequestV2(
 /**
  * Constructs [[CreateValueRequestV2]] instances based on JSON-LD input.
  */
-object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueRequestV2] {
+object CreateValueRequestV2 {
 
   /**
    * Converts JSON-LD input to a [[CreateValueRequestV2]].
@@ -77,7 +77,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
@@ -232,7 +232,7 @@ case class UpdateValueRequestV2(
 /**
  * Constructs [[UpdateValueRequestV2]] instances based on JSON-LD input.
  */
-object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueRequestV2] {
+object UpdateValueRequestV2 {
 
   /**
    * Converts JSON-LD input to a [[CreateValueRequestV2]].
@@ -244,7 +244,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
@@ -440,7 +440,7 @@ case class DeleteValueRequestV2(
   apiRequestID: UUID
 ) extends ValuesResponderRequestV2
 
-object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueRequestV2] {
+object DeleteValueRequestV2 {
 
   /**
    * Converts JSON-LD input into a case class instance.
@@ -452,7 +452,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
