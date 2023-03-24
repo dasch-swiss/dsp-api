@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import com.typesafe.scalalogging.Logger
 import zio.Task
 import zio.URLayer
 import zio.ZLayer
@@ -527,8 +526,7 @@ object StandoffTagUtilV2 {
   def convertXMLtoStandoffTagV2(
     xml: String,
     mapping: GetMappingResponseV2,
-    acceptStandoffLinksToClientIDs: Boolean,
-    log: Logger
+    acceptStandoffLinksToClientIDs: Boolean
   ): TextWithStandoffTagsV2 = {
 
     // collect all the `XMLTag` from the given mapping that require a separator
@@ -564,7 +562,7 @@ object StandoffTagUtilV2 {
     }.toVector
 
     val xmlStandoffUtil                    = new XMLToStandoffUtil()
-    val textWithStandoff: TextWithStandoff = xmlStandoffUtil.xml2TextWithStandoff(xml, elementsSeparatorRequired, log)
+    val textWithStandoff: TextWithStandoff = xmlStandoffUtil.xml2TextWithStandoff(xml, elementsSeparatorRequired)
 
     val standoffTagsV2: Seq[StandoffTagV2] = convertXMLStandoffTagToStandoffTagV2(
       textWithStandoff = textWithStandoff,

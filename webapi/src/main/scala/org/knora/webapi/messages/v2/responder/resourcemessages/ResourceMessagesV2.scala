@@ -779,13 +779,7 @@ object CreateResourceRequestV2 {
             }
 
             for {
-              valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
-                                                jsonLDObject = valueJsonLDObject,
-                                                requestingUser = requestingUser,
-                                                appActor = appActor,
-                                                log = log
-                                              )
-
+              valueContent                         <- ValueContentV2.fromJsonLDObject(valueJsonLDObject, requestingUser, appActor)
               maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
               maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID(
                                                      OntologyConstants.KnoraApiV2Complex.ValueHasUUID
@@ -1141,10 +1135,6 @@ case class ReadResourcesSequenceV2(
     appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    // Generate JSON-LD for the resources.
-
     val resourcesJsonObjects: Seq[JsonLDObject] = resources.map { resource: ReadResourceV2 =>
       resource.toJsonLD(
         targetSchema = targetSchema,
@@ -1220,7 +1210,7 @@ case class ReadResourcesSequenceV2(
    * @throws ForbiddenException  if the user does not have permission to see the requested resource.
    * @throws BadRequestException if more than one resource was returned.
    */
-  def toResource(requestedResourceIri: IRI)(implicit stringFormatter: StringFormatter): ReadResourceV2 = {
+  def toResource(requestedResourceIri: IRI): ReadResourceV2 = {
     if (hiddenResourceIris.contains(requestedResourceIri)) {
       throw ForbiddenException(s"You do not have permission to see resource <$requestedResourceIri>")
     }
@@ -1348,8 +1338,6 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
     extends KnoraJsonLDResponseV2
     with KnoraReadV2[GraphDataGetResponseV2] {
   private def generateJsonLD(targetSchema: ApiV2Schema): JsonLDDocument = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     val sortedNodesInTargetSchema: Seq[GraphNodeV2] = nodes.map(_.toOntologySchema(targetSchema)).sortBy(_.resourceIri)
     val edgesInTargetSchema: Seq[GraphEdgeV2]       = edges.map(_.toOntologySchema(targetSchema))
 

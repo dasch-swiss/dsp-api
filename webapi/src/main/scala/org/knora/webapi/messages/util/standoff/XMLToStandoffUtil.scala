@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util.standoff
 
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
-import com.typesafe.scalalogging.Logger
 import org.apache.commons.text.StringEscapeUtils
 
 import java.io.StringReader
@@ -392,8 +391,7 @@ class XMLToStandoffUtil(
    */
   def xml2TextWithStandoff(
     xmlStr: String,
-    tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired],
-    log: Logger
+    tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired]
   ): TextWithStandoff = {
 
     // Knora uses Unicode INFORMATION SEPARATOR TWO (U+001E) to indicate word breaks where a tag implicitly separates words. But
@@ -445,7 +443,7 @@ class XMLToStandoffUtil(
       try {
         XML.withSAXParser(saxParser).loadString(xmlStrWithSeparator)
       } catch {
-        case e: Exception => throw StandoffInternalException(s"XML processing error: ${e.getMessage}", e, log)
+        case e: Exception => throw StandoffInternalException(s"XML processing error: ${e.getMessage}", e)
       }
 
     val finishedConversionState = xmlNodes2Standoff(
@@ -781,7 +779,7 @@ class XMLToStandoffUtil(
 
         val newTagIndex    = acc.nextIndex
         val attrMap        = elem.attributes.asAttrMap
-        val isEmptyElement = elem.text.length == 0
+        val isEmptyElement = elem.text.isEmpty
 
         if (isEmptyElement && attrMap.contains(XmlClixStartIdAttrName)) {
           // It's a CLIX start milestone. Save it until we get the matching end milestone.

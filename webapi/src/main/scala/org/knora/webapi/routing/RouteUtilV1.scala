@@ -133,9 +133,7 @@ object RouteUtilV1 {
       for {
         mappingResponse <- MessageRelay.ask[GetMappingResponseV2](request)
         textWithStandoffTagV1 <-
-          ZIO.attempt(
-            StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
-          )
+          ZIO.attempt(StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs))
       } yield textWithStandoffTagV1
     }
 

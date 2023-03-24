@@ -113,7 +113,7 @@ case class ForbiddenException(message: String) extends RequestRejectedException(
  */
 case class NotFoundException(message: String) extends RequestRejectedException(message)
 object NotFoundException {
-  val notFound = NotFoundException("The requested data was not found")
+  val notFound: NotFoundException = NotFoundException("The requested data was not found")
 }
 
 /**
@@ -262,8 +262,7 @@ case class StandoffInternalException(message: String, cause: Option[Throwable] =
     extends InternalServerException(message, cause)
 
 object StandoffInternalException {
-  def apply(message: String, e: Throwable, log: Logger): StandoffInternalException =
-    StandoffInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  def apply(message: String, e: Throwable): StandoffInternalException = StandoffInternalException(message, Some(e))
 }
 
 /**

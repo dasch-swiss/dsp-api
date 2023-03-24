@@ -106,13 +106,7 @@ final case class ValuesRouteV2(
 
           val requestMessageFuture: Future[CreateValueRequestV2] = for {
             requestingUser <- getUserADM(requestContext)
-            requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
-                                                      requestDoc,
-                                                      apiRequestID = UUID.randomUUID,
-                                                      requestingUser = requestingUser,
-                                                      appActor = appActor,
-                                                      log = log
-                                                    )
+            requestMessage <- CreateValueRequestV2.fromJsonLD(requestDoc, UUID.randomUUID, requestingUser, appActor)
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
@@ -129,13 +123,7 @@ final case class ValuesRouteV2(
 
           val requestMessageFuture: Future[UpdateValueRequestV2] = for {
             requestingUser <- getUserADM(requestContext)
-            requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
-                                                      requestDoc,
-                                                      apiRequestID = UUID.randomUUID,
-                                                      requestingUser = requestingUser,
-                                                      appActor = appActor,
-                                                      log = log
-                                                    )
+            requestMessage <- UpdateValueRequestV2.fromJsonLD(requestDoc, UUID.randomUUID, requestingUser, appActor)
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
@@ -149,18 +137,10 @@ final case class ValuesRouteV2(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
           val requestMessageFuture: Future[DeleteValueRequestV2] = for {
             requestingUser <- getUserADM(requestContext)
-            requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
-                                                      requestDoc,
-                                                      apiRequestID = UUID.randomUUID,
-                                                      requestingUser = requestingUser,
-                                                      appActor = appActor,
-                                                      log = log
-                                                    )
+            requestMessage <- DeleteValueRequestV2.fromJsonLD(requestDoc, UUID.randomUUID, requestingUser)
           } yield requestMessage
-
           RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }

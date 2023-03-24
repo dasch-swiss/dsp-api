@@ -210,8 +210,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
 
     val body: JsonLDObject = node match {
 
-      case root: ListRootNodeInfoADM => {
-
+      case root: ListRootNodeInfoADM =>
         val label: Map[IRI, JsonLDString] =
           makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, root.labels, userLang, fallbackLang)
 
@@ -230,10 +229,8 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
             )
           ) ++ rootNode ++ label ++ comment ++ position
         )
-      }
 
-      case child: ListChildNodeInfoADM => {
-
+      case child: ListChildNodeInfoADM =>
         val label: Map[IRI, JsonLDString] =
           makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, child.labels, userLang, fallbackLang)
 
@@ -259,7 +256,6 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
             )
           ) ++ rootNode ++ label ++ comment ++ position
         )
-      }
     }
 
     val context = JsonLDObject(
