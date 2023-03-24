@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -21,7 +22,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class ResourceTypesRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**
@@ -43,12 +44,7 @@ final case class ResourceTypesRouteV1(
 
         } yield ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "resourcetypes") {
       get { requestContext =>
@@ -77,13 +73,7 @@ final case class ResourceTypesRouteV1(
           userADM = userADM
         )
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
-
+        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "propertylists") {
       get { requestContext =>
@@ -130,13 +120,7 @@ final case class ResourceTypesRouteV1(
             }
         }
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
-
+        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "vocabularies") {
       get { requestContext =>
@@ -144,13 +128,7 @@ final case class ResourceTypesRouteV1(
           userADM <- getUserADM(requestContext)
         } yield NamedGraphsGetRequestV1(userADM = userADM)
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
-
+        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "vocabularies" / "reload") {
       get { requestContext =>
@@ -158,12 +136,7 @@ final case class ResourceTypesRouteV1(
           userADM <- getUserADM(requestContext)
         } yield LoadOntologiesRequestV1(userADM = userADM)
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "subclasses" / Segment) { iri =>
       get { requestContext =>
@@ -177,12 +150,7 @@ final case class ResourceTypesRouteV1(
                              )
         } yield SubClassesGetRequestV1(resourceClassIri, userADM)
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       }
     }
   }

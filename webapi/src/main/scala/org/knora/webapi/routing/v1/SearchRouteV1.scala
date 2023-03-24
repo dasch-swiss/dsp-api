@@ -13,6 +13,7 @@ import scala.language.postfixOps
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
@@ -30,7 +31,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class SearchRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**
@@ -250,33 +251,21 @@ final case class SearchRouteV1(
     path("v1" / "search" /) {
       // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
       get { requestContext =>
-        val requestMessage = for {
-          userADM                         <- getUserADM(requestContext)
-          params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-        } yield makeExtendedSearchRequestMessage(userADM, params)
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        val requestTask = for {
+          user  <- Authenticator.getUserADM(requestContext)
+          params = requestContext.request.uri.query().toMultiMap
+        } yield makeExtendedSearchRequestMessage(user, params)
+        RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       }
     } ~
       path("v1" / "search" / Segment) {
         searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
           get { requestContext =>
-            val requestMessage = for {
-              userADM                    <- getUserADM(requestContext)
-              params: Map[String, String] = requestContext.request.uri.query().toMap
-            } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
-
-            RouteUtilV1.runJsonRouteWithFuture(
-              requestMessage,
-              requestContext,
-              appActor,
-              log
-            )
+            val requestTask = for {
+              user  <- Authenticator.getUserADM(requestContext)
+              params = requestContext.request.uri.query().toMap
+            } yield makeFulltextSearchRequestMessage(user, searchval, params)
+            RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
           }
       }
 }

@@ -17,6 +17,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.Authenticator
@@ -29,7 +30,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class StandoffRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**
@@ -96,7 +97,6 @@ final case class StandoffRouteV1(
                   XML_PART,
                   throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")
                 )
-                .toString
           } yield CreateMappingRequestV1(
             xml = xml,
             label = stringFormatter.toSparqlEncodedString(
@@ -115,12 +115,7 @@ final case class StandoffRouteV1(
             apiRequestID = UUID.randomUUID
           )
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageFuture,
-            requestContext,
-            appActor,
-            log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessageFuture, requestContext)
         }
       }
     }

@@ -9,6 +9,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import zio._
 
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -20,7 +21,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class CkanRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override implicit protected val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**
@@ -29,25 +30,14 @@ final case class CkanRouteV1(
   override def makeRoute: Route =
     path("v1" / "ckan") {
       get { requestContext =>
-        val requestMessage = for {
-          userProfile                 <- getUserADM(requestContext)
-          params                       = requestContext.request.uri.query().toMap
-          project: Option[Seq[String]] = params.get("project").map(_.split(",").toSeq)
-          limit: Option[Int]           = params.get("limit").map(_.toInt)
-          info: Boolean                = params.getOrElse("info", false) == true
-        } yield CkanRequestV1(
-          projects = project,
-          limit = limit,
-          info = info,
-          userProfile = userProfile
-        )
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        val requestTask = for {
+          userProfile <- Authenticator.getUserADM(requestContext)
+          params       = requestContext.request.uri.query().toMap
+          project      = params.get("project").map(_.split(",").toSeq)
+          limit        = params.get("limit").map(_.toInt)
+          info         = params.getOrElse("info", false) == true
+        } yield CkanRequestV1(project, limit, info, userProfile)
+        RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       }
     }
 }
