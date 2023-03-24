@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.Route
 import zio.Runtime
 
 import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoresADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -24,7 +25,7 @@ import org.knora.webapi.routing.RouteUtilADM.runJsonRoute
 
 final case class StoreRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with StoresADMJsonProtocol {
   override def makeRoute: Route = Route {
