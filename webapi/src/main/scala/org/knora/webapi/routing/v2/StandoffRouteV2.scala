@@ -115,16 +115,9 @@ final case class StandoffRouteV2(
                     JSON_PART,
                     throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")
                   )
-                  .toString
               )
 
-            metadata: CreateMappingRequestMetadataV2 <- CreateMappingRequestMetadataV2.fromJsonLD(
-                                                          jsonLDDocument = jsonldDoc,
-                                                          apiRequestID = apiRequestID,
-                                                          requestingUser = requestingUser,
-                                                          appActor = appActor,
-                                                          log = log
-                                                        )
+            metadata <- CreateMappingRequestMetadataV2.fromJsonLD(jsonldDoc)
 
             xml: String =
               allParts
@@ -132,7 +125,6 @@ final case class StandoffRouteV2(
                   XML_PART,
                   throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")
                 )
-                .toString
           } yield CreateMappingRequestV2(
             metadata = metadata,
             xml = CreateMappingRequestXMLV2(xml),

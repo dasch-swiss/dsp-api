@@ -5,30 +5,22 @@
 
 package org.knora.webapi.messages.v2.responder.standoffmessages
 
-import akka.actor.ActorRef
-import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
-
-import java.time.Instant
-import java.util.UUID
-import scala.collection.immutable.SortedSet
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-
 import dsp.errors.AssertionException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
+import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
+
+import java.time.Instant
+import java.util.UUID
+import scala.collection.immutable.SortedSet
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
@@ -148,26 +140,11 @@ case class CreateMappingRequestMetadataV2(label: String, projectIri: SmartIri, m
 
 object CreateMappingRequestMetadataV2 {
 
-  def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
+  def fromJsonLD(jsonLDDocument: JsonLDDocument)(implicit
+    ec: ExecutionContext
+  ): Future[CreateMappingRequestMetadataV2] = Future(fromJsonLDSync(jsonLDDocument))
 
-  private def fromJsonLDSync(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM
-  ): CreateMappingRequestMetadataV2 = {
+  private def fromJsonLDSync(jsonLDDocument: JsonLDDocument): CreateMappingRequestMetadataV2 = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -492,7 +469,7 @@ case class StandoffTagUriAttributeV2(standoffPropertyIri: SmartIri, value: Strin
 
   def stringValue: String = value
 
-  def rdfValue: String = s""""${stringValue.toString}"^^xsd:anyURI"""
+  def rdfValue: String = s""""$stringValue"^^xsd:anyURI"""
 
   override def toOntologySchema(targetSchema: OntologySchema): StandoffTagAttributeV2 =
     copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
@@ -513,7 +490,7 @@ case class StandoffTagUriAttributeV2(standoffPropertyIri: SmartIri, value: Strin
 case class StandoffTagInternalReferenceAttributeV2(standoffPropertyIri: SmartIri, value: IRI)
     extends StandoffTagAttributeV2 {
 
-  def stringValue: String = value.toString
+  def stringValue: String = value
 
   def rdfValue: String = s"<$value>"
 
