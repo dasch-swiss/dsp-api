@@ -1491,21 +1491,6 @@ class StringFormatter private (
     }
 
   /**
-   * Checks that a string represents a valid integer.
-   *
-   * @param s        the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a
-   *                 valid integer.
-   * @return the integer value of the string.
-   */
-  def validateInt(s: String, errorFun: => Nothing): Int =
-    try {
-      s.toInt
-    } catch {
-      case _: Exception => errorFun // value could not be converted to an Integer
-    }
-
-  /**
    * Checks that a string represents a valid decimal number.
    *
    * @param s        the string to be checked.

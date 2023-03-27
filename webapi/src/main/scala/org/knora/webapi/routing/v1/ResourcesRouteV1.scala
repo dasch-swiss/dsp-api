@@ -59,6 +59,7 @@ import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides API routes that deal with resources.
@@ -1098,10 +1099,11 @@ final case class ResourcesRouteV1(
           case "int_value" =>
             CreateResourceValueV1(
               int_value = Some(
-                stringFormatter.validateInt(
-                  elementValue,
-                  throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateInt(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
@@ -1243,18 +1245,15 @@ final case class ResourcesRouteV1(
                                                )
                                            }
 
-            numberOfProps: Int = stringFormatter.validateInt(
-                                   numprops,
-                                   throw BadRequestException(s"Invalid param numprops: $numprops")
-                                 ) match {
+            numberOfProps: Int = ValuesValidator
+                                   .validateInt(numprops)
+                                   .getOrElse(throw BadRequestException(s"Invalid param numprops: $numprops")) match {
                                    case number: Int =>
                                      if (number < 1) 1 else number // numberOfProps must not be smaller than 1
                                  }
 
-            limitOfResults = stringFormatter.validateInt(
-                               limit,
-                               throw BadRequestException(s"Invalid param limit: $limit")
-                             )
+            limitOfResults =
+              ValuesValidator.validateInt(limit).getOrElse(throw BadRequestException(s"Invalid param limit: $limit"))
 
           } yield makeResourceSearchRequestMessage(
             searchString = searchString,

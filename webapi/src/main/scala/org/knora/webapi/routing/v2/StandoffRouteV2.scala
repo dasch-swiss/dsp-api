@@ -30,6 +30,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides a function for API routes that deal with search.
@@ -61,7 +62,7 @@ final case class StandoffRouteV2(
           }
 
           val offset: Int =
-            stringFormatter.validateInt(offsetStr, throw BadRequestException(s"Invalid offset: $offsetStr"))
+            ValuesValidator.validateInt(offsetStr).getOrElse(throw BadRequestException(s"Invalid offset: $offsetStr"))
           val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
           val requestTask = Authenticator
             .getUserADM(requestContext)

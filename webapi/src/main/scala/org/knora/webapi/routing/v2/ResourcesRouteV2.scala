@@ -45,6 +45,7 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
@@ -188,7 +189,7 @@ final case class ResourcesRouteV2(
       val pageStr: String =
         params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
       val page: Int =
-        stringFormatter.validateInt(pageStr, throw BadRequestException(s"Invalid page number: $pageStr"))
+        ValuesValidator.validateInt(pageStr).getOrElse(throw BadRequestException(s"Invalid page number: $pageStr"))
 
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 

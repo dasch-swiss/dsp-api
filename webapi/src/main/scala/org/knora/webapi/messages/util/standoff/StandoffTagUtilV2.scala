@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.messages.ValuesValidator
 
 trait StandoffTagUtilV2 {
 
@@ -390,8 +391,9 @@ object StandoffTagUtilV2 {
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>
                 StandoffTagIntegerAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = stringFormatter
-                    .validateInt(attr.value, throw BadRequestException(s"Invalid integer attribute: '${attr.value}'"))
+                  value = ValuesValidator
+                    .validateInt(attr.value)
+                    .getOrElse(throw BadRequestException(s"Invalid integer attribute: '${attr.value}'"))
                 )
 
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Decimal))) =>
@@ -876,10 +878,9 @@ object StandoffTagUtilV2 {
 
           val integerValue = StandoffTagIntegerAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri,
-            value = stringFormatter.validateInt(
-              integerString,
-              throw BadRequestException(s"Integer value invalid: $integerString")
-            )
+            value = ValuesValidator
+              .validateInt(integerString)
+              .getOrElse(throw BadRequestException(s"Integer value invalid: $integerString"))
           )
 
           val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(

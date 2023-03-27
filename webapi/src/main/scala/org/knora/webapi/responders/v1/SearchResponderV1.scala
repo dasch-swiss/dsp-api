@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Responds to requests for user search queries and returns responses in Knora API
@@ -497,8 +498,9 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.IntValue =>
                   // check if string is an integer
-                  val searchString = stringFormatter
-                    .validateInt(searchval, throw BadRequestException(s"Given searchval is not an integer: $searchval"))
+                  val searchString = ValuesValidator
+                    .validateInt(searchval)
+                    .getOrElse(throw BadRequestException(s"Given searchval is not an integer: $searchval"))
                     .toString
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 

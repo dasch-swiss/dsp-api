@@ -25,6 +25,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides a function for API routes that deal with search.
@@ -65,10 +66,11 @@ final case class SearchRouteV2(
 
     offsetStr match {
       case Some(offset: String) =>
-        val offsetInt: Int = stringFormatter.validateInt(
-          offset,
-          throw BadRequestException(s"offset is expected to be an Integer, but $offset given")
-        )
+        val offsetInt: Int = ValuesValidator
+          .validateInt(offset)
+          .getOrElse(
+            throw BadRequestException(s"offset is expected to be an Integer, but $offset given")
+          )
 
         if (offsetInt < 0) throw BadRequestException(s"offset must be an Integer >= 0, but $offsetInt given.")
 
