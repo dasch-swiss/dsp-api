@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.triplestore.api
 
+import play.twirl.api.TxtFormat
 import zio._
 import zio.macros.accessible
 
@@ -36,6 +37,8 @@ trait TriplestoreService {
     simulateTimeout: Boolean = false,
     isGravsearch: Boolean = false
   ): Task[SparqlSelectResult]
+
+  def sparqlHttpSelect(query: TxtFormat.Appendable): Task[SparqlSelectResult] = sparqlHttpSelect(query.toString)
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].

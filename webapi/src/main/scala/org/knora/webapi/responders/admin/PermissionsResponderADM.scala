@@ -29,8 +29,10 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.twirl
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -475,7 +477,7 @@ final case class PermissionsResponderADMLive(
   ): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.v1.txt
                                .getAdministrativePermissionsForProject(
                                  projectIri = projectIRI
                                )
@@ -564,7 +566,7 @@ final case class PermissionsResponderADMLive(
   ): Task[Option[AdministrativePermissionADM]] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.v1.txt
                                .getAdministrativePermissionForProjectAndGroup(
                                  projectIri = projectIri,
                                  groupIri = groupIri
@@ -721,7 +723,7 @@ final case class PermissionsResponderADMLive(
 
         // Create the administrative permission.
         createAdministrativePermissionSparqlString =
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          twirl.queries.sparql.admin.txt
             .createNewAdministrativePermission(
               namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
               permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
@@ -780,7 +782,7 @@ final case class PermissionsResponderADMLive(
             throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
           }
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.v1.txt
                                .getObjectAccessPermission(
                                  resourceIri = Some(resourceIri),
                                  valueIri = None
@@ -837,7 +839,7 @@ final case class PermissionsResponderADMLive(
             throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
           }
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.v1.txt
                                .getObjectAccessPermission(
                                  resourceIri = None,
                                  valueIri = Some(valueIri)
@@ -891,7 +893,7 @@ final case class PermissionsResponderADMLive(
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.v1.txt
                                .getDefaultObjectAccessPermissionsForProject(
                                  projectIri = projectIri
                                )
@@ -987,67 +989,60 @@ final case class PermissionsResponderADMLive(
     resourceClassIri: Option[IRI],
     propertyIri: Option[IRI]
   ): Task[Option[DefaultObjectAccessPermissionADM]] = {
-
-    val maybeDefaultObjectAccessPermissionADM: Task[Option[DefaultObjectAccessPermissionADM]] =
-      for {
-        sparqlQueryString <- ZIO.attempt(
-                               org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                                 .getDefaultObjectAccessPermission(
-                                   projectIri = projectIri,
-                                   maybeGroupIri = groupIri,
-                                   maybeResourceClassIri = resourceClassIri,
-                                   maybePropertyIri = propertyIri
-                                 )
-                                 .toString()
-                             )
-
-        permissionQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
-
-        permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
-
-        permission <-
-          ZIO.attempt(if (permissionQueryResponseRows.nonEmpty) {
-
-            /* check if we only got one default object access permission back */
-            val doapCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
-            if (doapCount > 1)
-              throw InconsistentRepositoryDataException(
-                s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount."
-              )
-
-            /* get the iri of the retrieved permission */
-            val permissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
-
-            val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
-              permissionQueryResponseRows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-                predicate -> rows.map(_.rowMap("o"))
-              }
-            val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
-              groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-              PermissionType.OAP
-            )
-            val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(
-              iri = permissionIri,
-              forProject = groupedPermissionsQueryResponse
-                .getOrElse(
-                  OntologyConstants.KnoraAdmin.ForProject,
-                  throw InconsistentRepositoryDataException(s"Permission has no project.")
-                )
-                .head,
-              forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head),
-              forResourceClass =
-                groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head),
-              forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head),
-              hasPermissions = hasPermissions
-            )
-            Some(doap)
-          } else {
-            None
-          })
-      } yield permission
-
-    maybeDefaultObjectAccessPermissionADM
+    val query =
+      twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermission(projectIri, groupIri, resourceClassIri, propertyIri)
+    triplestoreService
+      .sparqlHttpSelect(query)
+      .flatMap(toDefaultObjectAccessPermission(_, projectIri, groupIri, resourceClassIri, propertyIri))
   }
+
+  private def toDefaultObjectAccessPermission(
+    result: SparqlSelectResult,
+    projectIri: IRI,
+    groupIri: Option[IRI],
+    resourceClassIri: Option[IRI],
+    propertyIri: Option[IRI]
+  ): Task[Option[DefaultObjectAccessPermissionADM]] =
+    ZIO.attempt {
+      val rows = result.results.bindings
+      if (rows.isEmpty) {
+        None
+      } else {
+        /* check if we only got one default object access permission back */
+        val doapCount: Int = rows.groupBy(_.rowMap("s")).size
+        if (doapCount > 1)
+          throw InconsistentRepositoryDataException(
+            s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount."
+          )
+
+        /* get the iri of the retrieved permission */
+        val permissionIri = result.getFirstRow.rowMap("s")
+
+        val groupedPermissionsQueryResponse: Map[IRI, Seq[IRI]] =
+          rows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
+            predicate -> rows.map(_.rowMap("o"))
+          }
+        val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
+          groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
+          PermissionType.OAP
+        )
+        val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(
+          iri = permissionIri,
+          forProject = groupedPermissionsQueryResponse
+            .getOrElse(
+              OntologyConstants.KnoraAdmin.ForProject,
+              throw InconsistentRepositoryDataException(s"Permission has no project.")
+            )
+            .head,
+          forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head),
+          forResourceClass =
+            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head),
+          forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head),
+          hasPermissions = hasPermissions
+        )
+        Some(doap)
+      }
+    }
 
   /**
    * Gets a single default object access permission identified by project and either group / resource class / property.
@@ -1600,7 +1595,7 @@ final case class PermissionsResponderADMLive(
 
         // Create the default object access permission.
         createNewDefaultObjectAccessPermissionSparqlString =
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          twirl.queries.sparql.admin.txt
             .createNewDefaultObjectAccessPermission(
               namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
               permissionIri = newPermissionIri,
@@ -1659,7 +1654,7 @@ final case class PermissionsResponderADMLive(
   ): Task[PermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                             twirl.queries.sparql.admin.txt
                                .getProjectPermissions(
                                  projectIri = projectIRI
                                )
@@ -2123,7 +2118,7 @@ final case class PermissionsResponderADMLive(
     for {
       // SPARQL query statement to get permission by IRI.
       sparqlQuery <- ZIO.attempt(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                       twirl.queries.sparql.admin.txt
                          .getPermissionByIRI(
                            permissionIri = permissionIri
                          )
@@ -2227,7 +2222,7 @@ final case class PermissionsResponderADMLive(
 
       // Generate SPARQL for changing the permission.
       sparqlChangePermission <- ZIO.attempt(
-                                  org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                  twirl.queries.sparql.admin.txt
                                     .updatePermission(
                                       namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
                                       permissionIri = permissionIri,
@@ -2251,7 +2246,7 @@ final case class PermissionsResponderADMLive(
     for {
       // Generate SPARQL for erasing a permission.
       sparqlDeletePermission <- ZIO.attempt(
-                                  org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                  twirl.queries.sparql.admin.txt
                                     .deletePermission(
                                       namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
                                       permissionIri = permissionIri
@@ -2264,7 +2259,7 @@ final case class PermissionsResponderADMLive(
 
       // Verify that the permission was deleted correctly.
       askString <- ZIO.attempt(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(permissionIri).toString
+                     twirl.queries.sparql.admin.txt.checkIriExists(permissionIri).toString
                    )
       askResponse                   <- triplestoreService.sparqlHttpAsk(askString)
       permissionStillExists: Boolean = askResponse.result
@@ -2286,7 +2281,7 @@ final case class PermissionsResponderADMLive(
   protected def isPermissionUsed(permissionIri: IRI, errorFun: => Nothing): Task[Unit] =
     for {
       isPermissionUsedSparql <- ZIO.attempt(
-                                  org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                  twirl.queries.sparql.admin.txt
                                     .isEntityUsed(
                                       entityIri = permissionIri
                                     )
@@ -2303,7 +2298,7 @@ final case class PermissionsResponderADMLive(
   def getProjectOfEntity(entityIri: IRI): Task[IRI] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                             twirl.queries.sparql.admin.txt
                                .getProjectOfEntity(
                                  entityIri = entityIri
                                )

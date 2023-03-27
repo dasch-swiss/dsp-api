@@ -7,13 +7,13 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
+import java.util.UUID
+import scala.collection.Map
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import java.util.UUID
-import scala.collection.Map
-
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
