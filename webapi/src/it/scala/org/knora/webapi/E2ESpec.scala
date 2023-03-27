@@ -111,11 +111,7 @@ abstract class E2ESpec
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
     UnsafeZioRun.runOrThrow(
-      AppServer.testWithoutSipi
-      // .provide(testLayers)
-        *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan(
-          "prepare-repo"
-        ))
+      AppServer.testWithoutSipi *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo"))
     )
 
   final override def afterAll(): Unit =
