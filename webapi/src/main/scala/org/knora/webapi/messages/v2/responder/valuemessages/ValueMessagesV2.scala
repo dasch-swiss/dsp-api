@@ -42,6 +42,7 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util._
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -2177,7 +2178,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
     val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
     )
 
     DecimalValueContentV2(
@@ -2482,13 +2483,13 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
     val intervalValueHasStart: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
     )
 
     val intervalValueHasEnd: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
     )
 
     IntervalValueContentV2(

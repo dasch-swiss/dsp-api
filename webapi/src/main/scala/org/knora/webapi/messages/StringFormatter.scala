@@ -1491,21 +1491,6 @@ class StringFormatter private (
     }
 
   /**
-   * Checks that a string represents a valid decimal number.
-   *
-   * @param s        the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a
-   *                 valid decimal number.
-   * @return the decimal value of the string.
-   */
-  def validateBigDecimal(s: String, errorFun: => Nothing): BigDecimal =
-    try {
-      BigDecimal(s)
-    } catch {
-      case _: Exception => errorFun // value could not be converted to a decimal
-    }
-
-  /**
    * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
    *
    * @param s        the string to be checked.

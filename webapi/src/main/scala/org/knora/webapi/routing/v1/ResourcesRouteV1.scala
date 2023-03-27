@@ -1110,10 +1110,11 @@ final case class ResourcesRouteV1(
           case "decimal_value" =>
             CreateResourceValueV1(
               decimal_value = Some(
-                stringFormatter.validateBigDecimal(
-                  elementValue,
-                  throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateBigDecimal(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
@@ -1184,10 +1185,11 @@ final case class ResourcesRouteV1(
                   throw BadRequestException(s"Invalid interval value in element '${node.label}: '$elementValue'")
 
                 val tVals: Seq[BigDecimal] = timeVals.map { timeVal =>
-                  stringFormatter.validateBigDecimal(
-                    timeVal,
-                    throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'")
-                  )
+                  ValuesValidator
+                    .validateBigDecimal(timeVal)
+                    .getOrElse(
+                      throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'")
+                    )
                 }.toSeq
 
                 CreateResourceValueV1(interval_value = Some(tVals))

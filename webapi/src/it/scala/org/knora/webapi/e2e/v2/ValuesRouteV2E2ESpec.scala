@@ -34,6 +34,7 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+import org.knora.webapi.messages.ValuesValidator
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
@@ -2254,7 +2255,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedDecimalValueAsDecimal: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = stringFormatter.validateBigDecimal
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
 
       savedDecimalValueAsDecimal should ===(decimalValueAsDecimal)
@@ -2972,7 +2973,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = stringFormatter.validateBigDecimal
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
 
       savedIntervalValueHasStart should ===(intervalStart)
@@ -2980,7 +2981,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = stringFormatter.validateBigDecimal
+        validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
       )
 
       savedIntervalValueHasEnd should ===(intervalEnd)
@@ -3920,7 +3921,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedDecimalValue: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        stringFormatter.validateBigDecimal
+        validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
       )
 
       savedDecimalValue should ===(decimalValue)
@@ -4671,7 +4672,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = stringFormatter.validateBigDecimal
+        validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
       )
 
       savedIntervalValueHasStart should ===(intervalStart)
@@ -4679,7 +4680,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = stringFormatter.validateBigDecimal
+        validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
       )
 
       savedIntervalValueHasEnd should ===(intervalEnd)

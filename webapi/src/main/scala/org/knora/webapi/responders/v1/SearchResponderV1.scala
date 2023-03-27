@@ -506,9 +506,9 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.DecimalValue =>
                   // check if string is a decimal number
-                  val searchString = stringFormatter
-                    .validateBigDecimal(
-                      searchval,
+                  val searchString = ValuesValidator
+                    .validateBigDecimal(searchval)
+                    .getOrElse(
                       throw BadRequestException(s"Given searchval is not a decimal number: $searchval")
                     )
                     .toString
