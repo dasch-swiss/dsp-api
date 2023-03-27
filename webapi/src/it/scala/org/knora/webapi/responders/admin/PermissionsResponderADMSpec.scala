@@ -7,27 +7,20 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import java.util.UUID
-import scala.collection.Map
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.ForbiddenException
-import dsp.errors.NotFoundException
-
+import dsp.errors.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
-import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
+
+import java.util.UUID
+import scala.collection.Map
 
 /**
  * This spec is used to test the [[PermissionsResponderADM]] actor.
@@ -412,26 +405,6 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             defaultObjectAccessPermission = perm001_d3.p
           )
         )
-      }
-
-      "cache DefaultObjectAccessPermission" in {
-        appActor ! DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          groupIri = None,
-          resourceClassIri = None,
-          propertyIri = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
-          requestingUser = rootUser
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm001_d3.p
-          )
-        )
-
-        val key = perm001_d3.p.cacheKey
-        val maybePermission =
-          CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsMessagesUtilADM.PermissionsCacheName, key)
-        maybePermission should be(Some(perm001_d3.p))
       }
     }
 

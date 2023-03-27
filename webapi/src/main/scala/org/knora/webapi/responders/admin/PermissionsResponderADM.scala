@@ -10,19 +10,18 @@ import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.{MessageHandler, MessageRelay}
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, ResponderRequest, SmartIri, StringFormatter}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.{OntologyConstants, ResponderRequest, SmartIri, StringFormatter}
 import org.knora.webapi.responders.{IriLocker, IriService, Responder}
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.util.cache.CacheUtil
 import zio._
 
 import java.util.UUID
@@ -979,93 +978,64 @@ final case class PermissionsResponderADMLive(
     propertyIri: Option[IRI]
   ): Task[Option[DefaultObjectAccessPermissionADM]] = {
 
-    val key = PermissionsMessagesUtilADM.getDefaultObjectAccessPermissionADMKey(
-      projectIri,
-      groupIri,
-      resourceClassIri,
-      propertyIri
-    )
-    val permissionFromCache =
-      CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsMessagesUtilADM.PermissionsCacheName, key)
-
     val maybeDefaultObjectAccessPermissionADM: Task[Option[DefaultObjectAccessPermissionADM]] =
-      permissionFromCache match {
-        case Some(permission) =>
-          // found permission in the cache
-          logger.debug("defaultObjectAccessPermissionGetADM - cache hit for key: {}", key)
-          ZIO.succeed(Some(permission))
-
-        case None =>
-          // not found permission in the cache
-
-          for {
-            sparqlQueryString <- ZIO.attempt(
-                                   org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                                     .getDefaultObjectAccessPermission(
-                                       projectIri = projectIri,
-                                       maybeGroupIri = groupIri,
-                                       maybeResourceClassIri = resourceClassIri,
-                                       maybePropertyIri = propertyIri
-                                     )
-                                     .toString()
+      for {
+        sparqlQueryString <- ZIO.attempt(
+                               org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                 .getDefaultObjectAccessPermission(
+                                   projectIri = projectIri,
+                                   maybeGroupIri = groupIri,
+                                   maybeResourceClassIri = resourceClassIri,
+                                   maybePropertyIri = propertyIri
                                  )
+                                 .toString()
+                             )
 
-            permissionQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
+        permissionQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
-            permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
+        permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
-            permission: Option[DefaultObjectAccessPermissionADM] =
-              if (permissionQueryResponseRows.nonEmpty) {
+        permission: Option[DefaultObjectAccessPermissionADM] =
+          if (permissionQueryResponseRows.nonEmpty) {
 
-                /* check if we only got one default object access permission back */
-                val doapCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
-                if (doapCount > 1)
-                  throw InconsistentRepositoryDataException(
-                    s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount."
-                  )
-
-                /* get the iri of the retrieved permission */
-                val permissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
-
-                val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
-                  permissionQueryResponseRows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-                    predicate -> rows.map(_.rowMap("o"))
-                  }
-                val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
-                  groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-                  PermissionType.OAP
-                )
-                val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(
-                  iri = permissionIri,
-                  forProject = groupedPermissionsQueryResponse
-                    .getOrElse(
-                      OntologyConstants.KnoraAdmin.ForProject,
-                      throw InconsistentRepositoryDataException(s"Permission has no project.")
-                    )
-                    .head,
-                  forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head),
-                  forResourceClass =
-                    groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head),
-                  forProperty =
-                    groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head),
-                  hasPermissions = hasPermissions
-                )
-
-                // write permission to cache
-                PermissionsMessagesUtilADM.writeDefaultObjectAccessPermissionADMToCache(doap)
-
-                Some(doap)
-              } else {
-                None
-              }
-            _ =
-              logger.debug(
-                s"defaultObjectAccessPermissionGetADM - p: $projectIri, g: $groupIri, r: $resourceClassIri, p: $propertyIri, permission: $permission"
+            /* check if we only got one default object access permission back */
+            val doapCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
+            if (doapCount > 1)
+              throw InconsistentRepositoryDataException(
+                s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount."
               )
-          } yield permission
-      }
 
-    // logger.debug(s"defaultObjectAccessPermissionGetADM - permission: $maybeDefaultObjectAccessPermissionADM")
+            /* get the iri of the retrieved permission */
+            val permissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
+
+            val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
+              permissionQueryResponseRows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
+                predicate -> rows.map(_.rowMap("o"))
+              }
+            val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
+              groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
+              PermissionType.OAP
+            )
+            val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(
+              iri = permissionIri,
+              forProject = groupedPermissionsQueryResponse
+                .getOrElse(
+                  OntologyConstants.KnoraAdmin.ForProject,
+                  throw InconsistentRepositoryDataException(s"Permission has no project.")
+                )
+                .head,
+              forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head),
+              forResourceClass =
+                groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head),
+              forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head),
+              hasPermissions = hasPermissions
+            )
+            Some(doap)
+          } else {
+            None
+          }
+      } yield permission
+
     maybeDefaultObjectAccessPermissionADM
   }
 
