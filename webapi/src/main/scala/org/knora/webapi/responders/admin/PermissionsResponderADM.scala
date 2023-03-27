@@ -995,8 +995,8 @@ final case class PermissionsResponderADMLive(
 
         permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
-        permission: Option[DefaultObjectAccessPermissionADM] =
-          if (permissionQueryResponseRows.nonEmpty) {
+        permission <-
+          ZIO.attempt(if (permissionQueryResponseRows.nonEmpty) {
 
             /* check if we only got one default object access permission back */
             val doapCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
@@ -1033,7 +1033,7 @@ final case class PermissionsResponderADMLive(
             Some(doap)
           } else {
             None
-          }
+          })
       } yield permission
 
     maybeDefaultObjectAccessPermissionADM
