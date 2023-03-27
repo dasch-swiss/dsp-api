@@ -5,28 +5,38 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import dsp.errors._
-import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.{MessageHandler, MessageRelay}
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
-import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
-import org.knora.webapi.messages.{OntologyConstants, ResponderRequest, SmartIri, StringFormatter}
-import org.knora.webapi.responders.{IriLocker, IriService, Responder}
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.util.ZioHelper
 import zio._
 
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
+
+import dsp.errors._
+import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.Responder
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util.ZioHelper
 
 /**
  * Provides information about permissions to other responders.
