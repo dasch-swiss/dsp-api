@@ -470,21 +470,19 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    * `errorFun`.
    *
    * @param allowedSchema the schema to be allowed.
-   * @param errorFun      a function that throws an exception. It will be called if the IRI has a different schema
-   *                      to the one specified.
-   * @return the same IRI
+   * @return [[Boolean]]
    */
-  def checkApiV2Schema(allowedSchema: ApiV2Schema, errorFun: => Nothing): SmartIri
+  def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean
 
-  /**
-   * Checks that the IRI's ontology schema, and if it is present whether it does not corresponds to the specified schema.
-   *
-   * @param allowedSchema the schema to be allowed.
-   * @return `false` in cases where the iri does not have a schema or the schema is equals allowedSchema
-   *
-   *         `true` if the iri has a schema different from the allowedSchema
-   */
-  def hasApiV2SchemaNotEqualTo(allowedSchema: ApiV2Schema): Boolean
+  // /**
+  //  * Checks that the IRI's ontology schema, and if it is present whether it does not corresponds to the specified schema.
+  //  *
+  //  * @param allowedSchema the schema to be allowed.
+  //  * @return `false` in cases where the iri does not have a schema or the schema is equals allowedSchema
+  //  *
+  //  *         `true` if the iri has a schema different from the allowedSchema
+  //  */
+  // def hasApiV2SchemaNotEqualTo(allowedSchema: ApiV2Schema): Boolean
 
   /**
    * Converts this IRI to another ontology schema.
@@ -1124,12 +1122,14 @@ class StringFormatter private (
 
     override def getOntologySchema: Option[OntologySchema] = iriInfo.ontologySchema
 
-    override def checkApiV2Schema(allowedSchema: ApiV2Schema, errorFun: => Nothing): SmartIri =
-      if (hasApiV2SchemaNotEqualTo(allowedSchema)) { errorFun }
-      else { this }
+    override def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean =
+      iriInfo.ontologySchema match {
+        case Some(value) => value == allowedSchema
+        case None        => true
+      }
 
-    override def hasApiV2SchemaNotEqualTo(allowedSchema: ApiV2Schema): Boolean =
-      iriInfo.ontologySchema.exists(_ != allowedSchema)
+    // override def hasApiV2SchemaNotEqualTo(allowedSchema: ApiV2Schema): Boolean =
+    //   iriInfo.ontologySchema.exists(_ != allowedSchema)
 
     override def getShortPrefixLabel: String = getOntologyName
 
