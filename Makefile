@@ -213,8 +213,8 @@ integration-test: docker-build-sipi-image ## runs all integration tests
 
 .PHONY: zio-http-test
 zio-http-test: ## runs tests against both ZIO HTTP and Akka HTTP routes
-	sbt -v "webapi/IntegrationTest/testOnly *ZioHttpSpec" -Dkey=akka
-	sbt -v "webapi/IntegrationTest/testOnly *ZioHttpSpec" -Dkey=zio
+	sbt -v coverage "webapi/IntegrationTest/testOnly *ZioHttpSpec" -Dkey=akka coverageAggregate
+	sbt -v coverage "webapi/IntegrationTest/testOnly *ZioHttpSpec" -Dkey=zio coverageAggregate
 
 .PHONY: test-shared
 test-shared: ## tests the shared projects (build is not called from this target)
