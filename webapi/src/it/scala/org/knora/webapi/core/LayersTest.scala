@@ -75,7 +75,7 @@ import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
-import org.knora.webapi.slice.admin.api.service.ProjectADMREstService
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
@@ -146,7 +146,7 @@ object LayersTest {
       with PermissionUtilADM
       with PermissionsResponderADM
       with ProjectsResponderADM
-      with ProjectADMREstService
+      with ProjectADMRestService
       with ProjectsResponderV1
       with ProjectADMService
       with RepositoryUpdater

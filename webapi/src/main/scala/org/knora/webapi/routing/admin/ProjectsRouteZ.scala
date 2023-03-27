@@ -25,11 +25,11 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.slice.admin.api.service.ProjectADMREstService
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 final case class ProjectsRouteZ(
   appConfig: AppConfig,
-  projectsService: ProjectADMREstService,
+  projectsService: ProjectADMRestService,
   authenticationMiddleware: AuthenticationMiddleware
 ) {
 
@@ -216,6 +216,6 @@ final case class ProjectsRouteZ(
 }
 
 object ProjectsRouteZ {
-  val layer: URLayer[AppConfig with ProjectADMREstService with AuthenticationMiddleware, ProjectsRouteZ] =
+  val layer: URLayer[AppConfig with ProjectADMRestService with AuthenticationMiddleware, ProjectsRouteZ] =
     ZLayer.fromFunction(ProjectsRouteZ.apply _)
 }

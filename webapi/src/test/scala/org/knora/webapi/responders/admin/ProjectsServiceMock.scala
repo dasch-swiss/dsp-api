@@ -12,9 +12,9 @@ import zio.mock._
 import dsp.valueobjects.Iri._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.slice.admin.api.service.ProjectADMREstService
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
-object ProjectsServiceMock extends Mock[ProjectADMREstService] {
+object ProjectsServiceMock extends Mock[ProjectADMRestService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
   object GetSingleProject extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
   object CreateProject    extends Effect[(ProjectCreatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
@@ -30,11 +30,11 @@ object ProjectsServiceMock extends Mock[ProjectADMREstService] {
   object GetRestrictedViewSettings
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsGetResponseADM]
 
-  override val compose: URLayer[Proxy, ProjectADMREstService] =
+  override val compose: URLayer[Proxy, ProjectADMRestService] =
     ZLayer {
       for {
         proxy <- ZIO.service[Proxy]
-      } yield new ProjectADMREstService {
+      } yield new ProjectADMRestService {
 
         def getProjectsADMRequest(): Task[ProjectsGetResponseADM] =
           proxy(GetProjects)

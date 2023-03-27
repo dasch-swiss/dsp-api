@@ -18,7 +18,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 
 @accessible
-trait ProjectADMREstService {
+trait ProjectADMRestService {
   def getProjectsADMRequest(): Task[ProjectsGetResponseADM]
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM]
   def createProjectADMRequest(
@@ -52,7 +52,7 @@ trait ProjectADMREstService {
   ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 }
 
-final case class ProjectsADMRestServiceLive(responder: ProjectsResponderADM) extends ProjectADMREstService {
+final case class ProjectsADMRestServiceLive(responder: ProjectsResponderADM) extends ProjectADMRestService {
 
   /**
    * Returns all projects as a [[ProjectsGetResponseADM]].
@@ -220,6 +220,6 @@ final case class ProjectsADMRestServiceLive(responder: ProjectsResponderADM) ext
 }
 
 object ProjectsADMRestServiceLive {
-  val layer: URLayer[ProjectsResponderADM, ProjectADMREstService] =
+  val layer: URLayer[ProjectsResponderADM, ProjectADMRestService] =
     ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }

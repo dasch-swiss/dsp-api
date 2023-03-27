@@ -80,7 +80,7 @@ import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
-import org.knora.webapi.slice.admin.api.service.ProjectADMREstService
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service.DspProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
@@ -148,7 +148,7 @@ object LayersLive {
       with OntologyResponderV2
       with PermissionUtilADM
       with PermissionsResponderADM
-      with ProjectADMREstService
+      with ProjectADMRestService
       with ProjectADMService
       with ProjectsResponderADM
       with ProjectsResponderV1
