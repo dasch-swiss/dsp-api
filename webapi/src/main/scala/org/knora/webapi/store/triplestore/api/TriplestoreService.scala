@@ -64,9 +64,10 @@ trait TriplestoreService {
     sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
   ): Task[SparqlExtendedConstructResponse]
 
-  def sparqlHttpExtendedConstruct(query: String): Task[SparqlExtendedConstructResponse] = sparqlHttpExtendedConstruct(
-    SparqlExtendedConstructRequest(query)
-  )
+  def sparqlHttpExtendedConstruct(query: String, isGravsearch: Boolean = false): Task[SparqlExtendedConstructResponse] =
+    sparqlHttpExtendedConstruct(
+      SparqlExtendedConstructRequest(query, isGravsearch)
+    )
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.

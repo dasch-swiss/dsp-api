@@ -8,6 +8,7 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -18,22 +19,25 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM
+import org.knora.webapi.routing.RouteUtilADM._
 
 /**
  * Provides routes to create list items.
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-class CreateListItemsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class CreateListItemsRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+) extends KnoraRoute(routeData, runtime)
     with ListADMJsonProtocol {
 
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
@@ -61,7 +65,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedListRootNodeCreatePayload)
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
           _ =
@@ -77,13 +81,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteF(requestMessage, requestContext)
       }
     }
   }
@@ -108,14 +106,14 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
         val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
         val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
         val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
-        val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
+        val validatedCreateChildNodePayload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
           Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
             ListChildNodeCreatePayloadADM
           )
 
         val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-          payload        <- toFuture(validatedCreateChildNodePeyload)
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          payload        <- toFuture(validatedCreateChildNodePayload)
+          requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
           _ =
@@ -132,12 +130,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
           apiRequestID = UUID.randomUUID()
         )
 
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteF(requestMessage, requestContext)
       }
     }
   }

@@ -8,7 +8,7 @@ package org.knora.webapi.routing.v1
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
+import zio._
 
 import java.time.Instant
 import java.util.UUID
@@ -18,6 +18,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
@@ -36,7 +37,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides an Akka routing function for API routes that deal with values.
  */
-class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class ValuesRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
@@ -154,7 +158,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                       mappingIri = mappingIri,
                       acceptStandoffLinksToClientIDs = false,
                       userProfile = userADM,
-                      appActor = appActor,
                       log = log
                     )
 
@@ -371,7 +374,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                       mappingIri = mappingIri,
                       acceptStandoffLinksToClientIDs = false,
                       userProfile = userADM,
-                      appActor = appActor,
                       log = log
                     )
 
@@ -577,93 +579,51 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       projectShortcode: String,
       apiRequest: ChangeFileValueApiRequestV1,
       userADM: UserADM
-    ): Future[ChangeFileValueRequestV1] = {
-      val resourceIri =
-        stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
-      val tempFilePath = stringFormatter.makeSipiTempFilePath(apiRequest.file)
-
+    ): ZIO[MessageRelay, Throwable, ChangeFileValueRequestV1] =
       for {
-        fileMetadataResponse: GetFileMetadataResponse <-
-          appActor
-            .ask(
-              GetFileMetadataRequest(
-                filePath = tempFilePath,
-                requestingUser = userADM
-              )
-            )
-            .mapTo[GetFileMetadataResponse]
-      } yield ChangeFileValueRequestV1(
-        resourceIri = resourceIri,
-        file = RouteUtilV1.makeFileValue(
-          filename = apiRequest.file,
-          fileMetadataResponse = fileMetadataResponse,
-          projectShortcode = projectShortcode
-        ),
-        apiRequestID = UUID.randomUUID,
-        userProfile = userADM
-      )
-    }
+        resourceIri <- ZIO.attempt(
+                         stringFormatter.validateAndEscapeIri(
+                           resIriStr,
+                           throw BadRequestException(s"Invalid resource IRI: $resIriStr")
+                         )
+                       )
+        tempFilePath          = stringFormatter.makeSipiTempFilePath(apiRequest.file)
+        msg                   = GetFileMetadataRequest(tempFilePath, userADM)
+        fileMetadataResponse <- MessageRelay.ask[GetFileMetadataResponse](msg)
+        fileValue            <- ZIO.attempt(RouteUtilV1.makeFileValue(apiRequest.file, fileMetadataResponse, projectShortcode))
+        uuid                 <- ZIO.random.flatMap(_.nextUUID)
+      } yield ChangeFileValueRequestV1(resourceIri, fileValue, uuid, userADM)
 
     // Version history request requires 3 URL path segments: resource IRI, property IRI, and current value IRI
     path("v1" / "values" / "history" / Segments) { iris =>
       get { requestContext =>
-        val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       routeData.appConfig
-                     )
-        } yield makeVersionHistoryRequestMessage(iris = iris, userADM = userADM)
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        val requestTask =
+          Authenticator
+            .getUserADM(requestContext)
+            .flatMap(user => ZIO.attempt(makeVersionHistoryRequestMessage(iris, user)))
+        RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       }
     } ~ path("v1" / "values") {
       post {
         entity(as[CreateValueApiRequestV1]) { apiRequest => requestContext =>
-          val requestMessageFuture = for {
-            userADM <- getUserADM(
-                         requestContext = requestContext,
-                         routeData.appConfig
-                       )
-            request <- makeCreateValueRequestMessage(apiRequest = apiRequest, userADM = userADM)
-          } yield request
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageFuture,
-            requestContext,
-            appActor,
-            log
-          )
+          val requestTask = Authenticator
+            .getUserADM(requestContext)
+            .flatMap(user => ZIO.fromFuture(ec => makeCreateValueRequestMessage(apiRequest, user)))
+          RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
         }
       }
     } ~ path("v1" / "values" / Segment) { valueIriStr =>
       get { requestContext =>
-        val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       routeData.appConfig
-                     )
-        } yield makeGetValueRequest(valueIriStr = valueIriStr, userADM = userADM)
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        val requestTask = Authenticator
+          .getUserADM(requestContext)
+          .flatMap(user => ZIO.attempt(makeGetValueRequest(valueIriStr, user)))
+        RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       } ~ put {
         entity(as[ChangeValueApiRequestV1]) { apiRequest => requestContext =>
           // In API v1, you cannot change a value and its comment in a single request. So we know that here,
           // we are getting a request to change either the value or the comment, but not both.
           val requestMessageFuture = for {
-            userADM <- getUserADM(
-                         requestContext = requestContext,
-                         routeData.appConfig
-                       )
+            userADM <- getUserADM(requestContext)
             request <- apiRequest match {
                          case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
                            FastFuture.successful(
@@ -681,104 +641,51 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                            )
                        }
           } yield request
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageFuture,
-            requestContext,
-            appActor,
-            log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessageFuture, requestContext)
         }
       } ~ delete { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       routeData.appConfig
-                     )
+          userADM      <- getUserADM(requestContext)
           params        = requestContext.request.uri.query().toMap
           deleteComment = params.get("deleteComment")
         } yield makeDeleteValueRequest(valueIriStr = valueIriStr, deleteComment = deleteComment, userADM = userADM)
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "valuecomments" / Segment) { valueIriStr =>
       delete { requestContext =>
-        val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       routeData.appConfig
-                     )
-        } yield makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userADM = userADM)
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        val requestTask = Authenticator
+          .getUserADM(requestContext)
+          .flatMap(user => ZIO.attempt(makeChangeCommentRequestMessage(valueIriStr, comment = None, user)))
+        RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       }
     } ~ path("v1" / "links" / Segments) { iris =>
       // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
       get { requestContext =>
-        val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       routeData.appConfig
-                     )
-        } yield makeLinkValueGetRequestMessage(iris = iris, userADM = userADM)
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        val requestTask = Authenticator
+          .getUserADM(requestContext)
+          .flatMap(user => ZIO.attempt(makeLinkValueGetRequestMessage(iris, user)))
+        RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       }
     } ~ path("v1" / "filevalue" / Segment) { resIriStr: IRI =>
       put {
         entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
-          val requestMessage = for {
-            userADM <- getUserADM(
-                         requestContext = requestContext,
-                         routeData.appConfig
-                       )
-            resourceIri = stringFormatter.validateAndEscapeIri(
-                            resIriStr,
-                            throw BadRequestException(s"Invalid resource IRI: $resIriStr")
-                          )
-
-            resourceInfoResponse <- appActor
-                                      .ask(
-                                        ResourceInfoGetRequestV1(
-                                          iri = resourceIri,
-                                          userProfile = userADM
-                                        )
-                                      )
-                                      .mapTo[ResourceInfoResponseV1]
-
-            projectShortcode = resourceInfoResponse.resource_info
-                                 .getOrElse(throw NotFoundException(s"Resource not found: $resourceIri"))
-                                 .project_shortcode
-
-            request <- makeChangeFileValueRequest(
-                         resIriStr = resIriStr,
-                         projectShortcode = projectShortcode,
-                         apiRequest = apiRequest,
-                         userADM = userADM
-                       )
+          val requestTask = for {
+            userADM <- Authenticator.getUserADM(requestContext)
+            resourceIri <- ZIO.attempt(
+                             stringFormatter.validateAndEscapeIri(
+                               resIriStr,
+                               throw BadRequestException(s"Invalid resource IRI: $resIriStr")
+                             )
+                           )
+            msg                   = ResourceInfoGetRequestV1(resourceIri, userADM)
+            resourceInfoResponse <- MessageRelay.ask[ResourceInfoResponseV1](msg)
+            projectShortcode <-
+              ZIO
+                .fromOption(resourceInfoResponse.resource_info)
+                .mapBoth(_ => NotFoundException(s"Resource not found: $resourceIri"), _.project_shortcode)
+            request <- makeChangeFileValueRequest(resIriStr, projectShortcode, apiRequest, userADM)
           } yield request
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            appActor,
-            log
-          )
+          RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
         }
       }
     }

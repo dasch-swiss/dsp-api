@@ -9,6 +9,7 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio.Runtime
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -16,6 +17,8 @@ import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -31,13 +34,15 @@ import org.knora.webapi.routing.RouteUtilV2
 /**
  * Provides a function for API routes that deal with search.
  */
-class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class StandoffRouteV2(
+  private val routeData: KnoraRouteData,
+  override implicit protected val runtime: Runtime[AppConfig with Authenticator with MessageRelay]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * Returns the route.
    */
-  override def makeRoute: Route = {
-
+  override def makeRoute: Route =
     path("v2" / "standoff" / Segment / Segment / Segment) {
       (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>
         get { requestContext =>
@@ -57,32 +62,12 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val offset: Int =
             stringFormatter.validateInt(offsetStr, throw BadRequestException(s"Invalid offset: $offsetStr"))
-          val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
-
           val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-
-          val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
-          } yield GetStandoffPageRequestV2(
-            resourceIri = resourceIri.toString,
-            valueIri = valueIri.toString,
-            offset = offset,
-            targetSchema = targetSchema,
-            requestingUser = requestingUser
-          )
-
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = schemaOptions
-          )
+          val requestTask = Authenticator
+            .getUserADM(requestContext)
+            .map(GetStandoffPageRequestV2(resourceIri.toString, valueIri.toString, offset, targetSchema, _))
+          val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, ApiV2Complex, Some(schemaOptions))
         }
     } ~ path("v2" / "mapping") {
       post {
@@ -121,10 +106,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             .runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
           val requestMessageFuture: Future[CreateMappingRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser              <- getUserADM(requestContext)
             allParts: Map[Name, String] <- allPartsFuture
             jsonldDoc =
               JsonLDUtil.parseJsonLD(
@@ -158,18 +140,8 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             apiRequestID = apiRequestID
           )
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
-
     }
-  }
 }

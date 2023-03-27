@@ -198,6 +198,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // IntegrationTest / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // IntegrationTest / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     // IntegrationTest / javaOptions += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", // starts sbt with debug port
+    IntegrationTest / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "akka"),
     IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     // add test framework for running zio-tests
     IntegrationTest / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))

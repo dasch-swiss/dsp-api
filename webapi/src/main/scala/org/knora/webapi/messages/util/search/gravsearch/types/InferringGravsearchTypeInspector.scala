@@ -5,23 +5,22 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import akka.actor.ActorRef
 import akka.event.LogSource
-import akka.pattern._
-import com.typesafe.scalalogging.Logger
+import com.typesafe.scalalogging.LazyLogging
+import zio.Task
+import zio.ZIO
 
 import scala.annotation.tailrec
-import scala.concurrent.Future
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi._
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
@@ -34,13 +33,12 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
  */
 class InferringGravsearchTypeInspector(
   nextInspector: Option[GravsearchTypeInspector],
-  appActor: ActorRef,
-  responderData: ResponderData
-) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
+  messageRelay: MessageRelay,
+  queryTraverser: QueryTraverser
+) extends GravsearchTypeInspector(nextInspector)
+    with LazyLogging {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  private val log: Logger = Logger(this.getClass())
 
   // The maximum number of type inference iterations.
   private val MAX_ITERATIONS = 50
@@ -134,12 +132,12 @@ class InferringGravsearchTypeInspector(
                   if (classDef.isResourceClass) {
                     // Yes. Use that class as the inferred type.
                     val inferredType = NonPropertyTypeInfo(classDef.entityInfoContent.classIri, isResourceType = true)
-                    log.debug("InferTypeOfSubjectOfRdfTypePredicate: {} {} .", entityToType, inferredType)
+                    logger.debug("InferTypeOfSubjectOfRdfTypePredicate: {} {} .", entityToType, inferredType)
                     Some(inferredType)
                   } else if (classDef.isStandoffClass) {
                     val inferredType =
                       NonPropertyTypeInfo(classDef.entityInfoContent.classIri, isStandoffTagType = true)
-                    log.debug("InferTypeOfSubjectOfRdfTypePredicate: {} {} .", entityToType, inferredType)
+                    logger.debug("InferTypeOfSubjectOfRdfTypePredicate: {} {} .", entityToType, inferredType)
                     Some(inferredType)
                   } else {
 
@@ -147,7 +145,7 @@ class InferringGravsearchTypeInspector(
                     if (GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(rdfType.toString)) {
                       // Yes. Return it.
                       val inferredType = NonPropertyTypeInfo(rdfType, isValueType = true)
-                      log.debug("InferTypeOfSubjectOfRdfTypePredicate: {} {} .", entityToType, inferredType)
+                      logger.debug("InferTypeOfSubjectOfRdfTypePredicate: {} {} .", entityToType, inferredType)
                       Some(inferredType)
                     } else {
                       // No. This must mean it's not allowed in Gravsearch queries.
@@ -164,7 +162,7 @@ class InferringGravsearchTypeInspector(
               // This isn't a Knora entity. If it's valid in a type inspection result, return it.
 
               val inferredType = NonPropertyTypeInfo(rdfType, isValueType = true)
-              log.debug("InferTypeOfSubjectOfRdfTypePredicate: {} {} .", entityToType, inferredType)
+              logger.debug("InferTypeOfSubjectOfRdfTypePredicate: {} {} .", entityToType, inferredType)
               Some(inferredType)
             } else {
               None
@@ -209,7 +207,7 @@ class InferringGravsearchTypeInspector(
                 val inferredObjectTypes: Set[GravsearchEntityTypeInfo] = InferenceRuleUtil
                   .readPropertyInfoToObjectType(readPropertyInfo, entityInfo, usageIndex.querySchema)
                   .toSet
-                log.debug("InferTypeOfPropertyFromItsIri: {} {} .", entityToType, inferredObjectTypes.mkString(", "))
+                logger.debug("InferTypeOfPropertyFromItsIri: {} {} .", entityToType, inferredObjectTypes.mkString(", "))
                 inferredObjectTypes
 
               case None =>
@@ -269,7 +267,7 @@ class InferringGravsearchTypeInspector(
                   entityTypes.flatMap {
                     case propertyTypeInfo: PropertyTypeInfo =>
                       val inferredType: GravsearchEntityTypeInfo = propertyTypeInfo.toNonPropertyTypeInfo
-                      log.debug("InferTypeOfObjectFromPredicate: {} {} .", entityToType, inferredType)
+                      logger.debug("InferTypeOfObjectFromPredicate: {} {} .", entityToType, inferredType)
                       Some(inferredType)
                     case _ =>
                       None
@@ -458,7 +456,7 @@ class InferringGravsearchTypeInspector(
                         if (!isSubclassOfAlreadyInferredType) {
                           // No. Use the inferred type.
                           val inferredType: GravsearchEntityTypeInfo = nonPropertyTypeInfo.toPropertyTypeInfo
-                          log.debug("InferTypeOfPredicateFromObject: {} {} .", entityToType, inferredType)
+                          logger.debug("InferTypeOfPredicateFromObject: {} {} .", entityToType, inferredType)
                           Some(inferredType)
                         } else {
                           // Yes. Don't infer the more specific type for the property.
@@ -519,7 +517,7 @@ class InferringGravsearchTypeInspector(
               isValueType = isValueType,
               isStandoffTagType = isStandoffTagType
             )
-            log.debug("InferTypeOfEntityFromKnownTypeInFilter: {} {} .", entityToType, inferredType)
+            logger.debug("InferTypeOfEntityFromKnownTypeInFilter: {} {} .", entityToType, inferredType)
             inferredType
           }
 
@@ -618,7 +616,11 @@ class InferringGravsearchTypeInspector(
             val inferredTypes = comparedEntities.flatMap(comparedEntity => intermediateResult.entities(comparedEntity))
 
             if (inferredTypes.nonEmpty) {
-              log.debug("InferTypeOfEntityFromComparisonWithOtherEntityInFilter: {} {} .", entityToType, inferredTypes)
+              logger.debug(
+                "InferTypeOfEntityFromComparisonWithOtherEntityInFilter: {} {} .",
+                entityToType,
+                inferredTypes
+              )
             }
 
             inferredTypes
@@ -658,7 +660,7 @@ class InferringGravsearchTypeInspector(
      *
      * @param querySchema the ontology schema that the query is written in.
      */
-    def getFileTypeForSchema(querySchema: ApiV2Schema): SmartIri =
+    private def getFileTypeForSchema(querySchema: ApiV2Schema): SmartIri =
       querySchema match {
         case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.File.toSmartIri
         case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.FileValue.toSmartIri
@@ -847,12 +849,14 @@ class InferringGravsearchTypeInspector(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
     requestingUser: UserADM
-  ): Future[IntermediateTypeInspectionResult] = {
-    log.debug("========== Starting type inference ==========")
+  ): Task[IntermediateTypeInspectionResult] = {
+    logger.debug("========== Starting type inference ==========")
 
     for {
       // get index of entity usage in the query and ontology information about all the Knora class and property IRIs mentioned in the query
-      (usageIndex, allEntityInfo) <- getUsageIndexAndEntityInfos(whereClause, requestingUser)
+      t            <- getUsageIndexAndEntityInfos(whereClause, requestingUser)
+      usageIndex    = t._1
+      allEntityInfo = t._2
 
       // Iterate over the inference rules until no new type information can be inferred.
       intermediateResult: IntermediateTypeInspectionResult = doIterations(
@@ -876,11 +880,11 @@ class InferringGravsearchTypeInspector(
                                                            )
 
       // Pass the intermediate result to the next type inspector in the pipeline.
-      lastResult: IntermediateTypeInspectionResult <- runNextInspector(
-                                                        intermediateResult = sanitizedResults,
-                                                        whereClause = whereClause,
-                                                        requestingUser = requestingUser
-                                                      )
+      lastResult <- runNextInspector(
+                      intermediateResult = sanitizedResults,
+                      whereClause = whereClause,
+                      requestingUser = requestingUser
+                    )
     } yield lastResult
   }
 
@@ -894,10 +898,10 @@ class InferringGravsearchTypeInspector(
   def getUsageIndexAndEntityInfos(
     whereClause: WhereClause,
     requestingUser: UserADM
-  ): Future[(UsageIndex, EntityInfoGetResponseV2)] =
+  ): Task[(UsageIndex, EntityInfoGetResponseV2)] =
     for {
       // Make an index of entity usage in the query.
-      usageIndex <- Future(makeUsageIndex(whereClause))
+      usageIndex <- ZIO.attempt(makeUsageIndex(whereClause))
 
       // Ask the ontology responder about all the Knora class and property IRIs mentioned in the query.
 
@@ -907,10 +911,7 @@ class InferringGravsearchTypeInspector(
                                    requestingUser = requestingUser
                                  )
 
-      initialEntityInfo: EntityInfoGetResponseV2 <-
-        appActor
-          .ask(initialEntityInfoRequest)
-          .mapTo[EntityInfoGetResponseV2]
+      initialEntityInfo <- messageRelay.ask[EntityInfoGetResponseV2](initialEntityInfoRequest)
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
       // definition back to the input schema.
@@ -961,10 +962,7 @@ class InferringGravsearchTypeInspector(
                                       requestingUser = requestingUser
                                     )
 
-      additionalEntityInfo: EntityInfoGetResponseV2 <-
-        appActor
-          .ask(additionalEntityInfoRequest)
-          .mapTo[EntityInfoGetResponseV2]
+      additionalEntityInfo <- messageRelay.ask[EntityInfoGetResponseV2](additionalEntityInfoRequest)
 
       // Add the additional classes to the usage index.
       usageIndexWithAdditionalClasses = usageIndex.copy(
@@ -1264,7 +1262,7 @@ class InferringGravsearchTypeInspector(
 
     // Run an iteration of type inference and get its result.
 
-    log.debug(
+    logger.debug(
       s"****** Inference iteration $iterationNumber (untyped ${intermediateResult.untypedEntities.size}, inconsistent ${intermediateResult.entitiesWithInconsistentTypes.size})"
     )
 
@@ -1287,7 +1285,7 @@ class InferringGravsearchTypeInspector(
 
     // If no new type information was found, stop.
     if (iterationResult == intermediateResult) {
-      log.debug("No new information, stopping iterations")
+      logger.debug("No new information, stopping iterations")
       intermediateResult
     } else {
       doIterations(
@@ -1653,7 +1651,7 @@ class InferringGravsearchTypeInspector(
    */
   private def makeUsageIndex(whereClause: WhereClause): UsageIndex =
     // Traverse the query, collecting information for the usage index.
-    QueryTraverser.visitWherePatterns(
+    queryTraverser.visitWherePatterns(
       patterns = whereClause.patterns,
       whereVisitor = new UsageIndexCollectingWhereVisitor,
       initialAcc = UsageIndex(

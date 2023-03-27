@@ -7,8 +7,11 @@ package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -18,7 +21,10 @@ import org.knora.webapi.routing.RouteUtilADM
 /**
  * Provides a routing function for the API that Sipi connects to.
  */
-class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class FilesRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * A routing function for the API that Sipi connects to.
@@ -30,7 +36,7 @@ class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
           projectID = stringFormatter.validateProjectShortcode(
                         projectIDAndFile.head,
                         throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'")
@@ -46,13 +52,7 @@ class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestingUser = requestingUser
         )
 
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        RouteUtilADM.runJsonRouteF(requestMessage, requestContext)
       }
     }
-
 }

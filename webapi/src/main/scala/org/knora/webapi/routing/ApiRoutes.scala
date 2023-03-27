@@ -15,9 +15,11 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.State
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
@@ -33,9 +35,17 @@ object ApiRoutes {
   /**
    * All routes composed together.
    */
-  val layer: ZLayer[
-    AppConfig with AppRouter with RestCardinalityService with RestResourceInfoService with State with ActorSystem,
-    Nothing,
+  val layer: URLayer[
+    ActorSystem
+      with AppConfig
+      with AppConfig
+      with AppRouter
+      with MessageRelay
+      with RestCardinalityService
+      with RestResourceInfoService
+      with StringFormatter
+      with core.State
+      with routing.Authenticator,
     ApiRoutes
   ] =
     ZLayer {
@@ -43,14 +53,16 @@ object ApiRoutes {
         sys       <- ZIO.service[ActorSystem]
         router    <- ZIO.service[AppRouter]
         appConfig <- ZIO.service[AppConfig]
-        routeData <- ZIO.succeed(
-                       KnoraRouteData(
-                         system = sys.system,
-                         appActor = router.ref,
-                         appConfig = appConfig
-                       )
-                     )
-        runtime <- ZIO.runtime[core.State with RestResourceInfoService with RestCardinalityService]
+        routeData <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
+        runtime <- ZIO.runtime[
+                     AppConfig
+                       with MessageRelay
+                       with RestCardinalityService
+                       with RestResourceInfoService
+                       with StringFormatter
+                       with core.State
+                       with routing.Authenticator
+                   ]
       } yield ApiRoutesImpl(routeData, runtime, appConfig)
     }
 }
@@ -64,7 +76,15 @@ object ApiRoutes {
  */
 private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
-  runtime: Runtime[core.State with RestResourceInfoService with RestCardinalityService],
+  runtime: Runtime[
+    AppConfig
+      with MessageRelay
+      with RestCardinalityService
+      with RestResourceInfoService
+      with StringFormatter
+      with core.State
+      with routing.Authenticator
+  ],
   appConfig: AppConfig
 ) extends ApiRoutes
     with AroundDirectives {
@@ -75,34 +95,34 @@ private final case class ApiRoutesImpl(
         DSPApiDirectives.handleErrors(routeData.system, appConfig) {
           CorsDirectives.cors(CorsSettings(routeData.system)) {
             DSPApiDirectives.handleErrors(routeData.system, appConfig) {
-              new HealthRoute(routeData, runtime).makeRoute ~
-                new VersionRoute().makeRoute ~
-                new RejectingRoute(routeData, runtime).makeRoute ~
-                new ResourcesRouteV1(routeData).makeRoute ~
-                new ValuesRouteV1(routeData).makeRoute ~
-                new StandoffRouteV1(routeData).makeRoute ~
-                new ListsRouteV1(routeData).makeRoute ~
-                new ResourceTypesRouteV1(routeData).makeRoute ~
-                new SearchRouteV1(routeData).makeRoute ~
-                new AuthenticationRouteV1(routeData).makeRoute ~
-                new AssetsRouteV1(routeData).makeRoute ~
-                new CkanRouteV1(routeData).makeRoute ~
-                new UsersRouteV1(routeData).makeRoute ~
-                new ProjectsRouteV1(routeData).makeRoute ~
-                new OntologiesRouteV2(routeData, runtime).makeRoute ~
-                new SearchRouteV2(routeData).makeRoute ~
-                new ResourcesRouteV2(routeData, runtime).makeRoute ~
-                new ValuesRouteV2(routeData).makeRoute ~
-                new StandoffRouteV2(routeData).makeRoute ~
-                new ListsRouteV2(routeData).makeRoute ~
-                new AuthenticationRouteV2(routeData).makeRoute ~
-                new GroupsRouteADM(routeData).makeRoute ~
-                new ListsRouteADM(routeData).makeRoute ~
-                new PermissionsRouteADM(routeData).makeRoute ~
-                new ProjectsRouteADM(routeData).makeRoute ~
-                new StoreRouteADM(routeData).makeRoute ~
-                new UsersRouteADM(routeData).makeRoute ~
-                new FilesRouteADM(routeData).makeRoute
+              HealthRoute(routeData, runtime).makeRoute ~
+                VersionRoute().makeRoute ~
+                RejectingRoute(routeData, runtime).makeRoute ~
+                ResourcesRouteV1(routeData, runtime).makeRoute ~
+                ValuesRouteV1(routeData, runtime).makeRoute ~
+                StandoffRouteV1(routeData, runtime).makeRoute ~
+                ListsRouteV1(routeData, runtime).makeRoute ~
+                ResourceTypesRouteV1(routeData, runtime).makeRoute ~
+                SearchRouteV1(routeData, runtime).makeRoute ~
+                AuthenticationRouteV1(routeData, runtime).makeRoute ~
+                AssetsRouteV1(routeData, runtime).makeRoute ~
+                CkanRouteV1(routeData, runtime).makeRoute ~
+                UsersRouteV1(routeData, runtime).makeRoute ~
+                ProjectsRouteV1(routeData, runtime).makeRoute ~
+                OntologiesRouteV2(routeData, runtime).makeRoute ~
+                SearchRouteV2(routeData, runtime).makeRoute ~
+                ResourcesRouteV2(routeData, runtime).makeRoute ~
+                ValuesRouteV2(routeData, runtime).makeRoute ~
+                StandoffRouteV2(routeData, runtime).makeRoute ~
+                ListsRouteV2(routeData, runtime).makeRoute ~
+                AuthenticationRouteV2(routeData, runtime).makeRoute ~
+                GroupsRouteADM(routeData, runtime).makeRoute ~
+                ListsRouteADM(routeData, runtime).makeRoute ~
+                PermissionsRouteADM(routeData, runtime).makeRoute ~
+                ProjectsRouteADM(routeData, runtime).makeRoute ~
+                StoreRouteADM(routeData, runtime).makeRoute ~
+                UsersRouteADM(routeData, runtime).makeRoute ~
+                FilesRouteADM(routeData, runtime).makeRoute
             }
           }
         }
