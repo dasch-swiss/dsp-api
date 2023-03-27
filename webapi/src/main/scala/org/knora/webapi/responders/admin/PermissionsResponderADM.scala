@@ -5,39 +5,29 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
+import dsp.errors._
+import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.{OntologyConstants, ResponderRequest, SmartIri, StringFormatter}
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.responders.{IriLocker, IriService, Responder}
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.util.cache.CacheUtil
 import zio._
 
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
-
-import dsp.errors._
-import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Provides information about permissions to other responders.
@@ -1085,11 +1075,11 @@ final case class PermissionsResponderADMLive(
    * properties can carry default object access permissions. Note that default access permissions defined for a system
    * property inside the 'SystemProject' can be overridden by defining them for its own project.
    *
-   * @param projectIri
-   * @param groupIri
-   * @param resourceClassIri
-   * @param propertyIri
-   * @param requestingUser
+   * @param projectIri        The project's IRI in which the default object access permission is defined.
+   * @param groupIri          The group's IRI for which the default object access permission is defined.
+   * @param resourceClassIri  The resource's class IRI for which the default object access permission is defined.
+   * @param propertyIri       The property's IRI for which the default object access permission is defined.
+   * @param requestingUser    The user making the request.
    * @return a [[DefaultObjectAccessPermissionGetResponseADM]]
    */
   private def defaultObjectAccessPermissionGetRequestADM(
