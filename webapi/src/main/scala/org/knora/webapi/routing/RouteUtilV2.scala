@@ -243,7 +243,7 @@ object RouteUtilV2 {
     targetSchema: OntologySchema = ApiV2Complex,
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with MessageRelay with AppConfig]): Future[RouteResult] = {
-    val responseZio = requestZio.flatMap(request => ZIO.serviceWithZIO[MessageRelay](_.ask(request)))
+    val responseZio = requestZio.flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
     completeResponse(responseZio, requestContext, targetSchema, schemaOptionsOption)
   }
 
@@ -299,7 +299,7 @@ object RouteUtilV2 {
     UnsafeZioRun.runToFuture {
       for {
         requestMessage <- requestTask
-        teiResponse    <- ZIO.serviceWithZIO[MessageRelay](_.ask[ResourceTEIGetResponseV2](requestMessage))
+        teiResponse    <- MessageRelay.ask[ResourceTEIGetResponseV2](requestMessage)
         contentType     = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
         response        = HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, teiResponse.toXML))
         completed      <- ZIO.fromFuture(_ => requestContext.complete(response))

@@ -10,10 +10,8 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import zio._
 
-import java.util.UUID
-import scala.concurrent.Future
-
-import dsp.errors.BadRequestException
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -27,7 +25,7 @@ import org.knora.webapi.routing.RouteUtilADM
  */
 final case class DeleteListItemsRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with ListADMJsonProtocol {
 
@@ -43,23 +41,9 @@ final case class DeleteListItemsRouteADM(
     delete {
       /* delete a list item root node or child if unused */
       requestContext =>
-        val nodeIri =
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list item Iri: $iri"))
-
-        val requestMessage: Future[ListItemDeleteRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield ListItemDeleteRequestADM(
-          nodeIri = nodeIri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        val requestTask =
+          RouteUtilADM.getIriUserUuid(iri, requestContext).map(r => ListItemDeleteRequestADM(r.iri, r.user, r.uuid))
+        RouteUtilADM.runJsonRouteZ(requestTask, requestContext)
     }
   }
 
@@ -69,22 +53,8 @@ final case class DeleteListItemsRouteADM(
   private def canDeleteList(): Route =
     path(listsBasePath / "candelete" / Segment) { iri =>
       get { requestContext =>
-        val listIri =
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
-
-        val requestMessage: Future[CanDeleteListRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield CanDeleteListRequestADM(
-          iri = listIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        val requestTask = RouteUtilADM.getIriUser(iri, requestContext).map(r => CanDeleteListRequestADM(r.iri, r.user))
+        RouteUtilADM.runJsonRouteZ(requestTask, requestContext)
       }
     }
 
@@ -94,22 +64,9 @@ final case class DeleteListItemsRouteADM(
   private def deleteListNodeComments(): Route =
     path(listsBasePath / "comments" / Segment) { iri =>
       delete { requestContext =>
-        val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
-
-        val requestMessage: Future[ListNodeCommentsDeleteRequestADM] =
-          for {
-            requestingUser <- getUserADM(requestContext)
-          } yield ListNodeCommentsDeleteRequestADM(
-            iri = listIri,
-            requestingUser = requestingUser
-          )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        val requestTask =
+          RouteUtilADM.getIriUser(iri, requestContext).map(r => ListNodeCommentsDeleteRequestADM(r.iri, r.user))
+        RouteUtilADM.runJsonRouteZ(requestTask, requestContext)
       }
     }
 }
