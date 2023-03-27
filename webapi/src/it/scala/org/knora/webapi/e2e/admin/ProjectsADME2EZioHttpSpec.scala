@@ -38,7 +38,7 @@ import dsp.valueobjects.V2
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class ProjectsADME2ESpec
+class ProjectsADME2EZioHttpSpec
     extends E2ESpec
     with SessionJsonProtocol
     with ProjectsADMJsonProtocol
@@ -61,7 +61,7 @@ class ProjectsADME2ESpec
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
-  "The Projects Route ('admin/projects')" when {
+  s"The Projects Route ($baseApiUrl -> 'admin/projects')" when {
     "used to query for project information" should {
       "return all projects" in {
         val request                = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
