@@ -589,7 +589,7 @@ final case class ValuesRouteV1(
                        )
         tempFilePath          = stringFormatter.makeSipiTempFilePath(apiRequest.file)
         msg                   = GetFileMetadataRequest(tempFilePath, userADM)
-        fileMetadataResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[GetFileMetadataResponse](msg))
+        fileMetadataResponse <- MessageRelay.ask[GetFileMetadataResponse](msg)
         fileValue            <- ZIO.attempt(RouteUtilV1.makeFileValue(apiRequest.file, fileMetadataResponse, projectShortcode))
         uuid                 <- ZIO.random.flatMap(_.nextUUID)
       } yield ChangeFileValueRequestV1(resourceIri, fileValue, uuid, userADM)
@@ -678,7 +678,7 @@ final case class ValuesRouteV1(
                              )
                            )
             msg                   = ResourceInfoGetRequestV1(resourceIri, userADM)
-            resourceInfoResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[ResourceInfoResponseV1](msg))
+            resourceInfoResponse <- MessageRelay.ask[ResourceInfoResponseV1](msg)
             projectShortcode <-
               ZIO
                 .fromOption(resourceInfoResponse.resource_info)

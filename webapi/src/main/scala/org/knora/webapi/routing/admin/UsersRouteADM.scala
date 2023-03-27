@@ -7,17 +7,17 @@ package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import zio._
 import zio.prelude.Validation
-
-import java.util.UUID
-import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -25,13 +25,17 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
+import org.knora.webapi.routing.RouteUtilADM.getIriUser
+import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
+import org.knora.webapi.routing.RouteUtilADM.getUserUuid
+import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
 
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
  */
 final case class UsersRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
@@ -62,19 +66,8 @@ final case class UsersRouteADM(
 
   /* return all users */
   def getUsers(): Route = path(usersBasePath) {
-    get { requestContext =>
-      val requestMessage: Future[UsersGetRequestADM] = for {
-        requestingUser <- getUserADM(requestContext)
-      } yield UsersGetRequestADM(
-        requestingUser = requestingUser
-      )
-
-      RouteUtilADM.runJsonRoute(
-        requestMessageF = requestMessage,
-        requestContext = requestContext,
-        appActor = appActor,
-        log = log
-      )
+    get { ctx =>
+      runJsonRouteZ(Authenticator.getUserADM(ctx).map(user => UsersGetRequestADM(requestingUser = user)), ctx)
     }
   }
 
@@ -110,21 +103,11 @@ final case class UsersRouteADM(
             systemAdmin
           )(UserCreatePayloadADM)
 
-        val requestMessage: Future[UserCreateRequestADM] = for {
-          payload        <- toFuture(validatedUserCreatePayload)
-          requestingUser <- getUserADM(requestContext)
-        } yield UserCreateRequestADM(
-          userCreatePayloadADM = payload,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        val requestTask = for {
+          payload <- validatedUserCreatePayload.toZIO
+          r       <- getUserUuid(requestContext)
+        } yield UserCreateRequestADM(payload, r.user, r.uuid)
+        runJsonRouteZ(requestTask, requestContext)
       }
     }
   }
@@ -132,70 +115,27 @@ final case class UsersRouteADM(
   /**
    * return a single user identified by iri
    */
-  private def getUserByIri(): Route = path(usersBasePath / "iri" / Segment) { userIri =>
-    get { requestContext =>
-      val requestMessage: Future[UserGetRequestADM] = for {
-        requestingUser <- getUserADM(requestContext)
-      } yield UserGetRequestADM(
-        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-        userInformationTypeADM = UserInformationTypeADM.Restricted,
-        requestingUser = requestingUser
-      )
+  private def getUserByIri(): Route =
+    path(usersBasePath / "iri" / Segment)(userIri => get(getUser(UserIdentifierADM(maybeIri = Some(userIri)), _)))
 
-      RouteUtilADM.runJsonRoute(
-        requestMessageF = requestMessage,
-        requestContext = requestContext,
-        appActor = appActor,
-        log = log
-      )
-    }
+  private def getUser(id: UserIdentifierADM, ctx: RequestContext) = {
+    val task = Authenticator.getUserADM(ctx).map(UserGetRequestADM(id, UserInformationTypeADM.Restricted, _))
+    runJsonRouteZ(task, ctx)
   }
 
   /**
    * return a single user identified by email
    */
   private def getUserByEmail(): Route =
-    path(usersBasePath / "email" / Segment) { userIri =>
-      get { requestContext =>
-        val requestMessage: Future[UserGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserGetRequestADM(
-          identifier = UserIdentifierADM(maybeEmail = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.Restricted,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
-      }
-    }
+    path(usersBasePath / "email" / Segment)(email => get(getUser(UserIdentifierADM(maybeEmail = Some(email)), _)))
 
   /**
    * return a single user identified by username
    */
   private def getUserByUsername(): Route =
-    path(usersBasePath / "username" / Segment) { userIri =>
-      get { requestContext =>
-        val requestMessage: Future[UserGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserGetRequestADM(
-          identifier = UserIdentifierADM(maybeUsername = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.Restricted,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
-      }
-    }
+    path(usersBasePath / "username" / Segment)(username =>
+      get(getUser(UserIdentifierADM(maybeUsername = Some(username)), _))
+    )
 
   /**
    * Change existing user's basic information.
@@ -251,22 +191,9 @@ final case class UsersRouteADM(
               maybeLanguageCode
             )
 
-          /* the api request is already checked at time of creation. see case class. */
-          val requestMessage: Future[UsersResponderRequestADM] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield UserChangeBasicInformationRequestADM(
-            userIri = checkedUserIri,
-            userUpdateBasicInformationPayload = userUpdatePayload,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getUserUuid(requestContext)
+            .map(r => UserChangeBasicInformationRequestADM(checkedUserIri, userUpdatePayload, r.user, r.uuid))
+          RouteUtilADM.runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -300,21 +227,11 @@ final case class UsersRouteADM(
             case None           => throw BadRequestException("The new password is missing.")
           }
 
-          val requestMessage: Future[UsersResponderRequestADM] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield UserChangePasswordRequestADM(
-            userIri = checkedUserIri,
-            userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(requesterPassword, changedPassword),
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
+          val updatePassword = UserUpdatePasswordPayloadADM(requesterPassword, changedPassword)
+          val task = getUserUuid(requestContext).map(r =>
+            UserChangePasswordRequestADM(checkedUserIri, updatePassword, r.user, r.uuid)
           )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          RouteUtilADM.runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -344,21 +261,9 @@ final case class UsersRouteADM(
             case None         => throw BadRequestException("The status is missing.")
           }
 
-          val requestMessage: Future[UsersResponderRequestADM] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield UserChangeStatusRequestADM(
-            userIri = checkedUserIri,
-            status = newStatus,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task =
+            getUserUuid(requestContext).map(r => UserChangeStatusRequestADM(checkedUserIri, newStatus, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -384,21 +289,9 @@ final case class UsersRouteADM(
       /* update existing user's status to false */
       val status = UserStatus.make(false).fold(error => throw error.head, value => value)
 
-      val requestMessage: Future[UserChangeStatusRequestADM] = for {
-        requestingUser <- getUserADM(requestContext)
-      } yield UserChangeStatusRequestADM(
-        userIri = checkedUserIri,
-        status = status,
-        requestingUser = requestingUser,
-        apiRequestID = UUID.randomUUID()
-      )
-
-      RouteUtilADM.runJsonRoute(
-        requestMessageF = requestMessage,
-        requestContext = requestContext,
-        appActor = appActor,
-        log = log
-      )
+      val task = getUserUuid(requestContext)
+        .map(r => UserChangeStatusRequestADM(checkedUserIri, status, r.user, r.uuid))
+      runJsonRouteZ(task, requestContext)
     }
   }
 
@@ -427,21 +320,9 @@ final case class UsersRouteADM(
             case None              => throw BadRequestException("The systemAdmin is missing.")
           }
 
-          val requestMessage: Future[UsersResponderRequestADM] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield UserChangeSystemAdminMembershipStatusRequestADM(
-            userIri = checkedUserIri,
-            systemAdmin = newSystemAdmin,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getUserUuid(requestContext)
+            .map(r => UserChangeSystemAdminMembershipStatusRequestADM(checkedUserIri, newSystemAdmin, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -457,19 +338,10 @@ final case class UsersRouteADM(
         val checkedUserIri =
           stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-        val requestMessage: Future[UserProjectMembershipsGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserProjectMembershipsGetRequestADM(
-          userIri = checkedUserIri,
-          requestingUser = requestingUser
-        )
+        val requestTask =
+          Authenticator.getUserADM(requestContext).map(UserProjectMembershipsGetRequestADM(checkedUserIri, _))
 
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteZ(requestTask, requestContext)
       }
     }
 
@@ -492,27 +364,10 @@ final case class UsersRouteADM(
           throw BadRequestException("Changes to built-in users are not allowed.")
         }
 
-        val checkedProjectIri =
-          stringFormatter.validateAndEscapeProjectIri(
-            projectIri,
-            throw BadRequestException(s"Invalid project IRI $projectIri")
-          )
-
-        val requestMessage: Future[UserProjectMembershipAddRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserProjectMembershipAddRequestADM(
-          userIri = checkedUserIri,
-          projectIri = checkedProjectIri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val task = getIriUserUuid(projectIri, requestContext).map(r =>
+          UserProjectMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteZ(task, requestContext)
       }
     }
 
@@ -535,27 +390,10 @@ final case class UsersRouteADM(
           throw BadRequestException("Changes to built-in users are not allowed.")
         }
 
-        val checkedProjectIri =
-          stringFormatter.validateAndEscapeProjectIri(
-            projectIri,
-            throw BadRequestException(s"Invalid project IRI $projectIri")
-          )
-
-        val requestMessage: Future[UserProjectMembershipRemoveRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserProjectMembershipRemoveRequestADM(
-          userIri = checkedUserIri,
-          projectIri = checkedProjectIri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val task = getIriUserUuid(projectIri, requestContext).map(r =>
+          UserProjectMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteZ(task, requestContext)
       }
     }
 
@@ -566,24 +404,10 @@ final case class UsersRouteADM(
     path(usersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
       get { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        val requestMessage: Future[UserProjectAdminMembershipsGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserProjectAdminMembershipsGetRequestADM(
-          userIri = checkedUserIri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val task = getIriUserUuid(userIri, requestContext).map(r =>
+          UserProjectAdminMembershipsGetRequestADM(r.iri, r.user, r.uuid)
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteZ(task, requestContext)
       }
     }
 
@@ -592,7 +416,7 @@ final case class UsersRouteADM(
    */
   private def addUserToProjectAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
-      post { requestContext =>
+      post { ctx =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
         val checkedUserIri =
@@ -606,27 +430,10 @@ final case class UsersRouteADM(
           throw BadRequestException("Changes to built-in users are not allowed.")
         }
 
-        val checkedProjectIri =
-          stringFormatter.validateAndEscapeProjectIri(
-            projectIri,
-            throw BadRequestException(s"Invalid project IRI $projectIri")
-          )
-
-        val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserProjectAdminMembershipAddRequestADM(
-          userIri = checkedUserIri,
-          projectIri = checkedProjectIri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val task = getIriUserUuid(projectIri, ctx).map(r =>
+          UserProjectAdminMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteZ(task, ctx)
       }
     }
 
@@ -649,27 +456,10 @@ final case class UsersRouteADM(
           throw BadRequestException("Changes to built-in users are not allowed.")
         }
 
-        val checkedProjectIri =
-          stringFormatter.validateAndEscapeProjectIri(
-            projectIri,
-            throw BadRequestException(s"Invalid project IRI $projectIri")
-          )
-
-        val requestMessage: Future[UserProjectAdminMembershipRemoveRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserProjectAdminMembershipRemoveRequestADM(
-          userIri = checkedUserIri,
-          projectIri = checkedProjectIri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val task = getIriUserUuid(projectIri, requestContext).map(r =>
+          UserProjectAdminMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteZ(task, requestContext)
       }
     }
 
@@ -678,25 +468,10 @@ final case class UsersRouteADM(
    */
   private def getUsersGroupMemberships(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships") { userIri =>
-      get { requestContext =>
+      get { ctx =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        val requestMessage: Future[UserGroupMembershipsGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserGroupMembershipsGetRequestADM(
-          userIri = checkedUserIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        val requestTask = getIriUser(userIri, ctx).map(r => UserGroupMembershipsGetRequestADM(r.iri, r.user))
+        runJsonRouteZ(requestTask, ctx)
       }
     }
 
@@ -722,21 +497,10 @@ final case class UsersRouteADM(
         val checkedGroupIri =
           stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-        val requestMessage: Future[UserGroupMembershipAddRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserGroupMembershipAddRequestADM(
-          userIri = checkedUserIri,
-          groupIri = checkedGroupIri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val task = getIriUserUuid(groupIri, requestContext).map(r =>
+          UserGroupMembershipAddRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteZ(task, requestContext)
       }
     }
 
@@ -762,21 +526,10 @@ final case class UsersRouteADM(
         val checkedGroupIri =
           stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-        val requestMessage: Future[UserGroupMembershipRemoveRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserGroupMembershipRemoveRequestADM(
-          userIri = checkedUserIri,
-          groupIri = checkedGroupIri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val task = getIriUserUuid(groupIri, requestContext).map(r =>
+          UserGroupMembershipRemoveRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteZ(task, requestContext)
       }
     }
 }

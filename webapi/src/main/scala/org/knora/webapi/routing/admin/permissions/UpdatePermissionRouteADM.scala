@@ -10,17 +10,16 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import zio._
 
-import java.util.UUID
-
-import dsp.errors.BadRequestException
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM
+import org.knora.webapi.routing.RouteUtilADM._
 final case class UpdatePermissionRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with PermissionsADMJsonProtocol {
 
@@ -41,25 +40,10 @@ final case class UpdatePermissionRouteADM(
   private def updatePermissionGroup(): Route =
     path(permissionsBasePath / Segment / "group") { iri =>
       put {
-        entity(as[ChangePermissionGroupApiRequestADM]) { apiRequest => requestContext =>
-          val permissionIri =
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
-
-          val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield PermissionChangeGroupRequestADM(
-            permissionIri = permissionIri,
-            changePermissionGroupRequest = apiRequest,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+        entity(as[ChangePermissionGroupApiRequestADM]) { apiRequest => ctx =>
+          val task = getIriUserUuid(iri, ctx)
+            .map(r => PermissionChangeGroupRequestADM(r.iri, apiRequest, r.user, r.uuid))
+          runJsonRouteZ(task, ctx)
         }
       }
     }
@@ -71,24 +55,9 @@ final case class UpdatePermissionRouteADM(
     path(permissionsBasePath / Segment / "hasPermissions") { iri =>
       put {
         entity(as[ChangePermissionHasPermissionsApiRequestADM]) { apiRequest => requestContext =>
-          val permissionIri =
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
-
-          val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield PermissionChangeHasPermissionsRequestADM(
-            permissionIri = permissionIri,
-            changePermissionHasPermissionsRequest = apiRequest,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getIriUserUuid(iri, requestContext)
+            .map(r => PermissionChangeHasPermissionsRequestADM(r.iri, apiRequest, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -100,24 +69,9 @@ final case class UpdatePermissionRouteADM(
     path(permissionsBasePath / Segment / "resourceClass") { iri =>
       put {
         entity(as[ChangePermissionResourceClassApiRequestADM]) { apiRequest => requestContext =>
-          val permissionIri =
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
-
-          val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield PermissionChangeResourceClassRequestADM(
-            permissionIri = permissionIri,
-            changePermissionResourceClassRequest = apiRequest,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getIriUserUuid(iri, requestContext)
+            .map(r => PermissionChangeResourceClassRequestADM(r.iri, apiRequest, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -129,24 +83,9 @@ final case class UpdatePermissionRouteADM(
     path(permissionsBasePath / Segment / "property") { iri =>
       put {
         entity(as[ChangePermissionPropertyApiRequestADM]) { apiRequest => requestContext =>
-          val permissionIri =
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
-
-          val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield PermissionChangePropertyRequestADM(
-            permissionIri = permissionIri,
-            changePermissionPropertyRequest = apiRequest,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getIriUserUuid(iri, requestContext)
+            .map(r => PermissionChangePropertyRequestADM(r.iri, apiRequest, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }

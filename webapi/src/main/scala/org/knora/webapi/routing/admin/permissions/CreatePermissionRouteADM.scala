@@ -10,17 +10,17 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import zio._
 
-import java.util.UUID
-import scala.concurrent.Future
-
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM
+import org.knora.webapi.routing.RouteUtilADM._
+
 final case class CreatePermissionRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with PermissionsADMJsonProtocol {
 
@@ -39,22 +39,9 @@ final case class CreatePermissionRouteADM(
   private def createAdministrativePermission(): Route =
     path(permissionsBasePath / "ap") {
       post {
-        /* create a new administrative permission */
-        entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => requestContext =>
-          val requestMessage = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield AdministrativePermissionCreateRequestADM(
-            createRequest = apiRequest,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+        entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => ctx =>
+          val task = getUserUuid(ctx).map(r => AdministrativePermissionCreateRequestADM(apiRequest, r.user, r.uuid))
+          runJsonRouteZ(task, ctx)
         }
       }
     }
@@ -65,22 +52,11 @@ final case class CreatePermissionRouteADM(
   private def createDefaultObjectAccessPermission(): Route =
     path(permissionsBasePath / "doap") {
       post {
-        /* create a new default object access permission */
         entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest => requestContext =>
-          val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
-            requestingUser <- getUserADM(requestContext)
-          } yield DefaultObjectAccessPermissionCreateRequestADM(
-            createRequest = apiRequest,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
+          val task = getUserUuid(requestContext).map(r =>
+            DefaultObjectAccessPermissionCreateRequestADM(apiRequest, r.user, r.uuid)
           )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
