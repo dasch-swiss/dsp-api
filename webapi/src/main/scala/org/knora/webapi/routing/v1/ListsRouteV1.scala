@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.routing.Authenticator
@@ -22,7 +23,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class ListsRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   /**
@@ -48,12 +49,7 @@ final case class ListsRouteV1(
                            }
         } yield requestMessage
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessageFuture,
-          requestContext,
-          appActor,
-          log
-        )
+        RouteUtilV1.runJsonRouteF(requestMessageFuture, requestContext)
       }
     } ~
       path("v1" / "selections" / Segment) { iri =>
@@ -72,12 +68,7 @@ final case class ListsRouteV1(
                              }
           } yield requestMessage
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageFuture,
-            requestContext,
-            appActor,
-            log
-          )
+          RouteUtilV1.runJsonRouteF(requestMessageFuture, requestContext)
         }
       }
   }

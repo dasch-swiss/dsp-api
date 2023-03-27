@@ -13,6 +13,7 @@ import zio._
 import java.util.UUID
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -24,7 +25,7 @@ import org.knora.webapi.routing.RouteUtilV1
  */
 final case class UsersRouteV1(
   private val routeData: KnoraRouteData,
-  override protected val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
 
   private val schemes = Array("http", "https")
@@ -33,22 +34,13 @@ final case class UsersRouteV1(
   /**
    * Returns the route.
    */
-  override def makeRoute: Route = {
-
+  override def makeRoute: Route =
     path("v1" / "users") {
       get {
         /* return all users */
         requestContext =>
-          val requestMessage = for {
-            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-          } yield UsersGetRequestV1(userProfile)
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            appActor,
-            log
-          )
+          val requestTask = Authenticator.getUserADM(requestContext).map(_.asUserProfileV1).map(UsersGetRequestV1)
+          RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       }
     } ~
       path("v1" / "users" / Segment) { value =>
@@ -78,12 +70,7 @@ final case class UsersRouteV1(
               )
             }
 
-            RouteUtilV1.runJsonRouteWithFuture(
-              requestMessage,
-              requestContext,
-              appActor,
-              log
-            )
+            RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
           }
         }
       } ~
@@ -103,12 +90,7 @@ final case class UsersRouteV1(
               apiRequestID = UUID.randomUUID()
             )
 
-            RouteUtilV1.runJsonRouteWithFuture(
-              requestMessage,
-              requestContext,
-              appActor,
-              log
-            )
+            RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       } ~
       path("v1" / "users" / "projects-admin" / Segment) { userIri =>
@@ -127,12 +109,7 @@ final case class UsersRouteV1(
               apiRequestID = UUID.randomUUID()
             )
 
-            RouteUtilV1.runJsonRouteWithFuture(
-              requestMessage,
-              requestContext,
-              appActor,
-              log
-            )
+            RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       } ~
       path("v1" / "users" / "groups" / Segment) { userIri =>
@@ -151,13 +128,7 @@ final case class UsersRouteV1(
               apiRequestID = UUID.randomUUID()
             )
 
-            RouteUtilV1.runJsonRouteWithFuture(
-              requestMessage,
-              requestContext,
-              appActor,
-              log
-            )
+            RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
         }
       }
-  }
 }
