@@ -142,7 +142,6 @@ class AnnotationReadingGravsearchTypeInspector(
       case IriRef(iri, _) =>
         if (iri.isApiV2Schema(querySchema)) iri
         else throw GravsearchException(s"Invalid schema in IRI: $iri")
-      // iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema in IRI: $iri"))
       case other => throw AssertionException(s"Not a type annotation predicate: $other")
     }
 
@@ -155,7 +154,6 @@ class AnnotationReadingGravsearchTypeInspector(
       case IriRef(iri, _) =>
         if (iri.isApiV2Schema(querySchema)) iri
         else throw GravsearchException(s"Invalid schema in IRI: $iri")
-      // iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema in IRI: $iri"))
       case other => throw AssertionException(s"Not a valid type in a type annotation: $other")
     }
 

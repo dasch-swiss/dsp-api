@@ -40,11 +40,6 @@ object GravsearchQueryChecker {
           if (iriRef.iri.isApiV2Schema(querySchema)) iriRef.iri
           else throw GravsearchException(s"${iriRef.toSparql} is not in the correct schema")
 
-          // iriRef.iri.checkApiV2Schema(
-          //   querySchema,
-          //   throw GravsearchException(s"${iriRef.toSparql} is not in the correct schema")
-          // )
-
           // If we're in the CONSTRUCT clause, don't allow rdf, rdfs, or owl IRIs.
           if (inConstructClause && iriRef.iri.toString.contains('#')) {
             iriRef.iri.getOntologyFromEntity.toString match {
@@ -64,18 +59,10 @@ object GravsearchQueryChecker {
                 case propertyTypeInfo: PropertyTypeInfo =>
                   if (propertyTypeInfo.objectTypeIri.isApiV2Schema(querySchema)) propertyTypeInfo.objectTypeIri
                   else throw GravsearchException(s"${entity.toSparql} is not in the correct schema")
-                // propertyTypeInfo.objectTypeIri.checkApiV2Schema(
-                //   querySchema,
-                //   throw GravsearchException(s"${entity.toSparql} is not in the correct schema")
-                // )
 
                 case nonPropertyTypeInfo: NonPropertyTypeInfo =>
                   if (nonPropertyTypeInfo.typeIri.isApiV2Schema(querySchema)) nonPropertyTypeInfo.typeIri
                   else throw GravsearchException(s"${entity.toSparql} is not in the correct schema")
-                  // nonPropertyTypeInfo.typeIri.checkApiV2Schema(
-                  //   querySchema,
-                  //   throw GravsearchException(s"${entity.toSparql} is not in the correct schema")
-                  // )
 
                   // If it's a variable that doesn't represent a property, and we're using the complex schema and the statement
                   // is in the CONSTRUCT clause, check that it refers to a resource or value.

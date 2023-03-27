@@ -474,16 +474,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    */
   def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean
 
-  // /**
-  //  * Checks that the IRI's ontology schema, and if it is present whether it does not corresponds to the specified schema.
-  //  *
-  //  * @param allowedSchema the schema to be allowed.
-  //  * @return `false` in cases where the iri does not have a schema or the schema is equals allowedSchema
-  //  *
-  //  *         `true` if the iri has a schema different from the allowedSchema
-  //  */
-  // def hasApiV2SchemaNotEqualTo(allowedSchema: ApiV2Schema): Boolean
-
   /**
    * Converts this IRI to another ontology schema.
    *
