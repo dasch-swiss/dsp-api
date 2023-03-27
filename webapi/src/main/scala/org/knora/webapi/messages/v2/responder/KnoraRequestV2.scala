@@ -8,11 +8,13 @@ package org.knora.webapi.messages.v2.responder
 import akka.actor.ActorRef
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
 
 import java.util.UUID
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
 
 /**
  * A trait for objects that can generate case class instances based on JSON-LD input.
