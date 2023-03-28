@@ -250,12 +250,13 @@ final case class ValuesRouteV1(
               )
 
             case OntologyConstants.KnoraBase.ColorValue =>
-              val colorValue = stringFormatter.validateColor(
-                apiRequest.color_value.get,
-                throw BadRequestException(
-                  s"Invalid color value: ${apiRequest.color_value.get}"
+              val colorValue = ValuesValidator
+                .validateColor(apiRequest.color_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid color value: ${apiRequest.color_value.get}"
+                  )
                 )
-              )
               Future(ColorValueV1(colorValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.GeomValue =>
@@ -467,12 +468,13 @@ final case class ValuesRouteV1(
               )
 
             case OntologyConstants.KnoraBase.ColorValue =>
-              val colorValue = stringFormatter.validateColor(
-                apiRequest.color_value.get,
-                throw BadRequestException(
-                  s"Invalid color value: ${apiRequest.color_value.get}"
+              val colorValue = ValuesValidator
+                .validateColor(apiRequest.color_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid color value: ${apiRequest.color_value.get}"
+                  )
                 )
-              )
               Future(ColorValueV1(colorValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.GeomValue =>

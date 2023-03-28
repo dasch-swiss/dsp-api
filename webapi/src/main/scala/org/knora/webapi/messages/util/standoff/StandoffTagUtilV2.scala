@@ -806,8 +806,9 @@ object StandoffTagUtilV2 {
 
           val colorValue = StandoffTagStringAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasColor.toSmartIri,
-            value =
-              stringFormatter.validateColor(colorString, throw BadRequestException(s"Color invalid: $colorString"))
+            value = ValuesValidator
+              .validateColor(colorString)
+              .getOrElse(throw BadRequestException(s"Color invalid: $colorString"))
           )
 
           val classSpecificProps =

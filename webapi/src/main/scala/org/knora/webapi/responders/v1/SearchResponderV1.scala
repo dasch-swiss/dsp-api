@@ -535,8 +535,9 @@ final case class SearchResponderV1Live(
                 case OntologyConstants.KnoraBase.ColorValue =>
                   // check if string is a hexadecimal RGB-color value
                   val searchString =
-                    stringFormatter
-                      .validateColor(searchval, throw BadRequestException(s"Invalid color format: $searchval"))
+                    ValuesValidator
+                      .validateColor(searchval)
+                      .getOrElse(throw BadRequestException(s"Invalid color format: $searchval"))
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                 case OntologyConstants.KnoraBase.GeomValue =>

@@ -1635,7 +1635,7 @@ class StringFormatter private (
    *                 a carriage return (`\r`).
    * @return the same string, escaped or unescaped as requested.
    */
-  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = {
+  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = { // --
     if (s.isEmpty || s.contains("\r")) errorFun
 
     // http://www.morelab.deusto.es/code_injection/
@@ -1762,19 +1762,19 @@ class StringFormatter private (
     f"$year%04d$month%02d$day%02dT$hour%02d$minute%02d$second%02d${fractionStr}Z"
   }
 
-  /**
-   * Checks that a hexadecimal color code string is valid.
-   *
-   * @param s        a string containing a hexadecimal color code.
-   * @param errorFun a function that throws an exception. It will be called if the string does not contain a valid
-   *                 hexadecimal color code.
-   * @return the same string.
-   */
-  def validateColor(s: String, errorFun: => Nothing): String = // --
-    ColorRegex.findFirstIn(s) match {
-      case Some(dateStr) => dateStr
-      case None          => errorFun // not a valid color hex value string
-    }
+  // /**
+  //  * Checks that a hexadecimal color code string is valid.
+  //  *
+  //  * @param s        a string containing a hexadecimal color code.
+  //  * @param errorFun a function that throws an exception. It will be called if the string does not contain a valid
+  //  *                 hexadecimal color code.
+  //  * @return the same string.
+  //  */
+  // def validateColor(s: String, errorFun: => Nothing): String = // --
+  //   ColorRegex.findFirstIn(s) match {
+  //     case Some(dateStr) => dateStr
+  //     case None          => errorFun // not a valid color hex value string
+  //   }
 
   /**
    * Checks that the format of a Knora date string is valid.

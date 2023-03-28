@@ -243,10 +243,11 @@ final case class ResourcesRouteV1(
                 Future(CreateValueV1WithComment(dateVal, givenValue.comment))
 
               case OntologyConstants.KnoraBase.ColorValue =>
-                val colorValue = stringFormatter.validateColor(
-                  givenValue.color_value.get,
-                  throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}")
-                )
+                val colorValue = ValuesValidator
+                  .validateColor(givenValue.color_value.get)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}")
+                  )
                 Future(CreateValueV1WithComment(ColorValueV1(colorValue), givenValue.comment))
 
               case OntologyConstants.KnoraBase.GeomValue =>
@@ -1152,10 +1153,11 @@ final case class ResourcesRouteV1(
           case "color_value" =>
             CreateResourceValueV1(
               color_value = Some(
-                stringFormatter.validateColor(
-                  elementValue,
-                  throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateColor(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
