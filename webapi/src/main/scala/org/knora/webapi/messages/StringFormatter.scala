@@ -1812,21 +1812,6 @@ class StringFormatter private (
     }
 
   /**
-   * Converts a string to a boolean.
-   *
-   * @param s        the string to be converted.
-   * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
-   *                 as a boolean value.
-   * @return a Boolean.
-   */
-  def toBoolean(s: String, errorFun: => Nothing): Boolean = // --
-    try {
-      s.toBoolean
-    } catch {
-      case _: IllegalArgumentException => errorFun
-    }
-
-  /**
    * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
    *
    * @param ncName   the string to be checked.
