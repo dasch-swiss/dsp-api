@@ -5,24 +5,14 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import dsp.errors.ApplicationCacheException
 import dsp.errors.BadRequestException
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.ChangeRightsPermission
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.DeletePermission
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.ModifyPermission
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.RestrictedViewPermission
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.ViewPermission
-import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.messages.OntologyConstants.KnoraBase._
 
 /**
  * Providing helper methods.
  */
 object PermissionsMessagesUtilADM {
-
-  val PermissionsCacheName = "permissionsCache"
 
   val PermissionTypeAndCodes: Map[String, Int] = Map(
     RestrictedViewPermission -> 1,
@@ -37,68 +27,11 @@ object PermissionsMessagesUtilADM {
   ////////////////////
 
   /**
-   * Creates a key representing the supplied parameters.
-   *
-   * @param projectIri       the project IRI
-   * @param groupIri         the group IRI
-   * @param resourceClassIri the resource class IRI
-   * @param propertyIri      the property IRI
-   * @return a string.
-   */
-  def getDefaultObjectAccessPermissionADMKey(
-    projectIri: IRI,
-    groupIri: Option[IRI],
-    resourceClassIri: Option[IRI],
-    propertyIri: Option[IRI]
-  ): String =
-    projectIri.toString + " | " + groupIri.toString + " | " + resourceClassIri.toString + " | " + propertyIri.toString
-
-  /**
-   * Writes a [[DefaultObjectAccessPermissionADM]] object to cache.
-   *
-   * @param doap a [[DefaultObjectAccessPermissionADM]].
-   * @return true if writing was successful.
-   * @throws ApplicationCacheException when there is a problem with writing to cache.
-   */
-  def writeDefaultObjectAccessPermissionADMToCache(doap: DefaultObjectAccessPermissionADM): Boolean = {
-
-    val key = doap.cacheKey
-
-    CacheUtil.put(PermissionsCacheName, key, doap)
-
-    if (CacheUtil.get(PermissionsCacheName, key).isEmpty) {
-      throw ApplicationCacheException("Writing the permission to cache was not successful.")
-    }
-
-    true
-  }
-
-  /**
-   * Removes a [[DefaultObjectAccessPermissionADM]] object from cache.
-   *
-   * @param projectIri       the project IRI
-   * @param groupIri         the group IRI
-   * @param resourceClassIri the resource class IRI
-   * @param propertyIri      the property IRI
-   */
-  def invalidateCachedDefaultObjectAccessPermissionADM(
-    projectIri: IRI,
-    groupIri: Option[IRI],
-    resourceClassIri: Option[IRI],
-    propertyIri: Option[IRI]
-  ): Unit = {
-
-    val key = getDefaultObjectAccessPermissionADMKey(projectIri, groupIri, resourceClassIri, propertyIri)
-
-    CacheUtil.remove(PermissionsCacheName, key)
-  }
-
-  /**
    * Validates the parameters of the `hasPermissions` collections of a DOAP.
    *
    * @param hasPermissions       Set of the permissions.
    */
-  def validateDOAPHasPermissions(hasPermissions: Set[PermissionADM]) =
+  private def validateDOAPHasPermissions(hasPermissions: Set[PermissionADM]): Unit =
     hasPermissions.foreach { permission =>
       if (permission.additionalInformation.isEmpty) {
         throw BadRequestException(s"additionalInformation of a default object access permission type cannot be empty.")
