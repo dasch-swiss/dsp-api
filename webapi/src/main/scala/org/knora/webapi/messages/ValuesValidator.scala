@@ -3,7 +3,7 @@ package org.knora.webapi.messages
 import scala.util.Try
 import scala.util.matching.Regex
 
-object ValuesValidator { // rename converter like
+object ValuesValidator {
   def validateBoolean(s: String): Option[Boolean] = s.toBooleanOption
 
   def validateInt(s: String): Option[Int] = s.toIntOption
@@ -37,27 +37,27 @@ object ValuesValidator { // rename converter like
    */
   def validateDate(s: String): Option[String] = {
     // TODO: below separators still exists in SF - think about how all consts should be distributed
-    val CalendarSeparator: String  = ":"
-    val PrecisionSeparator: String = "-"
+    val calendarSeparator: String  = ":"
+    val precisionSeparator: String = "-"
 
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
-    val DateRegex: Regex = ("""^(GREGORIAN|JULIAN|ISLAMIC)""" +
-      CalendarSeparator +          // calendar name
+    val dateRegex: Regex = ("""^(GREGORIAN|JULIAN|ISLAMIC)""" +
+      calendarSeparator +          // calendar name
       """(?:[1-9][0-9]{0,3})(""" + // year
-      PrecisionSeparator +
+      precisionSeparator +
       """(?!00)[0-9]{1,2}(""" + // month
-      PrecisionSeparator +
+      precisionSeparator +
       """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
-      CalendarSeparator +                              // separator if a period is given
+      calendarSeparator +                              // separator if a period is given
       """(?:[1-9][0-9]{0,3})(""" +                     // year 2
-      PrecisionSeparator +
+      precisionSeparator +
       """(?!00)[0-9]{1,2}(""" + // month 2
-      PrecisionSeparator +
+      precisionSeparator +
       """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
 
-    DateRegex.findFirstIn(s) match {
+    dateRegex.findFirstIn(s) match {
       case Some(value) => Option(value)
       case None        => None
     }
