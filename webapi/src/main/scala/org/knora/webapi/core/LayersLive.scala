@@ -130,7 +130,6 @@ object LayersLive {
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
-      with KnoraProjectRepo
       with GravsearchTypeInspectionUtil
       with GroupsResponderADM
       with HttpServer
@@ -138,6 +137,7 @@ object LayersLive {
       with IIIFService
       with IriService
       with JwtService
+      with KnoraProjectRepo
       with ListsResponderADM
       with ListsResponderV1
       with ListsResponderV2
@@ -198,7 +198,6 @@ object LayersLive {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
-      KnoraProjectRepoLive.layer,
       GravsearchTypeInspectionUtil.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
@@ -208,6 +207,7 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,
+      KnoraProjectRepoLive.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
       ListsResponderV2Live.layer,
