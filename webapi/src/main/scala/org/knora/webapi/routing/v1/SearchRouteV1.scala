@@ -15,6 +15,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.FulltextSearchGetRequestV1
@@ -23,7 +24,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
-import org.knora.webapi.messages.ValuesValidator
 
 // slash after path without following segment
 

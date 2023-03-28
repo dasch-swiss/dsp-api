@@ -42,6 +42,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -59,7 +60,6 @@ import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides API routes that deal with resources.

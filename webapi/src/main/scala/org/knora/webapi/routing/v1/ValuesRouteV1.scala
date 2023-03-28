@@ -20,6 +20,7 @@ import dsp.errors.NotFoundException
 import org.knora.webapi._
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
@@ -33,7 +34,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
-import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides an Akka routing function for API routes that deal with values.

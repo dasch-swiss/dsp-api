@@ -21,6 +21,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
@@ -30,7 +31,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides a function for API routes that deal with search.

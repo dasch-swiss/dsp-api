@@ -14,11 +14,11 @@ import java.util.GregorianCalendar
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
-import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Utility functions for converting dates.

@@ -30,6 +30,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -45,7 +46,6 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
-import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.

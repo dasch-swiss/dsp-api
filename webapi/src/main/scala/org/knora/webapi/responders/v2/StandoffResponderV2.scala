@@ -32,6 +32,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -61,7 +62,6 @@ import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.NextExecutionStep
 import org.knora.webapi.util.ResultAndNext
 import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements

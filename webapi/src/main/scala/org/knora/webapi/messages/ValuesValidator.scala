@@ -16,7 +16,7 @@ object ValuesValidator { // rename converter like
    * Checks that a hexadecimal color code string is valid.
    *
    * @param s a string containing a hexadecimal color code.
-   * @return  the same string.
+   * @return  [[Option]] of [[String]].
    */
   def validateColor(s: String): Option[String] = {
     val colorRegex: Regex = "^#(?:[0-9a-fA-F]{3}){1,2}$".r
@@ -29,10 +29,11 @@ object ValuesValidator { // rename converter like
 
   /**
    * Checks that the format of a Knora date string is valid.
+   * If the pattern doesn't match (=> None), the date string is formally invalid.
+   * This is a mere formal validation, the actual validity check is done in `DateUtilV1.dateString2DateRange
    *
-   * @param s        a Knora date string.
-   * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
-   * @return the same string.
+   * @param s a date string.
+   * @return  [[Option]] of [[String]].
    */
   def validateDate(s: String): Option[String] = {
     // TODO: below separators still exists in SF - think about how all consts should be distributed
@@ -42,7 +43,7 @@ object ValuesValidator { // rename converter like
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
-    val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN|ISLAMIC)""" +
+    val DateRegex: Regex = ("""^(GREGORIAN|JULIAN|ISLAMIC)""" +
       CalendarSeparator +          // calendar name
       """(?:[1-9][0-9]{0,3})(""" + // year
       PrecisionSeparator +
@@ -56,10 +57,7 @@ object ValuesValidator { // rename converter like
       PrecisionSeparator +
       """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
 
-    // if the pattern doesn't match (=> None), the date string is formally invalid
-    // Please note that this is a mere formal validation,
-    // the actual validity check is done in `DateUtilV1.dateString2DateRange`
-    KnoraDateRegex.findFirstIn(s) match {
+    DateRegex.findFirstIn(s) match {
       case Some(value) => Option(value)
       case None        => None
     }
