@@ -18,43 +18,43 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjects
-import org.knora.webapi.slice.admin.domain.model.DspProject
-import org.knora.webapi.slice.admin.domain.service.DspProjectRepo
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-final case class DspProjectRepoLive(
+final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
   private val pom: PredicateObjectMapper
-) extends DspProjectRepo {
+) extends KnoraProjectRepo {
 
-  override def findById(id: InternalIri): Task[Option[DspProject]] =
+  override def findById(id: InternalIri): Task[Option[KnoraProject]] =
     findOneByQuery(getProjects(maybeIri = Some(id.value), None, None))
 
-  override def findByProjectIdentifier(id: ProjectIdentifierADM): Task[Option[DspProject]] = {
+  override def findByProjectIdentifier(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = {
     val maybeIri       = id.asIriIdentifierOption
     val maybeShortname = id.asShortnameIdentifierOption
     val maybeShortCode = id.asShortcodeIdentifierOption
     findOneByQuery(getProjects(maybeIri = maybeIri, maybeShortname = maybeShortname, maybeShortcode = maybeShortCode))
   }
 
-  private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[DspProject]] =
+  private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
     for {
       construct <- triplestore.sparqlHttpExtendedConstruct(query).map(_.statements.headOption)
-      project   <- ZIO.foreach(construct)(toDspProject)
+      project   <- ZIO.foreach(construct)(toKnoraProject)
     } yield project
 
-  override def findAll(): Task[List[DspProject]] = {
+  override def findAll(): Task[List[KnoraProject]] = {
     val query = getProjects(None, None, None)
     for {
       projectsResponse <- triplestore.sparqlHttpExtendedConstruct(query).map(_.statements.toList)
-      projects         <- ZIO.foreach(projectsResponse)(toDspProject)
+      projects         <- ZIO.foreach(projectsResponse)(toKnoraProject)
     } yield projects
   }
 
-  private def toDspProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[DspProject] = {
+  private def toKnoraProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[KnoraProject] = {
     val projectIri = InternalIri(subjectPropsTuple._1.toString)
     val propsMap   = subjectPropsTuple._2
     for {
@@ -68,11 +68,11 @@ final case class DspProjectRepoLive(
       logo     <- pom.getSingleOption[StringLiteralV2](ProjectLogo, propsMap).map(_.map(_.value))
       status   <- pom.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(_.value)
       selfjoin <- pom.getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propsMap).map(_.value)
-    } yield DspProject(projectIri, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)
+    } yield KnoraProject(projectIri, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)
   }
 }
 
-object DspProjectRepoLive {
-  val layer: URLayer[TriplestoreService with OntologyRepo with PredicateObjectMapper, DspProjectRepoLive] =
-    ZLayer.fromFunction(DspProjectRepoLive.apply _)
+object KnoraProjectRepoLive {
+  val layer: URLayer[TriplestoreService with OntologyRepo with PredicateObjectMapper, KnoraProjectRepoLive] =
+    ZLayer.fromFunction(KnoraProjectRepoLive.apply _)
 }

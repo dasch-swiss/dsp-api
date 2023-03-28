@@ -82,10 +82,10 @@ import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.domain.service.DspProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
-import org.knora.webapi.slice.admin.repo.service.DspProjectRepoLive
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
@@ -130,7 +130,7 @@ object LayersLive {
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
-      with DspProjectRepo
+      with KnoraProjectRepo
       with GravsearchTypeInspectionUtil
       with GroupsResponderADM
       with HttpServer
@@ -198,7 +198,7 @@ object LayersLive {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
-      DspProjectRepoLive.layer,
+      KnoraProjectRepoLive.layer,
       GravsearchTypeInspectionUtil.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,

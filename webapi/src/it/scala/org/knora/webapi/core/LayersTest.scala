@@ -79,7 +79,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
-import org.knora.webapi.slice.admin.repo.service.DspProjectRepoLive
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -130,7 +130,7 @@ object LayersTest {
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
-      with DspProjectRepoLive
+      with KnoraProjectRepoLive
       with GroupsResponderADM
       with HttpServer
       with IIIFRequestMessageHandler
@@ -189,7 +189,7 @@ object LayersTest {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
-      DspProjectRepoLive.layer,
+      KnoraProjectRepoLive.layer,
       GravsearchTypeInspectionUtil.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,

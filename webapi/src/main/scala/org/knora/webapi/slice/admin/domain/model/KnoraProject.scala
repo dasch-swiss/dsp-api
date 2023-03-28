@@ -2,7 +2,7 @@ package org.knora.webapi.slice.admin.domain.model
 import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
-case class DspProject(
+case class KnoraProject(
   id: InternalIri,
   shortname: String,
   shortcode: String,
