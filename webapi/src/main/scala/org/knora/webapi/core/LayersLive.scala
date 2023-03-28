@@ -86,6 +86,7 @@ import org.knora.webapi.slice.admin.domain.service.DspProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
 import org.knora.webapi.slice.admin.repo.service.DspProjectRepoLive
+import org.knora.webapi.slice.common.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -148,6 +149,7 @@ object LayersLive {
       with OntologyResponderV2
       with PermissionUtilADM
       with PermissionsResponderADM
+      with PredicateObjectMapper
       with ProjectADMRestService
       with ProjectADMService
       with ProjectsResponderADM
@@ -217,6 +219,7 @@ object LayersLive {
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
+      PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectADMServiceLive.layer,
       ProjectsADMRestServiceLive.layer,

@@ -3,9 +3,7 @@ package org.knora.webapi.slice.admin.repo.service
 import play.twirl.api.TxtFormat
 import zio._
 
-import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.V2
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectDescription
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectKeyword
@@ -16,75 +14,65 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectShortname
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.Status
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.twirl
+import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
+import org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjects
 import org.knora.webapi.slice.admin.domain.model.DspProject
 import org.knora.webapi.slice.admin.domain.service.DspProjectRepo
+import org.knora.webapi.slice.common.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class DspProjectRepoLive(
   private val triplestore: TriplestoreService,
-  private val iriConverter: IriConverter
+  private val pom: PredicateObjectMapper
 ) extends DspProjectRepo {
 
   override def findById(id: InternalIri): Task[Option[DspProject]] =
-    findOneByQuery(twirl.queries.sparql.admin.txt.getProjects(maybeIri = Some(id.value)))
+    findOneByQuery(getProjects(maybeIri = Some(id.value), None, None))
 
-  override def findByProjectIdentifier(id: ProjectIdentifierADM): Task[Option[DspProject]] =
-    findOneByQuery(
-      twirl.queries.sparql.admin.txt
-        .getProjects(id.asIriIdentifierOption, id.asShortnameIdentifierOption, id.asShortcodeIdentifierOption)
-    )
+  override def findByProjectIdentifier(id: ProjectIdentifierADM): Task[Option[DspProject]] = {
+    val maybeIri       = id.asIriIdentifierOption
+    val maybeShortname = id.asShortnameIdentifierOption
+    val maybeShortCode = id.asShortcodeIdentifierOption
+    findOneByQuery(getProjects(maybeIri = maybeIri, maybeShortname = maybeShortname, maybeShortcode = maybeShortCode))
+  }
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[DspProject]] =
     for {
-      construct <- triplestore.sparqlHttpExtendedConstruct(query.toString).map(_.statements.headOption)
-      project   <- ZIO.foreach(construct)(it => toDspProject(InternalIri(it._1.toString), it._2))
+      construct <- triplestore.sparqlHttpExtendedConstruct(query).map(_.statements.headOption)
+      project   <- ZIO.foreach(construct)(toDspProject)
     } yield project
 
   override def findAll(): Task[List[DspProject]] = {
-    val query = twirl.queries.sparql.admin.txt.getProjects(None, None, None)
+    val query = getProjects(None, None, None)
     for {
-      projectsResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString()).map(_.statements.toList)
-      projects         <- ZIO.foreach(projectsResponse)(it => toDspProject(InternalIri(it._1.toString), it._2))
+      projectsResponse <- triplestore.sparqlHttpExtendedConstruct(query).map(_.statements.toList)
+      projects         <- ZIO.foreach(projectsResponse)(toDspProject)
     } yield projects
   }
 
-  private def toDspProject(
-    projectIri: InternalIri,
-    propertiesMap: ConstructPredicateObjects
-  ): Task[DspProject] = {
-    def getOption[A <: LiteralV2](key: IRI): Task[Option[Seq[A]]] =
-      for {
-        smartIri <- iriConverter.asInternalSmartIri(key)
-        props     = propertiesMap.get(smartIri)
-      } yield props.map(_.map(_.asInstanceOf[A]))
-
-    def getOrFail[A <: LiteralV2](key: IRI): Task[Seq[A]] =
-      getOption[A](key)
-        .flatMap(ZIO.fromOption(_))
-        .orElseFail(InconsistentRepositoryDataException(s"Project: ${projectIri.value} has no $key defined."))
-
+  private def toDspProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[DspProject] = {
+    val projectIri = InternalIri(subjectPropsTuple._1.toString)
+    val propsMap   = subjectPropsTuple._2
     for {
-      shortname <- getOrFail[StringLiteralV2](ProjectShortname).map(_.head.value)
-      shortcode <- getOrFail[StringLiteralV2](ProjectShortcode).map(_.head.value)
-      status    <- getOrFail[BooleanLiteralV2](Status).map(_.head.value)
-      keywords  <- getOption[StringLiteralV2](ProjectKeyword).map(_.getOrElse(Seq.empty).map(_.value).sorted)
-      logo      <- getOption[StringLiteralV2](ProjectLogo).map(_.map(_.head.value))
-      longname  <- getOption[StringLiteralV2](ProjectLongname).map(_.map(_.head.value))
-      selfjoin  <- getOrFail[BooleanLiteralV2](HasSelfJoinEnabled).map(_.head.value)
-      description <-
-        getOrFail[StringLiteralV2](ProjectDescription).map(_.map(desc => V2.StringLiteralV2(desc.value, desc.language)))
+      shortname <- pom.getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap).map(_.value)
+      shortcode <- pom.getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap).map(_.value)
+      longname  <- pom.getSingleOption[StringLiteralV2](ProjectLongname, propsMap).map(_.map(_.value))
+      description <- pom
+                       .getListOrFail[StringLiteralV2](ProjectDescription, propsMap)
+                       .map(_.map(desc => V2.StringLiteralV2(desc.value, desc.language)))
+      keywords <- pom.getList[StringLiteralV2](ProjectKeyword, propsMap).map(_.map(_.value).sorted)
+      logo     <- pom.getSingleOption[StringLiteralV2](ProjectLogo, propsMap).map(_.map(_.value))
+      status   <- pom.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(_.value)
+      selfjoin <- pom.getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propsMap).map(_.value)
     } yield DspProject(projectIri, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)
   }
 }
 
 object DspProjectRepoLive {
-  val layer: URLayer[TriplestoreService with OntologyRepo with IriConverter, DspProjectRepoLive] =
+  val layer: URLayer[TriplestoreService with OntologyRepo with PredicateObjectMapper, DspProjectRepoLive] =
     ZLayer.fromFunction(DspProjectRepoLive.apply _)
 }

@@ -7,8 +7,8 @@ case class DspProject(
   shortname: String,
   shortcode: String,
   longname: Option[String],
-  description: Seq[StringLiteralV2],
-  keywords: Seq[String],
+  description: List[StringLiteralV2],
+  keywords: List[String],
   logo: Option[String],
   status: Boolean,
   selfjoin: Boolean
