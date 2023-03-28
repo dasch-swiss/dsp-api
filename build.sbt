@@ -231,7 +231,10 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333, 3339),
     Docker / defaultLinuxInstallLocation := "/opt/docker",
-    dockerCommands += Cmd("RUN", "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*"), // install jq for container healthcheck
+    dockerCommands += Cmd(
+      "RUN",
+      "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*"
+    ), // install jq for container healthcheck
     dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
         |CMD bash /opt/docker/scripts/healthcheck.sh || exit 1""".stripMargin
