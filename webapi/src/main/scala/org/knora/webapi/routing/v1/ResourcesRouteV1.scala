@@ -250,10 +250,11 @@ final case class ResourcesRouteV1(
                 Future(CreateValueV1WithComment(ColorValueV1(colorValue), givenValue.comment))
 
               case OntologyConstants.KnoraBase.GeomValue =>
-                val geometryValue = stringFormatter.validateGeometryString(
-                  givenValue.geom_value.get,
-                  throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}")
-                )
+                val geometryValue = ValuesValidator
+                  .validateGeometryString(givenValue.geom_value.get)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}")
+                  )
                 Future(CreateValueV1WithComment(GeomValueV1(geometryValue), givenValue.comment))
 
               case OntologyConstants.KnoraBase.ListValue =>
@@ -1161,10 +1162,11 @@ final case class ResourcesRouteV1(
           case "geom_value" =>
             CreateResourceValueV1(
               geom_value = Some(
-                stringFormatter.validateGeometryString(
-                  elementValue,
-                  throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateGeometryString(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 

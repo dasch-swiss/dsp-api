@@ -1576,7 +1576,7 @@ class StringFormatter private (
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraPermissionIriStr(iri: IRI): Boolean =
+  def isKnoraPermissionIriStr(iri: IRI): Boolean = // V2 / value objects
     Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
 
   /**
@@ -1687,7 +1687,7 @@ class StringFormatter private (
    * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
    * @return an [[Instant]].
    */
-  def xsdDateTimeStampToInstant(s: String, errorFun: => Nothing): Instant =
+  def xsdDateTimeStampToInstant(s: String, errorFun: => Nothing): Instant = // --
     try {
       val accessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
       Instant.from(accessor)
@@ -1702,7 +1702,7 @@ class StringFormatter private (
    * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
    * @return an [[Instant]].
    */
-  def arkTimestampToInstant(timestampStr: String, errorFun: => Nothing): Instant =
+  def arkTimestampToInstant(timestampStr: String, errorFun: => Nothing): Instant = // --
     timestampStr match {
       case ArkTimestampRegex(year, month, day, hour, minute, second, fraction) =>
         val nanoOfSecond: Int = Option(fraction) match {
@@ -1763,23 +1763,6 @@ class StringFormatter private (
   }
 
   /**
-   * Checks that a geometry string contains valid JSON.
-   *
-   * @param s        a geometry string.
-   * @param errorFun a function that throws an exception. It will be called if the string does not contain valid
-   *                 JSON.
-   * @return the same string.
-   */
-  def validateGeometryString(s: String, errorFun: => Nothing): String =
-    // TODO: For now, we just make sure that the string is valid JSON. We should stop storing JSON in the triplestore, and represent geometry in RDF instead (issue 169).
-    try {
-      JsonParser(s)
-      s
-    } catch {
-      case _: Exception => errorFun
-    }
-
-  /**
    * Checks that a hexadecimal color code string is valid.
    *
    * @param s        a string containing a hexadecimal color code.
@@ -1787,7 +1770,7 @@ class StringFormatter private (
    *                 hexadecimal color code.
    * @return the same string.
    */
-  def validateColor(s: String, errorFun: => Nothing): String =
+  def validateColor(s: String, errorFun: => Nothing): String = // --
     ColorRegex.findFirstIn(s) match {
       case Some(dateStr) => dateStr
       case None          => errorFun // not a valid color hex value string
@@ -1800,7 +1783,7 @@ class StringFormatter private (
    * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
    * @return the same string.
    */
-  def validateDate(s: String, errorFun: => Nothing): String =
+  def validateDate(s: String, errorFun: => Nothing): String = // --
     // if the pattern doesn't match (=> None), the date string is formally invalid
     // Please note that this is a mere formal validation,
     // the actual validity check is done in `DateUtilV1.dateString2DateRange`
@@ -1817,7 +1800,7 @@ class StringFormatter private (
    *                 a boolean value.
    * @return the boolean value of the string.
    */
-  def validateBoolean(s: String, errorFun: => Nothing): Boolean =
+  def validateBoolean(s: String, errorFun: => Nothing): Boolean = // --
     try {
       s.toBoolean
     } catch {
@@ -1854,7 +1837,7 @@ class StringFormatter private (
    *                 as a boolean value.
    * @return a Boolean.
    */
-  def optionStringToBoolean(maybe: Option[String], errorFun: => Nothing): Boolean =
+  def optionStringToBoolean(maybe: Option[String], errorFun: => Nothing): Boolean = // --
     try {
       maybe.exists(_.toBoolean)
     } catch {
@@ -1869,7 +1852,7 @@ class StringFormatter private (
    *                 as a boolean value.
    * @return a Boolean.
    */
-  def toBoolean(s: String, errorFun: => Nothing): Boolean =
+  def toBoolean(s: String, errorFun: => Nothing): Boolean = // --
     try {
       s.toBoolean
     } catch {
@@ -1883,7 +1866,7 @@ class StringFormatter private (
    * @param errorFun a function that throws an exception. It will be called if the string is invalid.
    * @return the same string.
    */
-  private def validateNCName(ncName: String, errorFun: => Nothing): String =
+  private def validateNCName(ncName: String, errorFun: => Nothing): String = // --
     NCNameRegex.findFirstIn(ncName) match {
       case Some(value) => value
       case None        => errorFun
@@ -1905,7 +1888,7 @@ class StringFormatter private (
    * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
    * @return the same ontology name.
    */
-  def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = {
+  def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = { // --
     // Check that ontology name matched NCName regex pattern
     ontologyName match {
       case NCNameRegex(_*) => ()
@@ -2176,7 +2159,7 @@ class StringFormatter private (
    *                 project IRI.
    * @return the same string but escaped.
    */
-  def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI =
+  def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
     if (isKnoraProjectIriStr(iri)) {
       toSparqlEncodedString(iri, errorFun)
     } else {
@@ -2191,7 +2174,10 @@ class StringFormatter private (
    *                    project IRI.
    * @return the same optional string but escaped.
    */
-  def validateAndEscapeOptionalProjectIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] =
+  def validateAndEscapeOptionalProjectIri(
+    maybeString: Option[String],
+    errorFun: => Nothing
+  ): Option[IRI] = // V2 / value objects
     maybeString match {
       case Some(s) => Some(validateAndEscapeProjectIri(s, errorFun))
       case None    => None
@@ -2205,7 +2191,7 @@ class StringFormatter private (
    *                  project shortname.
    * @return the same string.
    */
-  def validateAndEscapeProjectShortname(shortname: String, errorFun: => Nothing): String = {
+  def validateAndEscapeProjectShortname(shortname: String, errorFun: => Nothing): String = { // V2 / value objects
     // Check that shortname matches NCName pattern
     val ncNameMatch = NCNameRegex.findFirstIn(shortname) match {
       case Some(value) => value
@@ -2226,7 +2212,10 @@ class StringFormatter private (
    *                    project shortname.
    * @return the same optional string.
    */
-  def validateAndEscapeOptionalProjectShortname(maybeString: Option[String], errorFun: => Nothing): Option[String] =
+  def validateAndEscapeOptionalProjectShortname(
+    maybeString: Option[String],
+    errorFun: => Nothing
+  ): Option[String] = // V2 / value objects
     maybeString match {
       case Some(s) => Some(validateAndEscapeProjectShortname(s, errorFun))
       case None    => None
@@ -2238,13 +2227,13 @@ class StringFormatter private (
    * @param shortcode the project's shortcode.
    * @return the shortcode in upper case.
    */
-  def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String =
+  def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = // V2 / value objects
     ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
       case Some(value) => value
       case None        => errorFun
     }
 
-  def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] =
+  def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = // --
     maybeString match {
       case Some(s) =>
         Some(toSparqlEncodedString(s, errorFun))
@@ -2257,7 +2246,7 @@ class StringFormatter private (
    * @param iri the group's IRI.
    * @return the IRI of the list.
    */
-  def validateGroupIri(iri: IRI, errorFun: => Nothing): IRI =
+  def validateGroupIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
     if (isKnoraGroupIriStr(iri)) {
       iri
     } else {
@@ -2270,7 +2259,7 @@ class StringFormatter private (
    * @param maybeIri the optional group's IRI to be checked.
    * @return the same optional IRI.
    */
-  def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] =
+  def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = // V2 / value objects
     maybeIri match {
       case Some(iri) => Some(validateGroupIri(iri, errorFun))
       case None      => None
@@ -2282,7 +2271,7 @@ class StringFormatter private (
    * @param iri the permission's IRI.
    * @return the IRI of the list.
    */
-  def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI =
+  def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
     if (isKnoraPermissionIriStr(iri)) {
       iri
     } else {
@@ -2297,7 +2286,7 @@ class StringFormatter private (
    *                 user IRI.
    * @return the same string but escaped.
    */
-  def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String =
+  def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = // V2 / value objects
     if (isKnoraUserIriStr(iri)) {
       toSparqlEncodedString(iri, errorFun)
     } else {
@@ -2312,7 +2301,10 @@ class StringFormatter private (
    *                    user IRI.
    * @return the same optional string.
    */
-  def validateAndEscapeOptionalUserIri(maybeString: Option[String], errorFun: => Nothing): Option[String] =
+  def validateAndEscapeOptionalUserIri(
+    maybeString: Option[String],
+    errorFun: => Nothing
+  ): Option[String] = // V2 / value objects
     maybeString match {
       case Some(s) => Some(validateAndEscapeUserIri(s, errorFun))
       case None    => None
@@ -2324,7 +2316,7 @@ class StringFormatter private (
    * @param email the email.
    * @return the email
    */
-  def validateEmailAndThrow(email: String, errorFun: => Nothing): String =
+  def validateEmailAndThrow(email: String, errorFun: => Nothing): String = // V2 / value objects
     EmailAddressRegex.findFirstIn(email) match {
       case Some(value) => value
       case None        => errorFun
@@ -2338,7 +2330,10 @@ class StringFormatter private (
    *                    email address.
    * @return the same optional string.
    */
-  def validateAndEscapeOptionalEmail(maybeString: Option[String], errorFun: => Nothing): Option[String] =
+  def validateAndEscapeOptionalEmail(
+    maybeString: Option[String],
+    errorFun: => Nothing
+  ): Option[String] = // V2 / value objects
     maybeString match {
       case Some(s) => Some(toSparqlEncodedString(validateEmailAndThrow(s, errorFun), errorFun))
       case None    => None
@@ -2352,7 +2347,7 @@ class StringFormatter private (
    *                 username.
    * @return the same string.
    */
-  def validateUsername(value: String, errorFun: => Nothing): String =
+  def validateUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
     UsernameRegex.findFirstIn(value) match {
       case Some(username) => username
       case None           => errorFun
@@ -2366,7 +2361,7 @@ class StringFormatter private (
    *                 username.
    * @return the same string with escaped special characters.
    */
-  def validateAndEscapeUsername(value: String, errorFun: => Nothing): String =
+  def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
     UsernameRegex.findFirstIn(value) match {
       case Some(username) => toSparqlEncodedString(username, errorFun)
       case None           => errorFun
@@ -2380,7 +2375,10 @@ class StringFormatter private (
    *                    username.
    * @return the same optional string.
    */
-  def validateAndEscapeOptionalUsername(maybeString: Option[String], errorFun: => Nothing): Option[String] =
+  def validateAndEscapeOptionalUsername(
+    maybeString: Option[String],
+    errorFun: => Nothing
+  ): Option[String] = // V2 / value objects
     maybeString match {
       case Some(s) => Some(validateAndEscapeUsername(s, errorFun))
       case None    => None
@@ -2552,7 +2550,7 @@ class StringFormatter private (
    * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
    * @return the decoded UUID.
    */
-  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = {
+  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = { // V2 / value objects
     val decodeTry = Try {
       base64DecodeUuid(base64Uuid)
     }
@@ -2599,7 +2597,7 @@ class StringFormatter private (
    * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
    * @return the decoded [[UUID]].
    */
-  def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID =
+  def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID = // V2 / value objects
     if (uuidStr.length == CanonicalUuidLength) {
       UUID.fromString(uuidStr)
     } else if (uuidStr.length == Base64UuidLength) {

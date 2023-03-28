@@ -33,6 +33,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides an Akka routing function for API routes that deal with values.
@@ -258,12 +259,13 @@ final case class ValuesRouteV1(
               Future(ColorValueV1(colorValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.GeomValue =>
-              val geometryValue = stringFormatter.validateGeometryString(
-                apiRequest.geom_value.get,
-                throw BadRequestException(
-                  s"Invalid geometry value: ${apiRequest.geom_value.get}"
+              val geometryValue = ValuesValidator
+                .validateGeometryString(apiRequest.geom_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid geometry value: ${apiRequest.geom_value.get}"
+                  )
                 )
-              )
               Future(GeomValueV1(geometryValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.ListValue =>
@@ -474,12 +476,13 @@ final case class ValuesRouteV1(
               Future(ColorValueV1(colorValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.GeomValue =>
-              val geometryValue = stringFormatter.validateGeometryString(
-                apiRequest.geom_value.get,
-                throw BadRequestException(
-                  s"Invalid geometry value: ${apiRequest.geom_value.get}"
+              val geometryValue = ValuesValidator
+                .validateGeometryString(apiRequest.geom_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid geometry value: ${apiRequest.geom_value.get}"
+                  )
                 )
-              )
               Future(GeomValueV1(geometryValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.ListValue =>

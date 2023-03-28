@@ -2365,7 +2365,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
 
     val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry,
-      stringFormatter.validateGeometryString
+      (s, errorFun) => ValuesValidator.validateGeometryString(s).getOrElse(errorFun)
     )
 
     GeomValueContentV2(
