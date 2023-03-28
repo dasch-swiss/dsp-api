@@ -61,6 +61,7 @@ import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.NextExecutionStep
 import org.knora.webapi.util.ResultAndNext
 import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements
@@ -380,12 +381,13 @@ final case class StandoffResponderV2Live(
                 .getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle"))
                 .text
 
-            val separatorRequired: Boolean = stringFormatter.validateBoolean(
-              separatorBooleanAsString,
-              throw BadRequestException(
-                s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"
+            val separatorRequired: Boolean = ValuesValidator
+              .validateBoolean(separatorBooleanAsString)
+              .getOrElse(
+                throw BadRequestException(
+                  s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"
+                )
               )
-            )
 
             // get the standoff class IRI
             val standoffClassIri =

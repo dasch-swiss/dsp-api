@@ -1123,10 +1123,11 @@ final case class ResourcesRouteV1(
           case "boolean_value" =>
             CreateResourceValueV1(
               boolean_value = Some(
-                stringFormatter.validateBoolean(
-                  elementValue,
-                  throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateBoolean(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 

@@ -571,9 +571,9 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.BooleanValue =>
                   // check if searchVal is a Boolan value
-                  val searchString = stringFormatter
-                    .validateBoolean(
-                      searchval,
+                  val searchString = ValuesValidator
+                    .validateBoolean(searchval)
+                    .getOrElse(
                       throw BadRequestException(s"Given searchval is not a valid Boolean value: $searchval")
                     )
                     .toString

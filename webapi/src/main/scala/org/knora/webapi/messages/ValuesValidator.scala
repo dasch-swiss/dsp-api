@@ -4,6 +4,8 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 object ValuesValidator { // rename converter like
+  def validateBoolean(s: String): Option[Boolean] = s.toBooleanOption
+
   def validateInt(s: String): Option[Int] = s.toIntOption
 
   def validateBigDecimal(s: String): Option[BigDecimal] = Try(BigDecimal(s)).toOption
@@ -17,9 +19,9 @@ object ValuesValidator { // rename converter like
    * @return  the same string.
    */
   def validateColor(s: String): Option[String] = {
-    val ColorRegex: Regex = "^#(?:[0-9a-fA-F]{3}){1,2}$".r
+    val colorRegex: Regex = "^#(?:[0-9a-fA-F]{3}){1,2}$".r
 
-    ColorRegex.findFirstIn(s) match {
+    colorRegex.findFirstIn(s) match {
       case Some(v) => Option(v)
       case None    => None
     }

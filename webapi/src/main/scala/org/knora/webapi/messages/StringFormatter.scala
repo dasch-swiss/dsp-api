@@ -678,10 +678,6 @@ class StringFormatter private (
     "\\n"
   )
 
-  // A regex for matching hexadecimal color codes.
-  // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
-  private val ColorRegex: Regex = "^#(?:[0-9a-fA-F]{3}){1,2}$".r
-
   // A regex sub-pattern for ontology prefix labels and local entity names. According to
   // <https://www.w3.org/TR/turtle/#prefixed-name>, a prefix label in Turtle must be a valid XML NCName
   // <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>. Knora also requires a local entity name to
@@ -1762,20 +1758,6 @@ class StringFormatter private (
     f"$year%04d$month%02d$day%02dT$hour%02d$minute%02d$second%02d${fractionStr}Z"
   }
 
-  // /**
-  //  * Checks that a hexadecimal color code string is valid.
-  //  *
-  //  * @param s        a string containing a hexadecimal color code.
-  //  * @param errorFun a function that throws an exception. It will be called if the string does not contain a valid
-  //  *                 hexadecimal color code.
-  //  * @return the same string.
-  //  */
-  // def validateColor(s: String, errorFun: => Nothing): String = // --
-  //   ColorRegex.findFirstIn(s) match {
-  //     case Some(dateStr) => dateStr
-  //     case None          => errorFun // not a valid color hex value string
-  //   }
-
   /**
    * Checks that the format of a Knora date string is valid.
    *
@@ -1790,21 +1772,6 @@ class StringFormatter private (
     KnoraDateRegex.findFirstIn(s) match {
       case Some(value) => value
       case None        => errorFun // calling this function throws an error
-    }
-
-  /**
-   * Checks that a string contains a valid boolean value.
-   *
-   * @param s        a string containing a boolean value.
-   * @param errorFun a function that throws an exception. It will be called if the string does not contain
-   *                 a boolean value.
-   * @return the boolean value of the string.
-   */
-  def validateBoolean(s: String, errorFun: => Nothing): Boolean = // --
-    try {
-      s.toBoolean
-    } catch {
-      case _: Exception => errorFun // value could not be converted to Boolean
     }
 
   /**

@@ -409,10 +409,11 @@ object StandoffTagUtilV2 {
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
                 StandoffTagBooleanAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = stringFormatter.validateBoolean(
-                    attr.value,
-                    throw BadRequestException(s"Invalid boolean attribute: '${attr.value}'")
-                  )
+                  value = ValuesValidator
+                    .validateBoolean(attr.value)
+                    .getOrElse(
+                      throw BadRequestException(s"Invalid boolean attribute: '${attr.value}'")
+                    )
                 )
 
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) =>
@@ -962,10 +963,11 @@ object StandoffTagUtilV2 {
 
           val booleanValue = StandoffTagBooleanAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri,
-            value = stringFormatter.validateBoolean(
-              booleanString,
-              throw BadRequestException(s"Boolean value invalid: $booleanString")
-            )
+            value = ValuesValidator
+              .validateBoolean(booleanString)
+              .getOrElse(
+                throw BadRequestException(s"Boolean value invalid: $booleanString")
+              )
           )
 
           val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(
