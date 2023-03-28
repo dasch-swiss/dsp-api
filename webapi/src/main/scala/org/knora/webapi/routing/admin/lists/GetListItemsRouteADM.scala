@@ -10,15 +10,15 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import zio._
 
-import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM
+import org.knora.webapi.routing.RouteUtilADM._
 
 /**
  * Provides routes to get list items.
@@ -27,7 +27,7 @@ import org.knora.webapi.routing.RouteUtilADM
  */
 final case class GetListItemsRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay with StringFormatter]
 ) extends KnoraRoute(routeData, runtime)
     with ListADMJsonProtocol {
 
@@ -51,20 +51,8 @@ final case class GetListItemsRouteADM(
             maybeProjectIri,
             throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri")
           )
-
-        val requestMessage: Future[ListsGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield ListsGetRequestADM(
-          projectIri = projectIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        val requestTask = Authenticator.getUserADM(requestContext).map(ListsGetRequestADM(projectIri, _))
+        runJsonRouteZ(requestTask, requestContext)
       }
     }
   }
@@ -73,23 +61,9 @@ final case class GetListItemsRouteADM(
    * Returns a list node, root or child, with children (if exist).
    */
   private def getListNode(): Route = path(listsBasePath / Segment) { iri =>
-    get { requestContext =>
-      val listIri =
-        stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-      val requestMessage: Future[ListGetRequestADM] = for {
-        requestingUser <- getUserADM(requestContext)
-      } yield ListGetRequestADM(
-        iri = listIri,
-        requestingUser = requestingUser
-      )
-
-      RouteUtilADM.runJsonRoute(
-        requestMessageF = requestMessage,
-        requestContext = requestContext,
-        appActor = appActor,
-        log = log
-      )
+    get { ctx =>
+      val task = getIriUser(iri, ctx).map(r => ListGetRequestADM(r.iri, r.user))
+      runJsonRouteZ(task, ctx)
     }
   }
 
@@ -98,22 +72,9 @@ final case class GetListItemsRouteADM(
    */
   private def getListOrNodeInfo(routeSwitch: String): Route =
     path(listsBasePath / routeSwitch / Segment) { iri =>
-      get { requestContext =>
-        val listIri =
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-        val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield ListNodeInfoGetRequestADM(
-          iri = listIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+      get { ctx =>
+        val task = getIriUser(iri, ctx).map(r => ListNodeInfoGetRequestADM(r.iri, r.user))
+        runJsonRouteZ(task, ctx)
       }
     }
 
@@ -123,23 +84,9 @@ final case class GetListItemsRouteADM(
   private def getListInfo(): Route =
     //  Brought from new lists route implementation, has the e functionality as getListOrNodeInfo
     path(listsBasePath / Segment / "info") { iri =>
-      get { requestContext =>
-        val listIri =
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-        val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield ListNodeInfoGetRequestADM(
-          iri = listIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+      get { ctx =>
+        val task = getIriUser(iri, ctx).map(r => ListNodeInfoGetRequestADM(r.iri, r.user))
+        runJsonRouteZ(task, ctx)
       }
     }
 }

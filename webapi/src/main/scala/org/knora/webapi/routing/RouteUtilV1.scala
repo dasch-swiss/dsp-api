@@ -5,9 +5,12 @@
 
 package org.knora.webapi.routing
 
+import akka.http.scaladsl.model.ContentTypes.`application/json`
+import akka.http.scaladsl.model.ContentTypes.`text/html(UTF-8)`
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
+import akka.util.ByteString
 import com.typesafe.scalalogging.Logger
 import spray.json.JsNumber
 import spray.json.JsObject
@@ -46,21 +49,24 @@ object RouteUtilV1 {
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runJsonRoute(requestMessage: KnoraRequestV1, requestContext: RequestContext)(implicit
-    runtime: zio.Runtime[MessageRelay]
+    runtime: Runtime[MessageRelay]
   ): Future[RouteResult] =
     UnsafeZioRun.runToFuture(doRunJsonRoute(requestMessage, requestContext))
 
   private def doRunJsonRoute(request: KnoraRequestV1, ctx: RequestContext): ZIO[MessageRelay, Throwable, RouteResult] =
+    createResponse(request).flatMap(completeContext(ctx, _))
+
+  private def createResponse(request: KnoraRequestV1): ZIO[MessageRelay, Throwable, HttpResponse] =
     for {
-      knoraResponse <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseV1](request))
-      jsonResponseWithStatus =
-        JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
-      httpResponse = HttpResponse(
-                       status = StatusCodes.OK,
-                       entity = HttpEntity(ContentTypes.`application/json`, jsonResponseWithStatus.compactPrint)
-                     )
-      result <- ZIO.fromFuture(_ => ctx.complete(httpResponse))
-    } yield result
+      knoraResponse <- MessageRelay.ask[KnoraResponseV1](request)
+      jsonBody       = JsObject(knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id)))
+    } yield okResponse(`application/json`, jsonBody.compactPrint)
+
+  private def okResponse(contentType: ContentType, body: String) =
+    HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, ByteString(body)))
+
+  private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
+    ZIO.fromFuture(_ => ctx.complete(response))
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
@@ -72,7 +78,7 @@ object RouteUtilV1 {
   def runJsonRouteF[RequestMessageT <: KnoraRequestV1](
     requestFuture: Future[RequestMessageT],
     requestContext: RequestContext
-  )(implicit runtime: zio.Runtime[MessageRelay]): Future[RouteResult] =
+  )(implicit runtime: Runtime[MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(ZIO.fromFuture(_ => requestFuture).flatMap(doRunJsonRoute(_, requestContext)))
 
   /**
@@ -83,7 +89,7 @@ object RouteUtilV1 {
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runJsonRouteZ[R](requestTask: ZIO[R, Throwable, KnoraRequestV1], requestContext: RequestContext)(implicit
-    runtime: zio.Runtime[R with MessageRelay]
+    runtime: Runtime[R with MessageRelay]
   ): Future[RouteResult] =
     UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
 
@@ -98,10 +104,9 @@ object RouteUtilV1 {
   ): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
       requestMessage <- requestTask
-      knoraResponse  <- ZIO.serviceWithZIO[MessageRelay](_.ask[ResourceFullResponseV1](requestMessage))
+      knoraResponse  <- MessageRelay.ask[ResourceFullResponseV1](requestMessage)
       html           <- ResourceHtmlView.propertiesHtmlView(knoraResponse)
-      httpResponse    = HttpResponse(status = StatusCodes.OK, entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, html))
-      result         <- ZIO.fromFuture(_ => requestContext.complete(httpResponse))
+      result         <- completeContext(requestContext, okResponse(`text/html(UTF-8)`, html))
     } yield result)
 
   /**
@@ -122,15 +127,17 @@ object RouteUtilV1 {
     acceptStandoffLinksToClientIDs: Boolean,
     userProfile: UserADM,
     log: Logger
-  )(implicit runtime: zio.Runtime[MessageRelay]): Future[TextWithStandoffTagsV2] =
-    UnsafeZioRun.runToFuture(
+  )(implicit runtime: Runtime[MessageRelay]): Future[TextWithStandoffTagsV2] =
+    UnsafeZioRun.runToFuture {
+      val request = GetMappingRequestV2(mappingIri, userProfile)
       for {
-        mappingResponse <-
-          ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, userProfile)))
-        textWithStandoffTagV1 =
-          StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
+        mappingResponse <- MessageRelay.ask[GetMappingResponseV2](request)
+        textWithStandoffTagV1 <-
+          ZIO.attempt(
+            StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
+          )
       } yield textWithStandoffTagV1
-    )
+    }
 
   /**
    * MIME types used in Sipi to store image files.
