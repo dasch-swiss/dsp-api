@@ -1144,10 +1144,11 @@ final case class ResourcesRouteV1(
           case "date_value" =>
             CreateResourceValueV1(
               date_value = Some(
-                stringFormatter.validateDate(
-                  elementValue,
-                  throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateDate(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 

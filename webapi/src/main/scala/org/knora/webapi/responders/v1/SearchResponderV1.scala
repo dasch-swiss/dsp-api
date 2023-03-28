@@ -432,8 +432,9 @@ final case class SearchResponderV1Live(
                   //
 
                   val datestring =
-                    stringFormatter
-                      .validateDate(searchval, throw BadRequestException(s"Invalid date format: $searchval"))
+                    ValuesValidator
+                      .validateDate(searchval)
+                      .getOrElse(throw BadRequestException(s"Invalid date format: $searchval"))
 
                   // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
                   val parsedDate = datestring.split(StringFormatter.CalendarSeparator)

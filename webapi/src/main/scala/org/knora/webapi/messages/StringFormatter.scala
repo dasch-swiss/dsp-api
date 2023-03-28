@@ -643,23 +643,6 @@ class StringFormatter private (
   private val reservedIriWords =
     Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared") ++ versionSegmentWords
 
-  // The expected format of a Knora date.
-  // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
-  // EE being the era: one of BC or AD
-  private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN|ISLAMIC)""" +
-    CalendarSeparator +          // calendar name
-    """(?:[1-9][0-9]{0,3})(""" + // year
-    PrecisionSeparator +
-    """(?!00)[0-9]{1,2}(""" + // month
-    PrecisionSeparator +
-    """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
-    CalendarSeparator +                              // separator if a period is given
-    """(?:[1-9][0-9]{0,3})(""" +                     // year 2
-    PrecisionSeparator +
-    """(?!00)[0-9]{1,2}(""" + // month 2
-    PrecisionSeparator +
-    """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
-
   // Characters that are escaped in strings that will be used in SPARQL.
   private val SparqlEscapeInput = Array(
     "\\",
@@ -1757,22 +1740,6 @@ class StringFormatter private (
 
     f"$year%04d$month%02d$day%02dT$hour%02d$minute%02d$second%02d${fractionStr}Z"
   }
-
-  /**
-   * Checks that the format of a Knora date string is valid.
-   *
-   * @param s        a Knora date string.
-   * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
-   * @return the same string.
-   */
-  def validateDate(s: String, errorFun: => Nothing): String = // --
-    // if the pattern doesn't match (=> None), the date string is formally invalid
-    // Please note that this is a mere formal validation,
-    // the actual validity check is done in `DateUtilV1.dateString2DateRange`
-    KnoraDateRegex.findFirstIn(s) match {
-      case Some(value) => value
-      case None        => errorFun // calling this function throws an error
-    }
 
   /**
    * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.

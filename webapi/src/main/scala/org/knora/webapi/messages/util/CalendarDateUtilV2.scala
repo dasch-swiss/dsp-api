@@ -12,6 +12,7 @@ import java.util.Date
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Indicates the era (CE or BCE) in Gregorian and Julian calendar dates.
@@ -517,7 +518,8 @@ object CalendarDateRangeV2 {
   def parse(dateStr: String): CalendarDateRangeV2 = {
     // Validate the date string.
     val stringFormatter = StringFormatter.getGeneralInstance
-    val validDateStr    = stringFormatter.validateDate(dateStr, throw BadRequestException(s"Invalid date: $dateStr"))
+    val validDateStr =
+      ValuesValidator.validateDate(dateStr).getOrElse(throw BadRequestException(s"Invalid date: $dateStr"))
 
     // Get the calendar name.
     val parsedDate              = validDateStr.split(StringFormatter.CalendarSeparator)

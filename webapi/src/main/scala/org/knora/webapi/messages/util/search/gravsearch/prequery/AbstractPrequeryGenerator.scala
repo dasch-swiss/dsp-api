@@ -21,6 +21,7 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
+import org.knora.webapi.messages.ValuesValidator
 
 object AbstractPrequeryGenerator {
   // separator used by GroupConcat
@@ -949,10 +950,11 @@ abstract class AbstractPrequeryGenerator(
     }
 
     // validate Knora date string
-    val dateStr: String = stringFormatter.validateDate(
-      dateStringLiteral.value,
-      throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string")
-    )
+    val dateStr: String = ValuesValidator
+      .validateDate(dateStringLiteral.value)
+      .getOrElse(
+        throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string")
+      )
 
     // Convert it to Julian Day Numbers.
     val dateValueContent = DateValueContentV2.parse(dateStr)
