@@ -10,7 +10,7 @@ fi
 # Check severity reported by health route
 severity=$(echo "$json" | jq -r .severity)
 if [ "$severity" != "non fatal" ]; then
-  echo "Heath route reports non non fatal severity"
+  echo "Health route reports other than a non fatal severity"
   exit 1
 fi
 
