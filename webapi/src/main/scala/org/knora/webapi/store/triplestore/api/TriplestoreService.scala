@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.triplestore.api
 
+import play.twirl.api.TxtFormat
 import zio._
 import zio.macros.accessible
 
@@ -26,16 +27,24 @@ trait TriplestoreService {
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
-   * @param sparql          the SPARQL SELECT query string.
-   * @param simulateTimeout if `true`, simulate a read timeout.
-   * @param isGravsearch    if `true`, takes a long timeout because gravsearch queries can take a long time.
-   * @return a [[SparqlSelectResult]].
+   * @param sparql          The SPARQL SELECT query string.
+   * @param simulateTimeout If `true`, simulate a read timeout.
+   * @param isGravsearch    If `true`, takes a long timeout because gravsearch queries can take a long time.
+   * @return A [[SparqlSelectResult]].
    */
   def sparqlHttpSelect(
     sparql: String,
     simulateTimeout: Boolean = false,
     isGravsearch: Boolean = false
   ): Task[SparqlSelectResult]
+
+  /**
+   * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
+   *
+   * @param query The SPARQL SELECT query.
+   * @return A [[SparqlSelectResult]].
+   */
+  def sparqlHttpSelect(query: TxtFormat.Appendable): Task[SparqlSelectResult] = sparqlHttpSelect(query.toString)
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
