@@ -48,7 +48,7 @@ final case class DspProjectRepoLive(
     } yield project
 
   override def findAll(): Task[List[DspProject]] = {
-    val query = twirl.queries.sparql.admin.txt.getProjects()
+    val query = twirl.queries.sparql.admin.txt.getProjects(None, None, None)
     for {
       projectsResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString()).map(_.statements.toList)
       projects         <- ZIO.foreach(projectsResponse)(it => toDspProject(InternalIri(it._1.toString), it._2))
