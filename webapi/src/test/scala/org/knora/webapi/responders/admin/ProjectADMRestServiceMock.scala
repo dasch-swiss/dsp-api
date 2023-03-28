@@ -14,7 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
-object ProjectsServiceMock extends Mock[ProjectADMRestService] {
+object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
   object GetSingleProject extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
   object CreateProject    extends Effect[(ProjectCreatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
