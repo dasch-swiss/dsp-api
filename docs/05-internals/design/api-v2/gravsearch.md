@@ -14,7 +14,7 @@ The classes that process Gravsearch queries and results can be found in `org.kno
 
 ## Type Inspection
 
-The code that converts Gravserch queries into SPARQL queries, and processes the query results, needs to know the
+The code that converts Gravsearch queries into SPARQL queries, and processes the query results, needs to know the
 types of the entities that are used in the input query. As explained in
 [Type Inference](../../../03-endpoints/api-v2/query-language.md#type-inference), these types can be inferred,
 or they can be specified in the query using type annotations.
