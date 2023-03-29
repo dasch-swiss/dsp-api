@@ -42,6 +42,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -242,17 +243,19 @@ final case class ResourcesRouteV1(
                 Future(CreateValueV1WithComment(dateVal, givenValue.comment))
 
               case OntologyConstants.KnoraBase.ColorValue =>
-                val colorValue = stringFormatter.validateColor(
-                  givenValue.color_value.get,
-                  throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}")
-                )
+                val colorValue = ValuesValidator
+                  .validateColor(givenValue.color_value.get)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}")
+                  )
                 Future(CreateValueV1WithComment(ColorValueV1(colorValue), givenValue.comment))
 
               case OntologyConstants.KnoraBase.GeomValue =>
-                val geometryValue = stringFormatter.validateGeometryString(
-                  givenValue.geom_value.get,
-                  throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}")
-                )
+                val geometryValue = ValuesValidator
+                  .validateGeometryString(givenValue.geom_value.get)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}")
+                  )
                 Future(CreateValueV1WithComment(GeomValueV1(geometryValue), givenValue.comment))
 
               case OntologyConstants.KnoraBase.ListValue =>
@@ -1098,30 +1101,33 @@ final case class ResourcesRouteV1(
           case "int_value" =>
             CreateResourceValueV1(
               int_value = Some(
-                stringFormatter.validateInt(
-                  elementValue,
-                  throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateInt(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
           case "decimal_value" =>
             CreateResourceValueV1(
               decimal_value = Some(
-                stringFormatter.validateBigDecimal(
-                  elementValue,
-                  throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateBigDecimal(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
           case "boolean_value" =>
             CreateResourceValueV1(
               boolean_value = Some(
-                stringFormatter.validateBoolean(
-                  elementValue,
-                  throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateBoolean(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
@@ -1138,30 +1144,33 @@ final case class ResourcesRouteV1(
           case "date_value" =>
             CreateResourceValueV1(
               date_value = Some(
-                stringFormatter.validateDate(
-                  elementValue,
-                  throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateDate(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
           case "color_value" =>
             CreateResourceValueV1(
               color_value = Some(
-                stringFormatter.validateColor(
-                  elementValue,
-                  throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateColor(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
           case "geom_value" =>
             CreateResourceValueV1(
               geom_value = Some(
-                stringFormatter.validateGeometryString(
-                  elementValue,
-                  throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateGeometryString(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
@@ -1182,10 +1191,11 @@ final case class ResourcesRouteV1(
                   throw BadRequestException(s"Invalid interval value in element '${node.label}: '$elementValue'")
 
                 val tVals: Seq[BigDecimal] = timeVals.map { timeVal =>
-                  stringFormatter.validateBigDecimal(
-                    timeVal,
-                    throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'")
-                  )
+                  ValuesValidator
+                    .validateBigDecimal(timeVal)
+                    .getOrElse(
+                      throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'")
+                    )
                 }.toSeq
 
                 CreateResourceValueV1(interval_value = Some(tVals))
@@ -1243,18 +1253,15 @@ final case class ResourcesRouteV1(
                                                )
                                            }
 
-            numberOfProps: Int = stringFormatter.validateInt(
-                                   numprops,
-                                   throw BadRequestException(s"Invalid param numprops: $numprops")
-                                 ) match {
+            numberOfProps: Int = ValuesValidator
+                                   .validateInt(numprops)
+                                   .getOrElse(throw BadRequestException(s"Invalid param numprops: $numprops")) match {
                                    case number: Int =>
                                      if (number < 1) 1 else number // numberOfProps must not be smaller than 1
                                  }
 
-            limitOfResults = stringFormatter.validateInt(
-                               limit,
-                               throw BadRequestException(s"Invalid param limit: $limit")
-                             )
+            limitOfResults =
+              ValuesValidator.validateInt(limit).getOrElse(throw BadRequestException(s"Invalid param limit: $limit"))
 
           } yield makeResourceSearchRequestMessage(
             searchString = searchString,

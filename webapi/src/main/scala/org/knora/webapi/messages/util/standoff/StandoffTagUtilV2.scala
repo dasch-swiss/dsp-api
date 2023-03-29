@@ -21,6 +21,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
@@ -390,26 +391,29 @@ object StandoffTagUtilV2 {
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>
                 StandoffTagIntegerAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = stringFormatter
-                    .validateInt(attr.value, throw BadRequestException(s"Invalid integer attribute: '${attr.value}'"))
+                  value = ValuesValidator
+                    .validateInt(attr.value)
+                    .getOrElse(throw BadRequestException(s"Invalid integer attribute: '${attr.value}'"))
                 )
 
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Decimal))) =>
                 StandoffTagDecimalAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = stringFormatter.validateBigDecimal(
-                    attr.value,
-                    throw BadRequestException(s"Invalid decimal attribute: '${attr.value}'")
-                  )
+                  value = ValuesValidator
+                    .validateBigDecimal(attr.value)
+                    .getOrElse(
+                      throw BadRequestException(s"Invalid decimal attribute: '${attr.value}'")
+                    )
                 )
 
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
                 StandoffTagBooleanAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = stringFormatter.validateBoolean(
-                    attr.value,
-                    throw BadRequestException(s"Invalid boolean attribute: '${attr.value}'")
-                  )
+                  value = ValuesValidator
+                    .validateBoolean(attr.value)
+                    .getOrElse(
+                      throw BadRequestException(s"Invalid boolean attribute: '${attr.value}'")
+                    )
                 )
 
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) =>
@@ -803,8 +807,9 @@ object StandoffTagUtilV2 {
 
           val colorValue = StandoffTagStringAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasColor.toSmartIri,
-            value =
-              stringFormatter.validateColor(colorString, throw BadRequestException(s"Color invalid: $colorString"))
+            value = ValuesValidator
+              .validateColor(colorString)
+              .getOrElse(throw BadRequestException(s"Color invalid: $colorString"))
           )
 
           val classSpecificProps =
@@ -876,10 +881,9 @@ object StandoffTagUtilV2 {
 
           val integerValue = StandoffTagIntegerAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri,
-            value = stringFormatter.validateInt(
-              integerString,
-              throw BadRequestException(s"Integer value invalid: $integerString")
-            )
+            value = ValuesValidator
+              .validateInt(integerString)
+              .getOrElse(throw BadRequestException(s"Integer value invalid: $integerString"))
           )
 
           val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(
@@ -917,10 +921,11 @@ object StandoffTagUtilV2 {
 
           val decimalValue = StandoffTagDecimalAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasDecimal.toSmartIri,
-            value = stringFormatter.validateBigDecimal(
-              decimalString,
-              throw BadRequestException(s"Decimal value invalid: $decimalString")
-            )
+            value = ValuesValidator
+              .validateBigDecimal(decimalString)
+              .getOrElse(
+                throw BadRequestException(s"Decimal value invalid: $decimalString")
+              )
           )
 
           val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(
@@ -958,10 +963,11 @@ object StandoffTagUtilV2 {
 
           val booleanValue = StandoffTagBooleanAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri,
-            value = stringFormatter.validateBoolean(
-              booleanString,
-              throw BadRequestException(s"Boolean value invalid: $booleanString")
-            )
+            value = ValuesValidator
+              .validateBoolean(booleanString)
+              .getOrElse(
+                throw BadRequestException(s"Boolean value invalid: $booleanString")
+              )
           )
 
           val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(
@@ -1007,18 +1013,20 @@ object StandoffTagUtilV2 {
 
           val intervalStart = StandoffTagDecimalAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalStart.toSmartIri,
-            value = stringFormatter.validateBigDecimal(
-              interval(0),
-              throw BadRequestException(s"Decimal value invalid: ${interval(0)}")
-            )
+            value = ValuesValidator
+              .validateBigDecimal(interval(0))
+              .getOrElse(
+                throw BadRequestException(s"Decimal value invalid: ${interval(0)}")
+              )
           )
 
           val intervalEnd = StandoffTagDecimalAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalEnd.toSmartIri,
-            value = stringFormatter.validateBigDecimal(
-              interval(1),
-              throw BadRequestException(s"Decimal value invalid: ${interval(1)}")
-            )
+            value = ValuesValidator
+              .validateBigDecimal(interval(1))
+              .getOrElse(
+                throw BadRequestException(s"Decimal value invalid: ${interval(1)}")
+              )
           )
 
           val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(
