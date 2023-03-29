@@ -96,7 +96,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
 
     }
