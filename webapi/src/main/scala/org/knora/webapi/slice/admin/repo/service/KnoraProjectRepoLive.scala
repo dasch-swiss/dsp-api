@@ -32,7 +32,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
-  private val pom: PredicateObjectMapper
+  private val mapper: PredicateObjectMapper
 ) extends KnoraProjectRepo {
 
   override def findById(id: InternalIri): Task[Option[KnoraProject]] =
@@ -63,16 +63,16 @@ final case class KnoraProjectRepoLive(
     val projectIri = InternalIri(subjectPropsTuple._1.toString)
     val propsMap   = subjectPropsTuple._2
     for {
-      shortname <- pom.getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap).map(_.value)
-      shortcode <- pom.getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap).map(_.value)
-      longname  <- pom.getSingleOption[StringLiteralV2](ProjectLongname, propsMap).map(_.map(_.value))
-      description <- pom
+      shortname <- mapper.getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap).map(_.value)
+      shortcode <- mapper.getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap).map(_.value)
+      longname  <- mapper.getSingleOption[StringLiteralV2](ProjectLongname, propsMap).map(_.map(_.value))
+      description <- mapper
                        .getListOrFail[StringLiteralV2](ProjectDescription, propsMap)
                        .map(_.map(desc => V2.StringLiteralV2(desc.value, desc.language)))
-      keywords <- pom.getList[StringLiteralV2](ProjectKeyword, propsMap).map(_.map(_.value).sorted)
-      logo     <- pom.getSingleOption[StringLiteralV2](ProjectLogo, propsMap).map(_.map(_.value))
-      status   <- pom.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(_.value)
-      selfjoin <- pom.getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propsMap).map(_.value)
+      keywords <- mapper.getList[StringLiteralV2](ProjectKeyword, propsMap).map(_.map(_.value).sorted)
+      logo     <- mapper.getSingleOption[StringLiteralV2](ProjectLogo, propsMap).map(_.map(_.value))
+      status   <- mapper.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(_.value)
+      selfjoin <- mapper.getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propsMap).map(_.value)
     } yield KnoraProject(projectIri, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)
   }
 }
