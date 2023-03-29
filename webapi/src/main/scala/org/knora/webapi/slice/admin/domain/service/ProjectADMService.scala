@@ -28,7 +28,7 @@ final case class ProjectADMServiceLive(
 
   override def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreach(_)(toProjectADM))
   override def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    projectRepo.findByProjectIdentifier(projectId).flatMap(ZIO.foreach(_)(toProjectADM))
+    projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM))
 
   private def toProjectADM(dspProject: KnoraProject): Task[ProjectADM] =
     for {
@@ -53,7 +53,7 @@ final case class ProjectADMServiceLive(
     } yield ProjectsKeywordsGetResponseADM(keywords)
 
   override def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]] =
-    projectRepo.findByProjectIdentifier(id).map(_.map(_.keywords).map(ProjectKeywordsGetResponseADM))
+    projectRepo.findById(id).map(_.map(_.keywords).map(ProjectKeywordsGetResponseADM))
 }
 
 object ProjectADMServiceLive {

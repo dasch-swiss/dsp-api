@@ -12,5 +12,5 @@ import org.knora.webapi.slice.common.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait KnoraProjectRepo extends Repository[KnoraProject, InternalIri] {
-  def findByProjectIdentifier(id: ProjectIdentifierADM): Task[Option[KnoraProject]]
+  def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]]
 }

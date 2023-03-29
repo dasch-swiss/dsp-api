@@ -38,7 +38,7 @@ final case class KnoraProjectRepoLive(
   override def findById(id: InternalIri): Task[Option[KnoraProject]] =
     findOneByQuery(getProjects(maybeIri = Some(id.value), None, None))
 
-  override def findByProjectIdentifier(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = {
+  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = {
     val maybeIri       = id.asIriIdentifierOption
     val maybeShortname = id.asShortnameIdentifierOption
     val maybeShortCode = id.asShortcodeIdentifierOption
