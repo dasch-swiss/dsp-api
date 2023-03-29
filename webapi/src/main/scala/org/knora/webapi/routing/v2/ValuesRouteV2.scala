@@ -67,19 +67,14 @@ final case class ValuesRouteV2(
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
 
-        // Was a version date provided?
-        val versionDate: Option[Instant] = params.get("version").map { versionStr =>
-          def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
-
-          // Yes. Try to parse it as an xsd:dateTimeStamp.
-          ValuesValidator
-            .xsdDateTimeStampToInstant(versionStr)
-            .getOrElse(
-              // If that doesn't work, try to parse it as a Knora ARK timestamp.
-              stringFormatter.arkTimestampToInstant(versionStr, errorFun)
-            )
-        }
-
+        val versionDate: Option[Instant] = params
+          .get("version")
+          .map(versionStr =>
+            ValuesValidator
+              .xsdDateTimeStampToInstant(versionStr)
+              .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
+              .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
+          )
         val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 

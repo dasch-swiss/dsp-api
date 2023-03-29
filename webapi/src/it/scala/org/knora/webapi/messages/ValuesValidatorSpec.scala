@@ -1,5 +1,7 @@
 package org.knora.webapi.messages
 
+import java.time.Instant
+
 import dsp.errors.AssertionException
 import org.knora.webapi.CoreSpec
 
@@ -107,6 +109,27 @@ class ValuesValidatorSpec extends CoreSpec {
           .validateDate(dateString)
           .getOrElse(throw AssertionException(s"Year 0 is Not accepted $dateString"))
       }
+    }
+
+    "parse an ARK URL timestamp with a fractional part" in {
+      val timestampStr = "20180604T0856229876543Z"
+      val timestamp =
+        ValuesValidator.arkTimestampToInstant(timestampStr)
+      assert(timestamp.contains(Instant.parse("2018-06-04T08:56:22.9876543Z")))
+    }
+
+    "parse an ARK URL timestamp with a leading zero" in {
+      val timestampStr = "20180604T085622098Z"
+      val timestamp =
+        ValuesValidator.arkTimestampToInstant(timestampStr)
+      assert(timestamp.contains(Instant.parse("2018-06-04T08:56:22.098Z")))
+    }
+
+    "parse an ARK URL timestamp without a fractional part" in {
+      val timestampStr = "20180604T085622Z"
+      val timestamp =
+        ValuesValidator.arkTimestampToInstant(timestampStr)
+      assert(timestamp.contains(Instant.parse("2018-06-04T08:56:22Z")))
     }
   }
 }

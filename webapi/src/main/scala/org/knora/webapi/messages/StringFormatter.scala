@@ -18,7 +18,6 @@ import zio.ZLayer
 import java.nio.ByteBuffer
 import java.time._
 import java.time.temporal.ChronoField
-import java.time.temporal.TemporalAccessor
 import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -736,10 +735,6 @@ class StringFormatter private (
   // A regex that matches a Knora standoff IRI.
   private val StandoffIriRegex: Regex =
     ("^http://" + IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + """)/standoff/(\d+)$""").r
-
-  // A regex that parses a Knora ARK timestamp.
-  private val ArkTimestampRegex: Regex =
-    """^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{1,9})?Z$""".r
 
   // A regex that finds trailing zeroes.
   private val TrailingZerosRegex: Regex =
@@ -1636,17 +1631,6 @@ class StringFormatter private (
     )
 
   /**
-   * Replaces all characters that have a special meaning in the Lucene Query Parser syntax and normalizes spaces.
-   *
-   * @param s  a string
-   * @return   the normalized string
-   */
-  def replaceLuceneQueryParserSyntaxCharacters(s: String): String = {
-    val stringWithoutSpecialCharacters = s.replaceAll("[\\/\\+\\-&\\|!\\(\\)\\{\\}\\[\\]\\^\"~\\*\\?:\\\\]", " ")
-    StringUtils.normalizeSpace(stringWithoutSpecialCharacters)
-  }
-
-  /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.
    *
    * @param s the string to be encoded.
@@ -1654,45 +1638,6 @@ class StringFormatter private (
    */
   def toJsonEncodedString(s: String): String =
     JsString(s).compactPrint
-
-  /**
-   * Parses a Knora ARK timestamp.
-   *
-   * @param timestampStr the string to be parsed.
-   * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return an [[Instant]].
-   */
-  def arkTimestampToInstant(timestampStr: String, errorFun: => Nothing): Instant = // --
-    timestampStr match {
-      case ArkTimestampRegex(year, month, day, hour, minute, second, fraction) =>
-        val nanoOfSecond: Int = Option(fraction) match {
-          case None => 0
-
-          case Some(definedFraction) =>
-            // Pad the nano-of-second with trailing zeroes so it has 9 digits, then convert it
-            // to an integer.
-            definedFraction.padTo(9, '0').toInt
-        }
-
-        try {
-          val accessor: TemporalAccessor = OffsetDateTime.of(
-            year.toInt,
-            month.toInt,
-            day.toInt,
-            hour.toInt,
-            minute.toInt,
-            second.toInt,
-            nanoOfSecond,
-            ZoneOffset.UTC
-          )
-
-          Instant.from(accessor)
-        } catch {
-          case _: Exception => errorFun
-        }
-
-      case _ => errorFun
-    }
 
   /**
    * Formats a Knora ARK timestamp.
