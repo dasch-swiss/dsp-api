@@ -29,6 +29,7 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.domain
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.messages.ValuesValidator
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -148,10 +149,11 @@ object SparqlExtendedConstructResponse {
 
                   case OntologyConstants.Xsd.DateTime =>
                     DateTimeLiteralV2(
-                      stringFormatter.xsdDateTimeStampToInstant(
-                        datatypeLiteral.value,
-                        throw InconsistentRepositoryDataException(s"Invalid xsd:dateTime: ${datatypeLiteral.value}")
-                      )
+                      ValuesValidator
+                        .xsdDateTimeStampToInstant(datatypeLiteral.value)
+                        .getOrElse(
+                          throw InconsistentRepositoryDataException(s"Invalid xsd:dateTime: ${datatypeLiteral.value}")
+                        )
                     )
 
                   case OntologyConstants.Xsd.Boolean =>

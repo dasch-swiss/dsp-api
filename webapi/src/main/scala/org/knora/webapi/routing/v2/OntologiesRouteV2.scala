@@ -41,6 +41,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
@@ -292,10 +293,9 @@ final case class OntologiesRouteV2(
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteClassCommentRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -543,10 +543,9 @@ final case class OntologiesRouteV2(
           .query()
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteClassRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -575,10 +574,9 @@ final case class OntologiesRouteV2(
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteOntologyCommentRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -839,10 +837,9 @@ final case class OntologiesRouteV2(
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeletePropertyCommentRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -1025,10 +1022,9 @@ final case class OntologiesRouteV2(
           .query()
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeletePropertyRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -1105,10 +1101,9 @@ final case class OntologiesRouteV2(
         .query()
         .toMap
         .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-      val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-        lastModificationDateStr,
-        throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-      )
+      val lastModificationDate = ValuesValidator
+        .xsdDateTimeStampToInstant(lastModificationDateStr)
+        .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
       val requestMessageFuture: Future[DeleteOntologyRequestV2] = for {
         requestingUser <- getUserADM(requestContext)

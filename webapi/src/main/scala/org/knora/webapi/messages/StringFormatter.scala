@@ -17,7 +17,6 @@ import zio.ZLayer
 
 import java.nio.ByteBuffer
 import java.time._
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 import java.time.temporal.TemporalAccessor
 import java.util.Base64
@@ -1655,21 +1654,6 @@ class StringFormatter private (
    */
   def toJsonEncodedString(s: String): String =
     JsString(s).compactPrint
-
-  /**
-   * Parses an `xsd:dateTimeStamp`.
-   *
-   * @param s        the string to be parsed.
-   * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return an [[Instant]].
-   */
-  def xsdDateTimeStampToInstant(s: String, errorFun: => Nothing): Instant = // --
-    try {
-      val accessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
-      Instant.from(accessor)
-    } catch {
-      case _: Exception => errorFun
-    }
 
   /**
    * Parses a Knora ARK timestamp.

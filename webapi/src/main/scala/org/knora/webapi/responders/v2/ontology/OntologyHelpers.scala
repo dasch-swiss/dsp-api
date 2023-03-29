@@ -34,6 +34,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.messages.ValuesValidator
 
 trait OntologyHelpers {
 
@@ -848,10 +849,9 @@ object OntologyHelpers {
         val lastModificationDate: Option[Instant] = ontologyMetadataMap
           .get(OntologyConstants.KnoraBase.LastModificationDate)
           .map(instant =>
-            stringFormatter.xsdDateTimeStampToInstant(
-              instant,
-              throw InconsistentRepositoryDataException(s"Invalid UTC instant: $instant")
-            )
+            ValuesValidator
+              .xsdDateTimeStampToInstant(instant)
+              .getOrElse(throw InconsistentRepositoryDataException(s"Invalid UTC instant: $instant"))
           )
         val ontologyVersion: Option[String] = ontologyMetadataMap.get(OntologyConstants.KnoraBase.OntologyVersion)
 
@@ -1696,12 +1696,13 @@ final case class OntologyHelpersLive(
                 } else {
                   val dateStr = lastModDates.head
                   Some(
-                    stringFormatter.xsdDateTimeStampToInstant(
-                      dateStr,
-                      throw InconsistentRepositoryDataException(
-                        s"Invalid ${OntologyConstants.KnoraBase.LastModificationDate}: $dateStr"
+                    ValuesValidator
+                      .xsdDateTimeStampToInstant(dateStr)
+                      .getOrElse(
+                        throw InconsistentRepositoryDataException(
+                          s"Invalid ${OntologyConstants.KnoraBase.LastModificationDate}: $dateStr"
+                        )
                       )
-                    )
                   )
                 }
 

@@ -126,22 +126,22 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
               // Get the value's creation date.
               // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-              maybeCreationDate: Option[Instant] = jsonLDObject
-                                                     .maybeDatatypeValueInObject(
-                                                       key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
-                                                       expectedDatatype =
-                                                         OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                       validationFun = stringFormatter.xsdDateTimeStampToInstant
-                                                     )
-                                                     .orElse(
-                                                       jsonLDObject
-                                                         .maybeDatatypeValueInObject(
-                                                           key = OntologyConstants.KnoraApiV2Complex.CreationDate,
-                                                           expectedDatatype =
-                                                             OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                           validationFun = stringFormatter.xsdDateTimeStampToInstant
-                                                         )
-                                                     )
+              maybeCreationDate =
+                jsonLDObject
+                  .maybeDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                  )
+                  .orElse(
+                    jsonLDObject
+                      .maybeDatatypeValueInObject(
+                        key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                        validationFun =
+                          (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                      )
+                  )
 
               maybePermissions: Option[String] =
                 jsonLDObject.maybeStringWithValidation(
@@ -276,7 +276,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
               jsonLDObject.maybeDatatypeValueInObject(
                 key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                validationFun = stringFormatter.xsdDateTimeStampToInstant
+                validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
               )
 
             // Get and validate the custom new value version IRI, if provided.
@@ -511,7 +511,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
         val deleteDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         DeleteValueRequestV2(
@@ -2598,7 +2598,7 @@ object TimeValueContentV2 extends ValueContentReaderV2[TimeValueContentV2] {
     val valueHasTimeStamp: Instant = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
       expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-      validationFun = stringFormatter.xsdDateTimeStampToInstant
+      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
     )
 
     TimeValueContentV2(

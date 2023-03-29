@@ -38,6 +38,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -1878,7 +1879,7 @@ object InputOntologyV2 {
     val lastModificationDate: Option[Instant] = ontologyObj.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
       expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-      validationFun = stringFormatter.xsdDateTimeStampToInstant
+      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
     )
 
     val ontologyMetadata = OntologyMetadataV2(

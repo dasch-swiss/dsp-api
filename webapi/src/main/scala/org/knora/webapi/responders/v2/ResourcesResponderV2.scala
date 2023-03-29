@@ -70,6 +70,7 @@ import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.messages.ValuesValidator
 
 trait ResourcesResponderV2
 
@@ -2368,10 +2369,9 @@ final case class ResourcesResponderV2Live(
           val author: IRI            = row.rowMap("author")
 
           ResourceHistoryEntry(
-            versionDate = stringFormatter.xsdDateTimeStampToInstant(
-              versionDateStr,
-              throw InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr")
-            ),
+            versionDate = ValuesValidator
+              .xsdDateTimeStampToInstant(versionDateStr)
+              .getOrElse(throw InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr")),
             author = author
           )
         }

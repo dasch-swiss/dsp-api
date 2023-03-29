@@ -26,6 +26,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateVal
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateValueResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Converts data from SPARQL query results into [[ApiValueV1]] objects.
@@ -841,15 +842,9 @@ final case class ValueUtilV1Live(
   private def makeTimeValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates   = valueProps.literalData
     val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
-
-    ZIO.attempt(
-      TimeValueV1(
-        timeStamp = stringFormatter.xsdDateTimeStampToInstant(
-          timeStampStr,
-          throw InconsistentRepositoryDataException(s"Can't parse timestamp: $timeStampStr")
-        )
-      )
-    )
+    ZIO
+      .fromOption(ValuesValidator.xsdDateTimeStampToInstant(timeStampStr).map(TimeValueV1(_)))
+      .orElseFail(InconsistentRepositoryDataException(s"Can't parse timestamp: $timeStampStr"))
   }
 
   /**

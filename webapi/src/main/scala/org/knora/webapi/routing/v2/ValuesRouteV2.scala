@@ -28,6 +28,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Provides a routing function for API v2 routes that deal with values.
@@ -71,12 +72,12 @@ final case class ValuesRouteV2(
           def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
 
           // Yes. Try to parse it as an xsd:dateTimeStamp.
-          try {
-            stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
-          } catch {
-            // If that doesn't work, try to parse it as a Knora ARK timestamp.
-            case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
-          }
+          ValuesValidator
+            .xsdDateTimeStampToInstant(versionStr)
+            .getOrElse(
+              // If that doesn't work, try to parse it as a Knora ARK timestamp.
+              stringFormatter.arkTimestampToInstant(versionStr, errorFun)
+            )
         }
 
         val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)

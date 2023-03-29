@@ -2,8 +2,13 @@ package org.knora.webapi.messages
 
 import scala.util.Try
 import scala.util.matching.Regex
+import java.time.Instant
+import java.time.temporal.TemporalAccessor
+import java.time.format.DateTimeFormatter
 
 object ValuesValidator {
+  // TODO: I think we should rename this to `ValuesConvertor` as it fits better what it's doing
+
   def validateBoolean(s: String): Option[Boolean] = s.toBooleanOption
 
   def validateInt(s: String): Option[Int] = s.toIntOption
@@ -61,5 +66,16 @@ object ValuesValidator {
       case Some(value) => Option(value)
       case None        => None
     }
+  }
+
+  /**
+   * Parses an `xsd:dateTimeStamp`.
+   *
+   * @param s        the string to be parsed.
+   * @return [[Option]] of [[Instant]].
+   */
+  def xsdDateTimeStampToInstant(s: String): Option[Instant] = {
+    val accessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
+    Try(Instant.from(accessor)).toOption
   }
 }

@@ -272,10 +272,9 @@ final case class ResourcesRouteV1(
 
               case OntologyConstants.KnoraBase.TimeValue =>
                 val timeValStr: String = givenValue.time_value.get
-                val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
-                  timeValStr,
-                  throw BadRequestException(s"Invalid timestamp: $timeValStr")
-                )
+                val timeStamp: Instant = ValuesValidator
+                  .xsdDateTimeStampToInstant(timeValStr)
+                  .getOrElse(throw BadRequestException(s"Invalid timestamp: $timeValStr"))
                 Future(CreateValueV1WithComment(TimeValueV1(timeStamp), givenValue.comment))
 
               case OntologyConstants.KnoraBase.GeonameValue =>
@@ -909,10 +908,9 @@ final case class ResourcesRouteV1(
           val creationDate: Option[Instant] = resourceNode
             .attribute("creationDate")
             .map(creationDateNode =>
-              stringFormatter.xsdDateTimeStampToInstant(
-                creationDateNode.text,
-                throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}")
-              )
+              ValuesValidator
+                .xsdDateTimeStampToInstant(creationDateNode.text)
+                .getOrElse(throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}"))
             )
 
           // Convert the XML element's label and namespace to an internal resource class IRI.
@@ -1205,10 +1203,9 @@ final case class ResourcesRouteV1(
             }
 
           case "time_value" =>
-            val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
-              elementValue,
-              throw BadRequestException(s"Invalid timestamp in element '${node.label}': $elementValue")
-            )
+            val timeStamp: Instant = ValuesValidator
+              .xsdDateTimeStampToInstant(elementValue)
+              .getOrElse(throw BadRequestException(s"Invalid timestamp in element '${node.label}': $elementValue"))
             CreateResourceValueV1(time_value = Some(timeStamp.toString))
 
           case "geoname_value" =>
