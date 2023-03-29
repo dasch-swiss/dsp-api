@@ -1,5 +1,43 @@
 # Changelog
 
+## [28.1.0](https://github.com/dasch-swiss/dsp-api/compare/v28.0.0...v28.1.0) (2023-03-29)
+
+
+### Bug Fixes
+
+* Allow setting a cardinality in a three tier class hierarchy (DEV-1927) ([#2542](https://github.com/dasch-swiss/dsp-api/issues/2542)) ([0dc76f0](https://github.com/dasch-swiss/dsp-api/commit/0dc76f00c0fd0003f387004114d1e8cc75a2d840))
+* Apply correct DAOP after changeing them (remove its caching) DEV-1965 ([#2551](https://github.com/dasch-swiss/dsp-api/issues/2551)) ([72e5f92](https://github.com/dasch-swiss/dsp-api/commit/72e5f92ef007675158262d4a949f89f6be7111f7))
+
+
+### Enhancements
+
+* add separate route for local processing of files through sipi ([#2519](https://github.com/dasch-swiss/dsp-api/issues/2519)) ([042f806](https://github.com/dasch-swiss/dsp-api/commit/042f8063b7f7ad5b0b04c5052bf70ea91dc8b689))
+
+
+### Documentation
+
+* update Project IRI documentation (DEV-1786) ([#2539](https://github.com/dasch-swiss/dsp-api/issues/2539)) ([230fca5](https://github.com/dasch-swiss/dsp-api/commit/230fca50736668e5324c7e671e1d57ff4ca750ce))
+
+
+### Maintenance
+
+* add a make target for parametrised database dump and upload ([#2541](https://github.com/dasch-swiss/dsp-api/issues/2541)) ([94c38f2](https://github.com/dasch-swiss/dsp-api/commit/94c38f211122532320d3e0d9a5d7b723d9fa36e3))
+* add docker container healthcheck for dsp-api (INFRA-93) ([#2549](https://github.com/dasch-swiss/dsp-api/issues/2549)) ([8bdc160](https://github.com/dasch-swiss/dsp-api/commit/8bdc160d268df38ead2c6c9c174839551ebed6ff))
+* **CI:** pull all tags when checking out ([#2532](https://github.com/dasch-swiss/dsp-api/issues/2532)) ([fc3a891](https://github.com/dasch-swiss/dsp-api/commit/fc3a89161fcd8be4dd6ace823a42af8b13212caa))
+* Publish a docker container for webapi and sipi on each commit t… ([#2553](https://github.com/dasch-swiss/dsp-api/issues/2553)) ([b6f2590](https://github.com/dasch-swiss/dsp-api/commit/b6f259055249705194cc50fda871786ed257b41e))
+* Remove dead ZIOs from ProjectResponderADM and introduce project services (DEV-1998) ([#2534](https://github.com/dasch-swiss/dsp-api/issues/2534)) ([b5619c2](https://github.com/dasch-swiss/dsp-api/commit/b5619c2a17a3bf43115360c656b76fc8f81e7fc0))
+* remove deprecated fuseki config ([#2552](https://github.com/dasch-swiss/dsp-api/issues/2552)) ([f6826fb](https://github.com/dasch-swiss/dsp-api/commit/f6826fb7c0832af8ad5a36eb6f4796e7448177da))
+* Remove publishing sipi docker image because this build is broken (DEV-1848) ([#2556](https://github.com/dasch-swiss/dsp-api/issues/2556)) ([71f75fa](https://github.com/dasch-swiss/dsp-api/commit/71f75fa4ab669bad79f7125e974beb1cba3a4313))
+* Remove unused code related to ziofied Responders (DEV-1958) ([#2543](https://github.com/dasch-swiss/dsp-api/issues/2543)) ([f40d6cb](https://github.com/dasch-swiss/dsp-api/commit/f40d6cbebc9c8d9f15be5db623df93349c64b173))
+* run integration tests against akka and zio routes (DEV-1585) ([#2545](https://github.com/dasch-swiss/dsp-api/issues/2545)) ([e730ba4](https://github.com/dasch-swiss/dsp-api/commit/e730ba464e0530674c0b11dd5b11679d43fd0797))
+* **StringFormatter:** move values related methods to separate file removing errorFun (DEV-1905) ([#2550](https://github.com/dasch-swiss/dsp-api/issues/2550)) ([ddcf912](https://github.com/dasch-swiss/dsp-api/commit/ddcf912ac03670b66ce236d94d768421dfe32b2b))
+* ziofy Authenticator (DEV-1926) ([#2540](https://github.com/dasch-swiss/dsp-api/issues/2540)) ([9878529](https://github.com/dasch-swiss/dsp-api/commit/9878529653ad9f235e70264d149c10e9d4361c8f))
+* ziofy ResourceUtilV1 (DEV-1967) ([#2546](https://github.com/dasch-swiss/dsp-api/issues/2546)) ([c6e0805](https://github.com/dasch-swiss/dsp-api/commit/c6e080538782fb7aa0b7c36fb18757bf7082acd8))
+* ziofy ResourceUtilV2 (DEV-1963) ([#2544](https://github.com/dasch-swiss/dsp-api/issues/2544)) ([89eb033](https://github.com/dasch-swiss/dsp-api/commit/89eb0334f0f651dccadd700fb86d99bdfaa73fd0))
+* ziofy RouteUtilADM (DEV-1968) ([#2547](https://github.com/dasch-swiss/dsp-api/issues/2547)) ([00b7070](https://github.com/dasch-swiss/dsp-api/commit/00b7070d5be417764e0db611a9bd509971de83ad))
+* ziofy SearchResponderV2 and Gravsearch (DEV-1755) ([#2538](https://github.com/dasch-swiss/dsp-api/issues/2538)) ([e708fc3](https://github.com/dasch-swiss/dsp-api/commit/e708fc3179c2dd071a64c3d423ecf88ccdbadf69))
+* ziofy ValuesResponderV2 (DEV-1757) ([#2536](https://github.com/dasch-swiss/dsp-api/issues/2536)) ([ca6f97a](https://github.com/dasch-swiss/dsp-api/commit/ca6f97af7feded2b50c23ddef0a000b5dc6936b7))
+
 ## [28.0.0](https://github.com/dasch-swiss/dsp-api/compare/v27.1.0...v28.0.0) (2023-03-17)
 
 
