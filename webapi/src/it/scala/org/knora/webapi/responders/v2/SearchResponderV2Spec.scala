@@ -21,6 +21,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import dsp.errors.BadRequestException
 
 /**
  * Tests [[SearchResponderV2]].
@@ -76,6 +77,26 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         assert(response.resources.size == 1)
+      }
+
+    }
+
+    "return a Bad Request error if fulltext search input is invalid" in {
+
+      appActor ! FulltextSearchRequestV2(
+        searchValue = "qin(",
+        offset = 0,
+        limitToProject = None,
+        limitToResourceClass = None,
+        limitToStandoffClass = None,
+        returnFiles = false,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+        requestingUser = SharedTestDataADM.anythingUser1
+      )
+
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
     }
