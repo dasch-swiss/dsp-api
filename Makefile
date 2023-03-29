@@ -40,21 +40,24 @@ structurizer: ## starts the structurizer and serves c4 architecture docs
 .PHONY: build
 build: docker-build ## build all targets (excluding docs)
 
+# add DOCKER_BUILDKIT=1 to enable buildkit logging as info
+# https://github.com/sbt/sbt-native-packager/issues/1371
+
 .PHONY: docker-build-dsp-api-image
 docker-build-dsp-api-image: # build and publish dsp-api docker image locally
-	@sbt "webapi / Docker / publishLocal"
+	export DOCKER_BUILDKIT=1; sbt "webapi / Docker / publishLocal"
 
 .PHONY: docker-publish-dsp-api-image
 docker-publish-dsp-api-image: # publish dsp-api image to Dockerhub
-	@sbt "webapi / Docker / publish"
+	export DOCKER_BUILDKIT=1; sbt "webapi / Docker / publish"
 
 .PHONY: docker-build-sipi-image
 docker-build-sipi-image: # build and publish sipi docker image locally
-	@sbt "sipi / Docker / publishLocal"
+	 export DOCKER_BUILDKIT=1; sbt "sipi / Docker / publishLocal"
 
 .PHONY: docker-publish-sipi-image
 docker-publish-sipi-image: # publish sipi image to Dockerhub
-	@sbt "sipi / Docker / publish"
+	export DOCKER_BUILDKIT=1; sbt "sipi / Docker / publish"
 
 .PHONY: docker-build
 docker-build: docker-build-dsp-api-image docker-build-sipi-image ## build and publish all Docker images locally
