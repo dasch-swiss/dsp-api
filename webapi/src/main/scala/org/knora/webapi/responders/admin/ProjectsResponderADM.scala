@@ -25,7 +25,6 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -40,12 +39,12 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProje
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.AdminConstants.adminDataGraph
+import org.knora.webapi.slice.admin.AdminConstants.permissionsDataGraph
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
@@ -65,15 +64,6 @@ trait ProjectsResponderADM {
   def projectsGetRequestADM(): Task[ProjectsGetResponseADM]
 
   /**
-   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
-   *
-   * @param id the IRI, shortname, shortcode or UUID of the project.
-   * @param skipCache  if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
-   * @return information about the project as an optional [[ProjectADM]].
-   */
-  def getSingleProjectADM(id: ProjectIdentifierADM, skipCache: Boolean = false): Task[Option[ProjectADM]]
-
-  /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
    * as a [[ProjectGetResponseADM]].
    *
@@ -83,6 +73,12 @@ trait ProjectsResponderADM {
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
   def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
+
+  /**
+   * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
+   * If project is not found in cache but in triplestore, then project is written to cache.
+   */
+  def getProjectFromCacheOrTriplestore(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -176,14 +172,16 @@ trait ProjectsResponderADM {
   ): Task[ProjectOperationResponseADM]
 
   def projectDataGetRequestADM(id: ProjectIdentifierADM, user: UserADM): Task[ProjectDataGetResponseADM]
+
 }
 
 final case class ProjectsResponderADMLive(
-  triplestoreService: TriplestoreService,
-  messageRelay: MessageRelay,
-  iriService: IriService,
-  cacheServiceSettings: CacheServiceSettings,
-  implicit val stringFormatter: StringFormatter
+  private val triplestoreService: TriplestoreService,
+  private val messageRelay: MessageRelay,
+  private val iriService: IriService,
+  private val projectService: ProjectADMService,
+  private val cacheServiceSettings: CacheServiceSettings,
+  implicit private val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
     with MessageHandler
     with LazyLogging
@@ -192,9 +190,6 @@ final case class ProjectsResponderADMLive(
   // Global lock IRI used for project creation and update
   private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
-  private val ADMIN_DATA_GRAPH       = "http://www.knora.org/data/admin"
-  private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
-
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ProjectsResponderRequestADM]
 
   /**
@@ -202,7 +197,7 @@ final case class ProjectsResponderADMLive(
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ProjectsGetRequestADM()          => projectsGetRequestADM()
-    case ProjectGetADM(identifier)        => getSingleProjectADM(identifier)
+    case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
     case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
     case ProjectMembersGetRequestADM(identifier, requestingUser) =>
       projectMembersGetRequestADM(identifier, requestingUser)
@@ -235,102 +230,18 @@ final case class ProjectsResponderADMLive(
   }
 
   /**
-   * Gets all the projects and returns them as a sequence containing [[ProjectADM]].
-   *
-   * @return all the projects as a sequence containing [[ProjectADM]].
-   */
-  private def projectsGetADM(): Task[Seq[ProjectADM]] = {
-    val query = twirl.queries.sparql.admin.txt
-      .getProjects(
-        maybeIri = None,
-        maybeShortname = None,
-        maybeShortcode = None
-      )
-    for {
-      projectsResponse      <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
-      projectIris            = projectsResponse.statements.keySet.map(_.toString)
-      ontologiesForProjects <- getOntologiesForProjects(projectIris)
-      projects =
-        projectsResponse.statements.toList.map {
-          case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-            val projectOntologies =
-              ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
-            convertStatementsToProjectADM(
-              statements = (projectIriSubject, propsMap),
-              ontologies = projectOntologies
-            )
-        }
-
-    } yield projects.sorted
-  }
-
-  /**
-   * Given a set of project IRIs, gets the ontologies that belong to each project.
-   *
-   * @param projectIris    a set of project IRIs. If empty, returns the ontologies for all projects.
-   * @return a map of project IRIs to sequences of ontology IRIs.
-   */
-  private def getOntologiesForProjects(projectIris: Set[IRI]): Task[Map[IRI, Seq[IRI]]] = {
-    def getIriPair(ontology: OntologyMetadataV2) =
-      ontology.projectIri.fold(
-        throw InconsistentRepositoryDataException(s"Ontology ${ontology.ontologyIri} has no project")
-      )(project => (project.toString, ontology.ontologyIri.toString))
-
-    val request = OntologyMetadataGetByProjectRequestV2(
-      projectIris = projectIris.map(_.toSmartIri),
-      requestingUser = KnoraSystemInstances.Users.SystemUser
-    )
-
-    for {
-      ontologyMetadataResponse <- messageRelay.ask[ReadOntologyMetadataV2](request)
-      ontologies                = ontologyMetadataResponse.ontologies.toList
-      iriPairs                  = ontologies.map(getIriPair)
-      projectToOntologyMap      = iriPairs.groupMap { case (project, _) => project } { case (_, onto) => onto }
-    } yield projectToOntologyMap
-  }
-
-  /**
    * Gets all the projects and returns them as a [[ProjectADM]].
    *
    * @return all the projects as a [[ProjectADM]].
    *
-   *         NotFoundException if no projects are found.
+   *         [[NotFoundException]] if no projects are found.
    */
   override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
-    for {
-      projects <- projectsGetADM()
-      result <- if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
-                else { ZIO.fail(NotFoundException(s"No projects found")) }
-    } yield result
-
-  /**
-   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information as a [[ProjectADM]].
-   *
-   * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @param skipCache            if `true`, doesn't check the cache and tries to retrieve the project directly from the triplestore
-   * @return information about the project as an optional [[ProjectADM]].
-   */
-  override def getSingleProjectADM(
-    id: ProjectIdentifierADM,
-    skipCache: Boolean = false
-  ): Task[Option[ProjectADM]] = {
-
-    logger.debug(
-      s"getSingleProjectADM - id: {}, skipCache: {}",
-      getId(id),
-      skipCache
-    )
-
-    for {
-      maybeProjectADM <-
-        if (skipCache) {
-          getProjectFromTriplestore(identifier = id)
-        } else {
-          // getting from cache or triplestore
-          getProjectFromCacheOrTriplestore(identifier = id)
-        }
-    } yield maybeProjectADM
-  }
+    projectService.findAll
+      .flatMap(projects =>
+        if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
+        else { ZIO.fail(NotFoundException(s"No projects found")) }
+      )
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -342,7 +253,7 @@ final case class ProjectsResponderADMLive(
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
   override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
-    getSingleProjectADM(id)
+    getProjectFromCacheOrTriplestore(id)
       .flatMap(ZIO.fromOption(_))
       .mapBoth(_ => NotFoundException(s"Project '${getId(id)}' not found"), ProjectGetResponseADM)
 
@@ -360,7 +271,7 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- getSingleProjectADM(id)
+      project <- getProjectFromCacheOrTriplestore(id)
                    .flatMap(ZIO.fromOption(_))
                    .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
@@ -420,7 +331,7 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectAdminMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- getSingleProjectADM(id)
+      project <- getProjectFromCacheOrTriplestore(id)
                    .flatMap(ZIO.fromOption(_))
                    .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
@@ -470,12 +381,7 @@ final case class ProjectsResponderADMLive(
    * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
    */
   override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
-    for {
-      projects <- projectsGetADM()
-
-      keywords: Seq[String] = projects.flatMap(_.keywords).distinct.sorted
-
-    } yield ProjectsKeywordsGetResponseADM(keywords = keywords)
+    projectService.findAllProjectsKeywords
 
   /**
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
@@ -485,14 +391,12 @@ final case class ProjectsResponderADMLive(
    */
   override def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM] =
     for {
-      id <- IriIdentifier
-              .fromString(projectIri.value)
-              .toZIO
-              .mapError(e => BadRequestException(e.getMessage))
-      keywords <- getSingleProjectADM(id)
+      id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
+      keywords <- projectService
+                    .findProjectKeywordsBy(id)
                     .flatMap(ZIO.fromOption(_))
-                    .mapBoth(_ => NotFoundException(s"Project '${projectIri.value}' not found."), _.keywords)
-    } yield ProjectKeywordsGetResponseADM(keywords)
+                    .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found."))
+    } yield keywords
 
   override def projectDataGetRequestADM(
     id: ProjectIdentifierADM,
@@ -544,7 +448,7 @@ final case class ProjectsResponderADMLive(
      * @param namedGraphTrigFiles the TriG files to combine.
      * @param resultFile          the output file.
      */
-    def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: Path): Unit = {
+    def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: Path): Task[Unit] = ZIO.attempt {
       val rdfFormatUtil: RdfFormatUtil                                = RdfFeatureFactory.getRdfFormatUtil()
       var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
 
@@ -590,7 +494,7 @@ final case class ProjectsResponderADMLive(
 
     for {
       // Get the project info.
-      project <- getSingleProjectADM(id)
+      project <- getProjectFromCacheOrTriplestore(id)
                    .flatMap(ZIO.fromOption(_))
                    .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
 
@@ -632,7 +536,7 @@ final case class ProjectsResponderADMLive(
 
       // Download the project's admin data.
 
-      adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = ADMIN_DATA_GRAPH, tempDir = tempDir)
+      adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = adminDataGraph, tempDir = tempDir)
 
       adminDataSparql = twirl.queries.sparql.admin.txt.getProjectAdminData(project.id)
       _ <- triplestoreService.sparqlHttpConstructFile(
@@ -644,7 +548,7 @@ final case class ProjectsResponderADMLive(
 
       // Download the project's permission data.
 
-      permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = PERMISSIONS_DATA_GRAPH, tempDir = tempDir)
+      permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = permissionsDataGraph, tempDir = tempDir)
 
       permissionDataSparql = twirl.queries.sparql.admin.txt.getProjectPermissions(project.id)
       _ <- triplestoreService.sparqlHttpConstructFile(
@@ -659,7 +563,7 @@ final case class ProjectsResponderADMLive(
       namedGraphTrigFiles: Seq[NamedGraphTrigFile] =
         projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
       resultFile: Path = tempDir.resolve(project.shortname + ".trig")
-      _                = combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
+      _               <- combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
     } yield ProjectDataGetResponseADM(resultFile)
   }
 
@@ -789,9 +693,9 @@ final case class ProjectsResponderADMLive(
     else {
       val projectId = IriIdentifier(projectIri)
       for {
-        maybeCurrentProject <- getSingleProjectADM(projectId, skipCache = true)
-        _ <- ZIO
-               .fromOption(maybeCurrentProject)
+        _ <- projectService
+               .findByProjectIdentifier(projectId)
+               .flatMap(ZIO.fromOption(_))
                .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request."))
 
         // we are changing the project, so lets get rid of the cached copy
@@ -814,18 +718,17 @@ final case class ProjectsResponderADMLive(
         _ <- triplestoreService.sparqlHttpUpdate(updateQuery.toString)
 
         /* Verify that the project was updated. */
-        maybeUpdatedProject <- getSingleProjectADM(projectId, skipCache = true)
-
         updatedProject <-
-          ZIO
-            .fromOption(maybeUpdatedProject)
+          projectService
+            .findByProjectIdentifier(projectId)
+            .flatMap(ZIO.fromOption(_))
             .orElseFail(UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
         _ <- ZIO.logDebug(
                s"updateProjectADM - projectUpdatePayload: $projectUpdatePayload /  updatedProject: $updatedProject"
              )
 
-        _ = checkProjectUpdate(updatedProject, projectUpdatePayload)
+        _ <- checkProjectUpdate(updatedProject, projectUpdatePayload)
 
       } yield ProjectOperationResponseADM(project = updatedProject)
     }
@@ -843,7 +746,7 @@ final case class ProjectsResponderADMLive(
   private def checkProjectUpdate(
     updatedProject: ProjectADM,
     projectUpdatePayload: ProjectUpdatePayloadADM
-  ): Unit = {
+  ): Task[Unit] = ZIO.attempt {
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.shortname
         .map(_.value)
@@ -1057,20 +960,9 @@ final case class ProjectsResponderADMLive(
 
         // check the custom IRI; if not given, create an unused IRI
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(_.value).map(_.toSmartIri)
-        newProjectIRI <- iriService.checkOrCreateEntityIri(
-                           customProjectIri,
-                           stringFormatter.makeRandomProjectIri
-                         )
-
-        maybeLongname = createProjectRequest.longname match {
-                          case Some(value) => Some(value.value)
-                          case None        => None
-                        }
-
-        maybeLogo = createProjectRequest.logo match {
-                      case Some(value) => Some(value.value)
-                      case None        => None
-                    }
+        newProjectIRI                     <- iriService.checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri)
+        maybeLongname                      = createProjectRequest.longname.map(_.value)
+        maybeLogo                          = createProjectRequest.logo.map(_.value)
 
         createNewProjectSparqlString = twirl.queries.sparql.admin.txt
                                          .createNewProject(
@@ -1097,7 +989,9 @@ final case class ProjectsResponderADMLive(
         // try to retrieve newly created project (will also add to cache)
         id <- IriIdentifier.fromString(newProjectIRI).toZIO.mapError(e => BadRequestException(e.getMessage))
         // check to see if we could retrieve the new project
-        newProjectADM <- getSingleProjectADM(id, skipCache = true)
+
+        newProjectADM <- projectService
+                           .findByProjectIdentifier(id)
                            .flatMap(ZIO.fromOption(_))
                            .orElseFail(
                              UpdateNotPerformedException(
@@ -1121,7 +1015,7 @@ final case class ProjectsResponderADMLive(
    * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
    * If project is not found in cache but in triplestore, then project is written to cache.
    */
-  private def getProjectFromCacheOrTriplestore(
+  override def getProjectFromCacheOrTriplestore(
     identifier: ProjectIdentifierADM
   ): Task[Option[ProjectADM]] =
     if (cacheServiceSettings.cacheServiceEnabled) {
@@ -1129,7 +1023,7 @@ final case class ProjectsResponderADMLive(
       getProjectFromCache(identifier).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          getProjectFromTriplestore(identifier = identifier).flatMap {
+          projectService.findByProjectIdentifier(identifier).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               logger.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
@@ -1151,82 +1045,8 @@ final case class ProjectsResponderADMLive(
     } else {
       // caching disabled
       logger.debug("getProjectFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      getProjectFromTriplestore(identifier = identifier)
+      projectService.findByProjectIdentifier(identifier)
     }
-
-  /**
-   * Tries to retrieve a [[ProjectADM]] from the triplestore.
-   */
-  private def getProjectFromTriplestore(
-    identifier: ProjectIdentifierADM
-  ): Task[Option[ProjectADM]] = {
-    val query = twirl.queries.sparql.admin.txt
-      .getProjects(
-        maybeIri = identifier.asIriIdentifierOption,
-        maybeShortname = identifier.asShortnameIdentifierOption,
-        maybeShortcode = identifier.asShortcodeIdentifierOption
-      )
-    for {
-      projectResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
-
-      projectIris = projectResponse.statements.keySet.map(_.toString)
-      ontologies <- if (projectResponse.statements.nonEmpty) {
-                      getOntologiesForProjects(projectIris)
-                    } else {
-                      ZIO.succeed(Map.empty[IRI, Seq[IRI]])
-                    }
-
-      maybeProjectADM: Option[ProjectADM] =
-        if (projectResponse.statements.nonEmpty) {
-          logger.debug("getProjectFromTriplestore - triplestore hit for: {}", getId(identifier))
-          val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
-          Some(convertStatementsToProjectADM(projectResponse.statements.head, projectOntologies))
-        } else {
-          logger.debug("getProjectFromTriplestore - no triplestore hit for: {}", getId(identifier))
-          None
-        }
-    } yield maybeProjectADM
-  }
-
-  /**
-   * Helper method that turns SPARQL result rows into a [[ProjectADM]].
-   *
-   * @param statements results from the SPARQL query representing information about the project.
-   * @param ontologies the ontologies in the project.
-   * @return a [[ProjectADM]] representing information about project.
-   */
-  @throws[InconsistentRepositoryDataException]("If the statements do not contain expected keys.")
-  private def convertStatementsToProjectADM(
-    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
-    ontologies: Seq[IRI]
-  ): ProjectADM = {
-    val projectIri: IRI                              = statements._1.toString
-    val propertiesMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
-
-    def getOption[A <: LiteralV2](key: IRI): Option[Seq[A]] =
-      propertiesMap.get(key.toSmartIri).map(_.map(_.asInstanceOf[A]))
-
-    def getOrThrow[A <: LiteralV2](
-      key: IRI
-    ): Seq[A] =
-      getOption[A](key).getOrElse(
-        throw InconsistentRepositoryDataException(s"Project: $projectIri has no $key defined.")
-      )
-
-    val shortname = getOrThrow[StringLiteralV2](ProjectShortname).head.value
-    val shortcode = getOrThrow[StringLiteralV2](ProjectShortcode).head.value
-    val longname  = getOption[StringLiteralV2](ProjectLongname).map(_.head.value)
-    val description = getOrThrow[StringLiteralV2](ProjectDescription)
-      .map(desc => V2.StringLiteralV2(desc.value, desc.language))
-    val keywords = getOption[StringLiteralV2](ProjectKeyword).getOrElse(Seq.empty).map(_.value).sorted
-    val logo     = getOption[StringLiteralV2](ProjectLogo).map(_.head.value)
-    val status   = getOrThrow[BooleanLiteralV2](Status).head.value
-    val selfjoin = getOrThrow[BooleanLiteralV2](HasSelfJoinEnabled).head.value
-
-    val project =
-      ProjectADM(projectIri, shortname, shortcode, longname, description, keywords, logo, ontologies, status, selfjoin)
-    project.unescape
-  }
 
   /**
    * Helper method for checking if a project identified by shortname exists.
@@ -1255,18 +1075,18 @@ final case class ProjectsResponderADMLive(
 }
 
 object ProjectsResponderADMLive {
-  val layer: ZLayer[
-    MessageRelay with TriplestoreService with StringFormatter with IriService with AppConfig,
-    Nothing,
-    ProjectsResponderADM
+  val layer: URLayer[
+    MessageRelay with TriplestoreService with StringFormatter with ProjectADMService with IriService with AppConfig,
+    ProjectsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
       c       <- ZIO.service[AppConfig].map(new CacheServiceSettings(_))
       iris    <- ZIO.service[IriService]
+      ps      <- ZIO.service[ProjectADMService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, c, sf))
+      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, ps, c, sf))
     } yield handler
   }
 }
