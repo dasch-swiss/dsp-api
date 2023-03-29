@@ -30,6 +30,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -188,7 +189,7 @@ final case class ResourcesRouteV2(
       val pageStr: String =
         params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
       val page: Int =
-        stringFormatter.validateInt(pageStr, throw BadRequestException(s"Invalid page number: $pageStr"))
+        ValuesValidator.validateInt(pageStr).getOrElse(throw BadRequestException(s"Invalid page number: $pageStr"))
 
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 

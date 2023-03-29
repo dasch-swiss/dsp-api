@@ -21,6 +21,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
@@ -61,7 +62,7 @@ final case class StandoffRouteV2(
           }
 
           val offset: Int =
-            stringFormatter.validateInt(offsetStr, throw BadRequestException(s"Invalid offset: $offsetStr"))
+            ValuesValidator.validateInt(offsetStr).getOrElse(throw BadRequestException(s"Invalid offset: $offsetStr"))
           val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
           val requestTask = Authenticator
             .getUserADM(requestContext)

@@ -141,7 +141,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
-    Test / libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin)
   .settings(
@@ -156,7 +156,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     inConfig(IntegrationTest) {
       Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings
     },
-    IntegrationTest / libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
   .settings(
     // add needed files to production jar
@@ -232,6 +232,14 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333, 3339),
     Docker / defaultLinuxInstallLocation := "/opt/docker",
+    dockerCommands += Cmd(
+      "RUN",
+      "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*"
+    ), // install jq for container healthcheck
+    dockerCommands += Cmd(
+      """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
+        |CMD bash /opt/docker/scripts/healthcheck.sh || exit 1""".stripMargin
+    ),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
       // Remove USER command

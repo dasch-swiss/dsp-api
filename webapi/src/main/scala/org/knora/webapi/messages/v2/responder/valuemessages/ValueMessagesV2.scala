@@ -28,6 +28,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
@@ -2177,7 +2178,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
     val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     DecimalValueContentV2(
@@ -2364,7 +2365,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
 
     val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry,
-      stringFormatter.validateGeometryString
+      (s, errorFun) => ValuesValidator.validateGeometryString(s).getOrElse(errorFun)
     )
 
     GeomValueContentV2(
@@ -2482,13 +2483,13 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
     val intervalValueHasStart: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     val intervalValueHasEnd: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     IntervalValueContentV2(

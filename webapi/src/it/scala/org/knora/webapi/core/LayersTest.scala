@@ -26,7 +26,6 @@ import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
-import org.knora.webapi.responders.admin.ProjectsServiceLive
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.StoresResponderADM
@@ -76,6 +75,12 @@ import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
+import org.knora.webapi.slice.common.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -118,30 +123,36 @@ object LayersTest {
     ApiRoutes
       with AppRouter
       with Authenticator
-      with OntologyCache
-      with OntologyRepo
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
+      with GravsearchTypeInspectionUtil
       with GroupsResponderADM
       with HttpServer
       with IIIFRequestMessageHandler
       with IriConverter
       with IriService
-      with ListsResponderV2
+      with KnoraProjectRepoLive
       with ListsResponderADM
       with ListsResponderV1
+      with ListsResponderV2
       with MessageRelay
+      with OntologyCache
+      with OntologyHelpers
+      with OntologyRepo
       with OntologyResponderV1
       with OntologyResponderV2
-      with OntologyHelpers
       with PermissionUtilADM
       with PermissionsResponderADM
+      with PredicateObjectMapper
+      with ProjectADMRestService
+      with ProjectADMService
       with ProjectsResponderADM
       with ProjectsResponderV1
+      with QueryTraverser
       with RepositoryUpdater
       with ResourceInfoRepo
       with ResourceUtilV2
@@ -151,18 +162,16 @@ object LayersTest {
       with RestResourceInfoService
       with SearchResponderV1
       with SearchResponderV2
-      with SparqlTransformerLive
-      with QueryTraverser
-      with GravsearchTypeInspectionUtil
       with SipiResponderADM
+      with SparqlTransformerLive
       with StandoffResponderV1
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
       with StoresResponderADM
       with TestClientService
-      with TriplestoreService
       with TriplestoreRequestMessageHandler
+      with TriplestoreService
       with UsersResponderADM
       with UsersResponderV1
       with ValueUtilV1
@@ -174,23 +183,25 @@ object LayersTest {
       ApiRoutes.layer,
       AppRouter.layer,
       AuthenticationMiddleware.layer,
-      AuthenticatorService.layer,
       AuthenticatorLive.layer,
+      AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      GravsearchTypeInspectionUtil.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer,
       IIIFRequestMessageHandlerLive.layer,
       IriConverter.layer,
       IriService.layer,
-      ListsResponderV2Live.layer,
+      KnoraProjectRepoLive.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
+      ListsResponderV2Live.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
@@ -199,11 +210,14 @@ object LayersTest {
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
+      PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
+      ProjectADMServiceLive.layer,
+      ProjectsADMRestServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
       ProjectsRouteZ.layer,
-      ProjectsServiceLive.layer,
+      QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
@@ -214,18 +228,16 @@ object LayersTest {
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
       SearchResponderV2Live.layer,
-      GravsearchTypeInspectionUtil.layer,
-      QueryTraverser.layer,
-      SparqlTransformerLive.layer,
       SipiResponderADMLive.layer,
+      SparqlTransformerLive.layer,
       StandoffResponderV1Live.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
       TestClientService.layer,
-      TriplestoreServiceLive.layer,
       TriplestoreRequestMessageHandlerLive.layer,
+      TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,

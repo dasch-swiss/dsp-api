@@ -32,6 +32,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -380,12 +381,13 @@ final case class StandoffResponderV2Live(
                 .getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle"))
                 .text
 
-            val separatorRequired: Boolean = stringFormatter.validateBoolean(
-              separatorBooleanAsString,
-              throw BadRequestException(
-                s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"
+            val separatorRequired: Boolean = ValuesValidator
+              .validateBoolean(separatorBooleanAsString)
+              .getOrElse(
+                throw BadRequestException(
+                  s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"
+                )
               )
-            )
 
             // get the standoff class IRI
             val standoffClassIri =
