@@ -24,12 +24,12 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.domain
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
-import org.knora.webapi.messages.ValuesValidator
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages

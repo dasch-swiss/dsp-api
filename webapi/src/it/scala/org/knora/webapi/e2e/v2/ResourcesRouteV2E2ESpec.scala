@@ -47,6 +47,7 @@ import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Tests the API v2 resources route.
@@ -670,7 +671,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             val versionDate: Instant = jsonLDObject.requireDatatypeValueInObject(
               key = OntologyConstants.KnoraApiV2Complex.VersionDate,
               expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-              validationFun = stringFormatter.xsdDateTimeStampToInstant
+              validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
             )
 
             val arkTimestamp                  = stringFormatter.formatArkTimestamp(versionDate)
@@ -1138,7 +1139,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.CreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(savedCreationDate == creationDate)
@@ -1388,7 +1389,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         .requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
       assert(savedCreationDate == creationDate)
 
@@ -1462,7 +1463,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.CreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -1473,7 +1474,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         .requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
       assert(savedValueCreationDate == customCreationDate)
 
@@ -1625,7 +1626,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(lastModificationDate == newModificationDate)
@@ -1700,7 +1701,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(lastModificationDate == newModificationDate)

@@ -1,10 +1,10 @@
 package org.knora.webapi.messages
 
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 import scala.util.Try
 import scala.util.matching.Regex
-import java.time.Instant
-import java.time.temporal.TemporalAccessor
-import java.time.format.DateTimeFormatter
 
 object ValuesValidator {
   // TODO: I think we should rename this to `ValuesConvertor` as it fits better what it's doing

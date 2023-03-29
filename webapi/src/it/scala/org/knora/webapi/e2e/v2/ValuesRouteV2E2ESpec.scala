@@ -29,12 +29,12 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import org.knora.webapi.messages.ValuesValidator
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
@@ -189,7 +189,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.validateAndEscapeIri) should ===(
         OntologyConstants.Xsd.DateTimeStamp
       )
-      jsonLDObject.requireStringWithValidation(JsonLDKeywords.VALUE, stringFormatter.xsdDateTimeStampToInstant)
+      jsonLDObject.requireStringWithValidation(
+        JsonLDKeywords.VALUE,
+        (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+      )
     }
 
   private def getResourceLastModificationDate(resourceIri: IRI, userEmail: String): Option[Instant] = {
@@ -1032,7 +1035,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -1093,7 +1096,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -3048,7 +3051,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       savedTimeStamp should ===(timeStamp)
@@ -3429,7 +3432,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -3579,7 +3582,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       savedCreationDate should ===(valueCreationDate)
@@ -4748,7 +4751,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       savedTimeStamp should ===(timeStamp)

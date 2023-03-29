@@ -15,6 +15,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -26,7 +27,6 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateVal
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateValueResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.ValuesValidator
 
 /**
  * Converts data from SPARQL query results into [[ApiValueV1]] objects.
