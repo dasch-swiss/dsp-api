@@ -32,7 +32,8 @@ final case class ProjectADMServiceLive(
 
   private def toProjectADM(dspProject: KnoraProject): Task[ProjectADM] =
     for {
-      ontologyIris <- ontologyRepo.findByProject(dspProject.id).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
+      ontologies  <- ontologyRepo.findByProject(dspProject.id)
+      ontologyIris = ontologies.map(_.ontologyMetadata.ontologyIri.toIri)
     } yield ProjectADM(
       id = dspProject.id.value,
       shortname = dspProject.shortname,
@@ -53,7 +54,11 @@ final case class ProjectADMServiceLive(
     } yield ProjectsKeywordsGetResponseADM(keywords)
 
   override def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]] =
-    projectRepo.findById(id).map(_.map(_.keywords).map(ProjectKeywordsGetResponseADM))
+    for {
+      projectMaybe <- projectRepo.findById(id)
+      keywordsMaybe = projectMaybe.map(_.keywords)
+      result        = keywordsMaybe.map(ProjectKeywordsGetResponseADM(_))
+    } yield result
 }
 
 object ProjectADMServiceLive {
