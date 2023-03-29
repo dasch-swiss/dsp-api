@@ -20,6 +20,7 @@ import dsp.errors.NotFoundException
 import org.knora.webapi._
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
@@ -249,21 +250,23 @@ final case class ValuesRouteV1(
               )
 
             case OntologyConstants.KnoraBase.ColorValue =>
-              val colorValue = stringFormatter.validateColor(
-                apiRequest.color_value.get,
-                throw BadRequestException(
-                  s"Invalid color value: ${apiRequest.color_value.get}"
+              val colorValue = ValuesValidator
+                .validateColor(apiRequest.color_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid color value: ${apiRequest.color_value.get}"
+                  )
                 )
-              )
               Future(ColorValueV1(colorValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.GeomValue =>
-              val geometryValue = stringFormatter.validateGeometryString(
-                apiRequest.geom_value.get,
-                throw BadRequestException(
-                  s"Invalid geometry value: ${apiRequest.geom_value.get}"
+              val geometryValue = ValuesValidator
+                .validateGeometryString(apiRequest.geom_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid geometry value: ${apiRequest.geom_value.get}"
+                  )
                 )
-              )
               Future(GeomValueV1(geometryValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.ListValue =>
@@ -465,21 +468,23 @@ final case class ValuesRouteV1(
               )
 
             case OntologyConstants.KnoraBase.ColorValue =>
-              val colorValue = stringFormatter.validateColor(
-                apiRequest.color_value.get,
-                throw BadRequestException(
-                  s"Invalid color value: ${apiRequest.color_value.get}"
+              val colorValue = ValuesValidator
+                .validateColor(apiRequest.color_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid color value: ${apiRequest.color_value.get}"
+                  )
                 )
-              )
               Future(ColorValueV1(colorValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.GeomValue =>
-              val geometryValue = stringFormatter.validateGeometryString(
-                apiRequest.geom_value.get,
-                throw BadRequestException(
-                  s"Invalid geometry value: ${apiRequest.geom_value.get}"
+              val geometryValue = ValuesValidator
+                .validateGeometryString(apiRequest.geom_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid geometry value: ${apiRequest.geom_value.get}"
+                  )
                 )
-              )
               Future(GeomValueV1(geometryValue), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.ListValue =>

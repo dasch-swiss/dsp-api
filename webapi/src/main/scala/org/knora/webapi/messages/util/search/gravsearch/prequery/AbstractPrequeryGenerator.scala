@@ -16,6 +16,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.types._
@@ -765,7 +766,7 @@ abstract class AbstractPrequeryGenerator(
     iriRef: IriRef,
     propInfo: PropertyTypeInfo
   ): TransformedFilterPattern = {
-    iriRef.iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}"))
+    if (!iriRef.iri.isApiV2Schema(querySchema)) throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}")
 
     // make sure that the comparison operator is a CompareExpressionOperator.EQUALS
     if (comparisonOperator != CompareExpressionOperator.EQUALS)
@@ -949,10 +950,11 @@ abstract class AbstractPrequeryGenerator(
     }
 
     // validate Knora date string
-    val dateStr: String = stringFormatter.validateDate(
-      dateStringLiteral.value,
-      throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string")
-    )
+    val dateStr: String = ValuesValidator
+      .validateDate(dateStringLiteral.value)
+      .getOrElse(
+        throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string")
+      )
 
     // Convert it to Julian Day Numbers.
     val dateValueContent = DateValueContentV2.parse(dateStr)

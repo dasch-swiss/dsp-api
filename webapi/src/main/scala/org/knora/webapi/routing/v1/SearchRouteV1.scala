@@ -15,6 +15,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.FulltextSearchGetRequestV1
@@ -139,12 +140,13 @@ final case class SearchRouteV1(
 
     val showNRows: Int = params.get("show_nrows") match {
       case Some(showNRowsStrList: Seq[String]) =>
-        val showNRowsVal = stringFormatter.validateInt(
-          showNRowsStrList.head,
-          throw BadRequestException(
-            s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"
+        val showNRowsVal = ValuesValidator
+          .validateInt(showNRowsStrList.head)
+          .getOrElse(
+            throw BadRequestException(
+              s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"
+            )
           )
-        )
         showNRowsVal match {
           case -1 => defaultShowNRows
           case _  => showNRowsVal
@@ -154,10 +156,11 @@ final case class SearchRouteV1(
 
     val startAt: Int = params.get("start_at") match {
       case Some(startAtStrList: Seq[String]) =>
-        stringFormatter.validateInt(
-          startAtStrList.head,
-          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList")
-        )
+        ValuesValidator
+          .validateInt(startAtStrList.head)
+          .getOrElse(
+            throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList")
+          )
       case None => 0
     }
 
@@ -214,10 +217,11 @@ final case class SearchRouteV1(
 
     val showNRows: Int = params.get("show_nrows") match {
       case Some(showNRowsStr) =>
-        val showNRowsVal = stringFormatter.validateInt(
-          showNRowsStr,
-          throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr")
-        )
+        val showNRowsVal = ValuesValidator
+          .validateInt(showNRowsStr)
+          .getOrElse(
+            throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr")
+          )
         showNRowsVal match {
           case -1 => defaultShowNRows
           case _  => showNRowsVal
@@ -227,10 +231,11 @@ final case class SearchRouteV1(
 
     val startAt: Int = params.get("start_at") match {
       case Some(startAtStr) =>
-        stringFormatter.validateInt(
-          startAtStr,
-          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr")
-        )
+        ValuesValidator
+          .validateInt(startAtStr)
+          .getOrElse(
+            throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr")
+          )
       case None => 0
     }
 

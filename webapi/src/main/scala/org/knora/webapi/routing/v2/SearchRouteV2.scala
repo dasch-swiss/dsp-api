@@ -19,6 +19,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.routing.Authenticator
@@ -65,10 +66,11 @@ final case class SearchRouteV2(
 
     offsetStr match {
       case Some(offset: String) =>
-        val offsetInt: Int = stringFormatter.validateInt(
-          offset,
-          throw BadRequestException(s"offset is expected to be an Integer, but $offset given")
-        )
+        val offsetInt: Int = ValuesValidator
+          .validateInt(offset)
+          .getOrElse(
+            throw BadRequestException(s"offset is expected to be an Integer, but $offset given")
+          )
 
         if (offsetInt < 0) throw BadRequestException(s"offset must be an Integer >= 0, but $offsetInt given.")
 
