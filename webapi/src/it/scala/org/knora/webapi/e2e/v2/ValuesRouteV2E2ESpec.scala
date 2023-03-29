@@ -2981,7 +2981,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
 
       savedIntervalValueHasEnd should ===(intervalEnd)
@@ -3921,7 +3921,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedDecimalValue: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
 
       savedDecimalValue should ===(decimalValue)
@@ -4672,7 +4672,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
 
       savedIntervalValueHasStart should ===(intervalStart)
@@ -4680,7 +4680,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
 
       savedIntervalValueHasEnd should ===(intervalEnd)

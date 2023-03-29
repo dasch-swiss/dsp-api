@@ -517,7 +517,6 @@ object CalendarDateRangeV2 {
    */
   def parse(dateStr: String): CalendarDateRangeV2 = {
     // Validate the date string.
-    val stringFormatter = StringFormatter.getGeneralInstance
     val validDateStr =
       ValuesValidator.validateDate(dateStr).getOrElse(throw BadRequestException(s"Invalid date: $dateStr"))
 

@@ -1097,9 +1097,6 @@ class StringFormatter private (
         case None        => true
       }
 
-    // override def hasApiV2SchemaNotEqualTo(allowedSchema: ApiV2Schema): Boolean =
-    //   iriInfo.ontologySchema.exists(_ != allowedSchema)
-
     override def getShortPrefixLabel: String = getOntologyName
 
     override def getLongPrefixLabel: String = {

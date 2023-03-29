@@ -2178,7 +2178,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
     val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     DecimalValueContentV2(
@@ -2483,13 +2483,13 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
     val intervalValueHasStart: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     val intervalValueHasEnd: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = (s, errerFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errerFun)
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     IntervalValueContentV2(

@@ -36,11 +36,9 @@ object GravsearchQueryChecker {
     for (entity <- Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj)) {
       entity match {
         case iriRef: IriRef =>
-          // The entity is an IRI. If it has a schema, check that it's the query schema.
           if (iriRef.iri.isApiV2Schema(querySchema)) iriRef.iri
           else throw GravsearchException(s"${iriRef.toSparql} is not in the correct schema")
 
-          // If we're in the CONSTRUCT clause, don't allow rdf, rdfs, or owl IRIs.
           if (inConstructClause && iriRef.iri.toString.contains('#')) {
             iriRef.iri.getOntologyFromEntity.toString match {
               case OntologyConstants.Rdf.RdfOntologyIri | OntologyConstants.Rdfs.RdfsOntologyIri |

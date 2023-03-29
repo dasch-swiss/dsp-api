@@ -350,7 +350,6 @@ object DateUtilV1 {
    * @return a [[JulianDayNumberValueV1]] representing the date.
    */
   def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValueV1 = {
-    val stringFormatter = StringFormatter.getGeneralInstance
     val datestring =
       ValuesValidator.validateDate(dateStr).getOrElse(throw BadRequestException(s"Invalid date format: $dateStr"))
 
