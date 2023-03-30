@@ -116,7 +116,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 
     val ontologyName: String = jsonLDDocument.requireStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.OntologyName,
-      stringFormatter.validateProjectSpecificOntologyName
+      (s: String, errorFun) => ValuesValidator.validateProjectSpecificOntologyName(s).getOrElse(errorFun)
     )
     val label: String =
       jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)

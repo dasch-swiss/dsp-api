@@ -966,7 +966,7 @@ class StringFormatter private (
             val hasBuiltInOntologyName = isBuiltInOntologyName(ontologyName)
 
             if (!hasBuiltInOntologyName) {
-              validateProjectSpecificOntologyName(ontologyName, errorFun)
+              ValuesValidator.validateProjectSpecificOntologyName(ontologyName).getOrElse(errorFun)
             }
 
             // If the IRI has the hostname for project-specific ontologies, it can't refer to a built-in or shared ontology.
@@ -1607,6 +1607,7 @@ class StringFormatter private (
    * @return the same string, escaped or unescaped as requested.
    */
   def toSparqlEncodedString(s: String, errorFun: => Nothing): String = { // --
+    // Note: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible.
     if (s.isEmpty || s.contains("\r")) errorFun
 
     // http://www.morelab.deusto.es/code_injection/
@@ -1697,46 +1698,6 @@ class StringFormatter private (
    */
   private def isBuiltInOntologyName(ontologyName: String): Boolean =
     OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
-
-  /**
-   * Checks that a name is valid as a project-specific ontology name.
-   *
-   * @param ontologyName the ontology name to be checked.
-   * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
-   * @return the same ontology name.
-   */
-  def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = { // --
-    // Check that ontology name matched NCName regex pattern
-    ontologyName match {
-      case NCNameRegex(_*) => ()
-      case _               => errorFun
-    }
-
-    // Check that ontology name is URL safe
-    ontologyName match {
-      case Base64UrlPatternRegex(_*) => ()
-      case _                         => errorFun
-    }
-
-    val lowerCaseOntologyName = ontologyName.toLowerCase
-
-    lowerCaseOntologyName match {
-      case ApiVersionNumberRegex(_*) => errorFun
-      case _                         => ()
-    }
-
-    if (isBuiltInOntologyName(ontologyName)) {
-      errorFun
-    }
-
-    for (reservedIriWord <- reservedIriWords) {
-      if (lowerCaseOntologyName.contains(reservedIriWord)) {
-        errorFun
-      }
-    }
-
-    ontologyName
-  }
 
   /**
    * Given a valid internal (built-in or project-specific) ontology name and an optional project code, constructs the
@@ -2051,6 +2012,7 @@ class StringFormatter private (
     }
 
   def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = // --
+    // Note: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible. (depends on toSparqlEncodedString())
     maybeString match {
       case Some(s) =>
         Some(toSparqlEncodedString(s, errorFun))

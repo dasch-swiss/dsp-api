@@ -127,4 +127,48 @@ object ValuesValidator {
       case None        => Some(false)
     }
 
+  /**
+   * Checks that a name is valid as a project-specific ontology name.
+   *
+   * @param ontologyName the ontology name to be checked.
+   * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
+   * @return the same ontology name.
+   */
+  def validateProjectSpecificOntologyName(ontologyName: String): Option[String] = {
+    // TODO: below separators still exists in SF - think about how all consts should be distributed
+
+    val NCNamePattern: String = """[\p{L}_][\p{L}0-9_.-]*"""
+    val NCNameRegex: Regex    = ("^" + NCNamePattern + "$").r
+
+    val Base64UrlPattern             = "[A-Za-z0-9_-]+"
+    val Base64UrlPatternRegex: Regex = ("^" + Base64UrlPattern + "$").r
+
+    val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
+
+    val versionSegmentWords = Set("simple", "v2")
+    val reservedIriWords =
+      Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared") ++ versionSegmentWords
+
+    val isNotReservedIriWord =
+      reservedIriWords.forall(reserverdWord => !ontologyName.toLowerCase().contains(reserverdWord))
+
+    if (
+      NCNameRegex.matches(ontologyName) &&
+      Base64UrlPatternRegex.matches(ontologyName) &&
+      ApiVersionNumberRegex.matches(ontologyName.toLowerCase()) &&
+      !OntologyConstants.BuiltInOntologyLabels.contains(ontologyName) &&
+      isNotReservedIriWord
+    ) Some(ontologyName)
+    else None
+
+    // for (reservedIriWord <- reservedIriWords) {
+    //   if (lowerCaseOntologyName.contains(reservedIriWord)) {
+    //     errorFun
+    //   }
+    // }
+
+    // ontologyName
+
+  }
+
 }
