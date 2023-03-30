@@ -4,7 +4,6 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAccessor
 import scala.util.Try
 import scala.util.matching.Regex
 
@@ -74,10 +73,8 @@ object ValuesValidator {
    * @param s        the string to be parsed.
    * @return [[Option]] of [[Instant]].
    */
-  def xsdDateTimeStampToInstant(s: String): Option[Instant] = {
-    val accessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
-    Try(Instant.from(accessor)).toOption
-  }
+  def xsdDateTimeStampToInstant(s: String): Option[Instant] =
+    Try(Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s))).toOption
 
   /**
    * Parses a DSP ARK timestamp.
