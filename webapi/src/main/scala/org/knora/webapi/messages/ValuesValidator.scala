@@ -155,7 +155,7 @@ object ValuesValidator {
     if (
       NCNameRegex.matches(ontologyName) &&
       Base64UrlPatternRegex.matches(ontologyName) &&
-      ApiVersionNumberRegex.matches(ontologyName.toLowerCase()) &&
+      !ApiVersionNumberRegex.matches(ontologyName.toLowerCase()) &&
       !OntologyConstants.BuiltInOntologyLabels.contains(ontologyName) &&
       isNotReservedIriWord
     ) Some(ontologyName)
