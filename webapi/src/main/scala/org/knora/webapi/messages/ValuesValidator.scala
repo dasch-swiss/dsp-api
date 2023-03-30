@@ -129,4 +129,5 @@ object ValuesValidator {
       case Some(value) => value.toBooleanOption
       case None        => Some(false)
     }
+
 }

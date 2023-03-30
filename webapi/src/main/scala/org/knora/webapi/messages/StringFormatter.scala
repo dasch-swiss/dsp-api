@@ -874,7 +874,8 @@ class StringFormatter private (
             val entityName = iri.substring(hashPos + 1)
 
             // Validate the entity name as an NCName.
-            (namespace, Some(validateNCName(entityName, errorFun)))
+            if (!NCNameRegex.matches(entityName)) errorFun
+            (namespace, Some(entityName))
           } else {
             (iri, None)
           }
@@ -1686,19 +1687,6 @@ class StringFormatter private (
       } else {
         acc
       }
-    }
-
-  /**
-   * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-   *
-   * @param ncName   the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string is invalid.
-   * @return the same string.
-   */
-  private def validateNCName(ncName: String, errorFun: => Nothing): String = // --
-    NCNameRegex.findFirstIn(ncName) match {
-      case Some(value) => value
-      case None        => errorFun
     }
 
   /**
