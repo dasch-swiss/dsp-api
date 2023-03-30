@@ -6,6 +6,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import scala.util.Try
 import scala.util.matching.Regex
+import spray.json.JsonParser
 
 object ValuesValidator {
   // TODO: I think we should rename this to `ValuesConvertor` as it fits better what it's doing
@@ -16,7 +17,7 @@ object ValuesValidator {
 
   def validateBigDecimal(s: String): Option[BigDecimal] = Try(BigDecimal(s)).toOption
 
-  def validateGeometryString(s: String): Option[String] = Option(s)
+  def validateGeometryString(s: String): Option[String] = Try(JsonParser(s)).map(_ => s).toOption
 
   /**
    * Checks that a hexadecimal color code string is valid.
