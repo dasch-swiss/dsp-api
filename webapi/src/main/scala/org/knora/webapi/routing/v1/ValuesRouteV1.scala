@@ -6,10 +6,10 @@
 package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.post
 import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
 import scala.collection.immutable.Seq
 
 import dsp.errors.BadRequestException
@@ -39,28 +39,28 @@ final case class ValuesRouteV1()(
 
   private case class UpdateValueAndComment[A](value: A, comment: Option[String])
 
-  /**
-   * Returns the route.
-   */
   def makeRoute: Route =
-    // Version history request requires 3 URL path segments: resource IRI, property IRI, and current value IRI
+    valuesHistory ~ values ~ valuecomments ~ links ~ filevalue
+
+  private def valuesHistory =
     path("v1" / "values" / "history" / Segments) { iris =>
       get { requestContext =>
         val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeVersionHistoryRequestMessage(iris, _))
         runJsonRouteZ(requestTask, requestContext)
       }
-    } ~ path("v1" / "values") {
-      post {
+    }
+
+  private def values =
+    path("v1" / "values" / Segment) { valueIriStr =>
+      get { requestContext =>
+        val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeGetValueRequest(valueIriStr, _))
+        runJsonRouteZ(requestTask, requestContext)
+      } ~ post {
         entity(as[CreateValueApiRequestV1]) { apiRequest => requestContext =>
           val requestTask =
             Authenticator.getUserADM(requestContext).flatMap(makeCreateValueRequestMessage(apiRequest, _))
           runJsonRouteZ(requestTask, requestContext)
         }
-      }
-    } ~ path("v1" / "values" / Segment) { valueIriStr =>
-      get { requestContext =>
-        val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeGetValueRequest(valueIriStr, _))
-        runJsonRouteZ(requestTask, requestContext)
       } ~ put {
         entity(as[ChangeValueApiRequestV1]) { apiRequest => requestContext =>
           // In API v1, you cannot change a value and its comment in a single request. So we know that here,
@@ -85,19 +85,28 @@ final case class ValuesRouteV1()(
         } yield task
         runJsonRouteZ(requestTask, requestContext)
       }
-    } ~ path("v1" / "valuecomments" / Segment) { valueIriStr =>
+    }
+
+  private def valuecomments =
+    path("v1" / "valuecomments" / Segment) { valueIriStr =>
       delete { requestContext =>
         val requestTask =
           Authenticator.getUserADM(requestContext).flatMap(makeChangeCommentRequestMessage(valueIriStr, None, _))
         runJsonRouteZ(requestTask, requestContext)
       }
-    } ~ path("v1" / "links" / Segments) { iris =>
+    }
+
+  private def links =
+    path("v1" / "links" / Segments) { iris =>
       // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
       get { requestContext =>
         val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeLinkValueGetRequestMessage(iris, _))
         runJsonRouteZ(requestTask, requestContext)
       }
-    } ~ path("v1" / "filevalue" / Segment) { resIriStr: IRI =>
+    }
+
+  private def filevalue =
+    path("v1" / "filevalue" / Segment) { resIriStr: IRI =>
       put {
         entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
           val requestTask = for {
