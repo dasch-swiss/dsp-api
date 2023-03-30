@@ -167,7 +167,7 @@ final case class ValuesRouteV1()(
                  case ColorValue    => makeColorValueCreate(apiRequest)
                  case GeomValue     => makeGeomValueCreate(apiRequest)
                  case ListValue     => makeListValueCreate(apiRequest)
-                 case IntervalValue => makeIntervalValueCreate(apiRequest)
+                 case IntervalValue => makeIntervalValue(apiRequest.interval_value.getOrElse(List.empty))
                  case TimeValue     => makeTimeValueCreate(apiRequest)
                  case GeonameValue  => makeGeonameValueCreate(apiRequest)
                  case _             => ZIO.fail(BadRequestException(s"No value submitted"))
@@ -183,13 +183,11 @@ final case class ValuesRouteV1()(
     xsdDateTimeStampToInstant(apiRequest.time_value.get, s"Invalid timestamp: ${apiRequest.time_value.get}")
       .map(timeStamp => TimeValueV1(timeStamp))
 
-  private def makeIntervalValueCreate(apiRequest: CreateValueApiRequestV1) = {
-    val timeValues: Seq[BigDecimal] = apiRequest.interval_value.get
+  private def makeIntervalValue(timeValues: Seq[BigDecimal]) =
     ZIO
       .fail(BadRequestException("parameters for interval_value invalid"))
       .when(timeValues.length != 2)
       .as(IntervalValueV1(timeValues.head, timeValues(1)))
-  }
 
   private def makeListValueCreate(apiRequest: CreateValueApiRequestV1) =
     validateAndEscapeIri(apiRequest.hlist_value.get, s"Invalid value IRI: ${apiRequest.hlist_value.get}")
@@ -284,7 +282,7 @@ final case class ValuesRouteV1()(
                  case GeomValue     => makeGeomValueUpdate(apiRequest)
                  case GeonameValue  => makeGeonameValueUpdate(apiRequest)
                  case IntValue      => makeIntValueUpdate(apiRequest)
-                 case IntervalValue => makeIntervalValueUpdate(apiRequest)
+                 case IntervalValue => makeIntervalValue(apiRequest.interval_value.getOrElse(List.empty))
                  case LinkValue     => makeLinkValueUpdate(apiRequest)
                  case ListValue     => makeListValueUpdate(apiRequest)
                  case TextValue     => makeTextValueUpdateAndComment(apiRequest, userADM)
@@ -302,14 +300,6 @@ final case class ValuesRouteV1()(
   private def makeTimeValueUpdate(apiRequest: ChangeValueApiRequestV1) =
     xsdDateTimeStampToInstant(apiRequest.time_value.get, "Invalid timestamp: ${apiRequest.time_value.get}")
       .map(TimeValueV1)
-
-  private def makeIntervalValueUpdate(apiRequest: ChangeValueApiRequestV1) = {
-    val timeValues: Seq[BigDecimal] = apiRequest.interval_value.get
-    ZIO
-      .fail(BadRequestException("parameters for interval_value invalid"))
-      .when(timeValues.length != 2)
-      .as(IntervalValueV1(timeValues.head, timeValues(1)))
-  }
 
   private def makeListValueUpdate(apiRequest: ChangeValueApiRequestV1) =
     validateAndEscapeIri(apiRequest.hlist_value.get, s"Invalid value IRI: ${apiRequest.hlist_value.get}")
