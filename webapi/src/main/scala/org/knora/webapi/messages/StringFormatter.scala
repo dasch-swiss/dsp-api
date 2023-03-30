@@ -1607,7 +1607,7 @@ class StringFormatter private (
    * @return the same string, escaped or unescaped as requested.
    */
   def toSparqlEncodedString(s: String, errorFun: => Nothing): String = { // --
-    // Note: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible.
+    // TODO: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible.
     if (s.isEmpty || s.contains("\r")) errorFun
 
     // http://www.morelab.deusto.es/code_injection/
@@ -2012,7 +2012,7 @@ class StringFormatter private (
     }
 
   def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = // --
-    // Note: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible. (depends on toSparqlEncodedString())
+    // TODO: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible. (depends on toSparqlEncodedString())
     maybeString match {
       case Some(s) =>
         Some(toSparqlEncodedString(s, errorFun))
