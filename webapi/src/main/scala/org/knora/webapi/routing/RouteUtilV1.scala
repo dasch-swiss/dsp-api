@@ -16,6 +16,7 @@ import spray.json.JsNumber
 import spray.json.JsObject
 import zio._
 
+import java.time.Instant
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
@@ -23,6 +24,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.twirl.ResourceHtmlView
@@ -34,6 +36,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponde
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
@@ -127,17 +130,14 @@ object RouteUtilV1 {
     acceptStandoffLinksToClientIDs: Boolean,
     userProfile: UserADM,
     log: Logger
-  )(implicit runtime: Runtime[MessageRelay]): Future[TextWithStandoffTagsV2] =
-    UnsafeZioRun.runToFuture {
-      val request = GetMappingRequestV2(mappingIri, userProfile)
-      for {
-        mappingResponse <- MessageRelay.ask[GetMappingResponseV2](request)
-        textWithStandoffTagV1 <-
-          ZIO.attempt(
-            StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
-          )
-      } yield textWithStandoffTagV1
-    }
+  ): ZIO[MessageRelay, Throwable, TextWithStandoffTagsV2] =
+    for {
+      mappingResponse <- MessageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, userProfile))
+      textWithStandoffTagV1 <-
+        ZIO.attempt(
+          StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
+        )
+    } yield textWithStandoffTagV1
 
   /**
    * MIME types used in Sipi to store image files.
@@ -272,5 +272,35 @@ object RouteUtilV1 {
       )
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")
+    }
+
+  def verifyNumberOfParams[A](
+    params: Seq[A],
+    errorMessage: String,
+    length: Int
+  ): IO[BadRequestException, Option[Nothing]] =
+    ZIO.fail(BadRequestException(errorMessage)).when(params.length != length)
+
+  def toSparqlEncodedString(str: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
+    ZIO
+      .service[StringFormatter]
+      .map(_.toSparqlEncodedString(str))
+      .flatMap(ZIO.fromOption(_))
+      .orElseFail(BadRequestException(errorMsg))
+
+  def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): ZIO[StringFormatter, Throwable, Set[IRI]] =
+    ZIO.serviceWithZIO[StringFormatter](sf => ZIO.attempt(sf.getResourceIrisFromStandoffTags(tags)))
+
+  def xsdDateTimeStampToInstant(s: String, errorMsg: String): ZIO[StringFormatter, Throwable, Instant] =
+    ZIO.serviceWithZIO[StringFormatter] { sf =>
+      ZIO.attempt(sf.xsdDateTimeStampToInstant(s, throw BadRequestException(errorMsg)))
+    }
+
+  def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
+    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
+      stringFormatter
+        .validateAndEscapeIri(s)
+        .toZIO
+        .orElseFail(BadRequestException(errorMsg))
     }
 }
