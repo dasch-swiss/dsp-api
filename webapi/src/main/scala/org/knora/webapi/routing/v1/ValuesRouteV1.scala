@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.Directives.post
 import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
+import java.util.UUID
 import scala.collection.immutable.Seq
 
 import dsp.errors.BadRequestException
@@ -346,11 +346,15 @@ final case class ValuesRouteV1()(
     comment: Option[String],
     userADM: UserADM
   ): ZIO[StringFormatter, BadRequestException, ChangeCommentRequestV1] =
-    for {
-      valueIri <- validateAndEscapeIri(valueIriStr, s"Invalid value IRI: $valueIriStr")
-      comment  <- sparqlEncodeComment(comment)
-      uuid     <- ZIO.random.flatMap(_.nextUUID)
-    } yield ChangeCommentRequestV1(valueIri, comment, userADM, uuid)
+    getIriCommentUuid(valueIriStr, comment)
+      .map(r => ChangeCommentRequestV1(r.validIri, r.encodedComment, userADM, r.uuid))
+
+  private case class IriCommentUuid(validIri: IRI, encodedComment: Option[String], uuid: UUID)
+  private def getIriCommentUuid(
+    valueIriStr: IRI,
+    comment: Option[String]
+  ): ZIO[StringFormatter, BadRequestException, IriCommentUuid] =
+    getIriCommentUuid(valueIriStr, comment).map(r => IriCommentUuid(r.validIri, r.encodedComment, r.uuid))
 
   private def makeDeleteValueRequest(
     valueIriStr: IRI,
