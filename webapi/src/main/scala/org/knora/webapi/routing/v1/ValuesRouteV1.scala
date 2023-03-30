@@ -37,10 +37,7 @@ final case class ValuesRouteV1()(
   private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) extends LazyLogging {
 
-  private case class UpdateValueAndComment[A](value: A, comment: Option[String])
-
-  def makeRoute: Route =
-    valuesHistory ~ values ~ valuecomments ~ links ~ filevalue
+  def makeRoute: Route = valuesHistory ~ values ~ valuecomments ~ links ~ filevalue
 
   private def valuesHistory =
     path("v1" / "values" / "history" / Segments) { iris =>
@@ -158,193 +155,88 @@ final case class ValuesRouteV1()(
     for {
       resourceIri <- validateAndEscapeIri(apiRequest.res_id, s"Invalid resource IRI ${apiRequest.res_id}")
       propertyIri <- validateAndEscapeIri(apiRequest.prop, s"Invalid property IRI ${apiRequest.prop}")
-      valueAndComment <-
-        apiRequest.getValueClassIri match {
-          case TextValue =>
-            val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
-            // check if text has markup
-            if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
-              toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
-                .map(utf8str =>
-                  UpdateValueAndComment(TextValueSimpleV1(utf8str, richtext.language), apiRequest.comment)
-                )
-
-            } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
-              // XML: text with markup
-              for {
-                mappingIri <-
-                  validateAndEscapeIri(richtext.mapping_id.get, s"Invalid mapping IRI: ${richtext.mapping_id.get}")
-                textWithStandoffTags <-
-                  convertXMLtoStandoffTagV1(
-                    richtext.xml.get,
-                    mappingIri,
-                    acceptStandoffLinksToClientIDs = false,
-                    userADM,
-                    logger
-                  )
-                resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
-                utf8str <- toSparqlEncodedString(
-                             textWithStandoffTags.text,
-                             "utf8str for for TextValue contains invalid characters"
-                           )
-              } yield UpdateValueAndComment(
-                TextValueWithStandoffV1(
-                  utf8str,
-                  textWithStandoffTags.language,
-                  textWithStandoffTags.standoffTagV2,
-                  resourceReferences,
-                  textWithStandoffTags.mapping.mappingIri,
-                  textWithStandoffTags.mapping.mapping
-                ),
-                apiRequest.comment
-              )
-            } else {
-              ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
-            }
-          case LinkValue =>
-            validateAndEscapeIri(apiRequest.link_value.get, s"Invalid resource IRI: ${apiRequest.link_value.get}")
-              .map(iri => UpdateValueAndComment(LinkUpdateV1(iri), apiRequest.comment))
-          case IntValue =>
-            ZIO.succeed(UpdateValueAndComment(IntegerValueV1(apiRequest.int_value.get), apiRequest.comment))
-          case DecimalValue =>
-            ZIO.succeed(UpdateValueAndComment(DecimalValueV1(apiRequest.decimal_value.get), apiRequest.comment))
-          case BooleanValue =>
-            ZIO.succeed(UpdateValueAndComment(BooleanValueV1(apiRequest.boolean_value.get), apiRequest.comment))
-          case UriValue =>
-            validateAndEscapeIri(apiRequest.uri_value.get, s"Invalid URI: ${apiRequest.uri_value.get}")
-              .map(iri => UpdateValueAndComment(UriValueV1(iri), apiRequest.comment))
-          case DateValue =>
-            ZIO
-              .attempt(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get))
-              .map(UpdateValueAndComment(_, apiRequest.comment))
-          case ColorValue =>
-            ZIO
-              .fromOption(ValuesValidator.validateColor(apiRequest.color_value.get))
-              .mapBoth(
-                _ => BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"),
-                c => UpdateValueAndComment(ColorValueV1(c), apiRequest.comment)
-              )
-          case GeomValue =>
-            ZIO
-              .fromOption(ValuesValidator.validateGeometryString(apiRequest.geom_value.get))
-              .mapBoth(
-                _ => BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"),
-                geom => UpdateValueAndComment(GeomValueV1(geom), apiRequest.comment)
-              )
-          case ListValue =>
-            validateAndEscapeIri(apiRequest.hlist_value.get, s"Invalid value IRI: ${apiRequest.hlist_value.get}")
-              .map(iri => UpdateValueAndComment(HierarchicalListValueV1(iri), apiRequest.comment))
-
-          case IntervalValue =>
-            val timeValues: Seq[BigDecimal] = apiRequest.interval_value.get
-            ZIO
-              .fail(BadRequestException("parameters for interval_value invalid"))
-              .when(timeValues.length != 2)
-              .as(UpdateValueAndComment(IntervalValueV1(timeValues.head, timeValues(1)), apiRequest.comment))
-
-          case TimeValue =>
-            xsdDateTimeStampToInstant(apiRequest.time_value.get, s"Invalid timestamp: ${apiRequest.time_value.get}")
-              .map(timeStamp => UpdateValueAndComment(TimeValueV1(timeStamp), apiRequest.comment))
-          case GeonameValue =>
-            ZIO.succeed(UpdateValueAndComment(GeonameValueV1(apiRequest.geoname_value.get), apiRequest.comment))
-          case _ =>
-            ZIO.fail(BadRequestException(s"No value submitted"))
-        }
-      comment <- sparqlEncodeComment(valueAndComment.comment)
+      value <- apiRequest.getValueClassIri match {
+                 case TextValue     => makeTextValueCreate(apiRequest, userADM)
+                 case LinkValue     => makeLinkValueCreate(apiRequest)
+                 case IntValue      => makeIntValueCreate(apiRequest)
+                 case DecimalValue  => makeDecimalValueCreate(apiRequest)
+                 case BooleanValue  => makeBooleanValueCreate(apiRequest)
+                 case UriValue      => makeUriValueCreate(apiRequest)
+                 case DateValue     => makeDateValueCreate(apiRequest)
+                 case ColorValue    => makeColorValueCreate(apiRequest)
+                 case GeomValue     => makeGeomValueCreate(apiRequest)
+                 case ListValue     => makeListValueCreate(apiRequest)
+                 case IntervalValue => makeIntervalValueCreate(apiRequest)
+                 case TimeValue     => makeTimeValueCreate(apiRequest)
+                 case GeonameValue  => makeGeonameValueCreate(apiRequest)
+                 case _             => ZIO.fail(BadRequestException(s"No value submitted"))
+               }
+      comment <- sparqlEncodeComment(apiRequest.comment)
       uuid    <- ZIO.random.flatMap(_.nextUUID)
-    } yield CreateValueRequestV1(0, resourceIri, propertyIri, valueAndComment.value, comment, userADM, uuid)
+    } yield CreateValueRequestV1(0, resourceIri, propertyIri, value, comment, userADM, uuid)
 
-  private def makeAddValueVersionRequestMessage(
-    valueIriStr: IRI,
-    apiRequest: ChangeValueApiRequestV1,
-    userADM: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, ChangeValueRequestV1] =
-    for {
-      valueIri <- validateAndEscapeIri(valueIriStr, s"Invalid value IRI: $valueIriStr")
-      valueAndComment <- apiRequest.getValueClassIri match {
-                           case BooleanValue  => makeBooleanUpdateValueAndComment(apiRequest)
-                           case ColorValue    => makeColorValueUpdateAndComment(apiRequest)
-                           case DateValue     => makeDateValueUpdateAndComment(apiRequest)
-                           case DecimalValue  => makeDecimalValueUpdateAndComment(apiRequest)
-                           case GeomValue     => makeGeomValueUpdateAndComment(apiRequest)
-                           case GeonameValue  => makeGeonameValueUpdateAndComment(apiRequest)
-                           case IntValue      => makeIntValueUpdateAndComment(apiRequest)
-                           case IntervalValue => makeIntervalValueUpadteAndComment(apiRequest)
-                           case LinkValue     => makeLinkValueUpdateAndComment(apiRequest)
-                           case ListValue     => makeListValueUpdateAndComment(apiRequest)
-                           case TextValue     => makeTextValueUpdateAndComment(apiRequest, userADM)
-                           case TimeValue     => makeTimeValueUpdateAndComment(apiRequest)
-                           case UriValue      => makeUriValueUpdateAndComment(apiRequest)
-                           case _             => ZIO.fail(BadRequestException(s"No value submitted"))
-                         }
-      comment <- sparqlEncodeComment(valueAndComment.comment)
-      uuid    <- ZIO.random.flatMap(_.nextUUID)
-    } yield ChangeValueRequestV1(valueIri, valueAndComment.value, comment, userADM, uuid)
+  private def makeGeonameValueCreate(apiRequest: CreateValueApiRequestV1) =
+    ZIO.succeed(GeonameValueV1(apiRequest.geoname_value.get))
 
-  private def makeGeonameValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
-    ZIO.succeed(UpdateValueAndComment(GeonameValueV1(apiRequest.geoname_value.get), apiRequest.comment))
+  private def makeTimeValueCreate(apiRequest: CreateValueApiRequestV1) =
+    xsdDateTimeStampToInstant(apiRequest.time_value.get, s"Invalid timestamp: ${apiRequest.time_value.get}")
+      .map(timeStamp => TimeValueV1(timeStamp))
 
-  private def makeTimeValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
-    xsdDateTimeStampToInstant(apiRequest.time_value.get, "Invalid timestamp: ${apiRequest.time_value.get}")
-      .map(time => UpdateValueAndComment(TimeValueV1(time), apiRequest.comment))
-
-  private def makeIntervalValueUpadteAndComment(apiRequest: ChangeValueApiRequestV1) = {
+  private def makeIntervalValueCreate(apiRequest: CreateValueApiRequestV1) = {
     val timeValues: Seq[BigDecimal] = apiRequest.interval_value.get
     ZIO
       .fail(BadRequestException("parameters for interval_value invalid"))
       .when(timeValues.length != 2)
-      .as(UpdateValueAndComment(IntervalValueV1(timeValues.head, timeValues(1)), apiRequest.comment))
+      .as(IntervalValueV1(timeValues.head, timeValues(1)))
   }
 
-  private def makeListValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
+  private def makeListValueCreate(apiRequest: CreateValueApiRequestV1) =
     validateAndEscapeIri(apiRequest.hlist_value.get, s"Invalid value IRI: ${apiRequest.hlist_value.get}")
-      .map(listNodeIri => UpdateValueAndComment(HierarchicalListValueV1(listNodeIri), apiRequest.comment))
+      .map(iri => HierarchicalListValueV1(iri))
 
-  private def makeGeomValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
+  private def makeGeomValueCreate(apiRequest: CreateValueApiRequestV1) =
     ZIO
       .fromOption(ValuesValidator.validateGeometryString(apiRequest.geom_value.get))
       .mapBoth(
         _ => BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"),
-        geom => UpdateValueAndComment(GeomValueV1(geom), apiRequest.comment)
+        geom => GeomValueV1(geom)
       )
 
-  private def makeColorValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
+  private def makeColorValueCreate(apiRequest: CreateValueApiRequestV1) =
     ZIO
       .fromOption(ValuesValidator.validateColor(apiRequest.color_value.get))
       .mapBoth(
         _ => BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"),
-        c => UpdateValueAndComment(ColorValueV1(c), apiRequest.comment)
+        c => ColorValueV1(c)
       )
 
-  private def makeDateValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
-    ZIO
-      .attempt(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get))
-      .map(UpdateValueAndComment(_, apiRequest.comment))
+  private def makeDateValueCreate(apiRequest: CreateValueApiRequestV1) =
+    ZIO.attempt(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get))
 
-  private def makeUriValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
+  private def makeUriValueCreate(apiRequest: CreateValueApiRequestV1) =
     validateAndEscapeIri(apiRequest.uri_value.get, s"Invalid URI: ${apiRequest.uri_value.get}")
-      .map(uri => UpdateValueAndComment(UriValueV1(uri), apiRequest.comment))
+      .map(iri => UriValueV1(iri))
 
-  private def makeBooleanUpdateValueAndComment(apiRequest: ChangeValueApiRequestV1) =
-    ZIO.succeed(UpdateValueAndComment(BooleanValueV1(apiRequest.boolean_value.get), apiRequest.comment))
+  private def makeBooleanValueCreate(apiRequest: CreateValueApiRequestV1) =
+    ZIO.succeed(BooleanValueV1(apiRequest.boolean_value.get))
 
-  private def makeDecimalValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
-    ZIO.succeed(UpdateValueAndComment(DecimalValueV1(apiRequest.decimal_value.get), apiRequest.comment))
+  private def makeDecimalValueCreate(apiRequest: CreateValueApiRequestV1) =
+    ZIO.succeed(DecimalValueV1(apiRequest.decimal_value.get))
 
-  private def makeIntValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
-    ZIO.succeed(UpdateValueAndComment(IntegerValueV1(apiRequest.int_value.get), apiRequest.comment))
+  private def makeIntValueCreate(apiRequest: CreateValueApiRequestV1) =
+    ZIO.succeed(IntegerValueV1(apiRequest.int_value.get))
 
-  private def makeLinkValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1) =
+  private def makeLinkValueCreate(apiRequest: CreateValueApiRequestV1) =
     validateAndEscapeIri(apiRequest.link_value.get, s"Invalid resource IRI: ${apiRequest.link_value.get}")
-      .map(resourceIri => UpdateValueAndComment(LinkUpdateV1(targetResourceIri = resourceIri), apiRequest.comment))
+      .map(iri => LinkUpdateV1(iri))
 
-  private def makeTextValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1, userADM: UserADM) = {
+  private def makeTextValueCreate(apiRequest: CreateValueApiRequestV1, userADM: UserADM) = {
     val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
     // check if text has markup
     if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
-      // simple text
       toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
-        .map(t => UpdateValueAndComment(TextValueSimpleV1(t, richtext.language), apiRequest.comment))
+        .map(utf8str => TextValueSimpleV1(utf8str, richtext.language))
+
     } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
       // XML: text with markup
       for {
@@ -363,16 +255,132 @@ final case class ValuesRouteV1()(
                      textWithStandoffTags.text,
                      "utf8str for for TextValue contains invalid characters"
                    )
-      } yield UpdateValueAndComment(
-        TextValueWithStandoffV1(
-          utf8str,
-          richtext.language,
-          textWithStandoffTags.standoffTagV2,
-          resourceReferences,
-          textWithStandoffTags.mapping.mappingIri,
-          textWithStandoffTags.mapping.mapping
-        ),
-        apiRequest.comment
+      } yield TextValueWithStandoffV1(
+        utf8str,
+        textWithStandoffTags.language,
+        textWithStandoffTags.standoffTagV2,
+        resourceReferences,
+        textWithStandoffTags.mapping.mappingIri,
+        textWithStandoffTags.mapping.mapping
+      )
+    } else {
+      ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
+    }
+  }
+
+  private def makeAddValueVersionRequestMessage(
+    valueIriStr: IRI,
+    apiRequest: ChangeValueApiRequestV1,
+    userADM: UserADM
+  ): ZIO[StringFormatter with MessageRelay, Throwable, ChangeValueRequestV1] =
+    for {
+      valueIri <- validateAndEscapeIri(valueIriStr, s"Invalid value IRI: $valueIriStr")
+      value <- apiRequest.getValueClassIri match {
+                 case BooleanValue  => makeBooleanUpdateValue(apiRequest)
+                 case ColorValue    => makeColorValueUpdate(apiRequest)
+                 case DateValue     => makeDateValueUpdate(apiRequest)
+                 case DecimalValue  => makeDecimalValueUpdate(apiRequest)
+                 case GeomValue     => makeGeomValueUpdate(apiRequest)
+                 case GeonameValue  => makeGeonameValueUpdate(apiRequest)
+                 case IntValue      => makeIntValueUpdate(apiRequest)
+                 case IntervalValue => makeIntervalValueUpdate(apiRequest)
+                 case LinkValue     => makeLinkValueUpdate(apiRequest)
+                 case ListValue     => makeListValueUpdate(apiRequest)
+                 case TextValue     => makeTextValueUpdateAndComment(apiRequest, userADM)
+                 case TimeValue     => makeTimeValueUpdate(apiRequest)
+                 case UriValue      => makeUriValueUpdate(apiRequest)
+                 case _             => ZIO.fail(BadRequestException(s"No value submitted"))
+               }
+      comment <- sparqlEncodeComment(apiRequest.comment)
+      uuid    <- ZIO.random.flatMap(_.nextUUID)
+    } yield ChangeValueRequestV1(valueIri, value, comment, userADM, uuid)
+
+  private def makeGeonameValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.succeed(GeonameValueV1(apiRequest.geoname_value.get))
+
+  private def makeTimeValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    xsdDateTimeStampToInstant(apiRequest.time_value.get, "Invalid timestamp: ${apiRequest.time_value.get}")
+      .map(TimeValueV1)
+
+  private def makeIntervalValueUpdate(apiRequest: ChangeValueApiRequestV1) = {
+    val timeValues: Seq[BigDecimal] = apiRequest.interval_value.get
+    ZIO
+      .fail(BadRequestException("parameters for interval_value invalid"))
+      .when(timeValues.length != 2)
+      .as(IntervalValueV1(timeValues.head, timeValues(1)))
+  }
+
+  private def makeListValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    validateAndEscapeIri(apiRequest.hlist_value.get, s"Invalid value IRI: ${apiRequest.hlist_value.get}")
+      .map(HierarchicalListValueV1)
+
+  private def makeGeomValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    ZIO
+      .fromOption(ValuesValidator.validateGeometryString(apiRequest.geom_value.get))
+      .mapBoth(
+        _ => BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"),
+        GeomValueV1
+      )
+
+  private def makeColorValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    ZIO
+      .fromOption(ValuesValidator.validateColor(apiRequest.color_value.get))
+      .mapBoth(
+        _ => BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"),
+        ColorValueV1
+      )
+
+  private def makeDateValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.attempt(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get))
+
+  private def makeUriValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    validateAndEscapeIri(apiRequest.uri_value.get, s"Invalid URI: ${apiRequest.uri_value.get}").map(UriValueV1)
+
+  private def makeBooleanUpdateValue(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.succeed(BooleanValueV1(apiRequest.boolean_value.get))
+
+  private def makeDecimalValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.succeed(DecimalValueV1(apiRequest.decimal_value.get))
+
+  private def makeIntValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.succeed(IntegerValueV1(apiRequest.int_value.get))
+
+  private def makeLinkValueUpdate(apiRequest: ChangeValueApiRequestV1) =
+    validateAndEscapeIri(apiRequest.link_value.get, s"Invalid resource IRI: ${apiRequest.link_value.get}")
+      .map(LinkUpdateV1(_))
+
+  private def makeTextValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1, userADM: UserADM) = {
+    val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
+    // check if text has markup
+    if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
+      // simple text
+      toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
+        .map(t => TextValueSimpleV1(t, richtext.language))
+    } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
+      // XML: text with markup
+      for {
+        mappingIri <-
+          validateAndEscapeIri(richtext.mapping_id.get, s"Invalid mapping IRI: ${richtext.mapping_id.get}")
+        textWithStandoffTags <-
+          convertXMLtoStandoffTagV1(
+            richtext.xml.get,
+            mappingIri,
+            acceptStandoffLinksToClientIDs = false,
+            userADM,
+            logger
+          )
+        resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
+        utf8str <- toSparqlEncodedString(
+                     textWithStandoffTags.text,
+                     "utf8str for for TextValue contains invalid characters"
+                   )
+      } yield TextValueWithStandoffV1(
+        utf8str,
+        richtext.language,
+        textWithStandoffTags.standoffTagV2,
+        resourceReferences,
+        textWithStandoffTags.mapping.mappingIri,
+        textWithStandoffTags.mapping.mapping
       )
     } else {
       ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
