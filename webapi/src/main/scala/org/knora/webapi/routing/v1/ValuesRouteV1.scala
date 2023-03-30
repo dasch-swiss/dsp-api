@@ -10,13 +10,14 @@ import akka.http.scaladsl.server.Directives.post
 import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+
 import scala.collection.immutable.Seq
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraBase._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -160,7 +161,7 @@ final case class ValuesRouteV1()(
       propertyIri <- validateAndEscapeIri(apiRequest.prop, s"Invalid property IRI ${apiRequest.prop}")
       valueAndComment <-
         apiRequest.getValueClassIri match {
-          case OntologyConstants.KnoraBase.TextValue =>
+          case TextValue =>
             val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
             // check if text has markup
             if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
@@ -201,51 +202,51 @@ final case class ValuesRouteV1()(
             } else {
               ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
             }
-          case OntologyConstants.KnoraBase.LinkValue =>
+          case LinkValue =>
             validateAndEscapeIri(apiRequest.link_value.get, s"Invalid resource IRI: ${apiRequest.link_value.get}")
               .map(iri => UpdateValueAndComment(LinkUpdateV1(iri), apiRequest.comment))
-          case OntologyConstants.KnoraBase.IntValue =>
+          case IntValue =>
             ZIO.succeed(UpdateValueAndComment(IntegerValueV1(apiRequest.int_value.get), apiRequest.comment))
-          case OntologyConstants.KnoraBase.DecimalValue =>
+          case DecimalValue =>
             ZIO.succeed(UpdateValueAndComment(DecimalValueV1(apiRequest.decimal_value.get), apiRequest.comment))
-          case OntologyConstants.KnoraBase.BooleanValue =>
+          case BooleanValue =>
             ZIO.succeed(UpdateValueAndComment(BooleanValueV1(apiRequest.boolean_value.get), apiRequest.comment))
-          case OntologyConstants.KnoraBase.UriValue =>
+          case UriValue =>
             validateAndEscapeIri(apiRequest.uri_value.get, s"Invalid URI: ${apiRequest.uri_value.get}")
               .map(iri => UpdateValueAndComment(UriValueV1(iri), apiRequest.comment))
-          case OntologyConstants.KnoraBase.DateValue =>
+          case DateValue =>
             ZIO
               .attempt(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get))
               .map(UpdateValueAndComment(_, apiRequest.comment))
-          case OntologyConstants.KnoraBase.ColorValue =>
+          case ColorValue =>
             ZIO
               .fromOption(ValuesValidator.validateColor(apiRequest.color_value.get))
               .mapBoth(
                 _ => BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"),
                 c => UpdateValueAndComment(ColorValueV1(c), apiRequest.comment)
               )
-          case OntologyConstants.KnoraBase.GeomValue =>
+          case GeomValue =>
             ZIO
               .fromOption(ValuesValidator.validateGeometryString(apiRequest.geom_value.get))
               .mapBoth(
                 _ => BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"),
                 geom => UpdateValueAndComment(GeomValueV1(geom), apiRequest.comment)
               )
-          case OntologyConstants.KnoraBase.ListValue =>
+          case ListValue =>
             validateAndEscapeIri(apiRequest.hlist_value.get, s"Invalid value IRI: ${apiRequest.hlist_value.get}")
               .map(iri => UpdateValueAndComment(HierarchicalListValueV1(iri), apiRequest.comment))
 
-          case OntologyConstants.KnoraBase.IntervalValue =>
+          case IntervalValue =>
             val timeValues: Seq[BigDecimal] = apiRequest.interval_value.get
             ZIO
               .fail(BadRequestException("parameters for interval_value invalid"))
               .when(timeValues.length != 2)
               .as(UpdateValueAndComment(IntervalValueV1(timeValues.head, timeValues(1)), apiRequest.comment))
 
-          case OntologyConstants.KnoraBase.TimeValue =>
+          case TimeValue =>
             xsdDateTimeStampToInstant(apiRequest.time_value.get, s"Invalid timestamp: ${apiRequest.time_value.get}")
               .map(timeStamp => UpdateValueAndComment(TimeValueV1(timeStamp), apiRequest.comment))
-          case OntologyConstants.KnoraBase.GeonameValue =>
+          case GeonameValue =>
             ZIO.succeed(UpdateValueAndComment(GeonameValueV1(apiRequest.geoname_value.get), apiRequest.comment))
           case _ =>
             ZIO.fail(BadRequestException(s"No value submitted"))
@@ -261,103 +262,126 @@ final case class ValuesRouteV1()(
   ): ZIO[StringFormatter with MessageRelay, Throwable, ChangeValueRequestV1] =
     for {
       valueIri <- validateAndEscapeIri(valueIriStr, s"Invalid value IRI: $valueIriStr")
-
-      valueAndComment <-
-        apiRequest.getValueClassIri match {
-          case OntologyConstants.KnoraBase.TextValue =>
-            val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
-            // check if text has markup
-            if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
-              // simple text
-              toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
-                .map(t => UpdateValueAndComment(TextValueSimpleV1(t, richtext.language), apiRequest.comment))
-            } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
-              // XML: text with markup
-              for {
-                mappingIri <-
-                  validateAndEscapeIri(richtext.mapping_id.get, s"Invalid mapping IRI: ${richtext.mapping_id.get}")
-                textWithStandoffTags <-
-                  convertXMLtoStandoffTagV1(
-                    richtext.xml.get,
-                    mappingIri,
-                    acceptStandoffLinksToClientIDs = false,
-                    userADM,
-                    logger
-                  )
-                resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
-                utf8str <- toSparqlEncodedString(
-                             textWithStandoffTags.text,
-                             "utf8str for for TextValue contains invalid characters"
-                           )
-              } yield UpdateValueAndComment(
-                TextValueWithStandoffV1(
-                  utf8str,
-                  richtext.language,
-                  textWithStandoffTags.standoffTagV2,
-                  resourceReferences,
-                  textWithStandoffTags.mapping.mappingIri,
-                  textWithStandoffTags.mapping.mapping
-                ),
-                apiRequest.comment
-              )
-            } else {
-              ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
-            }
-          case OntologyConstants.KnoraBase.LinkValue =>
-            validateAndEscapeIri(apiRequest.link_value.get, s"Invalid resource IRI: ${apiRequest.link_value.get}")
-              .map(resourceIri =>
-                UpdateValueAndComment(LinkUpdateV1(targetResourceIri = resourceIri), apiRequest.comment)
-              )
-          case OntologyConstants.KnoraBase.IntValue =>
-            ZIO.succeed(UpdateValueAndComment(IntegerValueV1(apiRequest.int_value.get), apiRequest.comment))
-          case OntologyConstants.KnoraBase.DecimalValue =>
-            ZIO.succeed(UpdateValueAndComment(DecimalValueV1(apiRequest.decimal_value.get), apiRequest.comment))
-          case OntologyConstants.KnoraBase.BooleanValue =>
-            ZIO.succeed(UpdateValueAndComment(BooleanValueV1(apiRequest.boolean_value.get), apiRequest.comment))
-          case OntologyConstants.KnoraBase.UriValue =>
-            validateAndEscapeIri(apiRequest.uri_value.get, s"Invalid URI: ${apiRequest.uri_value.get}")
-              .map(uri => UpdateValueAndComment(UriValueV1(uri), apiRequest.comment))
-          case OntologyConstants.KnoraBase.DateValue =>
-            ZIO
-              .attempt(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get))
-              .map(UpdateValueAndComment(_, apiRequest.comment))
-          case OntologyConstants.KnoraBase.ColorValue =>
-            ZIO
-              .fromOption(ValuesValidator.validateColor(apiRequest.color_value.get))
-              .mapBoth(
-                _ => BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"),
-                c => UpdateValueAndComment(ColorValueV1(c), apiRequest.comment)
-              )
-          case OntologyConstants.KnoraBase.GeomValue =>
-            ZIO
-              .fromOption(ValuesValidator.validateGeometryString(apiRequest.geom_value.get))
-              .mapBoth(
-                _ => BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"),
-                geom => UpdateValueAndComment(GeomValueV1(geom), apiRequest.comment)
-              )
-          case OntologyConstants.KnoraBase.ListValue =>
-            validateAndEscapeIri(apiRequest.hlist_value.get, s"Invalid value IRI: ${apiRequest.hlist_value.get}")
-              .map(listNodeIri => UpdateValueAndComment(HierarchicalListValueV1(listNodeIri), apiRequest.comment))
-          case OntologyConstants.KnoraBase.IntervalValue =>
-            val timeValues: Seq[BigDecimal] = apiRequest.interval_value.get
-            ZIO
-              .fail(BadRequestException("parameters for interval_value invalid"))
-              .when(timeValues.length != 2)
-              .as(UpdateValueAndComment(IntervalValueV1(timeValues.head, timeValues(1)), apiRequest.comment))
-          case OntologyConstants.KnoraBase.TimeValue =>
-            xsdDateTimeStampToInstant(apiRequest.time_value.get, "Invalid timestamp: ${apiRequest.time_value.get}")
-              .map(time => UpdateValueAndComment(TimeValueV1(time), apiRequest.comment))
-          case OntologyConstants.KnoraBase.GeonameValue =>
-            ZIO.succeed(UpdateValueAndComment(GeonameValueV1(apiRequest.geoname_value.get), apiRequest.comment))
-          case _ =>
-            ZIO.fail(BadRequestException(s"No value submitted"))
-        }
+      valueAndComment <- apiRequest.getValueClassIri match {
+                           case BooleanValue  => makeBooleanValueAndComment(apiRequest)
+                           case ColorValue    => makeColorValueAndComment(apiRequest)
+                           case DateValue     => makeDateValueAndComment(apiRequest)
+                           case DecimalValue  => makeDecimalValueAndComment(apiRequest)
+                           case GeomValue     => makeGeomValueAndComment(apiRequest)
+                           case GeonameValue  => makeGeonameValueAndComment(apiRequest)
+                           case IntValue      => makeIntValueAndComment(apiRequest)
+                           case IntervalValue => makeIntervalValueAndComment(apiRequest)
+                           case LinkValue     => makeLinkValueAndComment(apiRequest)
+                           case ListValue     => makeListValueAndComment(apiRequest)
+                           case TextValue     => makeTextValueAndComment(apiRequest, userADM)
+                           case TimeValue     => makeTimeValueAndComment(apiRequest)
+                           case UriValue      => makeUriValueAndComment(apiRequest)
+                           case _             => ZIO.fail(BadRequestException(s"No value submitted"))
+                         }
       comment <- sparqlEncodeComment(valueAndComment.comment)
       uuid    <- ZIO.random.flatMap(_.nextUUID)
     } yield ChangeValueRequestV1(valueIri, valueAndComment.value, comment, userADM, uuid)
 
+  private def makeGeonameValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.succeed(UpdateValueAndComment(GeonameValueV1(apiRequest.geoname_value.get), apiRequest.comment))
+
+  private def makeTimeValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    xsdDateTimeStampToInstant(apiRequest.time_value.get, "Invalid timestamp: ${apiRequest.time_value.get}")
+      .map(time => UpdateValueAndComment(TimeValueV1(time), apiRequest.comment))
+
+  private def makeIntervalValueAndComment(apiRequest: ChangeValueApiRequestV1) = {
+    val timeValues: Seq[BigDecimal] = apiRequest.interval_value.get
+    ZIO
+      .fail(BadRequestException("parameters for interval_value invalid"))
+      .when(timeValues.length != 2)
+      .as(UpdateValueAndComment(IntervalValueV1(timeValues.head, timeValues(1)), apiRequest.comment))
+  }
+
+  private def makeListValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    validateAndEscapeIri(apiRequest.hlist_value.get, s"Invalid value IRI: ${apiRequest.hlist_value.get}")
+      .map(listNodeIri => UpdateValueAndComment(HierarchicalListValueV1(listNodeIri), apiRequest.comment))
+
+  private def makeGeomValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    ZIO
+      .fromOption(ValuesValidator.validateGeometryString(apiRequest.geom_value.get))
+      .mapBoth(
+        _ => BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"),
+        geom => UpdateValueAndComment(GeomValueV1(geom), apiRequest.comment)
+      )
+
+  private def makeColorValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    ZIO
+      .fromOption(ValuesValidator.validateColor(apiRequest.color_value.get))
+      .mapBoth(
+        _ => BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"),
+        c => UpdateValueAndComment(ColorValueV1(c), apiRequest.comment)
+      )
+
+  private def makeDateValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    ZIO
+      .attempt(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get))
+      .map(UpdateValueAndComment(_, apiRequest.comment))
+
+  private def makeUriValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    validateAndEscapeIri(apiRequest.uri_value.get, s"Invalid URI: ${apiRequest.uri_value.get}")
+      .map(uri => UpdateValueAndComment(UriValueV1(uri), apiRequest.comment))
+
+  private def makeBooleanValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.succeed(UpdateValueAndComment(BooleanValueV1(apiRequest.boolean_value.get), apiRequest.comment))
+
+  private def makeDecimalValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.succeed(UpdateValueAndComment(DecimalValueV1(apiRequest.decimal_value.get), apiRequest.comment))
+
+  private def makeIntValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    ZIO.succeed(UpdateValueAndComment(IntegerValueV1(apiRequest.int_value.get), apiRequest.comment))
+
+  private def makeLinkValueAndComment(apiRequest: ChangeValueApiRequestV1) =
+    validateAndEscapeIri(apiRequest.link_value.get, s"Invalid resource IRI: ${apiRequest.link_value.get}")
+      .map(resourceIri => UpdateValueAndComment(LinkUpdateV1(targetResourceIri = resourceIri), apiRequest.comment))
+
+  private def makeTextValueAndComment(apiRequest: ChangeValueApiRequestV1, userADM: UserADM) = {
+    val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
+    // check if text has markup
+    if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
+      // simple text
+      toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
+        .map(t => UpdateValueAndComment(TextValueSimpleV1(t, richtext.language), apiRequest.comment))
+    } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
+      // XML: text with markup
+      for {
+        mappingIri <-
+          validateAndEscapeIri(richtext.mapping_id.get, s"Invalid mapping IRI: ${richtext.mapping_id.get}")
+        textWithStandoffTags <-
+          convertXMLtoStandoffTagV1(
+            richtext.xml.get,
+            mappingIri,
+            acceptStandoffLinksToClientIDs = false,
+            userADM,
+            logger
+          )
+        resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
+        utf8str <- toSparqlEncodedString(
+                     textWithStandoffTags.text,
+                     "utf8str for for TextValue contains invalid characters"
+                   )
+      } yield UpdateValueAndComment(
+        TextValueWithStandoffV1(
+          utf8str,
+          richtext.language,
+          textWithStandoffTags.standoffTagV2,
+          resourceReferences,
+          textWithStandoffTags.mapping.mappingIri,
+          textWithStandoffTags.mapping.mapping
+        ),
+        apiRequest.comment
+      )
+    } else {
+      ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
+    }
+  }
+
   private def sparqlEncodeComment(comment: Option[String]) =
-    comment.map(c => toSparqlEncodedString(c, s"Invalid comment: '$c'").map(Some(_))).getOrElse(ZIO.succeed(None))
+    comment.map(c => toSparqlEncodedString(c, s"Invalid comment: '$c'").map(Some(_))).getOrElse(ZIO.none)
 
   private def makeChangeCommentRequestMessage(
     valueIriStr: IRI,
