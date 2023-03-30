@@ -157,7 +157,7 @@ final case class ValuesRouteV1()(
       resourceIri <- validateAndEscapeIri(apiRequest.res_id, s"Invalid resource IRI ${apiRequest.res_id}")
       propertyIri <- validateAndEscapeIri(apiRequest.prop, s"Invalid property IRI ${apiRequest.prop}")
       value <- apiRequest.getValueClassIri match {
-                 case TextValue     => makeTextValueCreate(apiRequest, userADM)
+                 case TextValue     => makeTextValue(apiRequest.richtext_value.get, userADM)
                  case LinkValue     => makeLinkValueCreate(apiRequest)
                  case IntValue      => makeIntValueCreate(apiRequest)
                  case DecimalValue  => makeDecimalValueCreate(apiRequest)
@@ -167,7 +167,7 @@ final case class ValuesRouteV1()(
                  case ColorValue    => makeColorValueCreate(apiRequest)
                  case GeomValue     => makeGeomValueCreate(apiRequest)
                  case ListValue     => makeListValueCreate(apiRequest)
-                 case IntervalValue => makeIntervalValue(apiRequest.interval_value.getOrElse(List.empty))
+                 case IntervalValue => makeIntervalValue(apiRequest.interval_value.get)
                  case TimeValue     => makeTimeValueCreate(apiRequest)
                  case GeonameValue  => makeGeonameValueCreate(apiRequest)
                  case _             => ZIO.fail(BadRequestException(s"No value submitted"))
@@ -229,8 +229,7 @@ final case class ValuesRouteV1()(
     validateAndEscapeIri(apiRequest.link_value.get, s"Invalid resource IRI: ${apiRequest.link_value.get}")
       .map(iri => LinkUpdateV1(iri))
 
-  private def makeTextValueCreate(apiRequest: CreateValueApiRequestV1, userADM: UserADM) = {
-    val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
+  private def makeTextValue(richtext: CreateRichtextV1, userADM: UserADM) =
     // check if text has markup
     if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
       toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
@@ -265,7 +264,6 @@ final case class ValuesRouteV1()(
     } else {
       ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
     }
-  }
 
   private def makeAddValueVersionRequestMessage(
     valueIriStr: IRI,
@@ -285,7 +283,7 @@ final case class ValuesRouteV1()(
                  case IntervalValue => makeIntervalValue(apiRequest.interval_value.getOrElse(List.empty))
                  case LinkValue     => makeLinkValueUpdate(apiRequest)
                  case ListValue     => makeListValueUpdate(apiRequest)
-                 case TextValue     => makeTextValueUpdateAndComment(apiRequest, userADM)
+                 case TextValue     => makeTextValue(apiRequest.richtext_value.get, userADM)
                  case TimeValue     => makeTimeValueUpdate(apiRequest)
                  case UriValue      => makeUriValueUpdate(apiRequest)
                  case _             => ZIO.fail(BadRequestException(s"No value submitted"))
@@ -339,44 +337,6 @@ final case class ValuesRouteV1()(
   private def makeLinkValueUpdate(apiRequest: ChangeValueApiRequestV1) =
     validateAndEscapeIri(apiRequest.link_value.get, s"Invalid resource IRI: ${apiRequest.link_value.get}")
       .map(LinkUpdateV1(_))
-
-  private def makeTextValueUpdateAndComment(apiRequest: ChangeValueApiRequestV1, userADM: UserADM) = {
-    val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
-    // check if text has markup
-    if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
-      // simple text
-      toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
-        .map(t => TextValueSimpleV1(t, richtext.language))
-    } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
-      // XML: text with markup
-      for {
-        mappingIri <-
-          validateAndEscapeIri(richtext.mapping_id.get, s"Invalid mapping IRI: ${richtext.mapping_id.get}")
-        textWithStandoffTags <-
-          convertXMLtoStandoffTagV1(
-            richtext.xml.get,
-            mappingIri,
-            acceptStandoffLinksToClientIDs = false,
-            userADM,
-            logger
-          )
-        resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
-        utf8str <- toSparqlEncodedString(
-                     textWithStandoffTags.text,
-                     "utf8str for for TextValue contains invalid characters"
-                   )
-      } yield TextValueWithStandoffV1(
-        utf8str,
-        richtext.language,
-        textWithStandoffTags.standoffTagV2,
-        resourceReferences,
-        textWithStandoffTags.mapping.mappingIri,
-        textWithStandoffTags.mapping.mapping
-      )
-    } else {
-      ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
-    }
-  }
 
   private def sparqlEncodeComment(comment: Option[String]) =
     comment.map(c => toSparqlEncodedString(c, s"Invalid comment: '$c'").map(Some(_))).getOrElse(ZIO.none)
