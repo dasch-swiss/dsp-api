@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.Directives.post
 import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+
 import java.util.UUID
 import scala.collection.immutable.Seq
 
