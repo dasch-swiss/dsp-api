@@ -636,12 +636,13 @@ final case class ResourcesResponderV2Live(
         rows = sparqlSelectResponse.results.bindings
 
         _ = if (
-              rows.isEmpty || !stringFormatter.optionStringToBoolean(
-                rows.head.rowMap.get("isDeleted"),
-                throw InconsistentRepositoryDataException(
-                  s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+              rows.isEmpty || !ValuesValidator
+                .optionStringToBoolean(rows.head.rowMap.get("isDeleted"))
+                .getOrElse(
+                  throw InconsistentRepositoryDataException(
+                    s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+                  )
                 )
-              )
             ) {
               throw UpdateNotPerformedException(
                 s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug."

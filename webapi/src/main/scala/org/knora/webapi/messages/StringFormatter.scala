@@ -1689,22 +1689,6 @@ class StringFormatter private (
     }
 
   /**
-   * Turn a possibly empty string value into a boolean value.
-   * Returns false if the value is empty or if the given string is cannot be converted to a Boolean `true`.
-   *
-   * @param maybe    an optional string representation of a boolean value.
-   * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
-   *                 as a boolean value.
-   * @return a Boolean.
-   */
-  def optionStringToBoolean(maybe: Option[String], errorFun: => Nothing): Boolean = // --
-    try {
-      maybe.exists(_.toBoolean)
-    } catch {
-      case _: IllegalArgumentException => errorFun
-    }
-
-  /**
    * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
    *
    * @param ncName   the string to be checked.

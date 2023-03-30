@@ -112,4 +112,21 @@ object ValuesValidator {
       case _ => None
     }
   }
+
+  /**
+   * Turn a possibly empty string value into a boolean value.
+   *
+   * Returns
+   *  - `false` if None is provided
+   *  - the boolean value, if the string represents a boolean value
+   *  - `None` if the string does not represent a boolean value
+   *
+   * @param maybe    an optional string representation of a boolean value.
+   * @return [[Option]] of [[Boolean]].
+   */
+  def optionStringToBoolean(maybe: Option[String]): Option[Boolean] =
+    maybe match {
+      case Some(value) => value.toBooleanOption
+      case None        => Some(false)
+    }
 }
