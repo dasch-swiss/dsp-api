@@ -246,7 +246,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
       val res = ValuesValidator.optionStringToBoolean(Some(""))
       assert(res)(isNone)
     },
-    test("provide the fallback value for and invalid string") {
+    test("provide the fallback value for an invalid string") {
       val res = ValuesValidator.optionStringToBoolean(Some("invalid"), fallback = true)
       assertTrue(res)
     }
