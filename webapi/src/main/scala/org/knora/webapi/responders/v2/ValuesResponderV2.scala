@@ -1760,19 +1760,14 @@ final case class ValuesResponderV2Live(
         sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
         rows                  = sparqlSelectResponse.results.bindings
 
-        _ = if (
-              rows.isEmpty || !ValuesValidator
-                .optionStringToBoolean(rows.head.rowMap.get("isDeleted"))
-                .getOrElse(
-                  throw InconsistentRepositoryDataException(
-                    s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
-                  )
-                )
-            ) {
-              throw UpdateNotPerformedException(
-                s"The request to mark value <${deleteValueRequest.valueIri}> (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."
-              )
-            }
+        _ =
+          if (
+            rows.isEmpty || !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false)
+          ) {
+            throw UpdateNotPerformedException(
+              s"The request to mark value <${deleteValueRequest.valueIri}> (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."
+            )
+          }
       } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
     }
 

@@ -127,6 +127,20 @@ object ValuesValidator {
     maybe.flatMap(_.toBooleanOption)
 
   /**
+   * Turn a possibly empty string value into a boolean value.
+   *
+   * Returns
+   *  - `false` if None is provided
+   *  - the boolean value of the string, if it represents a boolean value
+   *  - the `fallback` value otherwise
+   *
+   * @param maybe an optional string representation of a boolean value.
+   * @return  a [[Boolean]].
+   */
+  def optionStringToBoolean(maybe: Option[String], fallback: Boolean): Boolean =
+    optionStringToBoolean(maybe).getOrElse(fallback)
+
+  /**
    * Checks that a name is valid as a project-specific ontology name.
    *
    * @param ontologyName the ontology name to be checked.

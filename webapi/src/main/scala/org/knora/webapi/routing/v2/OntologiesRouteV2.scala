@@ -122,12 +122,7 @@ final case class OntologiesRouteV2(
 
       val params: Map[String, String] = requestContext.request.uri.query().toMap
       val allLanguagesStr             = params.get(ALL_LANGUAGES)
-      val allLanguages = ValuesValidator
-        .optionStringToBoolean(allLanguagesStr)
-        .getOrElse(
-          throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-        )
-
+      val allLanguages                = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
       val requestTask = Authenticator
         .getUserADM(requestContext)
         .map(OntologyEntitiesGetRequestV2(requestedOntology, allLanguages, _))
@@ -210,12 +205,7 @@ final case class OntologiesRouteV2(
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = ValuesValidator
-          .optionStringToBoolean(params.get(ALL_LANGUAGES))
-          .getOrElse(
-            throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-          )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), false)
 
         val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -484,12 +474,7 @@ final case class OntologiesRouteV2(
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = ValuesValidator
-          .optionStringToBoolean(params.get(ALL_LANGUAGES))
-          .getOrElse(
-            throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-          )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), false)
 
         val requestMessageFuture: Future[ClassesGetRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -967,12 +952,7 @@ final case class OntologiesRouteV2(
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = ValuesValidator
-          .optionStringToBoolean(params.get(ALL_LANGUAGES))
-          .getOrElse(
-            throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-          )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), fallback = false)
 
         val requestMessageFuture: Future[PropertiesGetRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
