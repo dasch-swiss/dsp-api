@@ -134,11 +134,11 @@ object RouteUtilV1 {
   ): ZIO[MessageRelay, Throwable, TextWithStandoffTagsV2] =
     for {
       mappingResponse <- MessageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, userProfile))
-      textWithStandoffTagV1 <-
+      textWithStandoffTag <-
         ZIO.attempt(
           StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
         )
-    } yield textWithStandoffTagV1
+    } yield textWithStandoffTag
 
   /**
    * MIME types used in Sipi to store image files.
