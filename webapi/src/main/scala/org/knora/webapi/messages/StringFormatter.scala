@@ -1612,6 +1612,7 @@ class StringFormatter private (
    *                 a carriage return (`\r`).
    * @return the same string, escaped or unescaped as requested.
    */
+  @deprecated("Use toSparqlEncodedString(String) instead")
   def toSparqlEncodedString(s: String, errorFun: => Nothing): String = // --
     toSparqlEncodedString(s).getOrElse(errorFun)
 
