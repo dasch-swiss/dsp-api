@@ -225,13 +225,16 @@ final case class ResourcesRouteV2(
         val startDate: Option[Instant] = params
           .get("startDate")
           .map(dateStr =>
-            stringFormatter
-              .xsdDateTimeStampToInstant(dateStr, throw BadRequestException(s"Invalid start date: $dateStr"))
+            ValuesValidator
+              .xsdDateTimeStampToInstant(dateStr)
+              .getOrElse(throw BadRequestException(s"Invalid start date: $dateStr"))
           )
         val endDate = params
           .get("endDate")
           .map(dateStr =>
-            stringFormatter.xsdDateTimeStampToInstant(dateStr, throw BadRequestException(s"Invalid end date: $dateStr"))
+            ValuesValidator
+              .xsdDateTimeStampToInstant(dateStr)
+              .getOrElse(throw BadRequestException(s"Invalid start date: $dateStr"))
           )
 
         val requestTask = Authenticator
@@ -319,18 +322,14 @@ final case class ResourcesRouteV2(
 
       val params: Map[String, String] = requestContext.request.uri.query().toMap
 
-      // Was a version date provided?
-      val versionDate: Option[Instant] = params.get("version").map { versionStr =>
-        def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
-
-        // Yes. Try to parse it as an xsd:dateTimeStamp.
-        try {
-          stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
-        } catch {
-          // If that doesn't work, try to parse it as a Knora ARK timestamp.
-          case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
-        }
-      }
+      val versionDate: Option[Instant] = params
+        .get("version")
+        .map(versionStr =>
+          ValuesValidator
+            .xsdDateTimeStampToInstant(versionStr)
+            .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
+            .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
+        )
       val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
       val requestTask = Authenticator

@@ -212,10 +212,9 @@ final case class StandoffTagUtilV2Live(
 
                                  case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) |
                                      Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTimeStamp))) =>
-                                   val timeStamp = stringFormatter.xsdDateTimeStampToInstant(
-                                     value,
-                                     throw DataConversionException(s"Couldn't parse timestamp: $value")
-                                   )
+                                   val timeStamp = ValuesValidator
+                                     .xsdDateTimeStampToInstant(value)
+                                     .getOrElse(throw DataConversionException(s"Couldn't parse timestamp: $value"))
                                    StandoffTagTimeAttributeV2(standoffPropertyIri = propSmartIri, value = timeStamp)
 
                                  case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) =>
@@ -419,10 +418,9 @@ object StandoffTagUtilV2 {
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) =>
                 StandoffTagTimeAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = stringFormatter.xsdDateTimeStampToInstant(
-                    attr.value,
-                    throw BadRequestException(s"Invalid timestamp attribute: '${attr.value}'")
-                  )
+                  value = ValuesValidator
+                    .xsdDateTimeStampToInstant(attr.value)
+                    .getOrElse(throw BadRequestException(s"Invalid timestamp attribute: '${attr.value}'"))
                 )
 
               case None =>
@@ -1059,10 +1057,9 @@ object StandoffTagUtilV2 {
           val timeStampString: String =
             getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffTimeTag, standoffNodeFromXML)
           val timeStamp: Instant =
-            stringFormatter.xsdDateTimeStampToInstant(
-              timeStampString,
-              throw BadRequestException(s"Invalid timestamp: $timeStampString")
-            )
+            ValuesValidator
+              .xsdDateTimeStampToInstant(timeStampString)
+              .getOrElse(throw BadRequestException(s"Invalid timestamp: $timeStampString"))
           val timeStampAttr = StandoffTagTimeAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasTimeStamp.toSmartIri,
             value = timeStamp

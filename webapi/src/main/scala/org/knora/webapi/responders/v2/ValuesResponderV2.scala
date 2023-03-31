@@ -23,6 +23,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -1760,12 +1761,13 @@ final case class ValuesResponderV2Live(
         rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
-              rows.isEmpty || !stringFormatter.optionStringToBoolean(
-                rows.head.rowMap.get("isDeleted"),
-                throw InconsistentRepositoryDataException(
-                  s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+              rows.isEmpty || !ValuesValidator
+                .optionStringToBoolean(rows.head.rowMap.get("isDeleted"))
+                .getOrElse(
+                  throw InconsistentRepositoryDataException(
+                    s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+                  )
                 )
-              )
             ) {
               throw UpdateNotPerformedException(
                 s"The request to mark value <${deleteValueRequest.valueIri}> (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."

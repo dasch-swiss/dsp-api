@@ -19,6 +19,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
@@ -1445,12 +1446,13 @@ final case class ValuesResponderV1Live(
         rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
-              rows.isEmpty || !stringFormatter.optionStringToBoolean(
-                rows.head.rowMap.get("isDeleted"),
-                throw InconsistentRepositoryDataException(
-                  s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+              rows.isEmpty || !ValuesValidator
+                .optionStringToBoolean(rows.head.rowMap.get("isDeleted"))
+                .getOrElse(
+                  throw InconsistentRepositoryDataException(
+                    s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+                  )
                 )
-              )
             ) {
               throw UpdateNotPerformedException(
                 s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."
@@ -1558,12 +1560,13 @@ final case class ValuesResponderV1Live(
                                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
                                     val valuePermissionCode =
                                       if (
-                                        stringFormatter.optionStringToBoolean(
-                                          rowMap.get("isLinkValue"),
-                                          throw InconsistentRepositoryDataException(
-                                            s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"
+                                        ValuesValidator
+                                          .optionStringToBoolean(rowMap.get("isLinkValue"))
+                                          .getOrElse(
+                                            throw InconsistentRepositoryDataException(
+                                              s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"
+                                            )
                                           )
-                                        )
                                       ) {
                                         // It's a LinkValue.
                                         PermissionUtilADM.getUserPermissionV1(

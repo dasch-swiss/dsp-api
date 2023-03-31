@@ -21,6 +21,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
@@ -591,13 +592,13 @@ final case class ResourcesResponderV1Live(
                 // Make a resource info for each referring resource, and check the permissions on the referring resource.
 
                 val rowsForResInfo = rows.filterNot(row =>
-                  stringFormatter.optionStringToBoolean(
-                    row.rowMap.get("isLinkValue"),
-                    throw InconsistentRepositoryDataException(
-                      s"Invalid boolean for isLinkValue: ${row.rowMap
-                          .get("isLinkValue")}"
+                  ValuesValidator
+                    .optionStringToBoolean(row.rowMap.get("isLinkValue"))
+                    .getOrElse(
+                      throw InconsistentRepositoryDataException(
+                        s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}"
+                      )
                     )
-                  )
                 )
 
                 for {
@@ -619,13 +620,13 @@ final case class ResourcesResponderV1Live(
 
                         // Filter to get only the rows representing LinkValues.
                         val rowsWithLinkValues = rows.filter(row =>
-                          stringFormatter.optionStringToBoolean(
-                            row.rowMap.get("isLinkValue"),
-                            throw InconsistentRepositoryDataException(
-                              s"Invalid boolean for isLinkValue: ${row.rowMap
-                                  .get("isLinkValue")}"
+                          ValuesValidator
+                            .optionStringToBoolean(row.rowMap.get("isLinkValue"))
+                            .getOrElse(
+                              throw InconsistentRepositoryDataException(
+                                s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}"
+                              )
                             )
-                          )
                         )
 
                         // Group them by LinkValue IRI.
@@ -2487,12 +2488,13 @@ final case class ResourcesResponderV1Live(
         rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
-              rows.isEmpty || !stringFormatter.optionStringToBoolean(
-                rows.head.rowMap.get("isDeleted"),
-                throw InconsistentRepositoryDataException(
-                  s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+              rows.isEmpty || !ValuesValidator
+                .optionStringToBoolean(rows.head.rowMap.get("isDeleted"))
+                .getOrElse(
+                  throw InconsistentRepositoryDataException(
+                    s"Invalid boolean for isLinkValue: ${rows.head.rowMap.get("isDeleted")}"
+                  )
                 )
-              )
             ) {
               throw UpdateNotPerformedException(
                 s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug."
@@ -2874,12 +2876,13 @@ final case class ResourcesResponderV1Live(
         fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] =
           resInfoResponseRows
             .filter(row =>
-              stringFormatter.optionStringToBoolean(
-                row.rowMap.get("isFileValue"),
-                throw InconsistentRepositoryDataException(
-                  s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"
+              ValuesValidator
+                .optionStringToBoolean(row.rowMap.get("isFileValue"))
+                .getOrElse(
+                  throw InconsistentRepositoryDataException(
+                    s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"
+                  )
                 )
-              )
             )
             .groupBy(row => row.rowMap("obj"))
             .toVector

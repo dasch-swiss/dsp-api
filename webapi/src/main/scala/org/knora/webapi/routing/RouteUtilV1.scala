@@ -25,6 +25,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.twirl.ResourceHtmlView
@@ -291,10 +292,8 @@ object RouteUtilV1 {
   def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): ZIO[StringFormatter, Throwable, Set[IRI]] =
     ZIO.serviceWithZIO[StringFormatter](sf => ZIO.attempt(sf.getResourceIrisFromStandoffTags(tags)))
 
-  def xsdDateTimeStampToInstant(s: String, errorMsg: String): ZIO[StringFormatter, Throwable, Instant] =
-    ZIO.serviceWithZIO[StringFormatter] { sf =>
-      ZIO.attempt(sf.xsdDateTimeStampToInstant(s, throw BadRequestException(errorMsg)))
-    }
+  def xsdDateTimeStampToInstant(s: String, errorMsg: String): IO[Throwable, Instant] =
+    ZIO.fromOption(ValuesValidator.xsdDateTimeStampToInstant(s)).orElseFail(BadRequestException(errorMsg))
 
   def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>

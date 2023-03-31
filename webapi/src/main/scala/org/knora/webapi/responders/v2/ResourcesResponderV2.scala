@@ -23,6 +23,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
@@ -635,12 +636,13 @@ final case class ResourcesResponderV2Live(
         rows = sparqlSelectResponse.results.bindings
 
         _ = if (
-              rows.isEmpty || !stringFormatter.optionStringToBoolean(
-                rows.head.rowMap.get("isDeleted"),
-                throw InconsistentRepositoryDataException(
-                  s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+              rows.isEmpty || !ValuesValidator
+                .optionStringToBoolean(rows.head.rowMap.get("isDeleted"))
+                .getOrElse(
+                  throw InconsistentRepositoryDataException(
+                    s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+                  )
                 )
-              )
             ) {
               throw UpdateNotPerformedException(
                 s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug."
@@ -2368,10 +2370,9 @@ final case class ResourcesResponderV2Live(
           val author: IRI            = row.rowMap("author")
 
           ResourceHistoryEntry(
-            versionDate = stringFormatter.xsdDateTimeStampToInstant(
-              versionDateStr,
-              throw InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr")
-            ),
+            versionDate = ValuesValidator
+              .xsdDateTimeStampToInstant(versionDateStr)
+              .getOrElse(throw InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr")),
             author = author
           )
         }
