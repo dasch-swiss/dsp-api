@@ -1,12 +1,13 @@
 package org.knora.webapi.messages
 
+import spray.json.JsonParser
+
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import scala.util.Try
 import scala.util.matching.Regex
-import spray.json.JsonParser
 
 object ValuesValidator {
   // TODO: I think we should rename this to `ValuesConvertor` as it fits better what it's doing

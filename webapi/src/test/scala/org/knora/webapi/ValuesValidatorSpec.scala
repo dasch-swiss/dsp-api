@@ -1,9 +1,10 @@
 package org.knora.webapi
 
+import zio.test.Assertion._
+import zio.test._
+
 import java.time.Instant
 
-import zio.test._
-import zio.test.Assertion._
 import org.knora.webapi.messages.ValuesValidator
 
 object ValuesValidatorSpec extends ZIOSpecDefault {
