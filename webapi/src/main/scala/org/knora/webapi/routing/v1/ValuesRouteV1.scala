@@ -296,12 +296,13 @@ final case class ValuesRouteV1(
               )
 
             case OntologyConstants.KnoraBase.TimeValue =>
-              val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
-                apiRequest.time_value.get,
-                throw BadRequestException(
-                  s"Invalid timestamp: ${apiRequest.time_value.get}"
+              val timeStamp: Instant = ValuesValidator
+                .xsdDateTimeStampToInstant(apiRequest.time_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid timestamp: ${apiRequest.time_value.get}"
+                  )
                 )
-              )
               Future(TimeValueV1(timeStamp), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.GeonameValue =>
@@ -514,12 +515,13 @@ final case class ValuesRouteV1(
               )
 
             case OntologyConstants.KnoraBase.TimeValue =>
-              val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
-                apiRequest.time_value.get,
-                throw BadRequestException(
-                  s"Invalid timestamp: ${apiRequest.time_value.get}"
+              val timeStamp: Instant = ValuesValidator
+                .xsdDateTimeStampToInstant(apiRequest.time_value.get)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"Invalid timestamp: ${apiRequest.time_value.get}"
+                  )
                 )
-              )
               Future(TimeValueV1(timeStamp), apiRequest.comment)
 
             case OntologyConstants.KnoraBase.GeonameValue =>

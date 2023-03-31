@@ -21,14 +21,15 @@ import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.JsValue
 import spray.json.JsonParser
+
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import dsp.errors.AssertionException
 
+import dsp.errors.AssertionException
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.InstanceChecker
@@ -39,6 +40,7 @@ import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
@@ -670,7 +672,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             val versionDate: Instant = jsonLDObject.requireDatatypeValueInObject(
               key = OntologyConstants.KnoraApiV2Complex.VersionDate,
               expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-              validationFun = stringFormatter.xsdDateTimeStampToInstant
+              validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
             )
 
             val arkTimestamp                  = stringFormatter.formatArkTimestamp(versionDate)
@@ -1138,7 +1140,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.CreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(savedCreationDate == creationDate)
@@ -1388,7 +1390,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         .requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
       assert(savedCreationDate == creationDate)
 
@@ -1462,7 +1464,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.CreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -1473,7 +1475,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         .requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
       assert(savedValueCreationDate == customCreationDate)
 
@@ -1625,7 +1627,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(lastModificationDate == newModificationDate)
@@ -1700,7 +1702,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = stringFormatter.xsdDateTimeStampToInstant
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
 
       assert(lastModificationDate == newModificationDate)
