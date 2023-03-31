@@ -246,8 +246,8 @@ final case class ValuesRouteV1()(
 
   private def makeColorValueCreate(apiRequest: CreateValueApiRequestV1) = makeColorValue(apiRequest.color_value)
   private def makeColorValueUpdate(apiRequest: ChangeValueApiRequestV1) = makeColorValue(apiRequest.color_value)
-  private def makeColorValue(color_value: Option[IRI]) = for {
-    value <- getValueOrFail(color_value, "Not present 'color_value'")
+  private def makeColorValue(value: Option[IRI]) = for {
+    value <- getValueOrFail(value, "Not present 'color_value'")
     color <- ZIO
                .fromOption(ValuesValidator.validateColor(value))
                .orElseFail(BadRequestException(s"Invalid 'color_value': $value"))
@@ -255,9 +255,9 @@ final case class ValuesRouteV1()(
 
   private def makeDateValueCreate(apiRequest: CreateValueApiRequestV1) = makeDateValue(apiRequest.date_value)
   private def makeDateValueUpdate(apiRequest: ChangeValueApiRequestV1) = makeDateValue(apiRequest.date_value)
-  private def makeDateValue(date_value: Option[IRI]) =
+  private def makeDateValue(value: Option[IRI]) =
     for {
-      value <- getValueOrFail(date_value, "Not present 'date_value'")
+      value <- getValueOrFail(value, "Not present 'date_value'")
       date <- ZIO
                 .attempt(DateUtilV1.createJDNValueV1FromDateString(value))
                 .orElseFail(BadRequestException(s"Invalid 'date_value': $value"))
