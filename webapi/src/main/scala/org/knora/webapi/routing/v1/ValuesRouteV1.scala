@@ -39,90 +39,77 @@ final case class ValuesRouteV1()(
   private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) extends LazyLogging {
 
-  def makeRoute: Route = valuesHistory ~ values ~ valuecomments ~ links ~ filevalue
-
-  private def valuesHistory =
-    path("v1" / "values" / "history" / Segments) { iris =>
-      get { requestContext =>
-        val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeVersionHistoryRequestMessage(iris, _))
-        runJsonRouteZ(requestTask, requestContext)
-      }
+  def makeRoute: Route = path("v1" / "values" / "history" / Segments) { iris =>
+    get { requestContext =>
+      val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeVersionHistoryRequestMessage(iris, _))
+      runJsonRouteZ(requestTask, requestContext)
     }
-
-  private def values =
-    path("v1" / "values" / Segment) { valueIriStr =>
-      get { requestContext =>
-        val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeGetValueRequest(valueIriStr, _))
-        runJsonRouteZ(requestTask, requestContext)
-      } ~ post {
-        entity(as[CreateValueApiRequestV1]) { apiRequest => requestContext =>
-          val requestTask =
-            Authenticator.getUserADM(requestContext).flatMap(makeCreateValueRequestMessage(apiRequest, _))
-          runJsonRouteZ(requestTask, requestContext)
-        }
-      } ~ put {
-        entity(as[ChangeValueApiRequestV1]) { apiRequest => requestContext =>
-          // In API v1, you cannot change a value and its comment in a single request. So we know that here,
-          // we are getting a request to change either the value or the comment, but not both.
-          val requestTask = for {
-            userADM <- Authenticator.getUserADM(requestContext)
-            request <- apiRequest match {
-                         case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
-                           makeChangeCommentRequestMessage(valueIriStr, Some(comment), userADM)
-                         case _ =>
-                           makeAddValueVersionRequestMessage(valueIriStr, apiRequest, userADM)
-                       }
-          } yield request
-          runJsonRouteZ(requestTask, requestContext)
-        }
-      } ~ delete { requestContext =>
-        val requestTask = for {
-          userADM      <- Authenticator.getUserADM(requestContext)
-          params        = requestContext.request.uri.query().toMap
-          deleteComment = params.get("deleteComment")
-          task         <- makeDeleteValueRequest(valueIriStr, deleteComment, userADM)
-        } yield task
-        runJsonRouteZ(requestTask, requestContext)
-      }
-    }
-
-  private def valuecomments =
-    path("v1" / "valuecomments" / Segment) { valueIriStr =>
-      delete { requestContext =>
+  } ~ path("v1" / "values") {
+    post {
+      entity(as[CreateValueApiRequestV1]) { apiRequest => requestContext =>
         val requestTask =
-          Authenticator.getUserADM(requestContext).flatMap(makeChangeCommentRequestMessage(valueIriStr, None, _))
+          Authenticator.getUserADM(requestContext).flatMap(makeCreateValueRequestMessage(apiRequest, _))
         runJsonRouteZ(requestTask, requestContext)
       }
     }
-
-  private def links =
-    path("v1" / "links" / Segments) { iris =>
-      // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
-      get { requestContext =>
-        val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeLinkValueGetRequestMessage(iris, _))
+  } ~ path("v1" / "values" / Segment) { valueIriStr =>
+    get { requestContext =>
+      val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeGetValueRequest(valueIriStr, _))
+      runJsonRouteZ(requestTask, requestContext)
+    } ~ put {
+      entity(as[ChangeValueApiRequestV1]) { apiRequest => requestContext =>
+        // In API v1, you cannot change a value and its comment in a single request. So we know that here,
+        // we are getting a request to change either the value or the comment, but not both.
+        val requestTask = for {
+          userADM <- Authenticator.getUserADM(requestContext)
+          request <- apiRequest match {
+                       case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
+                         makeChangeCommentRequestMessage(valueIriStr, Some(comment), userADM)
+                       case _ =>
+                         makeAddValueVersionRequestMessage(valueIriStr, apiRequest, userADM)
+                     }
+        } yield request
+        runJsonRouteZ(requestTask, requestContext)
+      }
+    } ~ delete { requestContext =>
+      val requestTask = for {
+        userADM      <- Authenticator.getUserADM(requestContext)
+        params        = requestContext.request.uri.query().toMap
+        deleteComment = params.get("deleteComment")
+        task         <- makeDeleteValueRequest(valueIriStr, deleteComment, userADM)
+      } yield task
+      runJsonRouteZ(requestTask, requestContext)
+    }
+  } ~ path("v1" / "valuecomments" / Segment) { valueIriStr =>
+    delete { requestContext =>
+      val requestTask =
+        Authenticator.getUserADM(requestContext).flatMap(makeChangeCommentRequestMessage(valueIriStr, None, _))
+      runJsonRouteZ(requestTask, requestContext)
+    }
+  } ~ path("v1" / "links" / Segments) { iris =>
+    // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
+    get { requestContext =>
+      val requestTask = Authenticator.getUserADM(requestContext).flatMap(makeLinkValueGetRequestMessage(iris, _))
+      runJsonRouteZ(requestTask, requestContext)
+    }
+  } ~ path("v1" / "filevalue" / Segment) { resIriStr: IRI =>
+    put {
+      entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
+        val requestTask = for {
+          userADM              <- Authenticator.getUserADM(requestContext)
+          resourceIri          <- validateAndEscapeIri(resIriStr, s"Invalid resource IRI: $resIriStr")
+          msg                   = ResourceInfoGetRequestV1(resourceIri, userADM)
+          resourceInfoResponse <- MessageRelay.ask[ResourceInfoResponseV1](msg)
+          projectShortcode <-
+            ZIO
+              .fromOption(resourceInfoResponse.resource_info)
+              .mapBoth(_ => NotFoundException(s"Resource not found: $resourceIri"), _.project_shortcode)
+          request <- makeChangeFileValueRequest(resIriStr, projectShortcode, apiRequest, userADM)
+        } yield request
         runJsonRouteZ(requestTask, requestContext)
       }
     }
-
-  private def filevalue =
-    path("v1" / "filevalue" / Segment) { resIriStr: IRI =>
-      put {
-        entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
-          val requestTask = for {
-            userADM              <- Authenticator.getUserADM(requestContext)
-            resourceIri          <- validateAndEscapeIri(resIriStr, s"Invalid resource IRI: $resIriStr")
-            msg                   = ResourceInfoGetRequestV1(resourceIri, userADM)
-            resourceInfoResponse <- MessageRelay.ask[ResourceInfoResponseV1](msg)
-            projectShortcode <-
-              ZIO
-                .fromOption(resourceInfoResponse.resource_info)
-                .mapBoth(_ => NotFoundException(s"Resource not found: $resourceIri"), _.project_shortcode)
-            request <- makeChangeFileValueRequest(resIriStr, projectShortcode, apiRequest, userADM)
-          } yield request
-          runJsonRouteZ(requestTask, requestContext)
-        }
-      }
-    }
+  }
 
   private def makeVersionHistoryRequestMessage(
     iris: Seq[IRI],
