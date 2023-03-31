@@ -75,8 +75,8 @@ object ApiRoutes {
  * The FIRST matching route is used for handling a request.
  */
 private final case class ApiRoutesImpl(
-  routeData: KnoraRouteData,
-  runtime: Runtime[
+  private val routeData: KnoraRouteData,
+  private implicit val runtime: Runtime[
     AppConfig
       with MessageRelay
       with RestCardinalityService
@@ -85,7 +85,7 @@ private final case class ApiRoutesImpl(
       with core.State
       with routing.Authenticator
   ],
-  appConfig: AppConfig
+  private val appConfig: AppConfig
 ) extends ApiRoutes
     with AroundDirectives {
 
@@ -99,7 +99,7 @@ private final case class ApiRoutesImpl(
                 VersionRoute().makeRoute ~
                 RejectingRoute(routeData, runtime).makeRoute ~
                 ResourcesRouteV1(routeData, runtime).makeRoute ~
-                ValuesRouteV1(routeData, runtime).makeRoute ~
+                ValuesRouteV1().makeRoute ~
                 StandoffRouteV1(routeData, runtime).makeRoute ~
                 ListsRouteV1(routeData, runtime).makeRoute ~
                 ResourceTypesRouteV1(routeData, runtime).makeRoute ~

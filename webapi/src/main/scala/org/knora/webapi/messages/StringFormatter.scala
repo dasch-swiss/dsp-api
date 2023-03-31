@@ -14,6 +14,7 @@ import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import spray.json._
 import zio.ZLayer
+import zio.prelude.Validation
 
 import java.nio.ByteBuffer
 import java.time._
@@ -34,6 +35,7 @@ import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
@@ -574,8 +576,6 @@ class StringFormatter private (
   maybeKnoraHostAndPort: Option[String] = None,
   initForTest: Boolean = false
 ) {
-
-  import StringFormatter._
 
   private val base64Encoder = Base64.getUrlEncoder.withoutPadding
   private val base64Decoder = Base64.getUrlDecoder
@@ -1469,15 +1469,21 @@ class StringFormatter private (
    *                 IRI.
    * @return the same string.
    */
-  def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
-    val urlEncodedStr = encodeAllowEscapes(s)
+  @deprecated("Use validateAndEscapeIri(String) instead")
+  def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI =
+    validateAndEscapeIri(s).getOrElse(errorFun)
 
-    if (Iri.urlValidator.isValid(urlEncodedStr)) {
-      urlEncodedStr
-    } else {
-      errorFun
-    }
-  }
+  /**
+   * Checks that a string represents a valid IRI.
+   * Also encodes the IRI, preserving existing %-escapes.
+   *
+   * @param s        the string to be checked.
+   * @return A validated and escaped IRI.
+   */
+  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
+    Validation
+      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
+      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
    * Check that an optional string represents a valid IRI.
@@ -1606,18 +1612,20 @@ class StringFormatter private (
    *                 a carriage return (`\r`).
    * @return the same string, escaped or unescaped as requested.
    */
-  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = { // --
-    // TODO: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible.
-    if (s.isEmpty || s.contains("\r")) errorFun
+  @deprecated("Use toSparqlEncodedString(String) instead")
+  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = // --
+    toSparqlEncodedString(s).getOrElse(errorFun)
 
-    // http://www.morelab.deusto.es/code_injection/
-
-    StringUtils.replaceEach(
-      s,
-      SparqlEscapeInput,
-      SparqlEscapeOutput
-    )
-  }
+  /**
+   * Makes a string safe to be entered in the triplestore by escaping special chars.
+   *
+   * @param s        a string.
+   * @return the same string escaped
+   *         [[None]] if the string is empty or contains a carriage return (`\r`).
+   */
+  def toSparqlEncodedString(s: String): Option[String] =
+    if (s.isEmpty || s.contains("\r")) None
+    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
 
   /**
    * Unescapes a string that has been escaped for SPARQL.

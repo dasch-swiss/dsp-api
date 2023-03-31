@@ -61,7 +61,7 @@ abstract class R2RSpec
   private val bootstrap = util.Logger.text() >>> effectLayers
 
   // create a configured runtime
-  val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
+  implicit val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
