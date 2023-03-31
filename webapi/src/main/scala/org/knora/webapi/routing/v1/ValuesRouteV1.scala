@@ -95,17 +95,8 @@ final case class ValuesRouteV1()(
   } ~ path("v1" / "filevalue" / Segment) { resIriStr: IRI =>
     put {
       entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
-        val requestTask = for {
-          userADM              <- Authenticator.getUserADM(requestContext)
-          resourceIri          <- validateAndEscapeIri(resIriStr, s"Invalid resource IRI: $resIriStr")
-          msg                   = ResourceInfoGetRequestV1(resourceIri, userADM)
-          resourceInfoResponse <- MessageRelay.ask[ResourceInfoResponseV1](msg)
-          projectShortcode <-
-            ZIO
-              .fromOption(resourceInfoResponse.resource_info)
-              .mapBoth(_ => NotFoundException(s"Resource not found: $resourceIri"), _.project_shortcode)
-          request <- makeChangeFileValueRequest(resIriStr, projectShortcode, apiRequest, userADM)
-        } yield request
+        val requestTask =
+          Authenticator.getUserADM(requestContext).flatMap(makeChangeFileValueRequest(resIriStr, apiRequest, _))
         runJsonRouteZ(requestTask, requestContext)
       }
     }
@@ -363,12 +354,15 @@ final case class ValuesRouteV1()(
 
   private def makeChangeFileValueRequest(
     resIriStr: IRI,
-    projectShortcode: String,
     apiRequest: ChangeFileValueApiRequestV1,
     userADM: UserADM
   ): ZIO[StringFormatter with MessageRelay, Throwable, ChangeFileValueRequestV1] =
     for {
-      resourceIri          <- validateAndEscapeIri(resIriStr, s"Invalid resource IRI: $resIriStr")
+      resourceIri <- validateAndEscapeIri(resIriStr, s"Invalid resource IRI: $resIriStr")
+      projectShortcode <- MessageRelay
+                            .ask[ResourceInfoResponseV1](ResourceInfoGetRequestV1(resourceIri, userADM))
+                            .flatMap(response => ZIO.fromOption(response.resource_info))
+                            .mapBoth(_ => NotFoundException(s"Resource not found: $resourceIri"), _.project_shortcode)
       tempFilePath         <- ZIO.serviceWithZIO[StringFormatter](sf => ZIO.attempt(sf.makeSipiTempFilePath(apiRequest.file)))
       msg                   = GetFileMetadataRequest(tempFilePath, userADM)
       fileMetadataResponse <- MessageRelay.ask[GetFileMetadataResponse](msg)
