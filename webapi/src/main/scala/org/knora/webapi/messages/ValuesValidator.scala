@@ -124,10 +124,7 @@ object ValuesValidator {
    * @return [[Option]] of [[Boolean]].
    */
   def optionStringToBoolean(maybe: Option[String]): Option[Boolean] =
-    maybe match {
-      case Some(value) => value.toBooleanOption
-      case None        => Some(false)
-    }
+    maybe.flatMap(_.toBooleanOption)
 
   /**
    * Checks that a name is valid as a project-specific ontology name.
