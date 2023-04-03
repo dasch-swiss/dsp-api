@@ -9,12 +9,11 @@ import akka.actor._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
-
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Paths
-
 import dsp.errors.FileWriteException
+
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
@@ -31,8 +30,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
  */
 class SipiV1R2RSpec extends R2RSpec {
 
-  private val resourcesPath = new ResourcesRouteV1(routeData).makeRoute
-  private val valuesPath    = new ValuesRouteV1(routeData).makeRoute
+  private val resourcesPath = ResourcesRouteV1(routeData, runtime).makeRoute
+  private val valuesPath    = ValuesRouteV1().makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

@@ -16,7 +16,6 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.JsString
-
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
@@ -52,13 +51,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val searchPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new SearchRouteV2(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(SearchRouteV2(routeData, runtime).makeRoute)
   private val resourcePath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, null).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(routeData, runtime).makeRoute)
   private val standoffPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new StandoffRouteV2(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(StandoffRouteV2(routeData, runtime).makeRoute)
   private val valuesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

@@ -9,7 +9,6 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
@@ -23,105 +22,6 @@ class StringFormatterSpec extends CoreSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   "The StringFormatter class" should {
-
-    "not accept 2017-05-10" in {
-      val dateString = "2017-05-10"
-      assertThrows[AssertionException] {
-        stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-      }
-    }
-
-    "accept GREGORIAN:2017" in {
-      val dateString = "GREGORIAN:2017"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept GREGORIAN:2017-05" in {
-      val dateString = "GREGORIAN:2017-05"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept GREGORIAN:2017-05-10" in {
-      val dateString = "GREGORIAN:2017-05-10"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept GREGORIAN:2017-05-10:2017-05-12" in {
-      val dateString = "GREGORIAN:2017-05-10:2017-05-12"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept GREGORIAN:500-05-10 BC" in {
-      val dateString = "GREGORIAN:500-05-10 BC"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept GREGORIAN:500-05-10 AD" in {
-      val dateString = "GREGORIAN:500-05-10 AD"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept GREGORIAN:500-05-10 BC:5200-05-10 AD" in {
-      val dateString = "GREGORIAN:500-05-10 BC:5200-05-10 AD"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept JULIAN:50 BCE" in {
-      val dateString = "JULIAN:50 BCE"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept JULIAN:1560-05 CE" in {
-      val dateString = "JULIAN:1560-05 CE"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept JULIAN:217-05-10 BCE" in {
-      val dateString = "JULIAN:217-05-10 BCE"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept JULIAN:2017-05-10:2017-05-12" in {
-      val dateString = "JULIAN:2017-05-10:2017-05-12"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept JULIAN:2017:2017-5-12" in {
-      val dateString = "JULIAN:2017:2017-5-12"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept JULIAN:500 BCE:400 BCE" in {
-      val dateString = "JULIAN:500 BCE:400 BCE"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "accept GREGORIAN:10 BC:1 AD" in {
-      val dateString = "GREGORIAN:10 BC:1 AD"
-      stringFormatter.validateDate(dateString, throw AssertionException(s"Not accepted $dateString"))
-    }
-
-    "not accept month 00" in {
-      val dateString = "GREGORIAN:2017-00:2017-02"
-      assertThrows[AssertionException] {
-        stringFormatter.validateDate(dateString, throw AssertionException(s"month 00 in $dateString Not accepted"))
-      }
-    }
-
-    "not accept day 00" in {
-      val dateString = "GREGORIAN:2017-01-00"
-      assertThrows[AssertionException] {
-        stringFormatter.validateDate(dateString, throw AssertionException(s"day 00 in $dateString Not accepted"))
-      }
-    }
-
-    "not accept year 0" in {
-      val dateString = "GREGORIAN:0 BC"
-      assertThrows[AssertionException] {
-        stringFormatter.validateDate(dateString, throw AssertionException(s"Year 0 is Not accepted $dateString"))
-      }
-    }
-
     "recognize the url of the dhlab site as a valid IRI" in {
       val testUrl: String = "http://dhlab.unibas.ch/"
       val validIri        = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
@@ -1090,27 +990,6 @@ class StringFormatterSpec extends CoreSpec {
       val timestamp        = Instant.parse("2018-06-04T08:56:22Z")
       val arkUrl           = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
       assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622Z")
-    }
-
-    "parse an ARK URL timestamp with a fractional part" in {
-      val timestampStr = "20180604T0856229876543Z"
-      val timestamp =
-        stringFormatter.arkTimestampToInstant(timestampStr, throw BadRequestException(s"invalid timestamp"))
-      assert(timestamp == Instant.parse("2018-06-04T08:56:22.9876543Z"))
-    }
-
-    "parse an ARK URL timestamp with a leading zero" in {
-      val timestampStr = "20180604T085622098Z"
-      val timestamp =
-        stringFormatter.arkTimestampToInstant(timestampStr, throw BadRequestException(s"invalid timestamp"))
-      assert(timestamp == Instant.parse("2018-06-04T08:56:22.098Z"))
-    }
-
-    "parse an ARK URL timestamp without a fractional part" in {
-      val timestampStr = "20180604T085622Z"
-      val timestamp =
-        stringFormatter.arkTimestampToInstant(timestampStr, throw BadRequestException(s"invalid timestamp"))
-      assert(timestamp == Instant.parse("2018-06-04T08:56:22Z"))
     }
 
   }

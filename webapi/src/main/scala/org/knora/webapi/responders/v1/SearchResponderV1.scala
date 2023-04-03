@@ -19,6 +19,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.twirl.SearchCriterion
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -431,8 +432,9 @@ final case class SearchResponderV1Live(
                   //
 
                   val datestring =
-                    stringFormatter
-                      .validateDate(searchval, throw BadRequestException(s"Invalid date format: $searchval"))
+                    ValuesValidator
+                      .validateDate(searchval)
+                      .getOrElse(throw BadRequestException(s"Invalid date format: $searchval"))
 
                   // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
                   val parsedDate = datestring.split(StringFormatter.CalendarSeparator)
@@ -497,16 +499,17 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.IntValue =>
                   // check if string is an integer
-                  val searchString = stringFormatter
-                    .validateInt(searchval, throw BadRequestException(s"Given searchval is not an integer: $searchval"))
+                  val searchString = ValuesValidator
+                    .validateInt(searchval)
+                    .getOrElse(throw BadRequestException(s"Given searchval is not an integer: $searchval"))
                     .toString
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                 case OntologyConstants.KnoraBase.DecimalValue =>
                   // check if string is a decimal number
-                  val searchString = stringFormatter
-                    .validateBigDecimal(
-                      searchval,
+                  val searchString = ValuesValidator
+                    .validateBigDecimal(searchval)
+                    .getOrElse(
                       throw BadRequestException(s"Given searchval is not a decimal number: $searchval")
                     )
                     .toString
@@ -514,11 +517,9 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.TimeValue =>
                   // check if string is an integer
-                  val searchString = stringFormatter
-                    .xsdDateTimeStampToInstant(
-                      searchval,
-                      throw BadRequestException(s"Given searchval is not a timestamp: $searchval")
-                    )
+                  val searchString = ValuesValidator
+                    .xsdDateTimeStampToInstant(searchval)
+                    .getOrElse(throw BadRequestException(s"Given searchval is not a timestamp: $searchval"))
                     .toString
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
@@ -533,8 +534,9 @@ final case class SearchResponderV1Live(
                 case OntologyConstants.KnoraBase.ColorValue =>
                   // check if string is a hexadecimal RGB-color value
                   val searchString =
-                    stringFormatter
-                      .validateColor(searchval, throw BadRequestException(s"Invalid color format: $searchval"))
+                    ValuesValidator
+                      .validateColor(searchval)
+                      .getOrElse(throw BadRequestException(s"Invalid color format: $searchval"))
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                 case OntologyConstants.KnoraBase.GeomValue =>
@@ -568,9 +570,9 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.BooleanValue =>
                   // check if searchVal is a Boolan value
-                  val searchString = stringFormatter
-                    .validateBoolean(
-                      searchval,
+                  val searchString = ValuesValidator
+                    .validateBoolean(searchval)
+                    .getOrElse(
                       throw BadRequestException(s"Given searchval is not a valid Boolean value: $searchval")
                     )
                     .toString

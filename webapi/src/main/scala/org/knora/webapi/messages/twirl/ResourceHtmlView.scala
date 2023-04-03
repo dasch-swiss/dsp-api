@@ -5,17 +5,11 @@
 
 package org.knora.webapi.messages.twirl
 
-import akka.actor.ActorRef
-import akka.pattern.ask
-import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
-import org.slf4j.LoggerFactory
+import zio.UIO
+import zio.ZIO
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.SECONDS
-
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetResponseV1
@@ -30,78 +24,50 @@ import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
  */
 object ResourceHtmlView {
 
-  private implicit val timeout: Timeout = Duration(5, SECONDS)
-  val log                               = Logger(LoggerFactory.getLogger("org.knora.webapi.viewhandlers.ResourceHtmlView"))
-
-  /**
-   * A user representing the Knora API server, used in those cases where a user is required.
-   */
-  private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
-
-  def propertiesHtmlView(response: ResourceFullResponseV1, appActor: ActorRef): String = {
-
-    val properties = response.props.get.properties
-
-    val propMap = properties.foldLeft(Map.empty[String, String]) { case (acc, propertyV1) =>
-      log.debug(s"${propertyV1.toString}")
-
-      val label = propertyV1.label match {
-        case Some(value) => value
-        case None        => propertyV1.pid
+  def propertiesHtmlView(response: ResourceFullResponseV1): ZIO[MessageRelay, Throwable, String] = {
+    val responseProps                                              = response.props.get.properties
+    val initial: ZIO[MessageRelay, Throwable, Map[String, String]] = ZIO.succeed(Map.empty[String, String])
+    val labelValues = responseProps.foldLeft(initial) { case (acc, propertyV1) =>
+      val label = propertyV1.label.getOrElse(propertyV1.pid)
+      val values: ZIO[MessageRelay, Throwable, Seq[String]] = propertyV1.valuetype_id.get match {
+        case KnoraBase.TextValue =>
+          ZIO.foreach(propertyV1.values)(it => textValue2String(it.asInstanceOf[TextValueV1]))
+        case KnoraBase.DateValue =>
+          ZIO.foreach(propertyV1.values)(it => dateValue2String(it.asInstanceOf[DateValueV1]))
+        case KnoraBase.ListValue =>
+          ZIO.foreach(propertyV1.values)(it => listValue2String(it.asInstanceOf[HierarchicalListValueV1]))
+        case KnoraBase.Resource =>
+          ZIO.foreach(propertyV1.values)(it => resourceValue2String(it.asInstanceOf[LinkV1]))
+        case _ => ZIO.succeed(List.empty)
       }
-
-      val values: Seq[String] = propertyV1.valuetype_id.get match {
-        case OntologyConstants.KnoraBase.TextValue =>
-          propertyV1.values.map(literal => textValue2String(literal.asInstanceOf[TextValueV1]))
-
-        case OntologyConstants.KnoraBase.DateValue =>
-          propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1]))
-
-        case OntologyConstants.KnoraBase.ListValue =>
-          propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], appActor))
-
-        case OntologyConstants.KnoraBase.Resource => // TODO: This could actually be a subclass of knora-base:Resource.
-          propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1]))
-
-        case _ => Vector()
-      }
-
-      if (values.nonEmpty) {
-        acc + (label -> values.mkString(","))
-      } else {
-        acc
-      }
+      values.flatMap(v =>
+        if (v.nonEmpty) { acc.map(it => it + (label -> v.mkString(","))) }
+        else { acc }
+      )
     }
-
-    val imgpath = properties.find(_.locations.nonEmpty).map(_.locations.head.path).getOrElse("")
-    log.debug(s"non-empty locations: ${properties.find(_.locations.nonEmpty)}")
-    log.debug(s"imgpath: $imgpath , nonEmpty: ${imgpath.nonEmpty}")
-
-    val content: play.twirl.api.Html = org.knora.webapi.messages.twirl.views.html.resource.properties(propMap, imgpath)
-    content.toString
+    val imgPath = responseProps.find(_.locations.nonEmpty).map(_.locations.head.path).getOrElse("")
+    labelValues.map { props =>
+      val content: play.twirl.api.Html = org.knora.webapi.messages.twirl.views.html.resource.properties(props, imgPath)
+      content.toString
+    }
   }
 
-  private def textValue2String(text: TextValueV1): String =
-    text.utf8str
+  private def textValue2String(text: TextValueV1): UIO[String] = ZIO.succeed(text.utf8str)
 
-  private def dateValue2String(date: DateValueV1): String =
+  private def dateValue2String(date: DateValueV1): UIO[String] = ZIO.succeed {
     if (date.dateval1 == date.dateval2) {
-      date.dateval1.toString + " " + date.era1 + ", " + date.calendar.toString + " " + date.era2
+      date.dateval1 + " " + date.era1 + ", " + date.calendar.toString + " " + date.era2
     } else {
-      date.dateval1.toString + " " + date.era1 + ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
-    }
-
-  private def listValue2String(list: HierarchicalListValueV1, appActor: ActorRef): String = {
-
-    val resultFuture = appActor.ask(NodePathGetRequestV1(list.hierarchicalListIri, systemUser))
-    val nodePath     = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
-
-    nodePath.nodelist.foldLeft("") { (z, i) =>
-      z + i.label.get + " / "
+      date.dateval1 + " " + date.era1 + ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
     }
   }
 
-  private def resourceValue2String(resource: LinkV1): String =
-    resource.valueLabel.get
+  private def listValue2String(list: HierarchicalListValueV1): ZIO[MessageRelay, Throwable, String] = {
+    val req = NodePathGetRequestV1(list.hierarchicalListIri, KnoraSystemInstances.Users.SystemUser.asUserProfileV1)
+    ZIO
+      .serviceWithZIO[MessageRelay](_.ask[NodePathGetResponseV1](req))
+      .map(nodePath => nodePath.nodelist.foldLeft("")((z, i) => z + i.label.get + " / "))
+  }
 
+  private def resourceValue2String(resource: LinkV1): UIO[String] = ZIO.succeed(resource.valueLabel.get)
 }

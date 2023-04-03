@@ -6,7 +6,6 @@
 package org.knora.webapi.responders
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.ZIO
 import zio._
 
 import dsp.errors._
@@ -26,8 +25,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
  * will be subject to further refactoring once we extract more services.
  */
 final case class IriService(
-  triplestoreService: TriplestoreService,
-  stringFormatter: StringFormatter
+  private val triplestoreService: TriplestoreService,
+  private val stringFormatter: StringFormatter
 ) extends LazyLogging {
 
   /**

@@ -30,6 +30,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
@@ -115,7 +116,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 
     val ontologyName: String = jsonLDDocument.requireStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.OntologyName,
-      stringFormatter.validateProjectSpecificOntologyName
+      (s: String, errorFun) => ValuesValidator.validateProjectSpecificOntologyName(s).getOrElse(errorFun)
     )
     val label: String =
       jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
@@ -1878,7 +1879,7 @@ object InputOntologyV2 {
     val lastModificationDate: Option[Instant] = ontologyObj.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
       expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-      validationFun = stringFormatter.xsdDateTimeStampToInstant
+      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
     )
 
     val ontologyMetadata = OntologyMetadataV2(

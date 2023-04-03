@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import scala.concurrent.Future
+import zio.Task
+import zio.ZIO
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
@@ -13,7 +14,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperties
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperty
@@ -30,8 +30,8 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
  */
 class AnnotationReadingGravsearchTypeInspector(
   nextInspector: Option[GravsearchTypeInspector],
-  responderData: ResponderData
-) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
+  queryTraverser: QueryTraverser
+) extends GravsearchTypeInspector(nextInspector) {
 
   /**
    * Represents a Gravsearch type annotation.
@@ -54,22 +54,18 @@ class AnnotationReadingGravsearchTypeInspector(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
     requestingUser: UserADM
-  ): Future[IntermediateTypeInspectionResult] =
+  ): Task[IntermediateTypeInspectionResult] =
     for {
       // Get all the type annotations.
-      typeAnnotations: Seq[GravsearchTypeAnnotation] <- Future {
-                                                          QueryTraverser.visitWherePatterns(
-                                                            patterns = whereClause.patterns,
-                                                            whereVisitor = new AnnotationCollectingWhereVisitor(
-                                                              whereClause.querySchema.getOrElse(
-                                                                throw AssertionException(
-                                                                  s"WhereClause has no querySchema"
-                                                                )
-                                                              )
-                                                            ),
-                                                            initialAcc = Vector.empty[GravsearchTypeAnnotation]
-                                                          )
-                                                        }
+      querySchema <-
+        ZIO.fromOption(whereClause.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
+      typeAnnotations <- ZIO.attempt {
+                           queryTraverser.visitWherePatterns(
+                             patterns = whereClause.patterns,
+                             whereVisitor = new AnnotationCollectingWhereVisitor(querySchema),
+                             initialAcc = Vector.empty[GravsearchTypeAnnotation]
+                           )
+                         }
 
       // Collect the information in the type annotations.
       intermediateResult: IntermediateTypeInspectionResult =
@@ -105,11 +101,7 @@ class AnnotationReadingGravsearchTypeInspector(
         }
 
       // Pass the intermediate result to the next type inspector in the pipeline.
-      lastResult: IntermediateTypeInspectionResult <- runNextInspector(
-                                                        intermediateResult = intermediateResult,
-                                                        whereClause = whereClause,
-                                                        requestingUser = requestingUser
-                                                      )
+      lastResult <- runNextInspector(intermediateResult, whereClause, requestingUser)
     } yield lastResult
 
   /**
@@ -148,7 +140,8 @@ class AnnotationReadingGravsearchTypeInspector(
 
     val annotationPropIri: SmartIri = statementPattern.pred match {
       case IriRef(iri, _) =>
-        iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema in IRI: $iri"))
+        if (iri.isApiV2Schema(querySchema)) iri
+        else throw GravsearchException(s"Invalid schema in IRI: $iri")
       case other => throw AssertionException(s"Not a type annotation predicate: $other")
     }
 
@@ -159,7 +152,8 @@ class AnnotationReadingGravsearchTypeInspector(
 
     val typeIri: SmartIri = statementPattern.obj match {
       case IriRef(iri, _) =>
-        iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema in IRI: $iri"))
+        if (iri.isApiV2Schema(querySchema)) iri
+        else throw GravsearchException(s"Invalid schema in IRI: $iri")
       case other => throw AssertionException(s"Not a valid type in a type annotation: $other")
     }
 

@@ -8,6 +8,7 @@ package org.knora.webapi.routing.v2
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 import zio.prelude.Validation
 
 import java.util.UUID.randomUUID
@@ -22,9 +23,12 @@ import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -35,16 +39,19 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.RouteUtilV2.completeZioApiV2ComplexResponse
+import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
  */
-class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runtime[RestCardinalityService])
-    extends KnoraRoute(routeData)
-    with Authenticator {
+final case class OntologiesRouteV2(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[
+    AppConfig with Authenticator with MessageRelay with RestCardinalityService
+  ]
+) extends KnoraRoute(routeData, runtime) {
 
   val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
 
@@ -115,31 +122,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
       val params: Map[String, String] = requestContext.request.uri.query().toMap
       val allLanguagesStr             = params.get(ALL_LANGUAGES)
-      val allLanguages = stringFormatter.optionStringToBoolean(
-        allLanguagesStr,
-        throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-      )
-
-      val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
-      } yield OntologyEntitiesGetRequestV2(
-        ontologyIri = requestedOntology,
-        allLanguages = allLanguages,
-        requestingUser = requestingUser
-      )
-
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = targetSchema,
-        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-      )
+      val allLanguages                = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
+      val requestTask = Authenticator
+        .getUserADM(requestContext)
+        .map(OntologyEntitiesGetRequestV2(requestedOntology, allLanguages, _))
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema)
     }
   }
 
@@ -149,24 +136,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         val maybeProjectIri: Option[SmartIri] = RouteUtilV2.getProject(requestContext)
 
         val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield OntologyMetadataGetByProjectRequestV2(
           projectIris = maybeProjectIri.toSet,
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -178,10 +154,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
             val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
             val requestMessageFuture: Future[ChangeOntologyMetadataRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext,
-                                  routeData.appConfig
-                                )
+              requestingUser <- getUserADM(requestContext)
 
               requestMessage: ChangeOntologyMetadataRequestV2 <- ChangeOntologyMetadataRequestV2.fromJsonLD(
                                                                    jsonLDDocument = requestDoc,
@@ -192,15 +165,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                                                  )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -210,10 +175,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
     path(ontologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
       get { requestContext =>
         val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
 
           validatedProjectIris =
             projectIris
@@ -224,15 +186,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -251,32 +205,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = stringFormatter.optionStringToBoolean(
-          params.get(ALL_LANGUAGES),
-          throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-        )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), false)
 
         val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield OntologyEntitiesGetRequestV2(
           ontologyIri = requestedOntologyIri,
           allLanguages = allLanguages,
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = targetSchema,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext, targetSchema)
       }
     }
 
@@ -286,10 +225,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestMessageFuture: Future[CreateClassRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
 
             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -302,15 +238,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                                     )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -323,10 +251,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext,
-                                  routeData.appConfig
-                                )
+              requestingUser <- getUserADM(requestContext)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -339,15 +264,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                 )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -368,16 +285,12 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteClassCommentRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield DeleteClassCommentRequestV2(
           classIri = classIri,
           lastModificationDate = lastModificationDate,
@@ -385,15 +298,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -404,10 +309,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[AddCardinalitiesToClassRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext,
-                                  routeData.appConfig
-                                )
+              requestingUser <- getUserADM(requestContext)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -420,15 +322,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                                                   )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -439,17 +333,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
     // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
       get { requestContext =>
-        val appConfig = routeData.appConfig
-        val responseZio = getUserADMZ(requestContext, appConfig)
-          .flatMap(user =>
-            RestCardinalityService.canChangeCardinality(
-              classIri,
-              user,
-              propertyIri = getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey),
-              newCardinality = getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey)
-            )
-          )
-        completeZioApiV2ComplexResponse(responseZio, requestContext, appConfig)
+        val response = for {
+          user           <- Authenticator.getUserADM(requestContext)
+          property       <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey))
+          newCardinality <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey))
+          canChange      <- RestCardinalityService.canChangeCardinality(classIri, user, property, newCardinality)
+        } yield canChange
+        completeResponse(response, requestContext)
       }
     }
 
@@ -459,12 +349,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         entity(as[String]) { reqBody => requestContext =>
           {
             val messageF = for {
-              user    <- getUserADM(requestContext, appConfig)
+              user    <- getUserADM(requestContext)
               document = JsonLDUtil.parseJsonLD(reqBody)
               msg     <- ReplaceClassCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
             } yield msg
-            val options = RouteUtilV2.getSchemaOptions(requestContext)
-            RouteUtilV2.runRdfRouteWithFuture(messageF, requestContext, appConfig, appActor, log, ApiV2Complex, options)
+            RouteUtilV2.runRdfRouteF(messageF, requestContext)
           }
         }
       }
@@ -476,10 +365,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[CanDeleteCardinalitiesFromClassRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext,
-                                  routeData.appConfig
-                                )
+              requestingUser <- getUserADM(requestContext)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -493,15 +379,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                 )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -515,10 +393,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[DeleteCardinalitiesFromClassRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext,
-                                  routeData.appConfig
-                                )
+              requestingUser <- getUserADM(requestContext)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -531,15 +406,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                                                        )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -552,10 +419,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangeGuiOrderRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext,
-                                  routeData.appConfig
-                                )
+              requestingUser <- getUserADM(requestContext)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -568,15 +432,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                                          )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -618,32 +474,16 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = stringFormatter.optionStringToBoolean(
-          params.get(ALL_LANGUAGES),
-          throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-        )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), false)
 
         val requestMessageFuture: Future[ClassesGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield ClassesGetRequestV2(
           classIris = classesForResponder,
           allLanguages = allLanguages,
           requestingUser = requestingUser
         )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = targetSchema,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext, targetSchema)
       }
     }
 
@@ -658,23 +498,16 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         }
 
         val requestMessageFuture: Future[CanDeleteClassRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield CanDeleteClassRequestV2(
           classIri = classIri,
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        RouteUtilV2.runRdfRouteF(
+          requestMessageFuture,
+          requestContext,
+          ApiV2Complex
         )
       }
     }
@@ -698,16 +531,12 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           .query()
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteClassRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield DeleteClassRequestV2(
           classIri = classIri,
           lastModificationDate = lastModificationDate,
@@ -715,15 +544,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -741,16 +562,12 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteOntologyCommentRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield DeleteOntologyCommentRequestV2(
           ontologyIri = ontologyIri,
           lastModificationDate = lastModificationDate,
@@ -758,15 +575,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -778,7 +587,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           {
             val requestMessageFuture: Future[CreatePropertyRequestV2] = for {
 
-              requestingUser: UserADM <- getUserADM(requestContext = requestContext, routeData.appConfig)
+              requestingUser: UserADM <- getUserADM(requestContext)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -968,15 +777,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                   .fold(e => throw e.head, v => v)
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -989,10 +790,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangePropertyLabelsOrCommentsRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext,
-                                  routeData.appConfig
-                                )
+              requestingUser <- getUserADM(requestContext)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -1006,15 +804,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                                                            )
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -1035,16 +825,12 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeletePropertyCommentRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield DeletePropertyCommentRequestV2(
           propertyIri = propertyIri,
           lastModificationDate = lastModificationDate,
@@ -1052,15 +838,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -1072,7 +850,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           {
             val requestMessageFuture: Future[ChangePropertyGuiElementRequest] = for {
 
-              requestingUser: UserADM <- getUserADM(requestContext = requestContext, routeData.appConfig)
+              requestingUser: UserADM <- getUserADM(requestContext)
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -1132,15 +910,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
 
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteWithFuture(
-              requestMessageF = requestMessageFuture,
-              requestContext = requestContext,
-              appConfig = routeData.appConfig,
-              appActor = appActor,
-              log = log,
-              targetSchema = ApiV2Complex,
-              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-            )
+            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
           }
         }
       }
@@ -1182,32 +952,17 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = stringFormatter.optionStringToBoolean(
-          params.get(ALL_LANGUAGES),
-          throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-        )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), fallback = false)
 
         val requestMessageFuture: Future[PropertiesGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield PropertiesGetRequestV2(
           propertyIris = propsForResponder,
           allLanguages = allLanguages,
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = targetSchema,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext, targetSchema)
       }
     }
 
@@ -1222,24 +977,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         }
 
         val requestMessageFuture: Future[CanDeletePropertyRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield CanDeletePropertyRequestV2(
           propertyIri = propertyIri,
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -1262,16 +1006,12 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           .query()
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeletePropertyRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield DeletePropertyRequestV2(
           propertyIri = propertyIri,
           lastModificationDate = lastModificationDate,
@@ -1279,15 +1019,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -1297,10 +1029,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestMessageFuture: Future[CreateOntologyRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
 
             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -1313,15 +1042,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
                                                        )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -1338,24 +1059,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         }
 
         val requestMessageFuture: Future[CanDeleteOntologyRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield CanDeleteOntologyRequestV2(
           ontologyIri = ontologyIri,
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
       }
     }
 
@@ -1375,16 +1085,12 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         .query()
         .toMap
         .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-      val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-        lastModificationDateStr,
-        throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-      )
+      val lastModificationDate = ValuesValidator
+        .xsdDateTimeStampToInstant(lastModificationDateStr)
+        .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
       val requestMessageFuture: Future[DeleteOntologyRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
+        requestingUser <- getUserADM(requestContext)
       } yield DeleteOntologyRequestV2(
         ontologyIri = ontologyIri,
         lastModificationDate = lastModificationDate,
@@ -1392,15 +1098,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Run
         requestingUser = requestingUser
       )
 
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = ApiV2Complex,
-        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-      )
+      RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
     }
   }
 }

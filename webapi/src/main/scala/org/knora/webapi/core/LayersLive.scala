@@ -8,7 +8,6 @@ package org.knora.webapi.core
 import zio.ULayer
 import zio.ZLayer
 
-import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
@@ -18,10 +17,11 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
+import org.knora.webapi.messages.util.search.QueryTraverser
+import org.knora.webapi.messages.util.search.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
-import org.knora.webapi.responders.ActorDeps
-import org.knora.webapi.responders.ActorToZioBridge
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.GroupsResponderADMLive
@@ -31,7 +31,6 @@ import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADMLive
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADMLive
-import org.knora.webapi.responders.admin.ProjectsServiceLive
 import org.knora.webapi.responders.admin.SipiResponderADM
 import org.knora.webapi.responders.admin.SipiResponderADMLive
 import org.knora.webapi.responders.admin.StoresResponderADM
@@ -64,13 +63,30 @@ import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2Live
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2Live
+import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.responders.v2.SearchResponderV2Live
+import org.knora.webapi.responders.v2.StandoffResponderV2
+import org.knora.webapi.responders.v2.StandoffResponderV2Live
+import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.responders.v2.ValuesResponderV2Live
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.AuthenticatorLive
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
+import org.knora.webapi.slice.common.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -107,32 +123,38 @@ object LayersLive {
       with ApiRoutes
       with AppConfig
       with AppRouter
-      with AppRouterRelayingMessageHandler
-      with OntologyCache
+      with Authenticator
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
+      with GravsearchTypeInspectionUtil
       with GroupsResponderADM
       with HttpServer
-      with IIIFService
       with IIIFRequestMessageHandler
+      with IIIFService
       with IriService
-      with JWTService
-      with ListsResponderV2
+      with JwtService
+      with KnoraProjectRepo
       with ListsResponderADM
       with ListsResponderV1
+      with ListsResponderV2
       with MessageRelay
+      with OntologyCache
+      with OntologyHelpers
       with OntologyRepo
       with OntologyResponderV1
       with OntologyResponderV2
-      with OntologyHelpers
       with PermissionUtilADM
       with PermissionsResponderADM
+      with PredicateObjectMapper
+      with ProjectADMRestService
+      with ProjectADMService
       with ProjectsResponderADM
       with ProjectsResponderV1
+      with QueryTraverser
       with RepositoryUpdater
       with ResourceUtilV2
       with ResourceUtilV2
@@ -141,31 +163,34 @@ object LayersLive {
       with RestCardinalityService
       with RestResourceInfoService
       with SearchResponderV1
+      with SearchResponderV2
       with SipiResponderADM
+      with SparqlTransformerLive
       with StandoffResponderV1
+      with StandoffResponderV2
       with StandoffTagUtilV2
       with State
       with StoresResponderADM
-      with TriplestoreService
+      with StringFormatter
       with TriplestoreRequestMessageHandler
+      with TriplestoreService
       with UsersResponderADM
       with UsersResponderV1
-      with ValuesResponderV1
       with ValueUtilV1
+      with ValuesResponderV1
+      with ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
    */
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
-      ActorDeps.layer,
       ActorSystem.layer,
-      ActorToZioBridge.live,
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
-      AppRouterRelayingMessageHandler.layer,
       AuthenticationMiddleware.layer,
+      AuthenticatorLive.layer,
       AuthenticatorService.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
@@ -173,6 +198,7 @@ object LayersLive {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      GravsearchTypeInspectionUtil.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
@@ -180,10 +206,11 @@ object LayersLive {
       IIIFServiceSipiImpl.layer,
       IriConverter.layer,
       IriService.layer,
-      JWTService.layer,
-      ListsResponderV2Live.layer,
+      JwtServiceLive.layer,
+      KnoraProjectRepoLive.layer,
       ListsResponderADMLive.layer,
       ListsResponderV1Live.layer,
+      ListsResponderV2Live.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
@@ -192,11 +219,14 @@ object LayersLive {
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
+      PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
+      ProjectADMServiceLive.layer,
+      ProjectsADMRestServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
       ProjectsRouteZ.layer,
-      ProjectsServiceLive.layer,
+      QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
@@ -206,17 +236,21 @@ object LayersLive {
       RestCardinalityServiceLive.layer,
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
+      SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
+      SparqlTransformerLive.layer,
       StandoffResponderV1Live.layer,
+      StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
       StringFormatter.live,
-      TriplestoreServiceLive.layer,
       TriplestoreRequestMessageHandlerLive.layer,
+      TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
+      ValueUtilV1Live.layer,
       ValuesResponderV1Live.layer,
-      ValueUtilV1Live.layer
+      ValuesResponderV2Live.layer
     )
 }

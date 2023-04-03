@@ -1,85 +1,61 @@
-package org.knora.webapi.util.search.gravsearch.prequery
+package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import akka.actor.ActorRef
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 import dsp.errors.AssertionException
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
-import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.routing.UnsafeZioRun
+import zio._
 
-private object CountQueryHandler {
-
-  private val timeout = 10.seconds
-
-  val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
-
-  def transformQuery(
-    query: String,
-    appActor: ActorRef,
-    responderData: ResponderData,
-    appConfig: AppConfig
-  )(implicit executionContext: ExecutionContext, runtime: zio.Runtime[OntologyCache]): SelectQuery = {
-
-    val constructQuery = GravsearchParser.parseQuery(query)
-
-    val typeInspectionRunner =
-      new GravsearchTypeInspectionRunner(
-        appActor,
-        responderData = responderData,
-        inferTypes = true
-      )
-
-    val typeInspectionResultFuture = typeInspectionRunner.inspectTypes(constructQuery.whereClause, anythingUser)
-
-    val typeInspectionResult = Await.result(typeInspectionResultFuture, timeout)
-
-    val whereClauseWithoutAnnotations: WhereClause =
-      GravsearchTypeInspectionUtil.removeTypeAnnotations(constructQuery.whereClause)
-
-    // Validate schemas and predicates in the CONSTRUCT clause.
-    GravsearchQueryChecker.checkConstructClause(
-      constructClause = constructQuery.constructClause,
-      typeInspectionResult = typeInspectionResult
-    )
-
-    // Create a Select prequery
-
-    val nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer =
-      new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
-        constructClause = constructQuery.constructClause,
-        typeInspectionResult = typeInspectionResult,
-        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
-      )
-
-    val nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
-      inputQuery = constructQuery.copy(
-        whereClause = whereClauseWithoutAnnotations,
-        orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
-      ),
-      transformer = nonTriplestoreSpecificConstructToSelectTransformer
-    )
-
-    nonTriplestoreSpecficPrequery
-  }
-
-}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 
 class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends CoreSpec {
+
+  def transformQuery(query: String): SelectQuery = {
+
+    val inspectionRunner = for {
+      qt <- ZIO.service[QueryTraverser]
+      mr <- ZIO.service[MessageRelay]
+      sf <- ZIO.service[StringFormatter]
+    } yield new GravsearchTypeInspectionRunner(inferTypes = true, qt, mr, sf)
+
+    val countQueryZio = for {
+      constructQuery       <- ZIO.attempt(GravsearchParser.parseQuery(query))
+      whereClause           = constructQuery.whereClause
+      constructClause       = constructQuery.constructClause
+      querySchemaMaybe      = constructQuery.querySchema
+      inspectionResult     <- inspectionRunner.flatMap(_.inspectTypes(whereClause, anythingAdminUser))
+      _                    <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(constructClause, inspectionResult))
+      sanitizedWhereClause <- ZIO.serviceWithZIO[GravsearchTypeInspectionUtil](_.removeTypeAnnotations(whereClause))
+      querySchema <-
+        ZIO.fromOption(querySchemaMaybe).orElseFail(AssertionException(s"WhereClause has no querySchema"))
+      transformer =
+        new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
+          constructClause = constructClause,
+          typeInspectionResult = inspectionResult,
+          querySchema = querySchema
+        )
+      prequery <- ZIO.serviceWithZIO[QueryTraverser](
+                    _.transformConstructToSelect(
+                      inputQuery = constructQuery.copy(
+                        whereClause = sanitizedWhereClause,
+                        orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
+                      ),
+                      transformer
+                    )
+                  )
+
+    } yield prequery
+    UnsafeZioRun.runOrThrow(countQueryZio)
+  }
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -341,32 +317,13 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
   "The NonTriplestoreSpecificGravsearchToCountPrequeryGenerator object" should {
 
     "transform an input query with a decimal as an optional sort criterion and a filter" in {
-
-      val transformedQuery =
-        CountQueryHandler.transformQuery(
-          inputQueryWithDecimalOptionalSortCriterionAndFilter,
-          appActor,
-          responderData,
-          appConfig
-        )
-
+      val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter)
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
-
     }
 
     "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
-
-      val transformedQuery =
-        CountQueryHandler.transformQuery(
-          inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
-          appActor,
-          responderData,
-          appConfig
-        )
-
+      val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex)
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-
     }
-
   }
 }

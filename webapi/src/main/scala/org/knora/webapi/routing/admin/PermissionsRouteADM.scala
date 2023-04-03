@@ -7,7 +7,11 @@ package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.routing
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.admin.permissions._
@@ -15,11 +19,14 @@ import org.knora.webapi.routing.admin.permissions._
 /**
  * Provides an akka-http-routing function for API routes that deal with permissions.
  */
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
-  private val createPermissionRoute: CreatePermissionRouteADM = new CreatePermissionRouteADM(routeData)
-  private val getPermissionRoute: GetPermissionsRouteADM      = new GetPermissionsRouteADM(routeData)
-  private val updatePermissionRoute: UpdatePermissionRouteADM = new UpdatePermissionRouteADM(routeData)
-  private val deletePermissionRoute: DeletePermissionRouteADM = new DeletePermissionRouteADM(routeData)
+final case class PermissionsRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[routing.Authenticator with StringFormatter with MessageRelay]
+) extends KnoraRoute(routeData, runtime) {
+  private val createPermissionRoute: CreatePermissionRouteADM = CreatePermissionRouteADM(routeData, runtime)
+  private val getPermissionRoute: GetPermissionsRouteADM      = GetPermissionsRouteADM(routeData, runtime)
+  private val updatePermissionRoute: UpdatePermissionRouteADM = UpdatePermissionRouteADM(routeData, runtime)
+  private val deletePermissionRoute: DeletePermissionRouteADM = DeletePermissionRouteADM(routeData, runtime)
 
   override def makeRoute: Route =
     createPermissionRoute.makeRoute ~

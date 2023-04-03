@@ -12,9 +12,11 @@
  * @param maybeShortname the project's shortname.
  * @param maybeShortcode the project's shortcode.
  *@
-@(maybeIri: Option[IRI],
-  maybeShortname: Option[String],
-  maybeShortcode: Option[String])
+@(
+  maybeIri: Option[IRI] = None,
+  maybeShortname: Option[String] = None,
+  maybeShortcode: Option[String] = None
+)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

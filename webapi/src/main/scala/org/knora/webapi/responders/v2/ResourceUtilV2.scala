@@ -221,7 +221,7 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
    * Checks whether a list node exists and if is a root node.
    *
    * @param nodeIri the IRI of the list node.
-   * @return Future of Either None for nonexistent, true for root and false for child node.
+   * @return [[Task]] of Either None for nonexistent, true for root and false for child node.
    */
   override def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -256,17 +256,17 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
    * method checks whether the update was successful. If so, it asks Sipi to move the file to permanent storage.
    * If not, it asks Sipi to delete the temporary file.
    *
-   * @param updateFuture   the future that should have updated the triplestore.
+   * @param updateTask     the Task that should have updated the triplestore.
    * @param valueContents: Seq[FileValueContentV2],   the value that should have been created or updated.
    * @param requestingUser the user making the request.
    */
   override def doSipiPostUpdate[T <: UpdateResultInProject](
-    updateFuture: Task[T],
+    updateTask: Task[T],
     valueContents: Seq[FileValueContentV2],
     requestingUser: UserADM
   ): Task[T] =
     // Was this update a success?
-    updateFuture.foldZIO(
+    updateTask.foldZIO(
       (e: Throwable) => {
         // The update failed. Ask Sipi to delete the temporary files and return the original failure.
         val deleteRequests =

@@ -15,32 +15,6 @@ import scala.concurrent.Future
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.messages.util.rdf.RdfModel
-import org.knora.webapi.messages.util.rdf.Turtle
-
-/**
- * A trait for request messages that are constructed as an [[RdfModel]].
- */
-trait KnoraRdfModelRequestV2 {
-
-  /**
-   * An [[RdfModel]] representing the request.
-   */
-  val rdfModel: RdfModel
-
-  /**
-   * Returns a Turtle representation of the graph.
-   */
-  def toTurtle(): String =
-    RdfFeatureFactory
-      .getRdfFormatUtil()
-      .format(
-        rdfModel = rdfModel,
-        rdfFormat = Turtle,
-        prettyPrint = false
-      )
-}
 
 /**
  * A trait for objects that can generate case class instances based on JSON-LD input.

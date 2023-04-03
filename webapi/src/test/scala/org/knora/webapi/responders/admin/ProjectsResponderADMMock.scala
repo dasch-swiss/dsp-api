@@ -34,9 +34,9 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
 
-  object ProjectsGetRequestADM      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
-  object GetSingleProjectADM        extends Effect[(ProjectIdentifierADM, Boolean), Throwable, Option[ProjectADM]]
-  object GetSingleProjectADMRequest extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
+  object ProjectsGetRequestADM            extends Effect[Unit, Throwable, ProjectsGetResponseADM]
+  object GetProjectFromCacheOrTriplestore extends Effect[ProjectIdentifierADM, Throwable, Option[ProjectADM]]
+  object GetSingleProjectADMRequest       extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
   object ProjectMembersGetRequestADM
       extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectMembersGetResponseADM]
   object ProjectAdminMembersGetRequestADM
@@ -60,8 +60,8 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
       } yield new ProjectsResponderADM {
         override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
           proxy(ProjectsGetRequestADM)
-        override def getSingleProjectADM(id: ProjectIdentifierADM, skipCache: Boolean): Task[Option[ProjectADM]] =
-          proxy(GetSingleProjectADM, (id, skipCache))
+        override def getProjectFromCacheOrTriplestore(id: ProjectIdentifierADM): Task[Option[ProjectADM]] =
+          proxy(GetProjectFromCacheOrTriplestore, id)
         override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
           proxy(GetSingleProjectADMRequest, id)
         override def projectMembersGetRequestADM(

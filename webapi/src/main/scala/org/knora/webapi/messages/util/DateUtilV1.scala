@@ -14,6 +14,7 @@ import java.util.GregorianCalendar
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
@@ -349,8 +350,8 @@ object DateUtilV1 {
    * @return a [[JulianDayNumberValueV1]] representing the date.
    */
   def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValueV1 = {
-    val stringFormatter = StringFormatter.getGeneralInstance
-    val datestring      = stringFormatter.validateDate(dateStr, throw BadRequestException(s"Invalid date format: $dateStr"))
+    val datestring =
+      ValuesValidator.validateDate(dateStr).getOrElse(throw BadRequestException(s"Invalid date format: $dateStr"))
 
     // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
     val parsedDate = datestring.split(StringFormatter.CalendarSeparator)
