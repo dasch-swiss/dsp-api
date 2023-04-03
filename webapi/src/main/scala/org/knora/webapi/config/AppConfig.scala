@@ -52,8 +52,7 @@ final case class AppConfig(
   triplestore: Triplestore,
   cacheService: CacheService,
   clientTestDataService: ClientTestDataService,
-  instrumentationServerConfig: InstrumentationServerConfig,
-  httpServer: HttpServer
+  instrumentationServerConfig: InstrumentationServerConfig
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
@@ -227,12 +226,6 @@ final case class InstrumentationServerConfig(
   port: Int,
   interval: Duration
 )
-
-final case class HttpServer(
-  corsAllowedOrigins: Set[String]
-) {
-  val corsAllowedOriginsLowerCase = corsAllowedOrigins.map(_.toLowerCase())
-}
 
 /**
  * Loads the application configuration using ZIO-Config from a Typesafe-Config format in `application.conf`.
