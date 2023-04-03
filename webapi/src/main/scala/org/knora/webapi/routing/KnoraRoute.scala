@@ -7,9 +7,11 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import zio._
 import zio.prelude.Validation
 
 import scala.concurrent.ExecutionContext
@@ -32,7 +34,7 @@ case class KnoraRouteData(system: akka.actor.ActorSystem, appActor: akka.actor.A
  *
  * @param routeData a [[KnoraRouteData]] providing access to the application.
  */
-abstract class KnoraRoute(routeData: KnoraRouteData) {
+abstract class KnoraRoute(routeData: KnoraRouteData, protected implicit val runtime: Runtime[Authenticator]) {
 
   implicit protected val system: ActorSystem                = routeData.system
   implicit protected val timeout: Timeout                   = routeData.appConfig.defaultTimeoutAsDuration
@@ -64,4 +66,6 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
       },
       Future.successful
     )
+
+  def getUserADM(ctx: RequestContext) = UnsafeZioRun.runToFuture(Authenticator.getUserADM(ctx))
 }

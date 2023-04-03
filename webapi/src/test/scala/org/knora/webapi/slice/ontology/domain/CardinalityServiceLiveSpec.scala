@@ -110,7 +110,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               .addClassInfo(
                 ReadClassInfoV2Builder
                   .builder(classIri)
-                  .setDirectCardinalities(cardinalities)
+                  .addProperty(propertyIri.toInternalIri, cardinality)
               )
               .addClassInfo(
                 ReadClassInfoV2Builder
@@ -139,7 +139,6 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       subClassIri: SmartIri,
       propertyIri: SmartIri
     ): DataCreated = {
-      val cardinalities = OntologyCacheDataBuilder.cardinalitiesMap(propertyIri, cardinality)
       val data =
         OntologyCacheDataBuilder.builder
           .addOntology(
@@ -153,7 +152,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 ReadClassInfoV2Builder
                   .builder(subClassIri)
                   .addSuperClass(classIri)
-                  .setDirectCardinalities(cardinalities)
+                  .addProperty(propertyIri.toInternalIri, cardinality)
               )
           )
           .build
@@ -202,7 +201,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(
                   ReadClassInfoV2Builder
                     .builder(classIri)
-                    .setDirectCardinalities(OntologyCacheDataBuilder.cardinalitiesMap(propertyIri, ExactlyOne))
+                    .addProperty(propertyIri.toInternalIri, ExactlyOne)
                 )
             )
             .build
@@ -421,8 +420,6 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |then this is NOT possible because the new cardinality does violate the
                 |number of times the property is used on each instance
           """.stripMargin) {
-          val propertyCardinality =
-            OntologyCacheDataBuilder.cardinalitiesMap(Anything.Property.hasOtherThing, Unbounded)
           val data = OntologyCacheDataBuilder.builder
             .addOntology(
               ReadOntologyV2Builder
@@ -430,7 +427,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(
                   ReadClassInfoV2Builder
                     .builder(Anything.Class.Thing)
-                    .setDirectCardinalities(propertyCardinality)
+                    .addProperty(Anything.Property.hasOtherThing, Unbounded)
                 )
             )
           check(cardinalitiesGen(ZeroOrOne, ExactlyOne)) { newCardinality =>
@@ -475,6 +472,47 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |
                                   |""".stripMargin)
       ),
+      suite("canSetCardinality with deleted object in property reference")(
+        test("given a deleted property was used") {
+          val data = OntologyCacheDataBuilder.builder
+            .addOntology(
+              ReadOntologyV2Builder
+                .builder(Anything.Ontology)
+                .addClassInfo(
+                  ReadClassInfoV2Builder
+                    .builder(Anything.Class.Thing)
+                    .addProperty(Anything.Property.hasOtherThing, Unbounded)
+                )
+            )
+          check(cardinalitiesGen(AtLeastOne)) { newCardinality =>
+            for {
+              _ <- OntologyCacheFake.set(data.build)
+              actual <-
+                CardinalityService.canSetCardinality(
+                  Anything.Class.Thing,
+                  Anything.Property.hasOtherThing,
+                  newCardinality
+                )
+            } yield assertTrue(actual.isLeft)
+          }
+        }.provide(
+          commonLayers,
+          datasetLayerFromTurtle(s"""
+                                    |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                                    |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+                                    |@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+                                    |
+                                    |<http://aThing>
+                                    |  a <${Anything.Class.Thing.value}> ;
+                                    |  <${Anything.Property.hasOtherThing.value}> <http://aDeletedThing>.
+                                    |
+                                    |<http://aDeletedThing>
+                                    |  a <${Anything.Class.Thing.value}> ;
+                                    |  knora-base:isDeleted true .
+                                    |
+                                    |""".stripMargin)
+        )
+      ),
       suite("canSetCardinality with property in use once")(
         test(s"""
                 |Given the previous cardinality on the class/property
@@ -483,8 +521,6 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |then this is possible because the new cardinality does not violate the
                 |number of times the property is used on the instance
           """.stripMargin) {
-          val propertyCardinality =
-            OntologyCacheDataBuilder.cardinalitiesMap(Anything.Property.hasOtherThing, Unbounded)
           val data = OntologyCacheDataBuilder.builder
             .addOntology(
               ReadOntologyV2Builder
@@ -492,7 +528,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(
                   ReadClassInfoV2Builder
                     .builder(Anything.Class.Thing)
-                    .setDirectCardinalities(propertyCardinality)
+                    .addProperty(Anything.Property.hasOtherThing, Unbounded)
                 )
             )
           check(cardinalitiesGen(AtLeastOne, ZeroOrOne, ExactlyOne)) { newCardinality =>
@@ -517,6 +553,51 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |  a <${Anything.Class.Thing.value}> ;
                                   |  <${Anything.Property.hasOtherThing.value}> false .
                                   |
+                                  |""".stripMargin)
+      ),
+      suite("CardinalityServiceLive persistence check")(test(s"""
+                                                                |Given a three tier subclass hierarchy
+                                                                |setting required for the middle class property
+                                                                |should be possible""".stripMargin) {
+        val ontologyCacheData = OntologyCacheDataBuilder.builder
+          .addOntology(
+            ReadOntologyV2Builder
+              .builder(Biblio.Ontology)
+              .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Publication))
+              .addClassInfo(
+                ReadClassInfoV2Builder
+                  .builder(Biblio.Class.Article)
+                  .addSuperClass(Biblio.Class.Publication)
+                  .addProperty(Biblio.Property.hasTitle, Unbounded)
+              )
+              .addClassInfo(
+                ReadClassInfoV2Builder
+                  .builder(Biblio.Class.JournalArticle)
+                  .addSuperClass(Biblio.Class.Article)
+                  .addProperty(Biblio.Property.hasTitle, AtLeastOne)
+              )
+          )
+          .build
+        for {
+          _      <- OntologyCacheFake.set(ontologyCacheData)
+          result <- CardinalityService.canSetCardinality(Biblio.Class.Article, Biblio.Property.hasTitle, AtLeastOne)
+        } yield assertTrue(result.isRight)
+      }).provide(
+        commonLayers,
+        datasetLayerFromTurtle(s"""
+                                  |@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                                  |@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+                                  |
+                                  |<http://aPublication>
+                                  |  a <${Biblio.Class.Publication.value}> .
+                                  |
+                                  |<http://anArticle>
+                                  |  a <${Biblio.Class.Article.value}> ;
+                                  |  <${Biblio.Property.hasTitle.value}> "article title" .
+                                  |
+                                  |<http://aJournalArticle>
+                                  |  a <${Biblio.Class.JournalArticle.value}> ;
+                                  |  <${Biblio.Property.hasTitle.value}> "journal article title" .
                                   |""".stripMargin)
       )
     )

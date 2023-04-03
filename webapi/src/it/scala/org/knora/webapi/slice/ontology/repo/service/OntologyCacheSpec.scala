@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.ontology.repo.service
 
 import java.time.Instant
-import scala.language.postfixOps
 import dsp.constants.SalsahGui
 
 import org.knora.webapi.CoreSpec

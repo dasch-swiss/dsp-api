@@ -30,7 +30,7 @@ import org.knora.webapi.util.MutableTestIri
 class ValuesV1R2RSpec extends R2RSpec {
 
   private val valuesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

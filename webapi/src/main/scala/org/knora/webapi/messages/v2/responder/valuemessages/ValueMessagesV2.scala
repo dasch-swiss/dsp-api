@@ -22,11 +22,13 @@ import dsp.errors.NotImplementedException
 import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
@@ -45,7 +47,7 @@ import org.knora.webapi.util._
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
  */
-sealed trait ValuesResponderRequestV2 extends KnoraRequestV2
+sealed trait ValuesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
  * Requests the creation of a value.
@@ -124,22 +126,22 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
               // Get the value's creation date.
               // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-              maybeCreationDate: Option[Instant] = jsonLDObject
-                                                     .maybeDatatypeValueInObject(
-                                                       key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
-                                                       expectedDatatype =
-                                                         OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                       validationFun = stringFormatter.xsdDateTimeStampToInstant
-                                                     )
-                                                     .orElse(
-                                                       jsonLDObject
-                                                         .maybeDatatypeValueInObject(
-                                                           key = OntologyConstants.KnoraApiV2Complex.CreationDate,
-                                                           expectedDatatype =
-                                                             OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                           validationFun = stringFormatter.xsdDateTimeStampToInstant
-                                                         )
-                                                     )
+              maybeCreationDate =
+                jsonLDObject
+                  .maybeDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                  )
+                  .orElse(
+                    jsonLDObject
+                      .maybeDatatypeValueInObject(
+                        key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                        validationFun =
+                          (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                      )
+                  )
 
               maybePermissions: Option[String] =
                 jsonLDObject.maybeStringWithValidation(
@@ -274,7 +276,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
               jsonLDObject.maybeDatatypeValueInObject(
                 key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                validationFun = stringFormatter.xsdDateTimeStampToInstant
+                validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
               )
 
             // Get and validate the custom new value version IRI, if provided.
@@ -509,7 +511,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
         val deleteDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         DeleteValueRequestV2(
@@ -2176,7 +2178,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
     val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     DecimalValueContentV2(
@@ -2363,7 +2365,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
 
     val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry,
-      stringFormatter.validateGeometryString
+      (s, errorFun) => ValuesValidator.validateGeometryString(s).getOrElse(errorFun)
     )
 
     GeomValueContentV2(
@@ -2481,13 +2483,13 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
     val intervalValueHasStart: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     val intervalValueHasEnd: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
+      validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
     )
 
     IntervalValueContentV2(
@@ -2596,7 +2598,7 @@ object TimeValueContentV2 extends ValueContentReaderV2[TimeValueContentV2] {
     val valueHasTimeStamp: Instant = jsonLDObject.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
       expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-      validationFun = stringFormatter.xsdDateTimeStampToInstant
+      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
     )
 
     TimeValueContentV2(

@@ -211,7 +211,7 @@ follows:
     `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME`
   - XML-to-standoff mapping element:
     `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME/elements/MAPPING_ELEMENT_UUID`
-  - Project: `http://rdfh.ch/projects/PROJECT_SHORTCODE` (or `http://rdfh.ch/projects/PROJECT_UUID`)
+  - Project: `http://rdfh.ch/projects/PROJECT_UUID`
   - Group: `http://rdfh.ch/groups/PROJECT_SHORTCODE/GROUP_UUID`
   - Permission:
     `http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID`

@@ -5,38 +5,35 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import akka.actor.ActorRef
-
-import scala.concurrent.Future
+import zio.Task
+import zio.ZIO
 
 import dsp.errors.GravsearchException
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
 
 /**
  * Runs Gravsearch type inspection using one or more type inspector implementations.
  *
- * @param appActor      a reference to the application actor
- * @param responderData the Knora [[ResponderData]].
  * @param inferTypes    if true, use type inference.
  */
 class GravsearchTypeInspectionRunner(
-  appActor: ActorRef,
-  responderData: ResponderData,
-  inferTypes: Boolean = true
+  inferTypes: Boolean = true,
+  queryTraverser: QueryTraverser,
+  messageRelay: MessageRelay,
+  implicit val stringFormatter: StringFormatter
 ) {
-  private implicit val executionContext = responderData.actorDeps.executionContext
 
   // If inference was requested, construct an inferring type inspector.
   private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {
     Some(
       new InferringGravsearchTypeInspector(
         nextInspector = None,
-        appActor = appActor,
-        responderData = responderData
+        messageRelay,
+        queryTraverser
       )
     )
   } else {
@@ -46,7 +43,7 @@ class GravsearchTypeInspectionRunner(
   // The pipeline of type inspectors.
   private val typeInspectionPipeline = new AnnotationReadingGravsearchTypeInspector(
     nextInspector = maybeInferringTypeInspector,
-    responderData = responderData
+    queryTraverser
   )
 
   /**
@@ -57,56 +54,49 @@ class GravsearchTypeInspectionRunner(
    * @param requestingUser the requesting user.
    * @return the result of the type inspection.
    */
-  def inspectTypes(whereClause: WhereClause, requestingUser: UserADM): Future[GravsearchTypeInspectionResult] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
+  def inspectTypes(whereClause: WhereClause, requestingUser: UserADM): Task[GravsearchTypeInspectionResult] =
     for {
       // Get the set of typeable entities in the Gravsearch query.
-      typeableEntities: Set[TypeableEntity] <- Future {
-                                                 QueryTraverser.visitWherePatterns(
-                                                   patterns = whereClause.patterns,
-                                                   whereVisitor = new TypeableEntityCollectingWhereVisitor,
-                                                   initialAcc = Set.empty[TypeableEntity]
-                                                 )
-                                               }
+      typeableEntities <- ZIO.attempt {
+                            queryTraverser.visitWherePatterns(
+                              patterns = whereClause.patterns,
+                              whereVisitor = new TypeableEntityCollectingWhereVisitor,
+                              initialAcc = Set.empty[TypeableEntity]
+                            )
+                          }
 
       // In the initial intermediate result, none of the entities have types yet.
       initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(typeableEntities)
 
       // Run the pipeline and get its result.
-      lastResult: IntermediateTypeInspectionResult <- typeInspectionPipeline.inspectTypes(
-                                                        previousResult = initialResult,
-                                                        whereClause = whereClause,
-                                                        requestingUser = requestingUser
-                                                      )
+      lastResult <- typeInspectionPipeline.inspectTypes(
+                      previousResult = initialResult,
+                      whereClause = whereClause,
+                      requestingUser = requestingUser
+                    )
 
-      // Are any entities still untyped?
       untypedEntities: Set[TypeableEntity] = lastResult.untypedEntities
-
-      _ =
+      _ <- // Are any entities still untyped?
         if (untypedEntities.nonEmpty) {
-          //  Yes. Return an error.
-          throw GravsearchException(
-            s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}"
+          ZIO.fail(
+            //  Yes. Return an error.
+            GravsearchException(
+              s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}"
+            )
           )
         } else {
           // No. Are there any entities with multiple types?
           val inconsistentEntities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] =
             lastResult.entitiesWithInconsistentTypes
-
-          if (inconsistentEntities.nonEmpty) {
+          ZIO.fail {
             // Yes. Return an error.
-
-            val inconsistentStr: String = inconsistentEntities.map { case (entity, entityTypes) =>
+            val inconsistentStr = inconsistentEntities.map { case (entity, entityTypes) =>
               s"$entity ${entityTypes.mkString(" ; ")} ."
-            }
-              .mkString(" ")
-
-            throw GravsearchException(s"One or more entities have inconsistent types: $inconsistentStr")
-          }
+            }.mkString(" ")
+            GravsearchException(s"One or more entities have inconsistent types: $inconsistentStr")
+          }.when(inconsistentEntities.nonEmpty)
         }
     } yield lastResult.toFinalResult
-  }
 
   /**
    * A [[WhereVisitor]] that collects typeable entities from a Gravsearch WHERE clause.

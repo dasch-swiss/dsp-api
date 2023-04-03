@@ -45,6 +45,12 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   override def findAll(): Task[List[ReadOntologyV2]] = getCache.map(_.ontologies.values.toList)
 
+  override def findByProject(projectId: InternalIri): Task[List[ReadOntologyV2]] =
+    smartIriMapCache(projectId)(findByProject)
+
+  private def findByProject(projectIri: SmartIri, cache: OntologyCacheData): List[ReadOntologyV2] =
+    cache.ontologies.values.filter(_.ontologyMetadata.projectIri.contains(projectIri)).toList
+
   override def findClassBy(classIri: InternalIri): Task[Option[ReadClassInfoV2]] =
     smartIriMapCache(classIri)(findClassBy)
 
@@ -102,17 +108,33 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
   override def findAllSuperClassesBy(classIris: List[InternalIri]): Task[List[ReadClassInfoV2]] =
     smartIrisMapCache(classIris)((iris, cache) => findAllSuperClassesBy(iris, List.empty, cache))
 
+  override def findAllSuperClassesBy(
+    classIris: List[InternalIri],
+    upToClass: InternalIri
+  ): Task[List[ReadClassInfoV2]] =
+    for {
+      upToClassIri <- toSmartIri(upToClass)
+      result <- smartIrisMapCache(classIris)((iris, cache) =>
+                  findAllSuperClassesBy(iris, List.empty, cache, Some(upToClassIri))
+                )
+    } yield result.distinct
+
   @tailrec
   private def findAllSuperClassesBy(
     classIris: List[SmartIri],
     acc: List[ReadClassInfoV2],
-    cache: OntologyCacheData
+    cache: OntologyCacheData,
+    upToClassIri: Option[SmartIri] = None
   ): List[ReadClassInfoV2] = {
     val superClassesWithSelf = findDirectSuperClassesBy(classIris, cache)
     val superClasses         = superClassesWithSelf.filter(it => !classIris.contains(it.entityInfoContent.classIri))
-    superClasses match {
+    val filteredSuperClasses = upToClassIri match {
+      case Some(iri) => superClasses.filter(_.entityInfoContent.classIri != iri)
+      case None      => superClasses
+    }
+    filteredSuperClasses match {
       case Nil     => acc
-      case classes => findAllSuperClassesBy(toClassIris(classes), acc ::: classes, cache)
+      case classes => findAllSuperClassesBy(toClassIris(classes), acc ::: classes, cache, upToClassIri)
     }
   }
 }

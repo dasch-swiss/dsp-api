@@ -7,12 +7,15 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import scala.language.postfixOps
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.FulltextSearchGetRequestV1
@@ -27,7 +30,10 @@ import org.knora.webapi.routing.RouteUtilV1
 /**
  * Provides a spray-routing function for API routes that deal with search.
  */
-class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class SearchRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
+) extends KnoraRoute(routeData, runtime) {
 
   /**
    * The default number of rows to show in search results.
@@ -134,12 +140,13 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     val showNRows: Int = params.get("show_nrows") match {
       case Some(showNRowsStrList: Seq[String]) =>
-        val showNRowsVal = stringFormatter.validateInt(
-          showNRowsStrList.head,
-          throw BadRequestException(
-            s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"
+        val showNRowsVal = ValuesValidator
+          .validateInt(showNRowsStrList.head)
+          .getOrElse(
+            throw BadRequestException(
+              s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"
+            )
           )
-        )
         showNRowsVal match {
           case -1 => defaultShowNRows
           case _  => showNRowsVal
@@ -149,10 +156,11 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     val startAt: Int = params.get("start_at") match {
       case Some(startAtStrList: Seq[String]) =>
-        stringFormatter.validateInt(
-          startAtStrList.head,
-          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList")
-        )
+        ValuesValidator
+          .validateInt(startAtStrList.head)
+          .getOrElse(
+            throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList")
+          )
       case None => 0
     }
 
@@ -209,10 +217,11 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     val showNRows: Int = params.get("show_nrows") match {
       case Some(showNRowsStr) =>
-        val showNRowsVal = stringFormatter.validateInt(
-          showNRowsStr,
-          throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr")
-        )
+        val showNRowsVal = ValuesValidator
+          .validateInt(showNRowsStr)
+          .getOrElse(
+            throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr")
+          )
         showNRowsVal match {
           case -1 => defaultShowNRows
           case _  => showNRowsVal
@@ -222,10 +231,11 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     val startAt: Int = params.get("start_at") match {
       case Some(startAtStr) =>
-        stringFormatter.validateInt(
-          startAtStr,
-          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr")
-        )
+        ValuesValidator
+          .validateInt(startAtStr)
+          .getOrElse(
+            throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr")
+          )
       case None => 0
     }
 
@@ -246,33 +256,21 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     path("v1" / "search" /) {
       // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
       get { requestContext =>
-        val requestMessage = for {
-          userADM                         <- getUserADM(requestContext, routeData.appConfig)
-          params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-        } yield makeExtendedSearchRequestMessage(userADM, params)
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
+        val requestTask = for {
+          user  <- Authenticator.getUserADM(requestContext)
+          params = requestContext.request.uri.query().toMultiMap
+        } yield makeExtendedSearchRequestMessage(user, params)
+        RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
       }
     } ~
       path("v1" / "search" / Segment) {
         searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
           get { requestContext =>
-            val requestMessage = for {
-              userADM                    <- getUserADM(requestContext, routeData.appConfig)
-              params: Map[String, String] = requestContext.request.uri.query().toMap
-            } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
-
-            RouteUtilV1.runJsonRouteWithFuture(
-              requestMessage,
-              requestContext,
-              appActor,
-              log
-            )
+            val requestTask = for {
+              user  <- Authenticator.getUserADM(requestContext)
+              params = requestContext.request.uri.query().toMap
+            } yield makeFulltextSearchRequestMessage(user, searchval, params)
+            RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
           }
       }
 }

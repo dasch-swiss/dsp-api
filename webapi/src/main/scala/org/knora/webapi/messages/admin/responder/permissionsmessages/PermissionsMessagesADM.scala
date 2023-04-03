@@ -1055,17 +1055,6 @@ case class DefaultObjectAccessPermissionADM(
   hasPermissions: Set[PermissionADM]
 ) extends PermissionItemADM {
 
-  /**
-   * @return a simple string representing the permission which can be used as the cache key.
-   */
-  def cacheKey: String =
-    PermissionsMessagesUtilADM.getDefaultObjectAccessPermissionADMKey(
-      forProject,
-      forGroup,
-      forResourceClass,
-      forProperty
-    )
-
   def toJsValue: JsValue = defaultObjectAccessPermissionADMFormat.write(this)
 }
 

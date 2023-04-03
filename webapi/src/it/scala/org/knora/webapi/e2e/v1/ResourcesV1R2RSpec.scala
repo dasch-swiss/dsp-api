@@ -15,7 +15,6 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json._
-
 import java.io.ByteArrayInputStream
 import java.net.URLEncoder
 import java.util.zip.ZipEntry
@@ -28,10 +27,10 @@ import scala.util.Random
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
-
 import dsp.errors.AssertionException
 import dsp.errors.InvalidApiJsonException
 import dsp.errors.NotFoundException
+
 import org.knora.webapi._
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
@@ -56,11 +55,11 @@ import org.knora.webapi.util.MutableTestIri
 class ResourcesV1R2RSpec extends R2RSpec {
 
   private val resourcesPathV1 =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV1(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV1(routeData, runtime).makeRoute)
   private val resourcesPathV2 =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, null).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(routeData, runtime).makeRoute)
   private val valuesPathV1 =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ValuesRouteV1(routeData).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
 
   private val superUser      = SharedTestDataADM.superUser
   private val superUserEmail = superUser.email

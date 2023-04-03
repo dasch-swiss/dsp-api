@@ -99,9 +99,8 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
-    extends HealthCheck
-    with Authenticator {
+final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[Authenticator with State])
+    extends HealthCheck {
 
   /**
    * Returns the route.
@@ -109,16 +108,13 @@ final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[State])
   def makeRoute: Route =
     path("health") {
       get { requestContext =>
-        val res: ZIO[State, Nothing, HttpResponse] = {
+        val res = {
           for {
             _     <- ZIO.logDebug("health route start")
-            ec    <- ZIO.executor.map(_.asExecutionContext)
             state <- ZIO.service[State]
             requestingUser <-
-              ZIO
-                .fromFuture(_ =>
-                  getUserADM(requestContext, routeData.appConfig)(routeData.system, routeData.appActor, ec)
-                )
+              Authenticator
+                .getUserADM(requestContext)
                 .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
             result <- healthCheck(state)
             _      <- ZIO.logDebug("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())

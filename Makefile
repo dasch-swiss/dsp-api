@@ -40,21 +40,24 @@ structurizer: ## starts the structurizer and serves c4 architecture docs
 .PHONY: build
 build: docker-build ## build all targets (excluding docs)
 
+# add DOCKER_BUILDKIT=1 to enable buildkit logging as info
+# https://github.com/sbt/sbt-native-packager/issues/1371
+
 .PHONY: docker-build-dsp-api-image
 docker-build-dsp-api-image: # build and publish dsp-api docker image locally
-	@sbt "webapi / Docker / publishLocal"
+	export DOCKER_BUILDKIT=1; sbt "webapi / Docker / publishLocal"
 
 .PHONY: docker-publish-dsp-api-image
 docker-publish-dsp-api-image: # publish dsp-api image to Dockerhub
-	@sbt "webapi / Docker / publish"
+	export DOCKER_BUILDKIT=1; sbt "webapi / Docker / publish"
 
 .PHONY: docker-build-sipi-image
 docker-build-sipi-image: # build and publish sipi docker image locally
-	@sbt "sipi / Docker / publishLocal"
+	 export DOCKER_BUILDKIT=1; sbt "sipi / Docker / publishLocal"
 
 .PHONY: docker-publish-sipi-image
 docker-publish-sipi-image: # publish sipi image to Dockerhub
-	@sbt "sipi / Docker / publish"
+	export DOCKER_BUILDKIT=1; sbt "sipi / Docker / publish"
 
 .PHONY: docker-build
 docker-build: docker-build-dsp-api-image docker-build-sipi-image ## build and publish all Docker images locally
@@ -184,7 +187,7 @@ stack-db-only: env-file  ## starts only fuseki.
 client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
 client-test-data: build ## runs the dsp-api e2e and r2r tests and generates client-test-data.
 	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
-	sbt -v "webapi/IntegrationTest/testOnly *E2ESpec *R2RSpec"
+	sbt -v "webapi/IntegrationTest/testOnly *E2ESpec *E2EZioHttpSpec *R2RSpec"
 	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
 
 .PHONY: test-repository-upgrade
@@ -201,7 +204,7 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
 .PHONY: test-all
-test-all: test integration-test
+test-all: test integration-test zio-http-test
 
 .PHONY: test
 test: ## runs all unit tests
@@ -211,34 +214,13 @@ test: ## runs all unit tests
 integration-test: docker-build-sipi-image ## runs all integration tests
 	sbt -v coverage "IntegrationTest/test" coverageAggregate
 
+.PHONY: zio-http-test
+zio-http-test: ## runs tests against ZIO HTTP routes
+	sbt -v coverage "webapi/IntegrationTest/testOnly *ZioHttpSpec" -Dkey=zio coverageAggregate
+
 .PHONY: test-shared
 test-shared: ## tests the shared projects (build is not called from this target)
 	sbt -v coverage "shared/test"
-
-.PHONY: test-user-slice
-test-user-slice: ## tests all projects relating to the user slice (build is not called from this target)
-	sbt -v coverage "userCore/test"
-	sbt -v coverage "userHandler/test"
-	sbt -v coverage "userInterface/test"
-	sbt -v coverage "userRepo/test"
-	sbt coverageAggregate
-
-.PHONY: test-role-slice
-test-role-slice: ## tests all projects relating to the role slice (build is not called from this target)
-	sbt -v coverage "roleCore/test"
-	sbt -v coverage "roleHandler/test"
-	sbt -v coverage "roleInterface/test"
-	sbt -v coverage "roleRepo/test"
-	sbt coverageAggregate
-
-.PHONY: test-project-slice
-test-project-slice: ## tests all projects relating to the project slice (build is not called from this target)
-	sbt -v coverage "projectCore/test"
-	sbt -v coverage "projectHandler/test"
-	sbt -v coverage "projectInterface/test"
-	sbt -v coverage "projectRepo/test"
-	sbt coverageAggregate
-
 
 #################################
 ## Database Management
@@ -315,6 +297,26 @@ init-db-test-from-ls-test-server-trig-file: init-db-test-empty ## init local dat
 	@echo $@
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+
+.PHONY: db-dump
+db-dump: ## Dump data from an env. Use as `make db_dump PW=database-password ENV=db.0000-test-server.dasch.swiss`
+	@echo $@
+	@echo dumping environment ${ENV}
+	@curl -X GET -H "Accept: application/trig" -u "admin:${PW}" "https://${ENV}/dsp-repo" > "${ENV}.trig"
+
+.PHONY: init-db-from-dump-file
+init-db-from-dump-file: ## init local database from a specified dump file. Use as `make init-db-from-dump-file DUMP=some-dump-file.trig`
+	@echo $@
+	@echo dump file: ${DUMP}
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/${DUMP}" -u "admin:test" "http://localhost:3030/knora-test"
+
+.PHONY: init-db-from-env
+init-db-from-env: ## ## Dump data from an env and upload it to the local DB. Use as `make init-db-from-env PW=database-password ENV=db.0000-test-server.dasch.swiss`
+	@echo $@
+	${MAKE} db-dump
+	${MAKE} init-db-from-dump-file DUMP=${ENV}.trig
+
 
 #################################
 ## Other

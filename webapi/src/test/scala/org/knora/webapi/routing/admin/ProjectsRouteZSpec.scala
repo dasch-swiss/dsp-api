@@ -23,8 +23,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywor
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.responders.admin.ProjectsService
-import org.knora.webapi.responders.admin.ProjectsServiceMock
+import org.knora.webapi.responders.admin.ProjectADMRestServiceMock
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
 
@@ -54,12 +54,12 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     )
 
   /**
-   * Returns a ZIO effect that requires a [[ProjectsService]] (so that a mock can be provided) that applies the
+   * Returns a ZIO effect that requires a [[ProjectADMRestService]] (so that a mock can be provided) that applies the
    * provided [[Request]] to the `routes` of a [[ProjectsRouteZ]], returning a [[Response]].
    */
-  private def applyRoutes(request: Request): ZIO[ProjectsService, Option[Nothing], Response] = ZIO
+  private def applyRoutes(request: Request): ZIO[ProjectADMRestService, Option[Nothing], Response] = ZIO
     .serviceWithZIO[ProjectsRouteZ](_.route.apply(request))
-    .provideSome[ProjectsService](
+    .provideSome[ProjectADMRestService](
       AppConfig.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorService.mock(Some(KnoraSystemInstances.Users.SystemUser)),
@@ -88,7 +88,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   val getProjectsSpec = test("get all projects") {
     val request        = Request.get(url = URL(basePathProjects))
     val expectedResult = Expectation.value[ProjectsGetResponseADM](ProjectsGetResponseADM(Seq(getProjectADM())))
-    val mockService    = ProjectsServiceMock.GetProjects(expectedResult).toLayer
+    val mockService    = ProjectADMRestServiceMock.GetProjects(expectedResult).toLayer
     for {
       response <- applyRoutes(request).provide(mockService)
       body     <- response.body.asString
@@ -100,7 +100,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri)))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
@@ -119,7 +119,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri)))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
@@ -128,7 +128,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val shortname  = "someProject"
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val request    = Request.get(url = URL(basePathProjectsShortname / shortname))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
@@ -147,7 +147,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request   = Request.get(url = URL(basePathProjectsShortname / shortname))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortname is invalid: short name"}""")
@@ -156,7 +156,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val shortcode  = "0001"
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
@@ -175,7 +175,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request   = Request.get(url = URL(basePathProjectsShortcode / shortcode))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
@@ -220,7 +220,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       )
 
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
-      val mockService = ProjectsServiceMock
+      val mockService = ProjectADMRestServiceMock
         .CreateProject(
           assertion = Assertion.equalTo((projectCreatePayload, user)),
           result = expectedResult
@@ -246,7 +246,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.post(url = URL(basePathProjects), body = body)
       val user    = KnoraSystemInstances.Users.SystemUser
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(
@@ -269,7 +269,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.post(url = URL(basePathProjects), body = body)
       val user    = KnoraSystemInstances.Users.SystemUser
       for {
-        response <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
       } yield assertTrue(response.status == Status.BadRequest)
     }
   )
@@ -281,7 +281,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request        = Request.delete(url = URL(basePathProjectsIri / encode(projectIri.value)))
       val user           = KnoraSystemInstances.Users.SystemUser
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .DeleteProject(
           assertion = Assertion.equalTo(projectIri, user),
           result = expectedResult
@@ -297,7 +297,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.delete(url = URL(basePathProjectsIri / encode(iri)))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
@@ -342,7 +342,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val user    = KnoraSystemInstances.Users.SystemUser
 
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
-      val mockService = ProjectsServiceMock
+      val mockService = ProjectADMRestServiceMock
         .UpdateProject(
           assertion = Assertion.equalTo((projectIri, projectUpdatePayload, user)),
           result = expectedResult
@@ -360,7 +360,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val user                       = KnoraSystemInstances.Users.SystemUser
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(
@@ -375,7 +375,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val user                       = KnoraSystemInstances.Users.SystemUser
 
       for {
-        response <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
       } yield assertTrue(response.status == Status.BadRequest)
     },
     test("return a BadRequest Exception if project IRI is invalid") {
@@ -386,7 +386,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val user                       = KnoraSystemInstances.Users.SystemUser
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
@@ -402,7 +402,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val path       = file.Paths.get("getAllDataFile.trig")
       val testFile   = file.Files.createFile(path)
 
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetAllProjectData(
           assertion = Assertion.equalTo(identifier, user),
           result = Expectation.value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(testFile))
@@ -420,7 +420,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val path    = file.Paths.get("...")
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
@@ -433,7 +433,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectMembersGetResponseADM](
@@ -452,7 +452,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "members"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
@@ -462,7 +462,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode / "members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectMembersGetResponseADM](
@@ -481,7 +481,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request   = Request.get(url = URL(basePathProjectsShortcode / shortcode / "members"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
@@ -491,7 +491,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsShortname / shortname / "members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetProjectMembers(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectMembersGetResponseADM](
@@ -510,7 +510,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request   = Request.get(url = URL(basePathProjectsShortname / shortname / "members"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortname is invalid: short name"}""")
@@ -523,7 +523,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "admin-members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetProjectAdmins(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectAdminMembersGetResponseADM](
@@ -542,7 +542,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "admin-members"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
@@ -552,7 +552,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode / "admin-members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetProjectAdmins(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectAdminMembersGetResponseADM](
@@ -571,7 +571,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request   = Request.get(url = URL(basePathProjectsShortcode / shortcode / "admin-members"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
@@ -581,7 +581,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val user       = KnoraSystemInstances.Users.SystemUser
       val request    = Request.get(url = URL(basePathProjectsShortname / shortname / "admin-members"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetProjectAdmins(
           assertion = Assertion.equalTo((identifier, user)),
           result = Expectation.value[ProjectAdminMembersGetResponseADM](
@@ -600,7 +600,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request   = Request.get(url = URL(basePathProjectsShortname / shortname / "admin-members"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortname is invalid: short name"}""")
@@ -611,7 +611,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     val request = Request.get(url = URL(basePathProjects / "Keywords"))
     val expectedResult =
       Expectation.value[ProjectsKeywordsGetResponseADM](ProjectsKeywordsGetResponseADM(Seq.empty[String]))
-    val mockService = ProjectsServiceMock.GetKeywords(expectedResult).toLayer
+    val mockService = ProjectADMRestServiceMock.GetKeywords(expectedResult).toLayer
     for {
       response <- applyRoutes(request).provide(mockService)
       body     <- response.body.asString
@@ -623,7 +623,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val iri        = "http://rdfh.ch/projects/0001"
       val projectIri = TestDataFactory.projectIri(iri)
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "Keywords"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetKeywordsByProjectIri(
           assertion = Assertion.equalTo(projectIri),
           result = Expectation.value[ProjectKeywordsGetResponseADM](
@@ -641,7 +641,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "Keywords"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
@@ -654,7 +654,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val request    = Request.get(url = URL(basePathProjectsIri / encode(iri) / "RestrictedViewSettings"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetRestrictedViewSettings(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
@@ -673,7 +673,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.get(url = URL(basePathProjectsIri / encode(iri) / "RestrictedViewSettings"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}""")
@@ -683,7 +683,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val request    = Request.get(url = URL(basePathProjectsShortname / shortname / "RestrictedViewSettings"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetRestrictedViewSettings(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
@@ -702,7 +702,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request   = Request.get(url = URL(basePathProjectsShortname / shortname / "RestrictedViewSettings"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortname is invalid: short name"}""")
@@ -712,7 +712,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val request    = Request.get(url = URL(basePathProjectsShortcode / shortcode / "RestrictedViewSettings"))
-      val mockService: ULayer[ProjectsService] = ProjectsServiceMock
+      val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetRestrictedViewSettings(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
@@ -731,7 +731,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request   = Request.get(url = URL(basePathProjectsShortcode / shortcode / "RestrictedViewSettings"))
 
       for {
-        response     <- applyRoutes(request).provide(ProjectsServiceMock.empty)
+        response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
         assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")

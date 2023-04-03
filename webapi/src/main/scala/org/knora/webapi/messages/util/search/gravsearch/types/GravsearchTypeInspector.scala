@@ -5,14 +5,10 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import zio.Task
+import zio.ZIO
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search.WhereClause
 
 /**
@@ -21,16 +17,8 @@ import org.knora.webapi.messages.util.search.WhereClause
  * entities in the WHERE clause of a Gravsearch query, then runs the next inspector in the pipeline.
  *
  * @param nextInspector the next type inspector in the pipeline, or `None` if this is the last one.
- * @param responderData the Knora responder data.
  */
-abstract class GravsearchTypeInspector(
-  protected val nextInspector: Option[GravsearchTypeInspector],
-  responderData: ResponderData
-) {
-
-  protected val system: ActorSystem                         = responderData.system
-  protected implicit val executionContext: ExecutionContext = responderData.executionContext
-  protected implicit val timeout: Timeout                   = responderData.timeout
+abstract class GravsearchTypeInspector(protected val nextInspector: Option[GravsearchTypeInspector]) {
 
   /**
    * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
@@ -45,7 +33,7 @@ abstract class GravsearchTypeInspector(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
     requestingUser: UserADM
-  ): Future[IntermediateTypeInspectionResult]
+  ): Task[IntermediateTypeInspectionResult]
 
   /**
    * Runs the next type inspector in the pipeline.
@@ -58,7 +46,7 @@ abstract class GravsearchTypeInspector(
     intermediateResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
     requestingUser: UserADM
-  ): Future[IntermediateTypeInspectionResult] =
+  ): Task[IntermediateTypeInspectionResult] =
     // Is there another inspector in the pipeline?
     nextInspector match {
       case Some(next) =>
@@ -71,6 +59,6 @@ abstract class GravsearchTypeInspector(
 
       case None =>
         // There are no more inspectors. Return the result we have.
-        Future(intermediateResult)
+        ZIO.attempt(intermediateResult)
     }
 }
