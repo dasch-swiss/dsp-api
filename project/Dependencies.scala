@@ -61,7 +61,7 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" // Scala 3 compatible
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.6" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.7" // the logging interface
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.19"
@@ -94,7 +94,7 @@ object Dependencies {
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.3"
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.3"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.1"
-  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.5" // Scala 3 incompatible
+  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.1"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
