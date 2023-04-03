@@ -22,10 +22,10 @@ object Dependencies {
   val ZioConfigVersion            = "3.0.7"
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
-  val ZioJsonVersion              = "0.3.0"
+  val ZioJsonVersion              = "0.5.0"
   val ZioLoggingVersion           = "2.1.11"
   val ZioMetricsConnectorsVersion = "2.0.7"
-  val ZioPreludeVersion           = "1.0.0-RC17"
+  val ZioPreludeVersion           = "1.0.0-RC18"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.10"
 
@@ -46,7 +46,7 @@ object Dependencies {
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
-  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC9"
+  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC10"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -61,7 +61,7 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" // Scala 3 compatible
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.6" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.7" // the logging interface
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.19"
@@ -93,10 +93,10 @@ object Dependencies {
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.3"
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.3"
-  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.0"
-  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.5" // Scala 3 incompatible
+  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.1"
+  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.1"
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.2"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
   // test
