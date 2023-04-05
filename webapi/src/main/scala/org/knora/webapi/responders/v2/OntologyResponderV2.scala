@@ -1358,6 +1358,7 @@ final case class OntologyResponderV2Live(
                             classes = ontology.classes + (internalClassIri -> readClassInfo)
                           )
 
+        // FIXME: should update subclasses in cache
         _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.

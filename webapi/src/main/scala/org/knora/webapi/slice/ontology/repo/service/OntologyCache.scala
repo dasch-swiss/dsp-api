@@ -939,6 +939,7 @@ final case class OntologyCacheLive(
    * @return the updated ontology cache.
    */
   private def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
+    // XXX: doesn't seem to work
     // Get the class definitions of all the subclasses of the base class.
 
     val allSubClassIris: Set[SmartIri] = cacheData.classToSubclassLookup(baseClassIri)
@@ -1014,7 +1015,7 @@ final case class OntologyCacheLive(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
     updatedClassIri: SmartIri
-  ): Task[OntologyCacheData] =
+  ): Task[OntologyCacheData] = // XXX: doesn't seem to update subclasses
     for {
       ontologyCache        <- getCacheData
       newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
