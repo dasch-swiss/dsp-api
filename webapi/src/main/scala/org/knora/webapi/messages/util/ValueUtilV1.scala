@@ -15,6 +15,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -841,15 +842,9 @@ final case class ValueUtilV1Live(
   private def makeTimeValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates   = valueProps.literalData
     val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
-
-    ZIO.attempt(
-      TimeValueV1(
-        timeStamp = stringFormatter.xsdDateTimeStampToInstant(
-          timeStampStr,
-          throw InconsistentRepositoryDataException(s"Can't parse timestamp: $timeStampStr")
-        )
-      )
-    )
+    ZIO
+      .fromOption(ValuesValidator.xsdDateTimeStampToInstant(timeStampStr).map(TimeValueV1(_)))
+      .orElseFail(InconsistentRepositoryDataException(s"Can't parse timestamp: $timeStampStr"))
   }
 
   /**

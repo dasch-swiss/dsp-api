@@ -41,6 +41,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
@@ -57,7 +58,8 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilV1._
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.FileUtil
 
@@ -66,7 +68,7 @@ import org.knora.webapi.util.FileUtil
  */
 final case class ResourcesRouteV1(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
   // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
   private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
@@ -144,63 +146,47 @@ final case class ResourcesRouteV1(
 
               case OntologyConstants.KnoraBase.TextValue =>
                 val richtext: CreateRichtextV1 = givenValue.richtext_value.get
-
                 // check if text has markup
-                if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
+                val task = if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                   // simple text
-
-                  Future(
-                    CreateValueV1WithComment(
-                      TextValueSimpleV1(
-                        utf8str = stringFormatter.toSparqlEncodedString(
-                          richtext.utf8str.get,
-                          throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")
-                        ),
-                        language = richtext.language
-                      ),
-                      givenValue.comment
-                    )
-                  )
-
+                  toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
+                    .map(it => (CreateValueV1WithComment(TextValueSimpleV1(it, richtext.language), givenValue.comment)))
                 } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                   // XML: text with markup
-
-                  val mappingIri = stringFormatter.validateAndEscapeIri(
-                    richtext.mapping_id.get,
-                    throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid")
-                  )
-
                   for {
-                    textWithStandoffTags <- RouteUtilV1.convertXMLtoStandoffTagV1(
-                                              richtext.xml.get,
-                                              mappingIri,
-                                              acceptStandoffLinksToClientIDs,
-                                              userProfile,
-                                              log
-                                            )
-
-                    // collect the resource references from the linking standoff nodes
-                    resourceReferences =
-                      stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
-
+                    mappingIri <-
+                      validateAndEscapeIri(
+                        richtext.mapping_id.get,
+                        s"mapping_id ${richtext.mapping_id.get} is invalid"
+                      )
+                    textWithStandoffTags <-
+                      convertXMLtoStandoffTagV1(
+                        richtext.xml.get,
+                        mappingIri,
+                        acceptStandoffLinksToClientIDs,
+                        userProfile,
+                        log
+                      )
+                    resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
+                    utf8str <- toSparqlEncodedString(
+                                 textWithStandoffTags.text,
+                                 "utf8str for TextValue contains invalid characters"
+                               )
                   } yield CreateValueV1WithComment(
                     TextValueWithStandoffV1(
-                      utf8str = stringFormatter.toSparqlEncodedString(
-                        textWithStandoffTags.text,
-                        throw InconsistentRepositoryDataException("utf8str for TextValue contains invalid characters")
-                      ),
-                      language = richtext.language,
-                      resource_reference = resourceReferences,
-                      standoff = textWithStandoffTags.standoffTagV2,
-                      mappingIri = textWithStandoffTags.mapping.mappingIri,
-                      mapping = textWithStandoffTags.mapping.mapping
+                      utf8str,
+                      richtext.language,
+                      textWithStandoffTags.standoffTagV2,
+                      resourceReferences,
+                      textWithStandoffTags.mapping.mappingIri,
+                      textWithStandoffTags.mapping.mapping
                     ),
                     givenValue.comment
                   )
-
                 } else {
-                  throw BadRequestException("invalid parameters given for TextValueV1")
+                  ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
                 }
+                UnsafeZioRun.runToFuture(task)
 
               case OntologyConstants.KnoraBase.LinkValue =>
                 (givenValue.link_value, givenValue.link_to_client_id) match {
@@ -272,10 +258,9 @@ final case class ResourcesRouteV1(
 
               case OntologyConstants.KnoraBase.TimeValue =>
                 val timeValStr: String = givenValue.time_value.get
-                val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
-                  timeValStr,
-                  throw BadRequestException(s"Invalid timestamp: $timeValStr")
-                )
+                val timeStamp: Instant = ValuesValidator
+                  .xsdDateTimeStampToInstant(timeValStr)
+                  .getOrElse(throw BadRequestException(s"Invalid timestamp: $timeValStr"))
                 Future(CreateValueV1WithComment(TimeValueV1(timeStamp), givenValue.comment))
 
               case OntologyConstants.KnoraBase.GeonameValue =>
@@ -341,7 +326,7 @@ final case class ResourcesRouteV1(
                                                )
                                                .mapTo[GetFileMetadataResponse]
                                          } yield Some(
-                                           RouteUtilV1.makeFileValue(
+                                           makeFileValue(
                                              filename = filename,
                                              fileMetadataResponse = fileMetadataResponse,
                                              projectShortcode = projectShortcode
@@ -404,7 +389,7 @@ final case class ResourcesRouteV1(
                                                                                   )
                                                                                   .mapTo[GetFileMetadataResponse]
                              } yield Some(
-                               RouteUtilV1.makeFileValue(
+                               makeFileValue(
                                  filename = filename,
                                  fileMetadataResponse = fileMetadataResponse,
                                  projectShortcode = projectShortcode
@@ -909,10 +894,9 @@ final case class ResourcesRouteV1(
           val creationDate: Option[Instant] = resourceNode
             .attribute("creationDate")
             .map(creationDateNode =>
-              stringFormatter.xsdDateTimeStampToInstant(
-                creationDateNode.text,
-                throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}")
-              )
+              ValuesValidator
+                .xsdDateTimeStampToInstant(creationDateNode.text)
+                .getOrElse(throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}"))
             )
 
           // Convert the XML element's label and namespace to an internal resource class IRI.
@@ -1205,10 +1189,9 @@ final case class ResourcesRouteV1(
             }
 
           case "time_value" =>
-            val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
-              elementValue,
-              throw BadRequestException(s"Invalid timestamp in element '${node.label}': $elementValue")
-            )
+            val timeStamp: Instant = ValuesValidator
+              .xsdDateTimeStampToInstant(elementValue)
+              .getOrElse(throw BadRequestException(s"Invalid timestamp in element '${node.label}': $elementValue"))
             CreateResourceValueV1(time_value = Some(timeStamp.toString))
 
           case "geoname_value" =>
@@ -1271,7 +1254,7 @@ final case class ResourcesRouteV1(
             userProfile = userProfile
           )
 
-          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteF(requestMessage, requestContext)
       } ~ post {
         // Create a new resource with the given type and possibly a file.
         // The binary file is already managed by Sipi.
@@ -1285,7 +1268,7 @@ final case class ResourcesRouteV1(
                        )
           } yield request
 
-          RouteUtilV1.runJsonRouteF(requestMessageFuture, requestContext)
+          runJsonRouteF(requestMessageFuture, requestContext)
         }
       }
     } ~ path("v1" / "resources" / Segment) { resIri =>
@@ -1303,7 +1286,7 @@ final case class ResourcesRouteV1(
               userADM = userADM
             )
 
-          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteF(requestMessage, requestContext)
         }
       } ~ delete {
         parameters("deleteComment".?) { deleteCommentParam => requestContext =>
@@ -1311,7 +1294,7 @@ final case class ResourcesRouteV1(
             userADM <- getUserADM(requestContext)
           } yield makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userADM = userADM)
 
-          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "resources.html" / Segment) { iri =>
@@ -1333,7 +1316,7 @@ final case class ResourcesRouteV1(
           case other => ZIO.fail(BadRequestException(s"Invalid request type: $other"))
         }
 
-        RouteUtilV1.runHtmlRoute(requestTask, requestContext)
+        runHtmlRoute(requestTask, requestContext)
       }
     } ~ path("v1" / "properties" / Segment) { iri =>
       get { requestContext =>
@@ -1345,7 +1328,7 @@ final case class ResourcesRouteV1(
                    )
         } yield makeGetPropertiesRequestMessage(resIri, userADM)
 
-        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+        runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "resources" / "label" / Segment) { iri =>
       put {
@@ -1367,7 +1350,7 @@ final case class ResourcesRouteV1(
             userADM = userADM
           )
 
-          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "graphdata" / Segment) { iri =>
@@ -1381,7 +1364,7 @@ final case class ResourcesRouteV1(
                           )
           } yield GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userADM)
 
-          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteF(requestMessage, requestContext)
         }
       }
 
@@ -1395,7 +1378,7 @@ final case class ResourcesRouteV1(
           InternalServerExceptionMessageRequest()
         }
 
-        RouteUtilV1.runJsonRoute(msg, requestContext)
+        runJsonRoute(msg, requestContext)
       }
     } ~ path("v1" / "resources" / "xmlimport" / Segment) { projectId =>
       post {
@@ -1450,7 +1433,7 @@ final case class ResourcesRouteV1(
                                                               )
           } yield updateRequest
 
-          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>

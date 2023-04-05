@@ -517,11 +517,9 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.TimeValue =>
                   // check if string is an integer
-                  val searchString = stringFormatter
-                    .xsdDateTimeStampToInstant(
-                      searchval,
-                      throw BadRequestException(s"Given searchval is not a timestamp: $searchval")
-                    )
+                  val searchString = ValuesValidator
+                    .xsdDateTimeStampToInstant(searchval)
+                    .getOrElse(throw BadRequestException(s"Given searchval is not a timestamp: $searchval"))
                     .toString
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 

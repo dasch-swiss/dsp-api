@@ -28,6 +28,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -121,11 +122,7 @@ final case class OntologiesRouteV2(
 
       val params: Map[String, String] = requestContext.request.uri.query().toMap
       val allLanguagesStr             = params.get(ALL_LANGUAGES)
-      val allLanguages = stringFormatter.optionStringToBoolean(
-        allLanguagesStr,
-        throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-      )
-
+      val allLanguages                = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
       val requestTask = Authenticator
         .getUserADM(requestContext)
         .map(OntologyEntitiesGetRequestV2(requestedOntology, allLanguages, _))
@@ -208,11 +205,7 @@ final case class OntologiesRouteV2(
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = stringFormatter.optionStringToBoolean(
-          params.get(ALL_LANGUAGES),
-          throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-        )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), false)
 
         val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -292,10 +285,9 @@ final case class OntologiesRouteV2(
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteClassCommentRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -482,11 +474,7 @@ final case class OntologiesRouteV2(
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = stringFormatter.optionStringToBoolean(
-          params.get(ALL_LANGUAGES),
-          throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-        )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), false)
 
         val requestMessageFuture: Future[ClassesGetRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -543,10 +531,9 @@ final case class OntologiesRouteV2(
           .query()
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteClassRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -575,10 +562,9 @@ final case class OntologiesRouteV2(
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeleteOntologyCommentRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -839,10 +825,9 @@ final case class OntologiesRouteV2(
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
 
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeletePropertyCommentRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -967,11 +952,7 @@ final case class OntologiesRouteV2(
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguagesStr             = params.get(ALL_LANGUAGES)
-        val allLanguages = stringFormatter.optionStringToBoolean(
-          params.get(ALL_LANGUAGES),
-          throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr")
-        )
+        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), fallback = false)
 
         val requestMessageFuture: Future[PropertiesGetRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -1025,10 +1006,9 @@ final case class OntologiesRouteV2(
           .query()
           .toMap
           .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
+        val lastModificationDate = ValuesValidator
+          .xsdDateTimeStampToInstant(lastModificationDateStr)
+          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
         val requestMessageFuture: Future[DeletePropertyRequestV2] = for {
           requestingUser <- getUserADM(requestContext)
@@ -1105,10 +1085,9 @@ final case class OntologiesRouteV2(
         .query()
         .toMap
         .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-      val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-        lastModificationDateStr,
-        throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-      )
+      val lastModificationDate = ValuesValidator
+        .xsdDateTimeStampToInstant(lastModificationDateStr)
+        .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
       val requestMessageFuture: Future[DeleteOntologyRequestV2] = for {
         requestingUser <- getUserADM(requestContext)

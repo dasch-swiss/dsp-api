@@ -59,7 +59,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
   private val resourcesPathV2 =
     DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(routeData, runtime).makeRoute)
   private val valuesPathV1 =
-    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1(routeData, runtime).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
 
   private val superUser      = SharedTestDataADM.superUser
   private val superUserEmail = superUser.email

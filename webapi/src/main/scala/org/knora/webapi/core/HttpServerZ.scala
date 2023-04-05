@@ -21,18 +21,13 @@ import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 object HttpServerZ {
 
   private val corsMiddleware =
-    for {
-      config <- ZIO.service[AppConfig]
-      corsConfig =
-        Cors.CorsConfig(
-          anyOrigin = false,
-          anyMethod = false,
-          allowedMethods = Some(Set(Method.GET, Method.PUT, Method.DELETE, Method.POST)),
-          allowedOrigins = { origin =>
-            config.httpServer.corsAllowedOriginsLowerCase.contains(origin.toLowerCase())
-          }
-        )
-    } yield Middleware.cors(corsConfig)
+    Middleware.cors(
+      Cors.CorsConfig(
+        anyOrigin = true,
+        anyMethod = false,
+        allowedMethods = Some(Set(Method.GET, Method.PUT, Method.DELETE, Method.POST))
+      )
+    )
 
   private val loggingMiddleware = Middleware.requestLogging()
 
@@ -77,9 +72,8 @@ object HttpServerZ {
     for {
       port                <- ZIO.service[AppConfig].map(_.knoraApi.externalZioPort)
       routes              <- apiRoutes
-      cors                <- corsMiddleware
       metrics              = metricsMiddleware()
-      routesWithMiddleware = routes @@ cors @@ metrics @@ loggingMiddleware @@ tracingMiddleware
+      routesWithMiddleware = routes @@ corsMiddleware @@ metrics @@ loggingMiddleware @@ tracingMiddleware
       serverConfig         = ZLayer.succeed(ServerConfig.default.port(port))
       _                   <- Server.serve(routesWithMiddleware).provide(Server.live, serverConfig).forkDaemon
       _                   <- ZIO.logInfo(">>> Acquire ZIO HTTP Server <<<")

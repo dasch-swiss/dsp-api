@@ -14,12 +14,11 @@ import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import spray.json._
 import zio.ZLayer
+import zio.prelude.Validation
 
 import java.nio.ByteBuffer
 import java.time._
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
-import java.time.temporal.TemporalAccessor
 import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -36,6 +35,7 @@ import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
@@ -577,8 +577,6 @@ class StringFormatter private (
   initForTest: Boolean = false
 ) {
 
-  import StringFormatter._
-
   private val base64Encoder = Base64.getUrlEncoder.withoutPadding
   private val base64Decoder = Base64.getUrlDecoder
 
@@ -738,10 +736,6 @@ class StringFormatter private (
   private val StandoffIriRegex: Regex =
     ("^http://" + IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + """)/standoff/(\d+)$""").r
 
-  // A regex that parses a Knora ARK timestamp.
-  private val ArkTimestampRegex: Regex =
-    """^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{1,9})?Z$""".r
-
   // A regex that finds trailing zeroes.
   private val TrailingZerosRegex: Regex =
     """0+$""".r
@@ -880,7 +874,8 @@ class StringFormatter private (
             val entityName = iri.substring(hashPos + 1)
 
             // Validate the entity name as an NCName.
-            (namespace, Some(validateNCName(entityName, errorFun)))
+            if (!NCNameRegex.matches(entityName)) errorFun
+            (namespace, Some(entityName))
           } else {
             (iri, None)
           }
@@ -971,7 +966,7 @@ class StringFormatter private (
             val hasBuiltInOntologyName = isBuiltInOntologyName(ontologyName)
 
             if (!hasBuiltInOntologyName) {
-              validateProjectSpecificOntologyName(ontologyName, errorFun)
+              ValuesValidator.validateProjectSpecificOntologyName(ontologyName).getOrElse(errorFun)
             }
 
             // If the IRI has the hostname for project-specific ontologies, it can't refer to a built-in or shared ontology.
@@ -1474,15 +1469,21 @@ class StringFormatter private (
    *                 IRI.
    * @return the same string.
    */
-  def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
-    val urlEncodedStr = encodeAllowEscapes(s)
+  @deprecated("Use validateAndEscapeIri(String) instead")
+  def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI =
+    validateAndEscapeIri(s).getOrElse(errorFun)
 
-    if (Iri.urlValidator.isValid(urlEncodedStr)) {
-      urlEncodedStr
-    } else {
-      errorFun
-    }
-  }
+  /**
+   * Checks that a string represents a valid IRI.
+   * Also encodes the IRI, preserving existing %-escapes.
+   *
+   * @param s        the string to be checked.
+   * @return A validated and escaped IRI.
+   */
+  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
+    Validation
+      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
+      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
    * Check that an optional string represents a valid IRI.
@@ -1611,17 +1612,20 @@ class StringFormatter private (
    *                 a carriage return (`\r`).
    * @return the same string, escaped or unescaped as requested.
    */
-  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = { // --
-    if (s.isEmpty || s.contains("\r")) errorFun
+  @deprecated("Use toSparqlEncodedString(String) instead")
+  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = // --
+    toSparqlEncodedString(s).getOrElse(errorFun)
 
-    // http://www.morelab.deusto.es/code_injection/
-
-    StringUtils.replaceEach(
-      s,
-      SparqlEscapeInput,
-      SparqlEscapeOutput
-    )
-  }
+  /**
+   * Makes a string safe to be entered in the triplestore by escaping special chars.
+   *
+   * @param s        a string.
+   * @return the same string escaped
+   *         [[None]] if the string is empty or contains a carriage return (`\r`).
+   */
+  def toSparqlEncodedString(s: String): Option[String] =
+    if (s.isEmpty || s.contains("\r")) None
+    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
 
   /**
    * Unescapes a string that has been escaped for SPARQL.
@@ -1637,17 +1641,6 @@ class StringFormatter private (
     )
 
   /**
-   * Replaces all characters that have a special meaning in the Lucene Query Parser syntax and normalizes spaces.
-   *
-   * @param s  a string
-   * @return   the normalized string
-   */
-  def replaceLuceneQueryParserSyntaxCharacters(s: String): String = {
-    val stringWithoutSpecialCharacters = s.replaceAll("[\\/\\+\\-&\\|!\\(\\)\\{\\}\\[\\]\\^\"~\\*\\?:\\\\]", " ")
-    StringUtils.normalizeSpace(stringWithoutSpecialCharacters)
-  }
-
-  /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.
    *
    * @param s the string to be encoded.
@@ -1655,60 +1648,6 @@ class StringFormatter private (
    */
   def toJsonEncodedString(s: String): String =
     JsString(s).compactPrint
-
-  /**
-   * Parses an `xsd:dateTimeStamp`.
-   *
-   * @param s        the string to be parsed.
-   * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return an [[Instant]].
-   */
-  def xsdDateTimeStampToInstant(s: String, errorFun: => Nothing): Instant = // --
-    try {
-      val accessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
-      Instant.from(accessor)
-    } catch {
-      case _: Exception => errorFun
-    }
-
-  /**
-   * Parses a Knora ARK timestamp.
-   *
-   * @param timestampStr the string to be parsed.
-   * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return an [[Instant]].
-   */
-  def arkTimestampToInstant(timestampStr: String, errorFun: => Nothing): Instant = // --
-    timestampStr match {
-      case ArkTimestampRegex(year, month, day, hour, minute, second, fraction) =>
-        val nanoOfSecond: Int = Option(fraction) match {
-          case None => 0
-
-          case Some(definedFraction) =>
-            // Pad the nano-of-second with trailing zeroes so it has 9 digits, then convert it
-            // to an integer.
-            definedFraction.padTo(9, '0').toInt
-        }
-
-        try {
-          val accessor: TemporalAccessor = OffsetDateTime.of(
-            year.toInt,
-            month.toInt,
-            day.toInt,
-            hour.toInt,
-            minute.toInt,
-            second.toInt,
-            nanoOfSecond,
-            ZoneOffset.UTC
-          )
-
-          Instant.from(accessor)
-        } catch {
-          case _: Exception => errorFun
-        }
-
-      case _ => errorFun
-    }
 
   /**
    * Formats a Knora ARK timestamp.
@@ -1760,35 +1699,6 @@ class StringFormatter private (
     }
 
   /**
-   * Turn a possibly empty string value into a boolean value.
-   * Returns false if the value is empty or if the given string is cannot be converted to a Boolean `true`.
-   *
-   * @param maybe    an optional string representation of a boolean value.
-   * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
-   *                 as a boolean value.
-   * @return a Boolean.
-   */
-  def optionStringToBoolean(maybe: Option[String], errorFun: => Nothing): Boolean = // --
-    try {
-      maybe.exists(_.toBoolean)
-    } catch {
-      case _: IllegalArgumentException => errorFun
-    }
-
-  /**
-   * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-   *
-   * @param ncName   the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string is invalid.
-   * @return the same string.
-   */
-  private def validateNCName(ncName: String, errorFun: => Nothing): String = // --
-    NCNameRegex.findFirstIn(ncName) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
-
-  /**
    * Returns `true` if an ontology name is reserved for a built-in ontology.
    *
    * @param ontologyName the ontology name to be checked.
@@ -1796,46 +1706,6 @@ class StringFormatter private (
    */
   private def isBuiltInOntologyName(ontologyName: String): Boolean =
     OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
-
-  /**
-   * Checks that a name is valid as a project-specific ontology name.
-   *
-   * @param ontologyName the ontology name to be checked.
-   * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
-   * @return the same ontology name.
-   */
-  def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = { // --
-    // Check that ontology name matched NCName regex pattern
-    ontologyName match {
-      case NCNameRegex(_*) => ()
-      case _               => errorFun
-    }
-
-    // Check that ontology name is URL safe
-    ontologyName match {
-      case Base64UrlPatternRegex(_*) => ()
-      case _                         => errorFun
-    }
-
-    val lowerCaseOntologyName = ontologyName.toLowerCase
-
-    lowerCaseOntologyName match {
-      case ApiVersionNumberRegex(_*) => errorFun
-      case _                         => ()
-    }
-
-    if (isBuiltInOntologyName(ontologyName)) {
-      errorFun
-    }
-
-    for (reservedIriWord <- reservedIriWords) {
-      if (lowerCaseOntologyName.contains(reservedIriWord)) {
-        errorFun
-      }
-    }
-
-    ontologyName
-  }
 
   /**
    * Given a valid internal (built-in or project-specific) ontology name and an optional project code, constructs the
@@ -2150,6 +2020,7 @@ class StringFormatter private (
     }
 
   def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = // --
+    // TODO: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible. (depends on toSparqlEncodedString())
     maybeString match {
       case Some(s) =>
         Some(toSparqlEncodedString(s, errorFun))

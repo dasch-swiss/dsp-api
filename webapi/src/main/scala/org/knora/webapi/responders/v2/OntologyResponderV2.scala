@@ -603,10 +603,11 @@ final case class OntologyResponderV2Live(
 
       // Check that the ontology name is valid.
       validOntologyName =
-        stringFormatter.validateProjectSpecificOntologyName(
-          createOntologyRequest.ontologyName,
-          throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}")
-        )
+        ValuesValidator
+          .validateProjectSpecificOntologyName(createOntologyRequest.ontologyName)
+          .getOrElse(
+            throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}")
+          )
 
       // Make the internal ontology IRI.
       internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(

@@ -234,10 +234,7 @@ final case class SearchRouteV2(
 
         val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
-        val returnFiles: Boolean = stringFormatter.optionStringToBoolean(
-          params.get(RETURN_FILES),
-          throw BadRequestException(s"Invalid boolean value for '$RETURN_FILES'")
-        )
+        val returnFiles: Boolean = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
 
         val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)

@@ -44,7 +44,7 @@ class StandoffV1R2RSpec extends R2RSpec {
   private val standoffPath =
     DSPApiDirectives.handleErrors(system, appConfig)(StandoffRouteV1(routeData, runtime).makeRoute)
   private val valuesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1(routeData, runtime).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
 
   private val anythingUser      = SharedTestDataV1.anythingUser1
   private val anythingUserEmail = anythingUser.userData.email.get
