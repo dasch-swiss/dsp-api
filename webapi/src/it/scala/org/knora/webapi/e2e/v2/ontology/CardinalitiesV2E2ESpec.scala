@@ -259,7 +259,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
       HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
     ) ~> addCredentials(rootCredentials)
     val response = singleAwaitingRequest(request)
-    response.status
+    (response.status, responseToString(response))
   }
 
   private def getLastModificationDate(response: HttpResponse): String =
@@ -328,23 +328,23 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         )
       }
 
-      val superStatus = createValue(
+      val (superStatus, superResponse) = createValue(
         projectIri = projectIri,
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
         className = superClassName,
         propertyNames = List(superClassProperty1, superClassProperty2)
       )
-      assert(superStatus == StatusCodes.OK)
+      assert(superStatus == StatusCodes.OK, superResponse)
 
-      val subStatus = createValue(
+      val (subStatus, subResponse) = createValue(
         projectIri = projectIri,
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
         className = subClassName,
         propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)
       )
-      assert(subStatus == StatusCodes.OK)
+      assert(subStatus == StatusCodes.OK, subResponse)
     }
 
     "be able to create resource instances with all properties, when adding cardinalities on sub class first" in {
@@ -403,23 +403,23 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         )
       }
 
-      val superStatus = createValue(
+      val (superStatus, superResponse) = createValue(
         projectIri = projectIri,
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
         className = superClassName,
         propertyNames = List(superClassProperty1, superClassProperty2)
       )
-      assert(superStatus == StatusCodes.OK)
+      assert(superStatus == StatusCodes.OK, superResponse)
 
-      val subStatus = createValue(
+      val (subStatus, subResponse) = createValue(
         projectIri = projectIri,
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
         className = subClassName,
         propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)
       )
-      assert(subStatus == StatusCodes.OK)
+      assert(subStatus == StatusCodes.OK, subResponse)
     }
 
     "not be able to create subclass instances with missing properties defined on superclass, when adding cardinalities on super class first" in {
@@ -478,7 +478,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         )
       }
 
-      val status = createValue(
+      val (status, response) = createValue(
         projectIri = projectIri,
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
@@ -486,7 +486,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         // missing mandatory props defined on super class
         propertyNames = List(subClassProperty1, subClassProperty2)
       )
-      assert(status == StatusCodes.BadRequest)
+      assert(status == StatusCodes.BadRequest, response)
     }
 
     "not be able to create subclass instances with missing properties defined on superclass, when adding cardinalities on sub class first" in {
@@ -545,7 +545,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         )
       }
 
-      val status = createValue(
+      val (status, response) = createValue(
         projectIri = projectIri,
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
@@ -553,7 +553,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         // missing mandatory props defined on super class
         propertyNames = List(subClassProperty1, subClassProperty2)
       )
-      assert(status == StatusCodes.BadRequest)
+      assert(status == StatusCodes.BadRequest, response)
     }
 
   }
