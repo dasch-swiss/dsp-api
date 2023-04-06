@@ -99,7 +99,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |  },
           |  "@graph" : [
           |    {
-          |      "@id" : "inherit:$className",
+          |      "@id" : "$ontologyName:$className",
           |      "@type" : "owl:Class",
           |      "rdfs:label" : {
           |        "@language" : "en",
@@ -128,6 +128,101 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     getLastModificationDate(response)
   }
 
+  private def createProperty(
+    ontologyIri: String,
+    ontologyName: String,
+    propertyName: String,
+    lastModificationDate: String
+  ) = {
+    val payload =
+      s"""|{
+          |  "@id" : "$ontologyIri",
+          |  "@type" : "owl:Ontology",
+          |  "knora-api:lastModificationDate" : {
+          |    "@type" : "xsd:dateTimeStamp",
+          |    "@value" : "$lastModificationDate"
+          |  },
+          |  "@graph" : [
+          |    {
+          |      "@id" : "$ontologyName:$propertyName",
+          |      "@type" : "owl:ObjectProperty",
+          |      "knora-api:objectType" : {
+          |        "@id" : "knora-api:IntValue"
+          |      },
+          |      "rdfs:label" : {
+          |        "@language" : "en",
+          |        "@value" : "property $propertyName"
+          |      },
+          |      "rdfs:subPropertyOf" : {
+          |        "@id" : "knora-api:hasValue"
+          |      }
+          |    }
+          |  ],
+          |  "@context" : {
+          |    "$ontologyName" : "$ontologyIri#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+          |    "owl" : "http://www.w3.org/2002/07/owl#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+          |  }
+          |}
+          |""".stripMargin
+    val request = Post(
+      s"$baseApiUrl/v2/ontologies/properties",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
+    ) ~> addCredentials(rootCredentials)
+    val response = singleAwaitingRequest(request)
+    assert(response.status == StatusCodes.OK, responseToString(response))
+    getLastModificationDate(response)
+  }
+
+  private def addCardinalityToClass(
+    ontologyIri: String,
+    ontologyName: String,
+    className: String,
+    propertyName: String,
+    lastModificationDate: String
+  ) = {
+    val payload =
+      s"""|{
+          |  "@id" : "$ontologyIri",
+          |  "@type" : "owl:Ontology",
+          |  "knora-api:lastModificationDate" : {
+          |    "@type" : "xsd:dateTimeStamp",
+          |    "@value" : "$lastModificationDate"
+          |  },
+          |  "@graph" : [ 
+          |    {
+          |      "@id" : "$ontologyName:$className",
+          |      "@type" : "owl:Class",
+          |      "rdfs:subClassOf" : {
+          |        "@type": "owl:Restriction",
+          |        "owl:cardinality": 1,
+          |        "owl:onProperty": {
+          |          "@id" : "$ontologyName:$propertyName"
+          |        }
+          |      }
+          |    }
+          |  ],
+          |  "@context" : {
+          |    "$ontologyName" : "$ontologyIri#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "owl" : "http://www.w3.org/2002/07/owl#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+          |  }
+          |}
+          |""".stripMargin
+    val request = Post(
+      s"$baseApiUrl/v2/ontologies/cardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
+    ) ~> addCredentials(rootCredentials)
+    val response = singleAwaitingRequest(request)
+    assert(response.status == StatusCodes.OK, responseToString(response))
+    getLastModificationDate(response)
+  }
+
   private def getLastModificationDate(response: HttpResponse): String =
     JsonLDUtil
       .parseJsonLD(responseToString(response))
@@ -141,40 +236,59 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     "be able to create resource instances when adding cardinalities on super class first" in {
 
       val projectIri = createProject("test1", "4441")
-      println(projectIri)
 
       val (ontologyIri, lmd)   = createOntology(projectIri)
       var lastModificationDate = lmd
 
-      val superName = "SuperClass"
+      val superClassName = "SuperClass"
+      val ontologyName   = "inherit"
       lastModificationDate = createClass(
         ontologyIri = ontologyIri,
-        ontologyName = "inherit",
-        className = superName,
+        ontologyName = ontologyName,
+        className = superClassName,
         superClass = None,
         lastModificationDate = lastModificationDate
       )
 
-      val subName = "SubClass"
+      val subClassName = "SubClass"
       lastModificationDate = createClass(
         ontologyIri = ontologyIri,
-        ontologyName = "inherit",
-        className = subName,
-        superClass = Some(superName),
+        ontologyName = ontologyName,
+        className = subClassName,
+        superClass = Some(superClassName),
         lastModificationDate = lastModificationDate
       )
 
-      // create properties
+      val superClassProperty1 = "superClassProperty1"
+      val superClassProperty2 = "superClassProperty2"
+      val subClassProperty1   = "subClassProperty1"
+      val subClassProperty2   = "subClassProperty2"
+      for (prop <- List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)) {
+        lastModificationDate = createProperty(
+          ontologyIri = ontologyIri,
+          ontologyName = ontologyName,
+          propertyName = prop,
+          lastModificationDate = lastModificationDate
+        )
+      }
 
-      // create sub class
+      val clsAndProps = List(
+        (superClassName, superClassProperty1),
+        (superClassName, superClassProperty2),
+        (subClassName, subClassProperty1),
+        (subClassName, subClassProperty2)
+      )
+      for ((cls, prop) <- clsAndProps) {
+        lastModificationDate = addCardinalityToClass(
+          ontologyIri = ontologyIri,
+          ontologyName = ontologyName,
+          className = cls,
+          propertyName = prop,
+          lastModificationDate = lastModificationDate
+        )
+      }
 
-      // add cardinalities for sub class
-
-      // add cardinalities for super class
-
-      // val resStr = responseToString(createOntologyResponse)
-      // println(resStr)
-      // println(responseToString(createSuperClassResponse))
+      println(lastModificationDate)
 
     }
   }
