@@ -939,7 +939,6 @@ final case class OntologyCacheLive(
    * @return the updated ontology cache.
    */
   private def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
-    // XXX: doesn't seem to work
     // Get the class definitions of all the subclasses of the base class.
 
     val allSubClassIris: Set[SmartIri] = cacheData.classToSubclassLookup(baseClassIri)
@@ -984,9 +983,14 @@ final case class OntologyCacheLive(
         val ontologyIri              = directSubClass.entityInfoContent.classIri.getOntologyFromEntity
         val ontology: ReadOntologyV2 = cacheDataAcc.ontologies(ontologyIri)
 
+        val newKnoraResourceProperties = newInheritedCardinalities.keySet.filter(
+          OntologyHelpers.isKnoraResourceProperty(_, cacheData)
+        )
+
         val updatedOntology = ontology.copy(
           classes = ontology.classes + (directSubClassIri -> directSubClass.copy(
-            inheritedCardinalities = newInheritedCardinalities
+            inheritedCardinalities = newInheritedCardinalities,
+            knoraResourceProperties = newKnoraResourceProperties
           ))
         )
 
@@ -1015,7 +1019,7 @@ final case class OntologyCacheLive(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
     updatedClassIri: SmartIri
-  ): Task[OntologyCacheData] = // XXX: doesn't seem to update subclasses
+  ): Task[OntologyCacheData] =
     for {
       ontologyCache        <- getCacheData
       newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
