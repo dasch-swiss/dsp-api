@@ -223,6 +223,45 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     getLastModificationDate(response)
   }
 
+  private def createValue(
+    projectIri: String,
+    ontologyIri: String,
+    ontologyName: String,
+    className: String,
+    propertyNames: List[String]
+  ) = {
+    val propDefinitions =
+      propertyNames
+        .map(prop => s"""|  "$ontologyName:$prop" : {
+                         |    "@type" : "knora-api:IntValue",
+                         |    "knora-api:intValueAsInt" : 42
+                         |  },""".stripMargin)
+        .mkString("\n")
+    val payload =
+      s"""|{
+          |  "@type" : "$ontologyName:$className",
+          |  "rdfs:label": "Instance of $className",
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "$projectIri"
+          |  },
+          |$propDefinitions
+          |  "@context" : {
+          |    "$ontologyName" : "$ontologyIri#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "owl" : "http://www.w3.org/2002/07/owl#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+          |  }
+          |}
+          |""".stripMargin
+    val request = Post(
+      s"$baseApiUrl/v2/resources",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
+    ) ~> addCredentials(rootCredentials)
+    val response = singleAwaitingRequest(request)
+    assert(response.status == StatusCodes.OK, responseToString(response))
+  }
+
   private def getLastModificationDate(response: HttpResponse): String =
     JsonLDUtil
       .parseJsonLD(responseToString(response))
@@ -272,6 +311,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         )
       }
 
+      // first adding the the cardinalities to the *super*, then to the *sub* class
       val clsAndProps = List(
         (superClassName, superClassProperty1),
         (superClassName, superClassProperty2),
@@ -288,7 +328,21 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         )
       }
 
-      println(lastModificationDate)
+      createValue(
+        projectIri = projectIri,
+        ontologyIri = ontologyIri,
+        ontologyName = ontologyName,
+        className = superClassName,
+        propertyNames = List(superClassProperty1, superClassProperty2)
+      )
+
+      createValue(
+        projectIri = projectIri,
+        ontologyIri = ontologyIri,
+        ontologyName = ontologyName,
+        className = subClassName,
+        propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)
+      )
 
     }
   }
