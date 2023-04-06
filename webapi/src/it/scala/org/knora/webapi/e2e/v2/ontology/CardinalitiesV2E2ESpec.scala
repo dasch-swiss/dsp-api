@@ -272,7 +272,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
   private val rootCredentials = BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
 
   "Ontologies endpoint" should {
-    "be able to create resource instances when adding cardinalities on super class first" in {
+    "be able to create resource instances with all properties when adding cardinalities on super class first" in {
 
       val projectIri = createProject("test1", "4441")
 
@@ -343,7 +343,80 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         className = subClassName,
         propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)
       )
-
     }
+
+    "be able to create resource instances with all properties when adding cardinalities on sub class first" in {
+
+      val projectIri = createProject("test2", "4442")
+
+      val (ontologyIri, lmd)   = createOntology(projectIri)
+      var lastModificationDate = lmd
+
+      val superClassName = "SuperClass"
+      val ontologyName   = "inherit"
+      lastModificationDate = createClass(
+        ontologyIri = ontologyIri,
+        ontologyName = ontologyName,
+        className = superClassName,
+        superClass = None,
+        lastModificationDate = lastModificationDate
+      )
+
+      val subClassName = "SubClass"
+      lastModificationDate = createClass(
+        ontologyIri = ontologyIri,
+        ontologyName = ontologyName,
+        className = subClassName,
+        superClass = Some(superClassName),
+        lastModificationDate = lastModificationDate
+      )
+
+      val superClassProperty1 = "superClassProperty1"
+      val superClassProperty2 = "superClassProperty2"
+      val subClassProperty1   = "subClassProperty1"
+      val subClassProperty2   = "subClassProperty2"
+      for (prop <- List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)) {
+        lastModificationDate = createProperty(
+          ontologyIri = ontologyIri,
+          ontologyName = ontologyName,
+          propertyName = prop,
+          lastModificationDate = lastModificationDate
+        )
+      }
+
+      // first adding the the cardinalities to the *sub*, then to the *super* class
+      val clsAndProps = List(
+        (subClassName, subClassProperty1),
+        (subClassName, subClassProperty2),
+        (superClassName, superClassProperty1),
+        (superClassName, superClassProperty2)
+      )
+      for ((cls, prop) <- clsAndProps) {
+        lastModificationDate = addCardinalityToClass(
+          ontologyIri = ontologyIri,
+          ontologyName = ontologyName,
+          className = cls,
+          propertyName = prop,
+          lastModificationDate = lastModificationDate
+        )
+      }
+
+      createValue(
+        projectIri = projectIri,
+        ontologyIri = ontologyIri,
+        ontologyName = ontologyName,
+        className = superClassName,
+        propertyNames = List(superClassProperty1, superClassProperty2)
+      )
+
+      createValue(
+        projectIri = projectIri,
+        ontologyIri = ontologyIri,
+        ontologyName = ontologyName,
+        className = subClassName,
+        propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)
+      )
+    }
+
   }
 }
