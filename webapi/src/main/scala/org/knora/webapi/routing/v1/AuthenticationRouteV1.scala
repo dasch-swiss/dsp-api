@@ -10,22 +10,16 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
  */
-final case class AuthenticationRouteV1(
-  private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator]
-) extends KnoraRoute(routeData, runtime) {
+final case class AuthenticationRouteV1()(
+  private implicit val runtime: Runtime[Authenticator]
+) {
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     path("v1" / "authenticate") {
       get { requestContext =>
         requestContext.complete {
