@@ -82,21 +82,6 @@ final case class ResourcesRouteV1(
    */
   override def makeRoute: Route = {
 
-    def makeResourceSearchRequestMessage(
-      searchString: String,
-      resourceTypeIri: Option[IRI],
-      numberOfProps: Int,
-      limitOfResults: Int,
-      userProfile: UserADM
-    ): ResourceSearchGetRequestV1 =
-      ResourceSearchGetRequestV1(
-        searchString = searchString,
-        resourceTypeIri = resourceTypeIri,
-        numberOfProps = numberOfProps,
-        limitOfResults = limitOfResults,
-        userProfile = userProfile
-      )
-
     def valuesToCreate(
       properties: Map[IRI, Seq[CreateResourceValueV1]],
       acceptStandoffLinksToClientIDs: Boolean,
@@ -1204,13 +1189,7 @@ final case class ResourcesRouteV1(
             limitOfResults <- ZIO
                                 .fromOption(ValuesValidator.validateInt(limit))
                                 .orElseFail(BadRequestException(s"Invalid param limit: $limit"))
-          } yield makeResourceSearchRequestMessage(
-            searchString,
-            resourceTypeIri,
-            numberOfProps,
-            limitOfResults,
-            userProfile
-          )
+          } yield ResourceSearchGetRequestV1(searchString, resourceTypeIri, numberOfProps, limitOfResults, userProfile)
           runJsonRouteZ(requestMessage, requestContext)
       } ~ post {
         // Create a new resource with the given type and possibly a file.
