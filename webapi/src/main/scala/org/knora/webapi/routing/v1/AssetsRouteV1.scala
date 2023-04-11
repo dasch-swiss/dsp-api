@@ -10,7 +10,6 @@ import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.MediaTypes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import zio._
 
 import java.awt.Color
 import java.awt.Font
@@ -23,9 +22,7 @@ import javax.imageio.ImageIO
 /**
  * A route used for faking the image server.
  */
-final case class AssetsRouteV1()(
-  private implicit val runtime: Runtime[Any]
-) {
+final case class AssetsRouteV1() {
 
   /**
    * Returns the route.
