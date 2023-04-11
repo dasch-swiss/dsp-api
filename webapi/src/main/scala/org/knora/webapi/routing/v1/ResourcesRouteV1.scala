@@ -1230,7 +1230,7 @@ final case class ResourcesRouteV1(
           val requestMessage =
             Authenticator
               .getUserADM(requestContext)
-              .map(makeResourceRequestMessage(resIri, resinfoParam.getOrElse(false), reqtypeParam.getOrElse(""), _))
+              .flatMap(makeResourceRequestMessage(resIri, resinfoParam.getOrElse(false), reqtypeParam.getOrElse(""), _))
           runJsonRouteZ(requestMessage, requestContext)
         }
       } ~ delete {
@@ -1456,44 +1456,20 @@ final case class ResourcesRouteV1(
       new ByteArrayLSInput(contents(namespaceURI))
   }
 
-
-  def makeResourceRequestMessage(
-                                  resIri: String,
-                                  resinfo: Boolean,
-                                  requestType: String,
-                                  userADM: UserADM
-                                ): ResourcesResponderRequestV1 = {
-    val validResIri =
-      stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: $resIri"))
-
-    requestType match {
-      case "info" =>
-        ResourceInfoGetRequestV1(
-          iri = validResIri,
-          userProfile = userADM
-        )
-
-      case "rights" =>
-        ResourceRightsGetRequestV1(
-          iri = validResIri,
-          userProfile = userADM
-        )
-
-      case "context" =>
-        ResourceContextGetRequestV1(
-          iri = validResIri,
-          userProfile = userADM,
-          resinfo = resinfo
-        )
-
-      case "" =>
-        ResourceFullGetRequestV1(
-          iri = validResIri,
-          userADM = userADM
-        )
-
-      case other => throw BadRequestException(s"Invalid request type: $other")
-    }
-  }
-
+  private def makeResourceRequestMessage(
+    resIri: String,
+    resinfo: Boolean,
+    requestType: String,
+    userADM: UserADM
+  ): ZIO[StringFormatter, BadRequestException, ResourcesResponderRequestV1] =
+    for {
+      validResIri <- RouteUtilV1.validateAndEscapeIri(resIri, s"Invalid resource IRI: $resIri")
+      request <- requestType match {
+                   case "info"    => ZIO.succeed(ResourceInfoGetRequestV1(validResIri, userADM))
+                   case "rights"  => ZIO.succeed(ResourceRightsGetRequestV1(validResIri, userADM))
+                   case "context" => ZIO.succeed(ResourceContextGetRequestV1(validResIri, userADM, resinfo))
+                   case ""        => ZIO.succeed(ResourceFullGetRequestV1(validResIri, userADM))
+                   case other     => ZIO.fail(BadRequestException(s"Invalid request type: $other"))
+                 }
+    } yield request
 }
