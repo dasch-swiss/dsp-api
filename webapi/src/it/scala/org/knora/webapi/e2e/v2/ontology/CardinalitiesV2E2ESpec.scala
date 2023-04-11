@@ -15,6 +15,8 @@ import akka.http.scaladsl.model.HttpResponse
 
 class CardinalitiesV2E2ESpec extends E2ESpec {
 
+  // TODO: this test should be merged with OntologyV2R2RSpec, but that one is an R2R spec, which is Akka dependent
+
   private def createProject(shortname: String, shortcode: String) = {
     val payload =
       s"""|{
@@ -177,7 +179,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     getLastModificationDate(response)
   }
 
-  private def addCardinalityToClass(
+  private def addRequiredCardinalityToClass(
     ontologyIri: String,
     ontologyName: String,
     className: String,
@@ -319,7 +321,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         (subClassName, subClassProperty2)
       )
       for ((cls, prop) <- clsAndProps) {
-        lastModificationDate = addCardinalityToClass(
+        lastModificationDate = addRequiredCardinalityToClass(
           ontologyIri = ontologyIri,
           ontologyName = ontologyName,
           className = cls,
@@ -394,7 +396,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         (superClassName, superClassProperty2)
       )
       for ((cls, prop) <- clsAndProps) {
-        lastModificationDate = addCardinalityToClass(
+        lastModificationDate = addRequiredCardinalityToClass(
           ontologyIri = ontologyIri,
           ontologyName = ontologyName,
           className = cls,
@@ -469,7 +471,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         (subClassName, subClassProperty2)
       )
       for ((cls, prop) <- clsAndProps) {
-        lastModificationDate = addCardinalityToClass(
+        lastModificationDate = addRequiredCardinalityToClass(
           ontologyIri = ontologyIri,
           ontologyName = ontologyName,
           className = cls,
@@ -536,7 +538,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         (superClassName, superClassProperty2)
       )
       for ((cls, prop) <- clsAndProps) {
-        lastModificationDate = addCardinalityToClass(
+        lastModificationDate = addRequiredCardinalityToClass(
           ontologyIri = ontologyIri,
           ontologyName = ontologyName,
           className = cls,
