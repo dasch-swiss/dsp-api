@@ -15,6 +15,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilZ
 
 final case class ProjectsRouteV1()(
   private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
@@ -55,13 +56,12 @@ final case class ProjectsRouteV1()(
   private def getProjectMessageByShortname(
     shortname: String,
     requestContext: RequestContext
-  ): ZIO[Authenticator with StringFormatter, Throwable, ProjectInfoByShortnameGetRequestV1] = {
-    val shortNameDec = java.net.URLDecoder.decode(shortname, "utf-8")
+  ): ZIO[Authenticator with StringFormatter, Throwable, ProjectInfoByShortnameGetRequestV1] =
     for {
-      userProfile <- RouteUtilV1.getUserProfileV1(requestContext)
+      shortNameDecoded <- RouteUtilZ.urlDecode(shortname)
+      userProfile      <- RouteUtilV1.getUserProfileV1(requestContext)
     } yield ProjectInfoByShortnameGetRequestV1(
-      shortname = shortNameDec,
+      shortname = shortNameDecoded,
       userProfileV1 = Some(userProfile)
     )
-  }
 }
