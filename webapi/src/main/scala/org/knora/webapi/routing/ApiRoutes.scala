@@ -104,7 +104,7 @@ private final case class ApiRoutesImpl(
                 ResourcesRouteV1(routeData, runtime).makeRoute ~
                 ValuesRouteV1().makeRoute ~
                 StandoffRouteV1().makeRoute ~
-                ListsRouteV1(routeData, runtime).makeRoute ~
+                ListsRouteV1().makeRoute ~
                 ResourceTypesRouteV1(routeData, runtime).makeRoute ~
                 SearchRouteV1(routeData, runtime).makeRoute ~
                 AuthenticationRouteV1(routeData, runtime).makeRoute ~
