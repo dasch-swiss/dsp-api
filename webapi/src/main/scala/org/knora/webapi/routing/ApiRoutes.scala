@@ -108,7 +108,7 @@ private final case class ApiRoutesImpl(
                 AssetsRouteV1(routeData, runtime).makeRoute ~
                 CkanRouteV1(routeData, runtime).makeRoute ~
                 UsersRouteV1().makeRoute ~
-                ProjectsRouteV1(routeData, runtime).makeRoute ~
+                ProjectsRouteV1().makeRoute ~
                 OntologiesRouteV2(routeData, runtime).makeRoute ~
                 SearchRouteV2(routeData, runtime).makeRoute ~
                 ResourcesRouteV2(routeData, runtime).makeRoute ~

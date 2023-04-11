@@ -13,20 +13,15 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.messages.StringFormatter
+import akka.http.scaladsl.server.RequestContext
 
-final case class ProjectsRouteV1(
-  private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
-) extends KnoraRoute(routeData, runtime)
-    with ProjectV1JsonProtocol {
+final case class ProjectsRouteV1()(
+  private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+) extends ProjectV1JsonProtocol {
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     path("v1" / "projects") {
       get {
         /* returns all projects */
@@ -37,29 +32,33 @@ final case class ProjectsRouteV1(
       }
     } ~ path("v1" / "projects" / Segment) { value =>
       get {
-        /* returns a single project identified either through iri or shortname */
         parameters("identifier" ? "iri") { identifier: String => requestContext =>
-          val requestMessage = if (identifier != "iri") { // identify project by shortname.
-            val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
-            for {
-              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-            } yield ProjectInfoByShortnameGetRequestV1(
-              shortname = shortNameDec,
-              userProfileV1 = Some(userProfile)
-            )
-          } else { // identify project by iri. this is the default case.
-            val checkedProjectIri =
-              stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-            for {
-              userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-            } yield ProjectInfoByIRIGetRequestV1(
-              iri = checkedProjectIri,
-              userProfileV1 = Some(userProfile)
-            )
-          }
-
-          RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          val requestMessage = getProjectMessage(value, identifier, requestContext)
+          RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
         }
       }
+    }
+
+  private def getProjectMessage(
+    value: String,
+    identifier: String,
+    requestContext: RequestContext
+  ): ZIO[Authenticator with StringFormatter, Throwable, ProjectsResponderRequestV1] =
+    if (identifier != "iri") {
+      val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+      for {
+        userProfile <- RouteUtilV1.getUserProfileV1(requestContext)
+      } yield ProjectInfoByShortnameGetRequestV1(
+        shortname = shortNameDec,
+        userProfileV1 = Some(userProfile)
+      )
+    } else {
+      for {
+        checkedProjectIri <- RouteUtilV1.validateAndEscapeIri(value, s"Invalid project IRI $value")
+        userProfile       <- RouteUtilV1.getUserProfileV1(requestContext)
+      } yield ProjectInfoByIRIGetRequestV1(
+        iri = checkedProjectIri,
+        userProfileV1 = Some(userProfile)
+      )
     }
 }
