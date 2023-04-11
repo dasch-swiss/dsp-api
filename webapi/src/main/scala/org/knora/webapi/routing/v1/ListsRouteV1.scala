@@ -22,7 +22,7 @@ import org.knora.webapi.routing.RouteUtilV1
  * Provides API routes that deal with lists.
  */
 final case class ListsRouteV1()(implicit
-  val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+  private val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
 ) {
 
   def makeRoute: Route = {
