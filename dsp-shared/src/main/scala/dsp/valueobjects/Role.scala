@@ -38,7 +38,7 @@ object Role {
         )
       } else {
         val validatedValue = Validation(
-          V2IriValidation.toSparqlEncodedString(
+          Iri.toSparqlEncodedString(
             value,
             throw BadRequestException(RoleErrorMessages.LangStringValueInvalid(value))
           )
