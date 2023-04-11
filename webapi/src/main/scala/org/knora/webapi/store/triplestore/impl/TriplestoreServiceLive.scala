@@ -164,7 +164,6 @@ case class TriplestoreServiceLive(
     for {
       resultStr <-
         getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout, isGravsearch = isGravsearch)
-
       // Parse the response as a JSON object and generate a response message.
       responseMessage <- parseJsonResponse(sparql, resultStr)
     } yield responseMessage
@@ -681,9 +680,7 @@ case class TriplestoreServiceLive(
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
     simulateTimeout: Boolean = false
   ): Task[String] = {
-
     val httpClient = ZIO.attempt(queryHttpClient)
-
     val httpPost = ZIO.attempt {
       if (isUpdate) {
         // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
@@ -882,6 +879,8 @@ case class TriplestoreServiceLive(
 
         (statusCode, entity) match {
           case (404, _) => ZIO.fail(NotFoundException.notFound)
+          case (500, Some(response)) if response.contains("Text search parse error") =>
+            ZIO.fail(BadRequestException(s"$response"))
           case (500, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
           case (503, Some(response)) if response.contains("Query timed out") =>
             ZIO.fail(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
