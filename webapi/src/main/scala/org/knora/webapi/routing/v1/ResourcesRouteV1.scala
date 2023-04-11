@@ -58,8 +58,10 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilV1
 import org.knora.webapi.routing.RouteUtilV1._
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.FileUtil
 
@@ -68,7 +70,9 @@ import org.knora.webapi.util.FileUtil
  */
 final case class ResourcesRouteV1(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+  override protected implicit val runtime: Runtime[
+    Authenticator with IriConverter with StringFormatter with MessageRelay
+  ]
 ) extends KnoraRoute(routeData, runtime) {
   // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
   private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
@@ -1208,163 +1212,116 @@ final case class ResourcesRouteV1(
         // search for resources matching the given search string (searchstr) and return their Iris.
         requestContext =>
           val requestMessage = for {
-            userProfile <- getUserADM(requestContext)
+            userProfile <- Authenticator.getUserADM(requestContext)
             params       = requestContext.request.uri.query().toMap
-            searchstr    = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
+            searchstr <- ZIO
+                           .fromOption(params.get("searchstr"))
+                           .orElseFail(BadRequestException(s"required param searchstr is missing"))
 
-            // default -1 means: no restriction at all
-            restype = params.getOrElse("restype_id", "-1")
-
+            restype  = params.getOrElse("restype_id", "-1") // default -1 means: no restriction at all
             numprops = params.getOrElse("numprops", "1")
             limit    = params.getOrElse("limit", "11")
 
             // input validation
+            searchString <- RouteUtilV1.toSparqlEncodedString(searchstr, s"Invalid search string: '$searchstr'")
 
-            searchString = stringFormatter.toSparqlEncodedString(
-                             searchstr,
-                             throw BadRequestException(s"Invalid search string: '$searchstr'")
-                           )
+            resourceTypeIri <- restype match {
+                                 case "-1" => ZIO.none
+                                 case restype: IRI =>
+                                   RouteUtilV1
+                                     .validateAndEscapeIri(restype, "Invalid param restype: $restype")
+                                     .map(Some(_))
+                               }
 
-            resourceTypeIri: Option[IRI] = restype match {
-                                             case "-1" => None
-                                             case restype: IRI =>
-                                               Some(
-                                                 stringFormatter.validateAndEscapeIri(
-                                                   restype,
-                                                   throw BadRequestException(s"Invalid param restype: $restype")
-                                                 )
-                                               )
-                                           }
+            numberOfProps <- ZIO
+                               .fromOption(ValuesValidator.validateInt(numprops))
+                               .mapBoth(
+                                 _ => BadRequestException(s"Invalid param numprops: $numprops"),
+                                 number => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
+                               )
 
-            numberOfProps: Int = ValuesValidator
-                                   .validateInt(numprops)
-                                   .getOrElse(throw BadRequestException(s"Invalid param numprops: $numprops")) match {
-                                   case number: Int =>
-                                     if (number < 1) 1 else number // numberOfProps must not be smaller than 1
-                                 }
-
-            limitOfResults =
-              ValuesValidator.validateInt(limit).getOrElse(throw BadRequestException(s"Invalid param limit: $limit"))
-
+            limitOfResults <- ZIO
+                                .fromOption(ValuesValidator.validateInt(limit))
+                                .orElseFail(BadRequestException(s"Invalid param limit: $limit"))
           } yield makeResourceSearchRequestMessage(
-            searchString = searchString,
-            resourceTypeIri = resourceTypeIri,
-            numberOfProps = numberOfProps,
-            limitOfResults = limitOfResults,
-            userProfile = userProfile
+            searchString,
+            resourceTypeIri,
+            numberOfProps,
+            limitOfResults,
+            userProfile
           )
-
-          runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteZ(requestMessage, requestContext)
       } ~ post {
         // Create a new resource with the given type and possibly a file.
         // The binary file is already managed by Sipi.
         // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
         entity(as[CreateResourceApiRequestV1]) { apiRequest => requestContext =>
           val requestMessageFuture = for {
-            userProfile <- getUserADM(requestContext)
-            request <- makeCreateResourceRequestMessage(
-                         apiRequest = apiRequest,
-                         userADM = userProfile
-                       )
+            userProfile <- Authenticator.getUserADM(requestContext)
+            request     <- ZIO.fromFuture(_ => makeCreateResourceRequestMessage(apiRequest, userProfile))
           } yield request
-
-          runJsonRouteF(requestMessageFuture, requestContext)
+          runJsonRouteZ(requestMessageFuture, requestContext)
         }
       }
     } ~ path("v1" / "resources" / Segment) { resIri =>
       get {
         parameters("reqtype".?, "resinfo".as[Boolean].?) { (reqtypeParam, resinfoParam) => requestContext =>
           val requestMessage =
-            for {
-              userADM    <- getUserADM(requestContext)
-              requestType = reqtypeParam.getOrElse("")
-              resinfo     = resinfoParam.getOrElse(false)
-            } yield makeResourceRequestMessage(
-              resIri = resIri,
-              resinfo = resinfo,
-              requestType = requestType,
-              userADM = userADM
-            )
-
-          runJsonRouteF(requestMessage, requestContext)
+            Authenticator
+              .getUserADM(requestContext)
+              .map(makeResourceRequestMessage(resIri, resinfoParam.getOrElse(false), reqtypeParam.getOrElse(""), _))
+          runJsonRouteZ(requestMessage, requestContext)
         }
       } ~ delete {
         parameters("deleteComment".?) { deleteCommentParam => requestContext =>
-          val requestMessage = for {
-            userADM <- getUserADM(requestContext)
-          } yield makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userADM = userADM)
-
-          runJsonRouteF(requestMessage, requestContext)
+          val requestMessage = Authenticator
+            .getUserADM(requestContext)
+            .map(makeResourceDeleteMessage(resIri, deleteCommentParam, _))
+          runJsonRouteZ(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "resources.html" / Segment) { iri =>
       get { requestContext =>
         val params      = requestContext.request.uri.query().toMap
         val requestType = params.getOrElse("reqtype", "")
-
         val requestTask = requestType match {
           case "properties" =>
             for {
               userADM <- Authenticator.getUserADM(requestContext)
-              resIri <- ZIO.attempt(
-                          stringFormatter.validateAndEscapeIri(
-                            iri,
-                            throw BadRequestException(s"Invalid param resource IRI: $iri")
-                          )
-                        )
+              resIri  <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
             } yield ResourceFullGetRequestV1(resIri, userADM)
           case other => ZIO.fail(BadRequestException(s"Invalid request type: $other"))
         }
-
         runHtmlRoute(requestTask, requestContext)
       }
     } ~ path("v1" / "properties" / Segment) { iri =>
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext)
-          resIri = stringFormatter.validateAndEscapeIri(
-                     iri,
-                     throw BadRequestException(s"Invalid param resource IRI: $iri")
-                   )
+          userADM <- Authenticator.getUserADM(requestContext)
+          resIri  <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
         } yield makeGetPropertiesRequestMessage(resIri, userADM)
-
-        runJsonRouteF(requestMessage, requestContext)
+        runJsonRouteZ(requestMessage, requestContext)
       }
     } ~ path("v1" / "resources" / "label" / Segment) { iri =>
       put {
         entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest => requestContext =>
           val requestMessage = for {
-            userADM <- getUserADM(requestContext)
-            resIri = stringFormatter.validateAndEscapeIri(
-                       iri,
-                       throw BadRequestException(s"Invalid param resource IRI: $iri")
-                     )
-            label = stringFormatter.toSparqlEncodedString(
-                      apiRequest.label,
-                      throw BadRequestException(s"Invalid label: '${apiRequest.label}'")
-                    )
-          } yield ChangeResourceLabelRequestV1(
-            resourceIri = resIri,
-            label = label,
-            apiRequestID = UUID.randomUUID,
-            userADM = userADM
-          )
-
-          runJsonRouteF(requestMessage, requestContext)
+            userADM <- Authenticator.getUserADM(requestContext)
+            resIri  <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
+            label   <- RouteUtilV1.toSparqlEncodedString(apiRequest.label, s"Invalid label: '${apiRequest.label}'")
+            uuid    <- RouteUtilV1.randomUuid()
+          } yield ChangeResourceLabelRequestV1(resIri, label, userADM, uuid)
+          runJsonRouteZ(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "graphdata" / Segment) { iri =>
       get {
         parameters("depth".as[Int].?) { depth => requestContext =>
           val requestMessage = for {
-            userADM <- getUserADM(requestContext)
-            resourceIri = stringFormatter.validateAndEscapeIri(
-                            iri,
-                            throw BadRequestException(s"Invalid param resource IRI: $iri")
-                          )
+            userADM     <- Authenticator.getUserADM(requestContext)
+            resourceIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
           } yield GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userADM)
-
-          runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteZ(requestMessage, requestContext)
         }
       }
 
@@ -1384,56 +1341,50 @@ final case class ResourcesRouteV1(
       post {
         entity(as[String]) { xml => requestContext =>
           val requestMessage = for {
-            userADM <- getUserADM(requestContext)
+            userADM <- Authenticator.getUserADM(requestContext)
 
-            _ = if (userADM.isAnonymousUser) {
-                  throw ForbiddenException(
+            _ <-
+              ZIO
+                .fail(
+                  ForbiddenException(
                     "You are not logged in, and only a system administrator or project administrator can perform a bulk import"
                   )
-                }
-
-            _ = if (!(userADM.permissions.isSystemAdmin || userADM.permissions.isProjectAdmin(projectId))) {
-                  throw ForbiddenException(
+                )
+                .when(userADM.isAnonymousUser)
+            _ <-
+              ZIO
+                .fail(
+                  ForbiddenException(
                     s"You are logged in as ${userADM.email}, but only a system administrator or project administrator can perform a bulk import"
                   )
-                }
+                )
+                .when(!(userADM.permissions.isSystemAdmin || userADM.permissions.isProjectAdmin(projectId)))
 
             // Parse the submitted XML.
             rootElement: Elem = XML.loadString(xml)
 
-            // Make sure that the root element is knoraXmlImport:resources.
-            _ = if (rootElement.namespace + rootElement.label != OntologyConstants.KnoraXmlImportV1.Resources) {
-                  throw BadRequestException(s"Root XML element must be ${OntologyConstants.KnoraXmlImportV1.Resources}")
-                }
+            _ <- // Make sure that the root element is knoraXmlImport:resources.
+              ZIO
+                .fail(BadRequestException(s"Root XML element must be ${OntologyConstants.KnoraXmlImportV1.Resources}"))
+                .when(rootElement.namespace + rootElement.label != OntologyConstants.KnoraXmlImportV1.Resources)
 
             // Get the default namespace of the submitted XML. This should be the Knora XML import
             // namespace corresponding to the main internal ontology used in the import.
             defaultNamespace = rootElement.getNamespace(null)
 
             // Validate the XML using XML schemas.
-            _ <- validateImportXml(
-                   xml = xml,
-                   defaultNamespace = defaultNamespace,
-                   userADM = userADM
-                 )
+            _ <- ZIO.fromFuture(_ => validateImportXml(xml, defaultNamespace, userADM))
 
             // Make a CreateResourceFromXmlImportRequestV1 for each resource to be created.
-            resourcesToCreate: Seq[CreateResourceFromXmlImportRequestV1] = importXmlToCreateResourceRequests(
-                                                                             rootElement
-                                                                           )
+            resourcesToCreate = importXmlToCreateResourceRequests(rootElement)
 
             // Make a MultipleResourceCreateRequestV1 for the creation of all the resources.
-            apiRequestID: UUID = UUID.randomUUID
-
-            updateRequest: MultipleResourceCreateRequestV1 <- makeMultiResourcesRequestMessage(
-                                                                resourceRequest = resourcesToCreate,
-                                                                projectId = projectId,
-                                                                apiRequestID = apiRequestID,
-                                                                userProfile = userADM
-                                                              )
+            apiRequestID <- RouteUtilV1.randomUuid()
+            updateRequest <-
+              ZIO.fromFuture(_ => makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userADM))
           } yield updateRequest
 
-          runJsonRouteF(requestMessage, requestContext)
+          runJsonRouteZ(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>

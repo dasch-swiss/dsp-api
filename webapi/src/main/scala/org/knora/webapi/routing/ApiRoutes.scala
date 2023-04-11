@@ -26,6 +26,7 @@ import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 trait ApiRoutes {
   val routes: Route
@@ -39,8 +40,8 @@ object ApiRoutes {
   val layer: URLayer[
     ActorSystem
       with AppConfig
-      with AppConfig
       with AppRouter
+      with IriConverter
       with MessageRelay
       with RestCardinalityService
       with RestResourceInfoService
@@ -57,6 +58,7 @@ object ApiRoutes {
         routeData <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
                      AppConfig
+                       with IriConverter
                        with MessageRelay
                        with RestCardinalityService
                        with RestResourceInfoService
@@ -79,6 +81,7 @@ private final case class ApiRoutesImpl(
   private val routeData: KnoraRouteData,
   private implicit val runtime: Runtime[
     AppConfig
+      with IriConverter
       with MessageRelay
       with RestCardinalityService
       with RestResourceInfoService

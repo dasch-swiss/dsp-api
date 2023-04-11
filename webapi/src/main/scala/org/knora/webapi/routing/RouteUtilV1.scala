@@ -15,6 +15,7 @@ import com.typesafe.scalalogging.Logger
 import spray.json.JsNumber
 import spray.json.JsObject
 import zio._
+
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
@@ -24,6 +25,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -39,6 +41,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
@@ -303,6 +306,9 @@ object RouteUtilV1 {
         .toZIO
         .orElseFail(BadRequestException(errorMsg))
     }
+
+  def toSmartIri(str: String, errMsg: String): ZIO[IriConverter, BadRequestException, SmartIri] =
+    ZIO.serviceWithZIO[IriConverter](_.asSmartIri(str)).orElseFail(BadRequestException(errMsg))
 
   def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
 
