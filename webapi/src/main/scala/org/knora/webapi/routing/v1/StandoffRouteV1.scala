@@ -33,8 +33,8 @@ final case class StandoffRouteV1()(
   private implicit val system: ActorSystem
 ) {
 
-  private val JSON_PART = "json"
-  private val XML_PART  = "xml"
+  private val jsonPartKey = "json"
+  private val xmlPartKey  = "xml"
 
   def makeRoute: Route =
     path("v1" / "mapping") {
@@ -44,12 +44,16 @@ final case class StandoffRouteV1()(
             allParts <- parseFormData(formData)
             xml <-
               ZIO
-                .fromOption(allParts.get(XML_PART))
-                .orElseFail(BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!"))
+                .fromOption(allParts.get(xmlPartKey))
+                .orElseFail(
+                  BadRequestException(s"MultiPart POST request was sent without required '$xmlPartKey' part!")
+                )
             standoffApiJSONRequest <-
               ZIO
-                .fromOption(allParts.get(JSON_PART))
-                .orElseFail(BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!"))
+                .fromOption(allParts.get(jsonPartKey))
+                .orElseFail(
+                  BadRequestException(s"MultiPart POST request was sent without required '$jsonPartKey' part!")
+                )
                 .mapAttempt(_.parseJson.convertTo[CreateMappingApiRequestV1])
                 .mapError { case e: DeserializationException =>
                   BadRequestException("JSON params structure is invalid: " + e.toString)
@@ -74,9 +78,9 @@ final case class StandoffRouteV1()(
       type Name = String
       formData.parts
         .mapAsync[(Name, String)](1) {
-          case b: BodyPart if b.name == JSON_PART =>
+          case b: BodyPart if b.name == jsonPartKey =>
             b.toStrict(2.seconds).map(strict => (b.name, strict.entity.data.utf8String))
-          case b: BodyPart if b.name == XML_PART =>
+          case b: BodyPart if b.name == xmlPartKey =>
             b.toStrict(2.seconds).map(strict => (b.name, strict.entity.data.utf8String))
           case b: BodyPart if b.name.isEmpty => throw BadRequestException("part of HTTP multipart request has no name")
           case b: BodyPart                   => throw BadRequestException(s"multipart contains invalid name: ${b.name}")
