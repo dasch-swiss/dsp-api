@@ -983,9 +983,14 @@ final case class OntologyCacheLive(
         val ontologyIri              = directSubClass.entityInfoContent.classIri.getOntologyFromEntity
         val ontology: ReadOntologyV2 = cacheDataAcc.ontologies(ontologyIri)
 
+        val newKnoraResourceProperties = newInheritedCardinalities.keySet.filter(
+          OntologyHelpers.isKnoraResourceProperty(_, cacheData)
+        )
+
         val updatedOntology = ontology.copy(
           classes = ontology.classes + (directSubClassIri -> directSubClass.copy(
-            inheritedCardinalities = newInheritedCardinalities
+            inheritedCardinalities = newInheritedCardinalities,
+            knoraResourceProperties = newKnoraResourceProperties
           ))
         )
 
