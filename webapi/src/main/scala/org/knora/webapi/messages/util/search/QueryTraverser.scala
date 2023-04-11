@@ -18,6 +18,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import dsp.errors.GravsearchException
+import dsp.errors.GravsearchOptimizationException
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -433,6 +435,72 @@ final case class QueryTraverser(
     }
 
   /**
+   * Extracts the [[StatementPattern]] containing the type definition of the `knora-base:isMainResource`
+   * from a construct query.
+   * Prefers more specific types over `knora-base:Resource`, if available.
+   * If multiple types are present, the first one is returned.
+   *
+   * @param query the input query.
+   * @return the [[StatementPattern]] containing the type definition, if one is found; None otherwise.
+   */
+  private def findMainResourceType(query: ConstructQuery): Option[StatementPattern] =
+    for {
+      mainResourceName <-
+        query.constructClause.statements.collectFirst {
+          case StatementPattern(QueryVariable(name), IriRef(pred, _), _, _)
+              if pred
+                .toOntologySchema(InternalSchema)
+                .toString == OntologyConstants.KnoraBase.IsMainResource =>
+            name
+        }
+      mainResourceTypeStatement <-
+        query.whereClause.patterns.collectFirst {
+          case stmt @ StatementPattern(QueryVariable(mainResourceName), IriRef(pred, _), obj: IriRef, _)
+              if pred.toIri == OntologyConstants.Rdf.Type &&
+                obj.iri.toOntologySchema(InternalSchema).toIri != OntologyConstants.KnoraBase.Resource =>
+            stmt.copy(obj = obj.copy(iri = obj.iri.toOntologySchema(InternalSchema)))
+        }.orElse(query.whereClause.patterns.collectFirst {
+          case stmt @ StatementPattern(QueryVariable(mainResourceName), IriRef(pred, _), obj: IriRef, _)
+              if pred.toIri == OntologyConstants.Rdf.Type =>
+            stmt.copy(obj = obj.copy(iri = obj.iri.toOntologySchema(InternalSchema)))
+        })
+    } yield mainResourceTypeStatement
+
+  /**
+   * Ensures that the query contains at least one pattern that is not a negation pattern (MINUS or FILTER NOT EXISTS).
+   * It does so by adding a type statement, if that is the case.
+   *
+   * @param patterns the optimized patterns, potentially containing only negations.
+   * @param inputQuery the initial input query.
+   * @return succeeds with a sequence of [[QueryPatterns]] or fails with a [[GravsearchOptimizationException]].
+   */
+  private def ensureNotOnlyNegationPatterns(
+    patterns: Seq[QueryPattern],
+    inputQuery: ConstructQuery
+  ): Task[Seq[QueryPattern]] =
+    patterns match {
+      case MinusPattern(_) +: Nil =>
+        ZIO
+          .fromOption(findMainResourceType(inputQuery))
+          .map(patterns.appended(_))
+          .orElseFail(
+            GravsearchOptimizationException(
+              s"Query consisted only of a MINUS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
+            )
+          )
+      case FilterNotExistsPattern(_) +: Nil =>
+        ZIO
+          .fromOption(findMainResourceType(inputQuery))
+          .map(patterns.appended(_))
+          .orElseFail(
+            GravsearchOptimizationException(
+              s"Query consisted only of a FILTER NOT EXISTS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
+            )
+          )
+      case _ => ZIO.succeed(patterns)
+    }
+
+  /**
    * Traverses a SELECT query, delegating transformation tasks to a [[ConstructToSelectTransformer]], and returns the transformed query.
    *
    * @param inputQuery                 the query to be transformed.
@@ -451,14 +519,16 @@ final case class QueryTraverser(
                                   whereTransformer = transformer,
                                   limitInferenceToOntologies = limitInferenceToOntologies
                                 )
-    transformedOrderBy <- transformer.getOrderBy(inputQuery.orderBy)
-    groupBy            <- transformer.getGroupBy(transformedOrderBy)
-    limit              <- transformer.getLimit
-    offset             <- transformer.getOffset(inputQuery.offset, limit)
-    variables          <- transformer.getSelectColumns
+    transformedOrderBy              <- transformer.getOrderBy(inputQuery.orderBy)
+    patterns                         = transformedWherePatterns ++ transformedOrderBy.statementPatterns
+    patternsEnsuringNotOnlyNegation <- ensureNotOnlyNegationPatterns(patterns, inputQuery)
+    groupBy                         <- transformer.getGroupBy(transformedOrderBy)
+    limit                           <- transformer.getLimit
+    offset                          <- transformer.getOffset(inputQuery.offset, limit)
+    variables                       <- transformer.getSelectColumns
   } yield SelectQuery(
     variables = variables,
-    whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
+    whereClause = WhereClause(patterns = patternsEnsuringNotOnlyNegation),
     groupBy = groupBy,
     orderBy = transformedOrderBy.orderBy,
     limit = Some(limit),

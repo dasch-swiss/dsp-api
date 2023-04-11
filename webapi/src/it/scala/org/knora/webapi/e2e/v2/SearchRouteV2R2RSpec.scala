@@ -6508,7 +6508,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |        ?book a incunabula:book .
           |
           |        ?book incunabula:title ?title .
-          |        
+          |
           |        ?title knora-api:valueAsString ?titleStr .
           |
           |        FILTER(?titleStr != "Zeitglöcklein des Lebens und Leidens Christi")
@@ -9481,7 +9481,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |} WHERE {
            |    ?thing a knora-api:Resource .
            |    ?thing a anything:Thing .
-           |    
+           |
            |    {
            |        ?thing anything:hasRichtext ?richtext .
            |        FILTER knora-api:matchText(?richtext, "test")
@@ -9529,7 +9529,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    ?thing anything:hasRichtext ?richtext .
            |    ?thing anything:hasInteger ?int .
            |    ?int knora-api:intValueAsInt 1 .
-           |    
+           |
            |    {
            |        FILTER knora-api:matchText(?richtext, "test")
            |    }
@@ -10154,5 +10154,136 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       }
     }
 
+    "count anything:Thing that doesn't have a boolean property (MINUS)" in {
+      val gravsearchQuery =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |  ?thing a anything:Thing .
+          |  ?thing a knora-api:Resource .
+          |  MINUS {
+          |    ?thing anything:hasBoolean ?bool .
+          |  }
+          |}
+          |
+        """.stripMargin
+
+      Post(
+        "/v2/searchextended/count",
+        HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        val responseDocument = responseToJsonLDDocument(response)
+        val numberOfResults  = responseDocument.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
+
+        assert(numberOfResults != 0)
+
+        // checkSearchResponseNumberOfResults(responseAs[String], 51)
+      }
+
+    }
+
+    "count anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
+      val gravsearchQuery =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |  ?thing a anything:Thing .
+          |  ?thing a knora-api:Resource .
+          |  FILTER NOT EXISTS {
+          |    ?thing anything:hasBoolean ?bool .
+          |  }
+          |}
+          |
+            """.stripMargin
+
+      Post(
+        "/v2/searchextended/count",
+        HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        val responseDocument = responseToJsonLDDocument(response)
+        val numberOfResults  = responseDocument.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
+
+        assert(numberOfResults != 0)
+
+        // checkSearchResponseNumberOfResults(responseAs[String], 51)
+      }
+
+    }
+
+    "search for anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
+      val gravsearchQuery =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |  ?thing a anything:Thing .
+          |  ?thing a knora-api:Resource .
+          |  FILTER NOT EXISTS {
+          |    ?thing anything:hasBoolean ?bool .
+          |  }
+          |}
+          |
+            """.stripMargin
+
+      Post(
+        "/v2/searchextended",
+        HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        checkSearchResponseNumberOfResults(responseAs[String], 22)
+      }
+
+    }
+
+    "search for anything:Thing that doesn't have a link property (FILTER NOT EXISTS)" in {
+      val gravsearchQuery =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |} WHERE {
+          |  ?thing a anything:Thing .
+          |  ?thing a knora-api:Resource .
+          |  FILTER NOT EXISTS {
+          |    ?thing anything:hasOtherThing ?otherThing .
+          |  }
+          |}
+          |
+            """.stripMargin
+
+      Post(
+        "/v2/searchextended",
+        HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        checkSearchResponseNumberOfResults(responseAs[String], 22)
+      }
+
+    }
+
   }
+
 }

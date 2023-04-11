@@ -421,6 +421,13 @@ case class RdfProcessingException(message: String, cause: Option[Throwable] = No
     extends InternalServerException(message)
 
 /**
+ * Indicates that optimizing the Gravsearch query failed.
+ *
+ * @param message a description of the error.
+ */
+case class GravsearchOptimizationException(message: String) extends InternalServerException(message)
+
+/**
  * Helper functions for error handling.
  */
 object ExceptionUtil {
