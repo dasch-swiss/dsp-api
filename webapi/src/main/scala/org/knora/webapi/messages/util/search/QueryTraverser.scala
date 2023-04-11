@@ -8,6 +8,7 @@ package org.knora.webapi.messages.util.search
 import zio._
 
 import dsp.errors.BadRequestException
+import dsp.errors.GravsearchOptimizationException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
@@ -18,8 +19,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import dsp.errors.GravsearchException
-import dsp.errors.GravsearchOptimizationException
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
