@@ -12,22 +12,16 @@ import zio._
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
 
 /**
  * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
  */
-final case class CkanRouteV1(
-  private val routeData: KnoraRouteData,
-  override implicit protected val runtime: Runtime[Authenticator with MessageRelay]
-) extends KnoraRoute(routeData, runtime) {
+final case class CkanRouteV1()(
+  private implicit val runtime: Runtime[Authenticator with MessageRelay]
+) {
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     path("v1" / "ckan") {
       get { requestContext =>
         val requestTask = for {
