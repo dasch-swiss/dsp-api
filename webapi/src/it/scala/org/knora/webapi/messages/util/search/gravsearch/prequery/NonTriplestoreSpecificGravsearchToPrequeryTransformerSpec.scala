@@ -2629,6 +2629,18 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
               )
             )
           )
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = IriRef(
+            iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+            propertyPathOperator = None
+          ),
+          namedGraph = None
         )
       ),
       positiveEntities = Set(),
