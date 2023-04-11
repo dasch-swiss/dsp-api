@@ -39,7 +39,10 @@ jobs:
       - name: Trigger deployment to DEV
         env:
           IMAGE_TAG: ${{ needs.publish-from-branch.outputs.tag }}
+          JENKINS_BASIC_AUTH_USER: ${{ secrets.JENKINS_BASIC_AUTH_USER }}
+          JENKINS_BASIC_AUTH_PASS: ${{ secrets.JENKINS_BASIC_AUTH_PASS }}
+          JENKINS_DEV_WEBHOOK: ${{ secrets.JENKINS_DEV_WEBHOOK }}
         run: |
-          curl -f -u "${{ secrets.JENKINS_BASIC_AUTH_USER }}:${{ secrets.JENKINS_BASIC_AUTH_PASS }}" \
-               -X POST "${{ secrets.JENKINS_DEV_WEBHOOK }}" \
+          curl -f -u "${JENKINS_BASIC_AUTH_USER}:${JENKINS_BASIC_AUTH_PASS}" \
+               -X POST "${JENKINS_DEV_WEBHOOK}" \
                -d "Service=api&Version=${IMAGE_TAG}"
