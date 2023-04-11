@@ -10183,8 +10183,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val numberOfResults  = responseDocument.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
 
         assert(numberOfResults != 0)
-
-        // checkSearchResponseNumberOfResults(responseAs[String], 51)
       }
 
     }
@@ -10218,8 +10216,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val numberOfResults  = responseDocument.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
 
         assert(numberOfResults != 0)
-
-        // checkSearchResponseNumberOfResults(responseAs[String], 51)
       }
 
     }
