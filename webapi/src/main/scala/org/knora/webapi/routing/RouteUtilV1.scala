@@ -17,6 +17,7 @@ import spray.json.JsObject
 import zio._
 
 import java.time.Instant
+import java.util.UUID
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
@@ -302,4 +303,8 @@ object RouteUtilV1 {
         .toZIO
         .orElseFail(BadRequestException(errorMsg))
     }
+
+  def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
+
+  def getUserProfileV1(ctx: RequestContext) = Authenticator.getUserADM(ctx).map(_.asUserProfileV1)
 }
