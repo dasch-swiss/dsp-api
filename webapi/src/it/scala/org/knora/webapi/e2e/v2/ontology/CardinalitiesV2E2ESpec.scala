@@ -422,7 +422,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
       assert(subStatus == StatusCodes.OK, subResponse)
     }
 
-    "not be able to create subclass instances with missing properties defined on superclass, when adding cardinalities on super class first" in {
+    "not be able to create subclass instances with missing required properties defined on superclass, when adding cardinalities on super class first" in {
 
       val projectIri = createProject("test3", "4443")
 
