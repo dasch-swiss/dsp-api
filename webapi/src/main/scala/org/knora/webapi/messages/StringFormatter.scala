@@ -2013,19 +2013,25 @@ class StringFormatter private (
    * @param shortcode the project's shortcode.
    * @return the shortcode in upper case.
    */
+  @deprecated("Use def validateProjectShortcode(String) instead.")
   def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = // V2 / value objects
-    ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
+    validateProjectShortcode(shortcode).getOrElse(errorFun)
 
+  def validateProjectShortcode(shortcode: String): Option[String] =
+    ProjectIDRegex.findFirstIn(shortcode.toUpperCase)
+
+  @deprecated("Use escapeOptionalString(Option[String]) instead.")
   def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = // --
     // TODO: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible. (depends on toSparqlEncodedString())
-    maybeString match {
-      case Some(s) =>
-        Some(toSparqlEncodedString(s, errorFun))
-      case None => None
-    }
+    maybeString.map(toSparqlEncodedString).getOrElse(errorFun)
+  // maybeString match {
+  //   case Some(s) =>
+  //     Some(toSparqlEncodedString(s, errorFun))
+  //   case None => None
+  // }
+
+  def escapeOptionalString(maybeString: Option[String]): Option[String] =
+    maybeString.flatMap(toSparqlEncodedString)
 
   /**
    * Given the group IRI, checks if it is in a valid format.
@@ -2046,6 +2052,7 @@ class StringFormatter private (
    * @param maybeIri the optional group's IRI to be checked.
    * @return the same optional IRI.
    */
+  @deprecated("Use validateOptionalGroupIri(Option[IRI]) instead.")
   def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = // V2 / value objects
     maybeIri match {
       case Some(iri) => Some(validateGroupIri(iri, errorFun))
