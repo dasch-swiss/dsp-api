@@ -295,15 +295,15 @@ object RouteUtilV2 {
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
-      schemaOptions    <- ZIO.attempt(schemaOptionsOption.getOrElse(getSchemaOptions(requestContext)))
-      appConfig        <- ZIO.service[AppConfig]
-      knoraResponse    <- responseTask
-      responseMediaType = chooseRdfMediaTypeForResponse(requestContext)
-      rdfFormat         = RdfFormat.fromMediaType(RdfMediaTypes.toMostSpecificMediaType(responseMediaType))
-      contentType       = RdfMediaTypes.toUTF8ContentType(responseMediaType)
-      content: String   = knoraResponse.format(rdfFormat, targetSchema, schemaOptions, appConfig)
-      response          = HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, content))
-      routeResult      <- ZIO.fromFuture(_ => requestContext.complete(response))
+      schemaOptions     <- ZIO.attempt(schemaOptionsOption.getOrElse(getSchemaOptions(requestContext)))
+      appConfig         <- ZIO.service[AppConfig]
+      knoraResponse     <- responseTask
+      responseMediaType <- chooseRdfMediaTypeForResponse(requestContext)
+      rdfFormat          = RdfFormat.fromMediaType(RdfMediaTypes.toMostSpecificMediaType(responseMediaType))
+      contentType        = RdfMediaTypes.toUTF8ContentType(responseMediaType)
+      content: String    = knoraResponse.format(rdfFormat, targetSchema, schemaOptions, appConfig)
+      response           = HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, content))
+      routeResult       <- ZIO.fromFuture(_ => requestContext.complete(response))
     } yield routeResult)
 
   /**
@@ -330,14 +330,43 @@ object RouteUtilV2 {
       } yield completed
     }
 
+  private def extractMediaTypeFromHeaderItem(
+    headerValueItem: String,
+    headerValue: String
+  ): Task[Option[MediaRange.One]] = {
+    val mediaRangeParts: Array[String] = headerValueItem.split(';').map(_.trim)
+
+    // Get the qValue, if provided; it defaults to 1.
+    val qValue: Float = mediaRangeParts.tail.flatMap { param =>
+      param.split('=').map(_.trim) match {
+        case Array("q", qValueStr) => catching(classOf[NumberFormatException]).opt(qValueStr.toFloat)
+        case _                     => None // Ignore other parameters.
+      }
+    }.headOption
+      .getOrElse(1)
+
+    for {
+      mediaTypeStr <- ZIO
+                        .fromOption(mediaRangeParts.headOption)
+                        .orElseFail(
+                          BadRequestException(s"Invalid Accept header: $headerValue")
+                        )
+      maybeMediaType = RdfMediaTypes.registry.get(mediaTypeStr) match {
+                         case Some(mediaType: MediaType) => Some(mediaType)
+                         case _                          => None // Ignore non-RDF media types.
+                       }
+      mediaRange = maybeMediaType.map(mediaType => MediaRange.One(mediaType, qValue))
+    } yield mediaRange
+
+  }
+
   /**
    * Chooses an RDF media type for the response, using content negotiation as per [[https://tools.ietf.org/html/rfc7231#section-5.3.2]].
    *
    * @param requestContext the request context.
    * @return an RDF media type.
    */
-  @deprecated("this method throws")
-  private def chooseRdfMediaTypeForResponse(requestContext: RequestContext): MediaType.NonBinary = {
+  private def chooseRdfMediaTypeForResponse(requestContext: RequestContext): Task[MediaType.NonBinary] = {
     // Get the client's HTTP Accept header, if provided.
     val maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
 
@@ -345,47 +374,22 @@ object RouteUtilV2 {
       case Some(acceptHeader) =>
         // Parse the value of the accept header, filtering out non-RDF media types, and sort the results
         // in reverse order by q value.
-        val acceptMediaTypes: Array[MediaType.NonBinary] = acceptHeader.value
-          .split(',')
-          .flatMap { headerValueItem =>
-            val mediaRangeParts: Array[String] = headerValueItem.split(';').map(_.trim)
-            val mediaTypeStr: String = mediaRangeParts.headOption.getOrElse(
-              throw BadRequestException(s"Invalid Accept header: ${acceptHeader.value}")
-            )
+        val parts: Array[String] = acceptHeader.value.split(',')
+        for {
+          mediaRanges <-
+            ZIO
+              .foreach(parts)(headerValueItem => extractMediaTypeFromHeaderItem(headerValueItem, acceptHeader.value))
+              .map(_.flatten)
+          mediaTypes =
+            mediaRanges
+              .sortBy(_.qValue)
+              .reverse
+              .map(_.mediaType)
+              .collect { case nonBinary: MediaType.NonBinary => nonBinary }
+          highestRankingMediaType = mediaTypes.headOption.getOrElse(RdfMediaTypes.`application/ld+json`)
+        } yield highestRankingMediaType
 
-            // Get the qValue, if provided; it defaults to 1.
-            val qValue: Float = mediaRangeParts.tail.flatMap { param =>
-              param.split('=').map(_.trim) match {
-                case Array("q", qValueStr) => catching(classOf[NumberFormatException]).opt(qValueStr.toFloat)
-                case _                     => None // Ignore other parameters.
-              }
-            }.headOption
-              .getOrElse(1)
-
-            val maybeMediaType: Option[MediaType] = RdfMediaTypes.registry.get(mediaTypeStr) match {
-              case Some(mediaType: MediaType) => Some(mediaType)
-              case _                          => None // Ignore non-RDF media types.
-            }
-
-            maybeMediaType.map(mediaType => MediaRange.One(mediaType, qValue))
-          }
-          .sortBy(_.qValue)
-          .reverse
-          .map(_.mediaType)
-          .collect {
-            // All RDF media types are non-binary.
-            case nonBinary: MediaType.NonBinary => nonBinary
-          }
-
-        // Select the highest-ranked supported media type.
-        acceptMediaTypes.headOption match {
-          case Some(requested) => requested
-          case None            =>
-            // If there isn't one, use JSON-LD.
-            RdfMediaTypes.`application/ld+json`
-        }
-
-      case None => RdfMediaTypes.`application/ld+json`
+      case None => ZIO.succeed(RdfMediaTypes.`application/ld+json`)
     }
   }
 }
