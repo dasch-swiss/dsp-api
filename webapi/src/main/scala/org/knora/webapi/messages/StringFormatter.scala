@@ -2103,11 +2103,12 @@ class StringFormatter private (
    * @param email the email.
    * @return the email
    */
+  @deprecated("Use validateEmailAndThrow(String) instead.")
   def validateEmailAndThrow(email: String, errorFun: => Nothing): String = // V2 / value objects
-    EmailAddressRegex.findFirstIn(email) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
+    validateEmailAndThrow(email).getOrElse(errorFun)
+
+  def validateEmailAndThrow(email: String): Option[String] =
+    EmailAddressRegex.findFirstIn(email)
 
   /**
    * Check that an optional string represents a valid email address.
@@ -2117,14 +2118,15 @@ class StringFormatter private (
    *                    email address.
    * @return the same optional string.
    */
+  @deprecated("Use validateAndEscapeOptionalEmail(Option[String]) instead.")
   def validateAndEscapeOptionalEmail(
     maybeString: Option[String],
     errorFun: => Nothing
   ): Option[String] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(toSparqlEncodedString(validateEmailAndThrow(s, errorFun), errorFun))
-      case None    => None
-    }
+    maybeString.map(validateEmailAndThrow(_).getOrElse(errorFun))
+
+  def validateAndEscapeOptionalEmail(maybeString: Option[String]): Option[String] =
+    maybeString.flatMap(validateEmailAndThrow)
 
   /**
    * Check that the string represents a valid username.
@@ -2138,10 +2140,8 @@ class StringFormatter private (
   def validateUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
     validateUsername(value).getOrElse(errorFun)
 
-  def validateUsername(value: String): Validation[Throwable, String] =
-    Validation
-      .fromOption(UsernameRegex.findFirstIn(value))
-      .mapError(_ => ValidationException(s"The username '${value}' contains invalid characters."))
+  def validateUsername(value: String): Option[String] =
+    UsernameRegex.findFirstIn(value)
 
   /**
    * Check that the string represents a valid username and escape any special characters.
