@@ -865,7 +865,7 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
         ).contains(false)
 
         if (!missingRequiredContent) {
-          stringFormatter.validateAndEscapeIri(claim.subject.get).toOption.map(_ => (header, claim))
+          claim.subject.flatMap(iri => stringFormatter.validateAndEscapeIri(iri).toOption.map(_ => (header, claim)))
         } else {
           logger.debug("Missing required content in JWT")
           None
