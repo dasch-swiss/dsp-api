@@ -28,6 +28,7 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.twirl.ResourceHtmlView
@@ -41,6 +42,8 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.errors.SipiException
 
@@ -314,4 +317,16 @@ object RouteUtilV1 {
 
   def getUserProfileV1(ctx: RequestContext): ZIO[Authenticator, Throwable, UserProfileV1] =
     Authenticator.getUserADM(ctx).map(_.asUserProfileV1)
+
+  def getProjectByIri(projectIri: String): ZIO[KnoraProjectRepo, BadRequestException, KnoraProject] =
+    for {
+      projectId <- IriIdentifier
+                     .fromString(projectIri)
+                     .toZIO
+                     .orElseFail(BadRequestException(s"Invalid project IRI: $projectIri"))
+      project <- ZIO
+                   .serviceWithZIO[KnoraProjectRepo](_.findById(projectId))
+                   .flatMap(ZIO.fromOption(_))
+                   .orElseFail(BadRequestException(s"Project '$projectIri' not found"))
+    } yield project
 }

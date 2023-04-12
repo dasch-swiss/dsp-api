@@ -24,6 +24,7 @@ import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -42,6 +43,7 @@ object ApiRoutes {
       with AppConfig
       with AppRouter
       with IriConverter
+      with KnoraProjectRepo
       with MessageRelay
       with RestCardinalityService
       with RestResourceInfoService
@@ -59,6 +61,7 @@ object ApiRoutes {
         runtime <- ZIO.runtime[
                      AppConfig
                        with IriConverter
+                       with KnoraProjectRepo
                        with MessageRelay
                        with RestCardinalityService
                        with RestResourceInfoService
@@ -82,6 +85,7 @@ private final case class ApiRoutesImpl(
   private implicit val runtime: Runtime[
     AppConfig
       with IriConverter
+      with KnoraProjectRepo
       with MessageRelay
       with RestCardinalityService
       with RestResourceInfoService
@@ -104,7 +108,7 @@ private final case class ApiRoutesImpl(
               HealthRoute(routeData, runtime).makeRoute ~
                 VersionRoute().makeRoute ~
                 RejectingRoute(routeData, runtime).makeRoute ~
-                ResourcesRouteV1(routeData, runtime).makeRoute ~
+                ResourcesRouteV1().makeRoute ~
                 ValuesRouteV1().makeRoute ~
                 StandoffRouteV1().makeRoute ~
                 ListsRouteV1().makeRoute ~
