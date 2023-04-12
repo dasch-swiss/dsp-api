@@ -99,8 +99,9 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[Authenticator with State])
-    extends HealthCheck {
+final case class HealthRoute()(
+  private implicit val runtime: Runtime[Authenticator with State]
+) extends HealthCheck {
 
   /**
    * Returns the route.
