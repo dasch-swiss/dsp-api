@@ -12,7 +12,6 @@ import zio._
 import scala.language.postfixOps
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
@@ -50,7 +49,8 @@ final case class SearchRouteV1()(
           val requestTask = for {
             user  <- Authenticator.getUserADM(requestContext)
             params = requestContext.request.uri.query().toMap
-          } yield makeFulltextSearchRequestMessage(user, searchval, params)
+            msg   <- makeFulltextSearchRequestMessage(user, searchval, params)
+          } yield msg
           RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
         }
       }
@@ -144,65 +144,47 @@ final case class SearchRouteV1()(
     userADM: UserADM,
     searchval: String,
     params: Map[String, String]
-  ): FulltextSearchGetRequestV1 = {
-    val stringFormatter = StringFormatter.getGeneralInstance
+  ): ZIO[StringFormatter, Throwable, FulltextSearchGetRequestV1] = {
 
-    params.get("searchtype") match {
-      case Some("fulltext") => ()
-      case _                => throw BadRequestException(s"Unexpected searchtype param for fulltext search")
-    }
+    def errorMessage(name: String, value: String): String =
+      s"Unexpected param '$name' for extended search: $value"
 
-    val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
-      case Some(restype: IRI) =>
-        Some(
-          stringFormatter.validateAndEscapeIri(
-            restype,
-            throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")
-          )
+    for {
+      _ <- ZIO
+             .fail(BadRequestException("Unexpected searchtype param for fulltext search"))
+             .unless(params.get("searchtype").contains("fulltext"))
+
+      restypeIri <-
+        ZIO.foreach(params.get("filter_by_restype"))(value =>
+          RouteUtilV1.validateAndEscapeIri(value, errorMessage("filter_by_restype", value))
         )
-      case _ => None
-    }
-    val projectIri: Option[IRI] = params.get("filter_by_project") match {
-      case Some(project: IRI) =>
-        Some(
-          stringFormatter.validateAndEscapeIri(
-            project,
-            throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")
-          )
+      projectIri <-
+        ZIO.foreach(params.get("filter_by_project"))(value =>
+          RouteUtilV1.validateAndEscapeIri(value, errorMessage("filter_by_project", value))
         )
-      case _ => None
-    }
+      searchString <- RouteUtilV1.toSparqlEncodedString(searchval, s"Invalid search string: '$searchval'")
 
-    val searchString = stringFormatter.toSparqlEncodedString(
-      searchval,
-      throw BadRequestException(s"Invalid search string: '$searchval'")
-    )
-
-    val showNRows: Int = params.get("show_nrows") match {
-      case Some(showNRowsStr) =>
-        val showNRowsVal = ValuesValidator
-          .validateInt(showNRowsStr)
-          .getOrElse(
-            throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr")
+      showNRows <-
+        ZIO
+          .fromOption(ValuesValidator.validateInt(params.getOrElse("show_nrows", defaultShowNRows.toString)))
+          .map {
+            case -1 => defaultShowNRows
+            case v  => v
+          }
+          .orElseFail(
+            BadRequestException(
+              s"Can't parse integer parameter 'show_nrows' for extended search: ${params.get("show_nrows")}"
+            )
           )
-        showNRowsVal match {
-          case -1 => defaultShowNRows
-          case _  => showNRowsVal
-        }
-      case None => defaultShowNRows
-    }
-
-    val startAt: Int = params.get("start_at") match {
-      case Some(startAtStr) =>
-        ValuesValidator
-          .validateInt(startAtStr)
-          .getOrElse(
-            throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr")
+      startAt <-
+        ZIO
+          .fromOption(ValuesValidator.validateInt(params.getOrElse("start_at", "0")))
+          .orElseFail(
+            BadRequestException(
+              s"Can't parse integer parameter 'start_at' for extended search: ${params.get("start_at")}"
+            )
           )
-      case None => 0
-    }
-
-    FulltextSearchGetRequestV1(
+    } yield FulltextSearchGetRequestV1(
       searchValue = searchString, // save
       filterByRestype = restypeIri,
       filterByProject = projectIri,
