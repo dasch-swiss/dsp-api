@@ -9,6 +9,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import zio._
+import zio.prelude.Validation
 
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
@@ -106,6 +107,7 @@ object RouteUtilV2 {
    * @param requestContext the akka-http [[RequestContext]].
    * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
    */
+  @deprecated("this method throws")
   def getOntologySchema(requestContext: RequestContext): ApiV2Schema = {
     def nameToSchema(schemaName: String): ApiV2Schema =
       schemaName match {
@@ -137,26 +139,47 @@ object RouteUtilV2 {
    * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
    *         in the request.
    */
-  private def getStandoffRendering(requestContext: RequestContext): Option[MarkupRendering] = {
-    def nameToStandoffRendering(standoffRenderingName: String): MarkupRendering =
+  private def getStandoffRendering(requestContext: RequestContext): Validation[Throwable, Option[MarkupRendering]] = {
+    def nameToStandoffRendering(standoffRenderingName: String): Validation[Throwable, MarkupRendering] =
       standoffRenderingName match {
-        case MARKUP_XML      => MarkupAsXml
-        case MARKUP_STANDOFF => MarkupAsStandoff
-        case _               => throw BadRequestException(s"Unrecognised standoff rendering: $standoffRenderingName")
+        case MARKUP_XML      => Validation.succeed(MarkupAsXml)
+        case MARKUP_STANDOFF => Validation.succeed(MarkupAsStandoff)
+        case _               => Validation.fail(BadRequestException(s"Unrecognised standoff rendering: $standoffRenderingName"))
       }
 
     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
     params.get(MARKUP_PARAM) match {
-      case Some(schemaParam) => Some(nameToStandoffRendering(schemaParam))
+      case Some(schemaParam) => nameToStandoffRendering(schemaParam).map(Some(_))
 
       case None =>
-        requestContext.request.headers.find(_.lowercaseName == MARKUP_HEADER).map { header =>
-          nameToStandoffRendering(header.value)
-        }
+        requestContext.request.headers
+          .find(_.lowercaseName == MARKUP_HEADER)
+          .map(_.value)
+          .fold[Validation[Throwable, Option[MarkupRendering]]](Validation.succeed(None))(
+            nameToStandoffRendering(_).map(Some(_))
+          )
     }
   }
 
+  /**
+   * Gets the type of standoff rendering that should be used when returning text with standoff.
+   * The name of the standoff rendering can be specified either in the HTTP header [[MARKUP_HEADER]]
+   * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
+   * default of [[MarkupAsXml]] is returned.
+   *
+   * @param requestContext the akka-http [[RequestContext]].
+   * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
+   *         in the request.
+   */
+  @deprecated("Use getStandoffRendering(requestContext: RequestContext) instead")
+  private def getStandoffRenderingUnsafe(requestContext: RequestContext): Option[MarkupRendering] =
+    getStandoffRendering(requestContext).fold(
+      errors => throw errors.head,
+      markupRendering => markupRendering
+    )
+
+  @deprecated("this method throws")
   private def getJsonLDRendering(requestContext: RequestContext): Option[JsonLDRendering] = {
     def nameToJsonLDRendering(jsonLDRenderingName: String): JsonLDRendering =
       jsonLDRenderingName match {
@@ -178,7 +201,7 @@ object RouteUtilV2 {
    */
   def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] =
     Set(
-      getStandoffRendering(requestContext),
+      getStandoffRenderingUnsafe(requestContext),
       getJsonLDRendering(requestContext)
     ).flatten
 
@@ -188,6 +211,7 @@ object RouteUtilV2 {
    * @param requestContext the akka-http [[RequestContext]].
    * @return the specified project IRI, or [[None]] if no project header was included in the request.
    */
+  @deprecated("this method throws")
   def getProject(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] =
     requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map { header =>
       val projectIriStr = header.value
@@ -203,7 +227,7 @@ object RouteUtilV2 {
    * @param stringFormatter An instance of the [[StringFormatter]].
    * @return The [[SmartIri]] contains the specified project IRI.
    */
-  @throws(classOf[BadRequestException])
+  @deprecated("this method throws")
   def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
     getProject(ctx).getOrElse(
       throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
@@ -312,6 +336,7 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return an RDF media type.
    */
+  @deprecated("this method throws")
   private def chooseRdfMediaTypeForResponse(requestContext: RequestContext): MediaType.NonBinary = {
     // Get the client's HTTP Accept header, if provided.
     val maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
