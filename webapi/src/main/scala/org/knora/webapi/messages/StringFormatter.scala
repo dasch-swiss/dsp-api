@@ -2337,16 +2337,18 @@ class StringFormatter private (
    * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
    * @return the decoded UUID.
    */
-  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = { // V2 / value objects
-    val decodeTry = Try {
-      base64DecodeUuid(base64Uuid)
-    }
+  @deprecated("Use validateBase64EncodedUuid(String) instead.")
+  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = // V2 / value objects
+    validateBase64EncodedUuid(base64Uuid).getOrElse(errorFun)
 
-    decodeTry match {
-      case Success(uuid) => uuid
-      case Failure(_)    => errorFun
-    }
-  }
+  def validateBase64EncodedUuid(base64Uuid: String): Validation[Throwable, UUID] =
+    Validation.fromTry(
+      Try(base64DecodeUuid(base64Uuid))
+        .fold(
+          _ => Failure(ValidationException(s"String: '$base64Uuid' is not a valid base 64 UUID.")),
+          uuid => Success(uuid)
+        )
+    )
 
   /**
    * Encodes a [[UUID]] as a string in one of two formats:
@@ -2384,7 +2386,7 @@ class StringFormatter private (
    * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
    * @return the decoded [[UUID]].
    */
-  @deprecated("Use decodeUuidWithErr(String) instead")
+  @deprecated("Use decodeUuidWithErr(String) instead.")
   def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID = // V2 / value objects
     decodeUuidWithErr(uuidStr).getOrElse(errorFun)
 
