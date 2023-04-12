@@ -5,6 +5,7 @@
 
 package org.knora.webapi.routing
 
+import akka.actor
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
@@ -89,7 +90,9 @@ private final case class ApiRoutesImpl(
 ) extends ApiRoutes
     with AroundDirectives {
 
-  val routes =
+  private implicit val system: actor.ActorSystem = routeData.system
+
+  val routes: Route =
     logDuration {
       ServerVersion.addServerHeader {
         DSPApiDirectives.handleErrors(routeData.system, appConfig) {
@@ -100,13 +103,13 @@ private final case class ApiRoutesImpl(
                 RejectingRoute(routeData, runtime).makeRoute ~
                 ResourcesRouteV1(routeData, runtime).makeRoute ~
                 ValuesRouteV1().makeRoute ~
-                StandoffRouteV1(routeData, runtime).makeRoute ~
-                ListsRouteV1(routeData, runtime).makeRoute ~
+                StandoffRouteV1().makeRoute ~
+                ListsRouteV1().makeRoute ~
                 ResourceTypesRouteV1(routeData, runtime).makeRoute ~
                 SearchRouteV1().makeRoute ~
-                AuthenticationRouteV1(routeData, runtime).makeRoute ~
-                AssetsRouteV1(routeData, runtime).makeRoute ~
-                CkanRouteV1(routeData, runtime).makeRoute ~
+                AuthenticationRouteV1().makeRoute ~
+                AssetsRouteV1().makeRoute ~
+                CkanRouteV1().makeRoute ~
                 UsersRouteV1().makeRoute ~
                 ProjectsRouteV1(routeData, runtime).makeRoute ~
                 OntologiesRouteV2(routeData, runtime).makeRoute ~
