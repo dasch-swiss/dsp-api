@@ -2134,11 +2134,14 @@ class StringFormatter private (
    *                 username.
    * @return the same string.
    */
+  @deprecated("Use validateUsername(String) instead.")
   def validateUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    UsernameRegex.findFirstIn(value) match {
-      case Some(username) => username
-      case None           => errorFun
-    }
+    validateUsername(value).getOrElse(errorFun)
+
+  def validateUsername(value: String): Validation[Throwable, String] =
+    Validation
+      .fromOption(UsernameRegex.findFirstIn(value))
+      .mapError(_ => ValidationException(s"The username '${value}' contains invalid characters."))
 
   /**
    * Check that the string represents a valid username and escape any special characters.
@@ -2148,11 +2151,12 @@ class StringFormatter private (
    *                 username.
    * @return the same string with escaped special characters.
    */
+  @deprecated("Use validateAndEscapeUsername(String) instead.")
   def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    UsernameRegex.findFirstIn(value) match {
-      case Some(username) => toSparqlEncodedString(username, errorFun)
-      case None           => errorFun
-    }
+    validateAndEscapeUsername(value).getOrElse(errorFun)
+
+  def validateAndEscapeUsername(value: String): Option[String] =
+    UsernameRegex.findFirstIn(value).flatMap(toSparqlEncodedString)
 
   /**
    * Check that an optional string represents a valid username.
@@ -2162,14 +2166,15 @@ class StringFormatter private (
    *                    username.
    * @return the same optional string.
    */
+  @deprecated("Use validateAndEscapeOptionalUsername(Option[String]) instead.")
   def validateAndEscapeOptionalUsername(
     maybeString: Option[String],
     errorFun: => Nothing
   ): Option[String] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeUsername(s, errorFun))
-      case None    => None
-    }
+    maybeString.map(validateAndEscapeUsername(_).getOrElse(errorFun))
+
+  def validateAndEscapeOptionalUsername(maybeString: Option[String]): Option[String] =
+    maybeString.flatMap(validateAndEscapeUsername)
 
   /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
