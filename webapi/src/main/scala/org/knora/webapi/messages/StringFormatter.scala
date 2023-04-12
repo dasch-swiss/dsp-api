@@ -2384,15 +2384,19 @@ class StringFormatter private (
    * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
    * @return the decoded [[UUID]].
    */
+  @deprecated("Use decodeUuidWithErr(String) instead")
   def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID = // V2 / value objects
+    decodeUuidWithErr(uuidStr).getOrElse(errorFun)
+
+  def decodeUuidWithErr(uuidStr: String): Validation[Throwable, UUID] = // V2 / value objects
     if (uuidStr.length == CanonicalUuidLength) {
-      UUID.fromString(uuidStr)
+      Validation.succeed(UUID.fromString(uuidStr))
     } else if (uuidStr.length == Base64UuidLength) {
-      base64DecodeUuid(uuidStr)
+      Validation.succeed(base64DecodeUuid(uuidStr))
     } else if (uuidStr.length < Base64UuidLength) {
-      base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
+      Validation.succeed(base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse))
     } else {
-      errorFun
+      Validation.fail(InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
     }
 
   /**
