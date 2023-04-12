@@ -172,7 +172,7 @@ object RouteUtilADM {
   def validateAndEscape(iri: String): ZIO[StringFormatter, Throwable, IRI] =
     ZIO
       .serviceWithZIO[StringFormatter](sf =>
-        ZIO.attempt(sf.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid IRI: $iri")))
+        sf.validateAndEscapeIri(iri).toZIO.orElseFail(BadRequestException(s"Invalid IRI: $iri"))
       )
 
   def getUserUuid(ctx: RequestContext): ZIO[Authenticator, Throwable, UserUuid] =
