@@ -42,7 +42,7 @@ import org.knora.webapi.util.MutableTestIri
 class StandoffV1R2RSpec extends R2RSpec {
 
   private val standoffPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(StandoffRouteV1(routeData, runtime).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(StandoffRouteV1().makeRoute)
   private val valuesPath =
     DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
 
