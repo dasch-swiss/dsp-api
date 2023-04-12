@@ -199,6 +199,7 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
+  @deprecated("this method throws")
   def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] =
     Set(
       getStandoffRenderingUnsafe(requestContext),
@@ -211,12 +212,26 @@ object RouteUtilV2 {
    * @param requestContext the akka-http [[RequestContext]].
    * @return the specified project IRI, or [[None]] if no project header was included in the request.
    */
-  @deprecated("this method throws")
-  def getProject(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] =
+  @deprecated("use getProject() instead")
+  def getProjectUnsafe(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] =
     requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map { header =>
       val projectIriStr = header.value
       projectIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $projectIriStr"))
     }
+
+  /**
+   * Gets the project IRI specified in a Knora-specific HTTP header.
+   *
+   * @param requestContext the akka-http [[RequestContext]].
+   * @return the specified project IRI, or [[None]] if no project header was included in the request.
+   */
+  def getProject(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Task[Option[SmartIri]] = {
+    val projectHeader: Option[String] =
+      requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value)
+    ZIO.foreach(projectHeader)(iri =>
+      ZIO.attempt(iri.toSmartIri).orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
+    )
+  }
 
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
@@ -227,11 +242,25 @@ object RouteUtilV2 {
    * @param stringFormatter An instance of the [[StringFormatter]].
    * @return The [[SmartIri]] contains the specified project IRI.
    */
-  @deprecated("this method throws")
-  def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
-    getProject(ctx).getOrElse(
+  @deprecated("Use getRequiredProjectFromHeader(ctx: RequestContext) instead")
+  def getRequiredProjectFromHeaderUnsafe(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
+    getProjectUnsafe(ctx).getOrElse(
       throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
     )
+
+  /**
+   * Gets the project IRI specified in a Knora-specific HTTP header.
+   *
+   * @param ctx The akka-http [[RequestContext]].
+   *
+   * @param stringFormatter An instance of the [[StringFormatter]].
+   * @return The [[SmartIri]] contains the specified project IRI.
+   */
+  def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): Task[SmartIri] =
+    getProject(ctx).some
+      .orElseFail(
+        BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
+      )
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.

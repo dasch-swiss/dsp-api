@@ -133,7 +133,7 @@ final case class OntologiesRouteV2(
   private def getOntologyMetadata(): Route =
     path(ontologiesBasePath / "metadata") {
       get { requestContext =>
-        val maybeProjectIri: Option[SmartIri] = RouteUtilV2.getProject(requestContext)
+        val maybeProjectIri: Option[SmartIri] = RouteUtilV2.getProjectUnsafe(requestContext)
 
         val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
           requestingUser <- getUserADM(requestContext)

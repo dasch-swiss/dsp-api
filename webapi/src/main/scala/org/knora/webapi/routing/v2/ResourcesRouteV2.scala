@@ -40,7 +40,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeader
+import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeaderUnsafe
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
@@ -158,7 +158,7 @@ final case class ResourcesRouteV2(
   private def getResourcesInProject(): Route = path(resourcesBasePath) {
     get { requestContext =>
       val projectIri: SmartIri = RouteUtilV2
-        .getProject(requestContext)
+        .getProjectUnsafe(requestContext)
         .getOrElse(throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
       val params: Map[String, String] = requestContext.request.uri.query().toMap
 
@@ -295,7 +295,7 @@ final case class ResourcesRouteV2(
 
   private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
     get { ctx =>
-      val projectIri       = getRequiredProjectFromHeader(ctx).toIri
+      val projectIri       = getRequiredProjectFromHeaderUnsafe(ctx).toIri
       val resourceClassIri = getRequiredStringQueryParam(ctx, "resourceClass")
       val orderBy = getStringQueryParam(ctx, "orderBy") match {
         case None    => lastModificationDate
