@@ -11,147 +11,93 @@ import zio._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
 
 /**
  * Provides a spray-routing function for API routes that deal with resource types.
  */
-final case class ResourceTypesRouteV1(
-  private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
-) extends KnoraRoute(routeData, runtime) {
+final case class ResourceTypesRouteV1()(
+  private implicit val runtime: Runtime[Authenticator with MessageRelay with StringFormatter]
+) {
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route = {
-
+  def makeRoute: Route =
     path("v1" / "resourcetypes" / Segment) { iri =>
       get { requestContext =>
         val requestMessage = for {
-          userProfile <- getUserADM(requestContext)
-
-          // TODO: Check that this is the IRI of a resource type and not just any IRI
-          resourceTypeIri =
-            stringFormatter.validateAndEscapeIri(
-              iri,
-              throw BadRequestException(s"Invalid resource class IRI: $iri")
-            )
-
+          userProfile     <- Authenticator.getUserADM(requestContext)
+          resourceTypeIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid resource class IRI: $iri")
         } yield ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
-
-        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+        RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
       }
     } ~ path("v1" / "resourcetypes") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext)
+          userADM <- Authenticator.getUserADM(requestContext)
           params   = requestContext.request.uri.query().toMap
-
-          vocabularyId = params.getOrElse(
-                           "vocabulary",
-                           throw BadRequestException("Required param vocabulary is missing")
-                         )
-
-          namedGraphIri = vocabularyId match {
-                            case "0" => None // if param vocabulary is set to 0, query all named graphs
-                            case _ =>
-                              Some(
-                                stringFormatter.validateAndEscapeIri(
-                                  vocabularyId,
-                                  throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")
-                                )
-                              )
-                          }
-
-        } yield ResourceTypesForNamedGraphGetRequestV1(
-          namedGraph = namedGraphIri,
-          userADM = userADM
-        )
-
-        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          vocabularyId <- ZIO
+                            .fromOption(params.get("vocabulary"))
+                            .orElseFail(BadRequestException("Required param vocabulary is missing"))
+          namedGraphIri <- vocabularyId match {
+                             case "0" => ZIO.none // if param vocabulary is set to 0, query all named graphs
+                             case _ =>
+                               RouteUtilV1
+                                 .validateAndEscapeIri(vocabularyId, s"Invalid vocabulary IRI: $vocabularyId")
+                                 .map(Some(_))
+                           }
+        } yield ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userADM)
+        RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
       }
     } ~ path("v1" / "propertylists") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext)
-          params   = requestContext.request.uri.query().toMap
-
+          userADM                       <- Authenticator.getUserADM(requestContext)
+          params                         = requestContext.request.uri.query().toMap
           vocabularyId: Option[String]   = params.get("vocabulary")
-          resourcetypeId: Option[String] = params.get("restype")
-
-          // either the vocabulary or the restype param is set, but not both
-          _ = if (vocabularyId.nonEmpty && resourcetypeId.nonEmpty)
-                throw BadRequestException("Both vocabulary and restype params are set, only one is allowed")
-        } yield vocabularyId match {
-          case Some("0") => // 0 means that all named graphs should be queried
-            PropertyTypesForNamedGraphGetRequestV1(
-              namedGraph = None,
-              userADM = userADM
-            )
-
-          case Some(vocId) =>
-            val namedGraphIri = stringFormatter.validateAndEscapeIri(
-              vocId,
-              throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")
-            )
-            PropertyTypesForNamedGraphGetRequestV1(
-              namedGraph = Some(namedGraphIri),
-              userADM = userADM
-            )
-
-          case None => // no vocabulary id given, check for restype
-            resourcetypeId match {
-              case Some(restypeId) => // get property types for given resource type
-                stringFormatter.validateAndEscapeIri(
-                  restypeId,
-                  throw BadRequestException(s"Invalid vocabulary IRI: $restypeId")
-                )
-                PropertyTypesForResourceTypeGetRequestV1(restypeId, userADM)
-              case None => // no params given, get all property types (behaves like vocbulary=0)
-                PropertyTypesForNamedGraphGetRequestV1(
-                  namedGraph = None,
-                  userADM = userADM
-                )
-            }
-        }
-
-        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+          resourceTypeId: Option[String] = params.get("restype")
+          _ <- // Either the 'vocabulary' or the 'restype' param may be set, but not both.
+            ZIO
+              .fail(BadRequestException("Both vocabulary and restype params are set, only one is allowed"))
+              .when(vocabularyId.nonEmpty && resourceTypeId.nonEmpty)
+          msg <- vocabularyId match {
+                   case Some("0") => // 0 means that all named graphs should be queried
+                     ZIO.succeed(PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userADM))
+                   case Some(vocId) =>
+                     RouteUtilV1
+                       .validateAndEscapeIri(vocId, s"Invalid vocabulary IRI: $vocId")
+                       .map(namedGraphIri => PropertyTypesForNamedGraphGetRequestV1(Some(namedGraphIri), userADM))
+                   case None => // no vocabulary id given, check for resource type
+                     resourceTypeId match {
+                       case Some(resTypeId) => // get property types for given resource type
+                         RouteUtilV1
+                           .validateAndEscapeIri(resTypeId, s"Invalid vocabulary IRI: $resTypeId")
+                           .as(PropertyTypesForResourceTypeGetRequestV1(resTypeId, userADM))
+                       case None => // no params given, get all property types (behaves like vocabulary=0)
+                         ZIO.succeed(PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userADM))
+                     }
+                 }
+        } yield msg
+        RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
       }
     } ~ path("v1" / "vocabularies") {
       get { requestContext =>
-        val requestMessage = for {
-          userADM <- getUserADM(requestContext)
-        } yield NamedGraphsGetRequestV1(userADM = userADM)
-
-        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+        val requestMessage = Authenticator.getUserADM(requestContext).map(it => NamedGraphsGetRequestV1(userADM = it))
+        RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
       }
     } ~ path("v1" / "vocabularies" / "reload") {
       get { requestContext =>
-        val requestMessage = for {
-          userADM <- getUserADM(requestContext)
-        } yield LoadOntologiesRequestV1(userADM = userADM)
-
-        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+        val requestMessage = Authenticator.getUserADM(requestContext).map(LoadOntologiesRequestV1)
+        RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
       }
     } ~ path("v1" / "subclasses" / Segment) { iri =>
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext)
-
-          // TODO: Check that this is the IRI of a resource type and not just any IRI
-          resourceClassIri = stringFormatter.validateAndEscapeIri(
-                               iri,
-                               throw BadRequestException(s"Invalid resource class IRI: $iri")
-                             )
+          userADM          <- Authenticator.getUserADM(requestContext)
+          resourceClassIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid resource class IRI: $iri")
         } yield SubClassesGetRequestV1(resourceClassIri, userADM)
-
-        RouteUtilV1.runJsonRouteF(requestMessage, requestContext)
+        RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
       }
     }
-  }
 }

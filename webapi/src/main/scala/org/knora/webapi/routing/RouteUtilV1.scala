@@ -35,6 +35,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandof
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
@@ -306,5 +307,6 @@ object RouteUtilV1 {
 
   def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
 
-  def getUserProfileV1(ctx: RequestContext) = Authenticator.getUserADM(ctx).map(_.asUserProfileV1)
+  def getUserProfileV1(ctx: RequestContext): ZIO[Authenticator, Throwable, UserProfileV1] =
+    Authenticator.getUserADM(ctx).map(_.asUserProfileV1)
 }
