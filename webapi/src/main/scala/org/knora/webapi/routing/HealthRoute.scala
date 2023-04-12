@@ -69,8 +69,6 @@ trait HealthCheck {
       )
       .orDie
 
-  private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
-
   private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
 
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
