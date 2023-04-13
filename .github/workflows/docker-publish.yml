@@ -20,7 +20,7 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish-dsp-api-image
-#      - name: Build and publish sipi images to Dockerhub
-#        run: |
-#          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-#          make docker-publish-sipi-image
+      - name: Build and publish sipi images to Dockerhub
+        run: |
+          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          make docker-publish-sipi-image
