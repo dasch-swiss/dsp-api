@@ -519,26 +519,28 @@ final case class ResourcesRouteV1()(
                            )
         // Generate a bundle of XML schemas for validating the submitted XML.
         schemaBundle <- generateSchemasFromOntologies(mainOntologyIri.toString, userADM)
-
-        // Make a javax.xml.validation.SchemaFactory for instantiating XML schemas.
-        schemaFactory: SchemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
-
-        // Tell the SchemaFactory to find additional schemas using our SchemaBundleResolver, which gets them
-        // from the XmlImportSchemaBundleV1 we generated.
-        _ = schemaFactory.setResourceResolver(new SchemaBundleResolver(schemaBundle))
-
-        // Use the SchemaFactory to instantiate a javax.xml.validation.Schema representing the main schema in
-        // the bundle.
-        mainSchemaXml: String  = schemaBundle.schemas(schemaBundle.mainNamespace).schemaXml
-        schemaInstance: Schema = schemaFactory.newSchema(new StreamSource(new StringReader(mainSchemaXml)))
-
-        // Validate the submitted XML using a validator based on the main schema.
-        schemaValidator: Validator = schemaInstance.newValidator()
-        _ <- ZIO.attempt(schemaValidator.validate(new StreamSource(new StringReader(xml)))).mapError {
-               case e @ (_: IllegalArgumentException | _: SAXException) =>
-                 BadRequestException(s"XML import did not pass XML schema validation: $e")
-             }
+        _ <- validateXml(xml, schemaBundle)
       } yield ()
+
+    def validateXml(xml: IRI, schemaBundle: XmlImportSchemaBundleV1 ) =
+      ZIO.attempt(getXmlValidator(schemaBundle).validate(new StreamSource(new StringReader(xml)))).mapError { e =>
+        BadRequestException(s"XML import did not pass XML schema validation: $e")
+      }
+
+    def getXmlValidator(schemaBundle: XmlImportSchemaBundleV1) = {
+      // Make a javax.xml.validation.SchemaFactory for instantiating XML schemas.
+      val schemaFactory: SchemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
+
+      // Tell the SchemaFactory to find additional schemas using our SchemaBundleResolver, which gets them
+      // from the XmlImportSchemaBundleV1 we generated.
+      schemaFactory.setResourceResolver(new SchemaBundleResolver(schemaBundle))
+
+      // Use the SchemaFactory to instantiate a javax.xml.validation.Schema representing the main schema in
+      // the bundle.
+      val mainSchemaXml: String  = schemaBundle.schemas(schemaBundle.mainNamespace).schemaXml
+      val schemaInstance: Schema = schemaFactory.newSchema(new StreamSource(new StringReader(mainSchemaXml)))
+      schemaInstance.newValidator()
+    }
 
     def xmlImportElementNameToInternalOntologyIriV1(
       namespace: String,
@@ -1064,6 +1066,7 @@ final case class ResourcesRouteV1()(
       }
     }
   }
+
 
   /**
    * Represents an XML import schema corresponding to an ontology.
