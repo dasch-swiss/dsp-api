@@ -5,118 +5,87 @@
 
 package org.knora.webapi.routing.v1
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import spray.json._
 import zio.Runtime
+import zio.ZIO
 
-import java.util.UUID
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
 
 /**
  * A route used to convert XML to standoff.
  */
-final case class StandoffRouteV1(
-  private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with MessageRelay]
-) extends KnoraRoute(routeData, runtime) {
+final case class StandoffRouteV1()(
+  private implicit val runtime: Runtime[StringFormatter with Authenticator with MessageRelay],
+  private implicit val system: ActorSystem
+) {
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  private val jsonPartKey = "json"
+  private val xmlPartKey  = "xml"
+
+  def makeRoute: Route =
     path("v1" / "mapping") {
       post {
-        entity(as[Multipart.FormData]) { formdata: Multipart.FormData => requestContext =>
-          type Name = String
-
-          val JSON_PART = "json"
-          val XML_PART  = "xml"
-
-          // collect all parts of the multipart as it arrives into a map
-          val allPartsFuture: Future[Map[Name, String]] = formdata.parts
-            .mapAsync[(Name, String)](1) {
-              case b: BodyPart if b.name == JSON_PART =>
-                // Logger.debug(s"inside allPartsFuture - processing $JSON_PART")
-                b.toStrict(2.seconds).map { strict =>
-                  // Logger.debug(strict.entity.data.utf8String)
-                  (b.name, strict.entity.data.utf8String)
-                }
-
-              case b: BodyPart if b.name == XML_PART =>
-                // Logger.debug(s"inside allPartsFuture - processing $XML_PART")
-
-                b.toStrict(2.seconds).map { strict =>
-                  // Logger.debug(strict.entity.data.utf8String)
-                  (b.name, strict.entity.data.utf8String)
-                }
-
-              case b: BodyPart if b.name.isEmpty =>
-                throw BadRequestException("part of HTTP multipart request has no name")
-              case b: BodyPart => throw BadRequestException(s"multipart contains invalid name: ${b.name}")
-              case _           => throw BadRequestException("multipart request could not be handled")
-            }
-            .runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
-
-          val requestMessageFuture: Future[CreateMappingRequestV1] = for {
-
-            userProfile <- getUserADM(requestContext)
-
-            allParts: Map[Name, String] <- allPartsFuture
-
-            // get the json params and turn them into a case class
-            standoffApiJSONRequest: CreateMappingApiRequestV1 =
-              try {
-
-                val jsonString: String = allParts.getOrElse(
-                  JSON_PART,
-                  throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")
+        entity(as[Multipart.FormData]) { formData: Multipart.FormData => requestContext =>
+          val msg = for {
+            allParts <- parseFormData(formData)
+            xml <-
+              ZIO
+                .fromOption(allParts.get(xmlPartKey))
+                .orElseFail(
+                  BadRequestException(s"MultiPart POST request was sent without required '$xmlPartKey' part!")
                 )
-
-                jsonString.parseJson.convertTo[CreateMappingApiRequestV1]
-              } catch {
-                case e: DeserializationException =>
-                  throw BadRequestException("JSON params structure is invalid: " + e.toString)
-              }
-
-            xml: String =
-              allParts
-                .getOrElse(
-                  XML_PART,
-                  throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")
+            standoffApiJSONRequest <-
+              ZIO
+                .fromOption(allParts.get(jsonPartKey))
+                .orElseFail(
+                  BadRequestException(s"MultiPart POST request was sent without required '$jsonPartKey' part!")
                 )
-          } yield CreateMappingRequestV1(
-            xml = xml,
-            label = stringFormatter.toSparqlEncodedString(
-              standoffApiJSONRequest.label,
-              throw BadRequestException("'label' contains invalid characters")
-            ),
-            projectIri = stringFormatter.validateAndEscapeIri(
-              standoffApiJSONRequest.project_id,
-              throw BadRequestException("invalid project IRI")
-            ),
-            mappingName = stringFormatter.toSparqlEncodedString(
-              standoffApiJSONRequest.mappingName,
-              throw BadRequestException("'mappingName' contains invalid characters")
-            ),
-            userProfile = userProfile,
-            apiRequestID = UUID.randomUUID
-          )
-
-          RouteUtilV1.runJsonRouteF(requestMessageFuture, requestContext)
+                .mapAttempt(_.parseJson.convertTo[CreateMappingApiRequestV1])
+                .mapError { case e: DeserializationException =>
+                  BadRequestException("JSON params structure is invalid: " + e.toString)
+                }
+            label <-
+              RouteUtilV1.toSparqlEncodedString(standoffApiJSONRequest.label, "'label' contains invalid characters")
+            projectIri <- RouteUtilV1.validateAndEscapeIri(standoffApiJSONRequest.project_id, "invalid project IRI")
+            mappingName <- RouteUtilV1.toSparqlEncodedString(
+                             standoffApiJSONRequest.mappingName,
+                             "'mappingName' contains invalid characters"
+                           )
+            userProfile <- Authenticator.getUserADM(requestContext)
+            uuid        <- RouteUtilV1.randomUuid()
+          } yield CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid)
+          RouteUtilV1.runJsonRouteZ(msg, requestContext)
         }
       }
     }
+
+  private def parseFormData(formData: Multipart.FormData)(implicit system: ActorSystem) = ZIO.fromFuture {
+    implicit ec: ExecutionContext =>
+      type Name = String
+      formData.parts
+        .mapAsync[(Name, String)](1) {
+          case b: BodyPart if b.name == jsonPartKey =>
+            b.toStrict(2.seconds).map(strict => (b.name, strict.entity.data.utf8String))
+          case b: BodyPart if b.name == xmlPartKey =>
+            b.toStrict(2.seconds).map(strict => (b.name, strict.entity.data.utf8String))
+          case b: BodyPart if b.name.isEmpty => throw BadRequestException("part of HTTP multipart request has no name")
+          case b: BodyPart                   => throw BadRequestException(s"multipart contains invalid name: ${b.name}")
+          case _                             => throw BadRequestException("multipart request could not be handled")
+        }
+        .runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
+  }
 }
