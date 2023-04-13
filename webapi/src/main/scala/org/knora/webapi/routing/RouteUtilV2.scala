@@ -140,7 +140,7 @@ object RouteUtilV2 {
    *         in the request.
    */
   private def getStandoffRendering(requestContext: RequestContext): Validation[Throwable, Option[MarkupRendering]] = {
-    def nameToStandoffRendering(standoffRenderingName: String): Validation[Throwable, MarkupRendering] =
+    def nameToStandoffRendering(standoffRenderingName: String): Validation[BadRequestException, MarkupRendering] =
       standoffRenderingName match {
         case MARKUP_XML      => Validation.succeed(MarkupAsXml)
         case MARKUP_STANDOFF => Validation.succeed(MarkupAsStandoff)
