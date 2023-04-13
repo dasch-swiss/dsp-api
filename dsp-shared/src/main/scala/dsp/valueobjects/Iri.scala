@@ -243,7 +243,7 @@ object Iri {
       } else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (isKnoraListIriStr(value)) {
+        if (!isKnoraListIriStr(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
         } else if (isUuid && !Uuid.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
