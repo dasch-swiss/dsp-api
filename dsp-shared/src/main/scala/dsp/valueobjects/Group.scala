@@ -21,7 +21,7 @@ object Group {
         Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
       } else {
         val validatedValue = Validation(
-          V2IriValidation.toSparqlEncodedString(
+          Iri.toSparqlEncodedString(
             value,
             throw BadRequestException(GroupErrorMessages.GroupNameInvalid)
           )
@@ -48,7 +48,7 @@ object Group {
       } else {
         val validatedDescriptions = Validation(value.map { description =>
           val validatedDescription =
-            V2IriValidation.toSparqlEncodedString(
+            Iri.toSparqlEncodedString(
               description.value,
               throw BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
             )

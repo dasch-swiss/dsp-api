@@ -21,7 +21,7 @@ object List {
         Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
       } else {
         val validatedValue = Validation(
-          V2IriValidation.toSparqlEncodedString(value, throw BadRequestException(ListErrorMessages.ListNameInvalid))
+          Iri.toSparqlEncodedString(value, throw BadRequestException(ListErrorMessages.ListNameInvalid))
         )
 
         validatedValue.map(new ListName(_) {})
@@ -64,7 +64,7 @@ object List {
       } else {
         val validatedLabels = Validation(value.map { label =>
           val validatedLabel =
-            V2IriValidation.toSparqlEncodedString(
+            Iri.toSparqlEncodedString(
               label.value,
               throw BadRequestException(ListErrorMessages.LabelsInvalid)
             )
@@ -92,7 +92,7 @@ object List {
       } else {
         val validatedComments = Validation(value.map { comment =>
           val validatedComment =
-            V2IriValidation.toSparqlEncodedString(
+            Iri.toSparqlEncodedString(
               comment.value,
               throw BadRequestException(ListErrorMessages.CommentsInvalid)
             )
