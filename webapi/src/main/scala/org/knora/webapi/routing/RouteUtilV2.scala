@@ -179,8 +179,8 @@ object RouteUtilV2 {
       markupRendering => markupRendering
     )
 
-  @deprecated("this method throws")
-  private def getJsonLDRendering(requestContext: RequestContext): Option[JsonLDRendering] = {
+  @deprecated("use getJsonLDRendering() instead")
+  private def getJsonLDRenderingUnsafe(requestContext: RequestContext): Option[JsonLDRendering] = {
     def nameToJsonLDRendering(jsonLDRenderingName: String): JsonLDRendering =
       jsonLDRenderingName match {
         case JSON_LD_RENDERING_FLAT         => FlatJsonLD
@@ -193,6 +193,19 @@ object RouteUtilV2 {
     }
   }
 
+  private def getJsonLDRendering(requestContext: RequestContext): Task[Option[JsonLDRendering]] = {
+    def nameToJsonLDRendering(jsonLDRenderingName: String): Task[JsonLDRendering] =
+      jsonLDRenderingName match {
+        case JSON_LD_RENDERING_FLAT         => ZIO.succeed(FlatJsonLD)
+        case JSON_LD_RENDERING_HIERARCHICAL => ZIO.succeed(HierarchicalJsonLD)
+        case _                              => ZIO.fail(BadRequestException(s"Unrecognised JSON-LD rendering: $jsonLDRenderingName"))
+      }
+
+    val header: Option[String] =
+      requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map(_.value)
+    ZIO.foreach(header)(nameToJsonLDRendering)
+  }
+
   /**
    * Gets the schema options submitted in the request.
    *
@@ -203,7 +216,7 @@ object RouteUtilV2 {
   def getSchemaOptionsUnsafe(requestContext: RequestContext): Set[SchemaOption] =
     Set(
       getStandoffRenderingUnsafe(requestContext),
-      getJsonLDRendering(requestContext)
+      getJsonLDRenderingUnsafe(requestContext)
     ).flatten
 
   /**
@@ -215,7 +228,7 @@ object RouteUtilV2 {
   def getSchemaOptions(requestContext: RequestContext): Task[Set[SchemaOption]] =
     for {
       standoffRendering <- getStandoffRendering(requestContext).toZIO
-      jsonLDRendering   <- ZIO.attempt(getJsonLDRendering(requestContext))
+      jsonLDRendering   <- getJsonLDRendering(requestContext)
     } yield Set(standoffRendering, jsonLDRendering).flatten
 
   /**
@@ -336,7 +349,7 @@ object RouteUtilV2 {
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
-      schemaOptions     <- ZIO.attempt(schemaOptionsOption.getOrElse(getSchemaOptionsUnsafe(requestContext)))
+      schemaOptions     <- schemaOptionsOption.fold(getSchemaOptions(requestContext))(ZIO.succeed(_))
       appConfig         <- ZIO.service[AppConfig]
       knoraResponse     <- responseTask
       responseMediaType <- chooseRdfMediaTypeForResponse(requestContext)
