@@ -67,7 +67,7 @@ docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image ## publis
 
 .PHONY: docker-image-tag
 docker-image-tag: ## prints the docker image tag
-	@sbt -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag"
+	@sbt -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag"
 
 #################################
 ## Docker-Compose targets
