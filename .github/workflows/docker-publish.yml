@@ -28,7 +28,7 @@ jobs:
           make docker-publish-sipi-image
       - name: Output docker image tag
         id: output_docker_image_tag
-        run: echo "tag=$(make docker-image-tag)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=$(make docker-image-tag | tr -d '\n')" >> "$GITHUB_OUTPUT"
         shell: bash # Explicit for fail-fast behaviour
 
   trigger-dev-deployment:
