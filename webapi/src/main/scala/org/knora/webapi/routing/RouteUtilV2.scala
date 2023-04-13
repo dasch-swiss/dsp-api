@@ -186,7 +186,7 @@ object RouteUtilV2 {
       jsonLDRendering => jsonLDRendering
     )
 
-  private def getJsonLDRendering(requestContext: RequestContext): Validation[Throwable, Option[JsonLDRendering]] = {
+  private def getJsonLDRendering(requestContext: RequestContext): Validation[BadRequestException, Option[JsonLDRendering]] = {
     val header: Option[String] =
       requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map(_.value)
     header.fold[Validation[Throwable, Option[JsonLDRendering]]](Validation.succeed(None)) { header =>
@@ -217,7 +217,7 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
-  def getSchemaOptions(requestContext: RequestContext): Validation[Throwable, Set[SchemaOption]] =
+  def getSchemaOptions(requestContext: RequestContext): Validation[BadRequestException, Set[SchemaOption]] =
     for {
       standoffRendering <- getStandoffRendering(requestContext)
       jsonLDRendering   <- getJsonLDRendering(requestContext)
