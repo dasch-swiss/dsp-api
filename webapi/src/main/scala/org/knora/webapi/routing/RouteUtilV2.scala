@@ -248,15 +248,14 @@ object RouteUtilV2 {
    */
   def getProject(
     requestContext: RequestContext
-  ): ZIO[StringFormatter, BadRequestException, Option[SmartIri]] = {
-    val projectHeader: Option[String] =
-      requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value)
+  ): ZIO[StringFormatter, BadRequestException, Option[SmartIri]] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
+      val projectHeader: Option[String] =
+        requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value)
       ZIO.foreach(projectHeader)(iri =>
         ZIO.attempt(stringFormatter.toSmartIri(iri)).orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
       )
     }
-  }
 
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
