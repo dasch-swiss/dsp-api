@@ -508,7 +508,7 @@ final case class ResourcesRouteV1()(
       // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
       // IRI of the main ontology used in the import.
 
-      (for {
+      for {
         mainOntologyIri <- ZIO.serviceWithZIO[StringFormatter](sf =>
                              ZIO.attempt(
                                sf.xmlImportNamespaceToInternalOntologyIriV1(
@@ -534,10 +534,11 @@ final case class ResourcesRouteV1()(
 
         // Validate the submitted XML using a validator based on the main schema.
         schemaValidator: Validator = schemaInstance.newValidator()
-        _                          = schemaValidator.validate(new StreamSource(new StringReader(xml)))
-      } yield ()).mapError { case e @ (_: IllegalArgumentException | _: SAXException) =>
-        BadRequestException(s"XML import did not pass XML schema validation: $e")
-      }
+        _ <- ZIO.attempt(schemaValidator.validate(new StreamSource(new StringReader(xml)))).mapError {
+               case e @ (_: IllegalArgumentException | _: SAXException) =>
+                 BadRequestException(s"XML import did not pass XML schema validation: $e")
+             }
+      } yield ()
 
     def xmlImportElementNameToInternalOntologyIriV1(
       namespace: String,
