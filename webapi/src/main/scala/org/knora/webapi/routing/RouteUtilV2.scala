@@ -246,12 +246,16 @@ object RouteUtilV2 {
    * @param requestContext the akka-http [[RequestContext]].
    * @return the specified project IRI, or [[None]] if no project header was included in the request.
    */
-  def getProject(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Task[Option[SmartIri]] = {
+  def getProject(
+    requestContext: RequestContext
+  ): ZIO[StringFormatter, BadRequestException, Option[SmartIri]] = {
     val projectHeader: Option[String] =
       requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value)
-    ZIO.foreach(projectHeader)(iri =>
-      ZIO.attempt(iri.toSmartIri).orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
-    )
+    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
+      ZIO.foreach(projectHeader)(iri =>
+        ZIO.attempt(stringFormatter.toSmartIri(iri)).orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
+      )
+    }
   }
 
   /**
@@ -277,7 +281,7 @@ object RouteUtilV2 {
    * @param stringFormatter An instance of the [[StringFormatter]].
    * @return The [[SmartIri]] contains the specified project IRI.
    */
-  def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): Task[SmartIri] =
+  def getRequiredProjectFromHeader(ctx: RequestContext): ZIO[StringFormatter, BadRequestException, SmartIri] =
     getProject(ctx).some
       .orElseFail(
         BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
