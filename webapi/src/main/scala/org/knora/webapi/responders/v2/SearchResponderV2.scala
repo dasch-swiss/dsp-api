@@ -1008,18 +1008,32 @@ final case class SearchResponderV2Live(
 
     for {
       searchResourceByLabelSparql <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .searchResourceByLabel(
-              searchTerm = searchPhrase,
-              limitToProject = limitToProject,
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
-              countQuery = false
+        limitToResourceClass match {
+          case None =>
+            ZIO.attempt(
+              org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                .searchResourceByLabel(
+                  searchTerm = searchPhrase,
+                  limitToProject = limitToProject,
+                  limitToResourceClass = limitToResourceClass.map(_.toString),
+                  limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                  offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
+                  countQuery = false
+                )
+                .toString()
             )
-            .toString()
-        )
+          case Some(cls) =>
+            ZIO.attempt(
+              org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                .searchResourceByLabelWithDefinedResourceClass(
+                  searchTerm = searchPhrase,
+                  limitToResourceClass = cls.toString,
+                  limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                  offset = offset * appConfig.v2.resourcesSequence.resultsPerPage
+                )
+                .toString()
+            )
+        }
 
       searchResourceByLabelResponse <- triplestoreService.sparqlHttpExtendedConstruct(searchResourceByLabelSparql)
 
