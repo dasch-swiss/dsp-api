@@ -180,30 +180,22 @@ object RouteUtilV2 {
     )
 
   @deprecated("use getJsonLDRendering() instead")
-  private def getJsonLDRenderingUnsafe(requestContext: RequestContext): Option[JsonLDRendering] = {
-    def nameToJsonLDRendering(jsonLDRenderingName: String): JsonLDRendering =
-      jsonLDRenderingName match {
-        case JSON_LD_RENDERING_FLAT         => FlatJsonLD
-        case JSON_LD_RENDERING_HIERARCHICAL => HierarchicalJsonLD
-        case _                              => throw BadRequestException(s"Unrecognised JSON-LD rendering: $jsonLDRenderingName")
-      }
+  private def getJsonLDRenderingUnsafe(requestContext: RequestContext): Option[JsonLDRendering] =
+    getJsonLDRendering(requestContext).fold(
+      errors => throw errors.head,
+      jsonLDRendering => jsonLDRendering
+    )
 
-    requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map { header =>
-      nameToJsonLDRendering(header.value)
-    }
-  }
-
-  private def getJsonLDRendering(requestContext: RequestContext): Task[Option[JsonLDRendering]] = {
-    def nameToJsonLDRendering(jsonLDRenderingName: String): Task[JsonLDRendering] =
-      jsonLDRenderingName match {
-        case JSON_LD_RENDERING_FLAT         => ZIO.succeed(FlatJsonLD)
-        case JSON_LD_RENDERING_HIERARCHICAL => ZIO.succeed(HierarchicalJsonLD)
-        case _                              => ZIO.fail(BadRequestException(s"Unrecognised JSON-LD rendering: $jsonLDRenderingName"))
-      }
-
+  private def getJsonLDRendering(requestContext: RequestContext): Validation[Throwable, Option[JsonLDRendering]] = {
     val header: Option[String] =
       requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map(_.value)
-    ZIO.foreach(header)(nameToJsonLDRendering)
+    header.fold[Validation[Throwable, Option[JsonLDRendering]]](Validation.succeed(None)) { header =>
+      header match {
+        case JSON_LD_RENDERING_FLAT         => Validation.succeed(Some(FlatJsonLD))
+        case JSON_LD_RENDERING_HIERARCHICAL => Validation.succeed(Some(HierarchicalJsonLD))
+        case _                              => Validation.fail(BadRequestException(s"Unrecognised JSON-LD rendering: $header"))
+      }
+    }
   }
 
   /**
@@ -214,10 +206,10 @@ object RouteUtilV2 {
    */
   @deprecated("use getSchemaOptions() instead")
   def getSchemaOptionsUnsafe(requestContext: RequestContext): Set[SchemaOption] =
-    Set(
-      getStandoffRenderingUnsafe(requestContext),
-      getJsonLDRenderingUnsafe(requestContext)
-    ).flatten
+    getSchemaOptions(requestContext).fold(
+      errors => throw errors.head,
+      schemaOptions => schemaOptions
+    )
 
   /**
    * Gets the schema options submitted in the request.
@@ -225,9 +217,9 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
-  def getSchemaOptions(requestContext: RequestContext): Task[Set[SchemaOption]] =
+  def getSchemaOptions(requestContext: RequestContext): Validation[Throwable, Set[SchemaOption]] =
     for {
-      standoffRendering <- getStandoffRendering(requestContext).toZIO
+      standoffRendering <- getStandoffRendering(requestContext)
       jsonLDRendering   <- getJsonLDRendering(requestContext)
     } yield Set(standoffRendering, jsonLDRendering).flatten
 
@@ -349,7 +341,7 @@ object RouteUtilV2 {
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
-      schemaOptions     <- schemaOptionsOption.fold(getSchemaOptions(requestContext))(ZIO.succeed(_))
+      schemaOptions     <- ZIO.fromOption(schemaOptionsOption).orElse(getSchemaOptions(requestContext).toZIO)
       appConfig         <- ZIO.service[AppConfig]
       knoraResponse     <- responseTask
       responseMediaType <- chooseRdfMediaTypeForResponse(requestContext)
