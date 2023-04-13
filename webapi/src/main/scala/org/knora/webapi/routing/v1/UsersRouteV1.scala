@@ -83,6 +83,6 @@ final case class UsersRouteV1()(implicit r: Runtime[Authenticator with MessageRe
     for {
       userProfile <- RouteUtilV1.getUserProfileV1(requestContext)
       userIri     <- RouteUtilZ.validateAndEscapeIri(iri, "Invalid user IRI")
-      uuid        <- RouteUtilV1.randomUuid()
+      uuid        <- RouteUtilZ.randomUuid()
     } yield UserIriProfileUuid(userIri, userProfile, uuid)
 }

@@ -67,7 +67,7 @@ final case class StandoffRouteV1()(
                              "'mappingName' contains invalid characters"
                            )
             userProfile <- Authenticator.getUserADM(requestContext)
-            uuid        <- RouteUtilV1.randomUuid()
+            uuid        <- RouteUtilZ.randomUuid()
           } yield CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid)
           RouteUtilV1.runJsonRouteZ(msg, requestContext)
         }
