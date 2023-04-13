@@ -118,7 +118,7 @@ private final case class ApiRoutesImpl(
                 ValuesRouteV2(routeData, runtime).makeRoute ~
                 StandoffRouteV2(routeData, runtime).makeRoute ~
                 ListsRouteV2(routeData, runtime).makeRoute ~
-                AuthenticationRouteV2(routeData, runtime).makeRoute ~
+                AuthenticationRouteV2().makeRoute ~
                 GroupsRouteADM(routeData, runtime).makeRoute ~
                 ListsRouteADM(routeData, runtime).makeRoute ~
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
