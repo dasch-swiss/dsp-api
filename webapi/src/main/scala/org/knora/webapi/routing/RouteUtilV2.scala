@@ -199,12 +199,24 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
-  @deprecated("this method throws")
-  def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] =
+  @deprecated("use getSchemaOptions() instead")
+  def getSchemaOptionsUnsafe(requestContext: RequestContext): Set[SchemaOption] =
     Set(
       getStandoffRenderingUnsafe(requestContext),
       getJsonLDRendering(requestContext)
     ).flatten
+
+  /**
+   * Gets the schema options submitted in the request.
+   *
+   * @param requestContext the request context.
+   * @return the set of schema options submitted in the request, including default options.
+   */
+  def getSchemaOptions(requestContext: RequestContext): Task[Set[SchemaOption]] =
+    for {
+      standoffRendering <- getStandoffRendering(requestContext).toZIO
+      jsonLDRendering   <- ZIO.attempt(getJsonLDRendering(requestContext))
+    } yield Set(standoffRendering, jsonLDRendering).flatten
 
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
@@ -324,7 +336,7 @@ object RouteUtilV2 {
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
-      schemaOptions     <- ZIO.attempt(schemaOptionsOption.getOrElse(getSchemaOptions(requestContext)))
+      schemaOptions     <- ZIO.attempt(schemaOptionsOption.getOrElse(getSchemaOptionsUnsafe(requestContext)))
       appConfig         <- ZIO.service[AppConfig]
       knoraResponse     <- responseTask
       responseMediaType <- chooseRdfMediaTypeForResponse(requestContext)

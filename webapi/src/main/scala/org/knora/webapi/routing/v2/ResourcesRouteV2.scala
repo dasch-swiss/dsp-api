@@ -191,7 +191,7 @@ final case class ResourcesRouteV2(
       val page: Int =
         ValuesValidator.validateInt(pageStr).getOrElse(throw BadRequestException(s"Invalid page number: $pageStr"))
 
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
 
       val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
@@ -331,7 +331,7 @@ final case class ResourcesRouteV2(
             .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
         )
       val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
       val requestTask = Authenticator
         .getUserADM(requestContext)
         .map(requestingUser =>
