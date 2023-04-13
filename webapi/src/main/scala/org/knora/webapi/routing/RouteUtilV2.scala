@@ -139,7 +139,9 @@ object RouteUtilV2 {
    * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
    *         in the request.
    */
-  private def getStandoffRendering(requestContext: RequestContext): Validation[Throwable, Option[MarkupRendering]] = {
+  private def getStandoffRendering(
+    requestContext: RequestContext
+  ): Validation[BadRequestException, Option[MarkupRendering]] = {
     def nameToStandoffRendering(standoffRenderingName: String): Validation[BadRequestException, MarkupRendering] =
       standoffRenderingName match {
         case MARKUP_XML      => Validation.succeed(MarkupAsXml)
@@ -156,7 +158,7 @@ object RouteUtilV2 {
         requestContext.request.headers
           .find(_.lowercaseName == MARKUP_HEADER)
           .map(_.value)
-          .fold[Validation[Throwable, Option[MarkupRendering]]](Validation.succeed(None))(
+          .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
             nameToStandoffRendering(_).map(Some(_))
           )
     }
@@ -186,10 +188,12 @@ object RouteUtilV2 {
       jsonLDRendering => jsonLDRendering
     )
 
-  private def getJsonLDRendering(requestContext: RequestContext): Validation[BadRequestException, Option[JsonLDRendering]] = {
+  private def getJsonLDRendering(
+    requestContext: RequestContext
+  ): Validation[BadRequestException, Option[JsonLDRendering]] = {
     val header: Option[String] =
       requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map(_.value)
-    header.fold[Validation[Throwable, Option[JsonLDRendering]]](Validation.succeed(None)) { header =>
+    header.fold[Validation[BadRequestException, Option[JsonLDRendering]]](Validation.succeed(None)) { header =>
       header match {
         case JSON_LD_RENDERING_FLAT         => Validation.succeed(Some(FlatJsonLD))
         case JSON_LD_RENDERING_HIERARCHICAL => Validation.succeed(Some(HierarchicalJsonLD))
