@@ -297,14 +297,6 @@ object RouteUtilV1 {
   def xsdDateTimeStampToInstant(s: String, errorMsg: String): IO[Throwable, Instant] =
     ZIO.fromOption(ValuesValidator.xsdDateTimeStampToInstant(s)).orElseFail(BadRequestException(errorMsg))
 
-  def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
-    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
-      stringFormatter
-        .validateAndEscapeIri(s)
-        .toZIO
-        .orElseFail(BadRequestException(errorMsg))
-    }
-
   def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
 
   def getUserProfileV1(ctx: RequestContext): ZIO[Authenticator, Throwable, UserProfileV1] =

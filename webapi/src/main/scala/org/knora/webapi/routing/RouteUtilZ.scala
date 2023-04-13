@@ -10,6 +10,8 @@ import zio.ZIO
 import java.net.URLDecoder
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.StringFormatter
 
 object RouteUtilZ {
 
@@ -33,4 +35,12 @@ object RouteUtilZ {
           if (!errorMsg.isBlank) errorMsg else s"Not an url encoded utf-8 String '$value'"
         )
       )
+
+  def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
+    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
+      stringFormatter
+        .validateAndEscapeIri(s)
+        .toZIO
+        .orElseFail(BadRequestException(errorMsg))
+    }
 }

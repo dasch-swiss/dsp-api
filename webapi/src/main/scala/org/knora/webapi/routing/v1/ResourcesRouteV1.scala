@@ -59,6 +59,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1._
+import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.FileUtil
@@ -155,7 +156,7 @@ final case class ResourcesRouteV1(
                   // XML: text with markup
                   for {
                     mappingIri <-
-                      validateAndEscapeIri(
+                      RouteUtilZ.validateAndEscapeIri(
                         richtext.mapping_id.get,
                         s"mapping_id ${richtext.mapping_id.get} is invalid"
                       )

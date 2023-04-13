@@ -46,7 +46,7 @@ final case class ProjectsRouteV1()(
     requestContext: RequestContext
   ): ZIO[Authenticator with StringFormatter, Throwable, ProjectInfoByIRIGetRequestV1] =
     for {
-      checkedProjectIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid project IRI $iri")
+      checkedProjectIri <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid project IRI $iri")
       userProfile       <- RouteUtilV1.getUserProfileV1(requestContext)
     } yield ProjectInfoByIRIGetRequestV1(
       iri = checkedProjectIri,
