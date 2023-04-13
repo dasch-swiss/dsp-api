@@ -36,6 +36,8 @@ lazy val buildSettings = Seq(
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
+lazy val dockerImageTag = taskKey[String]("Returns the docker image tag")
+
 lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
@@ -58,6 +60,7 @@ lazy val root: Project = Project(id = "root", file("."))
     git.useGitDescribe := true,
     // override generated version string because docker hub rejects '+' in tags
     ThisBuild / version ~= (_.replace('+', '-')),
+    dockerImageTag := (ThisBuild / version).value,
     publish / skip := true,
     name           := "dsp-api"
   )
