@@ -33,6 +33,10 @@ CONSTRUCT {
               knora-base:attachedToProject ?resourceProject  ;
               knora-base:creationDate ?creationDate ;
               knora-base:lastModificationDate ?lastModificationDate .
+              
+        ?resource knora-base:hasValue ?valueObject ;
+            ?resourceValueProperty ?valueObject .
+        ?valueObject ?valueObjectProperty ?valueObjectValue .
 } WHERE {
     {
         SELECT DISTINCT ?resource ?label
@@ -61,6 +65,26 @@ CONSTRUCT {
 
     OPTIONAL {
         ?resource knora-base:lastModificationDate ?lastModificationDate .
+    }
+
+    OPTIONAL {
+        ?resource ?resourceValueProperty ?valueObject .
+        ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+
+        ?valueObject a ?valueObjectType ;
+            ?valueObjectProperty ?valueObjectValue .
+
+        ?valueObjectType rdfs:subClassOf* knora-base:Value .
+
+        FILTER(?valueObjectType != knora-base:LinkValue)
+
+        FILTER NOT EXISTS {
+            ?valueObject knora-base:isDeleted true .
+        }
+
+        FILTER NOT EXISTS {
+            ?valueObjectValue a knora-base:StandoffTag .
+        }
     }
     
 }
