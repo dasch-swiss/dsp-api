@@ -129,6 +129,14 @@ case class SearchResourceByLabelRequestV2(
   requestingUser: UserADM
 ) extends SearchResponderRequestV2
 
+case class SearchResourceByLabelWithDefinedResourceClassRequestV2(
+  searchValue: String,
+  offset: Int,
+  limitToResourceClass: SmartIri,
+  targetSchema: ApiV2Schema,
+  requestingUser: UserADM
+) extends SearchResponderRequestV2
+
 /**
  * Represents the number of resources found by a search query.
  */

@@ -52,6 +52,7 @@ final case class SearchRouteV2(
       gravsearchGet() ~
       gravsearchPost() ~
       searchByLabelCount() ~
+      searchResourceByLabel() ~
       searchByLabel()
 
   /**
@@ -382,6 +383,48 @@ final case class SearchRouteV2(
         searchValue = sparqlEncodedSearchString,
         offset = offset,
         limitToProject = limitToProject,
+        limitToResourceClass = limitToResourceClass,
+        targetSchema = targetSchema,
+        requestingUser = requestingUser
+      )
+
+      RouteUtilV2.runRdfRouteF(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
+    }
+  }
+
+  private def searchResourceByLabel(): Route = path(
+    "v2" / "searchbylabel" / "resource" / Segment
+  ) { searchval =>
+    get { requestContext =>
+      val sparqlEncodedSearchString =
+        stringFormatter.toSparqlEncodedString(
+          searchval,
+          throw BadRequestException(s"Invalid search string: '$searchval'")
+        )
+
+      if (sparqlEncodedSearchString.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
+        throw BadRequestException(
+          s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$sparqlEncodedSearchString' given of length ${sparqlEncodedSearchString.length}."
+        )
+      }
+
+      val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+      val offset = getOffsetFromParams(params)
+
+      val limitToResourceClass: SmartIri = getResourceClassFromParams(params).getOrElse(
+        throw BadRequestException(
+          s"Missing parameter 'limitToResourceClass' in resource specific search by label request."
+        )
+      )
+
+      val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+
+      val requestMessage: Future[SearchResourceByLabelWithDefinedResourceClassRequestV2] = for {
+        requestingUser <- getUserADM(requestContext)
+      } yield SearchResourceByLabelWithDefinedResourceClassRequestV2(
+        searchValue = sparqlEncodedSearchString,
+        offset = offset,
         limitToResourceClass = limitToResourceClass,
         targetSchema = targetSchema,
         requestingUser = requestingUser
