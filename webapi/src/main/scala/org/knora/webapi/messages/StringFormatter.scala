@@ -2080,12 +2080,13 @@ class StringFormatter private (
    *                 user IRI.
    * @return the same string but escaped.
    */
+  @deprecated("Use validateAndEscapeUserIri(IRI) instead.")
   def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = // V2 / value objects
-    if (isKnoraUserIriStr(iri)) {
-      toSparqlEncodedString(iri, errorFun)
-    } else {
-      errorFun
-    }
+    validateAndEscapeIri(iri).getOrElse(errorFun)
+
+  def validateAndEscapeUserIri(iri: IRI): Option[String] =
+    if (isKnoraUserIriStr(iri)) toSparqlEncodedString(iri)
+    else None
 
   /**
    * Check that an optional string represents a valid user IRI.
@@ -2095,14 +2096,15 @@ class StringFormatter private (
    *                    user IRI.
    * @return the same optional string.
    */
+  @deprecated("Use validateAndEscapeOptionalUserIri(Option[String]) instead.")
   def validateAndEscapeOptionalUserIri(
     maybeString: Option[String],
     errorFun: => Nothing
   ): Option[String] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeUserIri(s, errorFun))
-      case None    => None
-    }
+    maybeString.map(s => validateAndEscapeUserIri(s)).getOrElse(errorFun)
+
+  def validateAndEscapeOptionalUserIri(maybeString: Option[String]): Option[String] =
+    maybeString.flatMap(validateAndEscapeUserIri)
 
   /**
    * Given an email address, checks if it is in a valid format.
