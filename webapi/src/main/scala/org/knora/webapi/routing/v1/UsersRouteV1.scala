@@ -17,6 +17,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilZ
 
 /**
  * Provides a spray-routing function for API routes that deal with lists.
@@ -82,6 +83,6 @@ final case class UsersRouteV1()(implicit r: Runtime[Authenticator with MessageRe
     for {
       userProfile <- RouteUtilV1.getUserProfileV1(requestContext)
       userIri     <- RouteUtilV1.validateAndEscapeIri(iri, "Invalid user IRI")
-      uuid        <- RouteUtilV1.randomUuid()
+      uuid        <- RouteUtilZ.randomUuid()
     } yield UserIriProfileUuid(userIri, userProfile, uuid)
 }

@@ -191,25 +191,22 @@ final case class ResourcesRouteV2(
       val page: Int =
         ValuesValidator.validateInt(pageStr).getOrElse(throw BadRequestException(s"Invalid page number: $pageStr"))
 
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+      val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
 
-      val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+      val requestTask = for {
+        targetSchema   <- targetSchemaTask
+        requestingUser <- Authenticator.getUserADM(requestContext)
+      } yield SearchResourcesByProjectAndClassRequestV2(
+        projectIri,
+        resourceClass.toOntologySchema(ApiV2Complex),
+        maybeOrderByProperty,
+        page,
+        targetSchema,
+        RouteUtilV2.getSchemaOptions(requestContext),
+        requestingUser
+      )
 
-      val requestTask = Authenticator
-        .getUserADM(requestContext)
-        .map(
-          SearchResourcesByProjectAndClassRequestV2(
-            projectIri,
-            resourceClass.toOntologySchema(ApiV2Complex),
-            maybeOrderByProperty,
-            page,
-            targetSchema,
-            schemaOptions,
-            _
-          )
-        )
-
-      RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
     }
   }
 
@@ -330,20 +327,19 @@ final case class ResourcesRouteV2(
             .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
             .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
         )
-      val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
+      val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-      val requestTask = Authenticator
-        .getUserADM(requestContext)
-        .map(requestingUser =>
-          ResourcesGetRequestV2(
-            resourceIris,
-            versionDate = versionDate,
-            targetSchema = targetSchema,
-            schemaOptions = schemaOptions,
-            requestingUser = requestingUser
-          )
-        )
-      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema, Some(schemaOptions))
+      val requestTask = for {
+        targetSchema   <- targetSchemaTask
+        requestingUser <- Authenticator.getUserADM(requestContext)
+      } yield ResourcesGetRequestV2(
+        resourceIris,
+        versionDate = versionDate,
+        targetSchema = targetSchema,
+        schemaOptions = schemaOptions,
+        requestingUser = requestingUser
+      )
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
     }
   }
 
@@ -357,11 +353,16 @@ final case class ResourcesRouteV2(
         val resourceIris: Seq[IRI] = resIris.map { resIri: String =>
           stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
         }
-        val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-        val requestTask = Authenticator
-          .getUserADM(requestContext)
-          .map(user => ResourcesPreviewGetRequestV2(resourceIris, targetSchema = targetSchema, requestingUser = user))
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
+        val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
+        val requestTask = for {
+          targetSchema <- targetSchemaTask
+          user         <- Authenticator.getUserADM(requestContext)
+        } yield ResourcesPreviewGetRequestV2(
+          resourceIris = resourceIris,
+          targetSchema = targetSchema,
+          requestingUser = user
+        )
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
       }
     }
 
@@ -377,7 +378,7 @@ final case class ResourcesRouteV2(
       val requestTask = Authenticator
         .getUserADM(requestContext)
         .map(ResourceTEIGetRequestV2(resourceIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, _))
-      RouteUtilV2.runTEIXMLRoute(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
+      RouteUtilV2.runTEIXMLRoute(requestTask, requestContext)
     }
   }
 

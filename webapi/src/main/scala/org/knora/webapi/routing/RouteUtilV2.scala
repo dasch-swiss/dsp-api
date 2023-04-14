@@ -14,6 +14,7 @@ import scala.concurrent.Future
 import scala.util.control.Exception.catching
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -106,7 +107,7 @@ object RouteUtilV2 {
    * @param requestContext the akka-http [[RequestContext]].
    * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
    */
-  def getOntologySchema(requestContext: RequestContext): ApiV2Schema = {
+  def getOntologySchema(requestContext: RequestContext): Task[ApiV2Schema] = ZIO.attempt {
     def nameToSchema(schemaName: String): ApiV2Schema =
       schemaName match {
         case SIMPLE_SCHEMA_NAME  => ApiV2Simple
@@ -188,11 +189,28 @@ object RouteUtilV2 {
    * @param requestContext the akka-http [[RequestContext]].
    * @return the specified project IRI, or [[None]] if no project header was included in the request.
    */
+  @deprecated("Use getProjectZ instead")
   def getProject(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] =
     requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map { header =>
       val projectIriStr = header.value
       projectIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $projectIriStr"))
     }
+
+  /**
+   * Gets the project IRI specified in a Knora-specific HTTP header.
+   *
+   * @param requestContext the akka-http [[RequestContext]].
+   * @return the specified project IRI, or [[None]] if no project header was included in the request.
+   *         fails with a [[BadRequestException]] if the project IRI is invalid.
+   */
+  def getProjectZ(requestContext: RequestContext): ZIO[StringFormatter, BadRequestException, Option[SmartIri]] = {
+    val maybeProjectIriStr = requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value())
+    ZIO.serviceWithZIO[StringFormatter] { sf =>
+      ZIO.foreach(maybeProjectIriStr)(iri =>
+        ZIO.attempt(sf.toSmartIri(iri)).orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
+      )
+    }
+  }
 
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
@@ -225,26 +243,26 @@ object RouteUtilV2 {
     targetSchema: OntologySchema = ApiV2Complex,
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[MessageRelay with AppConfig]): Future[RouteResult] =
-    runRdfRouteZ(ZIO.fromFuture(_ => requestMessageF), requestContext, targetSchema, schemaOptionsOption)
+    runRdfRouteZ(ZIO.fromFuture(_ => requestMessageF), requestContext, ZIO.succeed(targetSchema), schemaOptionsOption)
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
    *
-   * @param requestZio           A Task containing a [[KnoraRequestV2]] message that should be evaluated.
-   * @param requestContext       The akka-http [[RequestContext]].
-   * @param targetSchema         The API schema that should be used in the response, default is [[ApiV2Complex]].
-   * @param schemaOptionsOption  The schema options that should be used when processing the request.
-   *                             Uses RouteUtilV2.getSchemaOptions if not present.
+   * @param requestZio          A Task containing a [[KnoraRequestV2]] message that should be evaluated.
+   * @param requestContext      The akka-http [[RequestContext]].
+   * @param targetSchemaTask    The API schema that should be used in the response, default is [[ApiV2Complex]].
+   * @param schemaOptionsOption The schema options that should be used when processing the request.
+   *                            Uses RouteUtilV2.getSchemaOptions if not present.
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runRdfRouteZ[R](
     requestZio: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
-    targetSchema: OntologySchema = ApiV2Complex,
+    targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with MessageRelay with AppConfig]): Future[RouteResult] = {
     val responseZio = requestZio.flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
-    completeResponse(responseZio, requestContext, targetSchema, schemaOptionsOption)
+    completeResponse(responseZio, requestContext, targetSchemaTask, schemaOptionsOption)
   }
 
   /**
@@ -267,10 +285,11 @@ object RouteUtilV2 {
   def completeResponse[R](
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
     requestContext: RequestContext,
-    targetSchema: OntologySchema = ApiV2Complex,
+    targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
+      targetSchema     <- targetSchemaTask
       schemaOptions    <- ZIO.attempt(schemaOptionsOption.getOrElse(getSchemaOptions(requestContext)))
       appConfig        <- ZIO.service[AppConfig]
       knoraResponse    <- responseTask
@@ -293,8 +312,7 @@ object RouteUtilV2 {
    */
   def runTEIXMLRoute[R](
     requestTask: ZIO[R, Throwable, KnoraRequestV2],
-    requestContext: RequestContext,
-    targetSchema: ApiV2Schema
+    requestContext: RequestContext
   )(implicit runtime: Runtime[R with MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture {
       for {

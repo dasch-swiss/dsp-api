@@ -63,12 +63,13 @@ final case class StandoffRouteV2(
 
           val offset: Int =
             ValuesValidator.validateInt(offsetStr).getOrElse(throw BadRequestException(s"Invalid offset: $offsetStr"))
-          val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-          val requestTask = Authenticator
-            .getUserADM(requestContext)
-            .map(GetStandoffPageRequestV2(resourceIri.toString, valueIri.toString, offset, targetSchema, _))
-          val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, ApiV2Complex, Some(schemaOptions))
+          val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
+          val requestTask = for {
+            user         <- Authenticator.getUserADM(requestContext)
+            targetSchema <- targetSchemaTask
+          } yield GetStandoffPageRequestV2(resourceIri.toString, valueIri.toString, offset, targetSchema, user)
+          val schemaOptions = Some(SchemaOptions.ForStandoffSeparateFromTextValues)
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, schemaOptionsOption = schemaOptions)
         }
     } ~ path("v2" / "mapping") {
       post {

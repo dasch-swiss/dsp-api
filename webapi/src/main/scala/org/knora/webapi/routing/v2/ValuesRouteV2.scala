@@ -75,22 +75,21 @@ final case class ValuesRouteV2(
               .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
               .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
           )
-        val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
+        val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
-        val requestTask = Authenticator
-          .getUserADM(requestContext)
-          .map(requestingUser =>
-            ResourcesGetRequestV2(
-              resourceIris = Seq(resourceIri.toString),
-              valueUuid = Some(valueUuid),
-              versionDate = versionDate,
-              targetSchema = targetSchema,
-              requestingUser = requestingUser
-            )
-          )
+        val requestTask = for {
+          requestingUser <- Authenticator.getUserADM(requestContext)
+          targetSchema   <- targetSchemaTask
+        } yield ResourcesGetRequestV2(
+          resourceIris = Seq(resourceIri.toString),
+          valueUuid = Some(valueUuid),
+          versionDate = versionDate,
+          targetSchema = targetSchema,
+          requestingUser = requestingUser
+        )
 
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema, Some(schemaOptions))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
       }
   }
 

@@ -52,6 +52,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1
 import org.knora.webapi.routing.RouteUtilV1._
+import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -96,7 +97,7 @@ final case class ResourcesRouteV1()(
                   case None => ZIO.none
                 }
         valuesToBeCreated <- valuesToCreate(apiRequest.properties, acceptStandoffLinksToClientIDs = false, userADM)
-        uuid              <- RouteUtilV1.randomUuid()
+        uuid              <- RouteUtilZ.randomUuid()
       } yield ResourceCreateRequestV1(resourceTypeIri, label, valuesToBeCreated, file, projectIri, userADM, uuid)
     }
 
@@ -166,7 +167,7 @@ final case class ResourcesRouteV1()(
           ZIO.foreach(deleteComment)(comment =>
             RouteUtilV1.toSparqlEncodedString(comment, s"Invalid comment: '$comment'")
           )
-        uuid <- RouteUtilV1.randomUuid()
+        uuid <- RouteUtilZ.randomUuid()
       } yield ResourceDeleteRequestV1(resourceIri, deleteComment, userADM, uuid)
 
     /**
@@ -948,7 +949,7 @@ final case class ResourcesRouteV1()(
             userADM <- Authenticator.getUserADM(requestContext)
             resIri  <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
             label   <- RouteUtilV1.toSparqlEncodedString(apiRequest.label, s"Invalid label: '${apiRequest.label}'")
-            uuid    <- RouteUtilV1.randomUuid()
+            uuid    <- RouteUtilZ.randomUuid()
           } yield ChangeResourceLabelRequestV1(resIri, label, userADM, uuid)
           runJsonRouteZ(requestMessage, requestContext)
         }
@@ -1018,7 +1019,7 @@ final case class ResourcesRouteV1()(
             resourcesToCreate <- importXmlToCreateResourceRequests(rootElement)
 
             // Make a MultipleResourceCreateRequestV1 for the creation of all the resources.
-            apiRequestID  <- RouteUtilV1.randomUuid()
+            apiRequestID  <- RouteUtilZ.randomUuid()
             updateRequest <- makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userADM)
           } yield updateRequest
 

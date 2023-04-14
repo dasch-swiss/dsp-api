@@ -65,9 +65,9 @@ class OntologyV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val ontologiesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new OntologiesRouteV2(routeData, runtime).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(OntologiesRouteV2().makeRoute)
   private val resourcesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(new ResourcesRouteV2(routeData, runtime).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(routeData, runtime).makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration
@@ -401,6 +401,10 @@ class OntologyV2R2RSpec extends R2RSpec {
 
           Get(httpGetTest.urlPath).addHeader(Accept(mediaType)) ~> ontologiesPath ~> check {
             val responseStr: String = responseAs[String]
+            val isOkResponse = response.status == StatusCodes.OK
+            if(!isOkResponse) {
+              println(httpGetTest)
+            }
             assert(response.status == StatusCodes.OK, responseStr)
 
             // Are we writing expected response files?
