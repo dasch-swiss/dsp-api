@@ -52,6 +52,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1
 import org.knora.webapi.routing.RouteUtilV1._
+import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -80,7 +81,7 @@ final case class ResourcesRouteV1()(
       val projectIri = apiRequest.project_id
       for {
         resourceTypeIri <-
-          RouteUtilV1.validateAndEscapeIri(apiRequest.restype_id, s"Invalid resource IRI: ${apiRequest.restype_id}")
+          RouteUtilZ.validateAndEscapeIri(apiRequest.restype_id, s"Invalid resource IRI: ${apiRequest.restype_id}")
         label   <- RouteUtilV1.toSparqlEncodedString(apiRequest.label, s"Invalid label: '${apiRequest.label}'")
         project <- getProjectByIri(projectIri)
         file <- apiRequest.file match {
@@ -96,7 +97,7 @@ final case class ResourcesRouteV1()(
                   case None => ZIO.none
                 }
         valuesToBeCreated <- valuesToCreate(apiRequest.properties, acceptStandoffLinksToClientIDs = false, userADM)
-        uuid              <- RouteUtilV1.randomUuid()
+        uuid              <- RouteUtilZ.randomUuid()
       } yield ResourceCreateRequestV1(resourceTypeIri, label, valuesToBeCreated, file, projectIri, userADM, uuid)
     }
 
@@ -161,12 +162,12 @@ final case class ResourcesRouteV1()(
       userADM: UserADM
     ): ZIO[StringFormatter, BadRequestException, ResourceDeleteRequestV1] =
       for {
-        resourceIri <- RouteUtilV1.validateAndEscapeIri(resIri, s"Invalid resource IRI: $resIri")
+        resourceIri <- RouteUtilZ.validateAndEscapeIri(resIri, s"Invalid resource IRI: $resIri")
         deleteComment <-
           ZIO.foreach(deleteComment)(comment =>
             RouteUtilV1.toSparqlEncodedString(comment, s"Invalid comment: '$comment'")
           )
-        uuid <- RouteUtilV1.randomUuid()
+        uuid <- RouteUtilZ.randomUuid()
       } yield ResourceDeleteRequestV1(resourceIri, deleteComment, userADM, uuid)
 
     /**
@@ -693,7 +694,7 @@ final case class ResourcesRouteV1()(
             maybeMappingID match {
               case Some(mappingID) =>
                 for {
-                  mappingIri <- RouteUtilV1.validateAndEscapeIri(
+                  mappingIri <- RouteUtilZ.validateAndEscapeIri(
                                   mappingID.toString(),
                                   s"Invalid mapping ID in element '${node.label}: '$mappingID"
                                 )
@@ -745,7 +746,7 @@ final case class ResourcesRouteV1()(
                     linkType match {
                       case "ref" => ZIO.succeed(CreateResourceValueV1(link_to_client_id = Some(target)))
                       case "iri" =>
-                        RouteUtilV1
+                        RouteUtilZ
                           .validateAndEscapeIri(target, s"Invalid IRI in element '${node.label}': '$target'")
                           .map(it => CreateResourceValueV1(link_value = Some(it)))
                       case other =>
@@ -784,7 +785,7 @@ final case class ResourcesRouteV1()(
               )
 
           case "uri_value" =>
-            RouteUtilV1
+            RouteUtilZ
               .validateAndEscapeIri(elementValue, s"Invalid URI value in element '${node.label}: '$elementValue'")
               .map(it => CreateResourceValueV1(uri_value = Some(it)))
 
@@ -813,7 +814,7 @@ final case class ResourcesRouteV1()(
               )
 
           case "hlist_value" =>
-            RouteUtilV1
+            RouteUtilZ
               .validateAndEscapeIri(elementValue, "Invalid hlist value in element '${node.label}: '$elementValue'")
               .map(it => CreateResourceValueV1(hlist_value = Some(it)))
 
@@ -873,7 +874,7 @@ final case class ResourcesRouteV1()(
             resourceTypeIri <- restype match {
                                  case "-1" => ZIO.none
                                  case restype: IRI =>
-                                   RouteUtilV1
+                                   RouteUtilZ
                                      .validateAndEscapeIri(restype, "Invalid param restype: $restype")
                                      .map(Some(_))
                                }
@@ -927,7 +928,7 @@ final case class ResourcesRouteV1()(
           case "properties" =>
             for {
               userADM <- Authenticator.getUserADM(requestContext)
-              resIri  <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
+              resIri  <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
             } yield ResourceFullGetRequestV1(resIri, userADM)
           case other => ZIO.fail(BadRequestException(s"Invalid request type: $other"))
         }
@@ -937,7 +938,7 @@ final case class ResourcesRouteV1()(
       get { requestContext =>
         val requestMessage = for {
           userADM <- Authenticator.getUserADM(requestContext)
-          resIri  <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
+          resIri  <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
         } yield PropertiesGetRequestV1(resIri, userADM)
         runJsonRouteZ(requestMessage, requestContext)
       }
@@ -946,9 +947,9 @@ final case class ResourcesRouteV1()(
         entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest => requestContext =>
           val requestMessage = for {
             userADM <- Authenticator.getUserADM(requestContext)
-            resIri  <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
+            resIri  <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
             label   <- RouteUtilV1.toSparqlEncodedString(apiRequest.label, s"Invalid label: '${apiRequest.label}'")
-            uuid    <- RouteUtilV1.randomUuid()
+            uuid    <- RouteUtilZ.randomUuid()
           } yield ChangeResourceLabelRequestV1(resIri, label, userADM, uuid)
           runJsonRouteZ(requestMessage, requestContext)
         }
@@ -958,7 +959,7 @@ final case class ResourcesRouteV1()(
         parameters("depth".as[Int].?) { depth => requestContext =>
           val requestMessage = for {
             userADM     <- Authenticator.getUserADM(requestContext)
-            resourceIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
+            resourceIri <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid param resource IRI: $iri")
           } yield GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userADM)
           runJsonRouteZ(requestMessage, requestContext)
         }
@@ -1018,7 +1019,7 @@ final case class ResourcesRouteV1()(
             resourcesToCreate <- importXmlToCreateResourceRequests(rootElement)
 
             // Make a MultipleResourceCreateRequestV1 for the creation of all the resources.
-            apiRequestID  <- RouteUtilV1.randomUuid()
+            apiRequestID  <- RouteUtilZ.randomUuid()
             updateRequest <- makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userADM)
           } yield updateRequest
 
@@ -1143,7 +1144,7 @@ final case class ResourcesRouteV1()(
     userADM: UserADM
   ): ZIO[StringFormatter, BadRequestException, ResourcesResponderRequestV1] =
     for {
-      validResIri <- RouteUtilV1.validateAndEscapeIri(resIri, s"Invalid resource IRI: $resIri")
+      validResIri <- RouteUtilZ.validateAndEscapeIri(resIri, s"Invalid resource IRI: $resIri")
       request <- requestType match {
                    case "info"    => ZIO.succeed(ResourceInfoGetRequestV1(validResIri, userADM))
                    case "rights"  => ZIO.succeed(ResourceRightsGetRequestV1(validResIri, userADM))
@@ -1160,7 +1161,7 @@ final case class ResourcesRouteV1()(
   ): ZIO[MessageRelay with StringFormatter, Throwable, Map[IRI, Seq[CreateValueV1WithComment]]] =
     ZIO.foreach(properties) { case (k, v) =>
       for {
-        tk <- RouteUtilV1.validateAndEscapeIri(k, s"Invalid property IRI $k")
+        tk <- RouteUtilZ.validateAndEscapeIri(k, s"Invalid property IRI $k")
         tv <- toCreateResourceValues(v, acceptStandoffLinksToClientIDs, userProfile)
       } yield tk -> tv
     }
@@ -1226,7 +1227,7 @@ final case class ResourcesRouteV1()(
       .fromOption(givenValue.hlist_value)
       .orElseFail(BadRequestException("hlist_value is missing"))
       .flatMap { it =>
-        RouteUtilV1
+        RouteUtilZ
           .validateAndEscapeIri(it, s"Invalid list value IRI: $it")
           .map(HierarchicalListValueV1)
           .map(CreateValueV1WithComment(_, givenValue.comment))
@@ -1237,7 +1238,7 @@ final case class ResourcesRouteV1()(
       .fromOption(givenValue.geom_value)
       .orElseFail(BadRequestException("geom_value is missing"))
       .flatMap(it =>
-        RouteUtilV1
+        RouteUtilZ
           .validateAndEscapeIri(it, s"Invalid geometry value: $it")
           .map(GeomValueV1)
           .map(CreateValueV1WithComment(_, givenValue.comment))
@@ -1269,7 +1270,7 @@ final case class ResourcesRouteV1()(
       .fromOption(givenValue.uri_value)
       .orElseFail(BadRequestException("uri_value is missing"))
       .flatMap(it =>
-        RouteUtilV1
+        RouteUtilZ
           .validateAndEscapeIri(it, s"Invalid URI: $it")
           .map(UriValueV1)
           .map(CreateValueV1WithComment(_, givenValue.comment))
@@ -1303,7 +1304,7 @@ final case class ResourcesRouteV1()(
     (givenValue.link_value, givenValue.link_to_client_id) match {
       case (Some(targetIri: IRI), None) =>
         // This is a link to an existing Knora IRI, so make sure the IRI is valid.
-        RouteUtilV1
+        RouteUtilZ
           .validateAndEscapeIri(targetIri, s"Invalid Knora resource IRI: $targetIri")
           .map(it => CreateValueV1WithComment(LinkUpdateV1(it), givenValue.comment))
 
@@ -1338,7 +1339,8 @@ final case class ResourcesRouteV1()(
           val richtextXml       = richtext.xml.get
           val richtextMappingId = richtext.mapping_id.get
           for {
-            mappingIri <- validateAndEscapeIri(richtextMappingId, s"mapping_id $richtextMappingId is invalid")
+            mappingIri <-
+              RouteUtilZ.validateAndEscapeIri(richtextMappingId, s"mapping_id $richtextMappingId is invalid")
             textWithStandoffTags <-
               convertXMLtoStandoffTagV1(richtextXml, mappingIri, acceptStandoffLinksToClientIDs, userProfile, logger)
             resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
