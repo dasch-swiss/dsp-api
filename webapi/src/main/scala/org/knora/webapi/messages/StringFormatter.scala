@@ -2024,11 +2024,6 @@ class StringFormatter private (
   def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = // --
     // TODO: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible. (depends on toSparqlEncodedString())
     maybeString.map(toSparqlEncodedString).getOrElse(errorFun)
-  // maybeString match {
-  //   case Some(s) =>
-  //     Some(toSparqlEncodedString(s, errorFun))
-  //   case None => None
-  // }
 
   def escapeOptionalString(maybeString: Option[String]): Option[String] =
     maybeString.flatMap(toSparqlEncodedString)
@@ -2039,12 +2034,13 @@ class StringFormatter private (
    * @param iri the group's IRI.
    * @return the IRI of the list.
    */
+  @deprecated("Use validateGroupIri(IRI) instead.")
   def validateGroupIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    if (isKnoraGroupIriStr(iri)) {
-      iri
-    } else {
-      errorFun
-    }
+    validateGroupIri(iri).getOrElse(errorFun)
+
+  def validateGroupIri(iri: IRI): Option[IRI] =
+    if (isKnoraGroupIriStr(iri)) Some(iri)
+    else None
 
   /**
    * Given the optional group IRI, checks if it is in a valid format.
@@ -2054,10 +2050,10 @@ class StringFormatter private (
    */
   @deprecated("Use validateOptionalGroupIri(Option[IRI]) instead.")
   def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = // V2 / value objects
-    maybeIri match {
-      case Some(iri) => Some(validateGroupIri(iri, errorFun))
-      case None      => None
-    }
+    maybeIri.map(validateGroupIri).getOrElse(errorFun)
+
+  def validateOptionalGroupIri(maybeIri: Option[IRI]): Option[IRI] =
+    maybeIri.flatMap(validateGroupIri)
 
   /**
    * Given the permission IRI, checks if it is in a valid format.
@@ -2101,7 +2097,7 @@ class StringFormatter private (
     maybeString: Option[String],
     errorFun: => Nothing
   ): Option[String] = // V2 / value objects
-    maybeString.map(s => validateAndEscapeUserIri(s)).getOrElse(errorFun)
+    maybeString.map(validateAndEscapeUserIri).getOrElse(errorFun)
 
   def validateAndEscapeOptionalUserIri(maybeString: Option[String]): Option[String] =
     maybeString.flatMap(validateAndEscapeUserIri)
