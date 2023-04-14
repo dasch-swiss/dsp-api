@@ -2061,12 +2061,13 @@ class StringFormatter private (
    * @param iri the permission's IRI.
    * @return the IRI of the list.
    */
+  @deprecated("Use validatePermissionIri(IRI) instead.")
   def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    if (isKnoraPermissionIriStr(iri)) {
-      iri
-    } else {
-      errorFun
-    }
+    validatePermissionIri(iri).getOrElse(errorFun)
+
+  def validatePermissionIri(iri: IRI): Option[IRI] =
+    if (isKnoraPermissionIriStr(iri)) Some(iri)
+    else None
 
   /**
    * Check that the supplied IRI represents a valid user IRI.
