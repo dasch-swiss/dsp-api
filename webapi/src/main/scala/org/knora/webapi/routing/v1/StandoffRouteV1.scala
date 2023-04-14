@@ -24,6 +24,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1J
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilZ
 
 /**
  * A route used to convert XML to standoff.
@@ -60,13 +61,13 @@ final case class StandoffRouteV1()(
                 }
             label <-
               RouteUtilV1.toSparqlEncodedString(standoffApiJSONRequest.label, "'label' contains invalid characters")
-            projectIri <- RouteUtilV1.validateAndEscapeIri(standoffApiJSONRequest.project_id, "invalid project IRI")
+            projectIri <- RouteUtilZ.validateAndEscapeIri(standoffApiJSONRequest.project_id, "invalid project IRI")
             mappingName <- RouteUtilV1.toSparqlEncodedString(
                              standoffApiJSONRequest.mappingName,
                              "'mappingName' contains invalid characters"
                            )
             userProfile <- Authenticator.getUserADM(requestContext)
-            uuid        <- RouteUtilV1.randomUuid()
+            uuid        <- RouteUtilZ.randomUuid()
           } yield CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid)
           RouteUtilV1.runJsonRouteZ(msg, requestContext)
         }

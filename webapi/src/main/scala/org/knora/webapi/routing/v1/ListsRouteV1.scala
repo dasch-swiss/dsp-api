@@ -17,6 +17,7 @@ import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilZ
 
 /**
  * Provides API routes that deal with lists.
@@ -55,7 +56,7 @@ final case class ListsRouteV1()(implicit
     requestContext: RequestContext
   ): ZIO[StringFormatter with MessageRelay, Throwable, ListsResponderRequestV1] =
     for {
-      listIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param list IRI: $iri")
+      listIri <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid param list IRI: $iri")
       requestMessage <- requestContext.request.uri.query().get("reqtype") match {
                           case Some("node")  => ZIO.succeed(NodePathGetRequestV1(listIri, userProfile))
                           case Some(reqtype) => ZIO.fail(BadRequestException(s"Invalid reqtype: $reqtype"))
@@ -69,7 +70,7 @@ final case class ListsRouteV1()(implicit
     requestContext: RequestContext
   ): ZIO[StringFormatter with MessageRelay, Throwable, ListsResponderRequestV1] =
     for {
-      selIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid param list IRI: $iri")
+      selIri <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid param list IRI: $iri")
       requestMessage <- requestContext.request.uri.query().get("reqtype") match {
                           case Some("node")  => ZIO.succeed(NodePathGetRequestV1(selIri, userProfile))
                           case Some(reqtype) => ZIO.fail(BadRequestException(s"Invalid reqtype: $reqtype"))

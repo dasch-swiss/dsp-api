@@ -21,6 +21,7 @@ import org.knora.webapi.messages.v1.responder.searchmessages.FulltextSearchGetRe
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchComparisonOperatorV1
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilZ
 
 // slash after path without following segment
 
@@ -92,18 +93,18 @@ final case class SearchRouteV1()(
 
       restypeIri <-
         ZIO.foreach(filterByResType)(value =>
-          RouteUtilV1.validateAndEscapeIri(value, errorMessage("filter_by_restype", value))
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_restype", value))
         )
       projectIri <-
         ZIO.foreach(filterByProject)(value =>
-          RouteUtilV1.validateAndEscapeIri(value, errorMessage("filter_by_project", value))
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_project", value))
         )
       ownerIri <-
         ZIO.foreach(filterByOwner)(value =>
-          RouteUtilV1.validateAndEscapeIri(value, errorMessage("filter_by_owner", value))
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_owner", value))
         )
       propertyIri <-
-        ZIO.foreach(propertyId)(prop => RouteUtilV1.validateAndEscapeIri(prop, errorMessage("property_id", prop)))
+        ZIO.foreach(propertyId)(prop => RouteUtilZ.validateAndEscapeIri(prop, errorMessage("property_id", prop)))
       compop <- ZIO.foreach(comparisonOperator)(SearchComparisonOperatorV1.lookup)
 
       // propertyId, compop, and searchval are parallel structures (parallel arrays): they have to be of the same length
@@ -156,11 +157,11 @@ final case class SearchRouteV1()(
 
       restypeIri <-
         ZIO.foreach(params.get("filter_by_restype"))(value =>
-          RouteUtilV1.validateAndEscapeIri(value, errorMessage("filter_by_restype", value))
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_restype", value))
         )
       projectIri <-
         ZIO.foreach(params.get("filter_by_project"))(value =>
-          RouteUtilV1.validateAndEscapeIri(value, errorMessage("filter_by_project", value))
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_project", value))
         )
       searchString <- RouteUtilV1.toSparqlEncodedString(searchval, s"Invalid search string: '$searchval'")
 
