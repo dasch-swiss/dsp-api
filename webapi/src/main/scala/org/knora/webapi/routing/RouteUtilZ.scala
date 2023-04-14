@@ -4,16 +4,14 @@
  */
 
 package org.knora.webapi.routing
-import zio.IO
-import zio.Task
-import zio.UIO
-import zio.ZIO
+import zio._
 
 import java.net.URLDecoder
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -32,7 +30,7 @@ object RouteUtilZ {
    *
    *         '''failure''' A [[BadRequestException]] with the `errorMsg`
    */
-  def urlDecode(value: String, errorMsg: String = ""): Task[String] =
+  def urlDecode(value: String, errorMsg: String = ""): IO[BadRequestException, IRI] =
     ZIO
       .attempt(URLDecoder.decode(value, "utf-8"))
       .orElseFail(
@@ -40,11 +38,6 @@ object RouteUtilZ {
           if (!errorMsg.isBlank) errorMsg else s"Not an url encoded utf-8 String '$value'"
         )
       )
-
-  def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
-
-  def toSmartIri(str: String, errMsg: String): ZIO[IriConverter, BadRequestException, SmartIri] =
-    ZIO.serviceWithZIO[IriConverter](_.asSmartIri(str)).orElseFail(BadRequestException(errMsg))
 
   def ensureExternalOntologyName(iri: SmartIri): ZIO[StringFormatter, BadRequestException, SmartIri] =
     ZIO.serviceWithZIO[StringFormatter] { sf =>
@@ -74,4 +67,20 @@ object RouteUtilZ {
     ZIO
       .succeed(iri)
       .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(BadRequestException(s"Invalid schema for <$iri>"))
+
+  def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
+    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
+      stringFormatter
+        .validateAndEscapeIri(s)
+        .toZIO
+        .orElseFail(BadRequestException(errorMsg))
+    }
+
+  def toSmartIri(s: String): ZIO[IriConverter, Throwable, SmartIri] =
+    ZIO.serviceWithZIO[IriConverter](_.asSmartIri(s))
+
+  def toSmartIri(s: String, errorMsg: String): ZIO[IriConverter, BadRequestException, SmartIri] =
+    toSmartIri(s).orElseFail(BadRequestException(errorMsg))
+
+  def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
 }

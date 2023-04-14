@@ -61,7 +61,7 @@ final case class StandoffRouteV1()(
                 }
             label <-
               RouteUtilV1.toSparqlEncodedString(standoffApiJSONRequest.label, "'label' contains invalid characters")
-            projectIri <- RouteUtilV1.validateAndEscapeIri(standoffApiJSONRequest.project_id, "invalid project IRI")
+            projectIri <- RouteUtilZ.validateAndEscapeIri(standoffApiJSONRequest.project_id, "invalid project IRI")
             mappingName <- RouteUtilV1.toSparqlEncodedString(
                              standoffApiJSONRequest.mappingName,
                              "'mappingName' contains invalid characters"

@@ -401,8 +401,8 @@ class OntologyV2R2RSpec extends R2RSpec {
 
           Get(httpGetTest.urlPath).addHeader(Accept(mediaType)) ~> ontologiesPath ~> check {
             val responseStr: String = responseAs[String]
-            val isOkResponse = response.status == StatusCodes.OK
-            if(!isOkResponse) {
+            val isOkResponse        = response.status == StatusCodes.OK
+            if (!isOkResponse) {
               println(httpGetTest)
             }
             assert(response.status == StatusCodes.OK, responseStr)
