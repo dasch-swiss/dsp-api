@@ -12,7 +12,6 @@ import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
 import org.w3c.dom.ls.LSInput
 import org.w3c.dom.ls.LSResourceResolver
-import org.xml.sax.SAXException
 import zio._
 
 import java.io._
@@ -23,7 +22,6 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.Schema
 import javax.xml.validation.SchemaFactory
-import javax.xml.validation.Validator
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
@@ -519,10 +517,10 @@ final case class ResourcesRouteV1()(
                            )
         // Generate a bundle of XML schemas for validating the submitted XML.
         schemaBundle <- generateSchemasFromOntologies(mainOntologyIri.toString, userADM)
-        _ <- validateXml(xml, schemaBundle)
+        _            <- validateXml(xml, schemaBundle)
       } yield ()
 
-    def validateXml(xml: IRI, schemaBundle: XmlImportSchemaBundleV1 ) =
+    def validateXml(xml: IRI, schemaBundle: XmlImportSchemaBundleV1) =
       ZIO.attempt(getXmlValidator(schemaBundle).validate(new StreamSource(new StringReader(xml)))).mapError { e =>
         BadRequestException(s"XML import did not pass XML schema validation: $e")
       }
@@ -1066,7 +1064,6 @@ final case class ResourcesRouteV1()(
       }
     }
   }
-
 
   /**
    * Represents an XML import schema corresponding to an ontology.
