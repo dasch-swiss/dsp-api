@@ -1480,10 +1480,9 @@ class StringFormatter private (
    * @param s        the string to be checked.
    * @return A validated and escaped IRI.
    */
-  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
-    Validation
-      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
-      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
+  def validateAndEscapeIri(s: String): Option[String] =
+    if (Iri.urlValidator.isValid(s)) Some(encodeAllowEscapes(s))
+    else None
 
   /**
    * Check that an optional string represents a valid IRI.
@@ -1493,11 +1492,12 @@ class StringFormatter private (
    *                    IRI.
    * @return the same optional string.
    */
+  @deprecated("Use validateAndEscapeOptionalIri(Option[String]) instead.")
   def validateAndEscapeOptionalIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] =
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeIri(s, errorFun))
-      case None    => None
-    }
+    maybeString.map(s => validateAndEscapeIri(s)).getOrElse(errorFun)
+
+  def validateAndEscapeOptionalIri(maybeString: Option[String]): Option[String] =
+    maybeString.flatMap(validateAndEscapeIri)
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
