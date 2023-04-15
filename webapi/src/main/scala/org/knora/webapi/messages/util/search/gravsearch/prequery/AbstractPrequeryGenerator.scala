@@ -5,6 +5,9 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import zio.Task
+import zio.ZIO
+
 import scala.collection.mutable
 
 import dsp.errors._
@@ -13,6 +16,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.types._
@@ -34,7 +38,8 @@ abstract class AbstractPrequeryGenerator(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema
-) extends WhereTransformer {
+) extends WhereTransformer
+    with ConstructToSelectTransformer {
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
@@ -73,7 +78,7 @@ abstract class AbstractPrequeryGenerator(
    * When we enter a UNION block, pushes an empty collection of generated variables on to the stack
    * valueVariablesAutomaticallyGenerated.
    */
-  override def enteringUnionBlock(): Unit = {
+  override def enteringUnionBlock(): Task[Unit] = ZIO.attempt {
     valueVariablesAutomaticallyGenerated = Map
       .empty[QueryVariable, Set[GeneratedQueryVariable]] :: valueVariablesAutomaticallyGenerated
 
@@ -84,7 +89,7 @@ abstract class AbstractPrequeryGenerator(
    * When we leave a UNION block, pops that block's collection of generated variables off the
    * stack valueVariablesAutomaticallyGenerated.
    */
-  override def leavingUnionBlock(): Unit = {
+  override def leavingUnionBlock(): Task[Unit] = ZIO.attempt {
     valueVariablesAutomaticallyGenerated = valueVariablesAutomaticallyGenerated.tail
 
     variablesInUnionBlocks = variablesInUnionBlocks.tail
@@ -576,7 +581,7 @@ abstract class AbstractPrequeryGenerator(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  ): Seq[QueryPattern] =
+  ): Task[Seq[QueryPattern]] = ZIO.attempt(
     // Does this statement set a Gravsearch option?
     statementPattern.subj match {
       case iriRef: IriRef if OntologyConstants.KnoraApi.GravsearchOptionsIris.contains(iriRef.iri.toString) =>
@@ -617,6 +622,7 @@ abstract class AbstractPrequeryGenerator(
 
         additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
     }
+  )
 
   /**
    * Creates additional statements for a given [[Entity]] based on type information using `conversionFuncForNonPropertyType`
@@ -760,7 +766,7 @@ abstract class AbstractPrequeryGenerator(
     iriRef: IriRef,
     propInfo: PropertyTypeInfo
   ): TransformedFilterPattern = {
-    iriRef.iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}"))
+    if (!iriRef.iri.isApiV2Schema(querySchema)) throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}")
 
     // make sure that the comparison operator is a CompareExpressionOperator.EQUALS
     if (comparisonOperator != CompareExpressionOperator.EQUALS)
@@ -944,10 +950,11 @@ abstract class AbstractPrequeryGenerator(
     }
 
     // validate Knora date string
-    val dateStr: String = stringFormatter.validateDate(
-      dateStringLiteral.value,
-      throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string")
-    )
+    val dateStr: String = ValuesValidator
+      .validateDate(dateStringLiteral.value)
+      .getOrElse(
+        throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string")
+      )
 
     // Convert it to Julian Day Numbers.
     val dateValueContent = DateValueContentV2.parse(dateStr)

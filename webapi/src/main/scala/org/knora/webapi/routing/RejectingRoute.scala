@@ -27,7 +27,7 @@ import org.knora.webapi.core.domain.AppState
  *
  * TODO: This should probably be refactored into a ZIO-HTTP middleware, when the transistion to ZIO-HTTP is done.
  */
-class RejectingRoute(routeData: KnoraRouteData, runtime: Runtime[State]) { self =>
+final case class RejectingRoute(private val routeData: KnoraRouteData, private val runtime: Runtime[State]) { self =>
 
   val log: Logger = Logger(this.getClass)
 

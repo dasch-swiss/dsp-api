@@ -7,156 +7,128 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
 import scala.language.postfixOps
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.FulltextSearchGetRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchComparisonOperatorV1
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilZ
 
 // slash after path without following segment
 
 /**
  * Provides a spray-routing function for API routes that deal with search.
  */
-class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class SearchRouteV1()(
+  private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+) {
+
+  def makeRoute: Route =
+    path("v1" / "search" /) {
+      // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
+      get { requestContext =>
+        val requestTask = for {
+          user  <- Authenticator.getUserADM(requestContext)
+          params = requestContext.request.uri.query().toMultiMap
+          msg   <- makeExtendedSearchRequestMessage(user, params)
+        } yield msg
+        RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
+      }
+    } ~
+      path("v1" / "search" / Segment) { searchval =>
+        // TODO: if a space is encoded as a "+", this is not converted back to a space
+        get { requestContext =>
+          val requestTask = for {
+            user  <- Authenticator.getUserADM(requestContext)
+            params = requestContext.request.uri.query().toMap
+            msg   <- makeFulltextSearchRequestMessage(user, searchval, params)
+          } yield msg
+          RouteUtilV1.runJsonRouteZ(requestTask, requestContext)
+        }
+      }
 
   /**
    * The default number of rows to show in search results.
    */
   private val defaultShowNRows = 25
 
-  def makeExtendedSearchRequestMessage(
+  private def makeExtendedSearchRequestMessage(
     userADM: UserADM,
     reverseParams: Map[String, Seq[String]]
-  ): ExtendedSearchGetRequestV1 = {
-    val stringFormatter = StringFormatter.getGeneralInstance
+  ): ZIO[StringFormatter, Throwable, ExtendedSearchGetRequestV1] = {
 
     // Spray returns the parameters in reverse order, so reverse them before processing, because the JavaScript GUI expects the order to be preserved.
-    val params = reverseParams.map { case (key, value) =>
-      key -> value.reverse
-    }
-
-    // println(params)
-
-    params.get("searchtype") match {
-      case Some(List("extended")) => ()
-      case other                  => throw BadRequestException(s"Unexpected searchtype param for extended search: $other")
-    }
+    val params = reverseParams.map { case (key, value) => key -> value.reverse }
 
     // only one value is expected
-    val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
-      case Some(List(restype: IRI)) =>
-        Some(
-          stringFormatter.validateAndEscapeIri(
-            restype,
-            throw BadRequestException(
-              s"Value for param 'filter_by_restype' for extended search $restype is not a valid IRI. Please make sure that it was correctly URL encoded."
-            )
+    val filterByResType: Option[String] = params.get("filter_by_restype").flatMap(_.headOption)
+    val filterByProject: Option[String] = params.get("filter_by_project").flatMap(_.headOption)
+    val filterByOwner: Option[String]   = params.get("filter_by_owner").flatMap(_.headOption)
+    val searchType: Option[String]      = params.get("searchtype").flatMap(_.headOption)
+    // known default value
+    val showNRows: String = params.get("show_nrows").flatMap(_.headOption).getOrElse(defaultShowNRows.toString())
+    val startAt: String   = params.get("start_at").flatMap(_.headOption).getOrElse("0")
+
+    // can be multiple values
+    val propertyId: Seq[String]         = params.get("property_id").toSeq.flatten
+    val searchval: Seq[String]          = params.get("searchval").toSeq.flatten
+    val comparisonOperator: Seq[String] = params.get("compop").toSeq.flatten
+
+    def errorMessage(name: String, value: String): String =
+      s"Value for param '$name' for extended search $value is not a valid IRI. Please make sure that it was correctly URL encoded."
+
+    for {
+      _ <- ZIO
+             .fail(BadRequestException(s"Unexpected searchtype param for extended search: $searchType"))
+             .unless(searchType.contains("extended"))
+
+      restypeIri <-
+        ZIO.foreach(filterByResType)(value =>
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_restype", value))
+        )
+      projectIri <-
+        ZIO.foreach(filterByProject)(value =>
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_project", value))
+        )
+      ownerIri <-
+        ZIO.foreach(filterByOwner)(value =>
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_owner", value))
+        )
+      propertyIri <-
+        ZIO.foreach(propertyId)(prop => RouteUtilZ.validateAndEscapeIri(prop, errorMessage("property_id", prop)))
+      compop <- ZIO.foreach(comparisonOperator)(SearchComparisonOperatorV1.lookup)
+
+      // propertyId, compop, and searchval are parallel structures (parallel arrays): they have to be of the same length
+      // in case of "compop" set to "EXISTS", also "searchval" has to be given as a param with an empty value (parallel arrays)
+      _ <- ZIO
+             .fail(BadRequestException(s"propertyId, compop, and searchval are not given parallelly"))
+             .unless((propertyIri.length == compop.length) && (compop.length == searchval.length))
+
+      nRows <-
+        ZIO
+          .fromOption(ValuesValidator.validateInt(showNRows))
+          .map {
+            case -1 => defaultShowNRows
+            case v  => v
+          }
+          .orElseFail(
+            BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRows")
           )
-        )
-      case _ => None
-    }
+      start <-
+        ZIO
+          .fromOption(ValuesValidator.validateInt(startAt))
+          .orElseFail(BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAt"))
 
-    // only one value is expected
-    val projectIri: Option[IRI] = params.get("filter_by_project") match {
-      case Some(List(project: IRI)) =>
-        Some(
-          stringFormatter.validateAndEscapeIri(
-            project,
-            throw BadRequestException(
-              s"Value for param 'filter_by_project' for extended search $project is not a valid IRI. Please make sure that it was correctly URL encoded."
-            )
-          )
-        )
-      case _ => None
-    }
-
-    // only one value is expected
-    val ownerIri: Option[IRI] = params.get("filter_by_owner") match {
-      case Some(List(owner: IRI)) =>
-        Some(
-          stringFormatter.validateAndEscapeIri(
-            owner,
-            throw BadRequestException(
-              s"Value for param 'filter_by_owner' for extended search $owner is not a valid IRI. Please make sure that it was correctly URL encoded."
-            )
-          )
-        )
-      case _ => None
-    }
-
-    // here, also multiple values can be given
-    val propertyIri: Seq[IRI] = params.get("property_id") match {
-      case Some(propertyList: Seq[IRI]) =>
-        propertyList.map(prop =>
-          stringFormatter.validateAndEscapeIri(
-            prop,
-            throw BadRequestException(
-              s"Value for param 'property_id' for extended search $prop is not a valid IRI. Please make sure that it was correctly URL encoded."
-            )
-          )
-        )
-      case _ => Nil
-    }
-
-    // here, also multiple values can be given
-    // convert string to enum (SearchComparisonOperatorV1), throw error if unknown
-    val compop: Seq[SearchComparisonOperatorV1.Value] = params.get("compop") match {
-      case Some(compopList: Seq[String]) =>
-        compopList.map { (compop: String) =>
-          SearchComparisonOperatorV1.lookup(compop)
-        }
-      case _ => Nil
-    }
-
-    // here, also multiple values can be given
-    val searchval: Seq[String] = params.get("searchval") match {
-      case Some(searchvalList: Seq[String]) =>
-        searchvalList // Attention: searchval cannot be processed (escaped) here because we do not know its value type yet
-      case _ => Nil
-    }
-
-    // propertyId, compop, and searchval are parallel structures (parallel arrays): they have to be of the same length
-    // in case of "compop" set to "EXISTS", also "searchval" has to be given as a param with an empty value (parallel arrays)
-    if (!((propertyIri.length == compop.length) && (compop.length == searchval.length))) {
-      // invalid length of parallel param structure
-      throw BadRequestException(s"propertyId, compop, and searchval are not given parallelly")
-    }
-
-    val showNRows: Int = params.get("show_nrows") match {
-      case Some(showNRowsStrList: Seq[String]) =>
-        val showNRowsVal = stringFormatter.validateInt(
-          showNRowsStrList.head,
-          throw BadRequestException(
-            s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"
-          )
-        )
-        showNRowsVal match {
-          case -1 => defaultShowNRows
-          case _  => showNRowsVal
-        }
-      case None => defaultShowNRows
-    }
-
-    val startAt: Int = params.get("start_at") match {
-      case Some(startAtStrList: Seq[String]) =>
-        stringFormatter.validateInt(
-          startAtStrList.head,
-          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList")
-        )
-      case None => 0
-    }
-
-    ExtendedSearchGetRequestV1(
+    } yield ExtendedSearchGetRequestV1(
       filterByRestype = restypeIri,
       filterByProject = projectIri,
       filterByOwner = ownerIri,
@@ -164,8 +136,8 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       compareProps = compop,
       searchValue = searchval, // not processed (escaped) yet
       userProfile = userADM,
-      showNRows = showNRows,
-      startAt = startAt
+      showNRows = nRows,
+      startAt = start
     )
   }
 
@@ -173,63 +145,47 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     userADM: UserADM,
     searchval: String,
     params: Map[String, String]
-  ): FulltextSearchGetRequestV1 = {
-    val stringFormatter = StringFormatter.getGeneralInstance
+  ): ZIO[StringFormatter, Throwable, FulltextSearchGetRequestV1] = {
 
-    params.get("searchtype") match {
-      case Some("fulltext") => ()
-      case _                => throw BadRequestException(s"Unexpected searchtype param for fulltext search")
-    }
+    def errorMessage(name: String, value: String): String =
+      s"Unexpected param '$name' for extended search: $value"
 
-    val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
-      case Some(restype: IRI) =>
-        Some(
-          stringFormatter.validateAndEscapeIri(
-            restype,
-            throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")
+    for {
+      _ <- ZIO
+             .fail(BadRequestException("Unexpected searchtype param for fulltext search"))
+             .unless(params.get("searchtype").contains("fulltext"))
+
+      restypeIri <-
+        ZIO.foreach(params.get("filter_by_restype"))(value =>
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_restype", value))
+        )
+      projectIri <-
+        ZIO.foreach(params.get("filter_by_project"))(value =>
+          RouteUtilZ.validateAndEscapeIri(value, errorMessage("filter_by_project", value))
+        )
+      searchString <- RouteUtilV1.toSparqlEncodedString(searchval, s"Invalid search string: '$searchval'")
+
+      showNRows <-
+        ZIO
+          .fromOption(ValuesValidator.validateInt(params.getOrElse("show_nrows", defaultShowNRows.toString)))
+          .map {
+            case -1 => defaultShowNRows
+            case v  => v
+          }
+          .orElseFail(
+            BadRequestException(
+              s"Can't parse integer parameter 'show_nrows' for extended search: ${params.get("show_nrows")}"
+            )
           )
-        )
-      case _ => None
-    }
-    val projectIri: Option[IRI] = params.get("filter_by_project") match {
-      case Some(project: IRI) =>
-        Some(
-          stringFormatter.validateAndEscapeIri(
-            project,
-            throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")
+      startAt <-
+        ZIO
+          .fromOption(ValuesValidator.validateInt(params.getOrElse("start_at", "0")))
+          .orElseFail(
+            BadRequestException(
+              s"Can't parse integer parameter 'start_at' for extended search: ${params.get("start_at")}"
+            )
           )
-        )
-      case _ => None
-    }
-
-    val searchString = stringFormatter.toSparqlEncodedString(
-      searchval,
-      throw BadRequestException(s"Invalid search string: '$searchval'")
-    )
-
-    val showNRows: Int = params.get("show_nrows") match {
-      case Some(showNRowsStr) =>
-        val showNRowsVal = stringFormatter.validateInt(
-          showNRowsStr,
-          throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr")
-        )
-        showNRowsVal match {
-          case -1 => defaultShowNRows
-          case _  => showNRowsVal
-        }
-      case None => defaultShowNRows
-    }
-
-    val startAt: Int = params.get("start_at") match {
-      case Some(startAtStr) =>
-        stringFormatter.validateInt(
-          startAtStr,
-          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr")
-        )
-      case None => 0
-    }
-
-    FulltextSearchGetRequestV1(
+    } yield FulltextSearchGetRequestV1(
       searchValue = searchString, // save
       filterByRestype = restypeIri,
       filterByProject = projectIri,
@@ -238,41 +194,4 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       startAt = startAt
     )
   }
-
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
-    path("v1" / "search" /) {
-      // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
-      get { requestContext =>
-        val requestMessage = for {
-          userADM                         <- getUserADM(requestContext, routeData.appConfig)
-          params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-        } yield makeExtendedSearchRequestMessage(userADM, params)
-
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessage,
-          requestContext,
-          appActor,
-          log
-        )
-      }
-    } ~
-      path("v1" / "search" / Segment) {
-        searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-          get { requestContext =>
-            val requestMessage = for {
-              userADM                    <- getUserADM(requestContext, routeData.appConfig)
-              params: Map[String, String] = requestContext.request.uri.query().toMap
-            } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
-
-            RouteUtilV1.runJsonRouteWithFuture(
-              requestMessage,
-              requestContext,
-              appActor,
-              log
-            )
-          }
-      }
 }

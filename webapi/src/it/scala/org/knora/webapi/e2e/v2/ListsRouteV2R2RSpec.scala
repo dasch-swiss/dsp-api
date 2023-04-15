@@ -11,7 +11,6 @@ import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import spray.json.JsValue
 import spray.json.JsonParser
-
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
@@ -31,7 +30,7 @@ import org.knora.webapi.util.FileUtil
  */
 class ListsRouteV2R2RSpec extends R2RSpec {
 
-  private val listsPath = new ListsRouteV2(routeData).makeRoute
+  private val listsPath = ListsRouteV2().makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

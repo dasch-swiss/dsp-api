@@ -36,27 +36,13 @@ lazy val buildSettings = Seq(
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
+lazy val dockerImageTag = taskKey[String]("Returns the docker image tag")
+
 lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
     sipi,
     shared,
-    // user
-    userCore,
-    userHandler,
-    userRepo,
-    userInterface,
-    // role
-    roleCore,
-    roleHandler,
-    roleRepo,
-    roleInterface,
-    // project
-    projectCore,
-    projectHandler,
-    projectRepo,
-    projectInterface,
-    // schema
     schemaCore
   )
   .enablePlugins(GitVersioning, GitBranchPrompt)
@@ -74,6 +60,7 @@ lazy val root: Project = Project(id = "root", file("."))
     git.useGitDescribe := true,
     // override generated version string because docker hub rejects '+' in tags
     ThisBuild / version ~= (_.replace('+', '-')),
+    dockerImageTag := (ThisBuild / version).value,
     publish / skip := true,
     name           := "dsp-api"
   )
@@ -157,7 +144,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
-    Test / libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin)
   .settings(
@@ -172,7 +159,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     inConfig(IntegrationTest) {
       Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings
     },
-    IntegrationTest / libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
   .settings(
     // add needed files to production jar
@@ -214,6 +201,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // IntegrationTest / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // IntegrationTest / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     // IntegrationTest / javaOptions += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", // starts sbt with debug port
+    IntegrationTest / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "akka"),
     IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     // add test framework for running zio-tests
     IntegrationTest / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -247,6 +235,14 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333, 3339),
     Docker / defaultLinuxInstallLocation := "/opt/docker",
+    dockerCommands += Cmd(
+      "RUN",
+      "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*"
+    ), // install jq for container healthcheck
+    dockerCommands += Cmd(
+      """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
+        |CMD bash /opt/docker/scripts/healthcheck.sh || exit 1""".stripMargin
+    ),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
       // Remove USER command
@@ -272,158 +268,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
 // DSP's new codebase
 //////////////////////////////////////
 
-// dsp-api-main project
-
-lazy val dspApiMain = project
-  .in(file("dsp-api-main"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "dspApiMain",
-    libraryDependencies ++= Dependencies.dspApiMainLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(userInterface, userHandler, userRepo)
-
-// Role projects
-
-lazy val roleInterface = project
-  .in(file("dsp-role/interface"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "roleInterface",
-    libraryDependencies ++= Dependencies.roleInterfaceLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared, roleHandler)
-
-lazy val roleHandler = project
-  .in(file("dsp-role/handler"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "roleHandler",
-    libraryDependencies ++= Dependencies.roleHandlerLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(
-    shared,
-    roleCore % "compile->compile;test->test",
-    roleRepo % "test->test"
-  )
-
-lazy val roleRepo = project
-  .in(file("dsp-role/repo"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "roleRepo",
-    libraryDependencies ++= Dependencies.roleRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared, roleCore % "compile->compile;test->test")
-
-lazy val roleCore = project
-  .in(file("dsp-role/core"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "roleCore",
-    libraryDependencies ++= Dependencies.roleCoreLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared)
-
-// User projects
-
-lazy val userInterface = project
-  .in(file("dsp-user/interface"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "userInterface",
-    libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared % "compile->compile;test->test", userHandler, userRepo % "test->test")
-
-lazy val userHandler = project
-  .in(file("dsp-user/handler"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "userHandler",
-    libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(
-    shared   % "compile->compile;test->test",
-    userCore % "compile->compile;test->test",
-    userRepo % "test->test" // userHandler tests need mock implementation of UserRepo
-  )
-
-lazy val userRepo = project
-  .in(file("dsp-user/repo"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "userRepo",
-    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared, userCore % "compile->compile;test->test")
-
-lazy val userCore = project
-  .in(file("dsp-user/core"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "userCore",
-    libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared)
-
-// project projects
-
-lazy val projectInterface = project
-  .in(file("dsp-project/interface"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "projectInterface",
-    libraryDependencies ++= Dependencies.projectInterfaceLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared, projectHandler)
-
-lazy val projectHandler = project
-  .in(file("dsp-project/handler"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "projectHandler",
-    libraryDependencies ++= Dependencies.projectHandlerLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(
-    shared,
-    projectCore,
-    projectRepo % "test->test"
-  ) // projectHandler tests need mock implementation of ProjectRepo
-
-lazy val projectCore = project
-  .in(file("dsp-project/core"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "projectCore",
-    libraryDependencies ++= Dependencies.projectCoreLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared)
-
-lazy val projectRepo = project
-  .in(file("dsp-project/repo"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "projectRepo",
-    libraryDependencies ++= Dependencies.projectRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared, projectCore)
-
-// schema projects
-
+// schema project
 lazy val schemaCore = project
   .in(file("dsp-schema/core"))
   .settings(
@@ -434,8 +279,7 @@ lazy val schemaCore = project
   )
   .dependsOn(shared)
 
-// Shared project
-
+// shared project
 lazy val shared = project
   .in(file("dsp-shared"))
   .settings(

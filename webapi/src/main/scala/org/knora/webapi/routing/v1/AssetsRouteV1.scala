@@ -19,24 +19,18 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Paths
 import javax.imageio.ImageIO
 
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
-
 /**
  * A route used for faking the image server.
  */
-class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class AssetsRouteV1() {
 
   /**
    * Returns the route.
    */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     path("v1" / "assets" / Remaining) { assetId =>
       get { requestContext =>
         requestContext.complete {
-          log.debug(s"got request: ${requestContext.toString}")
-
           val (width, height, text) = assetId match {
             case string if string.contains("big".toCharArray) => (1024, 1024, assetId)
             case _                                            => (16, 16, assetId)

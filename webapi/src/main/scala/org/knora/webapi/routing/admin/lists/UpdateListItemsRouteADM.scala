@@ -8,6 +8,7 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -18,20 +19,23 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM
+import org.knora.webapi.routing.RouteUtilADM._
 
 /**
  * Provides routes to update list items.
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
-class UpdateListItemsRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+final case class UpdateListItemsRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+) extends KnoraRoute(routeData, runtime)
     with ListADMJsonProtocol {
 
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
@@ -52,25 +56,11 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
         entity(as[ChangeNodeNameApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
-
           val namePayload: NodeNameChangePayloadADM =
             NodeNameChangePayloadADM(ListName.make(apiRequest.name).fold(e => throw e.head, v => v))
-
-          val requestMessage: Future[NodeNameChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
-          } yield NodeNameChangeRequestADM(
-            nodeIri = nodeIri,
-            changeNodeNameRequest = namePayload,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getUserUuid(requestContext)
+            .map(r => NodeNameChangeRequestADM(nodeIri, namePayload, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -84,25 +74,11 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
         entity(as[ChangeNodeLabelsApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
-
           val labelsPayload: NodeLabelsChangePayloadADM =
             NodeLabelsChangePayloadADM(Labels.make(apiRequest.labels).fold(e => throw e.head, v => v))
-
-          val requestMessage: Future[NodeLabelsChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
-          } yield NodeLabelsChangeRequestADM(
-            nodeIri = nodeIri,
-            changeNodeLabelsRequest = labelsPayload,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getUserUuid(requestContext)
+            .map(r => NodeLabelsChangeRequestADM(nodeIri, labelsPayload, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -116,25 +92,11 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
         entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
-
           val commentsPayload: NodeCommentsChangePayloadADM =
             NodeCommentsChangePayloadADM(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v))
-
-          val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
-          } yield NodeCommentsChangeRequestADM(
-            nodeIri = nodeIri,
-            changeNodeCommentsRequest = commentsPayload,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getUserUuid(requestContext)
+            .map(r => NodeCommentsChangeRequestADM(nodeIri, commentsPayload, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -146,24 +108,9 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     path(listsBasePath / Segment / "position") { iri =>
       put {
         entity(as[ChangeNodePositionApiRequestADM]) { apiRequest => requestContext =>
-          val nodeIri =
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
-
-          val requestMessage: Future[NodePositionChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, routeData.appConfig)
-          } yield NodePositionChangeRequestADM(
-            nodeIri = nodeIri,
-            changeNodePositionRequest = apiRequest,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          val task = getIriUserUuid(iri, requestContext)
+            .map(r => NodePositionChangeRequestADM(r.iri, apiRequest, r.user, r.uuid))
+          runJsonRouteZ(task, requestContext)
         }
       }
     }
@@ -197,7 +144,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           payload        <- toFuture(validatedChangeNodeInfoPayload)
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
+          requestingUser <- getUserADM(requestContext)
           // check if the requesting user is allowed to perform operation
           _ = if (
                 !requestingUser.permissions.isProjectAdmin(
@@ -213,13 +160,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRouteF(requestMessage, requestContext)
       }
     }
   }

@@ -14,12 +14,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
-import zio.Exit
 import zio.Exit.Failure
 import zio.Exit.Success
-import zio.Runtime
-import zio.Unsafe
-import zio.ZIO
+import zio._
 import zio.json._
 
 import java.time.Instant
@@ -28,9 +25,12 @@ import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -50,11 +50,14 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastM
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
-class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runtime[RestResourceInfoService])
-    extends KnoraRoute(routeData)
-    with Authenticator {
+final case class ResourcesRouteV2(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[
+    AppConfig with Authenticator with MessageRelay with RestResourceInfoService
+  ]
+) extends KnoraRoute(routeData, runtime) {
 
-  val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
+  private val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
 
   private val Text_Property          = "textProperty"
   private val Mapping_Iri            = "mappingIri"
@@ -94,26 +97,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
             resourceIriStr,
             throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
           )
-
-        val requestMessageFuture: Future[ResourceIIIFManifestGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-        } yield ResourceIIIFManifestGetRequestV2(
-          resourceIri = resourceIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        val requestTask = Authenticator.getUserADM(requestContext).map(ResourceIIIFManifestGetRequestV2(resourceIri, _))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
@@ -124,10 +109,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[CreateResourceRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
 
             requestMessage: CreateResourceRequestV2 <- CreateResourceRequestV2.fromJsonLD(
                                                          requestDoc,
@@ -143,15 +125,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
                  )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -164,10 +138,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[UpdateResourceMetadataRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
 
             requestMessage: UpdateResourceMetadataRequestV2 <- UpdateResourceMetadataRequestV2.fromJsonLD(
                                                                  requestDoc,
@@ -178,15 +149,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
                                                                )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -226,36 +189,27 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
       val pageStr: String =
         params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
       val page: Int =
-        stringFormatter.validateInt(pageStr, throw BadRequestException(s"Invalid page number: $pageStr"))
+        ValuesValidator.validateInt(pageStr).getOrElse(throw BadRequestException(s"Invalid page number: $pageStr"))
 
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
       val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
-      val requestMessageFuture: Future[SearchResourcesByProjectAndClassRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
-      } yield SearchResourcesByProjectAndClassRequestV2(
-        projectIri = projectIri,
-        resourceClass = resourceClass.toOntologySchema(ApiV2Complex),
-        orderByProperty = maybeOrderByProperty,
-        page = page,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions,
-        requestingUser = requestingUser
-      )
+      val requestTask = Authenticator
+        .getUserADM(requestContext)
+        .map(
+          SearchResourcesByProjectAndClassRequestV2(
+            projectIri,
+            resourceClass.toOntologySchema(ApiV2Complex),
+            maybeOrderByProperty,
+            page,
+            targetSchema,
+            schemaOptions,
+            _
+          )
+        )
 
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = ApiV2Complex,
-        schemaOptions = schemaOptions
-      )
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
     }
   }
 
@@ -271,86 +225,49 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
         val startDate: Option[Instant] = params
           .get("startDate")
           .map(dateStr =>
-            stringFormatter
-              .xsdDateTimeStampToInstant(dateStr, throw BadRequestException(s"Invalid start date: $dateStr"))
+            ValuesValidator
+              .xsdDateTimeStampToInstant(dateStr)
+              .getOrElse(throw BadRequestException(s"Invalid start date: $dateStr"))
           )
         val endDate = params
           .get("endDate")
           .map(dateStr =>
-            stringFormatter.xsdDateTimeStampToInstant(dateStr, throw BadRequestException(s"Invalid end date: $dateStr"))
+            ValuesValidator
+              .xsdDateTimeStampToInstant(dateStr)
+              .getOrElse(throw BadRequestException(s"Invalid start date: $dateStr"))
           )
 
-        val requestMessageFuture: Future[ResourceVersionHistoryGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-        } yield ResourceVersionHistoryGetRequestV2(
-          resourceIri = resourceIri,
-          startDate = startDate,
-          endDate = endDate,
-          requestingUser = requestingUser
-        )
+        val requestTask = Authenticator
+          .getUserADM(requestContext)
+          .map(requestingUser =>
+            ResourceVersionHistoryGetRequestV2(
+              resourceIri = resourceIri,
+              startDate = startDate,
+              endDate = endDate,
+              requestingUser = requestingUser
+            )
+          )
 
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
   private def getResourceHistoryEvents(): Route =
     path(resourcesBasePath / "resourceHistoryEvents" / Segment) { resourceIri: IRI =>
       get { requestContext =>
-        val requestMessageFuture: Future[ResourceHistoryEventsGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-        } yield ResourceHistoryEventsGetRequestV2(
-          resourceIri = resourceIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        val requestTask = Authenticator
+          .getUserADM(requestContext)
+          .map(ResourceHistoryEventsGetRequestV2(resourceIri, _))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
   private def getProjectResourceAndValueHistory(): Route =
     path(resourcesBasePath / "projectHistoryEvents" / Segment) { projectIri: IRI =>
       get { requestContext =>
-        val requestMessageFuture: Future[ProjectResourcesWithHistoryGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-        } yield ProjectResourcesWithHistoryGetRequestV2(
-          projectIri = projectIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        val requestTask =
+          Authenticator.getUserADM(requestContext).map(ProjectResourcesWithHistoryGetRequestV2(projectIri, _))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
@@ -405,44 +322,28 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
 
       val params: Map[String, String] = requestContext.request.uri.query().toMap
 
-      // Was a version date provided?
-      val versionDate: Option[Instant] = params.get("version").map { versionStr =>
-        def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
-
-        // Yes. Try to parse it as an xsd:dateTimeStamp.
-        try {
-          stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
-        } catch {
-          // If that doesn't work, try to parse it as a Knora ARK timestamp.
-          case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
-        }
-      }
-
+      val versionDate: Option[Instant] = params
+        .get("version")
+        .map(versionStr =>
+          ValuesValidator
+            .xsdDateTimeStampToInstant(versionStr)
+            .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
+            .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
+        )
       val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
-      val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
-      } yield ResourcesGetRequestV2(
-        resourceIris = resourceIris,
-        versionDate = versionDate,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions,
-        requestingUser = requestingUser
-      )
-
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions
-      )
+      val requestTask = Authenticator
+        .getUserADM(requestContext)
+        .map(requestingUser =>
+          ResourcesGetRequestV2(
+            resourceIris,
+            versionDate = versionDate,
+            targetSchema = targetSchema,
+            schemaOptions = schemaOptions,
+            requestingUser = requestingUser
+          )
+        )
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema, Some(schemaOptions))
     }
   }
 
@@ -453,73 +354,30 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           throw BadRequestException(
             s"List of provided resource Iris exceeds limit of ${routeData.appConfig.v2.resourcesSequence.resultsPerPage}"
           )
-
         val resourceIris: Seq[IRI] = resIris.map { resIri: String =>
           stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
         }
-
         val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-
-        val requestMessageFuture: Future[ResourcesPreviewGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              routeData.appConfig
-                            )
-        } yield ResourcesPreviewGetRequestV2(
-          resourceIris = resourceIris,
-          targetSchema = targetSchema,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          appConfig = routeData.appConfig,
-          appActor = appActor,
-          log = log,
-          targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+        val requestTask = Authenticator
+          .getUserADM(requestContext)
+          .map(user => ResourcesPreviewGetRequestV2(resourceIris, targetSchema = targetSchema, requestingUser = user))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
       }
     }
 
   private def getResourcesTei(): Route = path("v2" / "tei" / Segment) { resIri: String =>
     get { requestContext =>
+      val params: Map[String, String] = requestContext.request.uri.query().toMap
       val resourceIri: IRI =
         stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
-
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-      // the the property that represents the text
-      val textProperty: SmartIri = getTextPropertyFromParams(params)
-
-      val mappingIri: Option[IRI] = getMappingIriFromParams(params)
-
+      val textProperty: SmartIri             = getTextPropertyFromParams(params)
+      val mappingIri: Option[IRI]            = getMappingIriFromParams(params)
       val gravsearchTemplateIri: Option[IRI] = getGravsearchTemplateIriFromParams(params)
-
-      val headerXSLTIri = getHeaderXSLTIriFromParams(params)
-
-      val requestMessageFuture: Future[ResourceTEIGetRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
-      } yield ResourceTEIGetRequestV2(
-        resourceIri = resourceIri,
-        textProperty = textProperty,
-        mappingIri = mappingIri,
-        gravsearchTemplateIri = gravsearchTemplateIri,
-        headerXSLTIri = headerXSLTIri,
-        requestingUser = requestingUser
-      )
-
-      RouteUtilV2.runTEIXMLRoute(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appActor = appActor,
-        log = log,
-        targetSchema = RouteUtilV2.getOntologySchema(requestContext)
-      )
+      val headerXSLTIri                      = getHeaderXSLTIriFromParams(params)
+      val requestTask = Authenticator
+        .getUserADM(requestContext)
+        .map(ResourceTEIGetRequestV2(resourceIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, _))
+      RouteUtilV2.runTEIXMLRoute(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
   }
 
@@ -554,30 +412,10 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
         case Both     => (true, true)
         case other    => throw BadRequestException(s"Invalid direction: $other")
       }
-
-      val requestMessageFuture: Future[GraphDataGetRequestV2] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            routeData.appConfig
-                          )
-      } yield GraphDataGetRequestV2(
-        resourceIri = resourceIri,
-        depth = depth,
-        inbound = inbound,
-        outbound = outbound,
-        excludeProperty = excludeProperty,
-        requestingUser = requestingUser
-      )
-
-      RouteUtilV2.runRdfRouteWithFuture(
-        requestMessageF = requestMessageFuture,
-        requestContext = requestContext,
-        appConfig = routeData.appConfig,
-        appActor = appActor,
-        log = log,
-        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-      )
+      val requestTask = Authenticator
+        .getUserADM(requestContext)
+        .map(GraphDataGetRequestV2(resourceIri, depth, inbound, outbound, excludeProperty, _))
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
   }
 
@@ -588,10 +426,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
             requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
                                                                 requestDoc,
                                                                 apiRequestID = UUID.randomUUID,
@@ -601,15 +436,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
                                                               )
           } yield requestMessage
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -622,10 +449,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                routeData.appConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
 
             requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
                                                                 requestDoc,
@@ -636,15 +460,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
                                                               )
           } yield requestMessage.copy(erase = true)
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appConfig = routeData.appConfig,
-            appActor = appActor,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
         }
       }
     }
@@ -751,36 +567,30 @@ class ResourcesRouteV2(routeData: KnoraRouteData, implicit val runtime: zio.Runt
         )
       values.foreach { value =>
         value.valueContent match {
-          case fileValueContent: StillImageFileValueContentV2 => {
+          case fileValueContent: StillImageFileValueContentV2 =>
             if (!routeData.appConfig.sipi.imageMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: DocumentFileValueContentV2 => {
+          case fileValueContent: DocumentFileValueContentV2 =>
             if (!routeData.appConfig.sipi.documentMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: ArchiveFileValueContentV2 => {
+          case fileValueContent: ArchiveFileValueContentV2 =>
             if (!routeData.appConfig.sipi.archiveMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: TextFileValueContentV2 => {
+          case fileValueContent: TextFileValueContentV2 =>
             if (!routeData.appConfig.sipi.textMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: AudioFileValueContentV2 => {
+          case fileValueContent: AudioFileValueContentV2 =>
             if (!routeData.appConfig.sipi.audioMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
-          case fileValueContent: MovingImageFileValueContentV2 => {
+          case fileValueContent: MovingImageFileValueContentV2 =>
             if (!routeData.appConfig.sipi.videoMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
               throw badRequestException(fileValueContent)
             }
-          }
           case _ => ()
 
         }

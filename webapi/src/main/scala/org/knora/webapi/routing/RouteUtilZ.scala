@@ -4,12 +4,17 @@
  */
 
 package org.knora.webapi.routing
-import zio.Task
+import zio.IO
+import zio.UIO
 import zio.ZIO
 
 import java.net.URLDecoder
+import java.util.UUID
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 
 object RouteUtilZ {
 
@@ -25,7 +30,7 @@ object RouteUtilZ {
    *
    *         '''failure''' A [[BadRequestException]] with the `errorMsg`
    */
-  def urlDecode(value: String, errorMsg: String = ""): Task[String] =
+  def urlDecode(value: String, errorMsg: String = ""): IO[BadRequestException, IRI] =
     ZIO
       .attempt(URLDecoder.decode(value, "utf-8"))
       .orElseFail(
@@ -33,4 +38,20 @@ object RouteUtilZ {
           if (!errorMsg.isBlank) errorMsg else s"Not an url encoded utf-8 String '$value'"
         )
       )
+
+  def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
+    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
+      stringFormatter
+        .validateAndEscapeIri(s)
+        .toZIO
+        .orElseFail(BadRequestException(errorMsg))
+    }
+
+  def toSmartIri(s: String): ZIO[StringFormatter, Throwable, SmartIri] =
+    ZIO.serviceWithZIO[StringFormatter](sf => ZIO.attempt(sf.toSmartIri(s)))
+
+  def toSmartIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, SmartIri] =
+    toSmartIri(s).orElseFail(BadRequestException(errorMsg))
+
+  def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
 }

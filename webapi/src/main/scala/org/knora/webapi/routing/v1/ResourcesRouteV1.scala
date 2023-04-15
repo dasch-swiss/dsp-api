@@ -14,6 +14,7 @@ import akka.pattern._
 import org.w3c.dom.ls.LSInput
 import org.w3c.dom.ls.LSResourceResolver
 import org.xml.sax.SAXException
+import zio._
 
 import java.io._
 import java.nio.charset.StandardCharsets
@@ -36,19 +37,20 @@ import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi._
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
-import org.knora.webapi.messages.twirl.ResourceHtmlView
 import org.knora.webapi.messages.util.DateUtilV1
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -56,14 +58,19 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilV1._
+import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.FileUtil
 
 /**
  * Provides API routes that deal with resources.
  */
-class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+final case class ResourcesRouteV1(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+) extends KnoraRoute(routeData, runtime) {
   // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
   private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
 
@@ -140,67 +147,47 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
               case OntologyConstants.KnoraBase.TextValue =>
                 val richtext: CreateRichtextV1 = givenValue.richtext_value.get
-
                 // check if text has markup
-                if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
+                val task = if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                   // simple text
-
-                  Future(
-                    CreateValueV1WithComment(
-                      TextValueSimpleV1(
-                        utf8str = stringFormatter.toSparqlEncodedString(
-                          richtext.utf8str.get,
-                          throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")
-                        ),
-                        language = richtext.language
-                      ),
-                      givenValue.comment
-                    )
-                  )
-
+                  toSparqlEncodedString(richtext.utf8str.get, s"Invalid text: '${richtext.utf8str.get}'")
+                    .map(it => (CreateValueV1WithComment(TextValueSimpleV1(it, richtext.language), givenValue.comment)))
                 } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                   // XML: text with markup
-
-                  val mappingIri = stringFormatter.validateAndEscapeIri(
-                    richtext.mapping_id.get,
-                    throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid")
-                  )
-
                   for {
-
-                    textWithStandoffTags: TextWithStandoffTagsV2 <- RouteUtilV1.convertXMLtoStandoffTagV1(
-                                                                      xml = richtext.xml.get,
-                                                                      mappingIri = mappingIri,
-                                                                      acceptStandoffLinksToClientIDs =
-                                                                        acceptStandoffLinksToClientIDs,
-                                                                      userProfile = userProfile,
-                                                                      appActor = appActor,
-                                                                      log = log
-                                                                    )
-
-                    // collect the resource references from the linking standoff nodes
-                    resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(
-                                                     textWithStandoffTags.standoffTagV2
-                                                   )
-
+                    mappingIri <-
+                      RouteUtilZ.validateAndEscapeIri(
+                        richtext.mapping_id.get,
+                        s"mapping_id ${richtext.mapping_id.get} is invalid"
+                      )
+                    textWithStandoffTags <-
+                      convertXMLtoStandoffTagV1(
+                        richtext.xml.get,
+                        mappingIri,
+                        acceptStandoffLinksToClientIDs,
+                        userProfile,
+                        log
+                      )
+                    resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
+                    utf8str <- toSparqlEncodedString(
+                                 textWithStandoffTags.text,
+                                 "utf8str for TextValue contains invalid characters"
+                               )
                   } yield CreateValueV1WithComment(
                     TextValueWithStandoffV1(
-                      utf8str = stringFormatter.toSparqlEncodedString(
-                        textWithStandoffTags.text,
-                        throw InconsistentRepositoryDataException("utf8str for TextValue contains invalid characters")
-                      ),
-                      language = richtext.language,
-                      resource_reference = resourceReferences,
-                      standoff = textWithStandoffTags.standoffTagV2,
-                      mappingIri = textWithStandoffTags.mapping.mappingIri,
-                      mapping = textWithStandoffTags.mapping.mapping
+                      utf8str,
+                      richtext.language,
+                      textWithStandoffTags.standoffTagV2,
+                      resourceReferences,
+                      textWithStandoffTags.mapping.mappingIri,
+                      textWithStandoffTags.mapping.mapping
                     ),
                     givenValue.comment
                   )
-
                 } else {
-                  throw BadRequestException("invalid parameters given for TextValueV1")
+                  ZIO.fail(BadRequestException("invalid parameters given for TextValueV1"))
                 }
+                UnsafeZioRun.runToFuture(task)
 
               case OntologyConstants.KnoraBase.LinkValue =>
                 (givenValue.link_value, givenValue.link_to_client_id) match {
@@ -243,17 +230,19 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 Future(CreateValueV1WithComment(dateVal, givenValue.comment))
 
               case OntologyConstants.KnoraBase.ColorValue =>
-                val colorValue = stringFormatter.validateColor(
-                  givenValue.color_value.get,
-                  throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}")
-                )
+                val colorValue = ValuesValidator
+                  .validateColor(givenValue.color_value.get)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}")
+                  )
                 Future(CreateValueV1WithComment(ColorValueV1(colorValue), givenValue.comment))
 
               case OntologyConstants.KnoraBase.GeomValue =>
-                val geometryValue = stringFormatter.validateGeometryString(
-                  givenValue.geom_value.get,
-                  throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}")
-                )
+                val geometryValue = ValuesValidator
+                  .validateGeometryString(givenValue.geom_value.get)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}")
+                  )
                 Future(CreateValueV1WithComment(GeomValueV1(geometryValue), givenValue.comment))
 
               case OntologyConstants.KnoraBase.ListValue =>
@@ -270,10 +259,9 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
               case OntologyConstants.KnoraBase.TimeValue =>
                 val timeValStr: String = givenValue.time_value.get
-                val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
-                  timeValStr,
-                  throw BadRequestException(s"Invalid timestamp: $timeValStr")
-                )
+                val timeStamp: Instant = ValuesValidator
+                  .xsdDateTimeStampToInstant(timeValStr)
+                  .getOrElse(throw BadRequestException(s"Invalid timestamp: $timeValStr"))
                 Future(CreateValueV1WithComment(TimeValueV1(timeStamp), givenValue.comment))
 
               case OntologyConstants.KnoraBase.GeonameValue =>
@@ -339,7 +327,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                )
                                                .mapTo[GetFileMetadataResponse]
                                          } yield Some(
-                                           RouteUtilV1.makeFileValue(
+                                           makeFileValue(
                                              filename = filename,
                                              fileMetadataResponse = fileMetadataResponse,
                                              projectShortcode = projectShortcode
@@ -402,7 +390,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                                                   )
                                                                                   .mapTo[GetFileMetadataResponse]
                              } yield Some(
-                               RouteUtilV1.makeFileValue(
+                               makeFileValue(
                                  filename = filename,
                                  fileMetadataResponse = fileMetadataResponse,
                                  projectShortcode = projectShortcode
@@ -907,10 +895,9 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           val creationDate: Option[Instant] = resourceNode
             .attribute("creationDate")
             .map(creationDateNode =>
-              stringFormatter.xsdDateTimeStampToInstant(
-                creationDateNode.text,
-                throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}")
-              )
+              ValuesValidator
+                .xsdDateTimeStampToInstant(creationDateNode.text)
+                .getOrElse(throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}"))
             )
 
           // Convert the XML element's label and namespace to an internal resource class IRI.
@@ -1099,30 +1086,33 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           case "int_value" =>
             CreateResourceValueV1(
               int_value = Some(
-                stringFormatter.validateInt(
-                  elementValue,
-                  throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateInt(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
           case "decimal_value" =>
             CreateResourceValueV1(
               decimal_value = Some(
-                stringFormatter.validateBigDecimal(
-                  elementValue,
-                  throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateBigDecimal(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
           case "boolean_value" =>
             CreateResourceValueV1(
               boolean_value = Some(
-                stringFormatter.validateBoolean(
-                  elementValue,
-                  throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateBoolean(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
@@ -1139,30 +1129,33 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           case "date_value" =>
             CreateResourceValueV1(
               date_value = Some(
-                stringFormatter.validateDate(
-                  elementValue,
-                  throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateDate(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
           case "color_value" =>
             CreateResourceValueV1(
               color_value = Some(
-                stringFormatter.validateColor(
-                  elementValue,
-                  throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateColor(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
           case "geom_value" =>
             CreateResourceValueV1(
               geom_value = Some(
-                stringFormatter.validateGeometryString(
-                  elementValue,
-                  throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'")
-                )
+                ValuesValidator
+                  .validateGeometryString(elementValue)
+                  .getOrElse(
+                    throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'")
+                  )
               )
             )
 
@@ -1183,10 +1176,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                   throw BadRequestException(s"Invalid interval value in element '${node.label}: '$elementValue'")
 
                 val tVals: Seq[BigDecimal] = timeVals.map { timeVal =>
-                  stringFormatter.validateBigDecimal(
-                    timeVal,
-                    throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'")
-                  )
+                  ValuesValidator
+                    .validateBigDecimal(timeVal)
+                    .getOrElse(
+                      throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'")
+                    )
                 }.toSeq
 
                 CreateResourceValueV1(interval_value = Some(tVals))
@@ -1196,10 +1190,9 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             }
 
           case "time_value" =>
-            val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
-              elementValue,
-              throw BadRequestException(s"Invalid timestamp in element '${node.label}': $elementValue")
-            )
+            val timeStamp: Instant = ValuesValidator
+              .xsdDateTimeStampToInstant(elementValue)
+              .getOrElse(throw BadRequestException(s"Invalid timestamp in element '${node.label}': $elementValue"))
             CreateResourceValueV1(time_value = Some(timeStamp.toString))
 
           case "geoname_value" =>
@@ -1216,12 +1209,9 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         // search for resources matching the given search string (searchstr) and return their Iris.
         requestContext =>
           val requestMessage = for {
-            userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             routeData.appConfig
-                           )
-            params    = requestContext.request.uri.query().toMap
-            searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
+            userProfile <- getUserADM(requestContext)
+            params       = requestContext.request.uri.query().toMap
+            searchstr    = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
 
             // default -1 means: no restriction at all
             restype = params.getOrElse("restype_id", "-1")
@@ -1247,18 +1237,15 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                )
                                            }
 
-            numberOfProps: Int = stringFormatter.validateInt(
-                                   numprops,
-                                   throw BadRequestException(s"Invalid param numprops: $numprops")
-                                 ) match {
+            numberOfProps: Int = ValuesValidator
+                                   .validateInt(numprops)
+                                   .getOrElse(throw BadRequestException(s"Invalid param numprops: $numprops")) match {
                                    case number: Int =>
                                      if (number < 1) 1 else number // numberOfProps must not be smaller than 1
                                  }
 
-            limitOfResults = stringFormatter.validateInt(
-                               limit,
-                               throw BadRequestException(s"Invalid param limit: $limit")
-                             )
+            limitOfResults =
+              ValuesValidator.validateInt(limit).getOrElse(throw BadRequestException(s"Invalid param limit: $limit"))
 
           } yield makeResourceSearchRequestMessage(
             searchString = searchString,
@@ -1268,34 +1255,21 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             userProfile = userProfile
           )
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          runJsonRouteF(requestMessage, requestContext)
       } ~ post {
         // Create a new resource with the given type and possibly a file.
         // The binary file is already managed by Sipi.
         // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
         entity(as[CreateResourceApiRequestV1]) { apiRequest => requestContext =>
           val requestMessageFuture = for {
-            userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             routeData.appConfig
-                           )
+            userProfile <- getUserADM(requestContext)
             request <- makeCreateResourceRequestMessage(
                          apiRequest = apiRequest,
                          userADM = userProfile
                        )
           } yield request
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          runJsonRouteF(requestMessageFuture, requestContext)
         }
       }
     } ~ path("v1" / "resources" / Segment) { resIri =>
@@ -1303,10 +1277,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         parameters("reqtype".?, "resinfo".as[Boolean].?) { (reqtypeParam, resinfoParam) => requestContext =>
           val requestMessage =
             for {
-              userADM <- getUserADM(
-                           requestContext = requestContext,
-                           routeData.appConfig
-                         )
+              userADM    <- getUserADM(requestContext)
               requestType = reqtypeParam.getOrElse("")
               resinfo     = resinfoParam.getOrElse(false)
             } yield makeResourceRequestMessage(
@@ -1316,28 +1287,15 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
               userADM = userADM
             )
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          runJsonRouteF(requestMessage, requestContext)
         }
       } ~ delete {
         parameters("deleteComment".?) { deleteCommentParam => requestContext =>
           val requestMessage = for {
-            userADM <- getUserADM(
-                         requestContext = requestContext,
-                         routeData.appConfig
-                       )
+            userADM <- getUserADM(requestContext)
           } yield makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userADM = userADM)
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "resources.html" / Segment) { iri =>
@@ -1345,61 +1303,39 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         val params      = requestContext.request.uri.query().toMap
         val requestType = params.getOrElse("reqtype", "")
 
-        val requestMessage = requestType match {
+        val requestTask = requestType match {
           case "properties" =>
             for {
-              userADM <- getUserADM(
-                           requestContext = requestContext,
-                           routeData.appConfig
-                         )
-              resIri = stringFormatter.validateAndEscapeIri(
-                         iri,
-                         throw BadRequestException(s"Invalid param resource IRI: $iri")
-                       )
-            } yield ResourceFullGetRequestV1(
-              iri = resIri,
-              userADM = userADM
-            )
-          case other => throw BadRequestException(s"Invalid request type: $other")
+              userADM <- Authenticator.getUserADM(requestContext)
+              resIri <- ZIO.attempt(
+                          stringFormatter.validateAndEscapeIri(
+                            iri,
+                            throw BadRequestException(s"Invalid param resource IRI: $iri")
+                          )
+                        )
+            } yield ResourceFullGetRequestV1(resIri, userADM)
+          case other => ZIO.fail(BadRequestException(s"Invalid request type: $other"))
         }
 
-        RouteUtilV1.runHtmlRoute[ResourcesResponderRequestV1, ResourceFullResponseV1](
-          requestMessageF = requestMessage,
-          viewHandler = ResourceHtmlView.propertiesHtmlView,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runHtmlRoute(requestTask, requestContext)
       }
     } ~ path("v1" / "properties" / Segment) { iri =>
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       routeData.appConfig
-                     )
+          userADM <- getUserADM(requestContext)
           resIri = stringFormatter.validateAndEscapeIri(
                      iri,
                      throw BadRequestException(s"Invalid param resource IRI: $iri")
                    )
         } yield makeGetPropertiesRequestMessage(resIri, userADM)
 
-        RouteUtilV1.runJsonRouteWithFuture(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
-
+        runJsonRouteF(requestMessage, requestContext)
       }
     } ~ path("v1" / "resources" / "label" / Segment) { iri =>
       put {
         entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest => requestContext =>
           val requestMessage = for {
-            userADM <- getUserADM(
-                         requestContext = requestContext,
-                         routeData.appConfig
-                       )
+            userADM <- getUserADM(requestContext)
             resIri = stringFormatter.validateAndEscapeIri(
                        iri,
                        throw BadRequestException(s"Invalid param resource IRI: $iri")
@@ -1415,34 +1351,21 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             userADM = userADM
           )
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "graphdata" / Segment) { iri =>
       get {
         parameters("depth".as[Int].?) { depth => requestContext =>
           val requestMessage = for {
-            userADM <- getUserADM(
-                         requestContext = requestContext,
-                         routeData.appConfig
-                       )
+            userADM <- getUserADM(requestContext)
             resourceIri = stringFormatter.validateAndEscapeIri(
                             iri,
                             throw BadRequestException(s"Invalid param resource IRI: $iri")
                           )
           } yield GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userADM)
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )
+          runJsonRouteF(requestMessage, requestContext)
         }
       }
 
@@ -1456,21 +1379,13 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           InternalServerExceptionMessageRequest()
         }
 
-        RouteUtilV1.runJsonRoute(
-          requestMessage = msg,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+        runJsonRoute(msg, requestContext)
       }
     } ~ path("v1" / "resources" / "xmlimport" / Segment) { projectId =>
       post {
         entity(as[String]) { xml => requestContext =>
           val requestMessage = for {
-            userADM <- getUserADM(
-                         requestContext = requestContext,
-                         routeData.appConfig
-                       )
+            userADM <- getUserADM(requestContext)
 
             _ = if (userADM.isAnonymousUser) {
                   throw ForbiddenException(
@@ -1519,12 +1434,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                               )
           } yield updateRequest
 
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            appActor = appActor,
-            log = log
-          )(timeout = routeData.appConfig.defaultTimeoutAsDuration, executionContext = executionContext)
+          runJsonRouteF(requestMessage, requestContext)
         }
       }
     } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
@@ -1548,10 +1458,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           )
         ) { requestContext =>
           val httpResponseFuture: Future[HttpResponse] = for {
-            userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             routeData.appConfig
-                           )
+            userProfile <- getUserADM(requestContext)
             schemaZipFileBytes: Array[Byte] <- generateSchemaZipFile(
                                                  internalOntologyIri = internalOntologyIri,
                                                  userProfile = userProfile

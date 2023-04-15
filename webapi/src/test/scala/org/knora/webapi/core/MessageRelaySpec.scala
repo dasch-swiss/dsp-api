@@ -21,8 +21,7 @@ object MessageRelaySpec extends ZIOSpecDefault {
   }
 
   object TestHandler {
-    val layer: URLayer[MessageRelay, TestHandler] =
-      ZLayer.fromZIO(ZIO.serviceWithZIO[MessageRelay](_.subscribe(TestHandler())))
+    val layer: URLayer[MessageRelay, TestHandler] = ZLayer.fromZIO(MessageRelay.subscribe(TestHandler()))
   }
 
   case class SomeRelayedMessage() extends RelayedMessage
@@ -34,16 +33,14 @@ object MessageRelaySpec extends ZIOSpecDefault {
         for {
           // need to include the TestHandler in the test otherwise the layer and hence its subscription is ignored
           _      <- ZIO.service[TestHandler]
-          mr     <- ZIO.service[MessageRelay]
-          actual <- mr.ask(NotARelayedMessage()).exit
+          actual <- MessageRelay.ask(NotARelayedMessage()).exit
         } yield assert(actual)(dies(isSubtype[IllegalStateException](anything)))
       },
       test("when asked with a HandledTestMessage then it should relay it to the registered TestHandler") {
         for {
           // need to include the TestHandler in the test otherwise the layer and hence its subscription is ignored
           _      <- ZIO.service[TestHandler]
-          relay  <- ZIO.service[MessageRelay]
-          actual <- relay.ask[String](SomeRelayedMessage())
+          actual <- MessageRelay.ask[String](SomeRelayedMessage())
         } yield assertTrue(actual == "handled")
       }
     ).provide(MessageRelayLive.layer, TestHandler.layer)

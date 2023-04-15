@@ -10,8 +10,6 @@ import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
 
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
@@ -194,7 +192,7 @@ final case class CardinalityServiceLive(
     val subclasses =
       for {
         subclasses   <- ontologyRepo.findAllSubclassesBy(check.classIri)
-        superClasses <- ontologyRepo.findAllSuperClassesBy(toClassIris(subclasses))
+        superClasses <- ontologyRepo.findAllSuperClassesBy(toClassIris(subclasses), upToClass = check.classIri)
       } yield subclasses ::: superClasses
     val subclassCardinalityIsNotIncluded = (other: Cardinality) => other.isNotIncludedIn(check.newCardinality)
     canSetCheckFor(subclasses, check.propertyIri, subclassCardinalityIsNotIncluded, SubclassCheckFailure)

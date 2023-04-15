@@ -8,17 +8,20 @@ package org.knora.webapi.routing.admin.permissions
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import zio._
 
-import java.util.UUID
-
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM
-class DeletePermissionRouteADM(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
+import org.knora.webapi.routing.RouteUtilADM._
+
+final case class DeletePermissionRouteADM(
+  private val routeData: KnoraRouteData,
+  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+) extends KnoraRoute(routeData, runtime)
     with PermissionsADMJsonProtocol {
 
   val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
@@ -26,29 +29,16 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute: Route =
-    deletePermission()
+  override def makeRoute: Route = deletePermission()
 
   /**
    * Delete a permission
    */
   private def deletePermission(): Route =
     path(permissionsBasePath / Segment) { iri =>
-      delete { requestContext =>
-        val requestMessage = for {
-          requestingUser <- getUserADM(requestContext, routeData.appConfig)
-        } yield PermissionDeleteRequestADM(
-          permissionIri = iri,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          appActor = appActor,
-          log = log
-        )
+      delete { ctx =>
+        val task = getUserUuid(ctx).map(r => PermissionDeleteRequestADM(iri, r.user, r.uuid))
+        runJsonRouteZ(task, ctx)
       }
     }
 }

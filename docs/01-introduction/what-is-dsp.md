@@ -106,6 +106,6 @@ for interoperability and reusability of data.
 
 ## Linked Open Data
 
-DSP-API supports publishing data online as as [Linked Open Data](https://de.wikipedia.org/wiki/Linked_Open_Data),
+DSP-API supports publishing data online as [Linked Open Data](https://de.wikipedia.org/wiki/Linked_Open_Data),
 using open standards to allow interoperability between different repositories
 on the web.

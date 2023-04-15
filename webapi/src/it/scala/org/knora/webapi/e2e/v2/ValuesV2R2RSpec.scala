@@ -10,10 +10,9 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
-
 import scala.concurrent.ExecutionContextExecutor
-
 import dsp.errors.AssertionException
+
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
@@ -37,8 +36,8 @@ class ValuesV2R2RSpec extends R2RSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val valuesPath = new ValuesRouteV2(routeData).makeRoute
-  private val searchPath = new SearchRouteV2(routeData).makeRoute
+  private val valuesPath = ValuesRouteV2(routeData, runtime).makeRoute
+  private val searchPath = SearchRouteV2(routeData, runtime).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration

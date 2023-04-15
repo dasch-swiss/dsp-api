@@ -1,5 +1,124 @@
 # Changelog
 
+## [28.1.1](https://github.com/dasch-swiss/dsp-api/compare/v28.1.0...v28.1.1) (2023-04-13)
+
+
+### Bug Fixes
+
+* cardinality issues on subclasses after adding cardinalities to superclass (DEV-2026) ([#2572](https://github.com/dasch-swiss/dsp-api/issues/2572)) ([20a243b](https://github.com/dasch-swiss/dsp-api/commit/20a243b699ca99a8815689bf27a10f391297b21f))
+* Gravsearch wrongly finds no results, if a query can be optimized down to only negations (DEV-1980) ([#2576](https://github.com/dasch-swiss/dsp-api/issues/2576)) ([0612b9a](https://github.com/dasch-swiss/dsp-api/commit/0612b9a6b76e7959407436eaad50f3761d9d1bec))
+* use 400 instead of 500 for invalid input in fulltext search (DEV-1829) ([#2557](https://github.com/dasch-swiss/dsp-api/issues/2557)) ([51acceb](https://github.com/dasch-swiss/dsp-api/commit/51accebd256935fb8fa7df419dc3159155b6dbda))
+
+
+### Maintenance
+
+* add webhook trigger for DEV deployment to workflow (INFRA-240) ([#2577](https://github.com/dasch-swiss/dsp-api/issues/2577)) ([58304f6](https://github.com/dasch-swiss/dsp-api/commit/58304f68258a3ca2fea29cc2ea1997d163bceb07))
+* distribute V2 value functions to proper objects ([#2582](https://github.com/dasch-swiss/dsp-api/issues/2582)) ([fb6cbbc](https://github.com/dasch-swiss/dsp-api/commit/fb6cbbc3930d8e080e49961e1d90e82e2ba801b3))
+* fix docker-publish workflow output step failing ([#2590](https://github.com/dasch-swiss/dsp-api/issues/2590)) ([7e29290](https://github.com/dasch-swiss/dsp-api/commit/7e292905e3d676c9e3f816fabb4e15b6c085cc04))
+* fix string returned by docker-image-tag containing special control characters ([#2592](https://github.com/dasch-swiss/dsp-api/issues/2592)) ([ebee7d6](https://github.com/dasch-swiss/dsp-api/commit/ebee7d6e04bb38a8c597a4e5be64b00b7045595b))
+* pulish sipi images on each commit on main (DEV-1997) ([#2588](https://github.com/dasch-swiss/dsp-api/issues/2588)) ([727911d](https://github.com/dasch-swiss/dsp-api/commit/727911d5b145fb040db6844102b9eddaa7f123b5))
+* remove CORS restriction from ZIO-HTTP routes (DEV-2015) ([#2570](https://github.com/dasch-swiss/dsp-api/issues/2570)) ([f94bb82](https://github.com/dasch-swiss/dsp-api/commit/f94bb82ee1446eaccb579b89ef2d3ba22db8b72d))
+* remove errorFun from value conversion and extract to ValuesValidator (DEV-1993) ([#2558](https://github.com/dasch-swiss/dsp-api/issues/2558)) ([6cd58e4](https://github.com/dasch-swiss/dsp-api/commit/6cd58e4ff8dbf3fd0d9dd5512aca4e6b1e816e9c))
+* remove throwing from V1 Routes Assets, Authentication, Ckan ([#2580](https://github.com/dasch-swiss/dsp-api/issues/2580)) ([7cb0d33](https://github.com/dasch-swiss/dsp-api/commit/7cb0d3312cda771b5f1907840d05904156f090b9))
+* remove throwing in V1 Lists Route (DEV-2033) ([#2579](https://github.com/dasch-swiss/dsp-api/issues/2579)) ([c64a41f](https://github.com/dasch-swiss/dsp-api/commit/c64a41fac8e06ebd3776c1b2a63eb945fb9f3150))
+* remove throwing in V1 Projects Route (DEV-2037) ([#2581](https://github.com/dasch-swiss/dsp-api/issues/2581)) ([6b8bfc0](https://github.com/dasch-swiss/dsp-api/commit/6b8bfc06f86547f88f499484691d49e0ce4915b1))
+* remove throws from V1 Search Responder(DEV-2038) ([#2583](https://github.com/dasch-swiss/dsp-api/issues/2583)) ([2e6361f](https://github.com/dasch-swiss/dsp-api/commit/2e6361f48a135f5b87e573dda5365407e61a2364))
+* Return BadRequest in v1 values API if an expected parameter… ([#2561](https://github.com/dasch-swiss/dsp-api/issues/2561)) ([4a5a838](https://github.com/dasch-swiss/dsp-api/commit/4a5a838a94dcc51ddac458322bab93df70f60e38))
+* update dependencies ([#2569](https://github.com/dasch-swiss/dsp-api/issues/2569)) ([644e085](https://github.com/dasch-swiss/dsp-api/commit/644e0856ffdd7a63cef1e5ad755b1cc00db418ab))
+* upgrade Sipi base image to 2.8.1 DEV-2019 ([#2586](https://github.com/dasch-swiss/dsp-api/issues/2586)) ([8d88659](https://github.com/dasch-swiss/dsp-api/commit/8d886599d8179aedfa2b19ab6b14a765d114e8a4))
+* ziofy ResourceTypesRouteV1 (DEV-2034) ([#2578](https://github.com/dasch-swiss/dsp-api/issues/2578)) ([31a8206](https://github.com/dasch-swiss/dsp-api/commit/31a8206a63217542707a23e673418b88ab882d36))
+* ziofy StandoffRouteV1 (DEV-2031) ([#2575](https://github.com/dasch-swiss/dsp-api/issues/2575)) ([d739dfe](https://github.com/dasch-swiss/dsp-api/commit/d739dfedc8f4cae31daf36823c5740d2d0698bf3))
+* ziofy UserRouteV1 (DEV-2028) ([#2573](https://github.com/dasch-swiss/dsp-api/issues/2573)) ([222f757](https://github.com/dasch-swiss/dsp-api/commit/222f757782af7dd8d00cb04486af305d30e0bd28))
+* ziofy ValuesRouteV1 (DEV-2012) ([#2559](https://github.com/dasch-swiss/dsp-api/issues/2559)) ([0798fef](https://github.com/dasch-swiss/dsp-api/commit/0798fef04618781540140785bb58eabb52e5e624))
+
+## [28.1.0](https://github.com/dasch-swiss/dsp-api/compare/v28.0.0...v28.1.0) (2023-03-29)
+
+
+### Bug Fixes
+
+* Allow setting a cardinality in a three tier class hierarchy (DEV-1927) ([#2542](https://github.com/dasch-swiss/dsp-api/issues/2542)) ([0dc76f0](https://github.com/dasch-swiss/dsp-api/commit/0dc76f00c0fd0003f387004114d1e8cc75a2d840))
+* Apply correct DAOP after changeing them (remove its caching) DEV-1965 ([#2551](https://github.com/dasch-swiss/dsp-api/issues/2551)) ([72e5f92](https://github.com/dasch-swiss/dsp-api/commit/72e5f92ef007675158262d4a949f89f6be7111f7))
+
+
+### Enhancements
+
+* add separate route for local processing of files through sipi ([#2519](https://github.com/dasch-swiss/dsp-api/issues/2519)) ([042f806](https://github.com/dasch-swiss/dsp-api/commit/042f8063b7f7ad5b0b04c5052bf70ea91dc8b689))
+
+
+### Documentation
+
+* update Project IRI documentation (DEV-1786) ([#2539](https://github.com/dasch-swiss/dsp-api/issues/2539)) ([230fca5](https://github.com/dasch-swiss/dsp-api/commit/230fca50736668e5324c7e671e1d57ff4ca750ce))
+
+
+### Maintenance
+
+* add a make target for parametrised database dump and upload ([#2541](https://github.com/dasch-swiss/dsp-api/issues/2541)) ([94c38f2](https://github.com/dasch-swiss/dsp-api/commit/94c38f211122532320d3e0d9a5d7b723d9fa36e3))
+* add docker container healthcheck for dsp-api (INFRA-93) ([#2549](https://github.com/dasch-swiss/dsp-api/issues/2549)) ([8bdc160](https://github.com/dasch-swiss/dsp-api/commit/8bdc160d268df38ead2c6c9c174839551ebed6ff))
+* **CI:** pull all tags when checking out ([#2532](https://github.com/dasch-swiss/dsp-api/issues/2532)) ([fc3a891](https://github.com/dasch-swiss/dsp-api/commit/fc3a89161fcd8be4dd6ace823a42af8b13212caa))
+* Publish a docker container for webapi and sipi on each commit t… ([#2553](https://github.com/dasch-swiss/dsp-api/issues/2553)) ([b6f2590](https://github.com/dasch-swiss/dsp-api/commit/b6f259055249705194cc50fda871786ed257b41e))
+* Remove dead ZIOs from ProjectResponderADM and introduce project services (DEV-1998) ([#2534](https://github.com/dasch-swiss/dsp-api/issues/2534)) ([b5619c2](https://github.com/dasch-swiss/dsp-api/commit/b5619c2a17a3bf43115360c656b76fc8f81e7fc0))
+* remove deprecated fuseki config ([#2552](https://github.com/dasch-swiss/dsp-api/issues/2552)) ([f6826fb](https://github.com/dasch-swiss/dsp-api/commit/f6826fb7c0832af8ad5a36eb6f4796e7448177da))
+* Remove publishing sipi docker image because this build is broken (DEV-1848) ([#2556](https://github.com/dasch-swiss/dsp-api/issues/2556)) ([71f75fa](https://github.com/dasch-swiss/dsp-api/commit/71f75fa4ab669bad79f7125e974beb1cba3a4313))
+* Remove unused code related to ziofied Responders (DEV-1958) ([#2543](https://github.com/dasch-swiss/dsp-api/issues/2543)) ([f40d6cb](https://github.com/dasch-swiss/dsp-api/commit/f40d6cbebc9c8d9f15be5db623df93349c64b173))
+* run integration tests against akka and zio routes (DEV-1585) ([#2545](https://github.com/dasch-swiss/dsp-api/issues/2545)) ([e730ba4](https://github.com/dasch-swiss/dsp-api/commit/e730ba464e0530674c0b11dd5b11679d43fd0797))
+* **StringFormatter:** move values related methods to separate file removing errorFun (DEV-1905) ([#2550](https://github.com/dasch-swiss/dsp-api/issues/2550)) ([ddcf912](https://github.com/dasch-swiss/dsp-api/commit/ddcf912ac03670b66ce236d94d768421dfe32b2b))
+* ziofy Authenticator (DEV-1926) ([#2540](https://github.com/dasch-swiss/dsp-api/issues/2540)) ([9878529](https://github.com/dasch-swiss/dsp-api/commit/9878529653ad9f235e70264d149c10e9d4361c8f))
+* ziofy ResourceUtilV1 (DEV-1967) ([#2546](https://github.com/dasch-swiss/dsp-api/issues/2546)) ([c6e0805](https://github.com/dasch-swiss/dsp-api/commit/c6e080538782fb7aa0b7c36fb18757bf7082acd8))
+* ziofy ResourceUtilV2 (DEV-1963) ([#2544](https://github.com/dasch-swiss/dsp-api/issues/2544)) ([89eb033](https://github.com/dasch-swiss/dsp-api/commit/89eb0334f0f651dccadd700fb86d99bdfaa73fd0))
+* ziofy RouteUtilADM (DEV-1968) ([#2547](https://github.com/dasch-swiss/dsp-api/issues/2547)) ([00b7070](https://github.com/dasch-swiss/dsp-api/commit/00b7070d5be417764e0db611a9bd509971de83ad))
+* ziofy SearchResponderV2 and Gravsearch (DEV-1755) ([#2538](https://github.com/dasch-swiss/dsp-api/issues/2538)) ([e708fc3](https://github.com/dasch-swiss/dsp-api/commit/e708fc3179c2dd071a64c3d423ecf88ccdbadf69))
+* ziofy ValuesResponderV2 (DEV-1757) ([#2536](https://github.com/dasch-swiss/dsp-api/issues/2536)) ([ca6f97a](https://github.com/dasch-swiss/dsp-api/commit/ca6f97af7feded2b50c23ddef0a000b5dc6936b7))
+
+## [28.0.0](https://github.com/dasch-swiss/dsp-api/compare/v27.1.0...v28.0.0) (2023-03-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* Allow special characters in full-text search (DEV-1712) ([#2441](https://github.com/dasch-swiss/dsp-api/issues/2441))
+
+### Bug Fixes
+
+* Allow special characters in full-text search (DEV-1712) ([#2441](https://github.com/dasch-swiss/dsp-api/issues/2441)) ([b3148a0](https://github.com/dasch-swiss/dsp-api/commit/b3148a0d47e467d244e51ead35a160721035687d))
+* deleted properties in cardinalities should be included in the count query (DEV-1878) ([#2530](https://github.com/dasch-swiss/dsp-api/issues/2530)) ([9ae80fd](https://github.com/dasch-swiss/dsp-api/commit/9ae80fd83f9833256a43f1ecb84c78d1632b68c3))
+* doSipiPostUpdate to evaluate provided task only once (NO-TICKET) ([#2521](https://github.com/dasch-swiss/dsp-api/issues/2521)) ([a3639c1](https://github.com/dasch-swiss/dsp-api/commit/a3639c129b1ca08701776b5a6ee4ff9b6082c31d))
+* Invalidate the cache when changing the password (DEV-1814) ([#2511](https://github.com/dasch-swiss/dsp-api/issues/2511)) ([1cf4727](https://github.com/dasch-swiss/dsp-api/commit/1cf4727495fb6088addf6ae32c2d9eae1e602cf1))
+* Replace invalid character in usernames ([#2510](https://github.com/dasch-swiss/dsp-api/issues/2510)) ([031c744](https://github.com/dasch-swiss/dsp-api/commit/031c7449220f0c7374167927af042d1c454066b7))
+* Slow Gravsearch Queries are not being logged (DEV-1838) ([#2522](https://github.com/dasch-swiss/dsp-api/issues/2522)) ([fb254ad](https://github.com/dasch-swiss/dsp-api/commit/fb254ad400ceaa9513b05f1b556dd403ff8104d7))
+
+
+### Documentation
+
+* minor improvements to permissions documentation ([#2520](https://github.com/dasch-swiss/dsp-api/issues/2520)) ([e434f2c](https://github.com/dasch-swiss/dsp-api/commit/e434f2cdd95505d1eb2c4e51c8bfe89c71e13d90))
+
+
+### Enhancements
+
+* Add all instances which violate the new cardinality to response (DEV-1861) ([#2523](https://github.com/dasch-swiss/dsp-api/issues/2523)) ([5f22100](https://github.com/dasch-swiss/dsp-api/commit/5f22100eeaca5a9d7042533ddcd296af043e938a))
+* Add new upload route to Sipi without processing (DEV-1700) ([#2457](https://github.com/dasch-swiss/dsp-api/issues/2457)) ([3cacc76](https://github.com/dasch-swiss/dsp-api/commit/3cacc76b84d199bc6f54e4b8e726fa5d0c4be2b5))
+* **sipi:** add support for ODD and RNG file formats (DEV-1271) ([#2197](https://github.com/dasch-swiss/dsp-api/issues/2197)) ([4441035](https://github.com/dasch-swiss/dsp-api/commit/44410357838f0ab6248f286829313c88ebbdf397))
+
+
+### Maintenance
+
+* add JSON logging (DEV-931) ([#2506](https://github.com/dasch-swiss/dsp-api/issues/2506)) ([f3bbce3](https://github.com/dasch-swiss/dsp-api/commit/f3bbce3661d8cb9fbbef1729129743e6b9656ea9))
+* add logger name to text logging (DEV-1826) ([#2514](https://github.com/dasch-swiss/dsp-api/issues/2514)) ([bcf83d2](https://github.com/dasch-swiss/dsp-api/commit/bcf83d2dfc714a794a15935abc9c675bb68bfe34))
+* bump SIPI version (DEV-1797) ([#2507](https://github.com/dasch-swiss/dsp-api/issues/2507)) ([7e2dcd3](https://github.com/dasch-swiss/dsp-api/commit/7e2dcd3e29bd26375770284b78f8e463080aea0d))
+* cleanup StringFormatter (NO-TICKET) ([#2517](https://github.com/dasch-swiss/dsp-api/issues/2517)) ([ca418aa](https://github.com/dasch-swiss/dsp-api/commit/ca418aa152c1f32bd2db9feded1ea07fa512050e))
+* CORS fails if allowed origins contain upper case letter ([#2505](https://github.com/dasch-swiss/dsp-api/issues/2505)) ([de7337a](https://github.com/dasch-swiss/dsp-api/commit/de7337a71db353612dfe334261f2437bc98b6f95))
+* remove dsp-main (NO-TICKET) ([#2513](https://github.com/dasch-swiss/dsp-api/issues/2513)) ([d7f2f19](https://github.com/dasch-swiss/dsp-api/commit/d7f2f196d5ed27227c6e955e3fa7a994a1dc7c27))
+* Remove needless logging of all requests to /admin/projects (NO-TICKET) ([#2529](https://github.com/dasch-swiss/dsp-api/issues/2529)) ([3a01d87](https://github.com/dasch-swiss/dsp-api/commit/3a01d87c47158623fe007c5f18515713fc3acf9c))
+* remove unused subprojects (NO-TICKET) ([#2531](https://github.com/dasch-swiss/dsp-api/issues/2531)) ([45b7632](https://github.com/dasch-swiss/dsp-api/commit/45b7632dea3b8c7ccc37b64ab9762c4a22f3d163))
+* remove zio die from triplestore (NO-TICKET) ([#2509](https://github.com/dasch-swiss/dsp-api/issues/2509)) ([d5e0076](https://github.com/dasch-swiss/dsp-api/commit/d5e007699e833a1e1594e4673aa26bd4d3cd61b7))
+* Replace CacheServiceManager (DEV-1798) ([#2503](https://github.com/dasch-swiss/dsp-api/issues/2503)) ([843d31d](https://github.com/dasch-swiss/dsp-api/commit/843d31d088b39731ac2fa32c8d03153cbc9480a7))
+* Replace IIIFServiceManager (DEV-1799) ([#2502](https://github.com/dasch-swiss/dsp-api/issues/2502)) ([22e456b](https://github.com/dasch-swiss/dsp-api/commit/22e456b715e5bdb1f01c6427eff011196c12d93e))
+* Replace TriplestoreServiceManager (DEV-1800) ([#2501](https://github.com/dasch-swiss/dsp-api/issues/2501)) ([211b601](https://github.com/dasch-swiss/dsp-api/commit/211b6019a6caf58448608d354b6232fba727eccc))
+* ziofy Cache (DEV-1824) ([#2512](https://github.com/dasch-swiss/dsp-api/issues/2512)) ([1daeb55](https://github.com/dasch-swiss/dsp-api/commit/1daeb555a7eec8e30a7b5b06df11e1b98f3eaca9))
+* ziofy CardinalityHandler and OntologyHelpers (NO-TICKET) ([#2500](https://github.com/dasch-swiss/dsp-api/issues/2500)) ([d6fa2c0](https://github.com/dasch-swiss/dsp-api/commit/d6fa2c03f98f0c38dfeea1c9f279581a43012e82))
+* ziofy ontology responder v2 (DEV-1753) ([#2515](https://github.com/dasch-swiss/dsp-api/issues/2515)) ([3ac2379](https://github.com/dasch-swiss/dsp-api/commit/3ac2379951ac48a1508cae00854f8f39bdec255c))
+* ziofy ResourcesResponderV1 (DEV-1747) ([#2486](https://github.com/dasch-swiss/dsp-api/issues/2486)) ([00ddc62](https://github.com/dasch-swiss/dsp-api/commit/00ddc624df0cc3c60cdf3d265a444bafc72b038a))
+* ziofy ResourcesResponderV2 (DEV-1754) ([#2518](https://github.com/dasch-swiss/dsp-api/issues/2518)) ([e25284d](https://github.com/dasch-swiss/dsp-api/commit/e25284d48ff33135bc2fb1846c70eddbeba262c9))
+* ziofy StandoffResponderV2 (DEV-1756) ([#2498](https://github.com/dasch-swiss/dsp-api/issues/2498)) ([402ea3f](https://github.com/dasch-swiss/dsp-api/commit/402ea3f984c3287f3b3281de5d65adbe4e87b278))
+
 ## [27.1.0](https://github.com/dasch-swiss/dsp-api/compare/v27.0.0...v27.1.0) (2023-03-03)
 
 

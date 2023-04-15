@@ -18,6 +18,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
+
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
 import dsp.valueobjects.LangString
@@ -31,6 +32,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
@@ -500,7 +502,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         fooLastModDate = lastModDate
@@ -547,7 +549,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
         barLastModDate = lastModDate
 
@@ -626,7 +628,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -669,7 +671,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(lastModDate.isAfter(barLastModDate))
@@ -695,7 +697,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -1000,7 +1002,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newFreetestLastModDate = responseJsonDoc.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
@@ -1082,7 +1084,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newFreetestLastModDate = responseJsonDoc.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
@@ -1806,7 +1808,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -1879,7 +1881,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -1925,7 +1927,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -1998,7 +2000,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -2098,7 +2100,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -2432,7 +2434,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -2504,7 +2506,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -2541,7 +2543,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -2581,7 +2583,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = stringFormatter.xsdDateTimeStampToInstant
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
 
         uselessLastModDate = lastModDate

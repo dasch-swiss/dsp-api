@@ -7,36 +7,27 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import zio._
 
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginApiRequestPayloadV2
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilV2
 
 /**
  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
  */
-class AuthenticationRouteV2(routeData: KnoraRouteData)
-    extends KnoraRoute(routeData)
-    with Authenticator
-    with AuthenticationV2JsonProtocol {
+final case class AuthenticationRouteV2()(
+  private implicit val runtime: Runtime[StringFormatter with Authenticator]
+) extends AuthenticationV2JsonProtocol {
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     path("v2" / "authentication") {
       get { // authenticate credentials
-        requestContext =>
-          requestContext.complete {
-            doAuthenticateV2(
-              requestContext = requestContext,
-              routeData.appConfig
-            )
-          }
+        ctx => RouteUtilV2.complete(ctx, Authenticator.doAuthenticateV2(ctx))
       } ~
         post { // login
           /* send iri, email, or username, and password in body as:
@@ -53,49 +44,31 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
            * the authorization header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
            */
           entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
-            requestContext.complete {
-              doLoginV2(
-                credentials = KnoraPasswordCredentialsV2(
-                  UserIdentifierADM(
-                    maybeIri = apiRequest.iri,
-                    maybeEmail = apiRequest.email,
-                    maybeUsername = apiRequest.username
-                  ),
-                  password = apiRequest.password
-                ),
-                routeData.appConfig
-              )
+            val task = ZIO.serviceWithZIO[StringFormatter] { sf: StringFormatter =>
+              val userId      = UserIdentifierADM(apiRequest.iri, apiRequest.email, apiRequest.username)(sf)
+              val credentials = KnoraPasswordCredentialsV2(userId, apiRequest.password)
+              Authenticator.doLoginV2(credentials)
             }
+            RouteUtilV2.complete(requestContext, task)
           }
         } ~
-        delete { // logout
-          requestContext =>
-            requestContext.complete {
-              doLogoutV2(requestContext, routeData.appConfig)
-            }
-        }
+        // logout
+        delete(ctx => RouteUtilV2.complete(ctx, Authenticator.doLogoutV2(ctx)))
     } ~
       path("v2" / "login") {
         get { // html login interface (necessary for IIIF Authentication API support)
-          requestContext =>
-            requestContext.complete {
-              presentLoginFormV2(requestContext, routeData.appConfig)
-            }
+          ctx => RouteUtilV2.complete(ctx, Authenticator.presentLoginFormV2(ctx))
         } ~
           post { // called by html login interface (necessary for IIIF Authentication API support)
             formFields(Symbol("username"), Symbol("password")) { (username, password) => requestContext =>
               {
-                requestContext.complete {
-                  doLoginV2(
-                    credentials = KnoraPasswordCredentialsV2(
-                      UserIdentifierADM(
-                        maybeUsername = Some(username)
-                      ),
-                      password = password
-                    ),
-                    routeData.appConfig
-                  )
-                }
+                val task =
+                  ZIO.serviceWithZIO[StringFormatter] { sf: StringFormatter =>
+                    val userId      = UserIdentifierADM(maybeUsername = Some(username))(sf)
+                    val credentials = KnoraPasswordCredentialsV2(userId, password)
+                    Authenticator.doLoginV2(credentials)
+                  }
+                RouteUtilV2.complete(requestContext, task)
               }
             }
           }
