@@ -23,11 +23,11 @@ object Dependencies {
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.5.0"
-  val ZioLoggingVersion           = "2.1.11"
+  val ZioLoggingVersion           = "2.1.12"
   val ZioMetricsConnectorsVersion = "2.0.8"
   val ZioPreludeVersion           = "1.0.0-RC18"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.10"
+  val ZioVersion                  = "2.0.12"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio" %% "zio"                       % ZioVersion
@@ -88,7 +88,7 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "72.1"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.3"
