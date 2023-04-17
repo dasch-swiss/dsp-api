@@ -1981,18 +1981,16 @@ class StringFormatter private (
    *                  project shortname.
    * @return the same string.
    */
-  def validateAndEscapeProjectShortname(shortname: String, errorFun: => Nothing): String = { // V2 / value objects
-    // Check that shortname matches NCName pattern
-    val ncNameMatch = NCNameRegex.findFirstIn(shortname) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
-    // Check that shortname is URL safe
-    Base64UrlPatternRegex.findFirstIn(ncNameMatch) match {
-      case Some(shortname) => toSparqlEncodedString(shortname, errorFun)
-      case None            => errorFun
-    }
-  }
+  @deprecated("Use validateAndEscapeProjectShortname(String) instead.")
+  def validateAndEscapeProjectShortname(shortname: String, errorFun: => Nothing): String = // V2 / value objects
+    validateAndEscapeProjectShortname(shortname).getOrElse(errorFun)
+
+  def validateAndEscapeProjectShortname(shortname: String): Validation[ValidationException, String] =
+    Validation
+      .fromOption(
+        NCNameRegex.findFirstIn(shortname).flatMap(Base64UrlPatternRegex.findFirstIn).flatMap(toSparqlEncodedString)
+      )
+      .mapError(_ => ValidationException(s"Invalid Shortname: $shortname"))
 
   /**
    * Check that an optional string represents a valid project shortname.
@@ -2002,6 +2000,7 @@ class StringFormatter private (
    *                    project shortname.
    * @return the same optional string.
    */
+  @deprecated("Use validateAndEscapeOptionalProjectShortname(Option[String]) instead.")
   def validateAndEscapeOptionalProjectShortname(
     maybeString: Option[String],
     errorFun: => Nothing
@@ -2009,6 +2008,14 @@ class StringFormatter private (
     maybeString match {
       case Some(s) => Some(validateAndEscapeProjectShortname(s, errorFun))
       case None    => None
+    }
+
+  def validateAndEscapeOptionalProjectShortname(
+    maybeString: Option[String]
+  ): Validation[ValidationException, Option[String]] =
+    maybeString match {
+      case None        => Validation.succeed(None)
+      case Some(value) => validateAndEscapeProjectShortname(value).map(Some(_))
     }
 
   /**
