@@ -55,7 +55,7 @@ import org.knora.webapi.util.MutableTestIri
 class ResourcesV1R2RSpec extends R2RSpec {
 
   private val resourcesPathV1 =
-    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV1(routeData, runtime).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV1().makeRoute)
   private val resourcesPathV2 =
     DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(routeData, runtime).makeRoute)
   private val valuesPathV1 =

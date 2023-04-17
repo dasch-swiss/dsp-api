@@ -237,7 +237,7 @@ final case class SearchRouteV2(
         val returnFiles: Boolean = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
 
         val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
-        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
 
         val requestTask = Authenticator
           .getUserADM(requestContext)
@@ -287,7 +287,7 @@ final case class SearchRouteV2(
     get { requestContext =>
       val constructQuery                   = GravsearchParser.parseQuery(sparql)
       val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
       val requestMessage = Authenticator
         .getUserADM(requestContext)
         .map(GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, _))
@@ -301,7 +301,7 @@ final case class SearchRouteV2(
         {
           val constructQuery                   = GravsearchParser.parseQuery(gravsearchQuery)
           val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
-          val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+          val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
           val requestTask = Authenticator
             .getUserADM(requestContext)
             .map(GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, _))

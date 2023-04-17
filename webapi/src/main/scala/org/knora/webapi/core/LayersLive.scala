@@ -136,6 +136,7 @@ object LayersLive {
       with IIIFRequestMessageHandler
       with IIIFService
       with IriService
+      with IriConverter
       with JwtService
       with KnoraProjectRepo
       with ListsResponderADM

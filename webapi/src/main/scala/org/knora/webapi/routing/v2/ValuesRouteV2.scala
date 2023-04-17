@@ -76,7 +76,7 @@ final case class ValuesRouteV2(
               .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
           )
         val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
-        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
 
         val requestTask = Authenticator
           .getUserADM(requestContext)
