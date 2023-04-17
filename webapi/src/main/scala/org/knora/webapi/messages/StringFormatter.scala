@@ -2111,7 +2111,10 @@ class StringFormatter private (
     toSparqlEncodedString(iri).getOrElse(errorFun)
 
   def validateAndEscapeUserIri(iri: IRI): Validation[ValidationException, String] =
-    if (isKnoraUserIriStr(iri) && toSparqlEncodedString(iri).isDefined) Validation.succeed(iri)
+    if (isKnoraUserIriStr(iri))
+      Validation
+        .fromOption(toSparqlEncodedString(iri))
+        .mapError(_ => ValidationException(s"Invalid IRI: $iri"))
     else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
