@@ -1480,9 +1480,10 @@ class StringFormatter private (
    * @param s        the string to be checked.
    * @return A validated and escaped IRI.
    */
-  def validateAndEscapeIri(s: String): Option[String] =
-    if (Iri.urlValidator.isValid(s)) Some(encodeAllowEscapes(s))
-    else None
+  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
+    Validation
+      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
+      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
    * Check that an optional string represents a valid IRI.
@@ -1494,10 +1495,13 @@ class StringFormatter private (
    */
   @deprecated("Use validateAndEscapeOptionalIri(Option[String]) instead.")
   def validateAndEscapeOptionalIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] =
-    maybeString.map(s => validateAndEscapeIri(s)).getOrElse(errorFun)
+    validateAndEscapeOptionalIri(maybeString).getOrElse(errorFun)
 
-  def validateAndEscapeOptionalIri(maybeString: Option[String]): Option[String] =
-    maybeString.flatMap(validateAndEscapeIri)
+  def validateAndEscapeOptionalIri(maybeString: Option[String]): Validation[ValidationException, Option[String]] =
+    maybeString match {
+      case None      => Validation.succeed(None)
+      case Some(iri) => validateAndEscapeIri(iri).map(Some(_))
+    }
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
@@ -2038,9 +2042,9 @@ class StringFormatter private (
   def validateGroupIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
     validateGroupIri(iri).getOrElse(errorFun)
 
-  def validateGroupIri(iri: IRI): Option[IRI] =
-    if (isKnoraGroupIriStr(iri)) Some(iri)
-    else None
+  def validateGroupIri(iri: IRI): Validation[ValidationException, IRI] =
+    if (isKnoraGroupIriStr(iri)) Validation.succeed(iri)
+    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
    * Given the optional group IRI, checks if it is in a valid format.
@@ -2050,10 +2054,13 @@ class StringFormatter private (
    */
   @deprecated("Use validateOptionalGroupIri(Option[IRI]) instead.")
   def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = // V2 / value objects
-    maybeIri.map(validateGroupIri).getOrElse(errorFun)
+    validateOptionalGroupIri(maybeIri).getOrElse(errorFun)
 
-  def validateOptionalGroupIri(maybeIri: Option[IRI]): Option[IRI] =
-    maybeIri.flatMap(validateGroupIri)
+  def validateOptionalGroupIri(maybeIri: Option[IRI]): Validation[ValidationException, Option[IRI]] =
+    maybeIri match {
+      case None      => Validation.succeed(None)
+      case Some(iri) => validateGroupIri(iri).map(Some(_))
+    }
 
   /**
    * Given the permission IRI, checks if it is in a valid format.
@@ -2065,9 +2072,9 @@ class StringFormatter private (
   def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
     validatePermissionIri(iri).getOrElse(errorFun)
 
-  def validatePermissionIri(iri: IRI): Option[IRI] =
-    if (isKnoraPermissionIriStr(iri)) Some(iri)
-    else None
+  def validatePermissionIri(iri: IRI): Validation[ValidationException, IRI] =
+    if (isKnoraPermissionIriStr(iri)) Validation.succeed(iri)
+    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
    * Check that the supplied IRI represents a valid user IRI.
@@ -2079,11 +2086,11 @@ class StringFormatter private (
    */
   @deprecated("Use validateAndEscapeUserIri(IRI) instead.")
   def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = // V2 / value objects
-    validateAndEscapeIri(iri).getOrElse(errorFun)
+    toSparqlEncodedString(iri).getOrElse(errorFun)
 
-  def validateAndEscapeUserIri(iri: IRI): Option[String] =
-    if (isKnoraUserIriStr(iri)) toSparqlEncodedString(iri)
-    else None
+  def validateAndEscapeUserIri(iri: IRI): Validation[ValidationException, String] =
+    if (isKnoraUserIriStr(iri) && toSparqlEncodedString(iri).isDefined) Validation.succeed(iri)
+    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
    * Check that an optional string represents a valid user IRI.
@@ -2098,10 +2105,13 @@ class StringFormatter private (
     maybeString: Option[String],
     errorFun: => Nothing
   ): Option[String] = // V2 / value objects
-    maybeString.map(validateAndEscapeUserIri).getOrElse(errorFun)
+    validateAndEscapeOptionalUserIri(maybeString).getOrElse(errorFun)
 
-  def validateAndEscapeOptionalUserIri(maybeString: Option[String]): Option[String] =
-    maybeString.flatMap(validateAndEscapeUserIri)
+  def validateAndEscapeOptionalUserIri(maybeString: Option[String]): Validation[ValidationException, Option[String]] =
+    maybeString match {
+      case None      => Validation.succeed(None)
+      case Some(iri) => validateAndEscapeUserIri(iri).map(Some(_))
+    }
 
   /**
    * Given an email address, checks if it is in a valid format.

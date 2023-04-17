@@ -298,8 +298,9 @@ object RouteUtilV1 {
 
   def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
-      ZIO
-        .fromOption(stringFormatter.validateAndEscapeIri(s))
+      stringFormatter
+        .validateAndEscapeIri(s)
+        .toZIO
         .orElseFail(BadRequestException(errorMsg))
     }
 
