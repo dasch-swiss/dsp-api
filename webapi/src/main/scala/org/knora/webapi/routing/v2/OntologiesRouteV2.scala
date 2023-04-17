@@ -473,23 +473,8 @@ final case class OntologiesRouteV2()(
               _                                         <- PropertyIri.make(propertyInfoContent.propertyIri.toString).toZIO
 
               // get gui related values from request and validate them by making value objects from it
-
               // get the (optional) gui element from the request
-              maybeGuiElement <-
-                RouteUtilZ
-                  .toSmartIri(SalsahGui.External.GuiElementProp, "Should not happen")
-                  .map(propertyInfoContent.predicates.get)
-                  .flatMap(infoMaybe =>
-                    ZIO.foreach(infoMaybe) { predicateInfoV2: PredicateInfoV2 =>
-                      predicateInfoV2.objects.head match {
-                        case guiElement: SmartIriLiteralV2 =>
-                          ZIO.succeed(guiElement.value.toOntologySchema(InternalSchema).toString)
-                        case other =>
-                          ZIO.fail(BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other"))
-                      }
-                    }
-                  )
-
+              maybeGuiElement <- getGuiElement(propertyInfoContent)
               // get the gui attribute(s) from the request
               maybeGuiAttributes <- getGuiAttributes(propertyInfoContent)
               _ <- GuiObject
