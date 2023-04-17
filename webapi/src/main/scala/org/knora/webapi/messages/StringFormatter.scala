@@ -1950,11 +1950,14 @@ class StringFormatter private (
    * @return the same string but escaped.
    */
   def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    if (isKnoraProjectIriStr(iri)) {
-      toSparqlEncodedString(iri, errorFun)
-    } else {
-      errorFun
-    }
+    validateAndEscapeProjectIri(iri).getOrElse(errorFun)
+
+  def validateAndEscapeProjectIri(iri: IRI): Validation[ValidationException, IRI] =
+    if (isKnoraProjectIriStr(iri))
+      Validation
+        .fromOption(toSparqlEncodedString(iri))
+        .mapError(_ => ValidationException(s"Invalid IRI: $iri"))
+    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
    * Check that an optional string represents a valid project IRI.
@@ -1964,6 +1967,7 @@ class StringFormatter private (
    *                    project IRI.
    * @return the same optional string but escaped.
    */
+  @deprecated("Use validateAndEscapeOptionalProjectIri(Option[String]) instead.")
   def validateAndEscapeOptionalProjectIri(
     maybeString: Option[String],
     errorFun: => Nothing
@@ -1971,6 +1975,14 @@ class StringFormatter private (
     maybeString match {
       case Some(s) => Some(validateAndEscapeProjectIri(s, errorFun))
       case None    => None
+    }
+
+  def validateAndEscapeOptionalProjectIri(
+    maybeString: Option[String]
+  ): Validation[ValidationException, Option[IRI]] =
+    maybeString match {
+      case Some(s) => validateAndEscapeProjectIri(s).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 
   /**
@@ -1988,7 +2000,10 @@ class StringFormatter private (
   def validateAndEscapeProjectShortname(shortname: String): Validation[ValidationException, String] =
     Validation
       .fromOption(
-        NCNameRegex.findFirstIn(shortname).flatMap(Base64UrlPatternRegex.findFirstIn).flatMap(toSparqlEncodedString)
+        NCNameRegex
+          .findFirstIn(shortname)
+          .flatMap(Base64UrlPatternRegex.findFirstIn)
+          .flatMap(toSparqlEncodedString)
       )
       .mapError(_ => ValidationException(s"Invalid Shortname: $shortname"))
 
