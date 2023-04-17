@@ -164,21 +164,6 @@ final case class SearchResponderV2Live(
     case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 =>
       searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
 
-    case SearchResourceByLabelWithDefinedResourceClassRequestV2(
-          searchValue,
-          offset,
-          limitToResourceClass,
-          targetSchema,
-          requestingUser
-        ) =>
-      searchResourcesByLabelWithDefinedResourceClassV2(
-        searchValue,
-        offset,
-        limitToResourceClass,
-        targetSchema,
-        requestingUser
-      )
-
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -904,84 +889,6 @@ final case class SearchResponderV2Live(
           .as(countResponse.results.bindings.head.rowMap("count"))
 
     } yield ResourceCountV2(count.toInt)
-  }
-
-  private def searchResourcesByLabelWithDefinedResourceClassV2(
-    searchValue: String,
-    offset: Int,
-    limitToResourceClass: SmartIri,
-    targetSchema: ApiV2Schema,
-    requestingUser: UserADM
-  ): Task[ReadResourcesSequenceV2] = {
-
-    val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
-
-    for {
-      searchResourceByLabelSparql <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .searchResourceByLabelWithDefinedResourceClass(
-              searchTerm = searchPhrase,
-              limitToResourceClass = limitToResourceClass.toString,
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage
-            )
-            .toString()
-        )
-
-      searchResourceByLabelResponse <- triplestoreService.sparqlHttpExtendedConstruct(searchResourceByLabelSparql)
-
-      // collect the IRIs of main resources returned
-      mainResourceIris <- ZIO.attempt {
-                            searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
-                              case (
-                                    acc: Set[IRI],
-                                    (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]])
-                                  ) =>
-                                // check if the assertions represent a main resource and include its IRI if so
-                                val subjectIsMainResource: Boolean =
-                                  assertions
-                                    .getOrElse(
-                                      OntologyConstants.KnoraBase.IsMainResource.toSmartIri,
-                                      Seq.empty
-                                    )
-                                    .headOption match {
-                                    case Some(BooleanLiteralV2(booleanVal)) => booleanVal
-                                    case _                                  => false
-                                  }
-
-                                if (subjectIsMainResource) {
-                                  val subjIri: IRI = subject match {
-                                    case IriSubjectV2(value) => value
-                                    case other =>
-                                      throw InconsistentRepositoryDataException(
-                                        s"Unexpected subject of resource: $other"
-                                      )
-                                  }
-
-                                  acc + subjIri
-                                } else {
-                                  acc
-                                }
-                            }
-                          }
-
-      // separate resources and value objects
-      mainResourcesAndValueRdfData =
-        constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResourceByLabelResponse, requestingUser)
-      apiResponse <- constructResponseUtilV2.createApiResponse(
-                       mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                       orderByResourceIri = mainResourceIris.toSeq.sorted,
-                       pageSizeBeforeFiltering = mainResourceIris.size,
-                       queryStandoff = false,
-                       versionDate = None,
-                       calculateMayHaveMoreResults = true,
-                       targetSchema = targetSchema,
-                       requestingUser = requestingUser
-                     )
-
-    } yield apiResponse
-
   }
 
   /**
