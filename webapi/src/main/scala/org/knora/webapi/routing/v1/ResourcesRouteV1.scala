@@ -735,12 +735,12 @@ final case class ResourcesRouteV1()(
 
           case "link_value" =>
             ZIO
-              .fromOption(node.attribute("linkType").get.headOption)
+              .fromOption(node.attribute("linkType").flatMap(_.headOption))
               .mapBoth(_ => BadRequestException(s"Attribute 'linkType' missing in element '${node.label}'"), _.text)
               .flatMap { linkType =>
                 ZIO
-                  .fromOption(node.attribute("target").get.headOption)
-                  .orElseFail(BadRequestException(s"Attribute 'ref' missing in element '${node.label}'"))
+                  .fromOption(node.attribute("target").flatMap(_.headOption))
+                  .orElseFail(BadRequestException(s"Attribute 'target' missing in element '${node.label}'"))
                   .flatMap { targetNode =>
                     val target = targetNode.text
                     linkType match {
