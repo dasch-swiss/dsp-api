@@ -15,6 +15,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.routing.RouteUtilZ
 
 /**
  * Provides a spray-routing function for API routes that deal with resource types.
@@ -28,7 +29,7 @@ final case class ResourceTypesRouteV1()(
       get { requestContext =>
         val requestMessage = for {
           userProfile     <- Authenticator.getUserADM(requestContext)
-          resourceTypeIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid resource class IRI: $iri")
+          resourceTypeIri <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid resource class IRI: $iri")
         } yield ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
         RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
       }
@@ -43,7 +44,7 @@ final case class ResourceTypesRouteV1()(
           namedGraphIri <- vocabularyId match {
                              case "0" => ZIO.none // if param vocabulary is set to 0, query all named graphs
                              case _ =>
-                               RouteUtilV1
+                               RouteUtilZ
                                  .validateAndEscapeIri(vocabularyId, s"Invalid vocabulary IRI: $vocabularyId")
                                  .map(Some(_))
                            }
@@ -65,13 +66,13 @@ final case class ResourceTypesRouteV1()(
                    case Some("0") => // 0 means that all named graphs should be queried
                      ZIO.succeed(PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userADM))
                    case Some(vocId) =>
-                     RouteUtilV1
+                     RouteUtilZ
                        .validateAndEscapeIri(vocId, s"Invalid vocabulary IRI: $vocId")
                        .map(namedGraphIri => PropertyTypesForNamedGraphGetRequestV1(Some(namedGraphIri), userADM))
                    case None => // no vocabulary id given, check for resource type
                      resourceTypeId match {
                        case Some(resTypeId) => // get property types for given resource type
-                         RouteUtilV1
+                         RouteUtilZ
                            .validateAndEscapeIri(resTypeId, s"Invalid vocabulary IRI: $resTypeId")
                            .as(PropertyTypesForResourceTypeGetRequestV1(resTypeId, userADM))
                        case None => // no params given, get all property types (behaves like vocabulary=0)
@@ -95,7 +96,7 @@ final case class ResourceTypesRouteV1()(
       get { requestContext =>
         val requestMessage = for {
           userADM          <- Authenticator.getUserADM(requestContext)
-          resourceClassIri <- RouteUtilV1.validateAndEscapeIri(iri, s"Invalid resource class IRI: $iri")
+          resourceClassIri <- RouteUtilZ.validateAndEscapeIri(iri, s"Invalid resource class IRI: $iri")
         } yield SubClassesGetRequestV1(resourceClassIri, userADM)
         RouteUtilV1.runJsonRouteZ(requestMessage, requestContext)
       }

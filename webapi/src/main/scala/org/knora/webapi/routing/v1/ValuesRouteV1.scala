@@ -31,6 +31,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtoc
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV1._
+import org.knora.webapi.routing.RouteUtilZ.validateAndEscapeIri
 
 /**
  * Provides an Akka routing function for API routes that deal with values.

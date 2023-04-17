@@ -414,6 +414,18 @@ object RouteUtilV2 {
   }
 
   /**
+   * Completes the HTTP request in the [[RequestContext]] by _unsafely_ running the ZIO.
+   * @param ctx The akka-http [[RequestContext]].
+   * @param task The ZIO to run.
+   * @param runtime The [[zio.Runtime]] used for executing the ZIO.
+   * @tparam R The requirements for the ZIO, must be present in the [[zio.Runtime]].
+   * @return A [[Future]] containing the [[RouteResult]] for Akka HTTP.
+   */
+  def complete[R](ctx: RequestContext, task: ZIO[R, Throwable, HttpResponse])(implicit
+    runtime: Runtime[R]
+  ): Future[RouteResult] = ctx.complete(UnsafeZioRun.runToFuture(task))
+
+  /**
    * Chooses an RDF media type for the response, using content negotiation as per [[https://tools.ietf.org/html/rfc7231#section-5.3.2]].
    *
    * @param requestContext the request context.
