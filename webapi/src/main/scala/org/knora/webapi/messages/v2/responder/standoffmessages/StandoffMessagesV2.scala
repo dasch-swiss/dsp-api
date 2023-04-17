@@ -164,7 +164,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
       )
     }
 
-  private def fromJsonLDSync(
+  def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM

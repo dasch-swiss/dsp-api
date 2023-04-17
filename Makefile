@@ -65,6 +65,10 @@ docker-build: docker-build-dsp-api-image docker-build-sipi-image ## build and pu
 .PHONY: docker-publish
 docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image ## publish all Docker images to Dockerhub
 
+.PHONY: docker-image-tag
+docker-image-tag: ## prints the docker image tag
+	@sbt -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag"
+
 #################################
 ## Docker-Compose targets
 #################################

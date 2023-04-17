@@ -7,6 +7,7 @@ package org.knora.webapi.messages.v1.responder.searchmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
+import zio._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
@@ -106,11 +107,8 @@ object SearchComparisonOperatorV1 extends Enumeration {
 
   val valueMap: Map[String, SearchComparisonOperatorV1.Value] = values.map(v => (v.toString, v)).toMap
 
-  def lookup(name: String): SearchComparisonOperatorV1.Value =
-    valueMap.get(name) match {
-      case Some(value) => value
-      case None        => throw BadRequestException(s"compop type not supported: $name")
-    }
+  def lookup(name: String): Task[SearchComparisonOperatorV1.Value] =
+    ZIO.fromOption(valueMap.get(name)).orElseFail(BadRequestException(s"Invalid search comparison operator: $name"))
 }
 
 /**
