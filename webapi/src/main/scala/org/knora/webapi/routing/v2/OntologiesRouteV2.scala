@@ -140,7 +140,7 @@ final case class OntologiesRouteV2()(
     path(ontologiesBasePath / "metadata") {
       get { requestContext =>
         val requestTask = for {
-          maybeProjectIri <- RouteUtilV2.getProjectZ(requestContext)
+          maybeProjectIri <- RouteUtilV2.getProjectIri(requestContext)
           requestingUser  <- Authenticator.getUserADM(requestContext)
         } yield OntologyMetadataGetByProjectRequestV2(maybeProjectIri.toSet, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)

@@ -235,7 +235,7 @@ final case class SearchRouteV2(
         val returnFiles: Boolean = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
 
         val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
 
         val requestTask = for {
           requestingUser <- Authenticator.getUserADM(requestContext)
@@ -282,9 +282,9 @@ final case class SearchRouteV2(
     "v2" / "searchextended" / Segment
   ) { sparql => // Segment is a URL encoded string representing a Gravsearch query
     get { requestContext =>
-      val constructQuery                   = GravsearchParser.parseQuery(sparql)
-      val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+      val constructQuery   = GravsearchParser.parseQuery(sparql)
+      val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
+      val schemaOptions    = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
       val requestMessage = for {
         targetSchema   <- targetSchemaTask
         requestingUser <- Authenticator.getUserADM(requestContext)
@@ -299,9 +299,10 @@ final case class SearchRouteV2(
         {
           val constructQuery                   = GravsearchParser.parseQuery(gravsearchQuery)
           val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-          val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+          val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
           val requestTask = for {
             targetSchema   <- targetSchemaTask
+            schemaOptions  <- RouteUtilV2.getSchemaOptions(requestContext).toZIO
             requestingUser <- Authenticator.getUserADM(requestContext)
           } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
