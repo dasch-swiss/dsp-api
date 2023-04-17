@@ -390,5 +390,4 @@ final case class SearchRouteV2(
       RouteUtilV2.runRdfRouteF(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
   }
-
 }
