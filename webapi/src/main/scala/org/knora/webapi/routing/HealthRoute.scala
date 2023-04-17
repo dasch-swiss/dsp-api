@@ -69,8 +69,6 @@ trait HealthCheck {
       )
       .orDie
 
-  private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
-
   private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
 
   private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
@@ -99,8 +97,9 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-final case class HealthRoute(routeData: KnoraRouteData, runtime: Runtime[Authenticator with State])
-    extends HealthCheck {
+final case class HealthRoute()(
+  private implicit val runtime: Runtime[Authenticator with State]
+) extends HealthCheck {
 
   /**
    * Returns the route.

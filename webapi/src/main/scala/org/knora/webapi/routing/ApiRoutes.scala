@@ -105,7 +105,7 @@ private final case class ApiRoutesImpl(
         DSPApiDirectives.handleErrors(routeData.system, appConfig) {
           CorsDirectives.cors(CorsSettings(routeData.system)) {
             DSPApiDirectives.handleErrors(routeData.system, appConfig) {
-              HealthRoute(routeData, runtime).makeRoute ~
+              HealthRoute().makeRoute ~
                 VersionRoute().makeRoute ~
                 RejectingRoute(routeData, runtime).makeRoute ~
                 ResourcesRouteV1().makeRoute ~
