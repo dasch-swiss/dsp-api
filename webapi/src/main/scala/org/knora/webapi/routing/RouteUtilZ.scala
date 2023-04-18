@@ -4,17 +4,17 @@
  */
 
 package org.knora.webapi.routing
-import zio.IO
-import zio.UIO
-import zio.ZIO
+import zio._
 
 import java.net.URLDecoder
 import java.util.UUID
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object RouteUtilZ {
 
@@ -39,6 +39,35 @@ object RouteUtilZ {
         )
       )
 
+  def ensureExternalOntologyName(iri: SmartIri): ZIO[StringFormatter, BadRequestException, SmartIri] =
+    ZIO.serviceWithZIO[StringFormatter] { sf =>
+      if (sf.isKnoraOntologyIri(iri)) {
+        ZIO.fail(BadRequestException(s"Internal ontology <$iri> cannot be served"))
+      } else {
+        ZIO.succeed(iri)
+      }
+    }
+
+  def ensureIsKnoraOntologyIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    ZIO
+      .succeed(iri)
+      .filterOrFail(_.isKnoraOntologyIri)(BadRequestException(s"Iri is not a Knora ontology iri: $iri"))
+
+  def ensureIsNotKnoraOntologyIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    ZIO
+      .succeed(iri)
+      .filterOrFail(!_.isKnoraOntologyIri)(BadRequestException(s"Iri is a Knora ontology iri: $iri"))
+
+  def ensureIsKnoraBuiltInDefinitionIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    ZIO
+      .succeed(iri)
+      .filterOrFail(_.isKnoraBuiltInDefinitionIri)(BadRequestException(s"Iri is not a Knora build in definition: $iri"))
+
+  def ensureApiV2ComplexSchema(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    ZIO
+      .succeed(iri)
+      .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(BadRequestException(s"Invalid schema for <$iri>"))
+
   def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
       stringFormatter
@@ -47,10 +76,10 @@ object RouteUtilZ {
         .orElseFail(BadRequestException(errorMsg))
     }
 
-  def toSmartIri(s: String): ZIO[StringFormatter, Throwable, SmartIri] =
-    ZIO.serviceWithZIO[StringFormatter](sf => ZIO.attempt(sf.toSmartIri(s)))
+  def toSmartIri(s: String): ZIO[IriConverter, Throwable, SmartIri] =
+    ZIO.serviceWithZIO[IriConverter](_.asSmartIri(s))
 
-  def toSmartIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, SmartIri] =
+  def toSmartIri(s: String, errorMsg: String): ZIO[IriConverter, BadRequestException, SmartIri] =
     toSmartIri(s).orElseFail(BadRequestException(errorMsg))
 
   def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)

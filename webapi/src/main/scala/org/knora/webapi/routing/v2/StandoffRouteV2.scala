@@ -32,12 +32,15 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffPageRe
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /**
  * Provides a function for API routes that deal with search.
  */
 final case class StandoffRouteV2()(
-  private implicit val runtime: Runtime[AppConfig with Authenticator with StringFormatter with MessageRelay],
+  private implicit val runtime: Runtime[
+    AppConfig with Authenticator with IriConverter with StringFormatter with MessageRelay
+  ],
   private implicit val system: ActorSystem
 ) extends LazyLogging {
   private implicit val ec: ExecutionContext = system.dispatcher
@@ -58,11 +61,11 @@ final case class StandoffRouteV2()(
             offset <- ZIO
                         .fromOption(ValuesValidator.validateInt(offsetStr))
                         .orElseFail(BadRequestException(s"Invalid offset: $offsetStr"))
-            targetSchema = RouteUtilV2.getOntologySchema(requestContext)
-            user        <- Authenticator.getUserADM(requestContext)
+            targetSchema <- RouteUtilV2.getOntologySchema(requestContext)
+            user         <- Authenticator.getUserADM(requestContext)
           } yield GetStandoffPageRequestV2(resourceIri.toString, valueIri.toString, offset, targetSchema, user)
           val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, ApiV2Complex, Some(schemaOptions))
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, schemaOptionsOption = Some(schemaOptions))
         }
     } ~ path("v2" / "mapping") {
       post {
