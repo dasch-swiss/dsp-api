@@ -105,28 +105,19 @@ object RouteUtilV2 {
    * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
    * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
    *
-   * @param requestContext the akka-http [[RequestContext]].
+   * @param ctx the akka-http [[RequestContext]].
    * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
    */
-  def getOntologySchema(requestContext: RequestContext): Task[ApiV2Schema] = ZIO.attempt {
-    def nameToSchema(schemaName: String): ApiV2Schema =
+  def getOntologySchema(ctx: RequestContext): IO[BadRequestException, ApiV2Schema] = {
+    def nameToSchema(schemaName: String): IO[BadRequestException, ApiV2Schema] =
       schemaName match {
-        case SIMPLE_SCHEMA_NAME  => ApiV2Simple
-        case COMPLEX_SCHEMA_NAME => ApiV2Complex
-        case _                   => throw BadRequestException(s"Unrecognised ontology schema name: $schemaName")
+        case SIMPLE_SCHEMA_NAME  => ZIO.succeed(ApiV2Simple)
+        case COMPLEX_SCHEMA_NAME => ZIO.succeed(ApiV2Complex)
+        case _                   => ZIO.fail(BadRequestException(s"Unrecognised ontology schema name: $schemaName"))
       }
-
-    val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-    params.get(SCHEMA_PARAM) match {
-      case Some(schemaParam) => nameToSchema(schemaParam)
-
-      case None =>
-        requestContext.request.headers.find(_.lowercaseName == SCHEMA_HEADER) match {
-          case Some(header) => nameToSchema(header.value)
-          case None         => ApiV2Complex
-        }
-    }
+    def fromQueryParams = ctx.request.uri.query().get(SCHEMA_PARAM).map(nameToSchema)
+    def fromHeaders     = ctx.request.headers.find(_.lowercaseName == SCHEMA_HEADER).map(h => nameToSchema(h.value))
+    fromQueryParams.orElse(fromHeaders).getOrElse(ZIO.succeed(ApiV2Complex))
   }
 
   /**
