@@ -914,19 +914,35 @@ final case class SearchResponderV2Live(
     val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
     for {
+      // TODO-BL: this should be refactored and the old search-by-label code streamlined.
+      // I leave it for now, in case we have to revert, but I will create a follow-up task to refactor this.
       searchResourceByLabelSparql <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .searchResourceByLabel(
-              searchTerm = searchPhrase,
-              limitToProject = limitToProject,
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
-              countQuery = false
+        limitToResourceClass match {
+          case None =>
+            ZIO.attempt(
+              org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                .searchResourceByLabel(
+                  searchTerm = searchPhrase,
+                  limitToProject = limitToProject,
+                  limitToResourceClass = limitToResourceClass.map(_.toString),
+                  limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                  offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
+                  countQuery = false
+                )
+                .toString()
             )
-            .toString()
-        )
+          case Some(cls) =>
+            ZIO.attempt(
+              org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                .searchResourceByLabelWithDefinedResourceClass(
+                  searchTerm = searchPhrase,
+                  limitToResourceClass = cls.toString,
+                  limit = appConfig.v2.resourcesSequence.resultsPerPage,
+                  offset = offset * appConfig.v2.resourcesSequence.resultsPerPage
+                )
+                .toString()
+            )
+        }
 
       searchResourceByLabelResponse <- triplestoreService.sparqlHttpExtendedConstruct(searchResourceByLabelSparql)
 
