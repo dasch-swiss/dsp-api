@@ -222,7 +222,7 @@ object RouteUtilV2 {
    * @param requestContext the akka-http [[RequestContext]].
    * @return the specified project IRI, or [[None]] if no project header was included in the request.
    */
-  @deprecated("Use getProject instead")
+  @deprecated("Use getProjectIri instead")
   def getProjectIriUnsafe(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] =
     requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map { header =>
       val projectIriStr = header.value
