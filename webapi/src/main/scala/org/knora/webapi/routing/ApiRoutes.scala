@@ -24,8 +24,10 @@ import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 trait ApiRoutes {
   val routes: Route
@@ -39,8 +41,9 @@ object ApiRoutes {
   val layer: URLayer[
     ActorSystem
       with AppConfig
-      with AppConfig
       with AppRouter
+      with IriConverter
+      with KnoraProjectRepo
       with MessageRelay
       with RestCardinalityService
       with RestResourceInfoService
@@ -57,6 +60,8 @@ object ApiRoutes {
         routeData <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
                      AppConfig
+                       with IriConverter
+                       with KnoraProjectRepo
                        with MessageRelay
                        with RestCardinalityService
                        with RestResourceInfoService
@@ -79,6 +84,8 @@ private final case class ApiRoutesImpl(
   private val routeData: KnoraRouteData,
   private implicit val runtime: Runtime[
     AppConfig
+      with IriConverter
+      with KnoraProjectRepo
       with MessageRelay
       with RestCardinalityService
       with RestResourceInfoService
@@ -98,10 +105,10 @@ private final case class ApiRoutesImpl(
         DSPApiDirectives.handleErrors(routeData.system, appConfig) {
           CorsDirectives.cors(CorsSettings(routeData.system)) {
             DSPApiDirectives.handleErrors(routeData.system, appConfig) {
-              HealthRoute(routeData, runtime).makeRoute ~
+              HealthRoute().makeRoute ~
                 VersionRoute().makeRoute ~
                 RejectingRoute(routeData, runtime).makeRoute ~
-                ResourcesRouteV1(routeData, runtime).makeRoute ~
+                ResourcesRouteV1().makeRoute ~
                 ValuesRouteV1().makeRoute ~
                 StandoffRouteV1().makeRoute ~
                 ListsRouteV1().makeRoute ~
@@ -112,7 +119,7 @@ private final case class ApiRoutesImpl(
                 CkanRouteV1().makeRoute ~
                 UsersRouteV1().makeRoute ~
                 ProjectsRouteV1().makeRoute ~
-                OntologiesRouteV2(routeData, runtime).makeRoute ~
+                OntologiesRouteV2().makeRoute ~
                 SearchRouteV2(routeData, runtime).makeRoute ~
                 ResourcesRouteV2(routeData, runtime).makeRoute ~
                 ValuesRouteV2(routeData, runtime).makeRoute ~

@@ -7,12 +7,12 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import zio._
 import zio.prelude.Validation
 
-import java.util.UUID.randomUUID
-import scala.concurrent.Future
+import java.time.Instant
 
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
@@ -25,43 +25,38 @@ import dsp.valueobjects.Schema._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
+import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
  */
-final case class OntologiesRouteV2(
-  private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[
-    AppConfig with Authenticator with MessageRelay with RestCardinalityService
+final case class OntologiesRouteV2()(
+  private implicit val runtime: Runtime[
+    AppConfig with Authenticator with IriConverter with MessageRelay with RestCardinalityService with StringFormatter
   ]
-) extends KnoraRoute(routeData, runtime) {
+) {
 
-  val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
+  private val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
 
-  private val ALL_LANGUAGES          = "allLanguages"
-  private val LAST_MODIFICATION_DATE = "lastModificationDate"
+  private val allLanguagesKey         = "allLanguages"
+  private val lastModificationDateKey = "lastModificationDate"
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     dereferenceOntologyIri() ~
       getOntologyMetadata() ~
       updateOntologyMetadata() ~
@@ -98,51 +93,57 @@ final case class OntologiesRouteV2(
       // http://api.knora.org to get the ontology IRI. Otherwise, if it looks like it belongs to a
       // project-specific API ontology, prefix it with routeData.appConfig.externalOntologyIriHostAndPort to get the
       // ontology IRI.
+      val ontologyIriTask = getOntologySmartIri(requestContext)
 
-      val urlPath = requestContext.request.uri.path.toString
+      val requestTask = for {
+        ontologyIri          <- ontologyIriTask
+        params: Map[IRI, IRI] = requestContext.request.uri.query().toMap
+        allLanguagesStr       = params.get(allLanguagesKey)
+        allLanguages          = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
+        user                 <- Authenticator.getUserADM(requestContext)
+      } yield OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, user)
 
-      val requestedOntologyStr: IRI = if (stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath)) {
-        OntologyConstants.KnoraApi.ApiOntologyHostname + urlPath
-      } else if (stringFormatter.isProjectSpecificApiV2OntologyUrlPath(urlPath)) {
-        "http://" + routeData.appConfig.knoraApi.externalOntologyIriHostAndPort + urlPath
-      } else {
-        throw BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath")
-      }
+      val targetSchemaTask = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
 
-      val requestedOntology = requestedOntologyStr.toSmartIriWithErr(
-        throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr")
-      )
-
-      stringFormatter.checkExternalOntologyName(requestedOntology)
-
-      val targetSchema = requestedOntology.getOntologySchema match {
-        case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-        case _                              => throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr")
-      }
-
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
-      val allLanguagesStr             = params.get(ALL_LANGUAGES)
-      val allLanguages                = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
-      val requestTask = Authenticator
-        .getUserADM(requestContext)
-        .map(OntologyEntitiesGetRequestV2(requestedOntology, allLanguages, _))
-      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema)
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
     }
   }
+
+  private def getTargetSchemaFromOntology(iri: SmartIri) =
+    ZIO.fromOption(iri.getOntologySchema).orElseFail(BadRequestException(s"Invalid ontology IRI: $iri"))
+
+  private def getOntologySmartIri(
+    requestContext: RequestContext
+  ): ZIO[AppConfig with IriConverter with StringFormatter, BadRequestException, SmartIri] = {
+    val urlPath = requestContext.request.uri.path.toString
+    ZIO.serviceWithZIO[AppConfig] { appConfig =>
+      val externalOntologyIriHostAndPort = appConfig.knoraApi.externalOntologyIriHostAndPort
+      ZIO.serviceWithZIO[StringFormatter] { sf =>
+        for {
+          iri <- if (sf.isBuiltInApiV2OntologyUrlPath(urlPath)) {
+                   ZIO.succeed(OntologyConstants.KnoraApi.ApiOntologyHostname + urlPath)
+                 } else if (sf.isProjectSpecificApiV2OntologyUrlPath(urlPath)) {
+                   ZIO.succeed("http://" + externalOntologyIriHostAndPort + urlPath)
+                 } else {
+                   ZIO.fail(BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath"))
+                 }
+          smartIri <- validateOntologyIri(iri)
+        } yield smartIri
+      }
+    }
+  }
+
+  private def validateOntologyIri(iri: String): ZIO[IriConverter with StringFormatter, BadRequestException, SmartIri] =
+    RouteUtilZ.toSmartIri(iri, s"Invalid ontology IRI: $iri").flatMap(RouteUtilZ.ensureExternalOntologyName)
 
   private def getOntologyMetadata(): Route =
     path(ontologiesBasePath / "metadata") {
       get { requestContext =>
-        val maybeProjectIri: Option[SmartIri] = RouteUtilV2.getProject(requestContext)
-
-        val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield OntologyMetadataGetByProjectRequestV2(
-          projectIris = maybeProjectIri.toSet,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        val requestTask = for {
+          maybeProjectIri <- RouteUtilV2.getProjectIri(requestContext)
+          requestingUser  <- Authenticator.getUserADM(requestContext)
+        } yield OntologyMetadataGetByProjectRequestV2(maybeProjectIri.toSet, requestingUser)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
@@ -151,94 +152,64 @@ final case class OntologiesRouteV2(
       put {
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-            val requestMessageFuture: Future[ChangeOntologyMetadataRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
-              requestMessage: ChangeOntologyMetadataRequestV2 <- ChangeOntologyMetadataRequestV2.fromJsonLD(
-                                                                   jsonLDDocument = requestDoc,
-                                                                   apiRequestID = randomUUID,
-                                                                   requestingUser = requestingUser,
-                                                                   appActor = appActor,
-                                                                   log = log
-                                                                 )
+            val requestTask = for {
+              requestDoc     <- parseJsonLd(jsonRequest)
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              apiRequestId   <- RouteUtilZ.randomUuid()
+              requestMessage <-
+                ZIO.attempt(ChangeOntologyMetadataRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
             } yield requestMessage
-
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+            RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
           }
         }
       }
     }
 
+  private def parseJsonLd(jsonRequest: IRI) = ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
+
   private def getOntologyMetadataForProjects(): Route =
     path(ontologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
       get { requestContext =>
-        val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-
-          validatedProjectIris =
-            projectIris
-              .map(iri => iri.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $iri")))
-              .toSet
-        } yield OntologyMetadataGetByProjectRequestV2(
-          projectIris = validatedProjectIris,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        val requestTask = for {
+          requestingUser <- Authenticator.getUserADM(requestContext)
+          validatedProjectIris <- ZIO.foreach(projectIris) { iri =>
+                                    RouteUtilZ.toSmartIri(iri, s"Invalid project IRI: $iri")
+                                  }
+        } yield OntologyMetadataGetByProjectRequestV2(validatedProjectIris.toSet, requestingUser)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
   private def getOntology(): Route =
     path(ontologiesBasePath / "allentities" / Segment) { externalOntologyIriStr: IRI =>
       get { requestContext =>
-        val requestedOntologyIri = externalOntologyIriStr.toSmartIriWithErr(
-          throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr")
-        )
-
-        stringFormatter.checkExternalOntologyName(requestedOntologyIri)
-
-        val targetSchema = requestedOntologyIri.getOntologySchema match {
-          case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-          case _                              => throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr")
-        }
-
-        val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), false)
-
-        val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield OntologyEntitiesGetRequestV2(
-          ontologyIri = requestedOntologyIri,
-          allLanguages = allLanguages,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext, targetSchema)
+        val ontologyIriTask = validateOntologyIri(externalOntologyIriStr)
+        val requestMessageTask = for {
+          ontologyIri    <- ontologyIriTask
+          requestingUser <- Authenticator.getUserADM(requestContext)
+        } yield OntologyEntitiesGetRequestV2(ontologyIri, getLanguages(requestContext), requestingUser)
+        val targetSchema = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
+        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchema)
       }
     }
+
+  private def getLanguages(requestContext: RequestContext) = {
+    val params: Map[IRI, IRI] = requestContext.request.uri.query().toMap
+    ValuesValidator.optionStringToBoolean(params.get(allLanguagesKey), fallback = false)
+  }
 
   private def createClass(): Route = path(ontologiesBasePath / "classes") {
     post {
       // Create a new class.
       entity(as[String]) { jsonRequest => requestContext =>
         {
-          val requestMessageFuture: Future[CreateClassRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-
-            requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-            requestMessage: CreateClassRequestV2 <- CreateClassRequestV2.fromJsonLD(
-                                                      jsonLDDocument = requestDoc,
-                                                      apiRequestID = randomUUID,
-                                                      requestingUser = requestingUser,
-                                                      appActor = appActor,
-                                                      log = log
-                                                    )
+          val requestMessageTask = for {
+            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestDoc     <- parseJsonLd(jsonRequest)
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            requestMessage <- ZIO.attempt(CreateClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
           } yield requestMessage
-
-          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
       }
     }
@@ -250,21 +221,16 @@ final case class OntologiesRouteV2(
         // Change the labels or comments of a class.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestMessageFuture: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
-                                  jsonLDDocument = requestDoc,
-                                  apiRequestID = randomUUID,
-                                  requestingUser = requestingUser,
-                                  appActor = appActor,
-                                  log = log
-                                )
+            val requestMessageTask = for {
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestDoc     <- parseJsonLd(jsonRequest)
+              apiRequestId   <- RouteUtilZ.randomUuid()
+              requestMessage <-
+                ZIO.attempt(
+                  ChangeClassLabelsOrCommentsRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
+                )
             } yield requestMessage
-
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+            RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
           }
         }
       }
@@ -274,31 +240,17 @@ final case class OntologiesRouteV2(
   private def deleteClassComment(): Route =
     path(ontologiesBasePath / "classes" / "comment" / Segment) { classIriStr: IRI =>
       delete { requestContext =>
-        val classIri = classIriStr.toSmartIri
-
-        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
-        }
-
-        val lastModificationDateStr = requestContext.request.uri
-          .query()
-          .toMap
-          .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-
-        val lastModificationDate = ValuesValidator
-          .xsdDateTimeStampToInstant(lastModificationDateStr)
-          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
-
-        val requestMessageFuture: Future[DeleteClassCommentRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield DeleteClassCommentRequestV2(
-          classIri = classIri,
-          lastModificationDate = lastModificationDate,
-          apiRequestID = randomUUID,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        val requestMessageFuture = for {
+          classIri <- RouteUtilZ
+                        .toSmartIri(classIriStr, s"Invalid class IRI for request: $classIriStr")
+                        .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
+                          BadRequestException(s"Invalid class IRI for request: $classIriStr")
+                        )
+          lastModificationDate <- getLastModificationDate(requestContext)
+          requestingUser       <- Authenticator.getUserADM(requestContext)
+          apiRequestId         <- RouteUtilZ.randomUuid()
+        } yield DeleteClassCommentRequestV2(classIri, lastModificationDate, apiRequestId, requestingUser)
+        RouteUtilV2.runRdfRouteZ(requestMessageFuture, requestContext)
       }
     }
 
@@ -308,21 +260,14 @@ final case class OntologiesRouteV2(
         // Add cardinalities to a class.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestMessageFuture: Future[AddCardinalitiesToClassRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: AddCardinalitiesToClassRequestV2 <- AddCardinalitiesToClassRequestV2.fromJsonLD(
-                                                                    jsonLDDocument = requestDoc,
-                                                                    apiRequestID = randomUUID,
-                                                                    requestingUser = requestingUser,
-                                                                    appActor = appActor,
-                                                                    log = log
-                                                                  )
+            val requestMessageTask = for {
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestDoc     <- parseJsonLd(jsonRequest)
+              apiRequestId   <- RouteUtilZ.randomUuid()
+              requestMessage <-
+                ZIO.attempt(AddCardinalitiesToClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
             } yield requestMessage
-
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+            RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
           }
         }
       }
@@ -348,12 +293,13 @@ final case class OntologiesRouteV2(
       put {
         entity(as[String]) { reqBody => requestContext =>
           {
-            val messageF = for {
-              user    <- getUserADM(requestContext)
-              document = JsonLDUtil.parseJsonLD(reqBody)
-              msg     <- ReplaceClassCardinalitiesRequestV2.fromJsonLD(document, randomUUID, user, appActor, log)
+            val messageTask = for {
+              user         <- Authenticator.getUserADM(requestContext)
+              document     <- parseJsonLd(reqBody)
+              apiRequestId <- RouteUtilZ.randomUuid()
+              msg          <- ZIO.attempt(ReplaceClassCardinalitiesRequestV2.fromJsonLd(document, apiRequestId, user))
             } yield msg
-            RouteUtilV2.runRdfRouteF(messageF, requestContext)
+            RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
           }
         }
       }
@@ -364,22 +310,15 @@ final case class OntologiesRouteV2(
       post {
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestMessageFuture: Future[CanDeleteCardinalitiesFromClassRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: CanDeleteCardinalitiesFromClassRequestV2 <-
-                CanDeleteCardinalitiesFromClassRequestV2.fromJsonLD(
-                  jsonLDDocument = requestDoc,
-                  apiRequestID = randomUUID,
-                  requestingUser = requestingUser,
-                  appActor = appActor,
-                  log = log
-                )
-            } yield requestMessage
-
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+            val messageTask = for {
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestDoc     <- parseJsonLd(jsonRequest)
+              apiRequestId   <- RouteUtilZ.randomUuid()
+              msg <- ZIO.attempt(
+                       CanDeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
+                     )
+            } yield msg
+            RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
           }
         }
       }
@@ -392,21 +331,14 @@ final case class OntologiesRouteV2(
       patch {
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestMessageFuture: Future[DeleteCardinalitiesFromClassRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: DeleteCardinalitiesFromClassRequestV2 <- DeleteCardinalitiesFromClassRequestV2.fromJsonLD(
-                                                                         jsonLDDocument = requestDoc,
-                                                                         apiRequestID = randomUUID,
-                                                                         requestingUser = requestingUser,
-                                                                         appActor = appActor,
-                                                                         log = log
-                                                                       )
-            } yield requestMessage
-
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+            val requestMessageTask = for {
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestDoc     <- parseJsonLd(jsonRequest)
+              apiRequestId   <- RouteUtilZ.randomUuid()
+              msg <-
+                ZIO.attempt(DeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+            } yield msg
+            RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
           }
         }
       }
@@ -418,21 +350,13 @@ final case class OntologiesRouteV2(
         // Change a class's cardinalities.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestMessageFuture: Future[ChangeGuiOrderRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: ChangeGuiOrderRequestV2 <- ChangeGuiOrderRequestV2.fromJsonLD(
-                                                           jsonLDDocument = requestDoc,
-                                                           apiRequestID = randomUUID,
-                                                           requestingUser = requestingUser,
-                                                           appActor = appActor,
-                                                           log = log
-                                                         )
-            } yield requestMessage
-
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+            val requestMessageTask = for {
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestDoc     <- parseJsonLd(jsonRequest)
+              apiRequestId   <- RouteUtilZ.randomUuid()
+              msg            <- ZIO.attempt(ChangeGuiOrderRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+            } yield msg
+            RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
           }
         }
       }
@@ -441,141 +365,96 @@ final case class OntologiesRouteV2(
   private def getClasses(): Route =
     path(ontologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
       get { requestContext =>
-        val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map { classIriStr: IRI =>
-          val requestedClassIri: SmartIri =
-            classIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $classIriStr"))
+        val classSmartIrisTask: ZIO[IriConverter with StringFormatter, BadRequestException, Set[SmartIri]] =
+          ZIO
+            .foreach(externalResourceClassIris)(iri =>
+              RouteUtilZ
+                .toSmartIri(iri, s"Invalid class IRI: $iri")
+                .flatMap(RouteUtilZ.ensureExternalOntologyName)
+                .flatMap(RouteUtilZ.ensureIsNotKnoraOntologyIri)
+            )
+            .map(_.toSet)
 
-          stringFormatter.checkExternalOntologyName(requestedClassIri)
+        val targetSchemaTask: ZIO[IriConverter with StringFormatter, BadRequestException, OntologySchema] =
+          classSmartIrisTask
+            .flatMap(iriSet =>
+              ZIO.foreach(iriSet)(iri =>
+                ZIO
+                  .fromOption(iri.getOntologySchema)
+                  .orElseFail(BadRequestException(s"Class IRI does not have an ontology schema: $iri"))
+              )
+            )
+            .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
+            .map(_.head)
 
-          if (!requestedClassIri.isKnoraApiV2EntityIri) {
-            throw BadRequestException(s"Invalid class IRI: $classIriStr")
-          }
+        val requestMessageTask = for {
+          classSmartIris <- classSmartIrisTask
+          requestingUser <- Authenticator.getUserADM(requestContext)
+        } yield ClassesGetRequestV2(classSmartIris, getLanguages(requestContext), requestingUser)
 
-          val schema = requestedClassIri.getOntologySchema match {
-            case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-            case _                              => throw BadRequestException(s"Invalid class IRI: $classIriStr")
-          }
-
-          (requestedClassIri, schema)
-        }.toSet
-
-        val (classesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
-
-        if (classesForResponder.map(_.getOntologyFromEntity).size != 1) {
-          throw BadRequestException(s"Only one ontology may be queried per request")
-        }
-
-        // Decide which API schema to use for the response.
-        val targetSchema = if (schemas.size == 1) {
-          schemas.head
-        } else {
-          // The client requested different schemas.
-          throw BadRequestException("The request refers to multiple API schemas")
-        }
-
-        val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), false)
-
-        val requestMessageFuture: Future[ClassesGetRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield ClassesGetRequestV2(
-          classIris = classesForResponder,
-          allLanguages = allLanguages,
-          requestingUser = requestingUser
-        )
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext, targetSchema)
+        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchemaTask)
       }
     }
 
   private def canDeleteClass(): Route =
     path(ontologiesBasePath / "candeleteclass" / Segment) { classIriStr: IRI =>
       get { requestContext =>
-        val classIri = classIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(classIri)
-
-        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
-        }
-
-        val requestMessageFuture: Future[CanDeleteClassRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield CanDeleteClassRequestV2(
-          classIri = classIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(
-          requestMessageFuture,
-          requestContext,
-          ApiV2Complex
-        )
+        val requestTask = for {
+          classSmartIri <-
+            RouteUtilZ
+              .toSmartIri(classIriStr, s"Invalid class IRI: $classIriStr")
+              .flatMap(RouteUtilZ.ensureExternalOntologyName)
+              .filterOrFail(_.isKnoraApiV2EntityIri)(BadRequestException(s"Invalid class IRI: $classIriStr"))
+              .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
+                BadRequestException(s"Invalid class IRI for request: $classIriStr")
+              )
+          requestingUser <- Authenticator.getUserADM(requestContext)
+        } yield CanDeleteClassRequestV2(classSmartIri, requestingUser)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
   private def deleteClass(): Route =
     path(ontologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
       delete { requestContext =>
-        val classIriStr = externalResourceClassIris match {
-          case List(str) => str
-          case _         => throw BadRequestException(s"Only one class can be deleted at a time")
-        }
-
-        val classIri = classIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(classIri)
-
-        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
-        }
-
-        val lastModificationDateStr = requestContext.request.uri
-          .query()
-          .toMap
-          .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = ValuesValidator
-          .xsdDateTimeStampToInstant(lastModificationDateStr)
-          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
-
-        val requestMessageFuture: Future[DeleteClassRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield DeleteClassRequestV2(
-          classIri = classIri,
-          lastModificationDate = lastModificationDate,
-          apiRequestID = randomUUID,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        val requestTask = for {
+          classIri <- ZIO
+                        .succeed(externalResourceClassIris)
+                        .filterOrFail(_.size == 1)(BadRequestException(s"Only one class can be deleted at a time"))
+                        .map(_.head)
+                        .flatMap(iri => RouteUtilZ.toSmartIri(iri, s"Invalid class IRI: $iri"))
+                        .flatMap(RouteUtilZ.ensureExternalOntologyName)
+                        .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+          lastModificationDate <- getLastModificationDate(requestContext)
+          apiRequestId         <- RouteUtilZ.randomUuid()
+          requestingUser       <- Authenticator.getUserADM(requestContext)
+        } yield DeleteClassRequestV2(classIri, lastModificationDate, apiRequestId, requestingUser)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
+
+  private def getLastModificationDate(ctx: RequestContext): IO[BadRequestException, Instant] =
+    ZIO
+      .fromOption(ctx.request.uri.query().toMap.get(lastModificationDateKey))
+      .mapBoth(
+        _ => BadRequestException(s"Missing parameter: $lastModificationDateKey"),
+        ValuesValidator.xsdDateTimeStampToInstant
+      )
+      .flatMap(it => ZIO.fromOption(it).orElseFail(BadRequestException(s"Invalid timestamp: $it")))
 
   private def deleteOntologyComment(): Route =
     path(ontologiesBasePath / "comment" / Segment) { ontologyIriStr: IRI =>
       delete { requestContext =>
-        val ontologyIri = ontologyIriStr.toSmartIri
-
-        if (!ontologyIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid class IRI for request: $ontologyIriStr")
-        }
-
-        val lastModificationDateStr = requestContext.request.uri
-          .query()
-          .toMap
-          .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-
-        val lastModificationDate = ValuesValidator
-          .xsdDateTimeStampToInstant(lastModificationDateStr)
-          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
-
-        val requestMessageFuture: Future[DeleteOntologyCommentRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield DeleteOntologyCommentRequestV2(
-          ontologyIri = ontologyIri,
-          lastModificationDate = lastModificationDate,
-          apiRequestID = randomUUID,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        val requestMessageTask = for {
+          ontologyIri <- RouteUtilZ
+                           .toSmartIri(ontologyIriStr, s"Invalid ontology IRI: $ontologyIriStr")
+                           .flatMap(RouteUtilZ.ensureExternalOntologyName)
+                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+          lastModificationDate <- getLastModificationDate(requestContext)
+          apiRequestId         <- RouteUtilZ.randomUuid()
+          requestingUser       <- Authenticator.getUserADM(requestContext)
+        } yield DeleteOntologyCommentRequestV2(ontologyIri, lastModificationDate, apiRequestId, requestingUser)
+        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }
     }
 
@@ -585,99 +464,44 @@ final case class OntologiesRouteV2(
         // Create a new property.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestMessageFuture: Future[CreatePropertyRequestV2] = for {
-
-              requestingUser: UserADM <- getUserADM(requestContext)
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              // get ontology info from request
-              inputOntology: InputOntologyV2 = InputOntologyV2.fromJsonLD(requestDoc)
-
-              // get property info from request - in OntologyUpdateHelper.getPropertyDef a lot of validation of the property iri is done
-              propertyUpdateInfo: PropertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntology)
-
+            val requestMessageTask = for {
+              requestingUser                            <- Authenticator.getUserADM(requestContext)
+              requestDoc                                <- parseJsonLd(jsonRequest)
+              inputOntology                             <- getInputOntology(requestDoc)
+              propertyUpdateInfo                        <- getPropertyDef(inputOntology)
               propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
-
-              // validate property IRI
-              _ = PropertyIri.make(propertyInfoContent.propertyIri.toString)
+              _                                         <- PropertyIri.make(propertyInfoContent.propertyIri.toString).toZIO
 
               // get gui related values from request and validate them by making value objects from it
-
               // get the (optional) gui element from the request
-              maybeGuiElement: Option[String] =
-                propertyInfoContent.predicates
-                  .get(SalsahGui.External.GuiElementProp.toSmartIri)
-                  .map { predicateInfoV2: PredicateInfoV2 =>
-                    predicateInfoV2.objects.head match {
-                      case guiElement: SmartIriLiteralV2 => guiElement.value.toOntologySchema(InternalSchema).toString()
-                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
-                    }
-                  }
-
+              maybeGuiElement <- getGuiElement(propertyInfoContent)
               // get the gui attribute(s) from the request
-              maybeGuiAttributes: Set[String] =
-                propertyInfoContent.predicates
-                  .get(SalsahGui.External.GuiAttribute.toSmartIri)
-                  .map { predicateInfoV2: PredicateInfoV2 =>
-                    predicateInfoV2.objects.map {
-                      case guiAttribute: StringLiteralV2 => guiAttribute.value
-                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-                    }.toSet
-                  }
-                  .getOrElse(Set())
+              maybeGuiAttributes <- getGuiAttributes(propertyInfoContent)
+              _ <- GuiObject
+                     .makeFromStrings(maybeGuiAttributes, maybeGuiElement)
+                     .toZIO
+                     .mapError(error => BadRequestException(error.msg))
 
-              guiObject =
-                GuiObject
-                  .makeFromStrings(maybeGuiAttributes, maybeGuiElement)
-                  .fold(
-                    e => throw BadRequestException(e.map(error => error.msg).mkString(sys.props("line.separator"))),
-                    v => v
-                  )
-
-              requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
-                                                           jsonLDDocument = requestDoc,
-                                                           apiRequestID = randomUUID,
-                                                           requestingUser = requestingUser,
-                                                           appActor = appActor,
-                                                           log = log
-                                                         )
+              apiRequestId <- RouteUtilZ.randomUuid()
+              requestMessage <-
+                ZIO.attempt(CreatePropertyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
 
               // get gui related values from request and validate them by making value objects from it
 
               // get ontology info from request
-              inputOntology: InputOntologyV2             = InputOntologyV2.fromJsonLD(requestDoc)
-              propertyUpdateInfo: PropertyUpdateInfo     = OntologyUpdateHelper.getPropertyDef(inputOntology)
-              propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
+              inputOntology       <- getInputOntology(requestDoc)
+              propertyInfoContent <- getPropertyDef(inputOntology).map(_.propertyInfoContent)
 
               // get the (optional) gui element
-              maybeGuiElement: Option[SmartIri] =
-                propertyInfoContent.predicates
-                  .get(SalsahGui.External.GuiElementProp.toSmartIri)
-                  .map { predicateInfoV2: PredicateInfoV2 =>
-                    predicateInfoV2.objects.head match {
-                      case guiElement: SmartIriLiteralV2 => guiElement.value.toOntologySchema(InternalSchema)
-                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
-                    }
-                  }
+              // get the (optional) gui element from the request
+              maybeGuiElement <- getGuiElement(propertyInfoContent)
 
               // validate the gui element by creating value object
               validatedGuiElement = maybeGuiElement match {
-                                      case Some(guiElement) => GuiElement.make(guiElement.toString()).map(Some(_))
+                                      case Some(guiElement) => GuiElement.make(guiElement).map(Some(_))
                                       case None             => Validation.succeed(None)
                                     }
-
-              // get the gui attribute(s)
-              maybeGuiAttributes: List[String] =
-                propertyInfoContent.predicates
-                  .get(SalsahGui.External.GuiAttribute.toSmartIri)
-                  .map { predicateInfoV2: PredicateInfoV2 =>
-                    predicateInfoV2.objects.map {
-                      case guiAttribute: StringLiteralV2 => guiAttribute.value
-                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-                    }.toList
-                  }
-                  .getOrElse(List())
+              maybeGuiAttributes <- getGuiAttributes(propertyInfoContent)
 
               // validate the gui attributes by creating value objects
               guiAttributes = maybeGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute))
@@ -690,38 +514,40 @@ final case class OntologiesRouteV2(
                             .flatMap(values => GuiObject.make(values._1, values._2))
 
               ontologyIri =
-                Validation.succeed(SmartIriV3(inputOntology.ontologyMetadata.ontologyIri.toString()))
+                Validation.succeed(SmartIriV3(inputOntology.ontologyMetadata.ontologyIri.toString))
               lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
-              propertyIri          = Validation.succeed(SmartIriV3(propertyInfoContent.propertyIri.toString()))
-              subjectType = propertyInfoContent.predicates.get(
-                              OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
-                            ) match {
+              propertyIri          = Validation.succeed(SmartIriV3(propertyInfoContent.propertyIri.toString))
+              subClassConstraintSmartIri <-
+                RouteUtilZ.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint, "Should not happen")
+              subjectType = propertyInfoContent.predicates.get(subClassConstraintSmartIri) match {
                               case None => Validation.succeed(None)
                               case Some(value) =>
                                 value.objects.head match {
                                   case objectType: SmartIriLiteralV2 =>
                                     Validation.succeed(
-                                      Some(
-                                        SmartIriV3(objectType.value.toOntologySchema(InternalSchema).toString())
-                                      )
+                                      Some(SmartIriV3(objectType.value.toOntologySchema(InternalSchema).toString))
                                     )
                                   case other =>
                                     Validation.fail(ValidationException(s"Unexpected subject type for $other"))
                                 }
                             }
-              objectType =
-                propertyInfoContent.predicates.get(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri) match {
-                  case None => Validation.fail(ValidationException(s"Object type cannot be empty."))
-                  case Some(value) =>
-                    value.objects.head match {
-                      case objectType: SmartIriLiteralV2 =>
-                        Validation.succeed(
-                          SmartIriV3(objectType.value.toOntologySchema(InternalSchema).toString())
-                        )
-                      case other => Validation.fail(ValidationException(s"Unexpected object type for $other"))
-                    }
-                }
-              label = propertyInfoContent.predicates.get(OntologyConstants.Rdfs.Label.toSmartIri) match {
+              objectTypeSmartIri <- RouteUtilZ
+                                      .toSmartIri(OntologyConstants.KnoraApiV2Complex.ObjectType, "Should not happen")
+              objectType = propertyInfoContent.predicates.get(objectTypeSmartIri) match {
+                             case None =>
+                               Validation.fail(ValidationException(s"Object type cannot be empty."))
+                             case Some(value) =>
+                               value.objects.head match {
+                                 case objectType: SmartIriLiteralV2 =>
+                                   Validation.succeed(
+                                     SmartIriV3(objectType.value.toOntologySchema(InternalSchema).toString)
+                                   )
+                                 case other =>
+                                   Validation.fail(ValidationException(s"Unexpected object type for $other"))
+                               }
+                           }
+              labelSmartIri <- RouteUtilZ.toSmartIri(OntologyConstants.Rdfs.Label, "Should not happen")
+              label = propertyInfoContent.predicates.get(labelSmartIri) match {
                         case None => Validation.fail(ValidationException("Label missing"))
                         case Some(value) =>
                           value.objects.head match {
@@ -731,7 +557,8 @@ final case class OntologiesRouteV2(
                             case _ => Validation.fail(ValidationException("Unexpected Type for Label"))
                           }
                       }
-              comment = propertyInfoContent.predicates.get(OntologyConstants.Rdfs.Comment.toSmartIri) match {
+              commentSmartIri <- RouteUtilZ.toSmartIri(OntologyConstants.Rdfs.Comment, "Should not happen")
+              comment = propertyInfoContent.predicates.get(commentSmartIri) match {
                           case None => Validation.succeed(None)
                           case Some(value) =>
                             value.objects.head match {
@@ -743,12 +570,12 @@ final case class OntologiesRouteV2(
                             }
                         }
               superProperties =
-                propertyInfoContent.subPropertyOf.toList.map(smartIri => SmartIriV3(smartIri.toString())) match {
+                propertyInfoContent.subPropertyOf.toList.map(smartIri => SmartIriV3(smartIri.toString)) match {
                   case Nil        => Validation.fail(ValidationException("SuperProperties cannot be empty."))
                   case superProps => Validation.succeed(superProps)
                 }
 
-              createPropertyCommand: CreatePropertyCommand =
+              _ <-
                 Validation
                   .validate(
                     ontologyIri,
@@ -761,27 +588,52 @@ final case class OntologiesRouteV2(
                     superProperties,
                     guiObject
                   )
-                  .flatMap(values =>
-                    CreatePropertyCommand.make(
-                      values._1,
-                      values._2,
-                      values._3,
-                      values._4,
-                      values._5,
-                      values._6,
-                      values._7,
-                      values._8,
-                      values._9
-                    )
-                  )
-                  .fold(e => throw e.head, v => v)
+                  .flatMap(v => CreatePropertyCommand.make(v._1, v._2, v._3, v._4, v._5, v._6, v._7, v._8, v._9))
+                  .toZIO
             } yield requestMessage
 
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+            RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
           }
         }
       }
     }
+
+  private def getGuiAttributes(propertyInfoContent: PropertyInfoContentV2) =
+    RouteUtilZ
+      .toSmartIri(SalsahGui.External.GuiAttribute, "Should not happen")
+      .map(propertyInfoContent.predicates.get)
+      .flatMap(infoMaybe =>
+        ZIO
+          .foreach(infoMaybe) { predicateInfoV2: PredicateInfoV2 =>
+            ZIO.foreach(predicateInfoV2.objects) {
+              case guiAttribute: StringLiteralV2 => ZIO.succeed(guiAttribute.value)
+              case other =>
+                ZIO.fail(BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other"))
+            }
+          }
+          .map(_.toSet.flatten)
+      )
+
+  private def getGuiElement(propertyInfoContent: PropertyInfoContentV2) =
+    RouteUtilZ
+      .toSmartIri(SalsahGui.External.GuiElementProp, "Should not happen")
+      .map(propertyInfoContent.predicates.get)
+      .flatMap(infoMaybe =>
+        ZIO.foreach(infoMaybe) { predicateInfoV2: PredicateInfoV2 =>
+          predicateInfoV2.objects.head match {
+            case guiElement: SmartIriLiteralV2 =>
+              ZIO.succeed(guiElement.value.toOntologySchema(InternalSchema).toString)
+            case other =>
+              ZIO.fail(BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other"))
+          }
+        }
+      )
+
+  private def getPropertyDef(inputOntology: InputOntologyV2) =
+    ZIO.attempt(OntologyUpdateHelper.getPropertyDef(inputOntology))
+
+  private def getInputOntology(requestDoc: JsonLDDocument) =
+    ZIO.attempt(InputOntologyV2.fromJsonLD(requestDoc))
 
   private def updatePropertyLabelsOrComments(): Route =
     path(ontologiesBasePath / "properties") {
@@ -789,22 +641,16 @@ final case class OntologiesRouteV2(
         // Change the labels or comments of a property.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestMessageFuture: Future[ChangePropertyLabelsOrCommentsRequestV2] = for {
-              requestingUser <- getUserADM(requestContext)
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              requestMessage: ChangePropertyLabelsOrCommentsRequestV2 <- ChangePropertyLabelsOrCommentsRequestV2
-                                                                           .fromJsonLD(
-                                                                             jsonLDDocument = requestDoc,
-                                                                             apiRequestID = randomUUID,
-                                                                             requestingUser = requestingUser,
-                                                                             appActor = appActor,
-                                                                             log = log
-                                                                           )
+            val requestMessageTask = for {
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestDoc     <- parseJsonLd(jsonRequest)
+              apiRequestId   <- RouteUtilZ.randomUuid()
+              requestMessage <-
+                ZIO.attempt(
+                  ChangePropertyLabelsOrCommentsRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
+                )
             } yield requestMessage
-
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+            RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
           }
         }
       }
@@ -814,31 +660,15 @@ final case class OntologiesRouteV2(
   private def deletePropertyComment(): Route =
     path(ontologiesBasePath / "properties" / "comment" / Segment) { propertyIriStr: IRI =>
       delete { requestContext =>
-        val propertyIri = propertyIriStr.toSmartIri
-
-        if (!propertyIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid property IRI for request: $propertyIriStr")
-        }
-
-        val lastModificationDateStr = requestContext.request.uri
-          .query()
-          .toMap
-          .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-
-        val lastModificationDate = ValuesValidator
-          .xsdDateTimeStampToInstant(lastModificationDateStr)
-          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
-
-        val requestMessageFuture: Future[DeletePropertyCommentRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield DeletePropertyCommentRequestV2(
-          propertyIri = propertyIri,
-          lastModificationDate = lastModificationDate,
-          apiRequestID = randomUUID,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        val requestTask = for {
+          propertyIri <- RouteUtilZ
+                           .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
+                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+          lastModificationDate <- getLastModificationDate(requestContext)
+          apiRequestId         <- RouteUtilZ.randomUuid()
+          requestingUser       <- Authenticator.getUserADM(requestContext)
+        } yield DeletePropertyCommentRequestV2(propertyIri, lastModificationDate, apiRequestId, requestingUser)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
@@ -848,69 +678,30 @@ final case class OntologiesRouteV2(
         // Change the salsah-gui:guiElement and/or salsah-gui:guiAttribute of a property.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-            val requestMessageFuture: Future[ChangePropertyGuiElementRequest] = for {
-
-              requestingUser: UserADM <- getUserADM(requestContext)
-
-              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-              // get ontology info from request
-              inputOntology: InputOntologyV2 = InputOntologyV2.fromJsonLD(requestDoc)
-
-              // get property info from request - in OntologyUpdateHelper.getPropertyDef a lot of validation of the property iri is done
-              propertyUpdateInfo: PropertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntology)
-
-              propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
-              lastModificationDate                       = propertyUpdateInfo.lastModificationDate
-
-              // get all values from request and validate them by making value objects from it
-
-              // get and validate property IRI
-              propertyIri = PropertyIri.make(propertyInfoContent.propertyIri.toString)
-
-              // get the (optional) new gui element from the request
-              newGuiElement =
-                propertyInfoContent.predicates
-                  .get(SalsahGui.External.GuiElementProp.toSmartIri)
-                  .map { predicateInfoV2: PredicateInfoV2 =>
-                    predicateInfoV2.objects.head match {
-                      case guiElement: SmartIriLiteralV2 => guiElement.value.toOntologySchema(InternalSchema).toString()
-                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
-                    }
-                  }
-
-              // get the new gui attribute(s) from the request
-              newGuiAttributes =
-                propertyInfoContent.predicates
-                  .get(SalsahGui.External.GuiAttribute.toSmartIri)
-                  .map { predicateInfoV2: PredicateInfoV2 =>
-                    predicateInfoV2.objects.map {
-                      case guiAttribute: StringLiteralV2 => guiAttribute.value
-                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-                    }.toSet
-                  }
-                  .getOrElse(Set())
-
-              guiObject =
+            val requestTask = for {
+              requestingUser      <- Authenticator.getUserADM(requestContext)
+              requestDoc          <- parseJsonLd(jsonRequest)
+              inputOntology       <- getInputOntology(requestDoc)
+              propertyUpdateInfo  <- getPropertyDef(inputOntology)
+              propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
+              lastModificationDate = propertyUpdateInfo.lastModificationDate
+              propertyIri         <- PropertyIri.make(propertyInfoContent.propertyIri.toString).toZIO
+              newGuiElement       <- getGuiElement(propertyInfoContent)
+              newGuiAttributes    <- getGuiAttributes(propertyInfoContent)
+              guiObject <-
                 GuiObject
                   .makeFromStrings(newGuiAttributes, newGuiElement)
-                  .fold(
-                    e => throw BadRequestException(e.map(error => error.msg).mkString(sys.props("line.separator"))),
-                    v => v
-                  )
-
-              // create the request message with the validated gui object
-              requestMessage = ChangePropertyGuiElementRequest(
-                                 propertyIri = propertyIri.fold(e => throw e.head, v => v),
-                                 newGuiObject = guiObject,
-                                 lastModificationDate = lastModificationDate,
-                                 apiRequestID = randomUUID,
-                                 requestingUser = requestingUser
-                               )
-
-            } yield requestMessage
-
-            RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+                  .toZIO
+                  .mapError(e => BadRequestException(e.msg))
+              apiRequestId <- RouteUtilZ.randomUuid()
+            } yield ChangePropertyGuiElementRequest(
+              propertyIri,
+              guiObject,
+              lastModificationDate,
+              apiRequestId,
+              requestingUser
+            )
+            RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
           }
         }
       }
@@ -919,107 +710,69 @@ final case class OntologiesRouteV2(
   private def getProperties(): Route =
     path(ontologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
       get { requestContext =>
-        val propsAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalPropertyIris.map { propIriStr: IRI =>
-          val requestedPropIri: SmartIri =
-            propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $propIriStr"))
+        val propertyIrisTask = for {
+          propertyIris <- ZIO.foreach(externalPropertyIris) { propertyIriStr: IRI =>
+                            RouteUtilZ
+                              .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
+                              .flatMap(RouteUtilZ.ensureIsNotKnoraOntologyIri)
+                              .flatMap(RouteUtilZ.ensureExternalOntologyName)
+                          }
+        } yield propertyIris.toSet
 
-          stringFormatter.checkExternalOntologyName(requestedPropIri)
+        val targetSchemaTask = for {
+          schemas <- propertyIrisTask.map(_.flatMap(_.getOntologySchema))
+          targetSchema <-
+            ZIO
+              .succeed(schemas)
+              .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
+              .map(_.head)
+        } yield targetSchema
 
-          if (!requestedPropIri.isKnoraApiV2EntityIri) {
-            throw BadRequestException(s"Invalid property IRI: $propIriStr")
-          }
+        val requestTask = for {
+          propertyIris   <- propertyIrisTask
+          requestingUser <- Authenticator.getUserADM(requestContext)
+        } yield PropertiesGetRequestV2(propertyIris, getLanguages(requestContext), requestingUser)
 
-          val schema = requestedPropIri.getOntologySchema match {
-            case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-            case _                              => throw BadRequestException(s"Invalid property IRI: $propIriStr")
-          }
-
-          (requestedPropIri, schema)
-        }.toSet
-
-        val (propsForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
-
-        if (propsForResponder.map(_.getOntologyFromEntity).size != 1) {
-          throw BadRequestException(s"Only one ontology may be queried per request")
-        }
-
-        // Decide which API schema to use for the response.
-        val targetSchema = if (schemas.size == 1) {
-          schemas.head
-        } else {
-          // The client requested different schemas.
-          throw BadRequestException("The request refers to multiple API schemas")
-        }
-
-        val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val allLanguages                = ValuesValidator.optionStringToBoolean(params.get(ALL_LANGUAGES), fallback = false)
-
-        val requestMessageFuture: Future[PropertiesGetRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield PropertiesGetRequestV2(
-          propertyIris = propsForResponder,
-          allLanguages = allLanguages,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext, targetSchema)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
       }
     }
 
   private def canDeleteProperty(): Route =
     path(ontologiesBasePath / "candeleteproperty" / Segment) { propertyIriStr: IRI =>
       get { requestContext =>
-        val propertyIri = propertyIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(propertyIri)
-
-        if (!propertyIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid class IRI for request: $propertyIriStr")
-        }
-
-        val requestMessageFuture: Future[CanDeletePropertyRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield CanDeletePropertyRequestV2(
-          propertyIri = propertyIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        val requestMessageTask = for {
+          propertyIri <- RouteUtilZ
+                           .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
+                           .flatMap(RouteUtilZ.ensureExternalOntologyName)
+                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+          requestingUser <- Authenticator.getUserADM(requestContext)
+        } yield CanDeletePropertyRequestV2(propertyIri, requestingUser)
+        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }
     }
 
   private def deleteProperty(): Route =
     path(ontologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
       delete { requestContext =>
-        val propertyIriStr = externalPropertyIris match {
-          case List(str) => str
-          case _         => throw BadRequestException(s"Only one property can be deleted at a time")
-        }
-
-        val propertyIri = propertyIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(propertyIri)
-
-        if (!propertyIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid property IRI for request: $propertyIri")
-        }
-
-        val lastModificationDateStr = requestContext.request.uri
-          .query()
-          .toMap
-          .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = ValuesValidator
-          .xsdDateTimeStampToInstant(lastModificationDateStr)
-          .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
-
-        val requestMessageFuture: Future[DeletePropertyRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
+        val requestMessageTask = for {
+          propertyIri <-
+            ZIO
+              .succeed(externalPropertyIris)
+              .filterOrFail(_.size == 1)(BadRequestException(s"Only one property can be deleted at a time"))
+              .map(_.head)
+              .flatMap(iri => RouteUtilZ.toSmartIri(iri, s"Invalid property IRI: $iri"))
+              .flatMap(RouteUtilZ.ensureExternalOntologyName)
+              .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+          lastModificationDate <- getLastModificationDate(requestContext)
+          apiRequestId         <- RouteUtilZ.randomUuid()
+          requestingUser       <- Authenticator.getUserADM(requestContext)
         } yield DeletePropertyRequestV2(
-          propertyIri = propertyIri,
-          lastModificationDate = lastModificationDate,
-          apiRequestID = randomUUID,
-          requestingUser = requestingUser
+          propertyIri,
+          lastModificationDate,
+          apiRequestId,
+          requestingUser
         )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }
     }
 
@@ -1028,21 +781,13 @@ final case class OntologiesRouteV2(
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-          val requestMessageFuture: Future[CreateOntologyRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-
-            requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-            requestMessage: CreateOntologyRequestV2 <- CreateOntologyRequestV2.fromJsonLD(
-                                                         jsonLDDocument = requestDoc,
-                                                         apiRequestID = randomUUID,
-                                                         requestingUser = requestingUser,
-                                                         appActor = appActor,
-                                                         log = log
-                                                       )
+          val requestTask = for {
+            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestDoc     <- parseJsonLd(jsonRequest)
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            requestMessage <- ZIO.attempt(CreateOntologyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
           } yield requestMessage
-
-          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
       }
     }
@@ -1051,54 +796,31 @@ final case class OntologiesRouteV2(
   private def canDeleteOntology(): Route =
     path(ontologiesBasePath / "candeleteontology" / Segment) { ontologyIriStr: IRI =>
       get { requestContext =>
-        val ontologyIri = ontologyIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(ontologyIri)
+        val requestTask = for {
+          ontologyIri <- RouteUtilZ
+                           .toSmartIri(ontologyIriStr, s"Invalid ontology IRI for request $ontologyIriStr")
+                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+                           .flatMap(RouteUtilZ.ensureExternalOntologyName)
+          requestingUser <- Authenticator.getUserADM(requestContext)
+        } yield CanDeleteOntologyRequestV2(ontologyIri, requestingUser)
 
-        if (!ontologyIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"Invalid ontology IRI for request: $ontologyIriStr")
-        }
-
-        val requestMessageFuture: Future[CanDeleteOntologyRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield CanDeleteOntologyRequestV2(
-          ontologyIri = ontologyIri,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 
   private def deleteOntology(): Route = path(ontologiesBasePath / Segment) { ontologyIriStr =>
     delete { requestContext =>
-      val ontologyIri = ontologyIriStr.toSmartIri
-      stringFormatter.checkExternalOntologyName(ontologyIri)
-
-      if (
-        !ontologyIri.isKnoraOntologyIri || ontologyIri.isKnoraBuiltInDefinitionIri || !ontologyIri.getOntologySchema
-          .contains(ApiV2Complex)
-      ) {
-        throw BadRequestException(s"Invalid ontology IRI for request: $ontologyIri")
-      }
-
-      val lastModificationDateStr = requestContext.request.uri
-        .query()
-        .toMap
-        .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-      val lastModificationDate = ValuesValidator
-        .xsdDateTimeStampToInstant(lastModificationDateStr)
-        .getOrElse(throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
-
-      val requestMessageFuture: Future[DeleteOntologyRequestV2] = for {
-        requestingUser <- getUserADM(requestContext)
-      } yield DeleteOntologyRequestV2(
-        ontologyIri = ontologyIri,
-        lastModificationDate = lastModificationDate,
-        apiRequestID = randomUUID,
-        requestingUser = requestingUser
-      )
-
-      RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+      val requestMessageTask = for {
+        ontologyIri <- RouteUtilZ
+                         .toSmartIri(ontologyIriStr, s"Invalid ontology IRI for request $ontologyIriStr")
+                         .flatMap(RouteUtilZ.ensureExternalOntologyName)
+                         .flatMap(RouteUtilZ.ensureIsKnoraOntologyIri)
+                         .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+        lastModificationDate <- getLastModificationDate(requestContext)
+        apiRequestId         <- RouteUtilZ.randomUuid()
+        requestingUser       <- Authenticator.getUserADM(requestContext)
+      } yield DeleteOntologyRequestV2(ontologyIri, lastModificationDate, apiRequestId, requestingUser)
+      RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
     }
   }
 }
