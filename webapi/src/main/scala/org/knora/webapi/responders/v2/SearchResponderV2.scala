@@ -914,6 +914,8 @@ final case class SearchResponderV2Live(
     val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
     for {
+      // TODO-BL: this should be refactored and the old search-by-label code streamlined.
+      // I leave it for now, in case we have to revert, but I will create a follow-up task to refactor this.
       searchResourceByLabelSparql <-
         limitToResourceClass match {
           case None =>
