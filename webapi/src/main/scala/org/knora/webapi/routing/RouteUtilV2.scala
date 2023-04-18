@@ -23,6 +23,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
@@ -430,4 +431,6 @@ object RouteUtilV2 {
       case None => ZIO.succeed(RdfMediaTypes.`application/ld+json`)
     }
   }
+
+  def parseJsonLd(jsonRequest: IRI) = ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
 }

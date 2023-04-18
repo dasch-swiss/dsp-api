@@ -32,7 +32,6 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
@@ -153,7 +152,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestTask = for {
-              requestDoc     <- parseJsonLd(jsonRequest)
+              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               requestingUser <- Authenticator.getUserADM(requestContext)
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
@@ -164,8 +163,6 @@ final case class OntologiesRouteV2()(
         }
       }
     }
-
-  private def parseJsonLd(jsonRequest: IRI) = ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
 
   private def getOntologyMetadataForProjects(): Route =
     path(ontologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
@@ -205,7 +202,7 @@ final case class OntologiesRouteV2()(
         {
           val requestMessageTask = for {
             requestingUser <- Authenticator.getUserADM(requestContext)
-            requestDoc     <- parseJsonLd(jsonRequest)
+            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- ZIO.attempt(CreateClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
           } yield requestMessage
@@ -223,7 +220,7 @@ final case class OntologiesRouteV2()(
           {
             val requestMessageTask = for {
               requestingUser <- Authenticator.getUserADM(requestContext)
-              requestDoc     <- parseJsonLd(jsonRequest)
+              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
                 ZIO.attempt(
@@ -262,7 +259,7 @@ final case class OntologiesRouteV2()(
           {
             val requestMessageTask = for {
               requestingUser <- Authenticator.getUserADM(requestContext)
-              requestDoc     <- parseJsonLd(jsonRequest)
+              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
                 ZIO.attempt(AddCardinalitiesToClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
@@ -295,7 +292,7 @@ final case class OntologiesRouteV2()(
           {
             val messageTask = for {
               user         <- Authenticator.getUserADM(requestContext)
-              document     <- parseJsonLd(reqBody)
+              document     <- RouteUtilV2.parseJsonLd(reqBody)
               apiRequestId <- RouteUtilZ.randomUuid()
               msg          <- ZIO.attempt(ReplaceClassCardinalitiesRequestV2.fromJsonLd(document, apiRequestId, user))
             } yield msg
@@ -312,7 +309,7 @@ final case class OntologiesRouteV2()(
           {
             val messageTask = for {
               requestingUser <- Authenticator.getUserADM(requestContext)
-              requestDoc     <- parseJsonLd(jsonRequest)
+              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               msg <- ZIO.attempt(
                        CanDeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
@@ -333,7 +330,7 @@ final case class OntologiesRouteV2()(
           {
             val requestMessageTask = for {
               requestingUser <- Authenticator.getUserADM(requestContext)
-              requestDoc     <- parseJsonLd(jsonRequest)
+              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               msg <-
                 ZIO.attempt(DeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
@@ -352,7 +349,7 @@ final case class OntologiesRouteV2()(
           {
             val requestMessageTask = for {
               requestingUser <- Authenticator.getUserADM(requestContext)
-              requestDoc     <- parseJsonLd(jsonRequest)
+              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               msg            <- ZIO.attempt(ChangeGuiOrderRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
             } yield msg
@@ -466,7 +463,7 @@ final case class OntologiesRouteV2()(
           {
             val requestMessageTask = for {
               requestingUser                            <- Authenticator.getUserADM(requestContext)
-              requestDoc                                <- parseJsonLd(jsonRequest)
+              requestDoc                                <- RouteUtilV2.parseJsonLd(jsonRequest)
               inputOntology                             <- getInputOntology(requestDoc)
               propertyUpdateInfo                        <- getPropertyDef(inputOntology)
               propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
@@ -643,7 +640,7 @@ final case class OntologiesRouteV2()(
           {
             val requestMessageTask = for {
               requestingUser <- Authenticator.getUserADM(requestContext)
-              requestDoc     <- parseJsonLd(jsonRequest)
+              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
                 ZIO.attempt(
@@ -680,7 +677,7 @@ final case class OntologiesRouteV2()(
           {
             val requestTask = for {
               requestingUser      <- Authenticator.getUserADM(requestContext)
-              requestDoc          <- parseJsonLd(jsonRequest)
+              requestDoc          <- RouteUtilV2.parseJsonLd(jsonRequest)
               inputOntology       <- getInputOntology(requestDoc)
               propertyUpdateInfo  <- getPropertyDef(inputOntology)
               propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
@@ -783,7 +780,7 @@ final case class OntologiesRouteV2()(
         {
           val requestTask = for {
             requestingUser <- Authenticator.getUserADM(requestContext)
-            requestDoc     <- parseJsonLd(jsonRequest)
+            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- ZIO.attempt(CreateOntologyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
           } yield requestMessage

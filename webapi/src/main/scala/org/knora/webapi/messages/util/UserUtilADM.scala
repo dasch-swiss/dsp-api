@@ -5,18 +5,15 @@
 
 package org.knora.webapi.messages.util
 
-import akka.actor.ActorRef
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern.ask
-import akka.util.Timeout
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import zio._
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.Full
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 
 /**
  * Utility functions for working with users.
@@ -37,32 +34,21 @@ object UserUtilADM {
   def switchToUser(
     requestingUser: UserADM,
     requestedUserIri: IRI,
-    projectIri: IRI,
-    appActor: ActorRef
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    if (requestingUser.id == requestedUserIri) {
-      FastFuture.successful(requestingUser)
-    } else if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri))) {
-      Future.failed(
-        ForbiddenException(
+    projectIri: IRI
+  ): ZIO[StringFormatter with MessageRelay, Throwable, UserADM] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
+      if (requestingUser.id == requestedUserIri) {
+        ZIO.succeed(requestingUser)
+      } else if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri))) {
+        val forbiddenMsg =
           s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user"
-        )
-      )
-    } else {
-      for {
-        userResponse: UserResponseADM <-
-          appActor
-            .ask(
-              UserGetRequestADM(
-                identifier = UserIdentifierADM(maybeIri = Some(requestedUserIri)),
-                userInformationTypeADM = UserInformationTypeADM.Full,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )
-            )
-            .mapTo[UserResponseADM]
-      } yield userResponse.user
+        ZIO.fail(ForbiddenException(forbiddenMsg))
+      } else {
+        for {
+          userResponse <- MessageRelay.ask[UserResponseADM](
+                            UserGetRequestADM(UserIdentifierADM(maybeIri = Some(requestedUserIri)), Full, SystemUser)
+                          )
+        } yield userResponse.user
+      }
     }
-  }
 }

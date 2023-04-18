@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.routing
+import akka.http.scaladsl.server.RequestContext
 import zio._
 
 import java.net.URLDecoder
@@ -12,8 +13,10 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object RouteUtilZ {
@@ -39,6 +42,11 @@ object RouteUtilZ {
         )
       )
 
+  def decodeUuid(uuidStr: String): ZIO[StringFormatter, BadRequestException, UUID] =
+    ZIO.serviceWithZIO[StringFormatter] { sf =>
+      ZIO.attempt(sf.decodeUuid(uuidStr)).orElseFail(BadRequestException(s"Invalid value UUID: $uuidStr"))
+    }
+
   def ensureExternalOntologyName(iri: SmartIri): ZIO[StringFormatter, BadRequestException, SmartIri] =
     ZIO.serviceWithZIO[StringFormatter] { sf =>
       if (sf.isKnoraOntologyIri(iri)) {
@@ -57,6 +65,9 @@ object RouteUtilZ {
     ZIO
       .succeed(iri)
       .filterOrFail(!_.isKnoraOntologyIri)(BadRequestException(s"Iri is a Knora ontology iri: $iri"))
+
+  def ensureIsResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    ZIO.succeed(iri).filterOrFail(!_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
 
   def ensureIsKnoraBuiltInDefinitionIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO
@@ -83,4 +94,17 @@ object RouteUtilZ {
     toSmartIri(s).orElseFail(BadRequestException(errorMsg))
 
   def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
+
+  def getStringValueFromQuery(ctx: RequestContext, key: String): Option[String] = ctx.request.uri.query().get(key)
+
+  // TODO move to a more appropriate place
+  def getComment(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, Option[String]] =
+    ZIO.serviceWithZIO[StringFormatter] { sf =>
+      ZIO.attempt(
+        jsonLDObject.maybeStringWithValidation(
+          OntologyConstants.KnoraApiV2Complex.ValueHasComment,
+          (s, errorFun) => { sf.toSparqlEncodedString(s, errorFun) }
+        )
+      )
+    }
 }

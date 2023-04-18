@@ -1338,7 +1338,7 @@ final case class ResourcesRouteV1()(
             mappingIri <-
               RouteUtilZ.validateAndEscapeIri(richtextMappingId, s"mapping_id $richtextMappingId is invalid")
             textWithStandoffTags <-
-              convertXMLtoStandoffTagV1(richtextXml, mappingIri, acceptStandoffLinksToClientIDs, userProfile, logger)
+              convertXMLtoStandoffTagV1(richtextXml, mappingIri, acceptStandoffLinksToClientIDs, userProfile)
             resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
             utf8str <- toSparqlEncodedString(
                          textWithStandoffTags.text,
