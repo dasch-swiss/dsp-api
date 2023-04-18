@@ -730,8 +730,8 @@ class StringFormatterSpec extends CoreSpec {
     "validate import namespace with project shortcode" in {
       val defaultNamespace = "http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
       stringFormatter
-        .xmlImportNamespaceToInternalOntologyIriV1(
-          defaultNamespace,
+        .xmlImportNamespaceToInternalOntologyIriV1(defaultNamespace)
+        .getOrElse(
           throw AssertionException("Invalid XML import namespace")
         )
         .toString should be("http://www.knora.org/ontology/0801/biblio")

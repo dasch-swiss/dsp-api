@@ -844,10 +844,11 @@ final case class ResourcesRouteV1(
       // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
       // IRI of the main ontology used in the import.
 
-      val mainOntologyIri: SmartIri = stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
-        defaultNamespace,
-        throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
-      )
+      val mainOntologyIri: SmartIri = stringFormatter
+        .xmlImportNamespaceToInternalOntologyIriV1(defaultNamespace)
+        .getOrElse(
+          throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
+        )
 
       val validationFuture: Future[Unit] = for {
         // Generate a bundle of XML schemas for validating the submitted XML.

@@ -47,8 +47,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
-import zio.config.derivation.names
-import zio.prelude.ZValidation
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -1832,19 +1830,19 @@ class StringFormatter private (
   def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri =
     xmlImportNamespaceToInternalOntologyIriV1(namespace).getOrElse(errorFun)
 
-  def xmlImportNamespaceToInternalOntologyIriV1(namespace: String): Validation[ValidationException, SmartIri] =
+  def xmlImportNamespaceToInternalOntologyIriV1(namespace: String): Option[SmartIri] =
     namespace match {
       case ProjectSpecificXmlImportNamespaceRegex(shared, _, projectCode, ontologyName)
           if !isBuiltInOntologyName(ontologyName) =>
-        val isShared = shared.nonEmpty
+        val isShared = Option(shared).nonEmpty
 
-        val definedProjectCode: ZValidation[Nothing, ValidationException, String] =
-          if (projectCode.nonEmpty) Validation.succeed(projectCode)
-          else if (isShared) Validation.succeed(DefaultSharedOntologiesProjectCode)
-          else Validation.fail(ValidationException(s"Invalid XML import namespace: $namespace"))
+        val definedProjectCode: Option[String] =
+          if (Option(projectCode).nonEmpty) Some(projectCode)
+          else if (isShared) Some(DefaultSharedOntologiesProjectCode)
+          else None
 
         definedProjectCode.flatMap(code =>
-          Validation.succeed(
+          Some(
             makeProjectSpecificInternalOntologyIri(
               internalOntologyName = externalToInternalOntologyName(ontologyName),
               isShared = isShared,
@@ -1853,7 +1851,7 @@ class StringFormatter private (
           )
         )
 
-      case _ => Validation.fail(ValidationException(s"Invalid XML import namespace: $namespace"))
+      case _ => None
     }
 
   /**
