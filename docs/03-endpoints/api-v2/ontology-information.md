@@ -1866,6 +1866,9 @@ A partial update of the ontology will not be performed.
 * _Consistency Check with existing data_
     * Given that instances of the class or any of its subclasses exist then these instances are checked if they conform to the given cardinality.
 
+> **Note:** The Pre-Update check does not take into account any `subproperty` relations between the properties. 
+> Every cardinality is checked against only the given property and not its subproperties, neither in the ontology nor the consistency check with existing data. 
+> This means that currently it is necessary to maintain the cardinalities on all subproperties of a property in sync with the cardinalities on the superproperty.
 ```
 HTTP PUT to http://host/v2/ontologies/cardinalities
 ```
