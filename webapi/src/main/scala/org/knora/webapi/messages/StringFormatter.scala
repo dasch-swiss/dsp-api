@@ -47,6 +47,8 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
+import zio.config.derivation.names
+import zio.prelude.ZValidation
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -1826,24 +1828,32 @@ class StringFormatter private (
    *                  valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology IRI.
    */
+  @deprecated("Use xmlImportNamespaceToInternalOntologyIriV1(String) instead.")
   def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri =
+    xmlImportNamespaceToInternalOntologyIriV1(namespace).getOrElse(errorFun)
+
+  def xmlImportNamespaceToInternalOntologyIriV1(namespace: String): Validation[ValidationException, SmartIri] =
     namespace match {
       case ProjectSpecificXmlImportNamespaceRegex(shared, _, projectCode, ontologyName)
           if !isBuiltInOntologyName(ontologyName) =>
-        val isShared = Option(shared).nonEmpty
+        val isShared = shared.nonEmpty
 
-        val definedProjectCode = Option(projectCode) match {
-          case Some(code) => code
-          case None       => if (isShared) DefaultSharedOntologiesProjectCode else errorFun
-        }
+        val definedProjectCode: ZValidation[Nothing, ValidationException, String] =
+          if (projectCode.nonEmpty) Validation.succeed(projectCode)
+          else if (isShared) Validation.succeed(DefaultSharedOntologiesProjectCode)
+          else Validation.fail(ValidationException(s"Invalid XML import namespace: $namespace"))
 
-        makeProjectSpecificInternalOntologyIri(
-          internalOntologyName = externalToInternalOntologyName(ontologyName),
-          isShared = isShared,
-          projectCode = definedProjectCode
+        definedProjectCode.flatMap(code =>
+          Validation.succeed(
+            makeProjectSpecificInternalOntologyIri(
+              internalOntologyName = externalToInternalOntologyName(ontologyName),
+              isShared = isShared,
+              projectCode = code
+            )
+          )
         )
 
-      case _ => errorFun
+      case _ => Validation.fail(ValidationException(s"Invalid XML import namespace: $namespace"))
     }
 
   /**
@@ -1856,6 +1866,7 @@ class StringFormatter private (
    *                     valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology entity IRI.
    */
+  @deprecated("Use xmlImportElementNameToInternalOntologyIriV1(String, String) instead.")
   def xmlImportElementNameToInternalOntologyIriV1(
     namespace: String,
     elementLabel: String,
@@ -1864,6 +1875,9 @@ class StringFormatter private (
     val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
     ontologyIri.toString + "#" + elementLabel
   }
+
+  def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String): IRI =
+    xmlImportNamespaceToInternalOntologyIriV1(namespace).toString + "#" + elementLabel
 
   /**
    * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. The prefix label
