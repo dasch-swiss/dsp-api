@@ -80,7 +80,7 @@ case class CreateOntologyRequestV2(
 /**
  * Constructs instances of [[CreateOntologyRequestV2]] based on JSON-LD requests.
  */
-object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntologyRequestV2] {
+object CreateOntologyRequestV2 {
 
   /**
    * Converts JSON-LD input into a [[CreateOntologyRequestV2]].
@@ -88,26 +88,9 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[CreateOntologyRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -388,7 +371,7 @@ case class CreatePropertyRequestV2(
 /**
  * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
  */
-object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
+object CreatePropertyRequestV2 {
 
   /**
    * Converts a JSON-LD request to a [[CreatePropertyRequestV2]].
@@ -396,26 +379,9 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[CreatePropertyRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -483,7 +449,7 @@ case class CreateClassRequestV2(
 /**
  * Constructs instances of [[CreateClassRequestV2]] based on JSON-LD requests.
  */
-object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassRequestV2] {
+object CreateClassRequestV2 {
 
   /**
    * Converts a JSON-LD request to a [[CreateClassRequestV2]].
@@ -491,26 +457,9 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[CreateClassRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -557,7 +506,7 @@ case class AddCardinalitiesToClassRequestV2(
 /**
  * Constructs instances of [[AddCardinalitiesToClassRequestV2]] based on JSON-LD input.
  */
-object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCardinalitiesToClassRequestV2] {
+object AddCardinalitiesToClassRequestV2 {
 
   /**
    * Converts JSON-LD input into an [[AddCardinalitiesToClassRequestV2]].
@@ -565,26 +514,9 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -629,7 +561,7 @@ case class ReplaceClassCardinalitiesRequestV2(
 /**
  * Constructs instances of [[ReplaceClassCardinalitiesRequestV2]] based on JSON-LD input.
  */
-object ReplaceClassCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ReplaceClassCardinalitiesRequestV2] {
+object ReplaceClassCardinalitiesRequestV2 {
 
   /**
    * Converts JSON-LD input into a [[ReplaceClassCardinalitiesRequestV2]].
@@ -637,26 +569,9 @@ object ReplaceClassCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[Rep
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[ReplaceClassCardinalitiesRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReplaceClassCardinalitiesRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -694,8 +609,7 @@ final case class CanDeleteCardinalitiesFromClassRequestV2(
 /**
  * Constructs instances of [[CanDeleteCardinalitiesFromClassRequestV2]] based on JSON-LD input.
  */
-object CanDeleteCardinalitiesFromClassRequestV2
-    extends KnoraJsonLDRequestReaderV2[CanDeleteCardinalitiesFromClassRequestV2] {
+object CanDeleteCardinalitiesFromClassRequestV2 {
 
   /**
    * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
@@ -703,26 +617,9 @@ object CanDeleteCardinalitiesFromClassRequestV2
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CanDeleteCardinalitiesFromClassRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -760,7 +657,7 @@ final case class DeleteCardinalitiesFromClassRequestV2(
 /**
  * Constructs instances of [[DeleteCardinalitiesFromClassRequestV2]] based on JSON-LD input.
  */
-object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteCardinalitiesFromClassRequestV2] {
+object DeleteCardinalitiesFromClassRequestV2 {
 
   /**
    * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
@@ -768,26 +665,9 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteCardinalitiesFromClassRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -944,8 +824,7 @@ case class ChangePropertyLabelsOrCommentsRequestV2(
 /**
  * Constructs instances of [[ChangePropertyLabelsOrCommentsRequestV2]] based on JSON-LD input.
  */
-object ChangePropertyLabelsOrCommentsRequestV2
-    extends KnoraJsonLDRequestReaderV2[ChangePropertyLabelsOrCommentsRequestV2] {
+object ChangePropertyLabelsOrCommentsRequestV2 {
 
   /**
    * Converts a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
@@ -953,26 +832,9 @@ object ChangePropertyLabelsOrCommentsRequestV2
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -1014,7 +876,7 @@ case class DeletePropertyCommentRequestV2(
 /**
  * Constructs instances of [[DeletePropertyCommentRequestV2]] based on JSON-LD input.
  */
-object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeletePropertyCommentRequestV2] {
+object DeletePropertyCommentRequestV2 {
 
   /**
    * Converts a JSON-LD request to a [[DeletePropertyCommentRequestV2]].
@@ -1022,26 +884,9 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[DeletePropertyCommentRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeletePropertyCommentRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -1083,7 +928,7 @@ case class ChangeClassLabelsOrCommentsRequestV2(
 /**
  * Constructs instances of [[ChangeClassLabelsOrCommentsRequestV2]] based on JSON-LD input.
  */
-object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeClassLabelsOrCommentsRequestV2] {
+object ChangeClassLabelsOrCommentsRequestV2 {
 
   /**
    * Converts a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
@@ -1091,26 +936,9 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -1152,7 +980,7 @@ case class DeleteClassCommentRequestV2(
 /**
  * Constructs instances of [[DeleteClassCommentRequestV2]] based on JSON-LD input.
  */
-object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClassCommentRequestV2] {
+object DeleteClassCommentRequestV2 {
 
   /**
    * Converts a JSON-LD request to a [[DeleteClassCommentRequestV2]].
@@ -1160,26 +988,9 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[DeleteClassCommentRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteClassCommentRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -1205,23 +1016,9 @@ case class ChangeGuiOrderRequestV2(
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
-object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrderRequestV2] {
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeGuiOrderRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
+object ChangeGuiOrderRequestV2 {
 
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
@@ -1270,7 +1067,7 @@ case class ChangeOntologyMetadataRequestV2(
 /**
  * Constructs instances of [[ChangeOntologyMetadataRequestV2]] based on JSON-LD requests.
  */
-object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeOntologyMetadataRequestV2] {
+object ChangeOntologyMetadataRequestV2 {
 
   /**
    * Converts a JSON-LD request to a [[ChangeOntologyMetadataRequestV2]].
@@ -1278,26 +1075,9 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
    * @param jsonLDDocument the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
    * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
-    }
-
-  private def fromJsonLDSync(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM

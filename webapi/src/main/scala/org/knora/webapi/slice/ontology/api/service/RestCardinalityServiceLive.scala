@@ -14,7 +14,6 @@ import zio.macros.accessible
 import dsp.errors.BadRequestException.invalidQueryParamValue
 import dsp.errors.BadRequestException.missingQueryParamValue
 import dsp.errors.ForbiddenException
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDArray
@@ -38,9 +37,9 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 trait RestCardinalityService {
 
   def canChangeCardinality(
-    classIri: IRI,
+    classIri: String,
     user: UserADM,
-    propertyIri: Option[IRI],
+    propertyIri: Option[String],
     newCardinality: Option[String]
   ): Task[CanDoResponseV2] =
     (propertyIri, newCardinality) match {
@@ -50,11 +49,11 @@ trait RestCardinalityService {
       case (Some(propertyIri), Some(newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
     }
 
-  def canReplaceCardinality(classIri: IRI, user: UserADM): Task[CanDoResponseV2]
+  def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2]
 
   def canSetCardinality(
-    classIri: IRI,
-    propertyIri: IRI,
+    classIri: String,
+    propertyIri: String,
     cardinality: String,
     user: UserADM
   ): Task[CanDoResponseV2]
@@ -85,7 +84,7 @@ case class RestCardinalityServiceLive(
   private val permissionService: PermissionService = PermissionService(ontologyRepo)
   private val canSetResponsePrefix: String         = s"${KnoraApiV2PrefixExpansion}canSetCardinality"
 
-  def canReplaceCardinality(classIri: IRI, user: UserADM): Task[CanDoResponseV2] =
+  def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2] =
     for {
       classIri <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
       _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
@@ -109,8 +108,8 @@ case class RestCardinalityServiceLive(
   }
 
   def canSetCardinality(
-    classIri: IRI,
-    propertyIri: IRI,
+    classIri: String,
+    propertyIri: String,
     cardinality: String,
     user: UserADM
   ): Task[CanDoResponseV2] =
