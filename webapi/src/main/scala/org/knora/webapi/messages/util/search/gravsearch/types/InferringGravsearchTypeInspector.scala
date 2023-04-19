@@ -32,11 +32,9 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
  */
 class InferringGravsearchTypeInspector(
-  nextInspector: Option[GravsearchTypeInspector],
   messageRelay: MessageRelay,
   queryTraverser: QueryTraverser
-) extends GravsearchTypeInspector(nextInspector)
-    with LazyLogging {
+) extends LazyLogging {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -845,7 +843,15 @@ class InferringGravsearchTypeInspector(
     querySchema: ApiV2Schema
   )
 
-  override def inspectTypes(
+  /**
+   * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found in the query.
+   *
+   * @param previousResult the result of previous type inspection.
+   * @param whereClause    the Gravsearch WHERE clause.
+   * @param requestingUser the requesting user.
+   * @return the result returned by the pipeline.
+   */
+  def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
     requestingUser: UserADM
@@ -878,14 +884,7 @@ class InferringGravsearchTypeInspector(
                                                              usageIndex.querySchema,
                                                              entityInfo = allEntityInfo
                                                            )
-
-      // Pass the intermediate result to the next type inspector in the pipeline.
-      lastResult <- runNextInspector(
-                      intermediateResult = sanitizedResults,
-                      whereClause = whereClause,
-                      requestingUser = requestingUser
-                    )
-    } yield lastResult
+    } yield sanitizedResults
   }
 
   /**

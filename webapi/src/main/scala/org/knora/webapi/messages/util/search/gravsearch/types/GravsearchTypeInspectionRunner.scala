@@ -25,14 +25,29 @@ final case class GravsearchTypeInspectionRunner(
   implicit private val stringFormatter: StringFormatter
 ) {
 
-  private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] =
-    Some(new InferringGravsearchTypeInspector(nextInspector = None, messageRelay, queryTraverser))
+  // private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] =
+  //   Some(new InferringGravsearchTypeInspector(nextInspector = None, messageRelay, queryTraverser))
 
-  // The pipeline of type inspectors.
-  private val typeInspectionPipeline = new AnnotationReadingGravsearchTypeInspector(
-    nextInspector = maybeInferringTypeInspector,
-    queryTraverser
-  )
+  // // The pipeline of type inspectors.
+  // private val typeInspectionPipeline = new AnnotationReadingGravsearchTypeInspector(
+  //   nextInspector = maybeInferringTypeInspector,
+  //   queryTraverser
+  // )
+
+  private def typeInspectionPipeline(
+    whereClause: WhereClause,
+    initial: IntermediateTypeInspectionResult,
+    requestingUser: UserADM
+  ) = {
+    val inferringInspector: InferringGravsearchTypeInspector =
+      new InferringGravsearchTypeInspector(messageRelay, queryTraverser)
+    val annotationReadingInspector: AnnotationReadingGravsearchTypeInspector =
+      new AnnotationReadingGravsearchTypeInspector(queryTraverser)
+    for {
+      res1 <- annotationReadingInspector.inspectTypes(initial, whereClause, requestingUser)
+      res2 <- inferringInspector.inspectTypes(res1, whereClause, requestingUser)
+    } yield res2
+  }
 
   /**
    * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
@@ -57,11 +72,7 @@ final case class GravsearchTypeInspectionRunner(
       initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(typeableEntities)
 
       // Run the pipeline and get its result.
-      lastResult <- typeInspectionPipeline.inspectTypes(
-                      previousResult = initialResult,
-                      whereClause = whereClause,
-                      requestingUser = requestingUser
-                    )
+      lastResult <- typeInspectionPipeline(whereClause, initialResult, requestingUser)
 
       untypedEntities: Set[TypeableEntity] = lastResult.untypedEntities
       _ <- // Are any entities still untyped?
