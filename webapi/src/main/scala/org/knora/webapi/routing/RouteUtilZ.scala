@@ -5,15 +5,14 @@
 
 package org.knora.webapi.routing
 import akka.http.scaladsl.server.RequestContext
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg
 import zio._
+
 import java.net.URLDecoder
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasComment
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

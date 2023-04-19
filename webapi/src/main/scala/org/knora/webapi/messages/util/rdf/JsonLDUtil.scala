@@ -11,8 +11,8 @@ import jakarta.json._
 import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import zio.IO
-import zio.UIO
 import zio.ZIO
+
 import java.io.StringReader
 import java.io.StringWriter
 import java.util

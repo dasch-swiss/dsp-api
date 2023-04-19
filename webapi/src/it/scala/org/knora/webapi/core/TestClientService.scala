@@ -1,6 +1,8 @@
 package org.knora.webapi.testservices
 
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -17,7 +19,6 @@ import org.apache.http.util.EntityUtils
 import spray.json.JsObject
 import spray.json._
 import zio._
-
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -94,7 +95,17 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     duration: zio.Duration = 666.seconds
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
-      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ => akka.http.scaladsl.Http().singleRequest(request))
+      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ =>
+        akka.http.scaladsl
+          .Http()
+          .singleRequest(request)
+          .map { response =>
+            if (response.status != StatusCodes.OK) {
+              Unmarshal(response.entity).to[String].map(println(_))
+            }
+            response
+          }
+      )
 //      .timeout(duration)
 //      .some
 //      .mapError(error =>
