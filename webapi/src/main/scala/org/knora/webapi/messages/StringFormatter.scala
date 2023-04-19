@@ -1949,49 +1949,13 @@ class StringFormatter private (
    * Check that the string represents a valid project shortname.
    *
    * @param shortname string to be checked.
-   * @param errorFun  a function that throws an exception. It will be called if the string does not represent a valid
-   *                  project shortname.
    * @return the same string.
    */
-  @deprecated("Use validateAndEscapeProjectShortname(String) instead.")
-  def validateAndEscapeProjectShortname(shortname: String, errorFun: => Nothing): String = // V2 / value objects
-    validateAndEscapeProjectShortname(shortname).getOrElse(errorFun)
-
-  def validateAndEscapeProjectShortname(shortname: String): Validation[ValidationException, String] =
-    Validation
-      .fromOption(
-        NCNameRegex
-          .findFirstIn(shortname)
-          .flatMap(Base64UrlPatternRegex.findFirstIn)
-          .flatMap(toSparqlEncodedString)
-      )
-      .mapError(_ => ValidationException(s"Invalid Shortname: $shortname"))
-
-  /**
-   * Check that an optional string represents a valid project shortname.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    project shortname.
-   * @return the same optional string.
-   */
-  @deprecated("Use validateAndEscapeOptionalProjectShortname(Option[String]) instead.")
-  def validateAndEscapeOptionalProjectShortname(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[String] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeProjectShortname(s, errorFun))
-      case None    => None
-    }
-
-  def validateAndEscapeOptionalProjectShortname(
-    maybeString: Option[String]
-  ): Validation[ValidationException, Option[String]] =
-    maybeString match {
-      case None        => Validation.succeed(None)
-      case Some(value) => validateAndEscapeProjectShortname(value).map(Some(_))
-    }
+  def validateAndEscapeProjectShortname(shortname: String): Option[String] =
+    NCNameRegex
+      .findFirstIn(shortname)
+      .flatMap(Base64UrlPatternRegex.findFirstIn)
+      .flatMap(toSparqlEncodedString)
 
   /**
    * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.

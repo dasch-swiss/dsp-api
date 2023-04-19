@@ -1012,35 +1012,19 @@ class StringFormatterSpec extends CoreSpec {
 
     "validate project shortname" in {
       // shortname with dash is valid
-      stringFormatter.validateAndEscapeProjectShortname(
-        "valid-shortname",
-        throw AssertionException("not valid")
-      ) should be("valid-shortname")
-
+      assert(stringFormatter.validateAndEscapeProjectShortname("valid-shortname").contains("valid-shortname"))
       // shortname with numbers
-      stringFormatter.validateAndEscapeProjectShortname("valid_1111", throw AssertionException("not valid")) should be(
-        "valid_1111"
-      )
+      assert(stringFormatter.validateAndEscapeProjectShortname("valid_1111").contains("valid_1111"))
       // has special character colon
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("invalid:shortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname("invalid:shortname").isEmpty)
       // begins with dash
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("-invalidshortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname("-invalidshortname").isEmpty)
       // begins with dot
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname(".invalidshortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname(".invalidshortname").isEmpty)
       // includes slash
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("invalid/shortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname("invalid/shortname").isEmpty)
       // includes @
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("invalid@shortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname("invalid@shortname").isEmpty)
     }
 
     "validate project shortcode" in {

@@ -103,10 +103,12 @@ case class ChangeProjectApiRequestADM(
   /* validates and escapes the given values.*/
   def validateAndEscape: ChangeProjectApiRequestADM = {
 
-    val validatedShortname: Option[String] = stringFormatter.validateAndEscapeOptionalProjectShortname(
-      shortname,
-      errorFun = throw BadRequestException(s"The supplied short name: '$shortname' is not valid.")
-    )
+    val validatedShortname: Option[String] =
+      shortname.map(v =>
+        stringFormatter
+          .validateAndEscapeProjectShortname(v)
+          .getOrElse(throw BadRequestException(s"The supplied short name: '$v' is not valid."))
+      )
 
     val validatedLongName: Option[String] = stringFormatter.escapeOptionalString(
       longname,
