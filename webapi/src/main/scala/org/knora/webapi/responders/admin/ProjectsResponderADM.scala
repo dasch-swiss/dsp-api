@@ -233,6 +233,7 @@ final case class ProjectsResponderADMLive(
   /**
    * Gets all the projects but not system projects and returns them as a [[ProjectADM]].
    *
+   * @param  withSystemProjects includes system projcets in response.
    * @return all the projects as a [[ProjectADM]].
    *
    *         [[NotFoundException]] if no projects are found.
