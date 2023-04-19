@@ -1571,14 +1571,11 @@ class StringFormatter private (
    * @return the same string.
    */
   def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: => Nothing): IRI =
-    if (acceptClientIDs) {
-      s match {
-        case StandoffLinkReferenceToClientIDForResourceRegex(_) => s
-        case _                                                  => validateAndEscapeIri(s, errorFun)
-      }
-    } else {
-      validateAndEscapeIri(s, errorFun)
-    }
+    validateStandoffLinkResourceReference(s, acceptClientIDs).getOrElse(errorFun)
+
+  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
+    if (acceptClientIDs && isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
+    else validateAndEscapeIri(s)
 
   /**
    * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
