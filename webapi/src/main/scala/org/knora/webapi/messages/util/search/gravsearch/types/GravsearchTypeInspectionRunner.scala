@@ -24,21 +24,19 @@ final case class GravsearchTypeInspectionRunner(
   private val messageRelay: MessageRelay,
   implicit private val stringFormatter: StringFormatter
 ) {
+  private val inferringInspector: InferringGravsearchTypeInspector =
+    InferringGravsearchTypeInspector(messageRelay, queryTraverser)
+  private val annotationReadingInspector: AnnotationReadingGravsearchTypeInspector =
+    AnnotationReadingGravsearchTypeInspector(queryTraverser)
 
   private def typeInspectionPipeline(
     whereClause: WhereClause,
     initial: IntermediateTypeInspectionResult,
     requestingUser: UserADM
-  ) = {
-    val inferringInspector: InferringGravsearchTypeInspector =
-      InferringGravsearchTypeInspector(messageRelay, queryTraverser)
-    val annotationReadingInspector: AnnotationReadingGravsearchTypeInspector =
-      AnnotationReadingGravsearchTypeInspector(queryTraverser)
-    for {
-      res1 <- annotationReadingInspector.inspectTypes(initial, whereClause, requestingUser)
-      res2 <- inferringInspector.inspectTypes(res1, whereClause, requestingUser)
-    } yield res2
-  }
+  ) = for {
+    annotatedTypes <- annotationReadingInspector.inspectTypes(initial, whereClause, requestingUser)
+    inferredTypes  <- inferringInspector.inspectTypes(annotatedTypes, whereClause, requestingUser)
+  } yield inferredTypes
 
   /**
    * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
