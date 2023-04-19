@@ -2355,7 +2355,7 @@ object HierarchicalListValueContentV2 {
                                )
         _ <- ZIO
                .fail(BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI"))
-               .when(listValueAsListNode.isKnoraDataIri)
+               .when(!listValueAsListNode.isKnoraDataIri)
         comment <- RouteUtilZ.getComment(jsonLDObject)
       } yield HierarchicalListValueContentV2(ApiV2Complex, listValueAsListNode.toString, comment)
   }

@@ -107,17 +107,14 @@ final case class ResourcesRouteV2(
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-
           val requestTask = for {
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             requestingUser <- Authenticator.getUserADM(requestContext)
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
-
             // check for each value which represents a file value if the file's MIME type is allowed
             _ <- ZIO.fromFuture(_ => checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues))
           } yield requestMessage
-
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
       }

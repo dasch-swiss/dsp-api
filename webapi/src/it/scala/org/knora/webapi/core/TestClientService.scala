@@ -95,14 +95,14 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
       .fromFuture[akka.http.scaladsl.model.HttpResponse](_ => akka.http.scaladsl.Http().singleRequest(request))
-      .timeout(duration)
-      .some
-      .mapError(error =>
-        error match {
-          case None            => throw AssertionException("Request timed out.")
-          case Some(throwable) => throw throwable
-        }
-      )
+//      .timeout(duration)
+//      .some
+//      .mapError(error =>
+//        error match {
+//          case None            => throw AssertionException("Request timed out.")
+//          case Some(throwable) => throw throwable
+//        }
+//      )
 
   /**
    * Performs a http request and returns the body of the response.
@@ -110,7 +110,6 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   def getResponseString(request: akka.http.scaladsl.model.HttpRequest): Task[String] =
     for {
       response <- singleAwaitingRequest(request)
-      // _    <- ZIO.debug(response)
       body <-
         ZIO
           .attemptBlocking(

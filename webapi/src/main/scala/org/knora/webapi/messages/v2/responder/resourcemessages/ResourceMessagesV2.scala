@@ -681,7 +681,7 @@ object CreateResourceRequestV2 {
         resourceClassIri <- ZIO.attempt(jsonLDDocument.requireTypeAsKnoraTypeIri)
 
         // Get the custom resource IRI if provided.
-        maybeCustomResourceIri: Option[SmartIri] = jsonLDDocument.maybeIDAsKnoraDataIri
+        maybeCustomResourceIri <- ZIO.attempt(jsonLDDocument.maybeIDAsKnoraDataIri)
 
         // Get the resource's rdfs:label.
         label <- ZIO.attempt(
