@@ -27,9 +27,8 @@ object Logger {
       label("spans", bracketed(spans)) +
       (space + label("cause", cause).highlight).filter(LogFilter.causeNonEmpty)
 
-  private val textLogger: ZLayer[Any, Nothing, Unit] = zio.logging.console(
-    logFormatText,
-    logFilter
+  private val textLogger: ZLayer[Any, Nothing, Unit] = consoleLogger(
+    ConsoleLoggerConfig(logFormatText, logFilter)
   )
 
   private val logFormatJson: LogFormat =
@@ -38,9 +37,8 @@ object Logger {
       LogFormat.annotations +
       LogFormat.spans
 
-  private val jsonLogger: ZLayer[Any, Nothing, Unit] = consoleJson(
-    logFormatJson,
-    logFilter
+  private val jsonLogger: ZLayer[Any, Nothing, Unit] = consoleJsonLogger(
+    ConsoleLoggerConfig(logFormatJson, logFilter)
   )
 
   private val useJsonLogger = sys.env.getOrElse("DSP_API_LOG_APPENDER", "TEXT") == "JSON"
