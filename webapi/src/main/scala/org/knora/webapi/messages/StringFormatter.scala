@@ -1937,41 +1937,13 @@ class StringFormatter private (
    *                 project IRI.
    * @return the same string but escaped.
    */
+  @deprecated("Use validateAndEscapeProjectIri(IRI) instead.")
   def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
     validateAndEscapeProjectIri(iri).getOrElse(errorFun)
 
-  def validateAndEscapeProjectIri(iri: IRI): Validation[ValidationException, IRI] =
-    if (isKnoraProjectIriStr(iri))
-      Validation
-        .fromOption(toSparqlEncodedString(iri))
-        .mapError(_ => ValidationException(s"Invalid IRI: $iri"))
-    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
-
-  /**
-   * Check that an optional string represents a valid project IRI.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    project IRI.
-   * @return the same optional string but escaped.
-   */
-  @deprecated("Use validateAndEscapeOptionalProjectIri(Option[String]) instead.")
-  def validateAndEscapeOptionalProjectIri(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[IRI] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeProjectIri(s, errorFun))
-      case None    => None
-    }
-
-  def validateAndEscapeOptionalProjectIri(
-    maybeString: Option[String]
-  ): Validation[ValidationException, Option[IRI]] =
-    maybeString match {
-      case Some(s) => validateAndEscapeProjectIri(s).map(Some(_))
-      case None    => Validation.succeed(None)
-    }
+  def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
+    if (isKnoraProjectIriStr(iri)) toSparqlEncodedString(iri)
+    else None
 
   /**
    * Check that the string represents a valid project shortname.

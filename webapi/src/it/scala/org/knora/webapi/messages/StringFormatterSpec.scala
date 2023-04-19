@@ -1000,26 +1000,14 @@ class StringFormatterSpec extends CoreSpec {
         SharedTestDataADM.incunabulaProject.id,
         throw AssertionException("not valid")
       ) shouldBe SharedTestDataADM.incunabulaProject.id
-      stringFormatter.validateAndEscapeOptionalProjectIri(
-        Some(SharedTestDataADM.incunabulaProject.id),
-        throw AssertionException("not valid")
-      ) shouldBe Some(SharedTestDataADM.incunabulaProject.id)
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.systemProject.id,
         throw AssertionException("not valid")
       ) shouldBe SharedTestDataADM.systemProject.id
-      stringFormatter.validateAndEscapeOptionalProjectIri(
-        Some(SharedTestDataADM.systemProject.id),
-        throw AssertionException("not valid")
-      ) shouldBe Some(SharedTestDataADM.systemProject.id)
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.defaultSharedOntologiesProject.id,
         throw AssertionException("not valid")
       ) shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
-      stringFormatter.validateAndEscapeOptionalProjectIri(
-        Some(SharedTestDataADM.defaultSharedOntologiesProject.id),
-        throw AssertionException("not valid")
-      ) shouldBe Some(SharedTestDataADM.defaultSharedOntologiesProject.id)
     }
 
     "validate project shortname" in {
