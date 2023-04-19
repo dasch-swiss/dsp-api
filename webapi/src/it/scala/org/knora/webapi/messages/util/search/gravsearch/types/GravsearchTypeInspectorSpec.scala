@@ -66,39 +66,6 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
       |}
         """.stripMargin
 
-  val SimpleTypeInspectionResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
-    entities = Map(
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        objectIsResourceType = true
-      ),
-      TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        objectIsResourceType = true
-      ),
-      TypeableIri(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA".toSmartIri) -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        isResourceType = true
-      ),
-      TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        isResourceType = true
-      ),
-      TypeableVariable(variableName = "linkingProp2") -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        objectIsResourceType = true
-      ),
-      TypeableIri(iri = "http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA".toSmartIri) -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        isResourceType = true
-      ),
-      TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        objectIsResourceType = true
-      )
-    )
-  )
-
   val WhereClauseWithoutAnnotations: WhereClause = WhereClause(
     patterns = Vector(
       StatementPattern(
@@ -1330,9 +1297,8 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     entitiesInferredFromProperties = Map()
   )
 
-  def gravsearchTypeInspectionRunner(
-    inferTypes: Boolean
-  ): RIO[StringFormatter with MessageRelay with QueryTraverser, GravsearchTypeInspectionRunner] =
+  def gravsearchTypeInspectionRunner()
+    : RIO[StringFormatter with MessageRelay with QueryTraverser, GravsearchTypeInspectionRunner] =
     for {
       qt <- ZIO.service[QueryTraverser]
       mr <- ZIO.service[MessageRelay]
@@ -1340,12 +1306,11 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     } yield GravsearchTypeInspectionRunner(qt, mr, sf)
 
   def inspectTypes(
-    inferTypes: Boolean,
     query: String
   ): ZIO[StringFormatter with MessageRelay with QueryTraverser, Throwable, GravsearchTypeInspectionResult] =
     for {
       parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      runner      <- gravsearchTypeInspectionRunner(inferTypes)
+      runner      <- gravsearchTypeInspectionRunner()
       result      <- runner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
     } yield result
 
@@ -1359,14 +1324,6 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
         } yield result
       }
       whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
-    }
-  }
-
-  "The annotation-reading type inspector" should {
-    "get type information from a simple query" in {
-      val runZio = inspectTypes(false, QueryWithExplicitTypeAnnotations)
-      val result = UnsafeZioRun.runOrThrow(runZio)
-      assert(result == SimpleTypeInspectionResult)
     }
   }
 
@@ -1639,7 +1596,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     }
 
     "sanitize inconsistent types resulted from a union" in {
-      val runZio = inspectTypes(inferTypes = true, QueryWithInconsistentTypes3)
+      val runZio = inspectTypes(QueryWithInconsistentTypes3)
       val result = UnsafeZioRun.runOrThrow(runZio)
 
       val expectedResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
@@ -1694,7 +1651,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
           |}
           |}
                 """.stripMargin
-      val runZio = inspectTypes(inferTypes = true, queryWithOptional)
+      val runZio = inspectTypes(queryWithOptional)
       val result = UnsafeZioRun.runOrThrow(runZio)
 
       // From property "beol:hasRecipient" the type of ?document is inferred to be beol:basicLetter, and
@@ -1752,14 +1709,14 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     }
 
     "infer the most specific type from redundant ones given in a query" in {
-      val runZio = inspectTypes(inferTypes = true, QueryWithRedundantTypes)
+      val runZio = inspectTypes(QueryWithRedundantTypes)
       val result = UnsafeZioRun.runOrThrow(runZio)
       assert(result.entities.size == 5)
       result.entitiesInferredFromProperties.keySet should not contain TypeableVariable("letter")
     }
 
     "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and the specified type is a Knora resource class" in {
-      val runZio = inspectTypes(inferTypes = true, QueryRdfTypeRule)
+      val runZio = inspectTypes(QueryRdfTypeRule)
       val result = UnsafeZioRun.runOrThrow(runZio)
       assert(result.entities == TypeInferenceResult1.entities)
       result.entitiesInferredFromProperties.keySet should contain(TypeableVariable("date"))
@@ -1770,108 +1727,108 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     }
 
     "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {
-      val runZio = inspectTypes(inferTypes = true, QueryKnoraObjectTypeFromPropertyIriRule)
+      val runZio = inspectTypes(QueryKnoraObjectTypeFromPropertyIriRule)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult1.entities)
     }
 
     "infer an entity's type if the entity is used as the object of a statement and the predicate's knora-api:objectType is known" in {
-      val runZio = inspectTypes(inferTypes = true, QueryTypeOfObjectFromPropertyRule)
+      val runZio = inspectTypes(QueryTypeOfObjectFromPropertyRule)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult1.entities)
     }
 
     "infer the knora-api:objectType of a property variable if it's used with an object whose type is known" in {
-      val runZio = inspectTypes(inferTypes = true, QueryKnoraObjectTypeFromObjectRule)
+      val runZio = inspectTypes(QueryKnoraObjectTypeFromObjectRule)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult1.entities)
     }
 
     "infer an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and the predicate's knora-api:subjectType is known" in {
-      val runZio = inspectTypes(inferTypes = true, QueryTypeOfSubjectFromPropertyRule)
+      val runZio = inspectTypes(QueryTypeOfSubjectFromPropertyRule)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResultNoSubject.entities)
     }
 
     "infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER" in {
-      val runZio = inspectTypes(inferTypes = true, QueryPropertyVarTypeFromFilterRule)
+      val runZio = inspectTypes(QueryPropertyVarTypeFromFilterRule)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult2.entities)
     }
 
     "infer the type of a non-property variable if it's compared to an XSD literal in a FILTER" in {
-      val runZio = inspectTypes(inferTypes = true, QueryNonPropertyVarTypeFromFilterRule)
+      val runZio = inspectTypes(QueryNonPropertyVarTypeFromFilterRule)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult4.entities)
     }
 
     "infer the type of a non-property variable used as the argument of a function in a FILTER" in {
-      val runZio = inspectTypes(inferTypes = true, QueryVarTypeFromFunction)
+      val runZio = inspectTypes(QueryVarTypeFromFunction)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult5.entities)
     }
 
     "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
-      val runZio = inspectTypes(inferTypes = true, QueryIriTypeFromFunction)
+      val runZio = inspectTypes(QueryIriTypeFromFunction)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult6.entities)
     }
 
     "infer the types in a query that requires 6 iterations" in {
-      val runZio = inspectTypes(inferTypes = true, PathologicalQuery)
+      val runZio = inspectTypes(PathologicalQuery)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == PathologicalTypeInferenceResult.entities)
     }
 
     "know the object type of rdfs:label" in {
-      val runZio = inspectTypes(inferTypes = true, QueryWithRdfsLabelAndLiteral)
+      val runZio = inspectTypes(QueryWithRdfsLabelAndLiteral)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == RdfsLabelWithLiteralResult.entities)
     }
 
     "infer the type of a variable used as the object of rdfs:label" in {
-      val runZio = inspectTypes(inferTypes = true, QueryWithRdfsLabelAndVariable)
+      val runZio = inspectTypes(QueryWithRdfsLabelAndVariable)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == RdfsLabelWithVariableResult.entities)
     }
 
     "infer the type of a variable when it is compared with another variable in a FILTER (in the simple schema)" in {
-      val runZio = inspectTypes(inferTypes = true, QueryComparingResourcesInSimpleSchema)
+      val runZio = inspectTypes(QueryComparingResourcesInSimpleSchema)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryComparingResourcesInSimpleSchemaResult.entities)
     }
 
     "infer the type of a variable when it is compared with another variable in a FILTER (in the complex schema)" in {
-      val runZio = inspectTypes(inferTypes = true, QueryComparingResourcesInComplexSchema)
+      val runZio = inspectTypes(QueryComparingResourcesInComplexSchema)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryComparingResourcesInComplexSchemaResult.entities)
     }
 
     "infer the type of a resource IRI when it is compared with a variable in a FILTER (in the simple schema)" in {
-      val runZio = inspectTypes(inferTypes = true, QueryComparingResourceIriInSimpleSchema)
+      val runZio = inspectTypes(QueryComparingResourceIriInSimpleSchema)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryComparingResourceIriInSimpleSchemaResult.entities)
     }
 
     "infer the type of a resource IRI when it is compared with a variable in a FILTER (in the complex schema)" in {
-      val runZio = inspectTypes(inferTypes = true, QueryComparingResourceIriInComplexSchema)
+      val runZio = inspectTypes(QueryComparingResourceIriInComplexSchema)
       val result = UnsafeZioRun.runOrThrow(runZio)
       assert(result.entities == QueryComparingResourceIriInComplexSchemaResult.entities)
     }
 
     "infer knora-api:Resource as the subject type of a subproperty of knora-api:hasLinkTo" in {
-      val runZio = inspectTypes(inferTypes = true, QueryWithFilterComparison)
+      val runZio = inspectTypes(QueryWithFilterComparison)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == QueryWithFilterComparisonResult.entities)
     }
 
     "reject a query with a non-Knora property whose type cannot be inferred" in {
-      val runZio = inspectTypes(inferTypes = true, QueryNonKnoraTypeWithoutAnnotation)
+      val runZio = inspectTypes(QueryNonKnoraTypeWithoutAnnotation)
       UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
 
     "accept a query with a non-Knora property whose type can be inferred" in {
-      val runZio = inspectTypes(inferTypes = true, QueryNonKnoraTypeWithAnnotation)
+      val runZio = inspectTypes(QueryNonKnoraTypeWithAnnotation)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == TypeInferenceResult3.entities)
     }
 
     "ignore Gravsearch options" in {
-      val runZio = inspectTypes(inferTypes = true, QueryWithGravsearchOptions)
+      val runZio = inspectTypes(QueryWithGravsearchOptions)
       assert(UnsafeZioRun.runOrThrow(runZio).entities == GravsearchOptionsResult.entities)
     }
 
     "reject a query with inconsistent types inferred from statements" in {
-      val runZio = inspectTypes(inferTypes = true, QueryWithInconsistentTypes1)
+      val runZio = inspectTypes(QueryWithInconsistentTypes1)
       UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
 
     "reject a query with inconsistent types inferred from a FILTER" in {
-      val runZio = inspectTypes(inferTypes = true, QueryWithInconsistentTypes2)
+      val runZio = inspectTypes(QueryWithInconsistentTypes2)
       UnsafeZioRun.run(runZio).causeOption.get.squash mustBe a[GravsearchException]
     }
   }

@@ -25,7 +25,6 @@ final case class GravsearchTypeInspectionRunner(
   implicit private val stringFormatter: StringFormatter
 ) {
 
-  // If inference was requested, construct an inferring type inspector.
   private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] =
     Some(new InferringGravsearchTypeInspector(nextInspector = None, messageRelay, queryTraverser))
 
