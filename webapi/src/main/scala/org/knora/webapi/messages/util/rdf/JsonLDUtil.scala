@@ -10,7 +10,9 @@ import com.apicatalog.jsonld.document._
 import jakarta.json._
 import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
-
+import zio.IO
+import zio.UIO
+import zio.ZIO
 import java.io.StringReader
 import java.io.StringWriter
 import java.util
@@ -450,15 +452,33 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * function.
    *
    * @param validationFun the validation function.
-   * @tparam T the type returned by the validation function.
+   * @tparam T thetype returned by the validation function.
    * @return the return value of the validation function.
    */
+  @deprecated("Use getIri() instead")
   def toIri[T](validationFun: (String, => Nothing) => T): T =
     if (isIri) {
       val id: IRI = requireString(JsonLDKeywords.ID)
       validationFun(id, throw BadRequestException(s"Invalid IRI: $id"))
     } else {
       throw BadRequestException(s"This JSON-LD object does not represent an IRI: $this")
+    }
+
+  /**
+   * Get the IRI value from its JSON-LD object value representation.
+   *
+   * @return The IRI found in the JSON-LD object with the key `@id`.
+   *         Fails if the JSON-LD object does not represent an IRI or if the `@id` key is not present.
+   */
+  def getIri(): IO[String, String] =
+    if (isIri) {
+      val key = JsonLDKeywords.ID
+      getString(key).flatMap {
+        case Some(id) => ZIO.succeed(id)
+        case None     => ZIO.fail(s"No $key present")
+      }
+    } else {
+      ZIO.fail(s"This JSON-LD object does not represent an IRI: $this")
     }
 
   /**
@@ -510,6 +530,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function.
    */
+  @deprecated("Use getString instead")
   def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = {
     val str: String = requireString(key)
     validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
@@ -522,10 +543,27 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the value, or `None` if not found.
    */
+  @deprecated("Use getString instead")
   def maybeString(key: String): Option[String] =
     value.get(key).map {
       case JsonLDString(str) => str
       case other             => throw BadRequestException(s"Invalid $key: $other (string expected)")
+    }
+
+  /**
+   * Gets an optional string value of a property of this JSON-LD object.
+   *
+   * @param key the key of the optional value.
+   * @return the [[String]] value for the given key if it exists and is [[JsonLDString]], or [[None]] if it doesn't.
+   *         fails if the given key exists but is not a [[JsonLDString]].
+   */
+  def getString(key: String): IO[String, Option[String]] = getJsonLdString(key).map(_.map(_.value))
+
+  private def getJsonLdString(key: String): IO[String, Option[JsonLDString]] =
+    value.get(key) match {
+      case Some(str: JsonLDString) => ZIO.some(str)
+      case None                    => ZIO.none
+      case Some(other)             => ZIO.fail(s"Invalid $key: $other (string expected)")
     }
 
   /**
@@ -555,6 +593,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the validated IRI.
    */
+  @deprecated("use getIdIriFromObject instead")
   def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T =
     requireObject(key).toIri(validationFun)
 
@@ -571,6 +610,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function, or `None` if the value was not present.
    */
+  @deprecated("use getIdIriFromObject instead")
   def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     maybeObject(key).map(_.toIri(validationFun))
 
@@ -633,11 +673,39 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the optional value.
    */
+  @deprecated("use getObject instead")
   def maybeObject(key: String): Option[JsonLDObject] =
     value.get(key).map {
       case obj: JsonLDObject => obj
       case other             => throw BadRequestException(s"Invalid $key: $other (object expected)")
     }
+
+  /**
+   * Gets the optional object value of this JSON-LD object.
+   *
+   * @param key the key of the optional value.
+   * @return The [[JsonLDObject]] value of the [[JsonLDObject]] found at the given key.
+   *         Returns [[None]] if the key is not found.
+   *         Fails if the value is not a [[JsonLDObject]].
+   */
+  def getObject(key: String): IO[String, Option[JsonLDObject]] =
+    value.get(key) match {
+      case Some(obj: JsonLDObject) => ZIO.some(obj)
+      case None                    => ZIO.none
+      case Some(other)             => ZIO.fail(s"Invalid $key: $other (object expected)")
+    }
+
+  /**
+   * Gets the IRI of the object value of this JSON-LD at a specific key.
+   *
+   * @param key the key of the optional value.
+   * @return the IRI of the object value of this JSON-LD at a specific key.
+   *         Returns [[None]] if the key is not found.
+   *         Fails if the value is not a [[JsonLDObject]].
+   *         Fails if the [[JsonLDObject]] does not have an [[JsonLDKeywords.ID]].
+   */
+  def getObjectIri(key: String): IO[String, Option[String]] =
+    getObject(key).flatMap(ZIO.foreach(_)(_.getIri()))
 
   /**
    * Gets the required array value of this JSON-LD object. If the value is not an array,

@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import zio._
-
 import java.time.Instant
 import java.util.UUID
 
@@ -38,6 +37,7 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 
 /**
@@ -1658,6 +1658,69 @@ case class TextValueContentV2(
  * Constructs [[TextValueContentV2]] objects based on JSON-LD input.
  */
 object TextValueContentV2 {
+  private def getSparqlEncodedString(
+    obj: JsonLDObject,
+    key: String
+  ): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
+    obj
+      .getString(key)
+      .mapError(BadRequestException(_))
+      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.toSparqlEncodedString(it, s"Invalid key: $key: $it")))
+
+  private def getIriFromObject(obj: JsonLDObject, key: String): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
+    obj
+      .getObjectIri(key)
+      .mapError(BadRequestException(_))
+      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.validateAndEscapeIri(it, s"Invalid key: $key: $it")))
+
+  private def getTextValue(
+    maybeValueAsString: Option[IRI],
+    maybeTextValueAsXml: Option[String],
+    maybeValueHasLanguage: Option[IRI],
+    maybeMappingResponse: Option[GetMappingResponseV2],
+    jsonLdObject: JsonLDObject
+  ) =
+    (maybeValueAsString, maybeTextValueAsXml, maybeMappingResponse) match {
+      case (Some(valueAsString), None, None) => // Text without standoff.
+        RouteUtilZ
+          .getComment(jsonLdObject)
+          .map(comment =>
+            TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueAsString),
+              comment = comment
+            )
+          )
+
+      case (None, Some(textValueAsXml), Some(mappingResponse)) =>
+        // Text with standoff. TODO: support submitting text with standoff as JSON-LD rather than as XML.
+        for {
+          textWithStandoffTags <- ZIO.attempt(
+                                    StandoffTagUtilV2.convertXMLtoStandoffTagV2(
+                                      textValueAsXml,
+                                      mappingResponse,
+                                      acceptStandoffLinksToClientIDs = false
+                                    )
+                                  )
+          text    <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
+          comment <- RouteUtilZ.getComment(jsonLdObject)
+        } yield TextValueContentV2(
+          ontologySchema = ApiV2Complex,
+          maybeValueHasString = Some(text),
+          valueHasLanguage = maybeValueHasLanguage,
+          standoff = textWithStandoffTags.standoffTagV2,
+          mappingIri = Some(mappingResponse.mappingIri),
+          mapping = Some(mappingResponse.mapping),
+          comment = comment
+        )
+
+      case _ =>
+        ZIO.fail(
+          BadRequestException(
+            s"Invalid combination of knora-api:valueHasString, knora-api:textValueAsXml, and/or knora-api:textValueHasMapping"
+          )
+        )
+    }
 
   /**
    * Converts a JSON-LD object to a [[TextValueContentV2]].
@@ -1672,74 +1735,27 @@ object TextValueContentV2 {
   ): ZIO[StringFormatter with MessageRelay, Throwable, TextValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
     stringFormatter =>
       for {
-        maybeValueAsString <- ZIO.attempt(
-                                jsonLdObject.maybeStringWithValidation(
-                                  ValueAsString,
-                                  stringFormatter.toSparqlEncodedString
-                                )
-                              )
-        maybeValueHasLanguage <- ZIO.attempt(
-                                   jsonLdObject.maybeStringWithValidation(
-                                     TextValueHasLanguage,
-                                     stringFormatter.toSparqlEncodedString
-                                   )
-                                 )
-        maybeTextValueAsXml: Option[String] = jsonLdObject.maybeString(TextValueAsXml)
-        maybeMappingIri <- ZIO.attempt(
-                             jsonLdObject.maybeIriInObject(
-                               TextValueHasMapping,
-                               stringFormatter.validateAndEscapeIri
-                             )
-                           )
+        maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)
+        maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
+        maybeTextValueAsXml   <- jsonLdObject.getString(TextValueAsXml).mapError(BadRequestException(_))
 
         // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
-        maybeMappingResponse <- ZIO.foreach(maybeMappingIri) { mappingIri =>
-                                  MessageRelay.ask[GetMappingResponseV2](
-                                    GetMappingRequestV2(mappingIri, requestingUser)
-                                  )
-                                }
+        maybeMappingResponse <-
+          getIriFromObject(jsonLdObject, TextValueHasMapping).flatMap(mappingIriOption =>
+            ZIO.foreach(mappingIriOption) { mappingIri =>
+              MessageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser))
+            }
+          )
 
         comment <- RouteUtilZ.getComment(jsonLdObject)
         // Did the client submit text with or without standoff markup?
-        textValue: TextValueContentV2 = (maybeValueAsString, maybeTextValueAsXml, maybeMappingResponse) match {
-                                          case (Some(valueAsString), None, None) =>
-                                            // Text without standoff.
-                                            TextValueContentV2(
-                                              ontologySchema = ApiV2Complex,
-                                              maybeValueHasString = Some(valueAsString),
-                                              comment
-                                            )
-
-                                          case (None, Some(textValueAsXml), Some(mappingResponse)) =>
-                                            // Text with standoff. TODO: support submitting text with standoff as JSON-LD rather than as XML.
-
-                                            val textWithStandoffTags: TextWithStandoffTagsV2 =
-                                              StandoffTagUtilV2.convertXMLtoStandoffTagV2(
-                                                xml = textValueAsXml,
-                                                mapping = mappingResponse,
-                                                acceptStandoffLinksToClientIDs = false
-                                              )
-
-                                            TextValueContentV2(
-                                              ontologySchema = ApiV2Complex,
-                                              maybeValueHasString = Some(
-                                                stringFormatter.toSparqlEncodedString(
-                                                  textWithStandoffTags.text,
-                                                  throw BadRequestException("Text value contains invalid characters")
-                                                )
-                                              ),
-                                              valueHasLanguage = maybeValueHasLanguage,
-                                              standoff = textWithStandoffTags.standoffTagV2,
-                                              mappingIri = Some(mappingResponse.mappingIri),
-                                              mapping = Some(mappingResponse.mapping),
-                                              comment
-                                            )
-
-                                          case _ =>
-                                            throw BadRequestException(
-                                              s"Invalid combination of knora-api:valueHasString, knora-api:textValueAsXml, and/or knora-api:textValueHasMapping"
-                                            )
-                                        }
+        textValue <- getTextValue(
+                       maybeValueAsString,
+                       maybeTextValueAsXml,
+                       maybeValueHasLanguage,
+                       maybeMappingResponse,
+                       jsonLdObject
+                     )
 
       } yield textValue
   }

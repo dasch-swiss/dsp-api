@@ -5,8 +5,8 @@
 
 package org.knora.webapi.routing
 import akka.http.scaladsl.server.RequestContext
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg
 import zio._
-
 import java.net.URLDecoder
 import java.util.UUID
 
@@ -14,6 +14,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasComment
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.JsonLDObject
@@ -101,13 +102,16 @@ object RouteUtilZ {
   def getStringValueFromQuery(ctx: RequestContext, key: String): Option[String] = ctx.request.uri.query().get(key)
 
   // TODO move to a more appropriate place
-  def getComment(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, Option[String]] =
-    ZIO.serviceWithZIO[StringFormatter] { sf =>
-      ZIO.attempt(
-        jsonLDObject.maybeStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasComment,
-          (s, errorFun) => { sf.toSparqlEncodedString(s, errorFun) }
-        )
-      )
-    }
+  def getComment(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, Option[String]] = {
+    val key = ValueHasComment
+    jsonLDObject
+      .getString(key)
+      .mapError(BadRequestException(_))
+      .flatMap(ZIO.foreach(_)(value => RouteUtilZ.toSparqlEncodedString(value, s"Invalid $key: $value")))
+  }
+
+  def toSparqlEncodedString(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, String] =
+    ZIO.serviceWithZIO[StringFormatter](sf =>
+      ZIO.fromOption(sf.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
+    )
 }
