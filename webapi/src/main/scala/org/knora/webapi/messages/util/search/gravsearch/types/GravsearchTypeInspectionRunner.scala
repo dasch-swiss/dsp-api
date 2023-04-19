@@ -25,20 +25,10 @@ class GravsearchTypeInspectionRunner(
   messageRelay: MessageRelay,
   implicit val stringFormatter: StringFormatter
 ) {
-  private val inferTypes = true
 
   // If inference was requested, construct an inferring type inspector.
-  private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {
-    Some(
-      new InferringGravsearchTypeInspector(
-        nextInspector = None,
-        messageRelay,
-        queryTraverser
-      )
-    )
-  } else {
-    None
-  }
+  private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] =
+    Some(new InferringGravsearchTypeInspector(nextInspector = None, messageRelay, queryTraverser))
 
   // The pipeline of type inspectors.
   private val typeInspectionPipeline = new AnnotationReadingGravsearchTypeInspector(
