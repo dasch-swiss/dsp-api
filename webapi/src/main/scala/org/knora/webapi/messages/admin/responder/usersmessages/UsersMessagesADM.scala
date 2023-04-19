@@ -770,9 +770,12 @@ object UserIdentifierADM {
 
     if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
 
+    val userIrir = maybeIri.map(iri =>
+      sf.validateAndEscapeUserIri(iri).getOrElse(throw BadRequestException(s"Invalid user IRI $iri"))
+    )
+
     new UserIdentifierADM(
-      maybeIri =
-        sf.validateAndEscapeOptionalUserIri(maybeIri, throw BadRequestException(s"Invalid user IRI $maybeIri")),
+      maybeIri = userIrir,
       maybeEmail =
         sf.validateAndEscapeOptionalEmail(maybeEmail, throw BadRequestException(s"Invalid email $maybeEmail")),
       maybeUsername = sf.validateAndEscapeOptionalUsername(

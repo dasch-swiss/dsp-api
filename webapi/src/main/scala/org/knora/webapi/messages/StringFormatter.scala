@@ -2006,33 +2006,9 @@ class StringFormatter private (
   def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = // V2 / value objects
     toSparqlEncodedString(iri).getOrElse(errorFun)
 
-  def validateAndEscapeUserIri(iri: IRI): Validation[ValidationException, String] =
-    if (isKnoraUserIriStr(iri))
-      Validation
-        .fromOption(toSparqlEncodedString(iri))
-        .mapError(_ => ValidationException(s"Invalid IRI: $iri"))
-    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
-
-  /**
-   * Check that an optional string represents a valid user IRI.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    user IRI.
-   * @return the same optional string.
-   */
-  @deprecated("Use validateAndEscapeOptionalUserIri(Option[String]) instead.")
-  def validateAndEscapeOptionalUserIri(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[String] = // V2 / value objects
-    validateAndEscapeOptionalUserIri(maybeString).getOrElse(errorFun)
-
-  def validateAndEscapeOptionalUserIri(maybeString: Option[String]): Validation[ValidationException, Option[String]] =
-    maybeString match {
-      case None      => Validation.succeed(None)
-      case Some(iri) => validateAndEscapeUserIri(iri).map(Some(_))
-    }
+  def validateAndEscapeUserIri(iri: IRI): Option[String] =
+    if (isKnoraUserIriStr(iri)) toSparqlEncodedString(iri)
+    else None
 
   /**
    * Given an email address, checks if it is in a valid format.
