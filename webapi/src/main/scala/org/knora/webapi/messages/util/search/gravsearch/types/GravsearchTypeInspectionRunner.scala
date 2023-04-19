@@ -21,11 +21,11 @@ import org.knora.webapi.messages.util.search._
  * @param inferTypes    if true, use type inference.
  */
 class GravsearchTypeInspectionRunner(
-  inferTypes: Boolean = true,
   queryTraverser: QueryTraverser,
   messageRelay: MessageRelay,
   implicit val stringFormatter: StringFormatter
 ) {
+  private val inferTypes = true
 
   // If inference was requested, construct an inferring type inspector.
   private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {

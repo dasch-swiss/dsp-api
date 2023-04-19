@@ -73,7 +73,7 @@ final case class SearchResponderV2Live(
 
   // A Gravsearch type inspection runner.
   private val gravsearchTypeInspectionRunner =
-    new GravsearchTypeInspectionRunner(inferTypes = true, queryTraverser, messageRelay, stringFormatter)
+    new GravsearchTypeInspectionRunner(queryTraverser, messageRelay, stringFormatter)
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[SearchResponderRequestV2]

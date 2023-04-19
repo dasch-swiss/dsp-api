@@ -25,7 +25,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       qt <- ZIO.service[QueryTraverser]
       mr <- ZIO.service[MessageRelay]
       sf <- ZIO.service[StringFormatter]
-    } yield new GravsearchTypeInspectionRunner(inferTypes = true, qt, mr, sf)
+    } yield new GravsearchTypeInspectionRunner(qt, mr, sf)
 
     val countQueryZio = for {
       constructQuery       <- ZIO.attempt(GravsearchParser.parseQuery(query))
