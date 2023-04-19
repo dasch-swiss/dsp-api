@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
  */
-class InferringGravsearchTypeInspector(
+final case class InferringGravsearchTypeInspector(
   messageRelay: MessageRelay,
   queryTraverser: QueryTraverser
 ) extends LazyLogging {

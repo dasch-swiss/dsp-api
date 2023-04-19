@@ -1396,7 +1396,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
 
     "refine the inspected types for each typeableEntity" in {
       val typeInspectionRunner =
-        new InferringGravsearchTypeInspector(
+        InferringGravsearchTypeInspector(
           getService[MessageRelay],
           getService[QueryTraverser]
         )
@@ -1450,7 +1450,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
 
     "sanitize inconsistent resource types that only have knora-base:Resource as base class in common" in {
       val typeInspectionRunner =
-        new InferringGravsearchTypeInspector(
+        InferringGravsearchTypeInspector(
           getService[MessageRelay],
           getService[QueryTraverser]
         )
@@ -1530,7 +1530,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
 
     "sanitize inconsistent resource types that have common base classes other than knora-base:Resource" in {
       val typeInspectionRunner =
-        new InferringGravsearchTypeInspector(
+        InferringGravsearchTypeInspector(
           getService[MessageRelay],
           getService[QueryTraverser]
         )

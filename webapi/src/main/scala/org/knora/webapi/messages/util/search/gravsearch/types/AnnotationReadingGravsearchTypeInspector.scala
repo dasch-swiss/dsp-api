@@ -19,7 +19,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperty
 
 /**
- * A [[GravsearchTypeInspector]] that relies on Gravsearch type annotations. There are two kinds of type annotations:
+ * A inspector that relies on Gravsearch type annotations. There are two kinds of type annotations:
  *
  * 1. For a variable or IRI representing a resource or value, a type annotation is a triple whose subject is the variable
  * or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
@@ -28,7 +28,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
  * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
  * of object that is required by the property.
  */
-class AnnotationReadingGravsearchTypeInspector(queryTraverser: QueryTraverser) {
+final case class AnnotationReadingGravsearchTypeInspector(queryTraverser: QueryTraverser) {
 
   /**
    * Represents a Gravsearch type annotation.
