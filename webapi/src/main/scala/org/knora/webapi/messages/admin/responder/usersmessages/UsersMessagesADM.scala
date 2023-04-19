@@ -765,24 +765,22 @@ object UserIdentifierADM {
       maybeUsername
     ).flatten.size
 
-    // something needs to be set
     if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
-
     if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
 
-    val userIrir = maybeIri.map(iri =>
+    val userIri = maybeIri.map(iri =>
       sf.validateAndEscapeUserIri(iri).getOrElse(throw BadRequestException(s"Invalid user IRI $iri"))
     )
 
     val userEmail = maybeEmail.map(e => sf.validateEmail(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
+    val username = maybeUsername.map(u =>
+      sf.validateUsername(u).getOrElse(throw BadRequestException(s"Invalid username $maybeUsername"))
+    )
 
     new UserIdentifierADM(
-      maybeIri = userIrir,
+      maybeIri = userIri,
       maybeEmail = userEmail,
-      maybeUsername = sf.validateAndEscapeOptionalUsername(
-        maybeUsername,
-        throw BadRequestException(s"Invalid username $maybeUsername")
-      )
+      maybeUsername = username
     ) {}
   }
 }

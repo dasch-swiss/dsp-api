@@ -2054,24 +2054,6 @@ class StringFormatter private (
     UsernameRegex.findFirstIn(value).flatMap(toSparqlEncodedString)
 
   /**
-   * Check that an optional string represents a valid username.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    username.
-   * @return the same optional string.
-   */
-  @deprecated("Use validateAndEscapeOptionalUsername(Option[String]) instead.")
-  def validateAndEscapeOptionalUsername(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[String] = // V2 / value objects
-    maybeString.map(validateAndEscapeUsername(_).getOrElse(errorFun))
-
-  def validateAndEscapeOptionalUsername(maybeString: Option[String]): Option[String] =
-    maybeString.flatMap(validateAndEscapeUsername)
-
-  /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
    *
    * @param projectID      the shortcode of the project that the resource belongs to.
