@@ -230,7 +230,7 @@ final case class ProjectsResponderADMLive(
   }
 
   /**
-   * Gets all the projects and returns them as a [[ProjectADM]].
+   * Gets all the projects but not system projects and returns them as a [[ProjectADM]].
    *
    * @return all the projects as a [[ProjectADM]].
    *
@@ -239,8 +239,10 @@ final case class ProjectsResponderADMLive(
   override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
     projectService.findAll
       .flatMap(projects =>
-        if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
-        else { ZIO.fail(NotFoundException(s"No projects found")) }
+        if (projects.nonEmpty) {
+          val noSystemProjects: List[ProjectADM] = projects.filter(p => p.id.startsWith("http://rdfh.ch/projects/"))
+          ZIO.succeed(ProjectsGetResponseADM(noSystemProjects))
+        } else ZIO.fail(NotFoundException(s"No projects found"))
       )
 
   /**
