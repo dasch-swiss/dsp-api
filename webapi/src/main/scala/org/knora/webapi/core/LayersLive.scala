@@ -112,6 +112,7 @@ import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 
 object LayersLive {
 
@@ -130,6 +131,7 @@ object LayersLive {
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
+      with GravsearchTypeInspectionRunner
       with GravsearchTypeInspectionUtil
       with GroupsResponderADM
       with HttpServer
@@ -199,6 +201,7 @@ object LayersLive {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      GravsearchTypeInspectionRunner.layer,
       GravsearchTypeInspectionUtil.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,

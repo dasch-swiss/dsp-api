@@ -14,6 +14,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.search._
+import zio.ZLayer
 
 /**
  * Runs Gravsearch type inspection using one or more type inspector implementations.
@@ -170,4 +171,9 @@ final case class GravsearchTypeInspectionRunner(
       }
   }
 
+}
+
+object GravsearchTypeInspectionRunner {
+  val layer: ZLayer[QueryTraverser with MessageRelay with StringFormatter, Nothing, GravsearchTypeInspectionRunner] =
+    ZLayer.fromFunction(GravsearchTypeInspectionRunner.apply _)
 }
