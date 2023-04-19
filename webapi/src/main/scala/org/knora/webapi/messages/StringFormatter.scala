@@ -1848,13 +1848,10 @@ class StringFormatter private (
     namespace: String,
     elementLabel: String,
     errorFun: => Nothing
-  ): IRI = {
-    val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
-    ontologyIri.toString + "#" + elementLabel
-  }
+  ): IRI = xmlImportElementNameToInternalOntologyIriV1(namespace, elementLabel).getOrElse(errorFun)
 
-  def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String): IRI =
-    xmlImportNamespaceToInternalOntologyIriV1(namespace).toString + "#" + elementLabel
+  def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String): Option[IRI] =
+    xmlImportNamespaceToInternalOntologyIriV1(namespace).map(_.toString + "#" + elementLabel)
 
   /**
    * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. The prefix label
