@@ -58,7 +58,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
       for {
         proxy <- ZIO.service[Proxy]
       } yield new ProjectsResponderADM {
-        override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
+        override def projectsGetRequestADM(withSystemProjects: Boolean): Task[ProjectsGetResponseADM] =
           proxy(ProjectsGetRequestADM)
         override def getProjectFromCacheOrTriplestore(id: ProjectIdentifierADM): Task[Option[ProjectADM]] =
           proxy(GetProjectFromCacheOrTriplestore, id)

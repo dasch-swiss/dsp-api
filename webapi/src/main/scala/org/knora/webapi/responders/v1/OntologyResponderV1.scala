@@ -410,7 +410,7 @@ final case class OntologyResponderV1Live(
     userProfile: UserADM
   ): Task[NamedGraphsResponseV1] =
     for {
-      projectsResponse <- messageRelay.ask[ProjectsGetResponseADM](ProjectsGetRequestADM())
+      projectsResponse <- messageRelay.ask[ProjectsGetResponseADM](ProjectsGetRequestADM(withSystemProjects = true))
 
       readOntologyMetadataV2 <- messageRelay
                                   .ask[ReadOntologyMetadataV2](
