@@ -66,7 +66,10 @@ object RouteUtilZ {
       .succeed(iri)
       .filterOrFail(!_.isKnoraOntologyIri)(BadRequestException(s"Iri is a Knora ontology iri: $iri"))
 
-  def ensureIsResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
+  def ensureIsKnoraResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    ZIO.succeed(iri).filterOrFail(_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
+
+  def ensureIsNotKnoraResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO.succeed(iri).filterOrFail(!_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
 
   def ensureIsKnoraBuiltInDefinitionIri(iri: SmartIri): IO[BadRequestException, SmartIri] =

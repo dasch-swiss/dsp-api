@@ -44,7 +44,7 @@ final case class ValuesRouteV2()(
         val requestTask = for {
           resourceIri <- RouteUtilZ
                            .toSmartIri(resourceIriStr, s"Invalid resource IRI: $resourceIriStr")
-                           .flatMap(RouteUtilZ.ensureIsResourceIri)
+                           .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
           valueUuid <- RouteUtilZ.decodeUuid(valueUuidStr)
           versionDate <- ZIO.foreach(RouteUtilZ.getStringValueFromQuery(requestContext, "version")) { versionStr =>
                            ZIO

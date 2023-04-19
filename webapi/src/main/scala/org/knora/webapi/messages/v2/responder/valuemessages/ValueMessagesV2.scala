@@ -82,7 +82,7 @@ object CreateValueRequestV2 {
         // Get the IRI of the resource that the value is to be created in.
         resourceIri <- ZIO
                          .attempt(jsonLDDocument.requireIDAsKnoraDataIri)
-                         .flatMap(RouteUtilZ.ensureIsResourceIri)
+                         .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
 
         // Get the resource class.
         resourceClassIri <- ZIO.attempt(jsonLDDocument.requireTypeAsKnoraTypeIri)
@@ -90,29 +90,28 @@ object CreateValueRequestV2 {
         // Get the resource property and the value to be created.
         createValue <-
           jsonLDDocument.requireResourcePropertyValue match {
-            case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+            case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
               for {
-                valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser)
+                valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
 
                 // Get and validate the custom value IRI if provided.
                 maybeCustomValueIri <- ZIO.attempt(
-                                         jsonLDObject.maybeIDAsKnoraDataIri.map { definedNewIri =>
+                                         jsonLdObject.maybeIDAsKnoraDataIri.map { definedNewIri =>
                                            stringFormatter.validateCustomValueIri(
-                                             customValueIri = definedNewIri,
-                                             projectCode = resourceIri.getProjectCode.get,
-                                             resourceID = resourceIri.getResourceID.get
+                                             definedNewIri,
+                                             resourceIri.getProjectCode.get,
+                                             resourceIri.getResourceID.get
                                            )
                                          }
                                        )
 
                 // Get the custom value UUID if provided.
-                maybeCustomUUID <-
-                  ZIO.attempt(jsonLDObject.maybeUUID(ValueHasUUID))
+                maybeCustomUUID <- ZIO.attempt(jsonLdObject.maybeUUID(ValueHasUUID))
 
                 // Get the value's creation date.
                 // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
                 maybeCreationDate <- ZIO.attempt(
-                                       jsonLDObject
+                                       jsonLdObject
                                          .maybeDatatypeValueInObject(
                                            key = ValueCreationDate,
                                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
@@ -120,7 +119,7 @@ object CreateValueRequestV2 {
                                              ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
                                          )
                                          .orElse(
-                                           jsonLDObject
+                                           jsonLdObject
                                              .maybeDatatypeValueInObject(
                                                key = CreationDate,
                                                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
@@ -130,12 +129,10 @@ object CreateValueRequestV2 {
                                          )
                                      )
 
-                maybePermissions <- ZIO.attempt(
-                                      jsonLDObject.maybeStringWithValidation(
-                                        HasPermissions,
-                                        stringFormatter.toSparqlEncodedString
-                                      )
-                                    )
+                maybePermissions <-
+                  ZIO.attempt(
+                    jsonLdObject.maybeStringWithValidation(HasPermissions, stringFormatter.toSparqlEncodedString)
+                  )
               } yield CreateValueV2(
                 resourceIri = resourceIri.toString,
                 resourceClassIri = resourceClassIri,
@@ -299,7 +296,7 @@ object UpdateValueRequestV2 {
         // Get the IRI of the resource that the value is to be created in.
         resourceIri <- ZIO
                          .attempt(jsonLdDocument.requireIDAsKnoraDataIri)
-                         .flatMap(RouteUtilZ.ensureIsResourceIri)
+                         .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
         // Get the resource class.
         resourceClassIri <- ZIO.attempt(jsonLdDocument.requireTypeAsKnoraTypeIri)
 
