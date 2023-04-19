@@ -1970,14 +1970,6 @@ class StringFormatter private (
   def validateProjectShortcode(shortcode: String): Option[String] =
     ProjectIDRegex.findFirstIn(shortcode.toUpperCase)
 
-  @deprecated("Use escapeOptionalString(Option[String]) instead.")
-  def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = // --
-    // TODO: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible. (depends on toSparqlEncodedString())
-    maybeString.map(toSparqlEncodedString).getOrElse(errorFun)
-
-  def escapeOptionalString(maybeString: Option[String]): Option[String] =
-    maybeString.flatMap(toSparqlEncodedString)
-
   /**
    * Given the group IRI, checks if it is in a valid format.
    *

@@ -110,15 +110,19 @@ case class ChangeProjectApiRequestADM(
           .getOrElse(throw BadRequestException(s"The supplied short name: '$v' is not valid."))
       )
 
-    val validatedLongName: Option[String] = stringFormatter.escapeOptionalString(
-      longname,
-      errorFun = throw BadRequestException(s"The supplied longname: '$longname' is not valid.")
-    )
+    val validatedLongName: Option[String] =
+      longname.map(l =>
+        stringFormatter
+          .toSparqlEncodedString(l)
+          .getOrElse(throw BadRequestException(s"The supplied longname: '$l' is not valid."))
+      )
 
-    val validatedLogo: Option[String] = stringFormatter.escapeOptionalString(
-      logo,
-      errorFun = throw BadRequestException(s"The supplied logo: '$logo' is not valid.")
-    )
+    val validatedLogo: Option[String] =
+      logo.map(l =>
+        stringFormatter
+          .toSparqlEncodedString(l)
+          .getOrElse(throw BadRequestException(s"The supplied logo: '$l' is not valid."))
+      )
 
     val validatedDescriptions: Option[Seq[V2.StringLiteralV2]] = description match {
       case Some(descriptions: Seq[V2.StringLiteralV2]) =>
