@@ -2626,7 +2626,10 @@ final case class ValuesResponderV2Live(
         maybeCustomIri match {
           case Some(customIri: SmartIri) =>
             // Yes. Get the UUID from the given value IRI
-            val endingUUID: UUID = stringFormatter.base64DecodeUuid(customIri.toString.split("/").last)
+            val endingUUID: UUID = stringFormatter
+              .base64DecodeUuid(customIri.toString.split("/").last)
+              .toOption
+              .getOrElse(throw BadRequestException(s"Invalid UUID in IRI: $customIri"))
             endingUUID
           case None => UUID.randomUUID
         }

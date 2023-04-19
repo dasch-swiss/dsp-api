@@ -47,6 +47,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
+import dsp.valueobjects.Uuid
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -2206,11 +2207,12 @@ class StringFormatter private (
    * @param base64Uuid the Base64-encoded UUID to be decoded.
    * @return the equivalent [[UUID]].
    */
-  def base64DecodeUuid(base64Uuid: String): UUID = {
-    val bytes      = base64Decoder.decode(base64Uuid)
-    val byteBuffer = ByteBuffer.wrap(bytes)
-    new UUID(byteBuffer.getLong, byteBuffer.getLong)
-  }
+  def base64DecodeUuid(base64Uuid: String): Try[UUID] =
+    Try {
+      val bytes      = base64Decoder.decode(base64Uuid)
+      val byteBuffer = ByteBuffer.wrap(bytes)
+      new UUID(byteBuffer.getLong, byteBuffer.getLong)
+    }
 
   /**
    * Validates and decodes a Base64-encoded UUID.
@@ -2223,14 +2225,8 @@ class StringFormatter private (
   def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = // V2 / value objects
     validateBase64EncodedUuid(base64Uuid).getOrElse(errorFun)
 
-  def validateBase64EncodedUuid(base64Uuid: String): Validation[Throwable, UUID] =
-    Validation.fromTry(
-      Try(base64DecodeUuid(base64Uuid))
-        .fold(
-          _ => Failure(ValidationException(s"String: '$base64Uuid' is not a valid base 64 UUID.")),
-          uuid => Success(uuid)
-        )
-    )
+  def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
+    base64DecodeUuid(base64Uuid).toOption
 
   /**
    * Encodes a [[UUID]] as a string in one of two formats:
@@ -2250,38 +2246,11 @@ class StringFormatter private (
     }
 
   /**
-   * Calls `decodeUuidWithErr`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
+   * Calls `base64DecodeUuid`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
    */
+  @deprecated("It is still throwing!")
   def decodeUuid(uuidStr: String): UUID =
-    decodeUuidWithErr(uuidStr, throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
-
-  /**
-   * Decodes a string representing a UUID in one of two formats:
-   *
-   * - The canonical 36-character format.
-   * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
-   *
-   * Shorter strings are padded with leading zeroes to 22 characters and parsed in Base64 format
-   * (this is non-reversible, and is needed only for working with test data).
-   *
-   * @param uuidStr  the string to be decoded.
-   * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return the decoded [[UUID]].
-   */
-  @deprecated("Use decodeUuidWithErr(String) instead.")
-  def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID = // V2 / value objects
-    decodeUuidWithErr(uuidStr).getOrElse(errorFun)
-
-  def decodeUuidWithErr(uuidStr: String): Validation[Throwable, UUID] = // V2 / value objects
-    if (uuidStr.length == CanonicalUuidLength) {
-      Validation.succeed(UUID.fromString(uuidStr))
-    } else if (uuidStr.length == Base64UuidLength) {
-      Validation.succeed(base64DecodeUuid(uuidStr))
-    } else if (uuidStr.length < Base64UuidLength) {
-      Validation.succeed(base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse))
-    } else {
-      Validation.fail(InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
-    }
+    base64DecodeUuid(uuidStr).getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.

@@ -1106,8 +1106,8 @@ class StringFormatterSpec extends CoreSpec {
     "convert a UUID to Base-64 encoding and back again" in {
       val uuid              = UUID.randomUUID
       val base64EncodedUuid = stringFormatter.base64EncodeUuid(uuid)
-      val base4DecodedUuid  = stringFormatter.base64DecodeUuid(base64EncodedUuid)
-      uuid should be(base4DecodedUuid)
+      val base64DecodedUuid = stringFormatter.base64DecodeUuid(base64EncodedUuid)
+      assert(base64DecodedUuid.toOption.contains(uuid))
     }
 
     "return TRUE for IRIs BEOL project IRI and other which contain UUID version 4 or 5, otherwise return FALSE" in {
