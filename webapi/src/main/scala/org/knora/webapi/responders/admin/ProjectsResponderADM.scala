@@ -248,12 +248,6 @@ final case class ProjectsResponderADMLive(
             ZIO.succeed(ProjectsGetResponseADM(noSystemProjects))
           }
         }
-      // if (projects.nonEmpty && !withSystemProjects) {
-      //   val noSystemProjects: List[ProjectADM] = projects.filter(p => p.id.startsWith("http://rdfh.ch/projects/"))
-      //   ZIO.succeed(ProjectsGetResponseADM(noSystemProjects))
-      // } else if (projects.nonEmpty) {
-      //   ZIO.succeed(ProjectsGetResponseADM(projects))
-      // } else ZIO.fail(NotFoundException(s"No projects found"))
       )
 
   /**
