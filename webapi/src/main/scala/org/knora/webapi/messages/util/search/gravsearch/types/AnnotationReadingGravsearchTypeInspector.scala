@@ -28,7 +28,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
  * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
  * of object that is required by the property.
  */
-final case class AnnotationReadingGravsearchTypeInspector(queryTraverser: QueryTraverser) {
+final case class AnnotationReadingGravsearchTypeInspector(private val queryTraverser: QueryTraverser) {
 
   /**
    * Represents a Gravsearch type annotation.
