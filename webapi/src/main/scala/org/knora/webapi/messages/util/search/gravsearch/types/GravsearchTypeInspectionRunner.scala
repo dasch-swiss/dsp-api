@@ -17,13 +17,11 @@ import org.knora.webapi.messages.util.search._
 
 /**
  * Runs Gravsearch type inspection using one or more type inspector implementations.
- *
- * @param inferTypes    if true, use type inference.
  */
-class GravsearchTypeInspectionRunner(
-  queryTraverser: QueryTraverser,
-  messageRelay: MessageRelay,
-  implicit val stringFormatter: StringFormatter
+final case class GravsearchTypeInspectionRunner(
+  private val queryTraverser: QueryTraverser,
+  private val messageRelay: MessageRelay,
+  implicit private val stringFormatter: StringFormatter
 ) {
 
   // If inference was requested, construct an inferring type inspector.
