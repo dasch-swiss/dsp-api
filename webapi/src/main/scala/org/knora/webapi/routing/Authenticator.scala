@@ -25,11 +25,9 @@ import zio.macros.accessible
 import java.util.Base64
 import scala.util.Failure
 import scala.util.Success
-import scala.util.Try
 
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
-import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -170,12 +168,10 @@ trait Authenticator {
 
 object Authenticator {
 
-  val BAD_CRED_PASSWORD_MISMATCH  = "bad credentials: user found, but password did not match"
-  val BAD_CRED_USER_NOT_FOUND     = "bad credentials: user not found"
-  val BAD_CRED_EMAIL_NOT_SUPPLIED = "bad credentials: no email supplied"
-  val BAD_CRED_NONE_SUPPLIED      = "bad credentials: none found"
-  val BAD_CRED_USER_INACTIVE      = "bad credentials: user inactive"
-  val BAD_CRED_NOT_VALID          = "bad credentials: not valid"
+  val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
+  val BAD_CRED_NONE_SUPPLIED  = "bad credentials: none found"
+  val BAD_CRED_USER_INACTIVE  = "bad credentials: user inactive"
+  val BAD_CRED_NOT_VALID      = "bad credentials: not valid"
 
   val AUTHENTICATION_INVALIDATION_CACHE_NAME = "authenticationInvalidationCache"
 }
@@ -855,7 +851,7 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
    * @param token  the token to be decoded.
    * @return the token's header and claim, or `None` if the token is invalid.
    */
-  def decodeToken(token: String): Option[(JwtHeader, JwtClaim)] =
+  private def decodeToken(token: String): Option[(JwtHeader, JwtClaim)] =
     JwtSprayJson.decodeAll(token, secret, Seq(JwtAlgorithm.HS256)) match {
       case Success((header: JwtHeader, claim: JwtClaim, _)) =>
         val missingRequiredContent: Boolean = Set(
@@ -869,12 +865,7 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
         ).contains(false)
 
         if (!missingRequiredContent) {
-          Try(
-            stringFormatter.validateAndEscapeIri(
-              claim.subject.get,
-              throw BadRequestException("Invalid user IRI in JWT")
-            )
-          ).fold(_ => None, _ => Some(header, claim))
+          claim.subject.flatMap(iri => stringFormatter.validateAndEscapeIri(iri).toOption.map(_ => (header, claim)))
         } else {
           logger.debug("Missing required content in JWT")
           None

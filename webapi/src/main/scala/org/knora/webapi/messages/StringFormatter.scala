@@ -2686,10 +2686,12 @@ class StringFormatter private (
    *
    * @param iri the IRI to be checked.
    */
+  @deprecated("Use isExternalOntologyName(SmartIri) instead")
   def checkExternalOntologyName(iri: SmartIri): Unit =
-    if (iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)) {
-      throw BadRequestException(s"Internal ontology <$iri> cannot be served")
-    }
+    if (isKnoraOntologyIri(iri)) throw BadRequestException(s"Internal ontology <$iri> cannot be served")
+
+  def isKnoraOntologyIri(iri: SmartIri): Boolean =
+    iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)
 
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(

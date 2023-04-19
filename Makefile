@@ -65,6 +65,10 @@ docker-build: docker-build-dsp-api-image docker-build-sipi-image ## build and pu
 .PHONY: docker-publish
 docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image ## publish all Docker images to Dockerhub
 
+.PHONY: docker-image-tag
+docker-image-tag: ## prints the docker image tag
+	@sbt -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag"
+
 #################################
 ## Docker-Compose targets
 #################################
@@ -289,6 +293,11 @@ init-db-test-from-prod: db_prod_dump.trig init-db-test-empty ## init local datab
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_prod_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
+.PHONY: init-db-test-from-dev
+init-db-test-from-dev: ## init local database with data from dev. Use as `make init-db-test-from-dev PW=database-password`
+	@echo $@
+	${MAKE} init-db-from-env ENV=db.dev.dasch.swiss
+
 .PHONY: init-db-test-from-ls-test-server
 init-db-test-from-ls-test-server: db_ls_test_server_dump.trig init-db-test-from-ls-test-server-trig-file ## init local database with data from ls-test-server
 
@@ -308,6 +317,8 @@ db-dump: ## Dump data from an env. Use as `make db_dump PW=database-password ENV
 init-db-from-dump-file: ## init local database from a specified dump file. Use as `make init-db-from-dump-file DUMP=some-dump-file.trig`
 	@echo $@
 	@echo dump file: ${DUMP}
+	@docker compose -f docker-compose.yml up -d db
+	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/${DUMP}" -u "admin:test" "http://localhost:3030/knora-test"
 

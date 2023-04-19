@@ -9,11 +9,13 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import zio._
+import zio.prelude.Validation
 
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -103,27 +105,53 @@ object RouteUtilV2 {
    * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
    * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
    *
-   * @param requestContext the akka-http [[RequestContext]].
+   * @param ctx the akka-http [[RequestContext]].
    * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
    */
-  def getOntologySchema(requestContext: RequestContext): ApiV2Schema = {
-    def nameToSchema(schemaName: String): ApiV2Schema =
+  def getOntologySchema(ctx: RequestContext): IO[BadRequestException, ApiV2Schema] = {
+    def nameToSchema(schemaName: String): IO[BadRequestException, ApiV2Schema] =
       schemaName match {
-        case SIMPLE_SCHEMA_NAME  => ApiV2Simple
-        case COMPLEX_SCHEMA_NAME => ApiV2Complex
-        case _                   => throw BadRequestException(s"Unrecognised ontology schema name: $schemaName")
+        case SIMPLE_SCHEMA_NAME  => ZIO.succeed(ApiV2Simple)
+        case COMPLEX_SCHEMA_NAME => ZIO.succeed(ApiV2Complex)
+        case _                   => ZIO.fail(BadRequestException(s"Unrecognised ontology schema name: $schemaName"))
+      }
+    def fromQueryParams = ctx.request.uri.query().get(SCHEMA_PARAM).map(nameToSchema)
+    def fromHeaders     = ctx.request.headers.find(_.lowercaseName == SCHEMA_HEADER).map(h => nameToSchema(h.value))
+    fromQueryParams.orElse(fromHeaders).getOrElse(ZIO.succeed(ApiV2Complex))
+  }
+
+  /**
+   * Gets the type of standoff rendering that should be used when returning text with standoff.
+   * The name of the standoff rendering can be specified either in the HTTP header [[MARKUP_HEADER]]
+   * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
+   * default of [[MarkupAsXml]] is returned.
+   *
+   * @param requestContext the akka-http [[RequestContext]].
+   * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
+   *         in the request.
+   */
+  private def getStandoffRendering(
+    requestContext: RequestContext
+  ): Validation[BadRequestException, Option[MarkupRendering]] = {
+    def nameToStandoffRendering(standoffRenderingName: String): Validation[BadRequestException, MarkupRendering] =
+      standoffRenderingName match {
+        case MARKUP_XML      => Validation.succeed(MarkupAsXml)
+        case MARKUP_STANDOFF => Validation.succeed(MarkupAsStandoff)
+        case _               => Validation.fail(BadRequestException(s"Unrecognised standoff rendering: $standoffRenderingName"))
       }
 
     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
-    params.get(SCHEMA_PARAM) match {
-      case Some(schemaParam) => nameToSchema(schemaParam)
+    params.get(MARKUP_PARAM) match {
+      case Some(schemaParam) => nameToStandoffRendering(schemaParam).map(Some(_))
 
       case None =>
-        requestContext.request.headers.find(_.lowercaseName == SCHEMA_HEADER) match {
-          case Some(header) => nameToSchema(header.value)
-          case None         => ApiV2Complex
-        }
+        requestContext.request.headers
+          .find(_.lowercaseName == MARKUP_HEADER)
+          .map(_.value)
+          .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
+            nameToStandoffRendering(_).map(Some(_))
+          )
     }
   }
 
@@ -137,36 +165,29 @@ object RouteUtilV2 {
    * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
    *         in the request.
    */
-  private def getStandoffRendering(requestContext: RequestContext): Option[MarkupRendering] = {
-    def nameToStandoffRendering(standoffRenderingName: String): MarkupRendering =
-      standoffRenderingName match {
-        case MARKUP_XML      => MarkupAsXml
-        case MARKUP_STANDOFF => MarkupAsStandoff
-        case _               => throw BadRequestException(s"Unrecognised standoff rendering: $standoffRenderingName")
-      }
+  @deprecated("Use getStandoffRendering(requestContext: RequestContext) instead")
+  private def getStandoffRenderingUnsafe(requestContext: RequestContext): Option[MarkupRendering] =
+    getStandoffRendering(requestContext).fold(
+      errors => throw errors.head,
+      markupRendering => markupRendering
+    )
 
-    val params: Map[String, String] = requestContext.request.uri.query().toMap
+  @deprecated("use getJsonLDRendering() instead")
+  private def getJsonLDRenderingUnsafe(requestContext: RequestContext): Option[JsonLDRendering] =
+    getJsonLDRendering(requestContext).fold(
+      errors => throw errors.head,
+      jsonLDRendering => jsonLDRendering
+    )
 
-    params.get(MARKUP_PARAM) match {
-      case Some(schemaParam) => Some(nameToStandoffRendering(schemaParam))
-
-      case None =>
-        requestContext.request.headers.find(_.lowercaseName == MARKUP_HEADER).map { header =>
-          nameToStandoffRendering(header.value)
-        }
-    }
-  }
-
-  private def getJsonLDRendering(requestContext: RequestContext): Option[JsonLDRendering] = {
-    def nameToJsonLDRendering(jsonLDRenderingName: String): JsonLDRendering =
-      jsonLDRenderingName match {
-        case JSON_LD_RENDERING_FLAT         => FlatJsonLD
-        case JSON_LD_RENDERING_HIERARCHICAL => HierarchicalJsonLD
-        case _                              => throw BadRequestException(s"Unrecognised JSON-LD rendering: $jsonLDRenderingName")
-      }
-
-    requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map { header =>
-      nameToJsonLDRendering(header.value)
+  private def getJsonLDRendering(
+    requestContext: RequestContext
+  ): Validation[BadRequestException, Option[JsonLDRendering]] = {
+    val header: Option[String] =
+      requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map(_.value)
+    header.fold[Validation[BadRequestException, Option[JsonLDRendering]]](Validation.succeed(None)) {
+      case JSON_LD_RENDERING_FLAT         => Validation.succeed(Some(FlatJsonLD))
+      case JSON_LD_RENDERING_HIERARCHICAL => Validation.succeed(Some(HierarchicalJsonLD))
+      case header                         => Validation.fail(BadRequestException(s"Unrecognised JSON-LD rendering: $header"))
     }
   }
 
@@ -176,11 +197,24 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
-  def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] =
-    Set(
-      getStandoffRendering(requestContext),
-      getJsonLDRendering(requestContext)
-    ).flatten
+  @deprecated("use getSchemaOptions() instead")
+  def getSchemaOptionsUnsafe(requestContext: RequestContext): Set[SchemaOption] =
+    getSchemaOptions(requestContext).fold(
+      errors => throw errors.head,
+      schemaOptions => schemaOptions
+    )
+
+  /**
+   * Gets the schema options submitted in the request.
+   *
+   * @param requestContext the request context.
+   * @return the set of schema options submitted in the request, including default options.
+   */
+  def getSchemaOptions(requestContext: RequestContext): Validation[BadRequestException, Set[SchemaOption]] =
+    for {
+      standoffRendering <- getStandoffRendering(requestContext)
+      jsonLDRendering   <- getJsonLDRendering(requestContext)
+    } yield Set(standoffRendering, jsonLDRendering).flatten
 
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
@@ -188,11 +222,28 @@ object RouteUtilV2 {
    * @param requestContext the akka-http [[RequestContext]].
    * @return the specified project IRI, or [[None]] if no project header was included in the request.
    */
-  def getProject(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] =
+  @deprecated("Use getProjectIri instead")
+  def getProjectIriUnsafe(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] =
     requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map { header =>
       val projectIriStr = header.value
       projectIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $projectIriStr"))
     }
+
+  /**
+   * Gets the project IRI specified in a Knora-specific HTTP header.
+   *
+   * @param requestContext the akka-http [[RequestContext]].
+   * @return the specified project IRI, or [[None]] if no project header was included in the request.
+   *         fails with a [[BadRequestException]] if the project IRI is invalid.
+   */
+  def getProjectIri(requestContext: RequestContext): ZIO[StringFormatter, BadRequestException, Option[SmartIri]] = {
+    val maybeProjectIriStr = requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value())
+    ZIO.serviceWithZIO[StringFormatter] { sf =>
+      ZIO.foreach(maybeProjectIriStr)(iri =>
+        ZIO.attempt(sf.toSmartIri(iri)).orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
+      )
+    }
+  }
 
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
@@ -203,9 +254,9 @@ object RouteUtilV2 {
    * @param stringFormatter An instance of the [[StringFormatter]].
    * @return The [[SmartIri]] contains the specified project IRI.
    */
-  @throws(classOf[BadRequestException])
-  def getRequiredProjectFromHeader(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
-    getProject(ctx).getOrElse(
+  @deprecated("Use getRequiredProjectFromHeader(ctx: RequestContext) instead")
+  def getRequiredProjectFromHeaderUnsafe(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
+    getProjectIriUnsafe(ctx).getOrElse(
       throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
     )
 
@@ -225,26 +276,26 @@ object RouteUtilV2 {
     targetSchema: OntologySchema = ApiV2Complex,
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[MessageRelay with AppConfig]): Future[RouteResult] =
-    runRdfRouteZ(ZIO.fromFuture(_ => requestMessageF), requestContext, targetSchema, schemaOptionsOption)
+    runRdfRouteZ(ZIO.fromFuture(_ => requestMessageF), requestContext, ZIO.succeed(targetSchema), schemaOptionsOption)
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
    *
-   * @param requestZio           A Task containing a [[KnoraRequestV2]] message that should be evaluated.
-   * @param requestContext       The akka-http [[RequestContext]].
-   * @param targetSchema         The API schema that should be used in the response, default is [[ApiV2Complex]].
-   * @param schemaOptionsOption  The schema options that should be used when processing the request.
-   *                             Uses RouteUtilV2.getSchemaOptions if not present.
+   * @param requestZio          A Task containing a [[KnoraRequestV2]] message that should be evaluated.
+   * @param requestContext      The akka-http [[RequestContext]].
+   * @param targetSchemaTask    The API schema that should be used in the response, default is [[ApiV2Complex]].
+   * @param schemaOptionsOption The schema options that should be used when processing the request.
+   *                            Uses RouteUtilV2.getSchemaOptions if not present.
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runRdfRouteZ[R](
     requestZio: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
-    targetSchema: OntologySchema = ApiV2Complex,
+    targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with MessageRelay with AppConfig]): Future[RouteResult] = {
     val responseZio = requestZio.flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
-    completeResponse(responseZio, requestContext, targetSchema, schemaOptionsOption)
+    completeResponse(responseZio, requestContext, targetSchemaTask, schemaOptionsOption)
   }
 
   /**
@@ -254,7 +305,7 @@ object RouteUtilV2 {
    *
    * @param responseTask         A [[Task]] containing a [[KnoraResponseV2]] message that will be run unsafe.
    * @param requestContext       The akka-http [[RequestContext]].
-   * @param targetSchema         The API schema that should be used in the response, default is ApiV2Complex.
+   * @param targetSchemaTask     The API schema that should be used in the response, default is ApiV2Complex.
    * @param schemaOptionsOption  The schema options that should be used when processing the request.
    *                             Uses RouteUtilV2.getSchemaOptions if not present.
    *
@@ -267,19 +318,20 @@ object RouteUtilV2 {
   def completeResponse[R](
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
     requestContext: RequestContext,
-    targetSchema: OntologySchema = ApiV2Complex,
+    targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
-      schemaOptions    <- ZIO.attempt(schemaOptionsOption.getOrElse(getSchemaOptions(requestContext)))
-      appConfig        <- ZIO.service[AppConfig]
-      knoraResponse    <- responseTask
-      responseMediaType = chooseRdfMediaTypeForResponse(requestContext)
-      rdfFormat         = RdfFormat.fromMediaType(RdfMediaTypes.toMostSpecificMediaType(responseMediaType))
-      contentType       = RdfMediaTypes.toUTF8ContentType(responseMediaType)
-      content: String   = knoraResponse.format(rdfFormat, targetSchema, schemaOptions, appConfig)
-      response          = HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, content))
-      routeResult      <- ZIO.fromFuture(_ => requestContext.complete(response))
+      targetSchema      <- targetSchemaTask
+      schemaOptions     <- ZIO.fromOption(schemaOptionsOption).orElse(getSchemaOptions(requestContext).toZIO)
+      appConfig         <- ZIO.service[AppConfig]
+      knoraResponse     <- responseTask
+      responseMediaType <- chooseRdfMediaTypeForResponse(requestContext)
+      rdfFormat          = RdfFormat.fromMediaType(RdfMediaTypes.toMostSpecificMediaType(responseMediaType))
+      contentType        = RdfMediaTypes.toUTF8ContentType(responseMediaType)
+      content: String    = knoraResponse.format(rdfFormat, targetSchema, schemaOptions, appConfig)
+      response           = HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, content))
+      routeResult       <- ZIO.fromFuture(_ => requestContext.complete(response))
     } yield routeResult)
 
   /**
@@ -287,14 +339,12 @@ object RouteUtilV2 {
    *
    * @param requestTask          a [[Task]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param targetSchema         the API schema that should be used in the response.
    *
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runTEIXMLRoute[R](
     requestTask: ZIO[R, Throwable, KnoraRequestV2],
-    requestContext: RequestContext,
-    targetSchema: ApiV2Schema
+    requestContext: RequestContext
   )(implicit runtime: Runtime[R with MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture {
       for {
@@ -306,13 +356,55 @@ object RouteUtilV2 {
       } yield completed
     }
 
+  private def extractMediaTypeFromHeaderItem(
+    headerValueItem: String,
+    headerValue: String
+  ): Task[Option[MediaRange.One]] = {
+    val mediaRangeParts: Array[String] = headerValueItem.split(';').map(_.trim)
+
+    // Get the qValue, if provided; it defaults to 1.
+    val qValue: Float = mediaRangeParts.tail.flatMap { param =>
+      param.split('=').map(_.trim) match {
+        case Array("q", qValueStr) => catching(classOf[NumberFormatException]).opt(qValueStr.toFloat)
+        case _                     => None // Ignore other parameters.
+      }
+    }.headOption
+      .getOrElse(1)
+
+    for {
+      mediaTypeStr <- ZIO
+                        .fromOption(mediaRangeParts.headOption)
+                        .orElseFail(
+                          BadRequestException(s"Invalid Accept header: $headerValue")
+                        )
+      maybeMediaType = RdfMediaTypes.registry.get(mediaTypeStr) match {
+                         case Some(mediaType: MediaType) => Some(mediaType)
+                         case _                          => None // Ignore non-RDF media types.
+                       }
+      mediaRange = maybeMediaType.map(mediaType => MediaRange.One(mediaType, qValue))
+    } yield mediaRange
+
+  }
+
+  /**
+   * Completes the HTTP request in the [[RequestContext]] by _unsafely_ running the ZIO.
+   * @param ctx The akka-http [[RequestContext]].
+   * @param task The ZIO to run.
+   * @param runtime The [[zio.Runtime]] used for executing the ZIO.
+   * @tparam R The requirements for the ZIO, must be present in the [[zio.Runtime]].
+   * @return A [[Future]] containing the [[RouteResult]] for Akka HTTP.
+   */
+  def complete[R](ctx: RequestContext, task: ZIO[R, Throwable, HttpResponse])(implicit
+    runtime: Runtime[R]
+  ): Future[RouteResult] = ctx.complete(UnsafeZioRun.runToFuture(task))
+
   /**
    * Chooses an RDF media type for the response, using content negotiation as per [[https://tools.ietf.org/html/rfc7231#section-5.3.2]].
    *
    * @param requestContext the request context.
    * @return an RDF media type.
    */
-  private def chooseRdfMediaTypeForResponse(requestContext: RequestContext): MediaType.NonBinary = {
+  private def chooseRdfMediaTypeForResponse(requestContext: RequestContext): Task[MediaType.NonBinary] = {
     // Get the client's HTTP Accept header, if provided.
     val maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
 
@@ -320,47 +412,22 @@ object RouteUtilV2 {
       case Some(acceptHeader) =>
         // Parse the value of the accept header, filtering out non-RDF media types, and sort the results
         // in reverse order by q value.
-        val acceptMediaTypes: Array[MediaType.NonBinary] = acceptHeader.value
-          .split(',')
-          .flatMap { headerValueItem =>
-            val mediaRangeParts: Array[String] = headerValueItem.split(';').map(_.trim)
-            val mediaTypeStr: String = mediaRangeParts.headOption.getOrElse(
-              throw BadRequestException(s"Invalid Accept header: ${acceptHeader.value}")
-            )
+        val parts: Array[String] = acceptHeader.value.split(',')
+        for {
+          mediaRanges <-
+            ZIO
+              .foreach(parts)(headerValueItem => extractMediaTypeFromHeaderItem(headerValueItem, acceptHeader.value))
+              .map(_.flatten)
+          mediaTypes =
+            mediaRanges
+              .sortBy(_.qValue)
+              .reverse
+              .map(_.mediaType)
+              .collect { case nonBinary: MediaType.NonBinary => nonBinary }
+          highestRankingMediaType = mediaTypes.headOption.getOrElse(RdfMediaTypes.`application/ld+json`)
+        } yield highestRankingMediaType
 
-            // Get the qValue, if provided; it defaults to 1.
-            val qValue: Float = mediaRangeParts.tail.flatMap { param =>
-              param.split('=').map(_.trim) match {
-                case Array("q", qValueStr) => catching(classOf[NumberFormatException]).opt(qValueStr.toFloat)
-                case _                     => None // Ignore other parameters.
-              }
-            }.headOption
-              .getOrElse(1)
-
-            val maybeMediaType: Option[MediaType] = RdfMediaTypes.registry.get(mediaTypeStr) match {
-              case Some(mediaType: MediaType) => Some(mediaType)
-              case _                          => None // Ignore non-RDF media types.
-            }
-
-            maybeMediaType.map(mediaType => MediaRange.One(mediaType, qValue))
-          }
-          .sortBy(_.qValue)
-          .reverse
-          .map(_.mediaType)
-          .collect {
-            // All RDF media types are non-binary.
-            case nonBinary: MediaType.NonBinary => nonBinary
-          }
-
-        // Select the highest-ranked supported media type.
-        acceptMediaTypes.headOption match {
-          case Some(requested) => requested
-          case None            =>
-            // If there isn't one, use JSON-LD.
-            RdfMediaTypes.`application/ld+json`
-        }
-
-      case None => RdfMediaTypes.`application/ld+json`
+      case None => ZIO.succeed(RdfMediaTypes.`application/ld+json`)
     }
   }
 }
