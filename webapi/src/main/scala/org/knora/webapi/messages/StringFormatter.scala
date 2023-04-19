@@ -1976,29 +1976,9 @@ class StringFormatter private (
    * @param iri the group's IRI.
    * @return the IRI of the list.
    */
-  @deprecated("Use validateGroupIri(IRI) instead.")
-  def validateGroupIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    validateGroupIri(iri).getOrElse(errorFun)
-
   def validateGroupIri(iri: IRI): Validation[ValidationException, IRI] =
     if (isKnoraGroupIriStr(iri)) Validation.succeed(iri)
     else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
-
-  /**
-   * Given the optional group IRI, checks if it is in a valid format.
-   *
-   * @param maybeIri the optional group's IRI to be checked.
-   * @return the same optional IRI.
-   */
-  @deprecated("Use validateOptionalGroupIri(Option[IRI]) instead.")
-  def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = // V2 / value objects
-    validateOptionalGroupIri(maybeIri).getOrElse(errorFun)
-
-  def validateOptionalGroupIri(maybeIri: Option[IRI]): Validation[ValidationException, Option[IRI]] =
-    maybeIri match {
-      case None      => Validation.succeed(None)
-      case Some(iri) => validateGroupIri(iri).map(Some(_))
-    }
 
   /**
    * Given the permission IRI, checks if it is in a valid format.
