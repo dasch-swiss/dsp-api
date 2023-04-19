@@ -1990,9 +1990,9 @@ class StringFormatter private (
   def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
     validatePermissionIri(iri).getOrElse(errorFun)
 
-  def validatePermissionIri(iri: IRI): Validation[ValidationException, IRI] =
-    if (isKnoraPermissionIriStr(iri)) Validation.succeed(iri)
-    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
+  def validatePermissionIri(iri: IRI): Option[IRI] =
+    if (isKnoraPermissionIriStr(iri)) Some(iri)
+    else None
 
   /**
    * Check that the supplied IRI represents a valid user IRI.
