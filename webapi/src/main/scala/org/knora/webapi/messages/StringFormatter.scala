@@ -47,7 +47,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
-import dsp.valueobjects.Uuid
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
