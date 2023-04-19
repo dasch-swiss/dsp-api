@@ -2018,28 +2018,10 @@ class StringFormatter private (
    */
   @deprecated("Use validateEmailAndThrow(String) instead.")
   def validateEmailAndThrow(email: String, errorFun: => Nothing): String = // V2 / value objects
-    validateEmailAndThrow(email).getOrElse(errorFun)
+    validateEmail(email).getOrElse(errorFun)
 
-  def validateEmailAndThrow(email: String): Option[String] =
+  def validateEmail(email: String): Option[String] =
     EmailAddressRegex.findFirstIn(email)
-
-  /**
-   * Check that an optional string represents a valid email address.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    email address.
-   * @return the same optional string.
-   */
-  @deprecated("Use validateAndEscapeOptionalEmail(Option[String]) instead.")
-  def validateAndEscapeOptionalEmail(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[String] = // V2 / value objects
-    maybeString.map(validateEmailAndThrow(_).getOrElse(errorFun))
-
-  def validateAndEscapeOptionalEmail(maybeString: Option[String]): Option[String] =
-    maybeString.flatMap(validateEmailAndThrow)
 
   /**
    * Check that the string represents a valid username.
