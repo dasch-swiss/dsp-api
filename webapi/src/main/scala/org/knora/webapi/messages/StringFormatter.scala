@@ -1486,24 +1486,6 @@ class StringFormatter private (
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
-   * Check that an optional string represents a valid IRI.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    IRI.
-   * @return the same optional string.
-   */
-  @deprecated("Use validateAndEscapeOptionalIri(Option[String]) instead.")
-  def validateAndEscapeOptionalIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] =
-    validateAndEscapeOptionalIri(maybeString).getOrElse(errorFun)
-
-  def validateAndEscapeOptionalIri(maybeString: Option[String]): Validation[ValidationException, Option[String]] =
-    maybeString match {
-      case None      => Validation.succeed(None)
-      case Some(iri) => validateAndEscapeIri(iri).map(Some(_))
-    }
-
-  /**
    * Returns `true` if an IRI string looks like a Knora project IRI
    *
    * @param iri the IRI to be checked.
