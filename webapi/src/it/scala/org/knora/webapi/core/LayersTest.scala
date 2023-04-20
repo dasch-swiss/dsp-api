@@ -110,6 +110,7 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 object LayersTest {
 
   /**
@@ -129,6 +130,7 @@ object LayersTest {
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
+      with GravsearchTypeInspectionRunner
       with GravsearchTypeInspectionUtil
       with GroupsResponderADM
       with HttpServer
@@ -191,6 +193,7 @@ object LayersTest {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      GravsearchTypeInspectionRunner.layer,
       GravsearchTypeInspectionUtil.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
