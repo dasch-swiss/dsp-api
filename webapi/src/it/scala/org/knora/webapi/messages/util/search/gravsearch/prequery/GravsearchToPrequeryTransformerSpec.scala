@@ -17,7 +17,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
-class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec {
+class GravsearchToPrequeryTransformerSpec extends CoreSpec {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -26,7 +26,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       qt <- ZIO.service[QueryTraverser]
       mr <- ZIO.service[MessageRelay]
       sf <- ZIO.service[StringFormatter]
-    } yield new GravsearchTypeInspectionRunner(inferTypes = true, qt, mr, sf)
+    } yield GravsearchTypeInspectionRunner(qt, mr, sf)
 
     val preQueryZio = for {
       constructQuery       <- ZIO.attempt(GravsearchParser.parseQuery(query))
@@ -37,7 +37,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       typeInspectionResult <- inspectionRunner.flatMap(_.inspectTypes(whereClause, anythingAdminUser))
       _                    <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(constructClause, typeInspectionResult))
       querySchema          <- ZIO.fromOption(querySchemaMaybe).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      transformer = new NonTriplestoreSpecificGravsearchToPrequeryTransformer(
+      transformer = new GravsearchToPrequeryTransformer(
                       constructClause = constructClause,
                       typeInspectionResult = typeInspectionResult,
                       querySchema = querySchema,

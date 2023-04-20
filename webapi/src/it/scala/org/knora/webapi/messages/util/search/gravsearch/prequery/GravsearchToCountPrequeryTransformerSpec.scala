@@ -17,7 +17,7 @@ import zio._
 
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 
-class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends CoreSpec {
+class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
 
   def transformQuery(query: String): SelectQuery = {
 
@@ -25,7 +25,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       qt <- ZIO.service[QueryTraverser]
       mr <- ZIO.service[MessageRelay]
       sf <- ZIO.service[StringFormatter]
-    } yield new GravsearchTypeInspectionRunner(inferTypes = true, qt, mr, sf)
+    } yield GravsearchTypeInspectionRunner(qt, mr, sf)
 
     val countQueryZio = for {
       constructQuery       <- ZIO.attempt(GravsearchParser.parseQuery(query))
@@ -38,7 +38,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       querySchema <-
         ZIO.fromOption(querySchemaMaybe).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       transformer =
-        new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
+        new GravsearchToCountPrequeryTransformer(
           constructClause = constructClause,
           typeInspectionResult = inspectionResult,
           querySchema = querySchema

@@ -29,7 +29,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
  * @param querySchema          the ontology schema used in the input query.
  * @param appConfig             application configuration.
  */
-class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
+class GravsearchToPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,

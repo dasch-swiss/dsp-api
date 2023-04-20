@@ -38,8 +38,8 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
-import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -66,14 +66,11 @@ final case class SearchResponderV2Live(
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val queryTraverser: QueryTraverser,
   private val sparqlTransformerLive: SparqlTransformerLive,
+  private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   implicit private val stringFormatter: StringFormatter
 ) extends SearchResponderV2
     with MessageHandler
     with LazyLogging {
-
-  // A Gravsearch type inspection runner.
-  private val gravsearchTypeInspectionRunner =
-    new GravsearchTypeInspectionRunner(inferTypes = true, queryTraverser, messageRelay, stringFormatter)
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[SearchResponderRequestV2]
@@ -384,8 +381,8 @@ final case class SearchResponderV2Live(
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer =
-        new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
+      nonTriplestoreSpecificConstructToSelectTransformer: GravsearchToCountPrequeryTransformer =
+        new GravsearchToCountPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = querySchema
@@ -460,8 +457,8 @@ final case class SearchResponderV2Live(
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer =
-        new NonTriplestoreSpecificGravsearchToPrequeryTransformer(
+      nonTriplestoreSpecificConstructToSelectTransformer: GravsearchToPrequeryTransformer =
+        new GravsearchToPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = querySchema,
@@ -1075,6 +1072,7 @@ object SearchResponderV2Live {
       with StandoffTagUtilV2
       with QueryTraverser
       with SparqlTransformerLive
+      with GravsearchTypeInspectionRunner
       with StringFormatter,
     Nothing,
     SearchResponderV2Live
@@ -1092,6 +1090,7 @@ object SearchResponderV2Live {
         sparqlTransformerLive        <- ZIO.service[SparqlTransformerLive]
         stringFormatter              <- ZIO.service[StringFormatter]
         mr                           <- ZIO.service[MessageRelay]
+        typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
         handler <- mr.subscribe(
                      new SearchResponderV2Live(
                        appConfig,
@@ -1103,6 +1102,7 @@ object SearchResponderV2Live {
                        standoffTagUtilV2,
                        queryTraverser,
                        sparqlTransformerLive,
+                       typeInspectionRunner,
                        stringFormatter
                      )
                    )

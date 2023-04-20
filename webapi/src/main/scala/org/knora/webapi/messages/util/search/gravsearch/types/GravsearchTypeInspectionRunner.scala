@@ -7,6 +7,7 @@ package org.knora.webapi.messages.util.search.gravsearch.types
 
 import zio.Task
 import zio.ZIO
+import zio.ZLayer
 
 import dsp.errors.GravsearchException
 import org.knora.webapi.core.MessageRelay
@@ -17,34 +18,25 @@ import org.knora.webapi.messages.util.search._
 
 /**
  * Runs Gravsearch type inspection using one or more type inspector implementations.
- *
- * @param inferTypes    if true, use type inference.
  */
-class GravsearchTypeInspectionRunner(
-  inferTypes: Boolean = true,
-  queryTraverser: QueryTraverser,
-  messageRelay: MessageRelay,
-  implicit val stringFormatter: StringFormatter
+final case class GravsearchTypeInspectionRunner(
+  private val queryTraverser: QueryTraverser,
+  private val messageRelay: MessageRelay,
+  implicit private val stringFormatter: StringFormatter
 ) {
+  private val inferringInspector: InferringGravsearchTypeInspector =
+    InferringGravsearchTypeInspector(messageRelay, queryTraverser)
+  private val annotationReadingInspector: AnnotationReadingGravsearchTypeInspector =
+    AnnotationReadingGravsearchTypeInspector(queryTraverser)
 
-  // If inference was requested, construct an inferring type inspector.
-  private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {
-    Some(
-      new InferringGravsearchTypeInspector(
-        nextInspector = None,
-        messageRelay,
-        queryTraverser
-      )
-    )
-  } else {
-    None
-  }
-
-  // The pipeline of type inspectors.
-  private val typeInspectionPipeline = new AnnotationReadingGravsearchTypeInspector(
-    nextInspector = maybeInferringTypeInspector,
-    queryTraverser
-  )
+  private def typeInspectionPipeline(
+    whereClause: WhereClause,
+    initial: IntermediateTypeInspectionResult,
+    requestingUser: UserADM
+  ) = for {
+    annotatedTypes <- annotationReadingInspector.inspectTypes(initial, whereClause, requestingUser)
+    inferredTypes  <- inferringInspector.inspectTypes(annotatedTypes, whereClause, requestingUser)
+  } yield inferredTypes
 
   /**
    * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
@@ -69,11 +61,7 @@ class GravsearchTypeInspectionRunner(
       initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(typeableEntities)
 
       // Run the pipeline and get its result.
-      lastResult <- typeInspectionPipeline.inspectTypes(
-                      previousResult = initialResult,
-                      whereClause = whereClause,
-                      requestingUser = requestingUser
-                    )
+      lastResult <- typeInspectionPipeline(whereClause, initialResult, requestingUser)
 
       untypedEntities: Set[TypeableEntity] = lastResult.untypedEntities
       _ <- // Are any entities still untyped?
@@ -182,4 +170,9 @@ class GravsearchTypeInspectionRunner(
       }
   }
 
+}
+
+object GravsearchTypeInspectionRunner {
+  val layer: ZLayer[QueryTraverser with MessageRelay with StringFormatter, Nothing, GravsearchTypeInspectionRunner] =
+    ZLayer.fromFunction(GravsearchTypeInspectionRunner.apply _)
 }
