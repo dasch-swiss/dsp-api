@@ -14,7 +14,6 @@ import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.SparqlTransformerLive
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
@@ -131,7 +130,6 @@ object LayersTest {
       with CkanResponderV1
       with ConstructResponseUtilV2
       with GravsearchTypeInspectionRunner
-      with GravsearchTypeInspectionUtil
       with GroupsResponderADM
       with HttpServer
       with IIIFRequestMessageHandler
@@ -194,7 +192,6 @@ object LayersTest {
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
       GravsearchTypeInspectionRunner.layer,
-      GravsearchTypeInspectionUtil.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
       HttpServerZ.layer,

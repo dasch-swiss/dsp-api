@@ -275,7 +275,7 @@ final case class QueryTraverser(
    * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the transformed query patterns.
    */
-  def transformWherePatterns(
+  private def transformWherePatterns(
     patterns: Seq[QueryPattern],
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer,

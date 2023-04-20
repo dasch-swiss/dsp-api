@@ -40,7 +40,6 @@ import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMain
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
@@ -59,7 +58,6 @@ trait SearchResponderV2
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
   private val triplestoreService: TriplestoreService,
-  private val gravsearchTypeInspectionUtil: GravsearchTypeInspectionUtil,
   private val messageRelay: MessageRelay,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyCache: OntologyCache,
@@ -373,7 +371,7 @@ final case class SearchResponderV2Live(
       // Do type inspection and remove type annotations from the WHERE clause.
       typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
 
-      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
       _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
@@ -449,7 +447,7 @@ final case class SearchResponderV2Live(
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
       typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
-      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
       _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
@@ -1065,7 +1063,6 @@ object SearchResponderV2Live {
   val layer: ZLayer[
     AppConfig
       with TriplestoreService
-      with GravsearchTypeInspectionUtil
       with MessageRelay
       with ConstructResponseUtilV2
       with OntologyCache
@@ -1079,23 +1076,21 @@ object SearchResponderV2Live {
   ] =
     ZLayer.fromZIO(
       for {
-        appConfig                    <- ZIO.service[AppConfig]
-        triplestoreService           <- ZIO.service[TriplestoreService]
-        gravsearchTypeInspectionUtil <- ZIO.service[GravsearchTypeInspectionUtil]
-        messageRelay                 <- ZIO.service[MessageRelay]
-        constructResponseUtilV2      <- ZIO.service[ConstructResponseUtilV2]
-        ontologyCache                <- ZIO.service[OntologyCache]
-        standoffTagUtilV2            <- ZIO.service[StandoffTagUtilV2]
-        queryTraverser               <- ZIO.service[QueryTraverser]
-        sparqlTransformerLive        <- ZIO.service[SparqlTransformerLive]
-        stringFormatter              <- ZIO.service[StringFormatter]
-        mr                           <- ZIO.service[MessageRelay]
-        typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
+        appConfig               <- ZIO.service[AppConfig]
+        triplestoreService      <- ZIO.service[TriplestoreService]
+        messageRelay            <- ZIO.service[MessageRelay]
+        constructResponseUtilV2 <- ZIO.service[ConstructResponseUtilV2]
+        ontologyCache           <- ZIO.service[OntologyCache]
+        standoffTagUtilV2       <- ZIO.service[StandoffTagUtilV2]
+        queryTraverser          <- ZIO.service[QueryTraverser]
+        sparqlTransformerLive   <- ZIO.service[SparqlTransformerLive]
+        stringFormatter         <- ZIO.service[StringFormatter]
+        mr                      <- ZIO.service[MessageRelay]
+        typeInspectionRunner    <- ZIO.service[GravsearchTypeInspectionRunner]
         handler <- mr.subscribe(
                      new SearchResponderV2Live(
                        appConfig,
                        triplestoreService,
-                       gravsearchTypeInspectionUtil,
                        messageRelay,
                        constructResponseUtilV2,
                        ontologyCache,
