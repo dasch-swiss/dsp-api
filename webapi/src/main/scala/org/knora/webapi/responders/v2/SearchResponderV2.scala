@@ -35,6 +35,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.gravsearch.ConstructToConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
