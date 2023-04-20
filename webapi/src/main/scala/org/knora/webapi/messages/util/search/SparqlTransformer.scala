@@ -24,7 +24,7 @@ import SparqlTransformer._
  *
  * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
  */
-class NoInferenceSelectToSelectTransformer(
+class SelectToSelectTransformer(
   simulateInference: Boolean,
   sparqlTransformerLive: SparqlTransformerLive,
   implicit val stringFormatter: StringFormatter
