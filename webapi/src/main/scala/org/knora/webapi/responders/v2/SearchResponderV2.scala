@@ -399,7 +399,7 @@ final case class SearchResponderV2Live(
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
 
-      triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
+      triplestoreSpecificQueryPatternTransformerSelect: SparqlTransformer.NoInferenceSelectToSelectTransformer =
         new SparqlTransformer.NoInferenceSelectToSelectTransformer(
           simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
           sparqlTransformerLive,
@@ -480,7 +480,7 @@ final case class SearchResponderV2Live(
       mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
-      triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
+      triplestoreSpecificQueryPatternTransformerSelect: SparqlTransformer.NoInferenceSelectToSelectTransformer =
         new SparqlTransformer.NoInferenceSelectToSelectTransformer(
           simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
           sparqlTransformerLive,

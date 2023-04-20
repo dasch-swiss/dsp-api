@@ -102,27 +102,6 @@ trait WhereTransformer {
 }
 
 /**
- * A trait for classes that transform SELECT queries into other SELECT queries.
- */
-trait SelectToSelectTransformer extends WhereTransformer {
-
-  /**
-   * Transforms a [[StatementPattern]] in a SELECT's WHERE clause into zero or more statement patterns.
-   *
-   * @param statementPattern the statement to be transformed.
-   * @return the result of the transformation.
-   */
-  def transformStatementInSelect(statementPattern: StatementPattern): Task[Seq[StatementPattern]]
-
-  /**
-   * Specifies a FROM clause, if needed.
-   *
-   * @return the FROM clause to be used, if any.
-   */
-  def getFromClause: Task[Option[FromClause]]
-}
-
-/**
  * A trait for classes that transform CONSTRUCT queries into other CONSTRUCT queries.
  */
 trait ConstructToConstructTransformer extends WhereTransformer {
@@ -536,7 +515,7 @@ final case class QueryTraverser(
 
   def transformSelectToSelect(
     inputQuery: SelectQuery,
-    transformer: SelectToSelectTransformer,
+    transformer: SparqlTransformer.NoInferenceSelectToSelectTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]]
   ): Task[SelectQuery] =
     for {

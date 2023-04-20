@@ -31,9 +31,15 @@ object SparqlTransformer {
     simulateInference: Boolean,
     sparqlTransformerLive: SparqlTransformerLive,
     implicit val stringFormatter: StringFormatter
-  ) extends SelectToSelectTransformer {
+  ) extends WhereTransformer {
 
-    override def transformStatementInSelect(statementPattern: StatementPattern): Task[Seq[StatementPattern]] =
+    /**
+     * Transforms a [[StatementPattern]] in a SELECT's WHERE clause into zero or more statement patterns.
+     *
+     * @param statementPattern the statement to be transformed.
+     * @return the result of the transformation.
+     */
+    def transformStatementInSelect(statementPattern: StatementPattern): Task[Seq[StatementPattern]] =
       ZIO.succeed(Seq(statementPattern))
 
     override def transformStatementInWhere(
@@ -57,7 +63,12 @@ object SparqlTransformer {
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
       sparqlTransformerLive.transformLuceneQueryPatternForFuseki(luceneQueryPattern)
 
-    override def getFromClause: Task[Option[FromClause]] = ZIO.succeed(None)
+    /**
+     * Specifies a FROM clause, if needed.
+     *
+     * @return the FROM clause to be used, if any.
+     */
+    def getFromClause: Task[Option[FromClause]] = ZIO.succeed(None)
 
     override def enteringUnionBlock(): UIO[Unit] = ZIO.unit
 
