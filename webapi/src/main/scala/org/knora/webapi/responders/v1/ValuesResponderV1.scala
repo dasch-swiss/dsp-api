@@ -451,7 +451,7 @@ final case class ValuesResponderV1Live(
                                                                case (targetIri, initialReferenceCount) =>
                                                                  // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
                                                                  val realTargetIri =
-                                                                   stringFormatter.toRealStandoffLinkTargetResourceIri(
+                                                                   StandoffStuff.toRealStandoffLinkTargetResourceIri(
                                                                      iri = targetIri,
                                                                      clientResourceIDsToResourceIris =
                                                                        createMultipleValuesRequest.clientResourceIDsToResourceIris
@@ -600,7 +600,7 @@ final case class ValuesResponderV1Live(
                                   attributes = standoffTag.attributes.map {
                                     case iriAttribute: StandoffTagIriAttributeV2 =>
                                       iriAttribute.copy(
-                                        value = stringFormatter.toRealStandoffLinkTargetResourceIri(
+                                        value = StandoffStuff.toRealStandoffLinkTargetResourceIri(
                                           iri = iriAttribute.value,
                                           clientResourceIDsToResourceIris =
                                             createMultipleValuesRequest.clientResourceIDsToResourceIris

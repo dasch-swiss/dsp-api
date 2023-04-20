@@ -51,4 +51,21 @@ object StandoffStuff {
   def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
     if (acceptClientIDs && StandoffStuff.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
     else StringFormatter.validateAndEscapeIri(s)
+
+
+  /**
+   * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
+   * (referring to a resource that already exists) or a client's ID for a resource that doesn't yet exist and is
+   * described in an XML bulk import. Returns the real IRI of the target resource.
+   *
+   * @param iri                             an IRI from a standoff link, either in the form of a real resource IRI or in the form of
+   *                                        a reference to a client's ID for a resource.
+   * @param clientResourceIDsToResourceIris a map of client resource IDs to real resource IRIs.
+   */
+  def toRealStandoffLinkTargetResourceIri(iri: IRI, clientResourceIDsToResourceIris: Map[String, IRI]): IRI =
+    iri match {
+      case standoffLinkReferenceToClientIdForResourceRegex(clientResourceID) =>
+        clientResourceIDsToResourceIris(clientResourceID)
+      case _ => iri
+    }
 }
