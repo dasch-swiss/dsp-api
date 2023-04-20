@@ -26,7 +26,7 @@ object StandoffStuff {
 
   // In XML import data, a standoff link tag that refers to a resource described in the import must have the
   // form defined by this regex.
-  val standoffLinkReferenceToClientIdForResourceRegex: Regex = ("^ref:(" + XmlPatterns.nCNamePattern + ")$").r
+  private val standoffLinkReferenceToClientIdForResourceRegex: Regex = ("^ref:(" + XmlPatterns.nCNamePattern + ")$").r
 
   /**
    * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
