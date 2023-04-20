@@ -253,9 +253,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param model   the model being constructed.
    * @param rdfSubj the subject of this JSON-LD object.
    */
-  private def addRdfTypesToModel(model: RdfModel, rdfSubj: RdfResource)(implicit
-    stringFormatter: StringFormatter
-  ): Unit = {
+  private def addRdfTypesToModel(model: RdfModel, rdfSubj: RdfResource): Unit = {
     val nodeFactory: RdfNodeFactory = model.getNodeFactory
 
     def addRdfType(typeIri: JsonLDString): Unit =
