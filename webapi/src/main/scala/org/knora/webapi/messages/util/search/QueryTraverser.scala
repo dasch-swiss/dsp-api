@@ -63,12 +63,12 @@ trait WhereTransformer {
   /**
    * Called before entering a UNION block.
    */
-  def enteringUnionBlock(): Task[Unit]
+  def enteringUnionBlock(): Task[Unit] = ZIO.unit
 
   /**
    * Called before leaving a UNION block.
    */
-  def leavingUnionBlock(): Task[Unit]
+  def leavingUnionBlock(): Task[Unit] = ZIO.unit
 
   /**
    * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
@@ -90,7 +90,7 @@ trait WhereTransformer {
    * @param filterPattern the filter to be transformed.
    * @return the result of the transformation.
    */
-  def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]]
+  def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.succeed(Seq(filterPattern))
 
   /**
    * Transforms a [[LuceneQueryPattern]] into one or more query patterns.

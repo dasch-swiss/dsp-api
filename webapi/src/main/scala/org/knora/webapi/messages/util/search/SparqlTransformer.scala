@@ -52,12 +52,8 @@ class SelectToSelectTransformer(
       limitInferenceToOntologies = limitInferenceToOntologies
     )
 
-  override def transformFilter(filterPattern: FilterPattern): ZIO[Any, Nothing, Seq[FilterPattern]] =
-    ZIO.succeed(Seq(filterPattern))
-
-  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.attempt {
-    moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
-  }
+  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
+    ZIO.attempt(moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns))))
 
   override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
     sparqlTransformerLive.transformLuceneQueryPatternForFuseki(luceneQueryPattern)
@@ -69,9 +65,6 @@ class SelectToSelectTransformer(
    */
   def getFromClause: Task[Option[FromClause]] = ZIO.succeed(None)
 
-  override def enteringUnionBlock(): UIO[Unit] = ZIO.unit
-
-  override def leavingUnionBlock(): UIO[Unit] = ZIO.unit
 }
 
 /**
@@ -102,18 +95,12 @@ class ConstructToConstructTransformer(
       limitInferenceToOntologies = limitInferenceToOntologies
     )
 
-  override def transformFilter(filterPattern: FilterPattern): ZIO[Any, Nothing, Seq[FilterPattern]] =
-    ZIO.succeed(Seq(filterPattern))
-
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
     ZIO.attempt(moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns))))
 
   override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
     sparqlTransformerLive.transformLuceneQueryPatternForFuseki(luceneQueryPattern)
 
-  override def enteringUnionBlock(): UIO[Unit] = ZIO.unit
-
-  override def leavingUnionBlock(): UIO[Unit] = ZIO.unit
 }
 
 /**
