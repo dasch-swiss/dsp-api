@@ -3,8 +3,12 @@ package org.knora.webapi.messages
 import zio.prelude.Validation
 import scala.util.matching.Regex
 
+import dsp.errors.NotFoundException
 import dsp.errors.ValidationException
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 
 object XmlPatterns {
   // A regex sub-pattern for ontology prefix labels and local entity names. According to
@@ -52,7 +56,6 @@ object StandoffStuff {
     if (acceptClientIDs && StandoffStuff.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
     else StringFormatter.validateAndEscapeIri(s)
 
-
   /**
    * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
    * (referring to a resource that already exists) or a client's ID for a resource that doesn't yet exist and is
@@ -67,5 +70,27 @@ object StandoffStuff {
       case standoffLinkReferenceToClientIdForResourceRegex(clientResourceID) =>
         clientResourceIDsToResourceIris(clientResourceID)
       case _ => iri
+    }
+
+  /**
+   * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
+   *
+   * @param standoffTags The list of [[StandoffTagV2]].
+   * @return a set of Iris referred to in the [[StandoffTagV2]].
+   */
+  @throws[NotFoundException]
+  def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] =
+    standoffTags.foldLeft(Set.empty[IRI]) { case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
+      if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+        val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
+          case iriTagAttr: StandoffTagIriAttributeV2
+              if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink =>
+            iriTagAttr.value
+        }
+
+        acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
+      } else {
+        acc
+      }
     }
 }

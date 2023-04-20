@@ -1605,27 +1605,6 @@ class StringFormatter private (
   }
 
   /**
-   * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
-   *
-   * @param standoffTags The list of [[StandoffTagV2]].
-   * @return a set of Iris referred to in the [[StandoffTagV2]].
-   */
-  def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] =
-    standoffTags.foldLeft(Set.empty[IRI]) { case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
-      if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-        val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
-          case iriTagAttr: StandoffTagIriAttributeV2
-              if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink =>
-            iriTagAttr.value
-        }
-
-        acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
-      } else {
-        acc
-      }
-    }
-
-  /**
    * Returns `true` if an ontology name is reserved for a built-in ontology.
    *
    * @param ontologyName the ontology name to be checked.

@@ -14,15 +14,16 @@ import akka.util.ByteString
 import spray.json.JsNumber
 import spray.json.JsObject
 import zio._
-
 import java.time.Instant
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
+import org.knora.webapi.messages.StandoffStuff
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
@@ -291,8 +292,8 @@ object RouteUtilV1 {
       .flatMap(ZIO.fromOption(_))
       .orElseFail(BadRequestException(errorMsg))
 
-  def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): ZIO[StringFormatter, Throwable, Set[IRI]] =
-    ZIO.serviceWithZIO[StringFormatter](sf => ZIO.attempt(sf.getResourceIrisFromStandoffTags(tags)))
+  def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): Task[Set[IRI]] =
+    ZIO.attempt(StandoffStuff.getResourceIrisFromStandoffTags(tags))
 
   def xsdDateTimeStampToInstant(s: String, errorMsg: String): IO[Throwable, Instant] =
     ZIO.fromOption(ValuesValidator.xsdDateTimeStampToInstant(s)).orElseFail(BadRequestException(errorMsg))
