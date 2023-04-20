@@ -26,7 +26,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       qt <- ZIO.service[QueryTraverser]
       mr <- ZIO.service[MessageRelay]
       sf <- ZIO.service[StringFormatter]
-    } yield new GravsearchTypeInspectionRunner(inferTypes = true, qt, mr, sf)
+    } yield GravsearchTypeInspectionRunner(qt, mr, sf)
 
     val preQueryZio = for {
       constructQuery       <- ZIO.attempt(GravsearchParser.parseQuery(query))

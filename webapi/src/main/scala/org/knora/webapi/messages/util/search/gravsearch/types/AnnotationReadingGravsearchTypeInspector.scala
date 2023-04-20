@@ -19,7 +19,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperty
 
 /**
- * A [[GravsearchTypeInspector]] that relies on Gravsearch type annotations. There are two kinds of type annotations:
+ * A inspector that relies on Gravsearch type annotations. There are two kinds of type annotations:
  *
  * 1. For a variable or IRI representing a resource or value, a type annotation is a triple whose subject is the variable
  * or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
@@ -28,10 +28,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
  * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
  * of object that is required by the property.
  */
-class AnnotationReadingGravsearchTypeInspector(
-  nextInspector: Option[GravsearchTypeInspector],
-  queryTraverser: QueryTraverser
-) extends GravsearchTypeInspector(nextInspector) {
+final case class AnnotationReadingGravsearchTypeInspector(private val queryTraverser: QueryTraverser) {
 
   /**
    * Represents a Gravsearch type annotation.
@@ -50,7 +47,15 @@ class AnnotationReadingGravsearchTypeInspector(
     isValue: Boolean = false
   )
 
-  override def inspectTypes(
+  /**
+   * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found in the query.
+   *
+   * @param previousResult the result of previous type inspection.
+   * @param whereClause    the Gravsearch WHERE clause.
+   * @param requestingUser the requesting user.
+   * @return the result returned by the pipeline.
+   */
+  def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
     requestingUser: UserADM
@@ -68,7 +73,7 @@ class AnnotationReadingGravsearchTypeInspector(
                          }
 
       // Collect the information in the type annotations.
-      intermediateResult: IntermediateTypeInspectionResult =
+      result: IntermediateTypeInspectionResult =
         typeAnnotations.foldLeft(previousResult) {
           case (acc: IntermediateTypeInspectionResult, typeAnnotation: GravsearchTypeAnnotation) =>
             typeAnnotation.annotationProp match {
@@ -99,10 +104,7 @@ class AnnotationReadingGravsearchTypeInspector(
                 )
             }
         }
-
-      // Pass the intermediate result to the next type inspector in the pipeline.
-      lastResult <- runNextInspector(intermediateResult, whereClause, requestingUser)
-    } yield lastResult
+    } yield result
 
   /**
    * A [[WhereVisitor]] that collects type annotations.
