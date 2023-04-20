@@ -1,11 +1,17 @@
-package org.knora.webapi.messages.util.search
+package org.knora.webapi.messages.util.search.gravsearch
 
 import zio._
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-
-import SparqlTransformer._
+import org.knora.webapi.messages.util.search.FromClause
+import org.knora.webapi.messages.util.search.LuceneQueryPattern
+import org.knora.webapi.messages.util.search.OrderCriterion
+import org.knora.webapi.messages.util.search.QueryPattern
+import org.knora.webapi.messages.util.search.SparqlTransformer._
+import org.knora.webapi.messages.util.search.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.StatementPattern
+import org.knora.webapi.messages.util.search.WhereTransformer
 
 class SelectToSelectTransformer(
   simulateInference: Boolean,
