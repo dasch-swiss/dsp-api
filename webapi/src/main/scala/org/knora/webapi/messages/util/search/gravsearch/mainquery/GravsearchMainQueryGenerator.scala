@@ -16,7 +16,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 
 object GravsearchMainQueryGenerator {
 
@@ -106,7 +106,7 @@ object GravsearchMainQueryGenerator {
    */
   def getDependentResourceIrisPerMainResource(
     prequeryResponse: SparqlSelectResult,
-    transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
+    transformer: GravsearchToPrequeryTransformer,
     mainResourceVar: QueryVariable
   ): DependentResourcesPerMainResource = {
 
@@ -165,7 +165,7 @@ object GravsearchMainQueryGenerator {
    */
   def getValueObjectVarsAndIrisPerMainResource(
     prequeryResponse: SparqlSelectResult,
-    transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
+    transformer: GravsearchToPrequeryTransformer,
     mainResourceVar: QueryVariable
   ): ValueObjectVariablesAndValueObjectIris = {
 
