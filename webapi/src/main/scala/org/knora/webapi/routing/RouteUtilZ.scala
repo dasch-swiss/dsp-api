@@ -13,10 +13,8 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasComment
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object RouteUtilZ {
