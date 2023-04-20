@@ -14,6 +14,7 @@ import java.io.StringWriter
 import java.util.UUID
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
+import scala.util.control.NonFatal
 import scala.xml._
 
 import dsp.errors._
@@ -443,7 +444,7 @@ class XMLToStandoffUtil(
       try {
         XML.withSAXParser(saxParser).loadString(xmlStrWithSeparator)
       } catch {
-        case e: Exception => throw StandoffInternalException(s"XML processing error: ${e.getMessage}", Some(e))
+        case NonFatal(e) => throw StandoffInternalException(s"XML processing error: ${e.getMessage}", Some(e))
       }
 
     val finishedConversionState = xmlNodes2Standoff(
