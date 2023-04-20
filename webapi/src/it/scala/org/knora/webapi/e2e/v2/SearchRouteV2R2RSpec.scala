@@ -10180,7 +10180,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, response.toString)
 
         val responseDocument = responseToJsonLDDocument(response)
-        val numberOfResults  = responseDocument.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
+        val numberOfResults  = responseDocument.body.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
 
         assert(numberOfResults != 0)
       }
@@ -10213,7 +10213,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, response.toString)
 
         val responseDocument = responseToJsonLDDocument(response)
-        val numberOfResults  = responseDocument.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
+        val numberOfResults  = responseDocument.body.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
 
         assert(numberOfResults != 0)
       }

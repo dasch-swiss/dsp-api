@@ -81,15 +81,15 @@ object CreateValueRequestV2 {
       for {
         // Get the IRI of the resource that the value is to be created in.
         resourceIri <- ZIO
-                         .attempt(jsonLDDocument.requireIDAsKnoraDataIri)
+                         .attempt(jsonLDDocument.body.requireIDAsKnoraDataIri)
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
 
         // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLDDocument.requireTypeAsKnoraTypeIri)
+        resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
 
         // Get the resource property and the value to be created.
         createValue <-
-          jsonLDDocument.requireResourcePropertyValue match {
+          jsonLDDocument.body.requireResourcePropertyApiV2ComplexValue match {
             case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
               for {
                 valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
@@ -295,13 +295,13 @@ object UpdateValueRequestV2 {
       for {
         // Get the IRI of the resource that the value is to be created in.
         resourceIri <- ZIO
-                         .attempt(jsonLdDocument.requireIDAsKnoraDataIri)
+                         .attempt(jsonLdDocument.body.requireIDAsKnoraDataIri)
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
         // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLdDocument.requireTypeAsKnoraTypeIri)
+        resourceClassIri <- ZIO.attempt(jsonLdDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
 
         // Get the resource property and the new value version.
-        updateValue <- ZIO.attempt(jsonLdDocument.requireResourcePropertyValue).flatMap {
+        updateValue <- ZIO.attempt(jsonLdDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
                          case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
                            // Get the custom value creation date, if provided.
 
@@ -461,14 +461,14 @@ object DeleteValueRequestV2 {
     requestingUser: UserADM
   ): ZIO[StringFormatter, Throwable, DeleteValueRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      ZIO.attempt(jsonLDDocument.requireResourcePropertyValue).flatMap {
+      ZIO.attempt(jsonLDDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
         case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
           for {
-            resourceIri <- ZIO.attempt(jsonLDDocument.requireIDAsKnoraDataIri)
+            resourceIri <- ZIO.attempt(jsonLDDocument.body.requireIDAsKnoraDataIri)
             _ <- ZIO
                    .fail(BadRequestException(s"Invalid resource IRI: <$resourceIri>"))
                    .when(!resourceIri.isKnoraResourceIri)
-            resourceClassIri <- ZIO.attempt(jsonLDDocument.requireTypeAsKnoraTypeIri)
+            resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
             valueIri         <- ZIO.attempt(jsonLDObject.requireIDAsKnoraDataIri)
             _                <- ZIO.fail(BadRequestException(s"Invalid value IRI: <$valueIri>")).when(!valueIri.isKnoraValueIri)
             _ <- ZIO

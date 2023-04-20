@@ -1003,7 +1003,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val newFreetestLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+        val newFreetestLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
@@ -1085,7 +1085,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
-        val newFreetestLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+        val newFreetestLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
@@ -2097,11 +2097,11 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
-        responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
+        responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
           "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
         )
 
-        val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+        val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
@@ -2431,11 +2431,11 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
-        responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
+        responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
           "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
         )
 
-        val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+        val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
@@ -2503,11 +2503,11 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
-        responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
+        responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
           "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
         )
 
-        val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+        val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
@@ -2540,11 +2540,11 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
-        responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
+        responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
           "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
         )
 
-        val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+        val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
