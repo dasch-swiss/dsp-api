@@ -19,6 +19,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -147,53 +148,6 @@ case class TransformedOrderBy(
   statementPatterns: Seq[StatementPattern] = Vector.empty[StatementPattern],
   orderBy: Seq[OrderCriterion] = Vector.empty[OrderCriterion]
 )
-
-/**
- * A trait for classes that transform SELECT queries into CONSTRUCT queries.
- */
-trait ConstructToSelectTransformer extends WhereTransformer {
-
-  /**
-   * Returns the columns to be specified in the SELECT query.
-   */
-  def getSelectColumns: Task[Seq[SelectQueryColumn]]
-
-  /**
-   * Returns the variables that the query result rows are grouped by (aggregating rows into one).
-   * Variables returned by the SELECT query must either be present in the GROUP BY statement
-   * or be transformed by an aggregation function in SPARQL.
-   * This method will be called by [[QueryTraverser]] after the whole input query has been traversed.
-   *
-   * @param orderByCriteria the criteria used to sort the query results. They have to be included in the GROUP BY statement, otherwise they are unbound.
-   * @return a list of variables that the result rows are grouped by.
-   */
-  def getGroupBy(orderByCriteria: TransformedOrderBy): Task[Seq[QueryVariable]]
-
-  /**
-   * Returns the criteria, if any, that should be used in the ORDER BY clause of the SELECT query. This method will be called
-   * by [[QueryTraverser]] after the whole input query has been traversed.
-   *
-   * @param inputOrderBy the ORDER BY criteria in the input query.
-   * @return the ORDER BY criteria, if any.
-   */
-  def getOrderBy(inputOrderBy: Seq[OrderCriterion]): Task[TransformedOrderBy]
-
-  /**
-   * Returns the limit representing the maximum amount of result rows returned by the SELECT query.
-   *
-   * @return the LIMIT, if any.
-   */
-  def getLimit: Task[Int]
-
-  /**
-   * Returns the OFFSET to be used in the SELECT query.
-   * Provided the OFFSET submitted in the input query, calculates the actual offset in result rows depending on LIMIT.
-   *
-   * @param inputQueryOffset the OFFSET provided in the input query.
-   * @return the OFFSET.
-   */
-  def getOffset(inputQueryOffset: Long, limit: Int): Task[Long]
-}
 
 /**
  * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[ConstructToConstructTransformer]]
@@ -509,7 +463,7 @@ final case class QueryTraverser(
    */
   def transformConstructToSelect(
     inputQuery: ConstructQuery,
-    transformer: ConstructToSelectTransformer,
+    transformer: AbstractPrequeryGenerator,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[SelectQuery] = for {
     transformedWherePatterns <- transformWherePatterns(
