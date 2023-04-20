@@ -19,6 +19,8 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 import SparqlTransformer._
 
+import SparqlTransformer._
+
 /**
  * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
  *
