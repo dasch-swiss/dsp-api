@@ -102,20 +102,6 @@ trait WhereTransformer {
 }
 
 /**
- * A trait for classes that transform CONSTRUCT queries into other CONSTRUCT queries.
- */
-trait ConstructToConstructTransformer extends WhereTransformer {
-
-  /**
-   * Transforms a [[StatementPattern]] in a CONSTRUCT clause into zero or more statement patterns.
-   *
-   * @param statementPattern the statement to be transformed.
-   * @return the result of the transformation.
-   */
-  def transformStatementInConstruct(statementPattern: StatementPattern): Task[Seq[StatementPattern]]
-}
-
-/**
  * Returned by `ConstructToSelectTransformer.getOrderBy` to represent a transformed ORDER BY as well
  * as any additional statement patterns that should be added to the WHERE clause to support the ORDER BY.
  *
@@ -539,7 +525,7 @@ final case class QueryTraverser(
    */
   def transformConstructToConstruct(
     inputQuery: ConstructQuery,
-    transformer: ConstructToConstructTransformer,
+    transformer: NoInferenceConstructToConstructTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[ConstructQuery] =
     for {

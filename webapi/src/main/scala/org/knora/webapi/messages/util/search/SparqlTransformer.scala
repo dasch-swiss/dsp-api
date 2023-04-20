@@ -78,9 +78,15 @@ class NoInferenceSelectToSelectTransformer(
 class NoInferenceConstructToConstructTransformer(
   sparqlTransformerLive: SparqlTransformerLive,
   implicit val stringFormatter: StringFormatter
-) extends ConstructToConstructTransformer {
+) extends WhereTransformer {
 
-  override def transformStatementInConstruct(statementPattern: StatementPattern): Task[Seq[StatementPattern]] =
+  /**
+   * Transforms a [[StatementPattern]] in a CONSTRUCT clause into zero or more statement patterns.
+   *
+   * @param statementPattern the statement to be transformed.
+   * @return the result of the transformation.
+   */
+  def transformStatementInConstruct(statementPattern: StatementPattern): Task[Seq[StatementPattern]] =
     ZIO.succeed(Seq(statementPattern))
 
   override def transformStatementInWhere(

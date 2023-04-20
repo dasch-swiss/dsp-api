@@ -583,7 +583,7 @@ final case class SearchResponderV2Live(
             appConfig = appConfig
           )
 
-          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
+          val queryPatternTransformerConstruct: NoInferenceConstructToConstructTransformer =
             new NoInferenceConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
 
           for {
