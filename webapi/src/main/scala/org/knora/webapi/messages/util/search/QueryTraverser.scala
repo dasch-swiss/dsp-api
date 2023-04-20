@@ -525,7 +525,7 @@ final case class QueryTraverser(
    */
   def transformConstructToConstruct(
     inputQuery: ConstructQuery,
-    transformer: NoInferenceConstructToConstructTransformer,
+    transformer: ConstructToConstructTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[ConstructQuery] =
     for {

@@ -75,7 +75,7 @@ class NoInferenceSelectToSelectTransformer(
 /**
  * Transforms a non-triplestore-specific CONSTRUCT query for a triplestore that does not have inference enabled (e.g., Fuseki).
  */
-class NoInferenceConstructToConstructTransformer(
+class ConstructToConstructTransformer(
   sparqlTransformerLive: SparqlTransformerLive,
   implicit val stringFormatter: StringFormatter
 ) extends WhereTransformer {

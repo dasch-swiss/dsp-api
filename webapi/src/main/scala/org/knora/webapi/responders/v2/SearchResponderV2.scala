@@ -306,7 +306,7 @@ final case class SearchResponderV2Live(
           )
 
           val queryPatternTransformerConstruct =
-            new NoInferenceConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
+            new ConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
           for {
             query          <- queryTraverser.transformConstructToConstruct(mainQuery, queryPatternTransformerConstruct)
             searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
@@ -583,8 +583,8 @@ final case class SearchResponderV2Live(
             appConfig = appConfig
           )
 
-          val queryPatternTransformerConstruct: NoInferenceConstructToConstructTransformer =
-            new NoInferenceConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
+          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
+            new ConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
 
           for {
 
