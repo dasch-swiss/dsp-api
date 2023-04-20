@@ -730,8 +730,8 @@ class StringFormatterSpec extends CoreSpec {
     "validate import namespace with project shortcode" in {
       val defaultNamespace = "http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
       stringFormatter
-        .xmlImportNamespaceToInternalOntologyIriV1(
-          defaultNamespace,
+        .xmlImportNamespaceToInternalOntologyIriV1(defaultNamespace)
+        .getOrElse(
           throw AssertionException("Invalid XML import namespace")
         )
         .toString should be("http://www.knora.org/ontology/0801/biblio")
@@ -1000,59 +1000,31 @@ class StringFormatterSpec extends CoreSpec {
         SharedTestDataADM.incunabulaProject.id,
         throw AssertionException("not valid")
       ) shouldBe SharedTestDataADM.incunabulaProject.id
-      stringFormatter.validateAndEscapeOptionalProjectIri(
-        Some(SharedTestDataADM.incunabulaProject.id),
-        throw AssertionException("not valid")
-      ) shouldBe Some(SharedTestDataADM.incunabulaProject.id)
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.systemProject.id,
         throw AssertionException("not valid")
       ) shouldBe SharedTestDataADM.systemProject.id
-      stringFormatter.validateAndEscapeOptionalProjectIri(
-        Some(SharedTestDataADM.systemProject.id),
-        throw AssertionException("not valid")
-      ) shouldBe Some(SharedTestDataADM.systemProject.id)
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.defaultSharedOntologiesProject.id,
         throw AssertionException("not valid")
       ) shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
-      stringFormatter.validateAndEscapeOptionalProjectIri(
-        Some(SharedTestDataADM.defaultSharedOntologiesProject.id),
-        throw AssertionException("not valid")
-      ) shouldBe Some(SharedTestDataADM.defaultSharedOntologiesProject.id)
     }
 
     "validate project shortname" in {
       // shortname with dash is valid
-      stringFormatter.validateAndEscapeProjectShortname(
-        "valid-shortname",
-        throw AssertionException("not valid")
-      ) should be("valid-shortname")
-
+      assert(stringFormatter.validateAndEscapeProjectShortname("valid-shortname").contains("valid-shortname"))
       // shortname with numbers
-      stringFormatter.validateAndEscapeProjectShortname("valid_1111", throw AssertionException("not valid")) should be(
-        "valid_1111"
-      )
+      assert(stringFormatter.validateAndEscapeProjectShortname("valid_1111").contains("valid_1111"))
       // has special character colon
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("invalid:shortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname("invalid:shortname").isEmpty)
       // begins with dash
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("-invalidshortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname("-invalidshortname").isEmpty)
       // begins with dot
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname(".invalidshortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname(".invalidshortname").isEmpty)
       // includes slash
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("invalid/shortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname("invalid/shortname").isEmpty)
       // includes @
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("invalid@shortname", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateAndEscapeProjectShortname("invalid@shortname").isEmpty)
     }
 
     "validate project shortcode" in {
@@ -1134,8 +1106,8 @@ class StringFormatterSpec extends CoreSpec {
     "convert a UUID to Base-64 encoding and back again" in {
       val uuid              = UUID.randomUUID
       val base64EncodedUuid = stringFormatter.base64EncodeUuid(uuid)
-      val base4DecodedUuid  = stringFormatter.base64DecodeUuid(base64EncodedUuid)
-      uuid should be(base4DecodedUuid)
+      val base64DecodedUuid = stringFormatter.base64DecodeUuid(base64EncodedUuid)
+      assert(base64DecodedUuid.toOption.contains(uuid))
     }
 
     "return TRUE for IRIs BEOL project IRI and other which contain UUID version 4 or 5, otherwise return FALSE" in {

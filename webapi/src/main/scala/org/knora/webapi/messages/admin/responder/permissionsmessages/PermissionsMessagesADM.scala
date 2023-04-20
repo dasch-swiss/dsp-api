@@ -49,12 +49,12 @@ case class CreateAdministrativePermissionAPIRequestADM(
 
   def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
 
-  sf.validateAndEscapeProjectIri(forProject, throw BadRequestException(s"Invalid project IRI $forProject"))
+  sf.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
 
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
   if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(forGroup)) {
-    sf.validateGroupIri(forGroup, throw BadRequestException(s"Invalid group IRI $forGroup"))
+    sf.validateGroupIri(forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI $forGroup"))
   }
 
   def prepareHasPermissions: CreateAdministrativePermissionAPIRequestADM =
@@ -100,10 +100,8 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
         throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
       else {
         if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(iri)) {
-          sf.validateOptionalGroupIri(
-            forGroup,
-            throw BadRequestException(s"Invalid group IRI ${forGroup.get}")
-          )
+          sf.validateGroupIri(iri)
+            .getOrElse(throw BadRequestException(s"Invalid group IRI ${forGroup.get}"))
         }
       }
     case None =>

@@ -1486,20 +1486,6 @@ class StringFormatter private (
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
-   * Check that an optional string represents a valid IRI.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    IRI.
-   * @return the same optional string.
-   */
-  def validateAndEscapeOptionalIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] =
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeIri(s, errorFun))
-      case None    => None
-    }
-
-  /**
    * Returns `true` if an IRI string looks like a Knora project IRI
    *
    * @param iri the IRI to be checked.
@@ -1567,14 +1553,11 @@ class StringFormatter private (
    * @return the same string.
    */
   def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: => Nothing): IRI =
-    if (acceptClientIDs) {
-      s match {
-        case StandoffLinkReferenceToClientIDForResourceRegex(_) => s
-        case _                                                  => validateAndEscapeIri(s, errorFun)
-      }
-    } else {
-      validateAndEscapeIri(s, errorFun)
-    }
+    validateStandoffLinkResourceReference(s, acceptClientIDs).getOrElse(errorFun)
+
+  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
+    if (acceptClientIDs && isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
+    else validateAndEscapeIri(s)
 
   /**
    * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
@@ -1822,24 +1805,32 @@ class StringFormatter private (
    *                  valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology IRI.
    */
+  @deprecated("Use xmlImportNamespaceToInternalOntologyIriV1(String) instead.")
   def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri =
+    xmlImportNamespaceToInternalOntologyIriV1(namespace).getOrElse(errorFun)
+
+  def xmlImportNamespaceToInternalOntologyIriV1(namespace: String): Option[SmartIri] =
     namespace match {
       case ProjectSpecificXmlImportNamespaceRegex(shared, _, projectCode, ontologyName)
           if !isBuiltInOntologyName(ontologyName) =>
         val isShared = Option(shared).nonEmpty
 
-        val definedProjectCode = Option(projectCode) match {
-          case Some(code) => code
-          case None       => if (isShared) DefaultSharedOntologiesProjectCode else errorFun
-        }
+        val definedProjectCode: Option[String] =
+          if (Option(projectCode).nonEmpty) Some(projectCode)
+          else if (isShared) Some(DefaultSharedOntologiesProjectCode)
+          else None
 
-        makeProjectSpecificInternalOntologyIri(
-          internalOntologyName = externalToInternalOntologyName(ontologyName),
-          isShared = isShared,
-          projectCode = definedProjectCode
+        definedProjectCode.flatMap(code =>
+          Some(
+            makeProjectSpecificInternalOntologyIri(
+              internalOntologyName = externalToInternalOntologyName(ontologyName),
+              isShared = isShared,
+              projectCode = code
+            )
+          )
         )
 
-      case _ => errorFun
+      case _ => None
     }
 
   /**
@@ -1852,14 +1843,15 @@ class StringFormatter private (
    *                     valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology entity IRI.
    */
+  @deprecated("Use xmlImportElementNameToInternalOntologyIriV1(String, String) instead.")
   def xmlImportElementNameToInternalOntologyIriV1(
     namespace: String,
     elementLabel: String,
     errorFun: => Nothing
-  ): IRI = {
-    val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
-    ontologyIri.toString + "#" + elementLabel
-  }
+  ): IRI = xmlImportElementNameToInternalOntologyIriV1(namespace, elementLabel).getOrElse(errorFun)
+
+  def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String): Option[IRI] =
+    xmlImportNamespaceToInternalOntologyIriV1(namespace).map(_.toString + "#" + elementLabel)
 
   /**
    * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. The prefix label
@@ -1945,67 +1937,25 @@ class StringFormatter private (
    *                 project IRI.
    * @return the same string but escaped.
    */
+  @deprecated("Use validateAndEscapeProjectIri(IRI) instead.")
   def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    if (isKnoraProjectIriStr(iri)) {
-      toSparqlEncodedString(iri, errorFun)
-    } else {
-      errorFun
-    }
+    validateAndEscapeProjectIri(iri).getOrElse(errorFun)
 
-  /**
-   * Check that an optional string represents a valid project IRI.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    project IRI.
-   * @return the same optional string but escaped.
-   */
-  def validateAndEscapeOptionalProjectIri(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[IRI] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeProjectIri(s, errorFun))
-      case None    => None
-    }
+  def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
+    if (isKnoraProjectIriStr(iri)) toSparqlEncodedString(iri)
+    else None
 
   /**
    * Check that the string represents a valid project shortname.
    *
    * @param shortname string to be checked.
-   * @param errorFun  a function that throws an exception. It will be called if the string does not represent a valid
-   *                  project shortname.
    * @return the same string.
    */
-  def validateAndEscapeProjectShortname(shortname: String, errorFun: => Nothing): String = { // V2 / value objects
-    // Check that shortname matches NCName pattern
-    val ncNameMatch = NCNameRegex.findFirstIn(shortname) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
-    // Check that shortname is URL safe
-    Base64UrlPatternRegex.findFirstIn(ncNameMatch) match {
-      case Some(shortname) => toSparqlEncodedString(shortname, errorFun)
-      case None            => errorFun
-    }
-  }
-
-  /**
-   * Check that an optional string represents a valid project shortname.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    project shortname.
-   * @return the same optional string.
-   */
-  def validateAndEscapeOptionalProjectShortname(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[String] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeProjectShortname(s, errorFun))
-      case None    => None
-    }
+  def validateAndEscapeProjectShortname(shortname: String): Option[String] =
+    NCNameRegex
+      .findFirstIn(shortname)
+      .flatMap(Base64UrlPatternRegex.findFirstIn)
+      .flatMap(toSparqlEncodedString)
 
   /**
    * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
@@ -2013,19 +1963,12 @@ class StringFormatter private (
    * @param shortcode the project's shortcode.
    * @return the shortcode in upper case.
    */
+  @deprecated("Use def validateProjectShortcode(String) instead.")
   def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = // V2 / value objects
-    ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
+    validateProjectShortcode(shortcode).getOrElse(errorFun)
 
-  def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = // --
-    // TODO: I leave this for now to avoid merge conflicts. Should be moved to the ValuesValidator as soon as possible. (depends on toSparqlEncodedString())
-    maybeString match {
-      case Some(s) =>
-        Some(toSparqlEncodedString(s, errorFun))
-      case None => None
-    }
+  def validateProjectShortcode(shortcode: String): Option[String] =
+    ProjectIDRegex.findFirstIn(shortcode.toUpperCase)
 
   /**
    * Given the group IRI, checks if it is in a valid format.
@@ -2033,24 +1976,9 @@ class StringFormatter private (
    * @param iri the group's IRI.
    * @return the IRI of the list.
    */
-  def validateGroupIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    if (isKnoraGroupIriStr(iri)) {
-      iri
-    } else {
-      errorFun
-    }
-
-  /**
-   * Given the optional group IRI, checks if it is in a valid format.
-   *
-   * @param maybeIri the optional group's IRI to be checked.
-   * @return the same optional IRI.
-   */
-  def validateOptionalGroupIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = // V2 / value objects
-    maybeIri match {
-      case Some(iri) => Some(validateGroupIri(iri, errorFun))
-      case None      => None
-    }
+  def validateGroupIri(iri: IRI): Validation[ValidationException, IRI] =
+    if (isKnoraGroupIriStr(iri)) Validation.succeed(iri)
+    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
    * Given the permission IRI, checks if it is in a valid format.
@@ -2058,12 +1986,13 @@ class StringFormatter private (
    * @param iri the permission's IRI.
    * @return the IRI of the list.
    */
+  @deprecated("Use validatePermissionIri(IRI) instead.")
   def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    if (isKnoraPermissionIriStr(iri)) {
-      iri
-    } else {
-      errorFun
-    }
+    validatePermissionIri(iri).getOrElse(errorFun)
+
+  def validatePermissionIri(iri: IRI): Option[IRI] =
+    if (isKnoraPermissionIriStr(iri)) Some(iri)
+    else None
 
   /**
    * Check that the supplied IRI represents a valid user IRI.
@@ -2073,29 +2002,13 @@ class StringFormatter private (
    *                 user IRI.
    * @return the same string but escaped.
    */
+  @deprecated("Use validateAndEscapeUserIri(IRI) instead.")
   def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = // V2 / value objects
-    if (isKnoraUserIriStr(iri)) {
-      toSparqlEncodedString(iri, errorFun)
-    } else {
-      errorFun
-    }
+    toSparqlEncodedString(iri).getOrElse(errorFun)
 
-  /**
-   * Check that an optional string represents a valid user IRI.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    user IRI.
-   * @return the same optional string.
-   */
-  def validateAndEscapeOptionalUserIri(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[String] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeUserIri(s, errorFun))
-      case None    => None
-    }
+  def validateAndEscapeUserIri(iri: IRI): Option[String] =
+    if (isKnoraUserIriStr(iri)) toSparqlEncodedString(iri)
+    else None
 
   /**
    * Given an email address, checks if it is in a valid format.
@@ -2103,28 +2016,12 @@ class StringFormatter private (
    * @param email the email.
    * @return the email
    */
+  @deprecated("Use validateEmailAndThrow(String) instead.")
   def validateEmailAndThrow(email: String, errorFun: => Nothing): String = // V2 / value objects
-    EmailAddressRegex.findFirstIn(email) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
+    validateEmail(email).getOrElse(errorFun)
 
-  /**
-   * Check that an optional string represents a valid email address.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    email address.
-   * @return the same optional string.
-   */
-  def validateAndEscapeOptionalEmail(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[String] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(toSparqlEncodedString(validateEmailAndThrow(s, errorFun), errorFun))
-      case None    => None
-    }
+  def validateEmail(email: String): Option[String] =
+    EmailAddressRegex.findFirstIn(email)
 
   /**
    * Check that the string represents a valid username.
@@ -2134,11 +2031,12 @@ class StringFormatter private (
    *                 username.
    * @return the same string.
    */
+  @deprecated("Use validateUsername(String) instead.")
   def validateUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    UsernameRegex.findFirstIn(value) match {
-      case Some(username) => username
-      case None           => errorFun
-    }
+    validateUsername(value).getOrElse(errorFun)
+
+  def validateUsername(value: String): Option[String] =
+    UsernameRegex.findFirstIn(value)
 
   /**
    * Check that the string represents a valid username and escape any special characters.
@@ -2148,28 +2046,12 @@ class StringFormatter private (
    *                 username.
    * @return the same string with escaped special characters.
    */
+  @deprecated("Use validateAndEscapeUsername(String) instead.")
   def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    UsernameRegex.findFirstIn(value) match {
-      case Some(username) => toSparqlEncodedString(username, errorFun)
-      case None           => errorFun
-    }
+    validateAndEscapeUsername(value).getOrElse(errorFun)
 
-  /**
-   * Check that an optional string represents a valid username.
-   *
-   * @param maybeString the optional string to be checked.
-   * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-   *                    username.
-   * @return the same optional string.
-   */
-  def validateAndEscapeOptionalUsername(
-    maybeString: Option[String],
-    errorFun: => Nothing
-  ): Option[String] = // V2 / value objects
-    maybeString match {
-      case Some(s) => Some(validateAndEscapeUsername(s, errorFun))
-      case None    => None
-    }
+  def validateAndEscapeUsername(value: String): Option[String] =
+    UsernameRegex.findFirstIn(value).flatMap(toSparqlEncodedString)
 
   /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
@@ -2324,11 +2206,12 @@ class StringFormatter private (
    * @param base64Uuid the Base64-encoded UUID to be decoded.
    * @return the equivalent [[UUID]].
    */
-  def base64DecodeUuid(base64Uuid: String): UUID = {
-    val bytes      = base64Decoder.decode(base64Uuid)
-    val byteBuffer = ByteBuffer.wrap(bytes)
-    new UUID(byteBuffer.getLong, byteBuffer.getLong)
-  }
+  def base64DecodeUuid(base64Uuid: String): Try[UUID] =
+    Try {
+      val bytes      = base64Decoder.decode(base64Uuid)
+      val byteBuffer = ByteBuffer.wrap(bytes)
+      new UUID(byteBuffer.getLong, byteBuffer.getLong)
+    }
 
   /**
    * Validates and decodes a Base64-encoded UUID.
@@ -2337,16 +2220,12 @@ class StringFormatter private (
    * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
    * @return the decoded UUID.
    */
-  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = { // V2 / value objects
-    val decodeTry = Try {
-      base64DecodeUuid(base64Uuid)
-    }
+  @deprecated("Use validateBase64EncodedUuid(String) instead.")
+  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = // V2 / value objects
+    validateBase64EncodedUuid(base64Uuid).getOrElse(errorFun)
 
-    decodeTry match {
-      case Success(uuid) => uuid
-      case Failure(_)    => errorFun
-    }
-  }
+  def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
+    base64DecodeUuid(base64Uuid).toOption
 
   /**
    * Encodes a [[UUID]] as a string in one of two formats:
@@ -2366,34 +2245,17 @@ class StringFormatter private (
     }
 
   /**
-   * Calls `decodeUuidWithErr`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
+   * Calls `base64DecodeUuid`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
    */
+  @deprecated("It is still throwing!")
   def decodeUuid(uuidStr: String): UUID =
-    decodeUuidWithErr(uuidStr, throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
-
-  /**
-   * Decodes a string representing a UUID in one of two formats:
-   *
-   * - The canonical 36-character format.
-   * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
-   *
-   * Shorter strings are padded with leading zeroes to 22 characters and parsed in Base64 format
-   * (this is non-reversible, and is needed only for working with test data).
-   *
-   * @param uuidStr  the string to be decoded.
-   * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return the decoded [[UUID]].
-   */
-  def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID = // V2 / value objects
-    if (uuidStr.length == CanonicalUuidLength) {
-      UUID.fromString(uuidStr)
-    } else if (uuidStr.length == Base64UuidLength) {
-      base64DecodeUuid(uuidStr)
-    } else if (uuidStr.length < Base64UuidLength) {
+    if (uuidStr.length == CanonicalUuidLength) UUID.fromString(uuidStr)
+    else if (uuidStr.length == Base64UuidLength)
+      base64DecodeUuid(uuidStr).getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
+    else if (uuidStr.length < Base64UuidLength)
       base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
-    } else {
-      errorFun
-    }
+        .getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
+    else throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr")
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.
