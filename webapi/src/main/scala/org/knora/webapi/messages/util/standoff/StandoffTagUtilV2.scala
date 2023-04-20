@@ -19,7 +19,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StandoffStuff
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -727,7 +726,7 @@ object StandoffTagUtilV2 {
 
           val internalLink: StandoffTagAttributeV2 = StandoffTagIriAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-            value = StandoffStuff.validateStandoffLinkResourceReference(
+            value = StandoffStringUtil.validateStandoffLinkResourceReference(
               linkString,
               acceptStandoffLinksToClientIDs,
               throw BadRequestException(s"Invalid standoff resource reference: $linkString")

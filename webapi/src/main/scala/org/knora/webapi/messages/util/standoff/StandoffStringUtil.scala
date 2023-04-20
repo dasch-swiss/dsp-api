@@ -1,4 +1,4 @@
-package org.knora.webapi.messages
+package org.knora.webapi.messages.util.standoff
 
 import zio.prelude.Validation
 
@@ -7,22 +7,14 @@ import scala.util.matching.Regex
 import dsp.errors.NotFoundException
 import dsp.errors.ValidationException
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.XmlPatterns
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 
-object XmlPatterns {
-  // A regex sub-pattern for ontology prefix labels and local entity names. According to
-  // <https://www.w3.org/TR/turtle/#prefixed-name>, a prefix label in Turtle must be a valid XML NCName
-  // <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>. Knora also requires a local entity name to
-  // be an XML NCName.
-  val nCNamePattern: String = """[\p{L}_][\p{L}0-9_.-]*"""
-
-  // A regex for matching a string containing only an ontology prefix label or a local entity name.
-  val nCNameRegex: Regex = ("^" + nCNamePattern + "$").r
-}
-
-object StandoffStuff {
+object StandoffStringUtil {
 
   // In XML import data, a standoff link tag that refers to a resource described in the import must have the
   // form defined by this regex.
@@ -54,7 +46,7 @@ object StandoffStuff {
     validateStandoffLinkResourceReference(s, acceptClientIDs).getOrElse(errorFun)
 
   def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
-    if (acceptClientIDs && StandoffStuff.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
+    if (acceptClientIDs && StandoffStringUtil.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
     else StringFormatter.validateAndEscapeIri(s)
 
   /**

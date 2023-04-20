@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages
 
-import XmlPatterns.nCNamePattern
-import XmlPatterns.nCNameRegex
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._

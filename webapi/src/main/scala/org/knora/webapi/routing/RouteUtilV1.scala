@@ -23,13 +23,13 @@ import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
-import org.knora.webapi.messages.StandoffStuff
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.twirl.ResourceHtmlView
+import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -293,7 +293,7 @@ object RouteUtilV1 {
       .orElseFail(BadRequestException(errorMsg))
 
   def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): Task[Set[IRI]] =
-    ZIO.attempt(StandoffStuff.getResourceIrisFromStandoffTags(tags))
+    ZIO.attempt(StandoffStringUtil.getResourceIrisFromStandoffTags(tags))
 
   def xsdDateTimeStampToInstant(s: String, errorMsg: String): IO[Throwable, Instant] =
     ZIO.fromOption(ValuesValidator.xsdDateTimeStampToInstant(s)).orElseFail(BadRequestException(errorMsg))
