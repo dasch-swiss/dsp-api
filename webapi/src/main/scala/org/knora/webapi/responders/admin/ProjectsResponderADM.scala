@@ -57,11 +57,12 @@ trait ProjectsResponderADM {
   /**
    * Gets all the projects and returns them as a [[ProjectADM]].
    *
+   * @param withSystemProjects includes system projcets in response.
    * @return all the projects as a [[ProjectADM]].
    *
    *         NotFoundException if no projects are found.
    */
-  def projectsGetRequestADM(): Task[ProjectsGetResponseADM]
+  def projectsGetRequestADM(withSystemProjects: Boolean): Task[ProjectsGetResponseADM]
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -196,9 +197,9 @@ final case class ProjectsResponderADMLive(
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ProjectsGetRequestADM()          => projectsGetRequestADM()
-    case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
-    case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
+    case ProjectsGetRequestADM(withSystemProjects) => projectsGetRequestADM(withSystemProjects)
+    case ProjectGetADM(identifier)                 => getProjectFromCacheOrTriplestore(identifier)
+    case ProjectGetRequestADM(identifier)          => getSingleProjectADMRequest(identifier)
     case ProjectMembersGetRequestADM(identifier, requestingUser) =>
       projectMembersGetRequestADM(identifier, requestingUser)
     case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
@@ -230,17 +231,24 @@ final case class ProjectsResponderADMLive(
   }
 
   /**
-   * Gets all the projects and returns them as a [[ProjectADM]].
+   * Gets all the projects but not system projects and returns them as a [[ProjectADM]].
    *
+   * @param  withSystemProjects includes system projcets in response.
    * @return all the projects as a [[ProjectADM]].
    *
    *         [[NotFoundException]] if no projects are found.
    */
-  override def projectsGetRequestADM(): Task[ProjectsGetResponseADM] =
+  override def projectsGetRequestADM(withSystemProjects: Boolean): Task[ProjectsGetResponseADM] =
     projectService.findAll
       .flatMap(projects =>
-        if (projects.nonEmpty) { ZIO.succeed(ProjectsGetResponseADM(projects)) }
-        else { ZIO.fail(NotFoundException(s"No projects found")) }
+        (projects, withSystemProjects) match {
+          case (Nil, _)  => ZIO.fail(NotFoundException(s"No projects found"))
+          case (_, true) => ZIO.succeed(ProjectsGetResponseADM(projects))
+          case _ => {
+            val noSystemProjects: List[ProjectADM] = projects.filter(p => p.id.startsWith("http://rdfh.ch/projects/"))
+            ZIO.succeed(ProjectsGetResponseADM(noSystemProjects))
+          }
+        }
       )
 
   /**

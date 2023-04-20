@@ -43,12 +43,14 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   "The ProjectsResponderADM" when {
     "used to query for project information" should {
-      "return information for every project" in {
+      "return information for every project excluding system projects" in {
         appActor ! ProjectsGetRequestADM()
         val received = expectMsgType[ProjectsGetResponseADM](timeout)
 
         assert(received.projects.contains(SharedTestDataADM.imagesProject))
         assert(received.projects.contains(SharedTestDataADM.incunabulaProject))
+        assert(!received.projects.contains(SharedTestDataADM.systemProjectIri))
+        assert(!received.projects.contains(SharedTestDataADM.defaultSharedOntologiesProject))
       }
 
       "return information about a project identified by IRI" in {

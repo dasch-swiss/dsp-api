@@ -63,9 +63,9 @@ class ProjectsADME2EZioHttpSpec
 
   s"The Projects Route ($baseApiUrl -> 'admin/projects')" when {
     "used to query for project information" should {
-      "return all projects" in {
-        val request                = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
+      "return all projects excluding built-in system projects" in {
+        val request  = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+        val response = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
@@ -73,7 +73,7 @@ class ProjectsADME2EZioHttpSpec
 
         val projects: Seq[ProjectADM] =
           AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
-        projects.size should be(8)
+        projects.size should be(6)
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(

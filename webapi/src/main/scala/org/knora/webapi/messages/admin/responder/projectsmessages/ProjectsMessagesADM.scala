@@ -166,8 +166,10 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMes
 /**
  * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
+ *
+ * @param withSystemProjects includes system projcets in response.
  */
-case class ProjectsGetRequestADM() extends ProjectsResponderRequestADM
+case class ProjectsGetRequestADM(withSystemProjects: Boolean = false) extends ProjectsResponderRequestADM
 
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
