@@ -5,6 +5,9 @@
 
 package org.knora.webapi.messages
 
+import XmlPatterns.nCNamePattern
+import XmlPatterns.nCNameRegex
+import StandoffStuff.standoffLinkReferenceToClientIdForResourceRegex
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
@@ -659,16 +662,6 @@ class StringFormatter private (
     "\\n"
   )
 
-  // A regex sub-pattern for ontology prefix labels and local entity names. According to
-  // <https://www.w3.org/TR/turtle/#prefixed-name>, a prefix label in Turtle must be a valid XML NCName
-  // <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>. Knora also requires a local entity name to
-  // be an XML NCName.
-  private val NCNamePattern: String =
-    """[\p{L}_][\p{L}0-9_.-]*"""
-
-  // A regex for matching a string containing only an ontology prefix label or a local entity name.
-  private val NCNameRegex: Regex = ("^" + NCNamePattern + "$").r
-
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
   private val ProjectIDPattern: String =
     """\p{XDigit}{4,4}"""
@@ -679,7 +672,7 @@ class StringFormatter private (
   // A regex for the URL path of an API v2 ontology (built-in or project-specific).
   private val ApiV2OntologyUrlPathRegex: Regex = (
     "^" + "/ontology/((" +
-      ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
+      ProjectIDPattern + ")/)?(" + nCNamePattern + ")(" +
       OntologyConstants.KnoraApiV2Complex.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
   ).r
 
@@ -692,20 +685,14 @@ class StringFormatter private (
   // A regex for a project-specific XML import namespace.
   private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
     "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
-      "(shared/)?((" + ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+      "(shared/)?((" + ProjectIDPattern + ")/)?(" + nCNamePattern + ")" +
       OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
   ).r
 
   // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
   // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
   private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-    "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
-  ).r
-
-  // In XML import data, a standoff link tag that refers to a resource described in the import must have the
-  // form defined by this regex.
-  private val StandoffLinkReferenceToClientIDForResourceRegex: Regex = (
-    "^ref:(" + NCNamePattern + ")$"
+    "^(p(" + ProjectIDPattern + ")-)?(" + nCNamePattern + ")__(" + nCNamePattern + ")$"
   ).r
 
   private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
@@ -874,7 +861,7 @@ class StringFormatter private (
             val entityName = iri.substring(hashPos + 1)
 
             // Validate the entity name as an NCName.
-            if (!NCNameRegex.matches(entityName)) errorFun
+            if (!nCNameRegex.matches(entityName)) errorFun
             (namespace, Some(entityName))
           } else {
             (iri, None)
@@ -1556,20 +1543,9 @@ class StringFormatter private (
     validateStandoffLinkResourceReference(s, acceptClientIDs).getOrElse(errorFun)
 
   def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
-    if (acceptClientIDs && isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
+    if (acceptClientIDs && StandoffStuff.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
     else validateAndEscapeIri(s)
 
-  /**
-   * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
-   *
-   * @param s the string to be checked.
-   * @return `true` if the string is an XML NCName prefixed by `ref:`.
-   */
-  def isStandoffLinkReferenceToClientIDForResource(s: String): Boolean =
-    s match {
-      case StandoffLinkReferenceToClientIDForResourceRegex(_) => true
-      case _                                                  => false
-    }
 
   /**
    * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
@@ -1582,7 +1558,7 @@ class StringFormatter private (
    */
   def toRealStandoffLinkTargetResourceIri(iri: IRI, clientResourceIDsToResourceIris: Map[String, IRI]): IRI =
     iri match {
-      case StandoffLinkReferenceToClientIDForResourceRegex(clientResourceID) =>
+      case standoffLinkReferenceToClientIdForResourceRegex(clientResourceID) =>
         clientResourceIDsToResourceIris(clientResourceID)
       case _ => iri
     }
@@ -1952,7 +1928,7 @@ class StringFormatter private (
    * @return the same string.
    */
   def validateAndEscapeProjectShortname(shortname: String): Option[String] =
-    NCNameRegex
+    nCNameRegex
       .findFirstIn(shortname)
       .flatMap(Base64UrlPatternRegex.findFirstIn)
       .flatMap(toSparqlEncodedString)

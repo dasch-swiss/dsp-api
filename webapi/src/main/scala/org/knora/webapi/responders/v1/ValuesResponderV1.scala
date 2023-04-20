@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v1
 
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
 import java.time.Instant
 import scala.annotation.tailrec
 
@@ -18,6 +17,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.StandoffStuff
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
@@ -438,7 +438,7 @@ final case class ValuesResponderV1Live(
         // So now we can get the set of standoff link targets that are ordinary IRIs, and check that each of
         // them exists in the triplestore and is a knora-base:Resource.
         targetIrisThatAlreadyExist: Set[IRI] =
-          targetIris.keySet.filterNot(iri => stringFormatter.isStandoffLinkReferenceToClientIDForResource(iri))
+          targetIris.keySet.filterNot(iri => StandoffStuff.isStandoffLinkReferenceToClientIDForResource(iri))
 
         _ <- checkStandoffResourceReferenceTargets(
                targetIris = targetIrisThatAlreadyExist,
