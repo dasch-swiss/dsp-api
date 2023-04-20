@@ -299,6 +299,19 @@ object StringFormatter {
       JavaUtil.function({ _: Object => creationFun() })
     )
 
+  /**
+   * Checks that a string represents a valid IRI.
+   * Also encodes the IRI, preserving existing %-escapes.
+   *
+   * @param s the string to be checked.
+   * @return A validated and escaped IRI.
+   */
+  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
+    Validation
+      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
+      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
+
+
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
     StringFormatter.getGeneralInstance
@@ -1458,19 +1471,7 @@ class StringFormatter private (
    */
   @deprecated("Use validateAndEscapeIri(String) instead")
   def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI =
-    validateAndEscapeIri(s).getOrElse(errorFun)
-
-  /**
-   * Checks that a string represents a valid IRI.
-   * Also encodes the IRI, preserving existing %-escapes.
-   *
-   * @param s        the string to be checked.
-   * @return A validated and escaped IRI.
-   */
-  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
-    Validation
-      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
-      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
+    StringFormatter.validateAndEscapeIri(s).getOrElse(errorFun)
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
@@ -1528,24 +1529,6 @@ class StringFormatter private (
    */
   def isKnoraPermissionIriStr(iri: IRI): Boolean = // V2 / value objects
     Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
-
-  /**
-   * Checks that a string represents a valid resource identifier in a standoff link.
-   *
-   * @param s               the string to be checked.
-   * @param acceptClientIDs if `true`, the function accepts either an IRI or an XML NCName prefixed by `ref:`.
-   *                        The latter is used to refer to a client's ID for a resource that is described in an XML bulk import.
-   *                        If `false`, only an IRI is accepted.
-   * @param errorFun        a function that throws an exception. It will be called if the form of the string is invalid.
-   * @return the same string.
-   */
-  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: => Nothing): IRI =
-    validateStandoffLinkResourceReference(s, acceptClientIDs).getOrElse(errorFun)
-
-  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
-    if (acceptClientIDs && StandoffStuff.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
-    else validateAndEscapeIri(s)
-
 
   /**
    * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI

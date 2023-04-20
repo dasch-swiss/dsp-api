@@ -1,6 +1,10 @@
 package org.knora.webapi.messages
 
+import zio.prelude.Validation
 import scala.util.matching.Regex
+
+import dsp.errors.ValidationException
+import org.knora.webapi.IRI
 
 object XmlPatterns {
   // A regex sub-pattern for ontology prefix labels and local entity names. According to
@@ -30,4 +34,21 @@ object StandoffStuff {
       case standoffLinkReferenceToClientIdForResourceRegex(_) => true
       case _                                                  => false
     }
+
+  /**
+   * Checks that a string represents a valid resource identifier in a standoff link.
+   *
+   * @param s               the string to be checked.
+   * @param acceptClientIDs if `true`, the function accepts either an IRI or an XML NCName prefixed by `ref:`.
+   *                        The latter is used to refer to a client's ID for a resource that is described in an XML bulk import.
+   *                        If `false`, only an IRI is accepted.
+   * @param errorFun        a function that throws an exception. It will be called if the form of the string is invalid.
+   * @return the same string.
+   */
+  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: => Nothing): IRI =
+    validateStandoffLinkResourceReference(s, acceptClientIDs).getOrElse(errorFun)
+
+  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
+    if (acceptClientIDs && StandoffStuff.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
+    else StringFormatter.validateAndEscapeIri(s)
 }
