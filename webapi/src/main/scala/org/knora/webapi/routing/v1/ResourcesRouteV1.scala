@@ -716,14 +716,15 @@ final case class ResourcesRouteV1()(
     // IRI of the main ontology used in the import.
 
     for {
-      mainOntologyIri <- ZIO.serviceWithZIO[StringFormatter](sf =>
-                           ZIO.attempt(
-                             sf.xmlImportNamespaceToInternalOntologyIriV1(
-                               defaultNamespace,
-                               throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
-                             )
-                           )
-                         )
+      mainOntologyIri <-
+        ZIO.serviceWithZIO[StringFormatter](sf =>
+          ZIO.attempt(
+            sf.xmlImportNamespaceToInternalOntologyIriV1(
+              defaultNamespace,
+              throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
+            )
+          )
+        )
       // Generate a bundle of XML schemas for validating the submitted XML.
       schemaBundle <- generateSchemasFromOntologies(mainOntologyIri.toString, userADM)
       _            <- validateXml(xml, schemaBundle)

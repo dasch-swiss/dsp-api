@@ -47,10 +47,15 @@ final case class GetListItemsRouteADM(
     get {
       parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
         val projectIri =
-          stringFormatter.validateAndEscapeOptionalIri(
-            maybeProjectIri,
-            throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri")
-          )
+          maybeProjectIri match {
+            case None => None
+            case Some(value) =>
+              stringFormatter
+                .validateAndEscapeIri(value)
+                .toOption
+                .orElse(throw BadRequestException(s"Invalid param project IRI: $value"))
+          }
+
         val requestTask = Authenticator.getUserADM(requestContext).map(ListsGetRequestADM(projectIri, _))
         runJsonRouteZ(requestTask, requestContext)
       }

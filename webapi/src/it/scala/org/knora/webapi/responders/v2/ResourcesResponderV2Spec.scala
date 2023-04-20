@@ -2400,7 +2400,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               comment = Some("this is the number five")
             ),
             permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
-            customValueUUID = Some(stringFormatter.base64DecodeUuid("IN4R19yYR0ygi3K2VEHpUQ"))
+            customValueUUID = Some(stringFormatter.base64DecodeUuid("IN4R19yYR0ygi3K2VEHpUQ").get)
           )
         )
       )

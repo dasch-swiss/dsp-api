@@ -60,10 +60,9 @@ final case class ValuesRouteV2(
         }
 
         val valueUuid: UUID =
-          stringFormatter.decodeUuidWithErr(
-            valueUuidStr,
-            throw BadRequestException(s"Invalid value UUID: $valueUuidStr")
-          )
+          stringFormatter
+            .base64DecodeUuid(valueUuidStr)
+            .getOrElse(throw BadRequestException(s"Invalid value UUID: $valueUuidStr"))
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
 

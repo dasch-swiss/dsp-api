@@ -12,6 +12,7 @@ import zio._
 
 import java.time.Instant
 import java.util.UUID
+import scala.util.Success
 
 import dsp.errors._
 import org.knora.webapi._
@@ -2611,9 +2612,8 @@ final case class ValuesResponderV2Live(
       case Some(customValueUUID) =>
         // Yes. Check that if a custom IRI is given, it ends with the same UUID
         if (
-          maybeCustomIri.nonEmpty && stringFormatter.base64DecodeUuid(
-            maybeCustomIri.get.toString.split("/").last
-          ) != customValueUUID
+          maybeCustomIri.nonEmpty &&
+          stringFormatter.base64DecodeUuid(maybeCustomIri.get.toString.split("/").last) != Success(customValueUUID)
         ) {
           throw BadRequestException(
             s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${stringFormatter
@@ -2626,7 +2626,10 @@ final case class ValuesResponderV2Live(
         maybeCustomIri match {
           case Some(customIri: SmartIri) =>
             // Yes. Get the UUID from the given value IRI
-            val endingUUID: UUID = stringFormatter.base64DecodeUuid(customIri.toString.split("/").last)
+            val endingUUID: UUID = stringFormatter
+              .base64DecodeUuid(customIri.toString.split("/").last)
+              .toOption
+              .getOrElse(throw BadRequestException(s"Invalid UUID in IRI: $customIri"))
             endingUUID
           case None => UUID.randomUUID
         }
