@@ -22,7 +22,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
  * @param typeInspectionResult the result of type inspection of the input query.
  * @param querySchema          the ontology schema used in the input query.
  */
-class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
+class GravsearchToCountPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema

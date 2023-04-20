@@ -16,7 +16,7 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfResources
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueRdfData
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.ValueRdfData
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris
-import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 
 object MainQueryResultProcessor {
@@ -39,7 +39,7 @@ object MainQueryResultProcessor {
     valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
     allResourceVariablesFromTypeInspection: Set[QueryVariable],
     dependentResourceIrisFromTypeInspection: Set[IRI],
-    transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
+    transformer: GravsearchToPrequeryTransformer,
     typeInspectionResult: GravsearchTypeInspectionResult,
     inputQuery: ConstructQuery
   ): RdfResources = {
