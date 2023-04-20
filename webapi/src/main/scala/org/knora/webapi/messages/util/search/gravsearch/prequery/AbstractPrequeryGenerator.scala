@@ -75,6 +75,65 @@ abstract class AbstractPrequeryGenerator(
   var useInference = true
 
   /**
+   * Transforms a [[org.knora.webapi.messages.util.search.StatementPattern]] in a WHERE clause into zero or more query patterns.
+   *
+   * @param statementPattern           the statement to be transformed.
+   * @param inputOrderBy               the ORDER BY clause in the input query.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
+   * @return the result of the transformation.
+   */
+  override def transformStatementInWhere(
+    statementPattern: StatementPattern,
+    inputOrderBy: Seq[OrderCriterion],
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+  ): Task[Seq[QueryPattern]] =
+    // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
+    // other information about the matching resources or values.
+    processStatementPatternFromWhereClause(
+      statementPattern = statementPattern,
+      inputOrderBy = inputOrderBy,
+      limitInferenceToOntologies = limitInferenceToOntologies
+    )
+
+  /**
+   * Runs optimisations that take a Gravsearch query as input. An optimisation needs to be run here if
+   * it uses the type inspection result that refers to the Gravsearch query.
+   *
+   * @param patterns the query patterns to be optimised.
+   * @return the optimised query patterns.
+   */
+  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
+    ZIO.attempt(
+      GravsearchQueryOptimisationFactory
+        .getGravsearchQueryOptimisationFeature(
+          typeInspectionResult = typeInspectionResult,
+          querySchema = querySchema
+        )
+        .optimiseQueryPatterns(patterns)
+    )
+
+  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
+    ZIO.succeed(Seq(luceneQueryPattern))
+
+  /**
+   * Transforms a [[org.knora.webapi.messages.util.search.FilterPattern]] in a WHERE clause into zero or more statement patterns.
+   *
+   * @param filterPattern the filter to be transformed.
+   * @return the result of the transformation.
+   */
+  override def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.attempt {
+    val filterExpression: TransformedFilterPattern =
+      transformFilterPattern(filterPattern.expression, typeInspectionResult = typeInspectionResult, isTopLevel = true)
+
+    filterExpression.expression match {
+      case Some(expression: Expression) => filterExpression.additionalPatterns :+ FilterPattern(expression)
+
+      case None => filterExpression.additionalPatterns // no FILTER expression given
+    }
+
+  }
+
+  /**
    * When we enter a UNION block, pushes an empty collection of generated variables on to the stack
    * valueVariablesAutomaticallyGenerated.
    */
