@@ -12,7 +12,6 @@ import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import zio.IO
 import zio.ZIO
-
 import java.io.StringReader
 import java.io.StringWriter
 import java.util
@@ -24,9 +23,11 @@ import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasComment
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.routing.RouteUtilZ
 
 /*
 
@@ -1784,5 +1785,22 @@ object JsonLDUtil {
         // It's a blank node. It should be possible to inline it. If not, return an empty blank node.
         inlineResource(JsonLDObject.empty)
     }
+  }
+
+  /**
+   * Extracts the comment from a JSON-LD object by looking for the key [[ValueHasComment]].
+   * If the comment is present, it is converted to a SPARQL-escaped string.
+   *
+   * @param jsonLDObject The JSON-LD object.
+   * @return The comment, if found.
+   *         [[None]] if the comment is not present.
+   *         Fails with a [[BadRequestException]] if the comment is present but invalid.
+   */
+  def getComment(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, Option[String]] = {
+    val key = ValueHasComment
+    jsonLDObject
+      .getString(key)
+      .mapError(BadRequestException(_))
+      .flatMap(ZIO.foreach(_)(value => RouteUtilZ.toSparqlEncodedString(value, s"Invalid $key: $value")))
   }
 }

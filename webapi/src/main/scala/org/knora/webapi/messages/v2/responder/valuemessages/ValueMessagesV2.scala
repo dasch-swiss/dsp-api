@@ -1308,7 +1308,7 @@ object DateValueContentV2 {
     requestingUser: UserADM
   ): ZIO[StringFormatter, Throwable, DateValueContentV2] =
     for {
-      comment                     <- RouteUtilZ.getComment(jsonLDObject)
+      comment                     <- JsonLDUtil.getComment(jsonLDObject)
       calendarName                <- ZIO.attempt(jsonLDObject.requireStringWithValidation(DateValueHasCalendar, CalendarNameV2.parse))
       dateValueHasStartYear       <- ZIO.attempt(jsonLDObject.requireInt(DateValueHasStartYear))
       maybeDateValueHasStartMonth <- ZIO.attempt(jsonLDObject.maybeInt(DateValueHasStartMonth))
@@ -1681,7 +1681,7 @@ object TextValueContentV2 {
   ) =
     (maybeValueAsString, maybeTextValueAsXml, maybeMappingResponse) match {
       case (Some(valueAsString), None, None) => // Text without standoff.
-        RouteUtilZ
+        JsonLDUtil
           .getComment(jsonLdObject)
           .map(comment =>
             TextValueContentV2(
@@ -1702,7 +1702,7 @@ object TextValueContentV2 {
                                     )
                                   )
           text    <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
-          comment <- RouteUtilZ.getComment(jsonLdObject)
+          comment <- JsonLDUtil.getComment(jsonLdObject)
         } yield TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(text),
@@ -1746,7 +1746,7 @@ object TextValueContentV2 {
             }
           )
 
-        comment <- RouteUtilZ.getComment(jsonLdObject)
+        comment <- JsonLDUtil.getComment(jsonLdObject)
         // Did the client submit text with or without standoff markup?
         textValue <- getTextValue(
                        maybeValueAsString,
@@ -1827,7 +1827,7 @@ object IntegerValueContentV2 {
   ): ZIO[StringFormatter, Throwable, IntegerValueContentV2] =
     for {
       intValue <- ZIO.attempt(jsonLDObject.requireInt(IntValueAsInt))
-      comment  <- RouteUtilZ.getComment(jsonLDObject)
+      comment  <- JsonLDUtil.getComment(jsonLDObject)
     } yield IntegerValueContentV2(ApiV2Complex, intValue, comment)
 }
 
@@ -1915,7 +1915,7 @@ object DecimalValueContentV2 {
                             validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
                           )
                         )
-        comment <- RouteUtilZ.getComment(jsonLdObject)
+        comment <- JsonLDUtil.getComment(jsonLdObject)
       } yield DecimalValueContentV2(ApiV2Complex, decimalValue, comment)
   }
 }
@@ -1989,7 +1989,7 @@ object BooleanValueContentV2 {
   ): ZIO[StringFormatter, Throwable, BooleanValueContentV2] =
     for {
       booleanValue <- ZIO.attempt(jsonLdObject.requireBoolean(BooleanValueAsBoolean))
-      comment      <- RouteUtilZ.getComment(jsonLdObject)
+      comment      <- JsonLDUtil.getComment(jsonLdObject)
     } yield BooleanValueContentV2(ApiV2Complex, booleanValue, comment)
 }
 
@@ -2068,7 +2068,7 @@ object GeomValueContentV2 {
                                      (s, errorFun) => ValuesValidator.validateGeometryString(s).getOrElse(errorFun)
                                    )
                                  )
-      comment <- RouteUtilZ.getComment(jsonLDObject)
+      comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield GeomValueContentV2(ontologySchema = ApiV2Complex, geometryValueAsGeometry, comment)
 }
 
@@ -2179,7 +2179,7 @@ object IntervalValueContentV2 {
                                      (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
                                  )
                                )
-        comment <- RouteUtilZ.getComment(jsonLDObject)
+        comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield IntervalValueContentV2(ApiV2Complex, intervalValueHasStart, intervalValueHasEnd, comment)
     }
 }
@@ -2272,7 +2272,7 @@ object TimeValueContentV2 {
                                    (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
                                )
                              )
-        comment <- RouteUtilZ.getComment(jsonLDObject)
+        comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield TimeValueContentV2(ApiV2Complex, valueHasTimeStamp, comment)
     }
 }
@@ -2371,7 +2371,7 @@ object HierarchicalListValueContentV2 {
         _ <- ZIO
                .fail(BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI"))
                .when(!listValueAsListNode.isKnoraDataIri)
-        comment <- RouteUtilZ.getComment(jsonLDObject)
+        comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield HierarchicalListValueContentV2(ApiV2Complex, listValueAsListNode.toString, comment)
   }
 }
@@ -2452,7 +2452,7 @@ object ColorValueContentV2 {
                                  stringFormatter.toSparqlEncodedString
                                )
                              )
-        comment <- RouteUtilZ.getComment(jsonLDObject)
+        comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield ColorValueContentV2(ApiV2Complex, colorValueAsColor, comment)
     }
 }
@@ -2536,7 +2536,7 @@ object UriValueContentV2 {
                              validationFun = stringFormatter.toSparqlEncodedString
                            )
                          )
-        comment <- RouteUtilZ.getComment(jsonLDObject)
+        comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield UriValueContentV2(ApiV2Complex, uriValueAsUri, comment)
     }
 }
@@ -2623,7 +2623,7 @@ object GeonameValueContentV2 {
                                          stringFormatter.toSparqlEncodedString
                                        )
                                      )
-        comment <- RouteUtilZ.getComment(jsonLDObject)
+        comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield GeonameValueContentV2(ApiV2Complex, geonameValueAsGeonameCode, comment)
     }
 }
@@ -2793,7 +2793,7 @@ object StillImageFileValueContentV2 {
   ): ZIO[StringFormatter with MessageRelay, Throwable, StillImageFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
-      comment                   <- RouteUtilZ.getComment(jsonLDObject)
+      comment                   <- JsonLDUtil.getComment(jsonLDObject)
     } yield StillImageFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
@@ -2942,7 +2942,7 @@ object DocumentFileValueContentV2 {
   ): ZIO[StringFormatter with MessageRelay, Throwable, DocumentFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLdObject, requestingUser)
-      comment                   <- RouteUtilZ.getComment(jsonLdObject)
+      comment                   <- JsonLDUtil.getComment(jsonLdObject)
     } yield DocumentFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
@@ -2963,7 +2963,7 @@ object ArchiveFileValueContentV2 {
   ): ZIO[StringFormatter with MessageRelay, Throwable, ArchiveFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLdObject, requestingUser)
-      comment                   <- RouteUtilZ.getComment(jsonLdObject)
+      comment                   <- JsonLDUtil.getComment(jsonLdObject)
     } yield ArchiveFileValueContentV2(ApiV2Complex, fileValueWithSipiMetadata.fileValue, comment)
 }
 
@@ -3036,7 +3036,7 @@ object TextFileValueContentV2 {
   ): ZIO[StringFormatter with MessageRelay, Throwable, TextFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
-      comment                   <- RouteUtilZ.getComment(jsonLDObject)
+      comment                   <- JsonLDUtil.getComment(jsonLDObject)
     } yield TextFileValueContentV2(ApiV2Complex, fileValueWithSipiMetadata.fileValue, comment)
 }
 
@@ -3109,7 +3109,7 @@ object AudioFileValueContentV2 {
   ): ZIO[StringFormatter with MessageRelay, Throwable, AudioFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
-      comment                   <- RouteUtilZ.getComment(jsonLDObject)
+      comment                   <- JsonLDUtil.getComment(jsonLDObject)
     } yield AudioFileValueContentV2(ApiV2Complex, fileValueWithSipiMetadata.fileValue, comment)
 }
 
@@ -3184,7 +3184,7 @@ object MovingImageFileValueContentV2 {
   ): ZIO[StringFormatter with MessageRelay, Throwable, MovingImageFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
-      comment                   <- RouteUtilZ.getComment(jsonLDObject)
+      comment                   <- JsonLDUtil.getComment(jsonLDObject)
     } yield MovingImageFileValueContentV2(ApiV2Complex, fileValueWithSipiMetadata.fileValue, comment)
 }
 
@@ -3317,7 +3317,7 @@ object LinkValueContentV2 {
         _ <- ZIO
                .fail(BadRequestException(s"Link target IRI <$targetIri> is not a Knora data IRI"))
                .when(!targetIri.isKnoraDataIri)
-        comment <- RouteUtilZ.getComment(jsonLDObject)
+        comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = targetIri.toString, comment = comment)
   }
 }

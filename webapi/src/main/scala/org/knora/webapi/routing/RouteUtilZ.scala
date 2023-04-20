@@ -100,15 +100,6 @@ object RouteUtilZ {
 
   def getStringValueFromQuery(ctx: RequestContext, key: String): Option[String] = ctx.request.uri.query().get(key)
 
-  // TODO move to a more appropriate place
-  def getComment(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, Option[String]] = {
-    val key = ValueHasComment
-    jsonLDObject
-      .getString(key)
-      .mapError(BadRequestException(_))
-      .flatMap(ZIO.foreach(_)(value => RouteUtilZ.toSparqlEncodedString(value, s"Invalid $key: $value")))
-  }
-
   def toSparqlEncodedString(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, String] =
     ZIO.serviceWithZIO[StringFormatter](sf =>
       ZIO.fromOption(sf.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
