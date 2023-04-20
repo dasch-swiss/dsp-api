@@ -19,6 +19,7 @@ import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -137,6 +138,7 @@ object LayersLive {
       with HttpServer
       with IIIFRequestMessageHandler
       with IIIFService
+      with InferenceOptimizationService
       with IriService
       with IriConverter
       with JwtService
@@ -208,6 +210,7 @@ object LayersLive {
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFRequestMessageHandlerLive.layer,
       IIIFServiceSipiImpl.layer,
+      InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,
