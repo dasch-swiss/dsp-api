@@ -36,7 +36,7 @@ Permissions: No permissions required
 
 Request definition: `GET /admin/projects`
 
-Description: Returns a list of all projects.
+Description: Returns a list of all projects except built-in system ones.
 
 Example request:
 
