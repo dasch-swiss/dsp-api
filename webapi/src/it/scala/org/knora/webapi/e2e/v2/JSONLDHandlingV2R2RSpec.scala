@@ -71,7 +71,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
     "produce the expected JSON-LD context object (on the server side)" in {
       Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")) ~> resourcesPath ~> check {
 
-        assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, responseToJsonLDDocument(response))
 
         val receivedJson: JsObject = JsonParser(responseAs[String]).asJsObject
 

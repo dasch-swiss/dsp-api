@@ -2249,7 +2249,13 @@ class StringFormatter private (
    */
   @deprecated("It is still throwing!")
   def decodeUuid(uuidStr: String): UUID =
-    base64DecodeUuid(uuidStr).getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
+    if (uuidStr.length == CanonicalUuidLength) UUID.fromString(uuidStr)
+    else if (uuidStr.length == Base64UuidLength)
+      base64DecodeUuid(uuidStr).getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
+    else if (uuidStr.length < Base64UuidLength)
+      base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
+        .getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
+    else throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr")
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.
