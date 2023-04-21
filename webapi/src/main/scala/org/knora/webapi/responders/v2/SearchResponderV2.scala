@@ -1086,7 +1086,6 @@ object SearchResponderV2Live {
       for {
         appConfig                    <- ZIO.service[AppConfig]
         triplestoreService           <- ZIO.service[TriplestoreService]
-        gravsearchTypeInspectionUtil <- ZIO.service[GravsearchTypeInspectionUtil]
         messageRelay                 <- ZIO.service[MessageRelay]
         constructResponseUtilV2      <- ZIO.service[ConstructResponseUtilV2]
         ontologyCache                <- ZIO.service[OntologyCache]

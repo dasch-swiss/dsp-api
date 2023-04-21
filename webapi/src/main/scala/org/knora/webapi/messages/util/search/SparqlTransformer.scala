@@ -17,8 +17,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-import SparqlTransformer._
-
 /**
  * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
  *
