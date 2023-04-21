@@ -452,7 +452,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * function.
    *
    * @param validationFun the validation function.
-   * @tparam T thetype returned by the validation function.
+   * @tparam T the type returned by the validation function.
    * @return the return value of the validation function.
    */
   @deprecated("Use getIri() instead")
@@ -530,7 +530,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function.
    */
-  @deprecated("Use getString instead")
+  @deprecated("Use getString(String) instead")
   def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = {
     val str: String = requireString(key)
     validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
@@ -543,7 +543,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the value, or `None` if not found.
    */
-  @deprecated("Use getString instead")
+  @deprecated("Use getString(String) instead")
   def maybeString(key: String): Option[String] =
     value.get(key).map {
       case JsonLDString(str) => str
@@ -593,7 +593,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the validated IRI.
    */
-  @deprecated("use getIdIriFromObject instead")
+  @deprecated("use getIdIriFromObject(String) instead")
   def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T =
     requireObject(key).toIri(validationFun)
 
@@ -610,7 +610,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function, or `None` if the value was not present.
    */
-  @deprecated("use getIdIriFromObject instead")
+  @deprecated("use getIdIriFromObject(String) instead")
   def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     maybeObject(key).map(_.toIri(validationFun))
 
@@ -673,7 +673,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the optional value.
    */
-  @deprecated("use getObject instead")
+  @deprecated("use getObject(String) instead")
   def maybeObject(key: String): Option[JsonLDObject] =
     value.get(key).map {
       case obj: JsonLDObject => obj
