@@ -586,7 +586,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function, or `None` if the value was not present.
    */
-  @deprecated("Use getString instead")
+  @deprecated("Use getString(String) instead")
   def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     maybeString(key).map { str =>
       validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
