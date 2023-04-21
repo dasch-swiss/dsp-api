@@ -7,11 +7,9 @@ package org.knora.webapi.messages.util.search
 
 import zio._
 
-import dsp.errors.BadRequestException
 import dsp.errors.GravsearchOptimizationException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -20,6 +18,7 @@ import org.knora.webapi.messages.util.search.gravsearch.SelectToSelectTransforme
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
@@ -116,157 +115,14 @@ case class TransformedOrderBy(
 )
 
 /**
- * A trait for classes that transform SELECT queries into CONSTRUCT queries.
- */
-trait ConstructToSelectTransformer extends WhereTransformer {
-
-  /**
-   * Returns the columns to be specified in the SELECT query.
-   */
-  def getSelectColumns: Task[Seq[SelectQueryColumn]]
-
-  /**
-   * Returns the variables that the query result rows are grouped by (aggregating rows into one).
-   * Variables returned by the SELECT query must either be present in the GROUP BY statement
-   * or be transformed by an aggregation function in SPARQL.
-   * This method will be called by [[QueryTraverser]] after the whole input query has been traversed.
-   *
-   * @param orderByCriteria the criteria used to sort the query results. They have to be included in the GROUP BY statement, otherwise they are unbound.
-   * @return a list of variables that the result rows are grouped by.
-   */
-  def getGroupBy(orderByCriteria: TransformedOrderBy): Task[Seq[QueryVariable]]
-
-  /**
-   * Returns the criteria, if any, that should be used in the ORDER BY clause of the SELECT query. This method will be called
-   * by [[QueryTraverser]] after the whole input query has been traversed.
-   *
-   * @param inputOrderBy the ORDER BY criteria in the input query.
-   * @return the ORDER BY criteria, if any.
-   */
-  def getOrderBy(inputOrderBy: Seq[OrderCriterion]): Task[TransformedOrderBy]
-
-  /**
-   * Returns the limit representing the maximum amount of result rows returned by the SELECT query.
-   *
-   * @return the LIMIT, if any.
-   */
-  def getLimit: Task[Int]
-
-  /**
-   * Returns the OFFSET to be used in the SELECT query.
-   * Provided the OFFSET submitted in the input query, calculates the actual offset in result rows depending on LIMIT.
-   *
-   * @param inputQueryOffset the OFFSET provided in the input query.
-   * @return the OFFSET.
-   */
-  def getOffset(inputQueryOffset: Long, limit: Int): Task[Long]
-}
-
-/**
  * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[ConstructToConstructTransformer]]
- * or [[ConstructToSelectTransformer]].
+ * or [[AbstractPrequeryGenerator]].
  */
 final case class QueryTraverser(
-  messageRelay: MessageRelay,
-  ontologyCache: OntologyCache,
-  implicit val stringFormatter: StringFormatter
+  private val messageRelay: MessageRelay,
+  private val ontologyCache: OntologyCache,
+  implicit private val stringFormatter: StringFormatter
 ) {
-
-  /**
-   * Helper method that analyzed an RDF Entity and returns a sequence of Ontology IRIs that are being referenced by the entity.
-   * If an IRI appears that can not be resolved by the ontology cache, it will check if the IRI points to project data;
-   * if so, all ontologies defined by the project to which the data belongs, will be included in the results.
-   *
-   * @param entity       an RDF entity.
-   * @param map          a map of entity IRIs to the IRIs of the ontology where they are defined.
-   * @return a sequence of ontology IRIs which relate to the input RDF entity.
-   */
-  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri]): Task[Seq[SmartIri]] =
-    entity match {
-      case IriRef(iri, _) =>
-        val internal     = iri.toOntologySchema(InternalSchema)
-        val maybeOntoIri = map.get(internal)
-        maybeOntoIri match {
-          // if the map contains an ontology IRI corresponding to the entity IRI, then this can be returned
-          case Some(iri) => ZIO.succeed(Seq(iri))
-          case None      =>
-            // if the map doesn't contain a corresponding ontology IRI, then the entity IRI points to a resource or value
-            // in that case, all ontologies of the project, to which the entity belongs, should be returned.
-            val shortcode = internal.getProjectCode
-            shortcode match {
-              case None        => ZIO.succeed(Seq.empty)
-              case Some(value) =>
-                // find the project with the shortcode
-
-                for {
-                  projectMaybe <-
-                    messageRelay
-                      .ask[Option[ProjectADM]](
-                        ProjectGetADM(
-                          ShortcodeIdentifier
-                            .fromString(value)
-                            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-                        )
-                      )
-                  projectOntologies = projectMaybe match {
-                                        case None => Seq.empty
-                                        // return all ontologies of the project
-                                        case Some(project) => project.ontologies.map(_.toSmartIri)
-                                      }
-                } yield projectOntologies
-            }
-        }
-      case _ => ZIO.succeed(Seq.empty)
-    }
-
-  /**
-   * Extracts all ontologies that are relevant to a gravsearch query, in order to allow optimized cache-based inference simulation.
-   *
-   * @param whereClause  the WHERE-clause of a gravsearch query.
-   * @return a set of ontology IRIs relevant to the query, or `None`, if no meaningful result could be produced.
-   *         In the latter case, inference should be done on the basis of all available ontologies.
-   */
-  def getOntologiesRelevantForInference(
-    whereClause: WhereClause
-  ): Task[Option[Set[SmartIri]]] = {
-    // internal function for easy recursion
-    // gets a sequence of [[QueryPattern]] and returns the set of entities that the patterns consist of
-    def getEntities(patterns: Seq[QueryPattern]): Seq[Entity] =
-      patterns.flatMap { pattern =>
-        pattern match {
-          case ValuesPattern(_, values)             => values.toSeq
-          case BindPattern(_, expression)           => List(expression.asInstanceOf[Entity])
-          case UnionPattern(blocks)                 => blocks.flatMap(block => getEntities(block))
-          case StatementPattern(subj, pred, obj, _) => List(subj, pred, obj)
-          case LuceneQueryPattern(subj, obj, _, _)  => List(subj, obj)
-          case FilterNotExistsPattern(patterns)     => getEntities(patterns)
-          case MinusPattern(patterns)               => getEntities(patterns)
-          case OptionalPattern(patterns)            => getEntities(patterns)
-          case _                                    => List.empty
-        }
-      }
-
-    // get the entities for all patterns in the WHERE clause
-    val entities = getEntities(whereClause.patterns)
-
-    for {
-      ontoCache <- ontologyCache.getCacheData
-      // from the cache, get the map from entity to the ontology where the entity is defined
-      entityMap = ontoCache.entityDefinedInOntology
-      // resolve all entities from the WHERE clause to the ontology where they are defined
-      relevantOntologies   <- ZIO.foreach(entities)(resolveEntity(_, entityMap))
-      relevantOntologiesSet = relevantOntologies.flatten.toSet
-      relevantOntologiesMaybe =
-        relevantOntologiesSet match {
-          case ontologies =>
-            // if only knora-base was found, then None should be returned too
-            if (ontologies == Set(OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri))
-              None
-            // in all other cases, it should be made sure that knora-base is contained in the result
-            else Some(ontologies + OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri)
-        }
-    } yield relevantOntologiesMaybe
-  }
 
   /**
    * Traverses a WHERE clause, delegating transformation tasks to a [[WhereTransformer]], and returns the transformed query patterns.
@@ -476,7 +332,7 @@ final case class QueryTraverser(
    */
   def transformConstructToSelect(
     inputQuery: ConstructQuery,
-    transformer: ConstructToSelectTransformer,
+    transformer: AbstractPrequeryGenerator,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[SelectQuery] = for {
     transformedWherePatterns <- transformWherePatterns(

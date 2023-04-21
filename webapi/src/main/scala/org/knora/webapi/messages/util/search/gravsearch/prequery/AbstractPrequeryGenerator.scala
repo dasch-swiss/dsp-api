@@ -38,8 +38,49 @@ abstract class AbstractPrequeryGenerator(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema
-) extends WhereTransformer
-    with ConstructToSelectTransformer {
+) extends WhereTransformer {
+
+  /**
+   * Returns the columns to be specified in the SELECT query.
+   */
+  def getSelectColumns: Task[Seq[SelectQueryColumn]]
+
+  /**
+   * Returns the variables that the query result rows are grouped by (aggregating rows into one).
+   * Variables returned by the SELECT query must either be present in the GROUP BY statement
+   * or be transformed by an aggregation function in SPARQL.
+   * This method will be called by [[QueryTraverser]] after the whole input query has been traversed.
+   *
+   * @param orderByCriteria the criteria used to sort the query results. They have to be included in the GROUP BY statement, otherwise they are unbound.
+   * @return a list of variables that the result rows are grouped by.
+   */
+  def getGroupBy(orderByCriteria: TransformedOrderBy): Task[Seq[QueryVariable]]
+
+  /**
+   * Returns the criteria, if any, that should be used in the ORDER BY clause of the SELECT query. This method will be called
+   * by [[QueryTraverser]] after the whole input query has been traversed.
+   *
+   * @param inputOrderBy the ORDER BY criteria in the input query.
+   * @return the ORDER BY criteria, if any.
+   */
+  def getOrderBy(inputOrderBy: Seq[OrderCriterion]): Task[TransformedOrderBy]
+
+  /**
+   * Returns the limit representing the maximum amount of result rows returned by the SELECT query.
+   *
+   * @return the LIMIT, if any.
+   */
+  def getLimit: Task[Int]
+
+  /**
+   * Returns the OFFSET to be used in the SELECT query.
+   * Provided the OFFSET submitted in the input query, calculates the actual offset in result rows depending on LIMIT.
+   *
+   * @param inputQueryOffset the OFFSET provided in the input query.
+   * @return the OFFSET.
+   */
+  def getOffset(inputQueryOffset: Long, limit: Int): Task[Long]
+
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
@@ -73,6 +114,65 @@ abstract class AbstractPrequeryGenerator(
 
   // The query can set this to false to disable inference.
   var useInference = true
+
+  /**
+   * Transforms a [[org.knora.webapi.messages.util.search.StatementPattern]] in a WHERE clause into zero or more query patterns.
+   *
+   * @param statementPattern           the statement to be transformed.
+   * @param inputOrderBy               the ORDER BY clause in the input query.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
+   * @return the result of the transformation.
+   */
+  override def transformStatementInWhere(
+    statementPattern: StatementPattern,
+    inputOrderBy: Seq[OrderCriterion],
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+  ): Task[Seq[QueryPattern]] =
+    // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
+    // other information about the matching resources or values.
+    processStatementPatternFromWhereClause(
+      statementPattern = statementPattern,
+      inputOrderBy = inputOrderBy,
+      limitInferenceToOntologies = limitInferenceToOntologies
+    )
+
+  /**
+   * Runs optimisations that take a Gravsearch query as input. An optimisation needs to be run here if
+   * it uses the type inspection result that refers to the Gravsearch query.
+   *
+   * @param patterns the query patterns to be optimised.
+   * @return the optimised query patterns.
+   */
+  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
+    ZIO.attempt(
+      GravsearchQueryOptimisationFactory
+        .getGravsearchQueryOptimisationFeature(
+          typeInspectionResult = typeInspectionResult,
+          querySchema = querySchema
+        )
+        .optimiseQueryPatterns(patterns)
+    )
+
+  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
+    ZIO.succeed(Seq(luceneQueryPattern))
+
+  /**
+   * Transforms a [[org.knora.webapi.messages.util.search.FilterPattern]] in a WHERE clause into zero or more statement patterns.
+   *
+   * @param filterPattern the filter to be transformed.
+   * @return the result of the transformation.
+   */
+  override def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.attempt {
+    val filterExpression: TransformedFilterPattern =
+      transformFilterPattern(filterPattern.expression, typeInspectionResult = typeInspectionResult, isTopLevel = true)
+
+    filterExpression.expression match {
+      case Some(expression: Expression) => filterExpression.additionalPatterns :+ FilterPattern(expression)
+
+      case None => filterExpression.additionalPatterns // no FILTER expression given
+    }
+
+  }
 
   /**
    * When we enter a UNION block, pushes an empty collection of generated variables on to the stack

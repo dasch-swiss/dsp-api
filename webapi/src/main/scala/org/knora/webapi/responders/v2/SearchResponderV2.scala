@@ -42,6 +42,8 @@ import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMain
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
@@ -67,6 +69,7 @@ final case class SearchResponderV2Live(
   private val queryTraverser: QueryTraverser,
   private val sparqlTransformerLive: SparqlTransformerLive,
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
+  private val inferenceOptimizationService: InferenceOptimizationService,
   implicit private val stringFormatter: StringFormatter
 ) extends SearchResponderV2
     with MessageHandler
@@ -406,7 +409,8 @@ final case class SearchResponderV2Live(
           stringFormatter
         )
 
-      ontologiesForInferenceMaybe <- queryTraverser.getOntologiesRelevantForInference(inputQuery.whereClause)
+      ontologiesForInferenceMaybe <-
+        inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
 
       triplestoreSpecificCountQuery <- queryTraverser.transformSelectToSelect(
                                          inputQuery = nonTriplestoreSpecificPrequery,
@@ -468,7 +472,8 @@ final case class SearchResponderV2Live(
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-      ontologiesForInferenceMaybe <- queryTraverser.getOntologiesRelevantForInference(inputQuery.whereClause)
+      ontologiesForInferenceMaybe <-
+        inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
 
       nonTriplestoreSpecificPrequery <-
         queryTraverser.transformConstructToSelect(
@@ -1072,23 +1077,26 @@ object SearchResponderV2Live {
       with QueryTraverser
       with SparqlTransformerLive
       with GravsearchTypeInspectionRunner
+      with InferenceOptimizationService
       with StringFormatter,
     Nothing,
     SearchResponderV2Live
   ] =
     ZLayer.fromZIO(
       for {
-        appConfig               <- ZIO.service[AppConfig]
-        triplestoreService      <- ZIO.service[TriplestoreService]
-        messageRelay            <- ZIO.service[MessageRelay]
-        constructResponseUtilV2 <- ZIO.service[ConstructResponseUtilV2]
-        ontologyCache           <- ZIO.service[OntologyCache]
-        standoffTagUtilV2       <- ZIO.service[StandoffTagUtilV2]
-        queryTraverser          <- ZIO.service[QueryTraverser]
-        sparqlTransformerLive   <- ZIO.service[SparqlTransformerLive]
-        stringFormatter         <- ZIO.service[StringFormatter]
-        mr                      <- ZIO.service[MessageRelay]
-        typeInspectionRunner    <- ZIO.service[GravsearchTypeInspectionRunner]
+        appConfig                    <- ZIO.service[AppConfig]
+        triplestoreService           <- ZIO.service[TriplestoreService]
+        gravsearchTypeInspectionUtil <- ZIO.service[GravsearchTypeInspectionUtil]
+        messageRelay                 <- ZIO.service[MessageRelay]
+        constructResponseUtilV2      <- ZIO.service[ConstructResponseUtilV2]
+        ontologyCache                <- ZIO.service[OntologyCache]
+        standoffTagUtilV2            <- ZIO.service[StandoffTagUtilV2]
+        queryTraverser               <- ZIO.service[QueryTraverser]
+        sparqlTransformerLive        <- ZIO.service[SparqlTransformerLive]
+        stringFormatter              <- ZIO.service[StringFormatter]
+        mr                           <- ZIO.service[MessageRelay]
+        typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
+        inferenceOptimizationService <- ZIO.service[InferenceOptimizationService]
         handler <- mr.subscribe(
                      new SearchResponderV2Live(
                        appConfig,
@@ -1100,6 +1108,7 @@ object SearchResponderV2Live {
                        queryTraverser,
                        sparqlTransformerLive,
                        typeInspectionRunner,
+                       inferenceOptimizationService,
                        stringFormatter
                      )
                    )

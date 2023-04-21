@@ -110,6 +110,7 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
+import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 object LayersTest {
 
   /**
@@ -133,6 +134,7 @@ object LayersTest {
       with GroupsResponderADM
       with HttpServer
       with IIIFRequestMessageHandler
+      with InferenceOptimizationService
       with IriConverter
       with IriService
       with KnoraProjectRepoLive
@@ -196,6 +198,7 @@ object LayersTest {
       HttpServer.layer,
       HttpServerZ.layer,
       IIIFRequestMessageHandlerLive.layer,
+      InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,
       KnoraProjectRepoLive.layer,
