@@ -14,11 +14,11 @@ import akka.util.ByteString
 import spray.json.JsNumber
 import spray.json.JsObject
 import zio._
+
 import java.time.Instant
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1

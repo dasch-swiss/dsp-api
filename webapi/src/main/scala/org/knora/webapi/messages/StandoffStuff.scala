@@ -1,6 +1,7 @@
 package org.knora.webapi.messages
 
 import zio.prelude.Validation
+
 import scala.util.matching.Regex
 
 import dsp.errors.NotFoundException
@@ -93,4 +94,13 @@ object StandoffStuff {
         acc
       }
     }
+
+  /**
+   * Creates a new standoff tag IRI based on a UUID.
+   *
+   * @param valueIri   the IRI of the text value containing the standoff tag.
+   * @param startIndex the standoff tag's start index.
+   * @return a standoff tag IRI.
+   */
+  def makeRandomStandoffTagIri(valueIri: IRI, startIndex: Int): IRI = s"$valueIri/standoff/$startIndex"
 }

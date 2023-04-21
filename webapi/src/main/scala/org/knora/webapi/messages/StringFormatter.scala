@@ -5,9 +5,6 @@
 
 package org.knora.webapi.messages
 
-import XmlPatterns.nCNamePattern
-import XmlPatterns.nCNameRegex
-import StandoffStuff.standoffLinkReferenceToClientIdForResourceRegex
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
@@ -46,10 +43,12 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequence
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
+
+import XmlPatterns.nCNamePattern
+import XmlPatterns.nCNameRegex
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -310,7 +309,6 @@ object StringFormatter {
     Validation
       .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
-
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
@@ -1530,7 +1528,6 @@ class StringFormatter private (
   def isKnoraPermissionIriStr(iri: IRI): Boolean = // V2 / value objects
     Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
 
-
   /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
    *
@@ -2334,16 +2331,6 @@ class StringFormatter private (
     val knoraListUuid = makeRandomBase64EncodedUuid
     s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
   }
-
-  /**
-   * Creates a new standoff tag IRI based on a UUID.
-   *
-   * @param valueIri   the IRI of the text value containing the standoff tag.
-   * @param startIndex the standoff tag's start index.
-   * @return a standoff tag IRI.
-   */
-  def makeRandomStandoffTagIri(valueIri: IRI, startIndex: Int): IRI =
-    s"$valueIri/standoff/$startIndex"
 
   /**
    * Converts the IRI of a property that points to a resource into the IRI of the corresponding link value property.

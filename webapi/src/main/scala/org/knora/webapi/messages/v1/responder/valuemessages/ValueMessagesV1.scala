@@ -17,6 +17,7 @@ import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
+import org.knora.webapi.messages.StandoffStuff
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -713,7 +714,7 @@ case class TextValueWithStandoffV1(
       standoffNode: StandoffTagV2 =>
         CreateStandoffTagV1InTriplestore(
           standoffNode = standoffNode,
-          standoffTagInstanceIri = stringFormatter.makeRandomStandoffTagIri(
+          standoffTagInstanceIri = StandoffStuff.makeRandomStandoffTagIri(
             valueIri = valueIri,
             startIndex = standoffNode.startIndex
           ) // generate IRI for new standoff node
