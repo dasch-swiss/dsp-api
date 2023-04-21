@@ -920,7 +920,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     getString(key).flatMap {
       case Some(str) =>
         ZIO.serviceWithZIO[StringFormatter] { sf =>
-          ZIO.attempt(sf.base64DecodeUuid(str)).mapBoth(_ => s"Invalid UUID: $str", Some(_))
+          ZIO.fromTry(sf.base64DecodeUuid(str)).mapBoth(_ => s"Invalid UUID: $str", Some(_))
         }
       case None => ZIO.none
     }
