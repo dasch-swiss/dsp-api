@@ -306,7 +306,7 @@ final case class SearchResponderV2Live(
           )
 
           val queryPatternTransformerConstruct =
-            new SparqlTransformer.NoInferenceConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
+            new ConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
           for {
             query          <- queryTraverser.transformConstructToConstruct(mainQuery, queryPatternTransformerConstruct)
             searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
@@ -400,7 +400,7 @@ final case class SearchResponderV2Live(
       // Convert the non-triplestore-specific query to a triplestore-specific one.
 
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
-        new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+        new SelectToSelectTransformer(
           simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
@@ -481,7 +481,7 @@ final case class SearchResponderV2Live(
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
-        new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+        new SelectToSelectTransformer(
           simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
@@ -584,7 +584,7 @@ final case class SearchResponderV2Live(
           )
 
           val queryPatternTransformerConstruct: ConstructToConstructTransformer =
-            new SparqlTransformer.NoInferenceConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
+            new ConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
 
           for {
 
