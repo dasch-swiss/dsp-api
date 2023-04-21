@@ -63,7 +63,7 @@ final case class ProjectsADMRestServiceLive(responder: ProjectsResponderADM) ext
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
   def getProjectsADMRequest(): Task[ProjectsGetResponseADM] =
-    responder.projectsGetRequestADM()
+    responder.projectsGetRequestADM(withSystemProjects = false)
 
   /**
    * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].

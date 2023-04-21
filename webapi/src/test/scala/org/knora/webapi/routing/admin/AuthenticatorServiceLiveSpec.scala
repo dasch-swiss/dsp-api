@@ -27,7 +27,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
       val req      = Request.get(URL.empty).setHeaders(Headers.basicAuthorizationHeader(userMail, "pass"))
       for {
         actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName).exit
-      } yield assert(actual)(fails(hasMessage(equalTo("Invalid email Some(user.example.com)"))))
+      } yield assert(actual)(fails(hasMessage(equalTo(s"Invalid email $userMail"))))
     }
   )
 
@@ -81,7 +81,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
       val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName).exit
-      } yield assert(actual)(fails(hasMessage(equalTo("Invalid email Some(user.example.com)"))))
+      } yield assert(actual)(fails(hasMessage(equalTo("Invalid email user.example.com"))))
     },
     test("should fail if if an invalid username is provided") {
       val params = QueryParams(
@@ -101,7 +101,7 @@ object AuthenticatorServiceLiveSpec extends ZIOSpecDefault {
       val req = Request.get(URL.empty.setQueryParams(params))
       for {
         actual <- AuthenticatorServiceLive.extractCredentialsFromRequest(req, cookieName).exit
-      } yield assert(actual)(fails(hasMessage(equalTo("Invalid user IRI Some(notAnIri)"))))
+      } yield assert(actual)(fails(hasMessage(equalTo("Invalid user IRI notAnIri"))))
     }
   )
 

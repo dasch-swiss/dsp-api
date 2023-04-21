@@ -39,8 +39,7 @@ final case class ValuesRouteV2()(
   private def getValue(): Route = path(valuesBasePath / Segment / Segment) {
     (resourceIriStr: IRI, valueUuidStr: String) =>
       get { requestContext =>
-        val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+        val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
         val requestTask = for {
           resourceIri <- RouteUtilZ
                            .toSmartIri(resourceIriStr, s"Invalid resource IRI: $resourceIriStr")
@@ -65,7 +64,12 @@ final case class ValuesRouteV2()(
           requestingUser = requestingUser
         )
 
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
+        RouteUtilV2.runRdfRouteZ(
+          requestTask,
+          requestContext,
+          targetSchemaTask,
+          Some(RouteUtilV2.getSchemaOptionsUnsafe(requestContext))
+        )
       }
   }
 
