@@ -169,11 +169,8 @@ object RouteUtilADM {
       user         <- Authenticator.getUserADM(requestContext)
     } yield IriUser(validatedIri, user)
 
-  def validateAndEscape(iri: String): ZIO[StringFormatter, Throwable, IRI] =
-    ZIO
-      .serviceWithZIO[StringFormatter](sf =>
-        sf.validateAndEscapeIri(iri).toZIO.orElseFail(BadRequestException(s"Invalid IRI: $iri"))
-      )
+  def validateAndEscape(iri: String): IO[BadRequestException, IRI] =
+    StringFormatter.validateAndEscapeIri(iri).toZIO.orElseFail(BadRequestException(s"Invalid IRI: $iri"))
 
   def getUserUuid(ctx: RequestContext): ZIO[Authenticator, Throwable, UserUuid] =
     for {

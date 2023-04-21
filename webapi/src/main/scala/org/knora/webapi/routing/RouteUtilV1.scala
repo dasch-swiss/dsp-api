@@ -29,6 +29,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.twirl.ResourceHtmlView
+import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -291,8 +292,8 @@ object RouteUtilV1 {
       .flatMap(ZIO.fromOption(_))
       .orElseFail(BadRequestException(errorMsg))
 
-  def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): ZIO[StringFormatter, Throwable, Set[IRI]] =
-    ZIO.serviceWithZIO[StringFormatter](sf => ZIO.attempt(sf.getResourceIrisFromStandoffTags(tags)))
+  def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): Task[Set[IRI]] =
+    ZIO.attempt(StandoffStringUtil.getResourceIrisFromStandoffTags(tags))
 
   def xsdDateTimeStampToInstant(s: String, errorMsg: String): IO[Throwable, Instant] =
     ZIO.fromOption(ValuesValidator.xsdDateTimeStampToInstant(s)).orElseFail(BadRequestException(errorMsg))

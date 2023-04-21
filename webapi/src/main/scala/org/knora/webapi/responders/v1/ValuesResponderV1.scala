@@ -34,6 +34,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetResponseV1
@@ -438,7 +439,7 @@ final case class ValuesResponderV1Live(
         // So now we can get the set of standoff link targets that are ordinary IRIs, and check that each of
         // them exists in the triplestore and is a knora-base:Resource.
         targetIrisThatAlreadyExist: Set[IRI] =
-          targetIris.keySet.filterNot(iri => stringFormatter.isStandoffLinkReferenceToClientIDForResource(iri))
+          targetIris.keySet.filterNot(iri => StandoffStringUtil.isStandoffLinkReferenceToClientIDForResource(iri))
 
         _ <- checkStandoffResourceReferenceTargets(
                targetIris = targetIrisThatAlreadyExist,
@@ -451,11 +452,12 @@ final case class ValuesResponderV1Live(
                                                                case (targetIri, initialReferenceCount) =>
                                                                  // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
                                                                  val realTargetIri =
-                                                                   stringFormatter.toRealStandoffLinkTargetResourceIri(
-                                                                     iri = targetIri,
-                                                                     clientResourceIDsToResourceIris =
-                                                                       createMultipleValuesRequest.clientResourceIDsToResourceIris
-                                                                   )
+                                                                   StandoffStringUtil
+                                                                     .toRealStandoffLinkTargetResourceIri(
+                                                                       iri = targetIri,
+                                                                       clientResourceIDsToResourceIris =
+                                                                         createMultipleValuesRequest.clientResourceIDsToResourceIris
+                                                                     )
 
                                                                  SparqlTemplateLinkUpdate(
                                                                    linkPropertyIri =
@@ -600,7 +602,7 @@ final case class ValuesResponderV1Live(
                                   attributes = standoffTag.attributes.map {
                                     case iriAttribute: StandoffTagIriAttributeV2 =>
                                       iriAttribute.copy(
-                                        value = stringFormatter.toRealStandoffLinkTargetResourceIri(
+                                        value = StandoffStringUtil.toRealStandoffLinkTargetResourceIri(
                                           iri = iriAttribute.value,
                                           clientResourceIDsToResourceIris =
                                             createMultipleValuesRequest.clientResourceIDsToResourceIris

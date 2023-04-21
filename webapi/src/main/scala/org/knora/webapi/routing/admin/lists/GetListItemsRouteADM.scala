@@ -50,7 +50,7 @@ final case class GetListItemsRouteADM(
           maybeProjectIri match {
             case None => None
             case Some(value) =>
-              stringFormatter
+              StringFormatter
                 .validateAndEscapeIri(value)
                 .toOption
                 .orElse(throw BadRequestException(s"Invalid param project IRI: $value"))

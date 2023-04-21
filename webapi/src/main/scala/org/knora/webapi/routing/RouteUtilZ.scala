@@ -80,13 +80,8 @@ object RouteUtilZ {
       .succeed(iri)
       .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(BadRequestException(s"Invalid schema for <$iri>"))
 
-  def validateAndEscapeIri(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
-    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
-      stringFormatter
-        .validateAndEscapeIri(s)
-        .toZIO
-        .orElseFail(BadRequestException(errorMsg))
-    }
+  def validateAndEscapeIri(s: String, errorMsg: String): IO[BadRequestException, IRI] =
+    StringFormatter.validateAndEscapeIri(s).toZIO.orElseFail(BadRequestException(errorMsg))
 
   def toSmartIri(s: String): ZIO[IriConverter, Throwable, SmartIri] =
     ZIO.serviceWithZIO[IriConverter](_.asSmartIri(s))

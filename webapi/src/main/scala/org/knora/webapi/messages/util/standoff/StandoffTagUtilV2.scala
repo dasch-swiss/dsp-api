@@ -726,7 +726,7 @@ object StandoffTagUtilV2 {
 
           val internalLink: StandoffTagAttributeV2 = StandoffTagIriAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-            value = stringFormatter.validateStandoffLinkResourceReference(
+            value = StandoffStringUtil.validateStandoffLinkResourceReference(
               linkString,
               acceptStandoffLinksToClientIDs,
               throw BadRequestException(s"Invalid standoff resource reference: $linkString")

@@ -32,6 +32,7 @@ import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
@@ -1548,7 +1549,7 @@ case class TextValueContentV2(
         standoffNode: StandoffTagV2 =>
           CreateStandoffTagV2InTriplestore(
             standoffNode = standoffNode,
-            standoffTagInstanceIri = stringFormatter.makeRandomStandoffTagIri(
+            standoffTagInstanceIri = StandoffStringUtil.makeRandomStandoffTagIri(
               valueIri = valueIri,
               startIndex = standoffNode.startIndex
             ) // generate IRI for new standoff node

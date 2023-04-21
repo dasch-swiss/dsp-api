@@ -19,6 +19,7 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.LiteralValueType
@@ -892,7 +893,7 @@ final case class ValueUtilV1Live(
       standoff = standoffTags,
       mappingIri = mappingIri,
       mapping = mappingResponse.mapping,
-      resource_reference = stringFormatter.getResourceIrisFromStandoffTags(standoffTags)
+      resource_reference = StandoffStringUtil.getResourceIrisFromStandoffTags(standoffTags)
     )
 
   }
