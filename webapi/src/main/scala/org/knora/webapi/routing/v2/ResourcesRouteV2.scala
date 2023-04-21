@@ -41,6 +41,7 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeaderUnsafe
+import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
@@ -53,7 +54,7 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastM
 final case class ResourcesRouteV2(
   private val routeData: KnoraRouteData,
   override protected implicit val runtime: Runtime[
-    AppConfig with Authenticator with MessageRelay with RestResourceInfoService
+    AppConfig with Authenticator with StringFormatter with MessageRelay with RestResourceInfoService
   ]
 ) extends KnoraRoute(routeData, runtime) {
 
@@ -106,26 +107,15 @@ final case class ResourcesRouteV2(
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-          val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-          val requestMessageFuture: Future[CreateResourceRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-
-            requestMessage: CreateResourceRequestV2 <- CreateResourceRequestV2.fromJsonLD(
-                                                         requestDoc,
-                                                         apiRequestID = UUID.randomUUID,
-                                                         requestingUser = requestingUser,
-                                                         appActor = appActor,
-                                                         log = log
-                                                       )
-
+          val requestTask = for {
+            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
+            requestingUser <- Authenticator.getUserADM(requestContext)
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
             // check for each value which represents a file value if the file's MIME type is allowed
-            _ <- checkMimeTypesForFileValueContents(
-                   values = requestMessage.createResource.flatValues
-                 )
+            _ <- ZIO.fromFuture(_ => checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues))
           } yield requestMessage
-
-          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
       }
     }

@@ -6,9 +6,9 @@
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import akka.actor.ActorRef
-import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -18,6 +18,7 @@ import scala.concurrent.Future
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -659,7 +660,7 @@ case class CreateResourceRequestV2(
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
 
-object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResourceRequestV2] {
+object CreateResourceRequestV2 {
 
   /**
    * Converts JSON-LD input to a [[CreateResourceRequestV2]].
@@ -667,181 +668,188 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
+  def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
+    requestingUser: UserADM
+  ): ZIO[StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
+    implicit stringFormatter =>
+      for {
+        // Get the resource class.
+        resourceClassIri <- ZIO.attempt(jsonLDDocument.requireTypeAsKnoraTypeIri)
 
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        // Get the custom resource IRI if provided.
+        maybeCustomResourceIri <- ZIO.attempt(jsonLDDocument.maybeIDAsKnoraDataIri)
 
-    for {
-      // Get the resource class.
-      resourceClassIri: SmartIri <- Future(jsonLDDocument.requireTypeAsKnoraTypeIri)
+        // Get the resource's rdfs:label.
+        label <- ZIO.attempt(
+                   jsonLDDocument.requireStringWithValidation(
+                     OntologyConstants.Rdfs.Label,
+                     stringFormatter.toSparqlEncodedString
+                   )
+                 )
 
-      // Get the custom resource IRI if provided.
-      maybeCustomResourceIri: Option[SmartIri] = jsonLDDocument.maybeIDAsKnoraDataIri
-
-      // Get the resource's rdfs:label.
-      label: String = jsonLDDocument.requireStringWithValidation(
-                        OntologyConstants.Rdfs.Label,
-                        stringFormatter.toSparqlEncodedString
+        // Get information about the project that the resource should be created in.
+        projectIri <- ZIO.attempt(
+                        jsonLDDocument.requireIriInObject(
+                          OntologyConstants.KnoraApiV2Complex.AttachedToProject,
+                          stringFormatter.toSmartIriWithErr
+                        )
                       )
+        projectId <-
+          IriIdentifier.fromString(projectIri.toString).toZIO.mapError(e => BadRequestException(e.getMessage))
+        projectInfoResponse <- MessageRelay.ask[ProjectGetResponseADM](ProjectGetRequestADM(projectId))
 
-      // Get information about the project that the resource should be created in.
-      projectIri: SmartIri = jsonLDDocument.requireIriInObject(
-                               OntologyConstants.KnoraApiV2Complex.AttachedToProject,
-                               stringFormatter.toSmartIriWithErr
-                             )
+        _ <- ZIO.attempt(maybeCustomResourceIri.foreach { iri =>
+               if (!iri.isKnoraResourceIri) {
+                 throw BadRequestException(s"<$iri> is not a Knora resource IRI")
+               }
 
-      projectInfoResponse: ProjectGetResponseADM <-
-        appActor
-          .ask(
-            ProjectGetRequestADM(identifier =
-              IriIdentifier
-                .fromString(projectIri.toString)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-          )
-          .mapTo[ProjectGetResponseADM]
+               stringFormatter.validateUUIDOfResourceIRI(iri)
 
-      _ = maybeCustomResourceIri.foreach { iri =>
-            if (!iri.isKnoraResourceIri) {
-              throw BadRequestException(s"<$iri> is not a Knora resource IRI")
-            }
+               if (!iri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
+                 throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
+               }
+             })
 
-            stringFormatter.validateUUIDOfResourceIRI(iri)
+        // Get the resource's permissions.
+        permissions <- ZIO.attempt(
+                         jsonLDDocument.maybeStringWithValidation(
+                           OntologyConstants.KnoraApiV2Complex.HasPermissions,
+                           stringFormatter.toSparqlEncodedString
+                         )
+                       )
 
-            if (!iri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
-              throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
-            }
-          }
+        // Get the user who should be indicated as the creator of the resource, if specified.
 
-      // Get the resource's permissions.
-      permissions: Option[String] = jsonLDDocument.maybeStringWithValidation(
-                                      OntologyConstants.KnoraApiV2Complex.HasPermissions,
-                                      stringFormatter.toSparqlEncodedString
-                                    )
-
-      // Get the user who should be indicated as the creator of the resource, if specified.
-
-      maybeAttachedToUserIri: Option[SmartIri] = jsonLDDocument.maybeIriInObject(
-                                                   OntologyConstants.KnoraApiV2Complex.AttachedToUser,
-                                                   stringFormatter.toSmartIriWithErr
-                                                 )
-
-      maybeAttachedToUserFuture: Option[Future[UserADM]] =
-        maybeAttachedToUserIri.map { attachedToUserIri =>
-          UserUtilADM.switchToUser(
-            requestingUser = requestingUser,
-            requestedUserIri = attachedToUserIri.toString,
-            projectIri = projectIri.toString,
-            appActor = appActor
-          )
-        }
-
-      maybeAttachedToUser: Option[UserADM] <- ActorUtil.optionFuture2FutureOption(maybeAttachedToUserFuture)
-
-      creationDate =
-        jsonLDDocument.maybeDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.CreationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-        )
-
-      // Get the resource's values.
-
-      propertyIriStrs: Set[IRI] = jsonLDDocument.body.value.keySet --
-                                    Set(
-                                      JsonLDKeywords.ID,
-                                      JsonLDKeywords.TYPE,
-                                      OntologyConstants.Rdfs.Label,
-                                      OntologyConstants.KnoraApiV2Complex.AttachedToProject,
+        maybeAttachedToUserIri <- ZIO.attempt(
+                                    jsonLDDocument.maybeIriInObject(
                                       OntologyConstants.KnoraApiV2Complex.AttachedToUser,
-                                      OntologyConstants.KnoraApiV2Complex.HasPermissions,
-                                      OntologyConstants.KnoraApiV2Complex.CreationDate
+                                      stringFormatter.toSmartIriWithErr
                                     )
+                                  )
 
-      propertyValueFuturesMap: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] =
-        propertyIriStrs.map { propertyIriStr =>
-          val propertyIri: SmartIri =
-            propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-          val valuesArray: JsonLDArray = jsonLDDocument.requireArray(propertyIriStr)
+        maybeAttachedToUser <- ZIO.foreach(maybeAttachedToUserIri) { attachedToUserIri =>
+                                 UserUtilADM.switchToUser(
+                                   requestingUser,
+                                   attachedToUserIri.toString,
+                                   projectIri.toString
+                                 )
+                               }
 
-          val valueFuturesSeq: Seq[Future[CreateValueInNewResourceV2]] = valuesArray.value.map { valueJsonLD =>
-            val valueJsonLDObject = valueJsonLD match {
-              case jsonLDObject: JsonLDObject => jsonLDObject
-              case _                          => throw BadRequestException(s"Invalid JSON-LD as object of property <$propertyIriStr>")
-            }
+        creationDate <- ZIO.attempt(
+                          jsonLDDocument.maybeDatatypeValueInObject(
+                            key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                            validationFun =
+                              (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                          )
+                        )
+        // Get the resource's values.
 
-            for {
-              valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
-                                                jsonLDObject = valueJsonLDObject,
-                                                requestingUser = requestingUser,
-                                                appActor = appActor,
-                                                log = log
-                                              )
+        propertyIriStrs <- ZIO.attempt(
+                             jsonLDDocument.body.value.keySet --
+                               Set(
+                                 JsonLDKeywords.ID,
+                                 JsonLDKeywords.TYPE,
+                                 OntologyConstants.Rdfs.Label,
+                                 OntologyConstants.KnoraApiV2Complex.AttachedToProject,
+                                 OntologyConstants.KnoraApiV2Complex.AttachedToUser,
+                                 OntologyConstants.KnoraApiV2Complex.HasPermissions,
+                                 OntologyConstants.KnoraApiV2Complex.CreationDate
+                               )
+                           )
 
-              maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
-              maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID(
-                                                     OntologyConstants.KnoraApiV2Complex.ValueHasUUID
-                                                   )
+        propertyValueFuturesMap <-
+          ZIO.attempt(
+            propertyIriStrs.map { propertyIriStr =>
+              val propertyIri: SmartIri =
+                propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
+              val valuesArray: JsonLDArray = jsonLDDocument.requireArray(propertyIriStr)
 
-              // Get the value's creation date.
-              // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-              maybeCustomValueCreationDate =
-                valueJsonLDObject
-                  .maybeDatatypeValueInObject(
-                    key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
-                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                    validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-                  )
-                  .orElse(
-                    valueJsonLDObject.maybeDatatypeValueInObject(
-                      key = OntologyConstants.KnoraApiV2Complex.CreationDate,
-                      expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-                    )
-                  )
+              val valueFuturesSeq = ZIO.foreach(valuesArray.value) { valueJsonLD =>
+                for {
+                  valueJsonLDObject <- valueJsonLD match {
+                                         case jsonLDObject: JsonLDObject => ZIO.succeed(jsonLDObject)
+                                         case _ =>
+                                           ZIO.fail(
+                                             BadRequestException(
+                                               s"Invalid JSON-LD as object of property <$propertyIriStr>"
+                                             )
+                                           )
+                                       }
 
-              maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(
-                                                   OntologyConstants.KnoraApiV2Complex.HasPermissions,
-                                                   stringFormatter.toSparqlEncodedString
-                                                 )
-            } yield CreateValueInNewResourceV2(
-              valueContent = valueContent,
-              customValueIri = maybeCustomValueIri,
-              customValueUUID = maybeCustomValueUUID,
-              customValueCreationDate = maybeCustomValueCreationDate,
-              permissions = maybePermissions
-            )
-          }
+                  valueContent <- ValueContentV2.fromJsonLdObject(valueJsonLDObject, requestingUser)
 
-          propertyIri -> valueFuturesSeq
-        }.toMap
+                  maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
+                  maybeCustomValueUUID: Option[UUID] =
+                    valueJsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
 
-      propertyValuesMap: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(
-                                                                             propertyValueFuturesMap
-                                                                           )
-    } yield CreateResourceRequestV2(
-      createResource = CreateResourceV2(
-        resourceIri = maybeCustomResourceIri,
-        resourceClassIri = resourceClassIri,
-        label = label,
-        values = propertyValuesMap,
-        projectADM = projectInfoResponse.project,
-        permissions = permissions,
-        creationDate = creationDate
-      ),
-      requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
-      apiRequestID = apiRequestID
-    )
+                  // Get the value's creation date.
+                  // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
+                  maybeCustomValueCreationDate <- ZIO
+                                                    .attempt(
+                                                      valueJsonLDObject
+                                                        .maybeDatatypeValueInObject(
+                                                          key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                                                          expectedDatatype =
+                                                            OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                                          validationFun = (s, errorFun) =>
+                                                            ValuesValidator
+                                                              .xsdDateTimeStampToInstant(s)
+                                                              .getOrElse(errorFun)
+                                                        )
+                                                    )
+                                                    .flatMap(it =>
+                                                      if (it.isEmpty) {
+                                                        ZIO.attempt(
+                                                          valueJsonLDObject.maybeDatatypeValueInObject(
+                                                            key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                                                            expectedDatatype =
+                                                              OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                                            validationFun = (s, errorFun) =>
+                                                              ValuesValidator
+                                                                .xsdDateTimeStampToInstant(s)
+                                                                .getOrElse(errorFun)
+                                                          )
+                                                        )
+                                                      } else ZIO.succeed(it)
+                                                    )
+
+                  maybePermissions <- ZIO.attempt(
+                                        valueJsonLDObject.maybeStringWithValidation(
+                                          OntologyConstants.KnoraApiV2Complex.HasPermissions,
+                                          stringFormatter.toSparqlEncodedString
+                                        )
+                                      )
+                } yield CreateValueInNewResourceV2(
+                  valueContent = valueContent,
+                  customValueIri = maybeCustomValueIri,
+                  customValueUUID = maybeCustomValueUUID,
+                  customValueCreationDate = maybeCustomValueCreationDate,
+                  permissions = maybePermissions
+                )
+              }
+
+              propertyIri -> valueFuturesSeq
+            }.toMap
+          )
+        propertyValuesMap <- ZioHelper.sequence(propertyValueFuturesMap)
+      } yield CreateResourceRequestV2(
+        createResource = CreateResourceV2(
+          resourceIri = maybeCustomResourceIri,
+          resourceClassIri = resourceClassIri,
+          label = label,
+          values = propertyValuesMap,
+          projectADM = projectInfoResponse.project,
+          permissions = permissions,
+          creationDate = creationDate
+        ),
+        requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
+        apiRequestID = apiRequestID
+      )
   }
 }
 

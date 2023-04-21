@@ -181,8 +181,7 @@ final case class ValuesRouteV1()(
             richtext.xml.get,
             mappingIri,
             acceptStandoffLinksToClientIDs = false,
-            userADM,
-            logger
+            userADM
           )
         resourceReferences <- getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
         utf8str <- toSparqlEncodedString(

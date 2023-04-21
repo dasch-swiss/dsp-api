@@ -11,7 +11,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import akka.util.ByteString
-import com.typesafe.scalalogging.Logger
 import spray.json.JsNumber
 import spray.json.JsObject
 import zio._
@@ -133,14 +132,13 @@ object RouteUtilV1 {
     xml: String,
     mappingIri: IRI,
     acceptStandoffLinksToClientIDs: Boolean,
-    userProfile: UserADM,
-    log: Logger
+    userProfile: UserADM
   ): ZIO[MessageRelay, Throwable, TextWithStandoffTagsV2] =
     for {
       mappingResponse <- MessageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, userProfile))
       textWithStandoffTag <-
         ZIO.attempt(
-          StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs, log)
+          StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mappingResponse, acceptStandoffLinksToClientIDs)
         )
     } yield textWithStandoffTag
 
