@@ -43,10 +43,12 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequence
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
+
+import XmlPatterns.nCNamePattern
+import XmlPatterns.nCNameRegex
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -295,6 +297,18 @@ object StringFormatter {
       iriStr,
       JavaUtil.function({ _: Object => creationFun() })
     )
+
+  /**
+   * Checks that a string represents a valid IRI.
+   * Also encodes the IRI, preserving existing %-escapes.
+   *
+   * @param s the string to be checked.
+   * @return A validated and escaped IRI.
+   */
+  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
+    Validation
+      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
+      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
@@ -659,16 +673,6 @@ class StringFormatter private (
     "\\n"
   )
 
-  // A regex sub-pattern for ontology prefix labels and local entity names. According to
-  // <https://www.w3.org/TR/turtle/#prefixed-name>, a prefix label in Turtle must be a valid XML NCName
-  // <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>. Knora also requires a local entity name to
-  // be an XML NCName.
-  private val NCNamePattern: String =
-    """[\p{L}_][\p{L}0-9_.-]*"""
-
-  // A regex for matching a string containing only an ontology prefix label or a local entity name.
-  private val NCNameRegex: Regex = ("^" + NCNamePattern + "$").r
-
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
   private val ProjectIDPattern: String =
     """\p{XDigit}{4,4}"""
@@ -679,7 +683,7 @@ class StringFormatter private (
   // A regex for the URL path of an API v2 ontology (built-in or project-specific).
   private val ApiV2OntologyUrlPathRegex: Regex = (
     "^" + "/ontology/((" +
-      ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
+      ProjectIDPattern + ")/)?(" + nCNamePattern + ")(" +
       OntologyConstants.KnoraApiV2Complex.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
   ).r
 
@@ -692,20 +696,14 @@ class StringFormatter private (
   // A regex for a project-specific XML import namespace.
   private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
     "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
-      "(shared/)?((" + ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+      "(shared/)?((" + ProjectIDPattern + ")/)?(" + nCNamePattern + ")" +
       OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
   ).r
 
   // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
   // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
   private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-    "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
-  ).r
-
-  // In XML import data, a standoff link tag that refers to a resource described in the import must have the
-  // form defined by this regex.
-  private val StandoffLinkReferenceToClientIDForResourceRegex: Regex = (
-    "^ref:(" + NCNamePattern + ")$"
+    "^(p(" + ProjectIDPattern + ")-)?(" + nCNamePattern + ")__(" + nCNamePattern + ")$"
   ).r
 
   private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
@@ -874,7 +872,7 @@ class StringFormatter private (
             val entityName = iri.substring(hashPos + 1)
 
             // Validate the entity name as an NCName.
-            if (!NCNameRegex.matches(entityName)) errorFun
+            if (!nCNameRegex.matches(entityName)) errorFun
             (namespace, Some(entityName))
           } else {
             (iri, None)
@@ -1471,19 +1469,7 @@ class StringFormatter private (
    */
   @deprecated("Use validateAndEscapeIri(String) instead")
   def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI =
-    validateAndEscapeIri(s).getOrElse(errorFun)
-
-  /**
-   * Checks that a string represents a valid IRI.
-   * Also encodes the IRI, preserving existing %-escapes.
-   *
-   * @param s        the string to be checked.
-   * @return A validated and escaped IRI.
-   */
-  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
-    Validation
-      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
-      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
+    StringFormatter.validateAndEscapeIri(s).getOrElse(errorFun)
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
@@ -1541,51 +1527,6 @@ class StringFormatter private (
    */
   def isKnoraPermissionIriStr(iri: IRI): Boolean = // V2 / value objects
     Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
-
-  /**
-   * Checks that a string represents a valid resource identifier in a standoff link.
-   *
-   * @param s               the string to be checked.
-   * @param acceptClientIDs if `true`, the function accepts either an IRI or an XML NCName prefixed by `ref:`.
-   *                        The latter is used to refer to a client's ID for a resource that is described in an XML bulk import.
-   *                        If `false`, only an IRI is accepted.
-   * @param errorFun        a function that throws an exception. It will be called if the form of the string is invalid.
-   * @return the same string.
-   */
-  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: => Nothing): IRI =
-    validateStandoffLinkResourceReference(s, acceptClientIDs).getOrElse(errorFun)
-
-  def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
-    if (acceptClientIDs && isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
-    else validateAndEscapeIri(s)
-
-  /**
-   * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
-   *
-   * @param s the string to be checked.
-   * @return `true` if the string is an XML NCName prefixed by `ref:`.
-   */
-  def isStandoffLinkReferenceToClientIDForResource(s: String): Boolean =
-    s match {
-      case StandoffLinkReferenceToClientIDForResourceRegex(_) => true
-      case _                                                  => false
-    }
-
-  /**
-   * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
-   * (referring to a resource that already exists) or a client's ID for a resource that doesn't yet exist and is
-   * described in an XML bulk import. Returns the real IRI of the target resource.
-   *
-   * @param iri                             an IRI from a standoff link, either in the form of a real resource IRI or in the form of
-   *                                        a reference to a client's ID for a resource.
-   * @param clientResourceIDsToResourceIris a map of client resource IDs to real resource IRIs.
-   */
-  def toRealStandoffLinkTargetResourceIri(iri: IRI, clientResourceIDsToResourceIris: Map[String, IRI]): IRI =
-    iri match {
-      case StandoffLinkReferenceToClientIDForResourceRegex(clientResourceID) =>
-        clientResourceIDsToResourceIris(clientResourceID)
-      case _ => iri
-    }
 
   /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
@@ -1659,27 +1600,6 @@ class StringFormatter private (
 
     f"$year%04d$month%02d$day%02dT$hour%02d$minute%02d$second%02d${fractionStr}Z"
   }
-
-  /**
-   * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
-   *
-   * @param standoffTags The list of [[StandoffTagV2]].
-   * @return a set of Iris referred to in the [[StandoffTagV2]].
-   */
-  def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] =
-    standoffTags.foldLeft(Set.empty[IRI]) { case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
-      if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-        val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
-          case iriTagAttr: StandoffTagIriAttributeV2
-              if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink =>
-            iriTagAttr.value
-        }
-
-        acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
-      } else {
-        acc
-      }
-    }
 
   /**
    * Returns `true` if an ontology name is reserved for a built-in ontology.
@@ -1952,7 +1872,7 @@ class StringFormatter private (
    * @return the same string.
    */
   def validateAndEscapeProjectShortname(shortname: String): Option[String] =
-    NCNameRegex
+    nCNameRegex
       .findFirstIn(shortname)
       .flatMap(Base64UrlPatternRegex.findFirstIn)
       .flatMap(toSparqlEncodedString)
@@ -2411,16 +2331,6 @@ class StringFormatter private (
     val knoraListUuid = makeRandomBase64EncodedUuid
     s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
   }
-
-  /**
-   * Creates a new standoff tag IRI based on a UUID.
-   *
-   * @param valueIri   the IRI of the text value containing the standoff tag.
-   * @param startIndex the standoff tag's start index.
-   * @return a standoff tag IRI.
-   */
-  def makeRandomStandoffTagIri(valueIri: IRI, startIndex: Int): IRI =
-    s"$valueIri/standoff/$startIndex"
 
   /**
    * Converts the IRI of a property that points to a resource into the IRI of the corresponding link value property.
