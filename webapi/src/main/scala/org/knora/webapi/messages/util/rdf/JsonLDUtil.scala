@@ -456,6 +456,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the return value of the validation function.
    */
   @deprecated("Use getIri() instead")
+  @throws[BadRequestException]
   def toIri[T](validationFun: (String, => Nothing) => T): T =
     if (isIri) {
       val id: IRI = requireString(JsonLDKeywords.ID)
@@ -511,7 +512,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the value.
    */
-  @deprecated("Use getRequiredString() instead")
+  @deprecated("Use getRequiredString(String) instead")
+  @throws[BadRequestException]
   def requireString(key: String): String =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case JsonLDString(str) => str
@@ -532,6 +534,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the return value of the validation function.
    */
   @deprecated("Use getString(String) instead")
+  @throws[BadRequestException]
   def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = {
     val str: String = requireString(key)
     validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
@@ -545,6 +548,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the value, or `None` if not found.
    */
   @deprecated("Use getString(String) instead")
+  @throws[BadRequestException]
   def maybeString(key: String): Option[String] =
     value.get(key).map {
       case JsonLDString(str) => str
@@ -587,6 +591,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the return value of the validation function, or `None` if the value was not present.
    */
   @deprecated("Use getString(String) instead")
+  @throws[BadRequestException]
   def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     maybeString(key).map { str =>
       validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
@@ -602,6 +607,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the validated IRI.
    */
   @deprecated("use getIdIriFromObject(String) instead")
+  @throws[BadRequestException]
   def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T =
     requireObject(key).toIri(validationFun)
 
@@ -668,7 +674,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the required value.
    */
-  @deprecated("use getRequiredObject instead")
+  @deprecated("use getRequiredObject(String) instead")
+  @throws[BadRequestException]
   def requireObject(key: String): JsonLDObject =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case obj: JsonLDObject => obj
@@ -683,6 +690,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the optional value.
    */
   @deprecated("use getObject(String) instead")
+  @throws[BadRequestException]
   def maybeObject(key: String): Option[JsonLDObject] =
     value.get(key).map {
       case obj: JsonLDObject => obj
@@ -731,6 +739,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the required value.
    */
   @deprecated("use getRequiredArray instead")
+  @throws[BadRequestException]
   def requireArray(key: String): JsonLDArray =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case obj: JsonLDArray => obj
@@ -744,7 +753,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the optional value.
    */
-  @deprecated("use getArray instead")
+  @deprecated("use getArray(String) instead")
   def maybeArray(key: String): Option[JsonLDArray] =
     value.get(key).map {
       case obj: JsonLDArray => obj
@@ -771,7 +780,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the required value.
    */
-  @deprecated("use getRequiredInt instead")
+  @deprecated("use getRequiredInt(String) instead")
+  @throws[BadRequestException]
   def requireInt(key: String): Int =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case obj: JsonLDInt => obj.value
@@ -785,7 +795,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the optional value.
    */
-  @deprecated("use getInt instead")
+  @deprecated("use getInt() instead")
+  @throws[BadRequestException]
   def maybeInt(key: String): Option[Int] =
     value.get(key).map {
       case obj: JsonLDInt => obj.value
@@ -812,7 +823,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the required value.
    */
-  @deprecated("use getRequiredBoolean instead")
+  @deprecated("use getRequiredBoolean(String) instead")
+  @throws[BadRequestException]
   def requireBoolean(key: String): Boolean =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case obj: JsonLDBoolean => obj.value
@@ -826,7 +838,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the optional value.
    */
-  @deprecated("use getBoolean instead")
+  @deprecated("use getBoolean(String) instead")
+  @throws[BadRequestException]
   def maybeBoolean(key: String): Option[Boolean] =
     value.get(key).map {
       case obj: JsonLDBoolean => obj.value
@@ -853,7 +866,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return a validated Knora data IRI.
    */
-  @deprecated("use getRequiredIdValueAsKnoraDataIri instead")
+  @deprecated("use getRequiredIdValueAsKnoraDataIri() instead")
+  @throws[BadRequestException]
   def requireIDAsKnoraDataIri: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -871,7 +885,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return an optional validated Knora data IRI.
    */
-  @deprecated("use getIdValueAsKnoraDataIri instead")
+  @deprecated("use getIdValueAsKnoraDataIri() instead")
+  @throws[BadRequestException]
   def maybeIDAsKnoraDataIri: Option[SmartIri] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -910,7 +925,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return an optional validated decoded UUID.
    */
-  @deprecated("use getUuid instead")
+  @deprecated("use getUuid(String) instead")
+  @throws[BadRequestException]
   def maybeUUID(key: String): Option[UUID] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     maybeStringWithValidation(key, stringFormatter.validateBase64EncodedUuid)
@@ -930,7 +946,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return a validated Knora type IRI.
    */
-  @deprecated("use getRequiredTypeAsKnoraApiV2ComplexTypeIri instead")
+  @deprecated("use getRequiredTypeAsKnoraApiV2ComplexTypeIri() instead")
+  @throws[BadRequestException]
   def requireTypeAsKnoraApiV2ComplexTypeIri: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -962,7 +979,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return the property IRI and the value.
    */
-  @deprecated("use getRequiredResourcePropertyApiV2ComplexValue instead")
+  @deprecated("use getRequiredResourcePropertyApiV2ComplexValue() instead")
+  @throws[BadRequestException]
   def requireResourcePropertyApiV2ComplexValue: (SmartIri, JsonLDObject) = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
