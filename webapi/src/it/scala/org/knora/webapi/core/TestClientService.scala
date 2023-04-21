@@ -1,6 +1,8 @@
 package org.knora.webapi.testservices
 
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -17,7 +19,6 @@ import org.apache.http.util.EntityUtils
 import spray.json.JsObject
 import spray.json._
 import zio._
-
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -97,12 +98,10 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
       .fromFuture[akka.http.scaladsl.model.HttpResponse](_ => akka.http.scaladsl.Http().singleRequest(request))
       .timeout(duration)
       .some
-      .mapError(error =>
-        error match {
-          case None            => throw AssertionException("Request timed out.")
-          case Some(throwable) => throw throwable
-        }
-      )
+      .mapError {
+        case None            => throw AssertionException("Request timed out.")
+        case Some(throwable) => throw throwable
+      }
 
   /**
    * Performs a http request and returns the body of the response.
@@ -110,7 +109,6 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   def getResponseString(request: akka.http.scaladsl.model.HttpRequest): Task[String] =
     for {
       response <- singleAwaitingRequest(request)
-      // _    <- ZIO.debug(response)
       body <-
         ZIO
           .attemptBlocking(

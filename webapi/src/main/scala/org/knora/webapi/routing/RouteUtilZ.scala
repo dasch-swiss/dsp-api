@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.routing
+import akka.http.scaladsl.server.RequestContext
 import zio._
 
 import java.net.URLDecoder
@@ -39,6 +40,11 @@ object RouteUtilZ {
         )
       )
 
+  def decodeUuid(uuidStr: String): ZIO[StringFormatter, BadRequestException, UUID] =
+    ZIO.serviceWithZIO[StringFormatter] { sf =>
+      ZIO.attempt(sf.decodeUuid(uuidStr)).orElseFail(BadRequestException(s"Invalid value UUID: $uuidStr"))
+    }
+
   def ensureExternalOntologyName(iri: SmartIri): ZIO[StringFormatter, BadRequestException, SmartIri] =
     ZIO.serviceWithZIO[StringFormatter] { sf =>
       if (sf.isKnoraOntologyIri(iri)) {
@@ -57,6 +63,12 @@ object RouteUtilZ {
     ZIO
       .succeed(iri)
       .filterOrFail(!_.isKnoraOntologyIri)(BadRequestException(s"Iri is a Knora ontology iri: $iri"))
+
+  def ensureIsKnoraResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    ZIO.succeed(iri).filterOrFail(_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
+
+  def ensureIsNotKnoraResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    ZIO.succeed(iri).filterOrFail(!_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
 
   def ensureIsKnoraBuiltInDefinitionIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO
@@ -83,4 +95,11 @@ object RouteUtilZ {
     toSmartIri(s).orElseFail(BadRequestException(errorMsg))
 
   def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
+
+  def getStringValueFromQuery(ctx: RequestContext, key: String): Option[String] = ctx.request.uri.query().get(key)
+
+  def toSparqlEncodedString(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, String] =
+    ZIO.serviceWithZIO[StringFormatter](sf =>
+      ZIO.fromOption(sf.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
+    )
 }

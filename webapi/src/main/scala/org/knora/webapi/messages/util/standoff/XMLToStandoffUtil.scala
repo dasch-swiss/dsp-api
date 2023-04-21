@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util.standoff
 
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
-import com.typesafe.scalalogging.Logger
 import org.apache.commons.text.StringEscapeUtils
 
 import java.io.StringReader
@@ -15,6 +14,7 @@ import java.io.StringWriter
 import java.util.UUID
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
+import scala.util.control.NonFatal
 import scala.xml._
 
 import dsp.errors._
@@ -392,8 +392,7 @@ class XMLToStandoffUtil(
    */
   def xml2TextWithStandoff(
     xmlStr: String,
-    tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired],
-    log: Logger
+    tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired]
   ): TextWithStandoff = {
 
     // Knora uses Unicode INFORMATION SEPARATOR TWO (U+001E) to indicate word breaks where a tag implicitly separates words. But
@@ -445,7 +444,7 @@ class XMLToStandoffUtil(
       try {
         XML.withSAXParser(saxParser).loadString(xmlStrWithSeparator)
       } catch {
-        case e: Exception => throw StandoffInternalException(s"XML processing error: ${e.getMessage}", e, log)
+        case NonFatal(e) => throw StandoffInternalException(s"XML processing error: ${e.getMessage}", Some(e))
       }
 
     val finishedConversionState = xmlNodes2Standoff(
