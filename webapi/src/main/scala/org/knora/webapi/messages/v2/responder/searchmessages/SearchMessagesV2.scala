@@ -80,6 +80,19 @@ case class GravsearchCountRequestV2(
   requestingUser: UserADM
 ) extends SearchResponderRequestV2
 
+sealed trait LimitInference
+object LimitInference {
+  def make(projectIri: Option[IRI], ontologyIris: List[IRI]): LimitInference =
+    (projectIri, ontologyIris) match {
+      case (None, Nil) => AllInference
+      case _           => LimitedInference(projectIri, ontologyIris)
+    }
+  final case object NoInference  extends LimitInference
+  final case object AllInference extends LimitInference
+  final case class LimitedInference(projectIri: Option[IRI] = None, ontologyIris: List[IRI] = List.empty)
+      extends LimitInference
+}
+
 /**
  * Performs a Gravsearch query. A successful response will be a [[org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2]].
  *
@@ -92,7 +105,8 @@ case class GravsearchRequestV2(
   constructQuery: ConstructQuery,
   targetSchema: ApiV2Schema,
   schemaOptions: Set[SchemaOption] = Set.empty[SchemaOption],
-  requestingUser: UserADM
+  requestingUser: UserADM,
+  limitInference: LimitInference = LimitInference.AllInference
 ) extends SearchResponderRequestV2
 
 /**

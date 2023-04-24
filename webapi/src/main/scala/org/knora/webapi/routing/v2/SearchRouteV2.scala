@@ -299,12 +299,20 @@ final case class SearchRouteV2(
     post {
       entity(as[String]) { gravsearchQuery => requestContext =>
         {
+          val query                           = requestContext.request.uri.query()
+          val noInference: Boolean            = query.toMap.get("useInference").contains("false")
+          val limitToProject: Option[String]  = query.toMap.get("limitToProject")
+          val limitToOntologies: List[String] = query.toMultiMap.get("limitToOntology").toList.flatten
+          val inference =
+            if (noInference) LimitInference.NoInference
+            else LimitInference.make(limitToProject, limitToOntologies)
+          println(inference)
           val constructQuery                   = GravsearchParser.parseQuery(gravsearchQuery)
           val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
           val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
           val requestTask = Authenticator
             .getUserADM(requestContext)
-            .map(GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, _))
+            .map(GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, _, inference))
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchema, Some(schemaOptions))
         }
       }

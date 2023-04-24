@@ -123,12 +123,13 @@ final case class SearchResponderV2Live(
         requestingUser = requestingUser
       )
 
-    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) =>
+    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser, limitInference) =>
       gravsearchV2(
         inputQuery = query,
         targetSchema = targetSchema,
         schemaOptions = schemaOptions,
-        requestingUser = requestingUser
+        requestingUser = requestingUser,
+        limitInference = limitInference
       )
 
     case SearchResourceByLabelCountRequestV2(
@@ -401,11 +402,15 @@ final case class SearchResponderV2Live(
         )
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
+      // TODO: doen't do anything reasonable yet... should be passed from the route here too
+      useInference = if (nonTriplestoreSpecificConstructToSelectTransformer.useInference) LimitInference.AllInference
+                     else LimitInference.NoInference
 
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
         new SparqlTransformer.NoInferenceSelectToSelectTransformer(
           simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
           sparqlTransformerLive,
+          useInference,
           stringFormatter
         )
 
@@ -446,7 +451,8 @@ final case class SearchResponderV2Live(
     inputQuery: ConstructQuery,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    limitInference: LimitInference
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
@@ -481,12 +487,15 @@ final case class SearchResponderV2Live(
 
       // variable representing the main resources
       mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
+      useInference = if (nonTriplestoreSpecificConstructToSelectTransformer.useInference) limitInference
+                     else LimitInference.NoInference
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
         new SparqlTransformer.NoInferenceSelectToSelectTransformer(
           simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
           sparqlTransformerLive,
+          useInference,
           stringFormatter
         )
 

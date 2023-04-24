@@ -16,6 +16,10 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference.AllInference
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference.LimitedInference
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference.NoInference
 
 /**
  * Methods and classes for transforming generated SPARQL.
@@ -30,6 +34,7 @@ object SparqlTransformer {
   class NoInferenceSelectToSelectTransformer(
     simulateInference: Boolean,
     sparqlTransformerLive: SparqlTransformerLive,
+    useInference: LimitInference,
     implicit val stringFormatter: StringFormatter
   ) extends SelectToSelectTransformer {
 
@@ -43,8 +48,7 @@ object SparqlTransformer {
     ): Task[Seq[QueryPattern]] =
       sparqlTransformerLive.transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
-        simulateInference = simulateInference,
-        limitInferenceToOntologies = limitInferenceToOntologies
+        inference = useInference
       )
 
     override def transformFilter(filterPattern: FilterPattern): ZIO[Any, Nothing, Seq[FilterPattern]] =
@@ -82,8 +86,7 @@ object SparqlTransformer {
     ): Task[Seq[QueryPattern]] =
       sparqlTransformerLive.transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
-        simulateInference = true,
-        limitInferenceToOntologies = limitInferenceToOntologies
+        inference = LimitInference.make(None, limitInferenceToOntologies.map(_.toList).toList.flatten.map(_.toString))
       )
 
     override def transformFilter(filterPattern: FilterPattern): ZIO[Any, Nothing, Seq[FilterPattern]] =
@@ -252,8 +255,9 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
    */
   def transformStatementInWhereForNoInference(
     statementPattern: StatementPattern,
-    simulateInference: Boolean,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference
+    // simulateInference: Boolean,
+    // limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[Seq[QueryPattern]] = {
 
     statementPattern.pred match {
@@ -276,119 +280,118 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
             ZIO.succeed(Seq(statementPattern.copy(namedGraph = None)))
 
           case _ =>
-            // Is inference enabled?
-            if (simulateInference) {
-              // Yes. The statement might need to be expanded. Is the predicate a property IRI?
-              statementPattern.pred match {
-                case iriRef: IriRef =>
-                  ontologyCache.getCacheData.flatMap { ontoCache =>
-                    ZIO.attempt {
+            inference match {
+              case NoInference => ZIO.succeed(Seq(statementPattern))
+              case AllInference =>
+                statementPattern.pred match {
+                  case IriRef(iriRef, _) => ???
+                  case _                 => ZIO.succeed(Seq(statementPattern))
+                }
+              case LimitedInference(projectIri, ontologyIris) =>
+                statementPattern.pred match {
+                  case IriRef(iriRef, _) => ???
+                  case _                 => ZIO.succeed(Seq(statementPattern))
+                }
+            }
+            // XXX: move the following to the above question marks
+            ontologyCache.getCacheData.flatMap { ontoCache =>
+              ZIO.attempt {
 
-                      // Yes.
-                      val predIri     = iriRef.iri
-                      val propertyIri = predIri.toString
+                // Yes.
+                val predIri     = iriRef.iri
+                val propertyIri = predIri.toString
 
-                      // Is the property rdf:type?
-                      if (propertyIri == OntologyConstants.Rdf.Type) {
-                        // Yes. Expand using rdfs:subClassOf*.
+                // Is the property rdf:type?
+                if (propertyIri == OntologyConstants.Rdf.Type) {
+                  // Yes. Expand using rdfs:subClassOf*.
 
-                        val baseClassIri: IriRef = statementPattern.obj match {
-                          case iriRef: IriRef => iriRef
-                          case other =>
-                            throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
-                        }
-
-                        // look up subclasses from ontology cache
-                        val superClasses = ontoCache.classToSubclassLookup
-                        val knownSubClasses = superClasses
-                          .get(baseClassIri.iri)
-                          .getOrElse({
-                            Set(baseClassIri.iri)
-                          })
-                          .toSeq
-
-                        // if provided, limit the child classes to those that belong to relevant ontologies
-                        val relevantSubClasses = limitInferenceToOntologies match {
-                          case None                       => knownSubClasses
-                          case Some(relevantOntologyIris) =>
-                            // filter the known subclasses against the relevant ontologies
-                            knownSubClasses.filter { subClass =>
-                              ontoCache.classDefinedInOntology.get(subClass) match {
-                                case Some(ontologyOfSubclass) =>
-                                  // return true, if the ontology of the subclass is contained in the set of relevant ontologies; false otherwise
-                                  relevantOntologyIris.contains(ontologyOfSubclass)
-                                case None => false // should never happen
-                              }
-                            }
-                        }
-
-                        // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
-                        // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
-                        // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
-                        if (relevantSubClasses.length > 1) {
-                          Seq(
-                            UnionPattern(
-                              relevantSubClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
-                            )
-                          )
-                        } else {
-                          // if no subclasses are available, the initial statement can be used.
-                          Seq(statementPattern)
-                        }
-                      } else {
-                        // No. Expand using rdfs:subPropertyOf*.
-
-                        // look up subproperties from ontology cache
-                        val superProps = ontoCache.superPropertyOfRelations
-                        val knownSubProps = superProps
-                          .get(predIri)
-                          .getOrElse({
-                            Set(predIri)
-                          })
-                          .toSeq
-
-                        // if provided, limit the child properties to those that belong to relevant ontologies
-                        val relevantSubProps = limitInferenceToOntologies match {
-                          case None => knownSubProps
-                          case Some(ontologyIris) =>
-                            knownSubProps.filter { subProperty =>
-                              // filter the known subproperties against the relevant ontologies
-                              ontoCache.propertyDefinedInOntology.get(subProperty) match {
-                                case Some(childOntologyIri) =>
-                                  // return true, if the ontology of the subproperty is contained in the set of relevant ontologies; false otherwise
-                                  ontologyIris.contains(childOntologyIri)
-                                case None => false // should never happen
-                              }
-                            }
-                        }
-
-                        // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
-                        // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
-                        // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
-                        if (relevantSubProps.length > 1) {
-                          Seq(
-                            UnionPattern(
-                              relevantSubProps.map(newPredicate =>
-                                Seq(statementPattern.copy(pred = IriRef(newPredicate)))
-                              )
-                            )
-                          )
-                        } else {
-                          // if no subproperties are available, the initial statement can be used
-                          Seq(statementPattern)
-                        }
-                      }
-                    }
+                  val baseClassIri: IriRef = statementPattern.obj match {
+                    case iriRef: IriRef => iriRef
+                    case other =>
+                      throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
                   }
 
-                case _ =>
-                  // The predicate isn't a property IRI, so no expansion needed.
-                  ZIO.succeed(Seq(statementPattern))
+                  // look up subclasses from ontology cache
+                  val superClasses = ontoCache.classToSubclassLookup
+                  val knownSubClasses = superClasses
+                    .get(baseClassIri.iri)
+                    .getOrElse({
+                      Set(baseClassIri.iri)
+                    })
+                    .toSeq
+
+                  // if provided, limit the child classes to those that belong to relevant ontologies
+                  val relevantSubClasses = limitInferenceToOntologies match {
+                    case None                       => knownSubClasses
+                    case Some(relevantOntologyIris) =>
+                      // filter the known subclasses against the relevant ontologies
+                      knownSubClasses.filter { subClass =>
+                        ontoCache.classDefinedInOntology.get(subClass) match {
+                          case Some(ontologyOfSubclass) =>
+                            // return true, if the ontology of the subclass is contained in the set of relevant ontologies; false otherwise
+                            relevantOntologyIris.contains(ontologyOfSubclass)
+                          case None => false // should never happen
+                        }
+                      }
+                  }
+
+                  // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
+                  // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
+                  // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
+                  if (relevantSubClasses.length > 1) {
+                    Seq(
+                      UnionPattern(
+                        relevantSubClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
+                      )
+                    )
+                  } else {
+                    // if no subclasses are available, the initial statement can be used.
+                    Seq(statementPattern)
+                  }
+                } else {
+                  // No. Expand using rdfs:subPropertyOf*.
+
+                  // look up subproperties from ontology cache
+                  val superProps = ontoCache.superPropertyOfRelations
+                  val knownSubProps = superProps
+                    .get(predIri)
+                    .getOrElse({
+                      Set(predIri)
+                    })
+                    .toSeq
+
+                  // if provided, limit the child properties to those that belong to relevant ontologies
+                  val relevantSubProps = limitInferenceToOntologies match {
+                    case None => knownSubProps
+                    case Some(ontologyIris) =>
+                      knownSubProps.filter { subProperty =>
+                        // filter the known subproperties against the relevant ontologies
+                        ontoCache.propertyDefinedInOntology.get(subProperty) match {
+                          case Some(childOntologyIri) =>
+                            // return true, if the ontology of the subproperty is contained in the set of relevant ontologies; false otherwise
+                            ontologyIris.contains(childOntologyIri)
+                          case None => false // should never happen
+                        }
+                      }
+                  }
+
+                  // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
+                  // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
+                  // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
+                  if (relevantSubProps.length > 1) {
+                    Seq(
+                      UnionPattern(
+                        relevantSubProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
+                      )
+                    )
+                  } else {
+                    // if no subproperties are available, the initial statement can be used
+                    Seq(statementPattern)
+                  }
+                }
               }
-            } else {
-              // Inference is disabled. Just return the statement as is.
-              ZIO.succeed(Seq(statementPattern))
             }
+
         }
     }
   }
