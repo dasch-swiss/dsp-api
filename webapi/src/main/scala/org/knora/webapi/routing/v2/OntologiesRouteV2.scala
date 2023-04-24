@@ -17,8 +17,8 @@ import java.time.Instant
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
-import dsp.schema.domain.CreatePropertyCommand
-import dsp.schema.domain.{SmartIri => SmartIriV3}
+import dsp.valueobjects.CreatePropertyCommand
+import dsp.valueobjects.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
