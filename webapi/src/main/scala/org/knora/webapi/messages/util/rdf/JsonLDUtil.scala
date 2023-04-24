@@ -12,7 +12,6 @@ import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import zio.IO
 import zio.ZIO
-
 import java.io.StringReader
 import java.io.StringWriter
 import java.util
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /*
 
@@ -1009,35 +1009,32 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
   }
 
-  def getRequiredResourcePropertyApiV2ComplexValue: ZIO[StringFormatter, String, (SmartIri, JsonLDObject)] =
-    ZIO.serviceWithZIO[StringFormatter] { sf =>
+  def getRequiredResourcePropertyApiV2ComplexValue: ZIO[IriConverter, String, (SmartIri, JsonLDObject)] =
+    ZIO.serviceWithZIO[IriConverter] { c =>
       val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDKeywords.ID - JsonLDKeywords.TYPE
-      if (resourceProps.isEmpty) {
-        ZIO.fail("No value submitted")
-      } else if (resourceProps.size > 1) {
-        ZIO.fail(s"Only one value can be submitted per request using this route")
-      } else {
-        resourceProps.head match {
-          case (key: IRI, jsonLDValue: JsonLDValue) =>
-            for {
-              propertySmartIri <- ZIO
-                                    .attempt(sf.toSmartIri(key))
-                                    .orElseFail(s"Invalid property IRI: $key")
-              _ <- ZIO
-                     .fail(s"Invalid Knora API v2 complex property IRI: $propertySmartIri")
-                     .unless(
-                       propertySmartIri.isKnoraEntityIri && propertySmartIri.getOntologySchema.contains(ApiV2Complex)
-                     )
-
-              value <- jsonLDValue match {
-                         case jsonLDObject: JsonLDObject => ZIO.succeed(propertySmartIri -> jsonLDObject)
-                         case _                          => ZIO.fail(s"Invalid value for $propertySmartIri")
-                       }
-            } yield value
-        }
+      resourceProps match {
+        case emptyMap if resourceProps.isEmpty =>
+          ZIO.fail("No value submitted")
+        case tooMany if resourceProps.size > 1 =>
+          ZIO.fail(s"Only one value can be submitted per request using this route")
+        case singleProp =>
+          singleProp.head match {
+            case (key: IRI, jsonLDValue: JsonLDValue) =>
+              for {
+                propertySmartIri <-
+                  c.asSmartIri(key)
+                    .orElseFail("Invalid property IRI: $key")
+                    .filterOrElseWith(it => it.isKnoraEntityIri && it.isApiV2ComplexSchema)(it =>
+                      ZIO.fail(s"Invalid Knora API v2 complex property IRI: $it")
+                    )
+                value <- jsonLDValue match {
+                           case obj: JsonLDObject => ZIO.succeed(propertySmartIri -> obj)
+                           case _                 => ZIO.fail(s"Invalid value for $propertySmartIri")
+                         }
+              } yield value
+          }
       }
     }
-
 }
 
 object JsonLDObject {

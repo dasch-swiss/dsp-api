@@ -867,7 +867,7 @@ abstract class AbstractPrequeryGenerator(
     iriRef: IriRef,
     propInfo: PropertyTypeInfo
   ): TransformedFilterPattern = {
-    if (!iriRef.iri.isApiV2Schema(querySchema)) throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}")
+    if (!iriRef.iri.isOntologySchema(querySchema)) throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}")
 
     // make sure that the comparison operator is a CompareExpressionOperator.EQUALS
     if (comparisonOperator != CompareExpressionOperator.EQUALS)

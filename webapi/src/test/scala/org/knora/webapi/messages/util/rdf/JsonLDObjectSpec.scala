@@ -7,8 +7,10 @@ import zio.test.Assertion.fails
 import zio.test.Assertion.failsCause
 import zio.test.Assertion.failsWithA
 import zio.test._
+import scala.util.Try
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.messages.util.rdf.JsonLDObjectSpec.test
 
 object JsonLDObjectSpec extends ZIOSpecDefault {
 
@@ -32,10 +34,16 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
           actual <- empty.getObject(someKey)
         } yield assertTrue(actual.isEmpty)
       },
+      test("maybeString should return None") {
+        assertTrue(empty.maybeString(someKey).isEmpty)
+      },
       test("getString should return None") {
         for {
           actual <- empty.getString(someKey)
         } yield assertTrue(actual.isEmpty)
+      },
+      test("requireString should Fail") {
+        assertTrue(Try(empty.requireString(someKey)).isFailure)
       },
       test("getRequiredString should fail") {
         for {
