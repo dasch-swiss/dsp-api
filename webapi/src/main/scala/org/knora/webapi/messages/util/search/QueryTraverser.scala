@@ -14,6 +14,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
@@ -59,12 +61,12 @@ trait WhereTransformer {
   /**
    * Called before entering a UNION block.
    */
-  def enteringUnionBlock(): Task[Unit]
+  def enteringUnionBlock(): Task[Unit] = ZIO.unit
 
   /**
    * Called before leaving a UNION block.
    */
-  def leavingUnionBlock(): Task[Unit]
+  def leavingUnionBlock(): Task[Unit] = ZIO.unit
 
   /**
    * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
@@ -86,7 +88,7 @@ trait WhereTransformer {
    * @param filterPattern the filter to be transformed.
    * @return the result of the transformation.
    */
-  def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]]
+  def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.succeed(Seq(filterPattern))
 
   /**
    * Transforms a [[LuceneQueryPattern]] into one or more query patterns.
