@@ -13,8 +13,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.search.gravsearch.ConstructToConstructTransformer
-import org.knora.webapi.messages.util.search.gravsearch.SelectToSelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer

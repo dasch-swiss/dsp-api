@@ -13,9 +13,9 @@ import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.search.QueryTraverser
-import org.knora.webapi.messages.util.search.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
@@ -90,6 +90,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
@@ -110,9 +111,6 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
-import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 object LayersTest {
 
   /**
