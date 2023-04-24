@@ -525,6 +525,8 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       }
     )
   )
+
+  // uuid value related tests
   private val uuidValueSuite = suite("getting uuid values")(
     suite("when given an empty map")(
       // uuid value
@@ -539,6 +541,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     )
   )
 
+  // smartIri related tests
   private val smartIriValueSuite = suite("getting smart iri values")(
     suite("when given an empty map")(
       test("requireTypeAsKnoraApiV2ComplexTypeIri should fail with a BadRequestException") {
