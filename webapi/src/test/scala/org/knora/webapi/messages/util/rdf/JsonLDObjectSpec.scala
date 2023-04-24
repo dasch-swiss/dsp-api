@@ -650,27 +650,66 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   // smartIri related tests
   private val smartIriValueSuite = suite("getting smart iri values")(
-    suite("when given an empty map")(
-      test("requireTypeAsKnoraApiV2ComplexTypeIri should fail with a BadRequestException") {
+    smartIriValueSuiteGivenEmptyMap + smartIriValueSuiteGivenValidValue
+  )
+
+  private def smartIriValueSuiteGivenEmptyMap = suite("when given an empty map")(
+    test("requireTypeAsKnoraApiV2ComplexTypeIri should fail with a BadRequestException") {
+      for {
+        actual <- ZIO.attempt(emptyJsonLdObject.requireTypeAsKnoraApiV2ComplexTypeIri).exit
+      } yield assertTrue(actual == Exit.fail(BadRequestException("No @type provided")))
+    },
+    test("getRequiredTypeAsKnoraApiV2ComplexTypeIri should fail with correct message") {
+      for {
+        actual <- emptyJsonLdObject.getRequiredTypeAsKnoraApiV2ComplexTypeIri.exit
+      } yield assertTrue(actual == Exit.fail("No @type provided"))
+    },
+    test("requireResourcePropertyApiV2ComplexValue should fail with a BadRequestException") {
+      for {
+        actual <- ZIO.attempt(emptyJsonLdObject.requireResourcePropertyApiV2ComplexValue).exit
+      } yield assertTrue(actual == Exit.fail(BadRequestException("No value submitted")))
+    },
+    test("getRequiredResourcePropertyApiV2ComplexValue should fail with correct message") {
+      for {
+        actual <- emptyJsonLdObject.getRequiredResourcePropertyApiV2ComplexValue.exit
+      } yield assertTrue(actual == Exit.fail("No value submitted"))
+    }
+  )
+
+  private def smartIriValueSuiteGivenValidValue = {
+    val sf = StringFormatter.getInitializedTestInstance
+
+    val typeIri                 = "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    val smartTypeIri            = sf.toSmartIri(typeIri)
+    val jsonLdObjectWithTypeIri = JsonLDObject(Map("@type" -> JsonLDString(typeIri)))
+
+    val propertyIri                 = "http://api.knora.org/ontology/knora-api/v2#hasText"
+    val someText                    = "some text"
+    val textJsonLdString            = JsonLDObject(Map("@valuAsString" -> JsonLDString(someText)))
+    val smartPropertyIri            = sf.toSmartIri(propertyIri)
+    val jsonLDObjectWithPropertyIri = JsonLDObject(Map(propertyIri -> textJsonLdString))
+
+    suite("when given a valid value")(
+      test("requireTypeAsKnoraApiV2ComplexTypeIri should return smart iri") {
         for {
-          actual <- ZIO.attempt(emptyJsonLdObject.requireTypeAsKnoraApiV2ComplexTypeIri).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException("No @type provided")))
+          actual <- ZIO.attempt(jsonLdObjectWithTypeIri.requireTypeAsKnoraApiV2ComplexTypeIri)
+        } yield assertTrue(actual == smartTypeIri)
       },
-      test("getRequiredTypeAsKnoraApiV2ComplexTypeIri should fail with correct message") {
+      test("getRequiredTypeAsKnoraApiV2ComplexTypeIri should return smart iri") {
         for {
-          actual <- emptyJsonLdObject.getRequiredTypeAsKnoraApiV2ComplexTypeIri.exit
-        } yield assertTrue(actual == Exit.fail("No @type provided"))
+          actual <- jsonLdObjectWithTypeIri.getRequiredTypeAsKnoraApiV2ComplexTypeIri
+        } yield assertTrue(actual == smartTypeIri)
       },
-      test("requireResourcePropertyApiV2ComplexValue should fail with a BadRequestException") {
+      test("requireResourcePropertyApiV2ComplexValue should return smart iri") {
         for {
-          actual <- ZIO.attempt(emptyJsonLdObject.requireResourcePropertyApiV2ComplexValue).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException("No value submitted")))
+          actual <- ZIO.attempt(jsonLDObjectWithPropertyIri.requireResourcePropertyApiV2ComplexValue)
+        } yield assertTrue(actual == (smartPropertyIri, textJsonLdString))
       },
-      test("getRequiredResourcePropertyApiV2ComplexValue should fail with correct message") {
+      test("getRequiredResourcePropertyApiV2ComplexValue should return smart iri") {
         for {
-          actual <- emptyJsonLdObject.getRequiredResourcePropertyApiV2ComplexValue.exit
-        } yield assertTrue(actual == Exit.fail("No value submitted"))
+          actual <- jsonLDObjectWithPropertyIri.getRequiredResourcePropertyApiV2ComplexValue
+        } yield assertTrue(actual == (smartPropertyIri, textJsonLdString))
       }
     )
-  )
+  }
 }
