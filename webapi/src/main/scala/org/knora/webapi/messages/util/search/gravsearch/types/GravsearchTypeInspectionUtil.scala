@@ -239,9 +239,9 @@ object GravsearchTypeInspectionUtil {
   private def transformPattern(p: QueryPattern): Seq[QueryPattern] =
     p match {
       case filterNotExistsPattern: FilterNotExistsPattern => filterNotExistsPattern.patterns.flatMap(transformPattern)
-      case minusPattern: MinusPattern                     => minusPattern.patterns.flatMap(transformPattern)
-      case optionalPattern: OptionalPattern               => optionalPattern.patterns.flatMap(transformPattern)
-      case unionPattern: UnionPattern                     => unionPattern.blocks.flatMap(_.flatMap(transformPattern))
+      case minusPattern: MinusPattern                     => Seq(MinusPattern(minusPattern.patterns.flatMap(transformPattern)))
+      case optionalPattern: OptionalPattern               => Seq(OptionalPattern(optionalPattern.patterns.flatMap(transformPattern)))
+      case unionPattern: UnionPattern                     => Seq(UnionPattern(unionPattern.blocks.map(_.flatMap(transformPattern))))
       case filterPattern: FilterPattern                   => Seq(filterPattern)
       case luceneQueryPattern: LuceneQueryPattern         => Seq(luceneQueryPattern)
       case valuesPattern: ValuesPattern                   => Seq(valuesPattern)
