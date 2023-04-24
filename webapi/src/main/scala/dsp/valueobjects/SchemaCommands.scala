@@ -1,4 +1,4 @@
-package dsp.schema.domain
+package dsp.valueobjects
 
 import zio.prelude.Validation
 
@@ -7,6 +7,8 @@ import java.time.Instant
 import dsp.errors.ValidationException
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema
+
+// below file was moved from dsp-shared, for more info refer to issue DEV-745 and BL
 
 /**
  * SmartIri placeholder value object.

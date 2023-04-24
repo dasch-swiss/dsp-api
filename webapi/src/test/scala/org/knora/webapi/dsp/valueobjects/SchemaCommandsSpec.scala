@@ -1,4 +1,4 @@
-package dsp.schema.domain
+package org.knora.webapi.dsp.valueobjects
 
 import zio.test.Assertion._
 import zio.test._
