@@ -43,6 +43,9 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2

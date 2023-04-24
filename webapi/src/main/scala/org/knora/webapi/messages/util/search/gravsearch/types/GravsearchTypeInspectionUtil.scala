@@ -154,6 +154,28 @@ object GravsearchTypeInspectionUtil {
     entities.flatMap(entity => maybeTypeableEntity(entity)).toSet
 
   /**
+   * A [[WhereTransformer]] for removing Gravsearch type annotations from a WHERE clause.
+   */
+  private class AnnotationRemovingWhereTransformer extends WhereTransformer {
+    override def transformStatementInWhere(
+      statementPattern: StatementPattern,
+      inputOrderBy: Seq[OrderCriterion],
+      limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    ): Task[Seq[QueryPattern]] = ZIO.attempt {
+      if (mustBeAnnotationStatement(statementPattern)) {
+        Seq.empty[QueryPattern]
+      } else {
+        Seq(statementPattern)
+      }
+    }
+
+    override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.succeed(patterns)
+
+    override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
+      ZIO.succeed(Seq(luceneQueryPattern))
+  }
+
+  /**
    * Determines whether a statement pattern must represent a Gravsearch type annotation.
    *
    * @param statementPattern the statement pattern.
