@@ -1,4 +1,3 @@
-package org.knora.webapi
 package dsp.valueobjects
 
 import zio.test._

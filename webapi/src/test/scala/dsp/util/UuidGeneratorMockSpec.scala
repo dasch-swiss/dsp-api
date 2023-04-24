@@ -1,4 +1,3 @@
-package org.knora.webapi
 package dsp.util
 
 import zio.ZIO

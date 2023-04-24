@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi
 package dsp.util
 
 import zio._

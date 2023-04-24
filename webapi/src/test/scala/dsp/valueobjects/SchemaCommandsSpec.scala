@@ -1,4 +1,4 @@
-package org.knora.webapi.dsp.valueobjects
+package dsp.valueobjects
 
 import zio.test.Assertion._
 import zio.test._
@@ -9,11 +9,16 @@ import dsp.constants.SalsahGui
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.Schema
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import scala.collection.immutable.List
 
 /**
  * This spec is used to test [[dsp.schema.domain.SchemaCommandsSpec]].
  */
 object SchemaCommandsSpec extends ZIOSpecDefault {
+
+  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   def spec = (createPropertyCommandTest)
 
