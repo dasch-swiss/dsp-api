@@ -13,6 +13,7 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import org.knora.webapi.messages.util.search.gravsearch.transformers._
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference
 
 /**
  * Tests [[SparqlTransformer]].
@@ -168,7 +169,7 @@ class SparqlTransformerSpec extends CoreSpec {
 
       val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
         statementPattern = typeStatement,
-        simulateInference = true
+        LimitInference.AllInference
       )
 
       val expectedStatements: Seq[StatementPattern] = Seq(
@@ -227,7 +228,7 @@ class SparqlTransformerSpec extends CoreSpec {
       )
       val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
         statementPattern = typeStatement,
-        simulateInference = true
+        LimitInference.AllInference
       )
       UnsafeZioRun.runOrThrow(expandedStatements) match {
         case (head: UnionPattern) :: Nil =>
@@ -256,7 +257,7 @@ class SparqlTransformerSpec extends CoreSpec {
       )
       val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
         statementPattern = hasValueStatement,
-        simulateInference = true
+        LimitInference.AllInference
       )
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
@@ -307,7 +308,7 @@ class SparqlTransformerSpec extends CoreSpec {
       )
       val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
         statementPattern = hasValueStatement,
-        simulateInference = true
+        LimitInference.AllInference
       )
       UnsafeZioRun.runOrThrow(expandedStatements) match {
         case (head: UnionPattern) :: Nil =>
