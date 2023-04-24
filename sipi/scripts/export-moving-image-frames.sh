@@ -78,20 +78,18 @@ frame_rate=$(ffprobe -v 0 -of csv=p=0 -select_streams v:0 -show_entries stream=r
 IFS="/" read -ra array <<<"$frame_rate"
 numerator="${array[0]}"
 denumerator="${array[1]}"
-
-fps=$(expr "scale=2;${numerator}/${denumerator}" | bc)
+fps=$(bc <<< "scale=2; $numerator/$denumerator")
 
 # --
 # read aspect ratio from input file
 aspect=$(ffprobe -v error -select_streams v:0 -show_entries stream=display_aspect_ratio -of csv=s=x:p=0 ../"${file}")
-
 # if aspect ratio does not exist in video file metadata
-if [ ! -z {$aspect} ]; then
+if [ -n "$aspect" ]; then
   # get aspect ratio from video dimension (width and height)
   aspectW=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 ../"${file}")
   aspectH=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=s=x:p=0 ../"${file}")
 else
-  IFS=':' read -a array <<<"$aspect"
+  IFS=':' read -a -r array <<<"$aspect"
   aspectW="${array[0]}"
   aspectH="${array[1]}"
 fi
@@ -99,12 +97,10 @@ fi
 # --
 # calculate frame width, height and size
 framewidth='256'
-frameheight=$(($framewidth * $aspectH / $aspectW))
+frameheight=$((framewidth * aspectH / aspectW))
 framesize=${framewidth}'x'${frameheight}
 
 # --
-printSeparator
-echo 'Start with frame export'
 # check the outpath for the frames;
 # if exists, delete it and create new
 if [ -d "frames" ]; then
@@ -112,20 +108,16 @@ if [ -d "frames" ]; then
 fi
 mkdir -p 'frames'
 
-ffmpeg -i ../"${file}" -an -ss 0 -f image2 -s ${framesize} -vf framestep="${fps}" frames/"${name}"'_f_%d.jpg' 2>&1
-
-echo 'Done'
-printSeparator
+ffmpeg -i ../"${file}" -hide_banner -loglevel error -an -ss 0 -f image2 -s ${framesize} -vf framestep="${fps}" frames/"${name}"'_f_%d.jpg' 2>&1
 
 # --
 # create the matrix files
-echo 'Start with creating matrix file'
-
 # change directory frames
 cd frames
 # Get the number of files: one image = one second of movie
 # number_of_frame_files is equivalent to the movie duration (in seconds)
-readonly number_of_frame_files=$(find . -type f | wc -l)
+number_of_frame_files=$(find . -type f | wc -l)
+readonly number_of_frame_files
 
 image="${name}_f_1.jpg"
 
@@ -135,7 +127,7 @@ if [[ ! -f "${image}" ]]; then
 fi
 
 # grab the identify string, make sure it succeeded
-# IMG_CHARS=$(identify "${image}" 2> /dev/null) || die "${image} is not a proper image"
+IMG_CHARS=$(identify "${image}" 2> /dev/null) || die "${image} is not a proper image"
 # grab width and height
 IMG_CHARS=$(echo "${IMG_CHARS}" | sed -n 's/\(^.*\)\ \([0-9]*\)x\([0-9]*\)\ \(.*$\)/\2 \3/p')
 
@@ -158,39 +150,35 @@ frame_size="${frame_width}x${frame_height}"
 calcmatrix=$(echo "scale=4; (${number_of_frame_files}/10)/36" | bc)
 # Round the exact fraction to the to the next highest integer
 # for the number of matrix files to  create 'nummatrix'
-readonly interim=$(echo "${calcmatrix}+1"|bc)
-readonly nummatrix=${interim%.*}
-
-echo '#Matrix (calculated) '${calcmatrix}
-echo '#Matrix (rounded) '${nummatrix}
+interim=$(echo "${calcmatrix}+1"|bc)
+readonly interim
+nummatrix=${interim%.*}
+readonly nummatrix
 
 t=0
-while [ ${t} -lt ${nummatrix} ]; do
-  echo 'Matrix nr '${t}
+while [ ${t} -lt "${nummatrix}" ]; do
   firstframe=$(echo "scale=0; ${t}*360+1" | bc)
-  MATRIX=$(find *_${firstframe}.jpg)' '
+  MATRIX=$(find -- *_"${firstframe}.jpg")' '
 
   c=1
   while [ ${c} -lt 36 ]; do
     sec=$(echo "scale=0; ${firstframe}+(${c}*10)" | bc)
-    if [ $sec -lt $number_of_frame_files ]; then
+    if [ "${sec}" -lt "${number_of_frame_files}" ]; then
       img="${name}_f_${sec}.jpg"
-      if [ -f ${img} ]; then
+      if [ -f "${img}" ]; then
         MATRIX+=${img}' '
       fi
     fi
 
-    let c=c+1
+    (( c=c+1 ))
   done
 
   # here we make the montage of every matrix file
   # montage -size 320x180 DB_4_5.jpg DB_4_15.jpg DB_4_25.jpg DB_4_35.jpg -geometry +0+0 montage1.jpg
-  # $(echo "montage -size ${matrix_size} ${MATRIX} -tile 6x6 -geometry +0+0 -resize ${frame_size} ../matrix/${name}'_m_'${t}'.jpg'")
-  montage -size ${matrix_size} ${MATRIX} -tile 6x6 -geometry +0+0 -resize ${frame_size} ../${name}'_m_'${t}'.jpg' 2>&1
+  output_file="../${name}_m_${t}.jpg"
+  # shellcheck disable=SC2086
+  montage -size "${matrix_size}" ${MATRIX} -tile 6x6 -geometry +0+0 -resize "${frame_size}" "${output_file}" 2>&1
 
-  let t=t+1
+  (( t=t+1 ))
 
 done
-
-echo 'Done'
-printSeparator
