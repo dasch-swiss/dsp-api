@@ -18,8 +18,8 @@ import org.knora.webapi.messages.util.PermissionUtilADMLive
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.search.QueryTraverser
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
