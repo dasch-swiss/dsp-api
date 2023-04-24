@@ -633,7 +633,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val invalid       = "not a uuid"
     val expectedError = "Invalid someKey: not a uuid"
     val jsonLdObject  = JsonLDObject(Map(someKey -> JsonLDString(invalid)))
-    suite("when given a invalid value")(
+    suite("when given an invalid value")(
       // uuid value
       test("maybeUUID should fail with a BadRequestException") {
         for {
