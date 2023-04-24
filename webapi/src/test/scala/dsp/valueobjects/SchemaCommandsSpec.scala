@@ -4,17 +4,14 @@ import zio.test.Assertion._
 import zio.test._
 
 import java.time.Instant
+import scala.collection.immutable.List
 
 import dsp.constants.SalsahGui
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.Schema
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import scala.collection.immutable.List
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.domain.IriConverterLive
-import zio.ZIO
 
 /**
  * This spec is used to test [[dsp.schema.domain.SchemaCommandsSpec]].
