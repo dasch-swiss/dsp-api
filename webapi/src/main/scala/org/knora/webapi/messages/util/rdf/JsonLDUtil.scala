@@ -1047,7 +1047,6 @@ object JsonLDObject {
  * @param value a sequence of JSON-LD values.
  */
 case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
-  implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val nonEmpty: Boolean = value.nonEmpty
 
@@ -1120,7 +1119,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
    *
    * @return a map of language keys to values.
    */
-  def toObjsWithLang: Seq[StringLiteralV2] =
+  def toObjsWithLang()(implicit stringFormatter: StringFormatter): Seq[StringLiteralV2] =
     value.map {
       case obj: JsonLDObject =>
         val lang = obj.requireStringWithValidation(JsonLDKeywords.LANGUAGE, stringFormatter.toSparqlEncodedString)
