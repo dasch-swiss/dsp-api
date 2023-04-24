@@ -33,10 +33,6 @@ class SelectToSelectTransformer(
       simulateInference = simulateInference,
       limitInferenceToOntologies = limitInferenceToOntologies
     )
-
-  override def transformFilter(filterPattern: FilterPattern): ZIO[Any, Nothing, Seq[FilterPattern]] =
-    ZIO.succeed(Seq(filterPattern))
-
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.attempt {
     moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
   }
@@ -50,8 +46,4 @@ class SelectToSelectTransformer(
    * @return the FROM clause to be used, if any.
    */
   def getFromClause: Task[Option[FromClause]] = ZIO.succeed(None)
-
-  override def enteringUnionBlock(): UIO[Unit] = ZIO.unit
-
-  override def leavingUnionBlock(): UIO[Unit] = ZIO.unit
 }
