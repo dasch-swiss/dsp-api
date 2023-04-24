@@ -12,6 +12,7 @@ require "clean_temp_dir"
 require "util"
 local json = require "json"
 
+server.log("start local preprocessing", server.loglevel.LOG_DEBUG)
 --------------------------------------------------------------------------
 -- Calculate the SHA256 checksum of a file using the operating system tool
 --------------------------------------------------------------------------
@@ -315,3 +316,5 @@ end
 local response = {}
 response["uploadedFiles"] = file_upload_data
 send_success(response)
+
+server.log("local preprocessing done", server.loglevel.LOG_DEBUG)
