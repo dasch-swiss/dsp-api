@@ -200,10 +200,5 @@ routes = {
         method = 'POST',
         route = '/upload_without_processing',
         script = 'upload_without_processing.lua'
-    },
-    {
-        method = 'POST',
-        route = '/upload_for_processing',
-        script = 'upload_for_processing.lua'
     }
 }
