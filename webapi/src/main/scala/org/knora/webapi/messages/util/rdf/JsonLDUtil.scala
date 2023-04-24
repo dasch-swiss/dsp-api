@@ -12,6 +12,7 @@ import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import zio.IO
 import zio.ZIO
+
 import java.io.StringReader
 import java.io.StringWriter
 import java.util
@@ -466,10 +467,11 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
   /**
-   * Get the IRI value from its JSON-LD object value representation.
+   * Get the IRI value from this JSON-LD object value representation.
    *
-   * @return The IRI found in the JSON-LD object with the key `@id`.
-   *         Fails if the JSON-LD object does not represent an IRI or if the `@id` key is not present.
+   * @return The IRI of JSON-LD object.
+   *         Fails if this JSON-LD object does not represent an IRI.
+   *         Fails if the [[JsonLDKeywords.ID]] key is not present.
    */
   def getIri(): IO[String, String] =
     if (isIri) {
@@ -606,7 +608,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the validated IRI.
    */
-  @deprecated("use getIdIriFromObject(String) instead")
+  @deprecated("use getIdIriInObject(String) instead")
   @throws[BadRequestException]
   def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T =
     requireObject(key).toIri(validationFun)
@@ -624,9 +626,21 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function, or `None` if the value was not present.
    */
-  @deprecated("use getIdIriFromObject(String) instead")
+  @deprecated("use getIdIriInObject(String) instead")
   def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     maybeObject(key).map(_.toIri(validationFun))
+
+  /**
+   * Gets the IRI of the object value of this JSON-LD at a specific key.
+   *
+   * @param key the key of the optional value.
+   * @return the IRI of the object value of this JSON-LD at a specific key.
+   *         Returns [[None]] if the key is not found.
+   *         Fails if the value is not a [[JsonLDObject]].
+   *         Fails if the [[JsonLDObject]] does not have an [[JsonLDKeywords.ID]].
+   */
+  def getIdIriInObject(key: String): IO[String, Option[String]] =
+    getObject(key).flatMap(ZIO.foreach(_)(_.getIri()))
 
   /**
    * Gets a required datatype value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
@@ -717,18 +731,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case Some(obj) => ZIO.succeed(obj)
       case None      => ZIO.fail(s"No $key provided")
     }
-
-  /**
-   * Gets the IRI of the object value of this JSON-LD at a specific key.
-   *
-   * @param key the key of the optional value.
-   * @return the IRI of the object value of this JSON-LD at a specific key.
-   *         Returns [[None]] if the key is not found.
-   *         Fails if the value is not a [[JsonLDObject]].
-   *         Fails if the [[JsonLDObject]] does not have an [[JsonLDKeywords.ID]].
-   */
-  def getObjectIri(key: String): IO[String, Option[String]] =
-    getObject(key).flatMap(ZIO.foreach(_)(_.getIri()))
 
   /**
    * Gets the required array value of this JSON-LD object. If the value is not an array,
@@ -960,16 +962,14 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     typeIri
   }
 
-  def getRequiredTypeAsKnoraApiV2ComplexTypeIri: ZIO[StringFormatter, String, SmartIri] =
+  def getRequiredTypeAsKnoraApiV2ComplexTypeIri: ZIO[IriConverter, String, SmartIri] =
     getString(JsonLDKeywords.TYPE).flatMap {
       case Some(str) =>
-        ZIO.serviceWithZIO[StringFormatter] { sf =>
-          ZIO
-            .attempt(sf.toSmartIri(str))
-            .mapError(_.getMessage)
-            .filterOrFail(_.isKnoraEntityIri)(s"Invalid Knora entity IRI: $str")
-            .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(s"Invalid Knora API v2 complex type IRI: $str")
-        }
+        IriConverter
+          .asSmartIri(str)
+          .mapError(_.getMessage)
+          .filterOrFail(_.isKnoraEntityIri)(s"Invalid Knora entity IRI: $str")
+          .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(s"Invalid Knora API v2 complex type IRI: $str")
       case None => ZIO.fail(s"No ${JsonLDKeywords.TYPE} provided")
     }
 
