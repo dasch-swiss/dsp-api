@@ -34,7 +34,7 @@ if knora_data == nil then
 end
 
 if knora_data["permission"] ~= "DeleteTempFile" then
-    send_error(403, "Token does not grant permission to store file")
+    send_error(403, "Token does not grant permission to delete tmp file")
     return
 end
 
