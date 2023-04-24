@@ -236,16 +236,17 @@ object GravsearchTypeInspectionUtil {
     ZIO.succeed(whereClause.copy(patterns = patterns))
   }
 
-  private def transformPattern(p: QueryPattern): Seq[QueryPattern] =
-    p match {
-      case filterNotExistsPattern: FilterNotExistsPattern => filterNotExistsPattern.patterns.flatMap(transformPattern)
-      case minusPattern: MinusPattern                     => Seq(MinusPattern(minusPattern.patterns.flatMap(transformPattern)))
-      case optionalPattern: OptionalPattern               => Seq(OptionalPattern(optionalPattern.patterns.flatMap(transformPattern)))
-      case unionPattern: UnionPattern                     => Seq(UnionPattern(unionPattern.blocks.map(_.flatMap(transformPattern))))
-      case filterPattern: FilterPattern                   => Seq(filterPattern)
-      case luceneQueryPattern: LuceneQueryPattern         => Seq(luceneQueryPattern)
-      case valuesPattern: ValuesPattern                   => Seq(valuesPattern)
-      case bindPattern: BindPattern                       => Seq(bindPattern)
+  private def transformPattern(pattern: QueryPattern): Seq[QueryPattern] =
+    pattern match {
+      case filterNotExistsPattern: FilterNotExistsPattern =>
+        Seq(FilterNotExistsPattern(filterNotExistsPattern.patterns.flatMap(transformPattern)))
+      case minusPattern: MinusPattern             => Seq(MinusPattern(minusPattern.patterns.flatMap(transformPattern)))
+      case optionalPattern: OptionalPattern       => Seq(OptionalPattern(optionalPattern.patterns.flatMap(transformPattern)))
+      case unionPattern: UnionPattern             => Seq(UnionPattern(unionPattern.blocks.map(_.flatMap(transformPattern))))
+      case filterPattern: FilterPattern           => Seq(filterPattern)
+      case luceneQueryPattern: LuceneQueryPattern => Seq(luceneQueryPattern)
+      case valuesPattern: ValuesPattern           => Seq(valuesPattern)
+      case bindPattern: BindPattern               => Seq(bindPattern)
       case statementPattern: StatementPattern =>
         if (mustBeAnnotationStatement(statementPattern)) Seq.empty[QueryPattern]
         else Seq(statementPattern)
