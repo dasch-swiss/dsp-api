@@ -173,17 +173,10 @@ object GravsearchTypeInspectionUtil {
       }
     }
 
-    override def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] =
-      ZIO.succeed(Seq(filterPattern))
-
     override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.succeed(patterns)
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
       ZIO.succeed(Seq(luceneQueryPattern))
-
-    override def enteringUnionBlock(): Task[Unit] = ZIO.unit
-
-    override def leavingUnionBlock(): Task[Unit] = ZIO.unit
   }
 
   /**

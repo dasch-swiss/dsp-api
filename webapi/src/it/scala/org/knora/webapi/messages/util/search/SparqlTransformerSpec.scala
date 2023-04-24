@@ -12,6 +12,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
+import org.knora.webapi.messages.util.search.gravsearch.transformers._
 
 /**
  * Tests [[SparqlTransformer]].
