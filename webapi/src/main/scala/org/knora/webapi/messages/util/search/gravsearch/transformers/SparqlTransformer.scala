@@ -228,6 +228,7 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
           case _ =>
             inference match {
               case AllInference => // TODO: get rid of duplicate code
+                // TODO: log a warning here because inference could not be applied
                 ontologyCache.getCacheData.flatMap { ontoCache =>
                   ZIO.attempt {
                     // Is the property rdf:type?

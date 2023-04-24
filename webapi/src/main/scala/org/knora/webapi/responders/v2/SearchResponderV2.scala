@@ -58,6 +58,9 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport._
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference.AllInference
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference.LimitedInference
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference.NoInference
 
 trait SearchResponderV2
 final case class SearchResponderV2Live(
@@ -475,9 +478,6 @@ final case class SearchResponderV2Live(
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-      ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
-
       nonTriplestoreSpecificPrequery <-
         queryTraverser.transformConstructToSelect(
           inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
@@ -487,9 +487,30 @@ final case class SearchResponderV2Live(
       // variable representing the main resources
       mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
 
-      // TODO: use the ontologiesForInferenceMaybe here too
-      useInference = if (nonTriplestoreSpecificConstructToSelectTransformer.useInference) limitInference
-                     else LimitInference.NoInference
+      useInference <-
+        if (nonTriplestoreSpecificConstructToSelectTransformer.useInference)
+          limitInference match {
+            case NoInference                                => ZIO.succeed(NoInference)
+            case LimitedInference(_, iris) if iris.nonEmpty => ZIO.succeed(limitInference)
+            case LimitedInference(Some(projectIri), _) =>
+              for {
+                cache <- ontologyCache.getCacheData
+                projectOntologies = cache.ontologies.filter { case (iri, ontology) =>
+                                      ontology.ontologyMetadata.projectIri.contains(projectIri)
+                                    }.keys.map(_.toIri).toList
+                inference = if (projectOntologies.nonEmpty) LimitedInference(None, projectOntologies)
+                            else AllInference
+              } yield inference
+            case _ =>
+              inferenceOptimizationService
+                .getOntologiesRelevantForInference(inputQuery.whereClause)
+                .map(
+                  _.fold[LimitInference](LimitInference.AllInference)(smartIris =>
+                    LimitInference.LimitedInference(None, smartIris.map(_.toIri).toList)
+                  )
+                )
+          }
+        else ZIO.succeed(LimitInference.NoInference)
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
