@@ -2,6 +2,7 @@ package org.knora.webapi.messages.util.rdf
 
 import zio._
 import zio.test._
+
 import java.nio.ByteBuffer
 import java.util.Base64
 import java.util.UUID
@@ -99,36 +100,37 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val invalidIdMap                = Map(JsonLDKeywords.ID -> JsonLDBoolean(true))
     val jsonLdObject                = JsonLDObject(invalidIdMap)
     val jsonLdObjectWithIriInObject = JsonLDObject(Map(someKey -> JsonLDObject(invalidIdMap)))
+    val expectedError               = "Invalid @id: JsonLDBoolean(true) (string expected)"
     suite("when given an invalid value")(
       test("getIri returns should fail with correct error message")(for {
         actual <- jsonLdObject.getIri().exit
-      } yield assertTrue(actual == Exit.fail("Invalid @id: JsonLDBoolean(true) (string expected)"))),
+      } yield assertTrue(actual == Exit.fail(expectedError))),
       test("toIri should fail with a BadRequestException")(
         for {
           actual <- ZIO.attempt(jsonLdObject.toIri(noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException("Invalid @id: JsonLDBoolean(true) (string expected)"))
+          actual == Exit.fail(BadRequestException(expectedError))
         )
       ),
       test("maybeIriInObject should fail with a BadRequestException") {
         for {
           actual <- ZIO.attempt(jsonLdObjectWithIriInObject.maybeIriInObject(someKey, noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException("Invalid @id: JsonLDBoolean(true) (string expected)"))
+          actual == Exit.fail(BadRequestException(expectedError))
         )
       },
       test("requireIriInObject  should fail with a BadRequestException") {
         for {
           actual <- ZIO.attempt(jsonLdObjectWithIriInObject.requireIriInObject(someKey, noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException("Invalid @id: JsonLDBoolean(true) (string expected)"))
+          actual == Exit.fail(BadRequestException(expectedError))
         )
       },
       test("getIdIriInObject fails with correct error messageexpected value") {
         for {
           actual <- jsonLdObjectWithIriInObject.getIdIriInObject(someKey).exit
         } yield assertTrue(
-          actual == Exit.fail("Invalid @id: JsonLDBoolean(true) (string expected)")
+          actual == Exit.fail(expectedError)
         )
       }
     )
@@ -202,45 +204,46 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   }
 
   def stringValueWhenGivenInvalidString: Spec[Any, Serializable] = {
-    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDBoolean(true)))
+    val jsonLdObject  = JsonLDObject(Map(someKey -> JsonLDBoolean(true)))
+    val expectedError = "Invalid someKey: JsonLDBoolean(true) (string expected)"
     suite("when given an invalid String")(
       test("maybeString should fail with BadRequestExcpetion") {
         for {
           actual <- ZIO.attempt(jsonLdObject.maybeString(someKey)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+          actual == Exit.fail(BadRequestException(expectedError))
         )
       },
       test("maybeStringWithValidation should fail with BadRequestExcpetion") {
         for {
           actual <- ZIO.attempt(jsonLdObject.maybeStringWithValidation(someKey, noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+          actual == Exit.fail(BadRequestException(expectedError))
         )
       },
       test("getString should fail with correct error message") {
         for {
           actual <- jsonLdObject.getString(someKey).exit
-        } yield assertTrue(actual == Exit.fail("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+        } yield assertTrue(actual == Exit.fail(expectedError))
       },
       test("requireString should fails with BadRequestException") {
         for {
           actual <- ZIO.attempt(jsonLdObject.requireString(someKey)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+          actual == Exit.fail(BadRequestException(expectedError))
         )
       },
       test("requireStringWithValidation should fail with BadRequestException") {
         for {
           actual <- ZIO.attempt(jsonLdObject.requireStringWithValidation(someKey, noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+          actual == Exit.fail(BadRequestException(expectedError))
         )
       },
       test("getRequiredString should return correct value") {
         for {
           actual <- jsonLdObject.getRequiredString(someKey).exit
-        } yield assertTrue(actual == Exit.fail("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+        } yield assertTrue(actual == Exit.fail(expectedError))
       }
     )
   }
