@@ -381,7 +381,7 @@ final case class SearchResponderV2Live(
       whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
+      _ <- GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult)
 
       // Create a Select prequery
       querySchema <-
@@ -458,7 +458,7 @@ final case class SearchResponderV2Live(
       whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
+      _ <- GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult)
 
       // Create a Select prequery
       querySchema <-
