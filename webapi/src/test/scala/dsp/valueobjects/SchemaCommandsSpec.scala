@@ -12,43 +12,46 @@ import dsp.valueobjects.Schema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import scala.collection.immutable.List
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resourceinfo.domain.IriConverterLive
+import zio.ZIO
 
 /**
  * This spec is used to test [[dsp.schema.domain.SchemaCommandsSpec]].
  */
 object SchemaCommandsSpec extends ZIOSpecDefault {
 
-  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  def spec = (createPropertyCommandTest)
+  def spec = (createPropertyCommandTest).provide(IriConverter.layer, StringFormatter.test)
 
   private val createPropertyCommandTest = suite("CreatePropertyCommand")(
     test("create a createPropertyCommand") {
-      val ontologyIri          = SmartIri("Ontology IRI")
       val lastModificationDate = Instant.now()
-      val propertyIri          = SmartIri("")
       val subjectType          = None
-      val objectType           = SmartIri("Object Type")
-      val superProperties      = List(SmartIri("Super Property IRI"))
       (for {
-        label             <- LangString.make(LanguageCode.en, "some label")
-        commentLangString <- LangString.make(LanguageCode.en, "some comment")
+        ontologyIri <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything")
+        propertyIri <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#someProperty")
+        objectType  <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#SomeClass")
+        superProperties <-
+          IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#someSuperCoolProperty").map(List(_))
+        label             <- LangString.make(LanguageCode.en, "some label").toZIO
+        commentLangString <- LangString.make(LanguageCode.en, "some comment").toZIO
         comment            = Some(commentLangString)
-        guiAttribute      <- Schema.GuiAttribute.make("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>")
-        guiElement        <- Schema.GuiElement.make(SalsahGui.List)
-        guiObject         <- Schema.GuiObject.make(guiAttributes = Set(guiAttribute), guiElement = Some(guiElement))
-        command = CreatePropertyCommand.make(
-                    ontologyIri = ontologyIri,
-                    lastModificationDate = lastModificationDate,
-                    propertyIri = propertyIri,
-                    subjectType = subjectType,
-                    objectType = objectType,
-                    label = label,
-                    comment = comment,
-                    superProperties = superProperties,
-                    guiObject = guiObject
-                  )
-      } yield assert(command.toEither)(isRight)).toZIO
+        guiAttribute      <- Schema.GuiAttribute.make("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>").toZIO
+        guiElement        <- Schema.GuiElement.make(SalsahGui.List).toZIO
+        guiObject         <- Schema.GuiObject.make(Set(guiAttribute), Some(guiElement)).toZIO
+        command =
+          CreatePropertyCommand.make(
+            ontologyIri = ontologyIri,
+            lastModificationDate = lastModificationDate,
+            propertyIri = propertyIri,
+            subjectType = subjectType,
+            objectType = objectType,
+            label = label,
+            comment = comment,
+            superProperties = superProperties,
+            guiObject = guiObject
+          )
+      } yield assert(command.toEither)(isRight))
     }
   )
 }
