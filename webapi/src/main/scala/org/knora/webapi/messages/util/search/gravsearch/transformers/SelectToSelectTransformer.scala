@@ -2,14 +2,13 @@ package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import zio._
 
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference
 
 import SparqlTransformer._
 
 class SelectToSelectTransformer(
-  simulateInference: Boolean,
   sparqlTransformerLive: SparqlTransformerLive,
   implicit val stringFormatter: StringFormatter
 ) extends WhereTransformer {
@@ -26,12 +25,11 @@ class SelectToSelectTransformer(
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference
   ): Task[Seq[QueryPattern]] =
     sparqlTransformerLive.transformStatementInWhereForNoInference(
       statementPattern = statementPattern,
-      simulateInference = simulateInference,
-      limitInferenceToOntologies = limitInferenceToOntologies
+      inference = inference
     )
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.attempt {
     moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))

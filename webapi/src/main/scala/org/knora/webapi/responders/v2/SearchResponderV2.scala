@@ -125,12 +125,13 @@ final case class SearchResponderV2Live(
         requestingUser = requestingUser
       )
 
-    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) =>
+    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser, limitInference) =>
       gravsearchV2(
         inputQuery = query,
         targetSchema = targetSchema,
         schemaOptions = schemaOptions,
-        requestingUser = requestingUser
+        requestingUser = requestingUser,
+        limitInference = limitInference
       )
 
     case SearchResourceByLabelCountRequestV2(
@@ -406,18 +407,17 @@ final case class SearchResponderV2Live(
 
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
         new SelectToSelectTransformer(
-          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
         )
 
       ontologiesForInferenceMaybe <-
         inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
-
+      // TODO: implement correctly here too (this is just for compilation)
       triplestoreSpecificCountQuery <- queryTraverser.transformSelectToSelect(
                                          inputQuery = nonTriplestoreSpecificPrequery,
                                          transformer = triplestoreSpecificQueryPatternTransformerSelect,
-                                         ontologiesForInferenceMaybe
+                                         LimitInference.AllInference
                                        )
 
       countResponse <- triplestoreService.sparqlHttpSelect(triplestoreSpecificCountQuery.toSparql, isGravsearch = true)
@@ -449,7 +449,8 @@ final case class SearchResponderV2Live(
     inputQuery: ConstructQuery,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    limitInference: LimitInference
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
@@ -486,10 +487,13 @@ final case class SearchResponderV2Live(
       // variable representing the main resources
       mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
 
+      // TODO: use the ontologiesForInferenceMaybe here too
+      useInference = if (nonTriplestoreSpecificConstructToSelectTransformer.useInference) limitInference
+                     else LimitInference.NoInference
+
       // Convert the non-triplestore-specific query to a triplestore-specific one.
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
         new SelectToSelectTransformer(
-          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
         )
@@ -500,7 +504,7 @@ final case class SearchResponderV2Live(
         queryTraverser.transformSelectToSelect(
           inputQuery = nonTriplestoreSpecificPrequery,
           transformer = triplestoreSpecificQueryPatternTransformerSelect,
-          limitInferenceToOntologies = ontologiesForInferenceMaybe
+          inference = useInference
         )
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
@@ -598,7 +602,7 @@ final case class SearchResponderV2Live(
             triplestoreSpecificMainQuery <- queryTraverser.transformConstructToConstruct(
                                               inputQuery = mainQuery,
                                               transformer = queryPatternTransformerConstruct,
-                                              limitInferenceToOntologies = ontologiesForInferenceMaybe
+                                              inference = limitInference
                                             )
 
             // Convert the result to a SPARQL string and send it to the triplestore.

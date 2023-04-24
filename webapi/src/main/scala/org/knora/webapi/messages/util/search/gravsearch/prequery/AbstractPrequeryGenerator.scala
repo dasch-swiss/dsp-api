@@ -21,6 +21,7 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types._
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
@@ -127,14 +128,14 @@ abstract class AbstractPrequeryGenerator(
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference = LimitInference.AllInference
   ): Task[Seq[QueryPattern]] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
     processStatementPatternFromWhereClause(
       statementPattern = statementPattern,
       inputOrderBy = inputOrderBy,
-      limitInferenceToOntologies = limitInferenceToOntologies
+      inference = inference
     )
 
   /**
@@ -681,7 +682,7 @@ abstract class AbstractPrequeryGenerator(
   protected def processStatementPatternFromWhereClause(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference = LimitInference.AllInference
   ): Task[Seq[QueryPattern]] = ZIO.attempt(
     // Does this statement set a Gravsearch option?
     statementPattern.subj match {

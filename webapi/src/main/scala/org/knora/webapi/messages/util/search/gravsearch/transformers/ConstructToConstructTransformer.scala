@@ -2,9 +2,9 @@ package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import zio._
 
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference
 
 import SparqlTransformer._
 
@@ -25,12 +25,11 @@ class ConstructToConstructTransformer(
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference = LimitInference.AllInference
   ): Task[Seq[QueryPattern]] =
     sparqlTransformerLive.transformStatementInWhereForNoInference(
       statementPattern = statementPattern,
-      simulateInference = true,
-      limitInferenceToOntologies = limitInferenceToOntologies
+      inference = inference
     )
 
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =

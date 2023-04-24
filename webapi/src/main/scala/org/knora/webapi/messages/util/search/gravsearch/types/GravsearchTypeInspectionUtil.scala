@@ -14,6 +14,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.AnnotationRemovingWhereTransformer
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference
 
 /**
  * Utilities for Gravsearch type inspection.
@@ -164,7 +165,7 @@ object GravsearchTypeInspectionUtil {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion],
-      limitInferenceToOntologies: Option[Set[SmartIri]] = None
+      inference: LimitInference = LimitInference.AllInference
     ): Task[Seq[QueryPattern]] = ZIO.attempt {
       if (mustBeAnnotationStatement(statementPattern)) {
         Seq.empty[QueryPattern]

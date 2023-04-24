@@ -11,11 +11,11 @@ import dsp.errors.GravsearchOptimizationException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
+import org.knora.webapi.messages.v2.responder.searchmessages.LimitInference
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
@@ -79,7 +79,7 @@ trait WhereTransformer {
   def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference
   ): Task[Seq[QueryPattern]]
 
   /**
@@ -134,7 +134,7 @@ final case class QueryTraverser(
     patterns: Seq[QueryPattern],
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference = LimitInference.AllInference
   ): Task[Seq[QueryPattern]] =
     for {
       // Optimization has to be called before WhereTransformer.transformStatementInWhere,
@@ -145,7 +145,7 @@ final case class QueryTraverser(
                                  whereTransformer.transformStatementInWhere(
                                    statementPattern = statementPattern,
                                    inputOrderBy = inputOrderBy,
-                                   limitInferenceToOntologies = limitInferenceToOntologies
+                                   inference = inference
                                  )
 
                                case filterPattern: FilterPattern =>
@@ -156,7 +156,7 @@ final case class QueryTraverser(
                                    patterns = filterNotExistsPattern.patterns,
                                    whereTransformer = whereTransformer,
                                    inputOrderBy = inputOrderBy,
-                                   limitInferenceToOntologies = limitInferenceToOntologies
+                                   inference = inference
                                  ).map(patterns => Seq(FilterNotExistsPattern(patterns)))
 
                                case minusPattern: MinusPattern =>
@@ -164,7 +164,7 @@ final case class QueryTraverser(
                                    patterns = minusPattern.patterns,
                                    whereTransformer = whereTransformer,
                                    inputOrderBy = inputOrderBy,
-                                   limitInferenceToOntologies = limitInferenceToOntologies
+                                   inference = inference
                                  ).map(patterns => Seq(MinusPattern(patterns)))
 
                                case optionalPattern: OptionalPattern =>
@@ -172,7 +172,7 @@ final case class QueryTraverser(
                                    patterns = optionalPattern.patterns,
                                    whereTransformer = whereTransformer,
                                    inputOrderBy = inputOrderBy,
-                                   limitInferenceToOntologies = limitInferenceToOntologies
+                                   inference = inference
                                  ).map(patterns => Seq(OptionalPattern(patterns)))
 
                                case unionPattern: UnionPattern =>
@@ -185,7 +185,7 @@ final case class QueryTraverser(
                                            patterns = blockPatterns,
                                            whereTransformer = whereTransformer,
                                            inputOrderBy = inputOrderBy,
-                                           limitInferenceToOntologies = limitInferenceToOntologies
+                                           inference = inference
                                          )
                                        )
                                        .zipLeft(
@@ -330,13 +330,13 @@ final case class QueryTraverser(
   def transformConstructToSelect(
     inputQuery: ConstructQuery,
     transformer: AbstractPrequeryGenerator,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference = LimitInference.AllInference
   ): Task[SelectQuery] = for {
     transformedWherePatterns <- transformWherePatterns(
                                   patterns = inputQuery.whereClause.patterns,
                                   inputOrderBy = inputQuery.orderBy,
                                   whereTransformer = transformer,
-                                  limitInferenceToOntologies = limitInferenceToOntologies
+                                  inference = inference
                                 )
     transformedOrderBy              <- transformer.getOrderBy(inputQuery.orderBy)
     patterns                         = transformedWherePatterns ++ transformedOrderBy.statementPatterns
@@ -357,7 +357,7 @@ final case class QueryTraverser(
   def transformSelectToSelect(
     inputQuery: SelectQuery,
     transformer: SelectToSelectTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    inference: LimitInference
   ): Task[SelectQuery] =
     for {
       fromClause <- transformer.getFromClause
@@ -365,7 +365,7 @@ final case class QueryTraverser(
                     patterns = inputQuery.whereClause.patterns,
                     inputOrderBy = inputQuery.orderBy,
                     whereTransformer = transformer,
-                    limitInferenceToOntologies = limitInferenceToOntologies
+                    inference = inference
                   )
       whereClause = WhereClause(patterns)
     } yield inputQuery.copy(fromClause = fromClause, whereClause = whereClause)
@@ -381,14 +381,14 @@ final case class QueryTraverser(
   def transformConstructToConstruct(
     inputQuery: ConstructQuery,
     transformer: ConstructToConstructTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inference: LimitInference = LimitInference.AllInference
   ): Task[ConstructQuery] =
     for {
       wherePatterns <- transformWherePatterns(
                          patterns = inputQuery.whereClause.patterns,
                          inputOrderBy = inputQuery.orderBy,
                          whereTransformer = transformer,
-                         limitInferenceToOntologies = limitInferenceToOntologies
+                         inference = inference
                        )
       constructStatements <-
         ZIO.foreach(inputQuery.constructClause.statements)(transformer.transformStatementInConstruct).map(_.flatten)
