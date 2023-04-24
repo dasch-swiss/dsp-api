@@ -35,6 +35,14 @@ temporary files can be set in Sipi's configuration file, using the parameter
 `max_temp_file_age`, which takes a value in seconds, and defaults to
 86400 (1 day).
 
+### upload_without_processing.lua
+
+The `upload_without_processing.lua` script is available at Sipi's `upload_without_processing` route. 
+It receives files submitted to Sipi but does not process them. 
+Instead, it stores them as is in Sipi's `tmp` directory.
+
+Other than `upload.lua`, old temporary files are not deleted.
+
 ### store.lua
 
 The `store.lua` script is available at Sipi's `store` route. It moves a file
