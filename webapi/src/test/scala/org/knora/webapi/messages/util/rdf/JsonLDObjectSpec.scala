@@ -346,6 +346,10 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   // int value related tests
   private val intValueSuite = suite("getting int values")(
+    intValueSuiteWhenGivenAnEmptyMap + intValueSuiteWhenGivenValidValue + intValueSuiteWhenGivenInvalidValue
+  )
+
+  private def intValueSuiteWhenGivenAnEmptyMap =
     suite("when given an empty map")(
       test("maybeInt should return None") {
         assertTrue(emptyJsonLdObject.maybeInt(someKey).isEmpty)
@@ -366,32 +370,139 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == Exit.fail("No someKey provided"))
       }
     )
+
+  private def intValueSuiteWhenGivenValidValue = {
+    val intValue     = 42
+    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDInt(intValue)))
+    suite("when given a valid value")(
+      test("maybeInt should return int value") {
+        assertTrue(jsonLdObject.maybeInt(someKey).contains(intValue))
+      },
+      test("requireInt should return int value") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.requireInt(someKey))
+        } yield assertTrue(actual == intValue)
+      },
+      test("getInt should return int value") {
+        for {
+          actual <- jsonLdObject.getInt(someKey)
+        } yield assertTrue(actual.contains(intValue))
+      },
+      test("getRequiredInt return int value") {
+        for {
+          actual <- jsonLdObject.getRequiredInt(someKey)
+        } yield assertTrue(actual == intValue)
+      }
+    )
+  }
+
+  private def intValueSuiteWhenGivenInvalidValue = {
+    val jsonLdObject  = JsonLDObject(Map(someKey -> JsonLDBoolean(false)))
+    val expectedError = "Invalid someKey: JsonLDBoolean(false) (integer expected)"
+    suite("when given an invalid value")(
+      test("maybeInt should fail with a BadRequestException") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.maybeInt(someKey)).exit
+        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
+      },
+      test("requireInt should fail with a BadRequestException") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.requireInt(someKey)).exit
+        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
+      },
+      test("getInt should return None") {
+        for {
+          actual <- jsonLdObject.getInt(someKey).exit
+        } yield assertTrue(actual == Exit.fail(expectedError))
+      },
+      test("getRequiredInt should fail with correct error message") {
+        for {
+          actual <- jsonLdObject.getRequiredInt(someKey).exit
+        } yield assertTrue(actual == Exit.fail(expectedError))
+      }
+    )
+  }
+
+  // boolean value related tests
+  private val booleanValueSuite = suite("getting boolean values")(
+    booleanValueSuiteWhenGivenAnEmptyMap + booleanValueSuiteWhenGivenValidValue + booleanValueSuiteWhenGivenInvalidValue
   )
 
-  private val booleanValueSuite = suite("getting boolean values")(
-    suite("when given an empty map")(
+  private def booleanValueSuiteWhenGivenAnEmptyMap = suite("when given an empty map")(
+    test("maybeBoolean should return None") {
+      assertTrue(emptyJsonLdObject.maybeBoolean(someKey).isEmpty)
+    },
+    test("requireBoolean should fail with a BadRequestException") {
+      for {
+        actual <- ZIO.attempt(emptyJsonLdObject.requireBoolean(someKey)).exit
+      } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
+    },
+    test("getBoolean should return None") {
+      for {
+        actual <- emptyJsonLdObject.getBoolean(someKey)
+      } yield assertTrue(actual.isEmpty)
+    },
+    test("getRequiredBoolean should fail with correct error message") {
+      for {
+        actual <- emptyJsonLdObject.getRequiredBoolean(someKey).exit
+      } yield assertTrue(actual == Exit.fail("No someKey provided"))
+    }
+  )
+
+  private def booleanValueSuiteWhenGivenValidValue = {
+    val booleanValue = true
+    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDBoolean(booleanValue)))
+    suite("when given a valid value")(
       // Boolean value
-      test("maybeBoolean should return None") {
-        assertTrue(emptyJsonLdObject.maybeBoolean(someKey).isEmpty)
+      test("maybeBoolean should return boolean value") {
+        assertTrue(jsonLdObject.maybeBoolean(someKey).contains(booleanValue))
       },
-      test("requireBoolean should fail with a BadRequestException") {
+      test("requireBoolean should return boolean value") {
         for {
-          actual <- ZIO.attempt(emptyJsonLdObject.requireBoolean(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
+          actual <- ZIO.attempt(jsonLdObject.requireBoolean(someKey))
+        } yield assertTrue(actual)
       },
       test("getBoolean should return None") {
         for {
-          actual <- emptyJsonLdObject.getBoolean(someKey)
-        } yield assertTrue(actual.isEmpty)
+          actual <- jsonLdObject.getBoolean(someKey)
+        } yield assertTrue(actual.contains(booleanValue))
       },
       test("getRequiredBoolean should fail with correct error message") {
         for {
-          actual <- emptyJsonLdObject.getRequiredBoolean(someKey).exit
-        } yield assertTrue(actual == Exit.fail("No someKey provided"))
+          actual <- jsonLdObject.getRequiredBoolean(someKey)
+        } yield assertTrue(actual)
       }
     )
-  )
+  }
 
+  private def booleanValueSuiteWhenGivenInvalidValue = {
+    val jsonLdObject  = JsonLDObject(Map(someKey -> JsonLDInt(42)))
+    val expectedError = "Invalid someKey: JsonLDInt(42) (boolean expected)"
+    suite("when given an empty map")(
+      test("maybeBoolean should fail with a BadRequestException") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.maybeBoolean(someKey)).exit
+        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
+      },
+      test("requireBoolean should fail with a BadRequestException") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.requireBoolean(someKey)).exit
+        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
+      },
+      test("getBoolean should fail with correct error message") {
+        for {
+          actual <- jsonLdObject.getBoolean(someKey).exit
+        } yield assertTrue(actual == Exit.fail(expectedError))
+      },
+      test("getRequiredBoolean should fail with correct error message") {
+        for {
+          actual <- jsonLdObject.getRequiredBoolean(someKey).exit
+        } yield assertTrue(actual == Exit.fail(expectedError))
+      }
+    )
+  }
+
+  // id value related tests
   private val idValueSuite = suite("getting id values")(
     suite("when given an empty map")(
       test("maybeIDAsKnoraDataIri should return None") {
