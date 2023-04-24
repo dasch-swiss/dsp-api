@@ -20,6 +20,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   private val someResourceIri                              = "http://www.knora.org/ontology/0001/anything#Thing"
   private def noValidation: (String, => Nothing) => String = (a, _) => a
 
+  // IRI value related tests
   private val iriValueSuite = suite("getting iri values")(
     iriValueWhenGivenAnEmptyMap,
     iriValueWhenGivenCorrectValues,
@@ -123,37 +124,118 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     )
   }
 
+  // String value related tests
   private val stringValueSuite = suite("getting string values")(
-    suite("when given an empty map")(
-      test("maybeString should return None") {
-        assertTrue(emptyJsonLdObject.maybeString(someKey).isEmpty)
-      },
-      test("maybeStringWithValidation should return None") {
-        assertTrue(emptyJsonLdObject.maybeStringWithValidation(someKey, noValidation).isEmpty)
-      },
-      test("getString should return None") {
-        for {
-          actual <- emptyJsonLdObject.getString(someKey)
-        } yield assertTrue(actual.isEmpty)
-      },
-      test("requireString should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(emptyJsonLdObject.requireString(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
-      },
-      test("requireStringWithValidation should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(emptyJsonLdObject.requireStringWithValidation(someKey, noValidation)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
-      },
-      test("getRequiredString should fail with correct message") {
-        for {
-          actual <- emptyJsonLdObject.getRequiredString(someKey).exit
-        } yield assertTrue(actual == Exit.fail("No someKey provided"))
-      }
-    )
+    stringValueWhenGivenAnEmptyMap + stringValueWhenGivenValidString + stringValueWhenGivenInvalidString
   )
 
+  private def stringValueWhenGivenAnEmptyMap = suite("when given an empty map")(
+    test("maybeString should return None") {
+      assertTrue(emptyJsonLdObject.maybeString(someKey).isEmpty)
+    },
+    test("maybeStringWithValidation should return None") {
+      assertTrue(emptyJsonLdObject.maybeStringWithValidation(someKey, noValidation).isEmpty)
+    },
+    test("getString should return None") {
+      for {
+        actual <- emptyJsonLdObject.getString(someKey)
+      } yield assertTrue(actual.isEmpty)
+    },
+    test("requireString should fail with a BadRequestException") {
+      for {
+        actual <- ZIO.attempt(emptyJsonLdObject.requireString(someKey)).exit
+      } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
+    },
+    test("requireStringWithValidation should fail with a BadRequestException") {
+      for {
+        actual <- ZIO.attempt(emptyJsonLdObject.requireStringWithValidation(someKey, noValidation)).exit
+      } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
+    },
+    test("getRequiredString should fail with correct message") {
+      for {
+        actual <- emptyJsonLdObject.getRequiredString(someKey).exit
+      } yield assertTrue(actual == Exit.fail("No someKey provided"))
+    }
+  )
+
+  def stringValueWhenGivenValidString: Spec[Any, Serializable] = {
+    val someString   = "someString"
+    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDString(someString)))
+    suite("when given a valid String")(
+      test("maybeString should return correct value") {
+        assertTrue(jsonLdObject.maybeString(someKey).contains(someString))
+      },
+      test("maybeStringWithValidation should return  correct value") {
+        assertTrue(jsonLdObject.maybeStringWithValidation(someKey, noValidation).contains(someString))
+      },
+      test("getString should return correct value") {
+        for {
+          actual <- jsonLdObject.getString(someKey)
+        } yield assertTrue(actual.contains(someString))
+      },
+      test("requireString should return correct value") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.requireString(someKey))
+        } yield assertTrue(actual == someString)
+      },
+      test("requireStringWithValidation should return correct value") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.requireStringWithValidation(someKey, noValidation))
+        } yield assertTrue(actual == someString)
+      },
+      test("getRequiredString should return correct value") {
+        for {
+          actual <- jsonLdObject.getRequiredString(someKey)
+        } yield assertTrue(actual == someString)
+      }
+    )
+  }
+
+  def stringValueWhenGivenInvalidString: Spec[Any, Serializable] = {
+    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDBoolean(true)))
+    suite("when given an invalid String")(
+      test("maybeString should fail with BadRequestExcpetion") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.maybeString(someKey)).exit
+        } yield assertTrue(
+          actual == Exit.fail(BadRequestException("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+        )
+      },
+      test("maybeStringWithValidation should fail with BadRequestExcpetion") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.maybeStringWithValidation(someKey, noValidation)).exit
+        } yield assertTrue(
+          actual == Exit.fail(BadRequestException("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+        )
+      },
+      test("getString should fail with correct error message") {
+        for {
+          actual <- jsonLdObject.getString(someKey).exit
+        } yield assertTrue(actual == Exit.fail("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+      },
+      test("requireString should fails with BadRequestException") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.requireString(someKey)).exit
+        } yield assertTrue(
+          actual == Exit.fail(BadRequestException("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+        )
+      },
+      test("requireStringWithValidation should fail with BadRequestException") {
+        for {
+          actual <- ZIO.attempt(jsonLdObject.requireStringWithValidation(someKey, noValidation)).exit
+        } yield assertTrue(
+          actual == Exit.fail(BadRequestException("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+        )
+      },
+      test("getRequiredString should return correct value") {
+        for {
+          actual <- jsonLdObject.getRequiredString(someKey).exit
+        } yield assertTrue(actual == Exit.fail("Invalid someKey: JsonLDBoolean(true) (string expected)"))
+      }
+    )
+  }
+
+  // Boolean value related tests
   private val objectValuesSuite = zio.test.suite("getting object values")(
     suite("when given an empty map")(
       test("maybeObject should return None") {
