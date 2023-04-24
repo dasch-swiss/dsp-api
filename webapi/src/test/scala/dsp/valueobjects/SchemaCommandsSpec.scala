@@ -14,7 +14,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /**
- * This spec is used to test [[dsp.schema.domain.SchemaCommandsSpec]].
+ * This spec is used to test [[dsp.valueobjects.CreatePropertyCommand]].
  */
 object SchemaCommandsSpec extends ZIOSpecDefault {
 
