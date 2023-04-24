@@ -55,6 +55,11 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport._
+import org.knora.webapi.messages.util.search.gravsearch.transformers.{
+  SelectToSelectTransformer,
+  ConstructToConstructTransformer,
+  SparqlTransformerLive
+}
 
 trait SearchResponderV2
 final case class SearchResponderV2Live(

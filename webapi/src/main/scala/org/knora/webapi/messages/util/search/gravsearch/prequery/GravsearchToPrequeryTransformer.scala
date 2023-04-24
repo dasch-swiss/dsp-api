@@ -19,6 +19,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInf
 import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
 
 import AbstractPrequeryGenerator._
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
