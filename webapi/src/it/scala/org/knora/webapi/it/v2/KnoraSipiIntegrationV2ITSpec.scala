@@ -174,7 +174,7 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a JSON-LD array containing the values of the specified property.
    */
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.requireArray(propertyIriInResult.toString)
+    resource.body.requireArray(propertyIriInResult.toString)
 
   /**
    * Given a JSON-LD document representing a resource, returns a JSON-LD object representing the expected single
@@ -190,7 +190,8 @@ class KnoraSipiIntegrationV2ITSpec
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI
   ): JsonLDObject = {
-    val resourceIri: IRI = resource.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+    val resourceIri: IRI =
+      resource.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
     val propertyValues: JsonLDArray =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
 
@@ -409,7 +410,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
+        resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
       )
 
       // Get the new file value from the resource.
@@ -581,7 +582,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Get the resource from Knora.
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-      assert(resource.requireTypeAsKnoraTypeIri.toString == thingDocumentIRI)
+      assert(resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == thingDocumentIRI)
 
       // Get the new file value from the resource.
 
@@ -986,7 +987,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
 
-      resource.requireTypeAsKnoraTypeIri.toString should equal(
+      resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString should equal(
         OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation
       )
 
@@ -1099,7 +1100,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
 
-      resource.requireTypeAsKnoraTypeIri.toString should equal(
+      resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString should equal(
         OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation
       )
 
@@ -1158,7 +1159,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(wavResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation"
+        resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation"
       )
 
       // Get the new file value from the resource.
@@ -1264,7 +1265,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation"
+        resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation"
       )
 
       // Get the new file value from the resource.

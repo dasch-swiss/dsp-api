@@ -664,7 +664,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val historyResponseAsString       = responseToString(historyResponse)
       assert(historyResponse.status == StatusCodes.OK, historyResponseAsString)
       val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(historyResponseAsString)
-      val entries: JsonLDArray           = jsonLDDocument.requireArray("@graph")
+      val entries: JsonLDArray           = jsonLDDocument.body.requireArray("@graph")
 
       for (entry: JsonLDValue <- entries.value) {
         entry match {
@@ -1617,14 +1617,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
 
       val previewJsonLD        = getResponseAsJsonLD(previewRequest)
-      val updatedLabel: String = previewJsonLD.requireString(OntologyConstants.Rdfs.Label)
+      val updatedLabel: String = previewJsonLD.body.requireString(OntologyConstants.Rdfs.Label)
       assert(updatedLabel == newLabel)
-      val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+      val updatedPermissions: String =
+        previewJsonLD.body.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
       assert(
         PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions)
       )
 
-      val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
+      val lastModificationDate: Instant = previewJsonLD.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
@@ -1692,14 +1693,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
 
       val previewJsonLD        = JsonLDUtil.parseJsonLD(previewResponseAsString)
-      val updatedLabel: String = previewJsonLD.requireString(OntologyConstants.Rdfs.Label)
+      val updatedLabel: String = previewJsonLD.body.requireString(OntologyConstants.Rdfs.Label)
       assert(updatedLabel == newLabel)
-      val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+      val updatedPermissions: String =
+        previewJsonLD.body.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
       assert(
         PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions)
       )
 
-      val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
+      val lastModificationDate: Instant = previewJsonLD.body.requireDatatypeValueInObject(
         key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
@@ -1749,9 +1751,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val previewResponseAsString = responseToString(previewResponse)
       val previewJsonLD           = JsonLDUtil.parseJsonLD(previewResponseAsString)
-      val responseIsDeleted       = previewJsonLD.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
+      val responseIsDeleted       = previewJsonLD.body.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
       responseIsDeleted should equal(true)
-      val responseType = previewJsonLD.requireString("@type")
+      val responseType = previewJsonLD.body.requireString("@type")
       responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
 
       collectClientTestData("deleted-resource-preview-response", previewResponseAsString)
@@ -1798,11 +1800,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       previewResponse.status should equal(StatusCodes.OK)
 
       val previewJsonLD     = JsonLDUtil.parseJsonLD(previewResponseAsString)
-      val responseIsDeleted = previewJsonLD.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
+      val responseIsDeleted = previewJsonLD.body.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
       responseIsDeleted should equal(true)
-      val responseType = previewJsonLD.requireString("@type")
+      val responseType = previewJsonLD.body.requireString("@type")
       responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
-      val responseDeleteDate = previewJsonLD
+      val responseDeleteDate = previewJsonLD.body
         .requireObject(OntologyConstants.KnoraApiV2Complex.DeleteDate)
         .requireString("@value")
       responseDeleteDate should equal(deleteDate.toString)

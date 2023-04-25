@@ -29,6 +29,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /*
 
@@ -426,7 +427,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * Returns `true` if this JSON-LD object represents an RDF entity with an IRI,
    * i.e. if it has an `@id` and a `@type`.
    */
-  def isEntityWithIri: Boolean =
+  private def isEntityWithIri: Boolean =
     Set(JsonLDKeywords.ID, JsonLDKeywords.TYPE).subsetOf(value.keySet)
 
   /**
@@ -456,6 +457,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the return value of the validation function.
    */
   @deprecated("Use getIri() instead")
+  @throws[BadRequestException]
   def toIri[T](validationFun: (String, => Nothing) => T): T =
     if (isIri) {
       val id: IRI = requireString(JsonLDKeywords.ID)
@@ -465,10 +467,11 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
   /**
-   * Get the IRI value from its JSON-LD object value representation.
+   * Get the IRI value from this JSON-LD object value representation.
    *
-   * @return The IRI found in the JSON-LD object with the key `@id`.
-   *         Fails if the JSON-LD object does not represent an IRI or if the `@id` key is not present.
+   * @return The IRI of the JSON-LD object.
+   *         Fails if this JSON-LD object does not represent an IRI.
+   *         Fails if the [[JsonLDKeywords.ID]] key is not present.
    */
   def getIri(): IO[String, String] =
     if (isIri) {
@@ -490,7 +493,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type returned by the validation function.
    * @return the return value of the validation function.
    */
-  def toDatatypeValueLiteral[T](expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): T =
+  private def toDatatypeValueLiteral[T](expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): T =
     if (isDatatypeValue) {
       val datatype: IRI = requireString(JsonLDKeywords.TYPE)
 
@@ -511,6 +514,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the value.
    */
+  @deprecated("Use getRequiredString(String) instead")
+  @throws[BadRequestException]
   def requireString(key: String): String =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case JsonLDString(str) => str
@@ -531,6 +536,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the return value of the validation function.
    */
   @deprecated("Use getString(String) instead")
+  @throws[BadRequestException]
   def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = {
     val str: String = requireString(key)
     validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
@@ -544,10 +550,18 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the value, or `None` if not found.
    */
   @deprecated("Use getString(String) instead")
+  @throws[BadRequestException]
   def maybeString(key: String): Option[String] =
     value.get(key).map {
       case JsonLDString(str) => str
       case other             => throw BadRequestException(s"Invalid $key: $other (string expected)")
+    }
+
+  private def getJsonLdString(key: String): IO[String, Option[JsonLDString]] =
+    value.get(key) match {
+      case Some(str: JsonLDString) => ZIO.some(str)
+      case None                    => ZIO.none
+      case Some(other)             => ZIO.fail(s"Invalid $key: $other (string expected)")
     }
 
   /**
@@ -559,11 +573,10 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   def getString(key: String): IO[String, Option[String]] = getJsonLdString(key).map(_.map(_.value))
 
-  private def getJsonLdString(key: String): IO[String, Option[JsonLDString]] =
-    value.get(key) match {
-      case Some(str: JsonLDString) => ZIO.some(str)
-      case None                    => ZIO.none
-      case Some(other)             => ZIO.fail(s"Invalid $key: $other (string expected)")
+  def getRequiredString(key: String): IO[String, String] =
+    getString(key).flatMap {
+      case Some(str) => ZIO.succeed(str)
+      case None      => ZIO.fail(s"No $key provided")
     }
 
   /**
@@ -579,6 +592,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function, or `None` if the value was not present.
    */
+  @deprecated("Use getString(String) instead")
+  @throws[BadRequestException]
   def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     maybeString(key).map { str =>
       validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
@@ -593,7 +608,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the validated IRI.
    */
-  @deprecated("use getIdIriFromObject(String) instead")
+  @deprecated("use getIdIriInObject(String) instead")
+  @throws[BadRequestException]
   def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T =
     requireObject(key).toIri(validationFun)
 
@@ -610,9 +626,21 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function, or `None` if the value was not present.
    */
-  @deprecated("use getIdIriFromObject(String) instead")
+  @deprecated("use getIdIriInObject(String) instead")
   def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     maybeObject(key).map(_.toIri(validationFun))
+
+  /**
+   * Gets the IRI of the object value of this JSON-LD at a specific key.
+   *
+   * @param key the key of the optional value.
+   * @return the IRI of the object value of this JSON-LD at a specific key.
+   *         Returns [[None]] if the key is not found.
+   *         Fails if the value is not a [[JsonLDObject]].
+   *         Fails if the [[JsonLDObject]] does not have an [[JsonLDKeywords.ID]].
+   */
+  def getIriInObject(key: String): IO[String, Option[String]] =
+    getObject(key).flatMap(ZIO.foreach(_)(_.getIri()))
 
   /**
    * Gets a required datatype value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
@@ -660,6 +688,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the required value.
    */
+  @deprecated("use getRequiredObject(String) instead")
+  @throws[BadRequestException]
   def requireObject(key: String): JsonLDObject =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case obj: JsonLDObject => obj
@@ -674,6 +704,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the optional value.
    */
   @deprecated("use getObject(String) instead")
+  @throws[BadRequestException]
   def maybeObject(key: String): Option[JsonLDObject] =
     value.get(key).map {
       case obj: JsonLDObject => obj
@@ -695,17 +726,11 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case Some(other)             => ZIO.fail(s"Invalid $key: $other (object expected)")
     }
 
-  /**
-   * Gets the IRI of the object value of this JSON-LD at a specific key.
-   *
-   * @param key the key of the optional value.
-   * @return the IRI of the object value of this JSON-LD at a specific key.
-   *         Returns [[None]] if the key is not found.
-   *         Fails if the value is not a [[JsonLDObject]].
-   *         Fails if the [[JsonLDObject]] does not have an [[JsonLDKeywords.ID]].
-   */
-  def getObjectIri(key: String): IO[String, Option[String]] =
-    getObject(key).flatMap(ZIO.foreach(_)(_.getIri()))
+  def getRequiredObject(key: String): IO[String, JsonLDObject] =
+    getObject(key).flatMap {
+      case Some(obj) => ZIO.succeed(obj)
+      case None      => ZIO.fail(s"No $key provided")
+    }
 
   /**
    * Gets the required array value of this JSON-LD object. If the value is not an array,
@@ -715,6 +740,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the required value.
    */
+  @deprecated("use getRequiredArray instead")
+  @throws[BadRequestException]
   def requireArray(key: String): JsonLDArray =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case obj: JsonLDArray => obj
@@ -728,10 +755,24 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the optional value.
    */
+  @deprecated("use getArray(String) instead")
   def maybeArray(key: String): Option[JsonLDArray] =
     value.get(key).map {
       case obj: JsonLDArray => obj
       case other            => JsonLDArray(Seq(other))
+    }
+
+  def getArray(key: String): IO[String, Option[JsonLDArray]] =
+    value.get(key) match {
+      case Some(obj: JsonLDArray) => ZIO.some(obj)
+      case None                   => ZIO.none
+      case Some(other)            => ZIO.some(JsonLDArray(List(other)))
+    }
+
+  def getRequiredArray(key: String): IO[String, JsonLDArray] =
+    getArray(key).flatMap {
+      case Some(obj) => ZIO.succeed(obj)
+      case None      => ZIO.fail(s"No $key provided")
     }
 
   /**
@@ -741,6 +782,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the required value.
    */
+  @deprecated("use getRequiredInt(String) instead")
+  @throws[BadRequestException]
   def requireInt(key: String): Int =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case obj: JsonLDInt => obj.value
@@ -754,10 +797,25 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the optional value.
    */
+  @deprecated("use getInt() instead")
+  @throws[BadRequestException]
   def maybeInt(key: String): Option[Int] =
     value.get(key).map {
       case obj: JsonLDInt => obj.value
       case other          => throw BadRequestException(s"Invalid $key: $other (integer expected)")
+    }
+
+  def getInt(key: String): IO[String, Option[Int]] =
+    value.get(key) match {
+      case Some(obj: JsonLDInt) => ZIO.some(obj.value)
+      case None                 => ZIO.none
+      case Some(other)          => ZIO.fail(s"Invalid $key: $other (integer expected)")
+    }
+
+  def getRequiredInt(key: String): IO[String, Int] =
+    getInt(key).flatMap {
+      case Some(obj) => ZIO.succeed(obj)
+      case None      => ZIO.fail(s"No $key provided")
     }
 
   /**
@@ -767,6 +825,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the required value.
    */
+  @deprecated("use getRequiredBoolean(String) instead")
+  @throws[BadRequestException]
   def requireBoolean(key: String): Boolean =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
       case obj: JsonLDBoolean => obj.value
@@ -780,10 +840,25 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the optional value.
    * @return the optional value.
    */
+  @deprecated("use getBoolean(String) instead")
+  @throws[BadRequestException]
   def maybeBoolean(key: String): Option[Boolean] =
     value.get(key).map {
       case obj: JsonLDBoolean => obj.value
       case other              => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
+    }
+
+  def getBoolean(key: String): IO[String, Option[Boolean]] =
+    value.get(key) match {
+      case Some(obj: JsonLDBoolean) => ZIO.some(obj.value)
+      case None                     => ZIO.none
+      case Some(other)              => ZIO.fail(s"Invalid $key: $other (boolean expected)")
+    }
+
+  def getRequiredBoolean(key: String): IO[String, Boolean] =
+    getBoolean(key).flatMap {
+      case Some(obj) => ZIO.succeed(obj)
+      case None      => ZIO.fail(s"No $key provided")
     }
 
   override def compare(that: JsonLDValue): Int = 0
@@ -793,6 +868,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return a validated Knora data IRI.
    */
+  @deprecated("use getRequiredIdValueAsKnoraDataIri() instead")
+  @throws[BadRequestException]
   def requireIDAsKnoraDataIri: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -810,6 +887,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return an optional validated Knora data IRI.
    */
+  @deprecated("use getIdValueAsKnoraDataIri() instead")
+  @throws[BadRequestException]
   def maybeIDAsKnoraDataIri: Option[SmartIri] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -824,21 +903,53 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     maybeIri
   }
 
+  def getIdValueAsKnoraDataIri: ZIO[StringFormatter, String, Option[SmartIri]] =
+    getString(JsonLDKeywords.ID).flatMap {
+      case Some(str) =>
+        ZIO.serviceWithZIO[StringFormatter] { sf =>
+          ZIO
+            .attempt(sf.toSmartIri(str))
+            .mapError(_.getMessage)
+            .filterOrFail(_.isKnoraDataIri)(s"Invalid Knora data IRI: $str")
+            .map(Some(_))
+        }
+      case None => ZIO.none
+    }
+
+  def getRequiredIdValueAsKnoraDataIri: ZIO[StringFormatter, String, SmartIri] =
+    getIdValueAsKnoraDataIri.flatMap {
+      case Some(iri) => ZIO.succeed(iri)
+      case None      => ZIO.fail(s"No ${JsonLDKeywords.ID} provided")
+    }
+
   /**
    * Validates an optional Base64-encoded UUID in a JSON-LD object.
    *
    * @return an optional validated decoded UUID.
    */
+  @deprecated("use getUuid(String) instead")
+  @throws[BadRequestException]
   def maybeUUID(key: String): Option[UUID] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     maybeStringWithValidation(key, stringFormatter.validateBase64EncodedUuid)
   }
+
+  def getUuid(key: String): ZIO[StringFormatter, String, Option[UUID]] =
+    getString(key).flatMap {
+      case Some(str) =>
+        ZIO.serviceWithZIO[StringFormatter] { sf =>
+          ZIO.fromTry(sf.base64DecodeUuid(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))
+        }
+      case None => ZIO.none
+    }
 
   /**
    * Validates the `@type` of a JSON-LD object as a Knora type IRI in the API v2 complex schema.
    *
    * @return a validated Knora type IRI.
    */
+  @deprecated("use getRequiredTypeAsKnoraApiV2ComplexTypeIri() instead")
+  @throws[BadRequestException]
   def requireTypeAsKnoraApiV2ComplexTypeIri: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -851,12 +962,26 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     typeIri
   }
 
+  def getRequiredTypeAsKnoraApiV2ComplexTypeIri: ZIO[IriConverter, String, SmartIri] =
+    getString(JsonLDKeywords.TYPE).flatMap {
+      case Some(str) =>
+        IriConverter
+          .asSmartIri(str)
+          .mapError(_.getMessage)
+          .filterOrFail(iri => iri.isKnoraEntityIri && iri.isApiV2ComplexSchema)(
+            s"Invalid Knora API v2 complex type IRI: $str"
+          )
+      case None => ZIO.fail(s"No ${JsonLDKeywords.TYPE} provided")
+    }
+
   /**
    * When called on a JSON-LD object representing a resource, ensures that it contains a single Knora property with
    * a single value in the Knora API v2 complex schema.
    *
    * @return the property IRI and the value.
    */
+  @deprecated("use getRequiredResourcePropertyApiV2ComplexValue() instead")
+  @throws[BadRequestException]
   def requireResourcePropertyApiV2ComplexValue: (SmartIri, JsonLDObject) = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -884,6 +1009,33 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         }
     }
   }
+
+  def getRequiredResourcePropertyApiV2ComplexValue: ZIO[IriConverter, String, (SmartIri, JsonLDObject)] =
+    ZIO.serviceWithZIO[IriConverter] { c =>
+      val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDKeywords.ID - JsonLDKeywords.TYPE
+      resourceProps match {
+        case emptyMap if resourceProps.isEmpty =>
+          ZIO.fail("No value submitted")
+        case tooMany if resourceProps.size > 1 =>
+          ZIO.fail(s"Only one value can be submitted per request using this route")
+        case singleProp =>
+          singleProp.head match {
+            case (key: IRI, jsonLDValue: JsonLDValue) =>
+              for {
+                propertySmartIri <-
+                  c.asSmartIri(key)
+                    .orElseFail("Invalid property IRI: $key")
+                    .filterOrElseWith(it => it.isKnoraEntityIri && it.isApiV2ComplexSchema)(it =>
+                      ZIO.fail(s"Invalid Knora API v2 complex property IRI: $it")
+                    )
+                value <- jsonLDValue match {
+                           case obj: JsonLDObject => ZIO.succeed(propertySmartIri -> obj)
+                           case _                 => ZIO.fail(s"Invalid value for $propertySmartIri")
+                         }
+              } yield value
+          }
+      }
+    }
 }
 
 object JsonLDObject {
@@ -896,7 +1048,6 @@ object JsonLDObject {
  * @param value a sequence of JSON-LD values.
  */
 case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
-  implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val nonEmpty: Boolean = value.nonEmpty
 
@@ -969,7 +1120,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
    *
    * @return a map of language keys to values.
    */
-  def toObjsWithLang: Seq[StringLiteralV2] =
+  def toObjsWithLang()(implicit stringFormatter: StringFormatter): Seq[StringLiteralV2] =
     value.map {
       case obj: JsonLDObject =>
         val lang = obj.requireStringWithValidation(JsonLDKeywords.LANGUAGE, stringFormatter.toSparqlEncodedString)
@@ -1003,133 +1154,6 @@ case class JsonLDDocument(
   isFlat: Boolean = false,
   keepStructure: Boolean = false
 ) {
-
-  /**
-   * A convenience function that calls `body.requireString`.
-   */
-  def requireString(key: String): String = body.requireString(key)
-
-  /**
-   * A convenience function that calls `body.requireStringWithValidation`.
-   */
-  def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T =
-    body.requireStringWithValidation(key, validationFun)
-
-  /**
-   * A convenience function that calls `body.maybeString`.
-   */
-  def maybeString(key: String): Option[String] = body.maybeString(key)
-
-  /**
-   * A convenience function that calls `body.maybeStringWithValidation`.
-   */
-  def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
-    body.maybeStringWithValidation(key, validationFun)
-
-  /**
-   * A convenience function that calls `body.requireIriInObject`.
-   */
-  def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T =
-    body.requireIriInObject(key, validationFun)
-
-  /**
-   * A convenience function that calls `body.maybeIriInObject`.
-   */
-  def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
-    body.maybeIriInObject(key, validationFun)
-
-  /**
-   * A convenience function that calls `body.requireDatatypeValueInObject`.
-   */
-  def requireDatatypeValueInObject[T](
-    key: String,
-    expectedDatatype: SmartIri,
-    validationFun: (String, => Nothing) => T
-  ): T =
-    body.requireDatatypeValueInObject(
-      key = key,
-      expectedDatatype = expectedDatatype,
-      validationFun = validationFun
-    )
-
-  /**
-   * A convenience function that calls `body.maybeDatatypeValueInObject`.
-   */
-  def maybeDatatypeValueInObject[T](
-    key: String,
-    expectedDatatype: SmartIri,
-    validationFun: (String, => Nothing) => T
-  ): Option[T] =
-    body.maybeDatatypeValueInObject(
-      key = key,
-      expectedDatatype = expectedDatatype,
-      validationFun = validationFun
-    )
-
-  /**
-   * A convenience function that calls `body.requireObject`.
-   */
-  def requireObject(key: String): JsonLDObject = body.requireObject(key)
-
-  /**
-   * A convenience function that calls `body.maybeObject`.
-   */
-  def maybeObject(key: String): Option[JsonLDObject] = body.maybeObject(key)
-
-  /**
-   * A convenience function that calls `body.requireArray`.
-   */
-  def requireArray(key: String): JsonLDArray = body.requireArray(key)
-
-  /**
-   * A convenience function that calls `body.maybeArray`.
-   */
-  def maybeArray(key: String): Option[JsonLDArray] = body.maybeArray(key)
-
-  /**
-   * A convenience function that calls `body.requireInt`.
-   */
-  def requireInt(key: String): Int = body.requireInt(key)
-
-  /**
-   * A convenience function that calls `body.maybeInt`.
-   */
-  def maybeInt(key: String): Option[Int] = body.maybeInt(key)
-
-  /**
-   * A convenience function that calls `body.requireBoolean`.
-   */
-  def requireBoolean(key: String): Boolean = body.requireBoolean(key)
-
-  /**
-   * A convenience function that calls `body.maybeBoolean`.
-   */
-  def maybeBoolean(key: String): Option[Boolean] = body.maybeBoolean(key)
-
-  /**
-   * A convenience function that calls `body.requireIDAsKnoraDataIri`.
-   */
-  def requireIDAsKnoraDataIri: SmartIri = body.requireIDAsKnoraDataIri
-
-  /**
-   * A convenience function that calls `body.maybeIDAsKnoraDataIri`.
-   */
-  def maybeIDAsKnoraDataIri: Option[SmartIri] = body.maybeIDAsKnoraDataIri
-
-  /**
-   * A convenience function that calls `body.requireTypeAsKnoraApiV2ComplexTypeIri`.
-   */
-  def requireTypeAsKnoraTypeIri: SmartIri = body.requireTypeAsKnoraApiV2ComplexTypeIri
-
-  /**
-   * A convenience function that calls `body.requireResourcePropertyApiV2ComplexValue`.
-   */
-  def requireResourcePropertyValue: (SmartIri, JsonLDObject) = body.requireResourcePropertyApiV2ComplexValue
-
-  /**
-   * A convenience function that calls `body.maybeUUID`.
-   */
-  def maybeUUID(key: String): Option[UUID] = body.maybeUUID(key: String)
 
   /**
    * Flattens this JSON-LD document by moving inlined entities with IRIs to the top level.

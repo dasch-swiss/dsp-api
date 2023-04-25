@@ -91,14 +91,15 @@ class ValuesV2R2RSpec extends R2RSpec {
   }
 
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.requireArray(propertyIriInResult.toString)
+    resource.body.requireArray(propertyIriInResult.toString)
 
   private def getValueFromResource(
     resource: JsonLDDocument,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI
   ): JsonLDObject = {
-    val resourceIri: IRI = resource.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+    val resourceIri: IRI =
+      resource.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
     val propertyValues: JsonLDArray =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
 

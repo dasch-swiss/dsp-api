@@ -479,14 +479,27 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   def getOntologySchema: Option[OntologySchema]
 
   /**
-   * Checks that the IRI's ontology schema, if present, corresponds to the specified schema. If the IRI
-   * has no schema, does nothing. If the IRI has a schema that's different to the specified schema, calls
-   * `errorFun`.
+   * Checks that the IRI's ontology schema, if present, corresponds to the specified schema.
    *
-   * @param allowedSchema the schema to be allowed.
-   * @return [[Boolean]]
+   * @param schema The [[ApiV2Schema]] to be allowed.
+   * @return `true` if the [[OntologySchema]] is present and matches the specified schema or if the iri does not have a schema.
    */
-  def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean
+  def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean = getOntologySchema match {
+    case Some(schema) => schema == allowedSchema
+    case None         => true
+  }
+
+  /**
+   * Checks that the IRI's ontology schema, if present, corresponds to the specified schema.
+   *
+   * @param schema The [[OntologySchema]] which must be present.
+   * @return `true` if the [[OntologySchema]] is present and matches the specified schema.
+   *         `false` otherwise.
+   */
+  private def isOntologySchema(schema: OntologySchema): Boolean = getOntologySchema.contains(schema)
+  def isApiV2ComplexSchema: Boolean                             = isOntologySchema(ApiV2Complex)
+  def isApiV2SimpleSchema: Boolean                              = isOntologySchema(ApiV2Simple)
+  def isInternalSchema: Boolean                                 = isOntologySchema(InternalSchema)
 
   /**
    * Converts this IRI to another ontology schema.
@@ -1080,12 +1093,6 @@ class StringFormatter private (
       }
 
     override def getOntologySchema: Option[OntologySchema] = iriInfo.ontologySchema
-
-    override def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean =
-      iriInfo.ontologySchema match {
-        case Some(value) => value == allowedSchema
-        case None        => true
-      }
 
     override def getShortPrefixLabel: String = getOntologyName
 

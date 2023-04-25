@@ -165,5 +165,4 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
       typeIri = typeIri
     )
   }
-
 }
