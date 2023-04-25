@@ -853,10 +853,7 @@ class StringFormatter private (
                 ontologySchema = None
               )
           }
-        } else if (
-          iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
-          iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph
-        ) {
+        } else if (iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart)) {
           // Nothing else to do.
           SmartIriInfo(
             iriType = KnoraDataIri,

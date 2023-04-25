@@ -241,6 +241,7 @@ object StatementPattern {
    * @param obj  the object of the statement.
    * @return the statement pattern.
    */
+  @deprecated("We don't use explicit anymore")
   def makeExplicit(subj: Entity, pred: Entity, obj: Entity): StatementPattern = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -248,7 +249,7 @@ object StatementPattern {
       subj = subj,
       pred = pred,
       obj = obj,
-      namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph.toSmartIri))
+      None
     )
   }
 
