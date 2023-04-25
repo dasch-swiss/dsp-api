@@ -63,7 +63,6 @@ trait SearchResponderV2
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
   private val triplestoreService: TriplestoreService,
-  private val gravsearchTypeInspectionUtil: GravsearchTypeInspectionUtil,
   private val messageRelay: MessageRelay,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyCache: OntologyCache,
@@ -378,7 +377,7 @@ final case class SearchResponderV2Live(
       // Do type inspection and remove type annotations from the WHERE clause.
       typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
 
-      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
       _ <- GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult)
@@ -453,7 +452,7 @@ final case class SearchResponderV2Live(
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
       typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
-      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
       _ <- GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult)
@@ -1068,7 +1067,6 @@ object SearchResponderV2Live {
   val layer: ZLayer[
     AppConfig
       with TriplestoreService
-      with GravsearchTypeInspectionUtil
       with MessageRelay
       with ConstructResponseUtilV2
       with OntologyCache
@@ -1085,7 +1083,6 @@ object SearchResponderV2Live {
       for {
         appConfig                    <- ZIO.service[AppConfig]
         triplestoreService           <- ZIO.service[TriplestoreService]
-        gravsearchTypeInspectionUtil <- ZIO.service[GravsearchTypeInspectionUtil]
         messageRelay                 <- ZIO.service[MessageRelay]
         constructResponseUtilV2      <- ZIO.service[ConstructResponseUtilV2]
         ontologyCache                <- ZIO.service[OntologyCache]
@@ -1100,7 +1097,6 @@ object SearchResponderV2Live {
                      new SearchResponderV2Live(
                        appConfig,
                        triplestoreService,
-                       gravsearchTypeInspectionUtil,
                        messageRelay,
                        constructResponseUtilV2,
                        ontologyCache,
