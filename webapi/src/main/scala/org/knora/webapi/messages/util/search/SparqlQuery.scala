@@ -164,7 +164,6 @@ sealed trait QueryPattern extends SparqlGenerator
  * @param subj       the subject of the statement.
  * @param pred       the predicate of the statement.
  * @param obj        the object of the statement.
- * @param namedGraph the named graph this statement should be searched in. Defaults to [[None]].
  */
 case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends QueryPattern {
   override def toSparql: String = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} .\n"
